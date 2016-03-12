@@ -1,0 +1,207 @@
+
+The DOX MATRIX!
+
+module{
+
+	'strings...
+	name
+	shortDesc
+	longDesc
+	author
+	version
+	license
+	docs	
+	
+	namespaces
+}
+
+namespaces[]{
+
+	ident
+
+	namespaces
+	aliases
+	enums
+	structs
+	classes
+	interfaces
+	consts
+	globals
+	functions
+}
+
+aliases[]{
+
+	ident
+	docs
+	flags
+	type
+}
+
+enums[]{
+
+	ident
+	docs
+	flags
+	
+	consts
+}
+
+structs[]{
+
+	ident
+	docs
+	flags
+	genArgs
+	superType
+	ifaceTypes
+	where
+
+	aliases
+	enums
+	classes
+	structs
+	interfaces	
+	consts
+	globals
+	functions
+	
+	fields
+	methods
+	properties
+}
+
+classes[]{
+
+	ident
+	docs
+	flags
+	genArgs
+	superType
+	ifaceTypes
+	where
+
+	aliases
+	enums
+	classes
+	structs
+	interfaces	
+	consts
+	globals
+	functions
+	
+	fields
+	methods
+	properties
+}
+
+interfaces[]{
+
+	ident
+	docs
+	flags
+	genArgs
+	superType
+	ifaceTypes
+	where
+
+	aliases
+	enums
+	classes
+	structs
+	interfaces	
+	consts
+	globals
+	functions
+	
+	methods
+	properties
+}
+
+consts[]{
+
+	ident
+	docs
+	flags
+	type
+}
+
+globals[]{
+
+	ident
+	docs
+	flags
+	type
+}
+
+fields[]{
+
+	ident
+	docs
+	flags
+	type
+}
+
+properties[]{
+
+	ident
+	docs
+	flags
+	type
+}
+
+functions[]{
+
+	ident
+	docs
+	overloads
+}
+
+methods[]{
+
+	ident
+	docs
+	overloads 
+}
+
+overloads[]{
+
+	genArgs
+	flags
+	return
+	params
+	where
+}
+
+return{
+
+	type
+	docs
+}
+
+params[]{
+
+	ident
+	docs
+	flags
+	type
+	default
+}
+
+ident=string
+
+docs=string (html)
+
+flags=int bitmask (public, private, abstract, extern etc)
+
+type, superType = string (namespace path to type + optional genArgs, eg: "std.List<Int>" )
+
+ifaceTypes = string[] (array of type paths)
+
+genArgs=string (generic args for generic types/funcs, eg: "<T>" )
+
+default=string (default param value expression)
+
+Notes:
+
+* Multiple modules can currently add stuff to the same namespace, so to find a 'type path' you may have search multiple modules.

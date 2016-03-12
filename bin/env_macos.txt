@@ -1,0 +1,52 @@
+
+'***** COMMON *****
+
+MX2_BUILD_VERBOSE=0
+
+'***** DESKTOP *****
+
+MX2_BUILD_DIR_DESKTOP_DEBUG=desktop_debug_macos
+MX2_BUILD_DIR_DESKTOP_RELEASE=desktop_release_macos
+
+'LD options
+MX2_LD_OPTS_DESKTOP=
+MX2_LD_OPTS_DESKTOP_DEBUG=-O0 '-g
+MX2_LD_OPTS_DESKTOP_RELEASE=-O3
+
+'C compiler options
+MX2_CC_OPTS_DESKTOP=-std=gnu99 -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-undefined-bool-conversion -Wno-int-to-void-pointer-cast -Wno-inconsistent-missing-override -Wno-logical-op-parentheses
+MX2_CC_OPTS_DESKTOP_DEBUG=-O0 '-g
+MX2_CC_OPTS_DESKTOP_RELEASE=-O3 -DNDEBUG
+
+'C++ compiler options
+MX2_CPP_OPTS_DESKTOP=-std=c++11 -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-undefined-bool-conversion -Wno-int-to-void-pointer-cast -Wno-inconsistent-missing-override -Wno-logical-op-parentheses
+MX2_CPP_OPTS_DESKTOP_DEBUG=-O0 '-g
+MX2_CPP_OPTS_DESKTOP_RELEASE=-O3 -DNDEBUG
+
+'***** EMSCRIPTEN *****
+
+EMSCRIPTEN=${HOME}/emsdk/emscripten/1.35.0
+PATH=${HOME}/emsdk:${HOME}/emsdk/clang/e1.35.0_64bit:${HOME}/emsdk/node/0.12.2_64bit/bin:${HOME}/emsdk/emscripten/1.35.0:${PATH}
+
+MX2_MSERVER=open "${MX2_HOME}/devtools/MonkeyXFree86c/bin/mserver_macos.app"
+
+'El Capitan broke my python...
+PATH=/usr/local/bin:${PATH}
+
+MX2_BUILD_DIR_EMSCRIPTEN_DEBUG=emscripten_debug
+MX2_BUILD_DIR_EMSCRIPTEN_RELEASE=emscripten_release
+
+'LD options
+MX2_LD_OPTS_EMSCRIPTEN=-s TOTAL_MEMORY=33554432 -s DISABLE_EXCEPTION_CATCHING=0 -s USE_PTHREADS=1
+MX2_LD_OPTS_EMSCRIPTEN_DEBUG=-O2
+MX2_LD_OPTS_EMSCRIPTEN_RELEASE=-O3
+
+'C compiler options
+MX2_CC_OPTS_EMSCRIPTEN=-std=gnu99 -s TOTAL_MEMORY=33554432 -s DISABLE_EXCEPTION_CATCHING=0 -s USE_PTHREADS=1 -Wno-undefined-bool-conversion -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-warn-absolute-paths
+MX2_CC_OPTS_EMSCRIPTEN_DEBUG=-O2
+MX2_CC_OPTS_EMSCRIPTEN_RELEASE=-O3
+
+'C++ compiler options
+MX2_CPP_OPTS_EMSCRIPTEN=-std=c++11 -s TOTAL_MEMORY=33554432 -s DISABLE_EXCEPTION_CATCHING=0 -s USE_PTHREADS=1 -Wno-undefined-bool-conversion -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-warn-absolute-paths
+MX2_CPP_OPTS_EMSCRIPTEN_DEBUG=-O2
+MX2_CPP_OPTS_EMSCRIPTEN_RELEASE=-O3

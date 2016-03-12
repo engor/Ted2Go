@@ -1,0 +1,8 @@
+
+Added acceptsFirstMouse to SDLView in SDL_cocoawindows.m...
+
+- (BOOL)acceptsFirstMouse:(NSEvent *)theEvent
+{
+    return YES;
+}
+

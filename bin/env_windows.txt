@@ -1,0 +1,59 @@
+
+'***** COMMON ******
+
+MX2_BUILD_VERBOSE=0
+
+'***** DESKTOP *****
+
+GCC_EXEC_PREFIX=
+PATH=${MX2_HOME}\devtools\TDM-GCC-64-4.9.2\bin;${PATH}
+
+MX2_BUILD_DIR_DESKTOP_DEBUG=desktop_debug_windows
+MX2_BUILD_DIR_DESKTOP_RELEASE=desktop_release_windows
+
+MX2_LD_OPTS_DESKTOP=-m32	'-mwindows
+MX2_LD_OPTS_DESKTOP_DEBUG=
+MX2_LD_OPTS_DESKTOP_RELEASE=-O3 -s
+
+MX2_CC_OPTS_DESKTOP=-std=gnu99 -m32
+MX2_CC_OPTS_DESKTOP_DEBUG=-g
+MX2_CC_OPTS_DESKTOP_RELEASE=-O3
+
+MX2_CPP_OPTS_DESKTOP=-std=c++11 -m32
+MX2_CPP_OPTS_DESKTOP_DEBUG=-g
+MX2_CPP_OPTS_DESKTOP_RELEASE=-O3
+
+'***** EMSCRIPTEN *****
+
+'PATH=${MX2_HOME}\devtools\Emscripten\clang\e1.35.0_64bit;${PATH}
+'PATH=${MX2_HOME}\devtools\Emscripten\emscripten\1.35.0;${PATH}
+'PATH=${MX2_HOME}\devtools\Emscripten\python\2.7.5.3_64bit;${PATH}
+
+EM_CONFIG=C:\Users\Mark Sibly\.emscripten
+EMSCRIPTEN=D:\devtools\Emscripten\emscripten\incoming
+
+PATH=D:\devtools\Emscripten;${PATH}
+PATH=D:\devtools\Emscripten\spidermonkey\37.0.1_64bit;${PATH}
+PATH=D:\devtools\Emscripten\crunch\1.03;${PATH}
+PATH=D:\devtools\Emscripten\clang\fastcomp\build_incoming_vs2013_64\RelWithDebInfo\bin;${PATH}
+PATH=D:\devtools\Emscripten\node\4.1.1_64bit\bin;${PATH}
+PATH=D:\devtools\Emscripten\python\2.7.5.3_64bit;${PATH}
+PATH=D:\devtools\Emscripten\java\7.45_64bit\bin;${PATH}
+PATH=D:\devtools\Emscripten\emscripten\incoming;${PATH}
+
+MX2_MSERVER="${MX2_HOME}\devtools\MonkeyXFree86c\bin\mserver_winnt"
+
+MX2_BUILD_DIR_EMSCRIPTEN_DEBUG=emscripten_debug
+MX2_BUILD_DIR_EMSCRIPTEN_RELEASE=emscripten_release
+
+MX2_LD_OPTS_EMSCRIPTEN=-s TOTAL_MEMORY=33554432 -s DISABLE_EXCEPTION_CATCHING=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1
+MX2_LD_OPTS_EMSCRIPTEN_DEBUG=-O2
+MX2_LD_OPTS_EMSCRIPTEN_RELEASE=-O3
+
+MX2_CC_OPTS_EMSCRIPTEN=-std=gnu99 -s TOTAL_MEMORY=33554432 -s DISABLE_EXCEPTION_CATCHING=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1 -Wno-undefined-bool-conversion -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-warn-absolute-paths
+MX2_CC_OPTS_EMSCRIPTEN_DEBUG=-O2
+MX2_CC_OPTS_EMSCRIPTEN_RELEASE=-O3
+
+MX2_CPP_OPTS_EMSCRIPTEN=-std=c++11 -s TOTAL_MEMORY=33554432 -s DISABLE_EXCEPTION_CATCHING=1 -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1 -Wno-undefined-bool-conversion
+MX2_CPP_OPTS_EMSCRIPTEN_DEBUG=-O2
+MX2_CPP_OPTS_EMSCRIPTEN_RELEASE=-O3

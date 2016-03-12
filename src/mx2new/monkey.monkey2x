@@ -1,0 +1,68 @@
+
+Namespace monkey
+
+Extern
+
+Struct @Void="void"
+End
+
+Struct @Bool="bbBool"
+End
+
+Struct @Byte="bbByte"
+End
+
+Struct @UByte="bbUByte"
+End
+
+Struct @Short="bbShort"
+End
+
+Struct @UShort="bbUShort"
+End
+
+Struct @Int="bbInt"
+End
+
+Struct @UInt="bbUInt"
+End
+
+Struct @Long="bbLong"
+End
+
+Struct @ULong="bbULong"
+End
+
+Struct @Float="bbFloat"
+End
+
+Struct @Double="bbDouble"
+End
+
+Struct @String="bbString"
+
+	Property Length:Int()="length"
+	
+	Method Split:Int[]( separator:String )="split"
+	
+	Method Slice:String( start:Int )="slice"
+	
+	method Slice:String( start:Int,term:Int )="slice"
+	
+End
+
+Struct @Array<T> ="bbArray"
+
+	Property Length:Int()
+	
+	Method Slice:T[]( start:Int )
+	
+	Method Slice:T[]( start:Int,term:Int )
+	
+End
+
+Class @Object="bbObject"
+
+	Property TypeName:String()
+
+End

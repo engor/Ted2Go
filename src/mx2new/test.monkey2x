@@ -1,0 +1,14 @@
+
+Namespace test
+
+#Import "<std.monkey2>"
+
+Using std.filesystem
+
+Function Main()
+
+	Print ExtractDir( "D:/test/" )
+	
+	Print ExtractDir( "D:/" )
+
+End
