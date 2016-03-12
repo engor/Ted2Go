@@ -18,6 +18,7 @@
 /help
 
 /modules/*
+!/modules/modules.txt
 !/modules/monkey
 !/modules/libc
 !/modules/miniz

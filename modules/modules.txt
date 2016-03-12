@@ -1,0 +1,11 @@
+
+'NOTE: Must be in dependancy order!
+
+monkey
+libc
+miniz
+hoedown
+stb-image
+std
+gles20
+sdl2
