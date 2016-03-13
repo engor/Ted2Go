@@ -96,15 +96,13 @@
 </tr>
 <tr>
   <td align="left">type <code>&lt;</code> types <code>&gt;</code></td>
-  <td align="left">Generic instance type</td>
+  <td align="left">Generic type instance</td>
 </tr>
 <tr>
   <td align="left">type <code>Ptr</code></td>
   <td align="left">Pointer type</td>
 </tr>
 </tbody></table>
-
-
 
 
 <h3 id="native-wrapper-types">Native wrapper types</h3>
@@ -585,16 +583,16 @@
 
 
 
-<h3 id="variable-declarations">Variable declarations</h3>
-
-<p>Local variables</p>
+<h3 id="local-variables">Local variables</h3>
 
 <ul>
 <li><p><code>Local</code> <em>identifier</em> <code>:</code> <em>type</em> [ <code>=</code> <em>expression</em> ]</p></li>
 <li><p><code>Local</code> <em>identifier</em> <code>:=</code> <em>expression</em></p></li>
 </ul>
 
-<p>Field variables:</p>
+
+
+<h3 id="field-variables">Field variables</h3>
 
 <ul>
 <li><p><code>Field</code> <em>identifier</em> <code>:</code> <em>type</em> [ <code>=</code> <em>expression</em> ]</p></li>
@@ -602,7 +600,9 @@
 <li><p><code>Field</code> <em>identifier</em> <code>:</code> <em>type</em> <code>=</code> <em>extern-symbol</em></p></li>
 </ul>
 
-<p>Global variables:</p>
+
+
+<h3 id="global-variables">Global variables</h3>
 
 <ul>
 <li><p><code>Global</code> <em>identifier</em> <code>:</code> <em>type</em> [ <code>=</code> <em>expression</em> ]</p></li>
@@ -612,7 +612,7 @@
 
 
 
-<h3 id="constant-declarations">Constant declarations</h3>
+<h3 id="constants">Constants</h3>
 
 <ul>
 <li><p><code>Const</code> <em>identifier</em> <code>:</code> <em>type</em> <code>=</code> <em>expression</em></p></li>
@@ -622,23 +622,125 @@
 
 
 
-<h3 id="method-declarations">Method declarations</h3>
+<h3 id="classes">Classes</h3>
 
 <ul>
-<li><code>Method</code> <em>identifier</em> <code>:</code> <em>return-type</em> <code>(</code> <em>param-decls</em> <code>)</code> [ <code>Abstract</code> | <code>Virtual</code> | <code>Override</code> | <code>Final</code> | <code>Override Final</code> ] [ <code>=</code><em>extern-symbol</em> ] <br>
+<li><code>Class</code> <em>identifier</em> [ <code>&lt;</code> <em>generic-types</em> <code>&gt;</code> ] [ <code>Extends</code> <em>type</em> ] [ <code>Implements</code> <em>types</em> ] [ <code>Abstract</code> | <code>Virtual</code> | <code>Final</code> ] [ <code>Where</code> <em>where-expression</em> ] [ <code>=</code> extern-symbol ]  <br>
+&nbsp;&nbsp;&nbsp;&nbsp;    <em>class-members</em> <br>
+<code>End</code> | <code>End Class</code></li>
+</ul>
+
+<p>Class methods are final by default and must be declared <code>Virtual</code> or <code>Abstract</code> if they are designed to be overridden, or <code>Override</code> or <code>Override Final</code> if they override a superclass method.</p>
+
+<p>This behavior can be modified by declaring a class <code>Virtual</code>. Classes declared <code>Virtual</code>  or with a superclass declared <code>Virtual</code> behave much like monkey1 or java classes - all methods are virtual by default, and will silently override any existing superclass virtual methods. It is an error to declare methods of such classes either <code>Virtual</code> or <code>Override</code>.</p>
+
+<p>Classes declared <code>Abstract</code> or that contain any abstract methods cannot be instantiated using <code>New</code>.</p>
+
+<p>Classes declared <code>Final</code> cannot be extended.</p>
+
+
+
+<h3 id="interfaces">Interfaces</h3>
+
+<ul>
+<li><code>Interface</code> <em>identifier</em> [ <code>Extends</code> <em>types</em> ] [ <code>=</code> extern-symbol ] <br>
+&nbsp;&nbsp;&nbsp;&nbsp;    <em>interface-members</em> <br>
+<code>End</code> | <code>End Interface</code></li>
+</ul>
+
+
+
+<h3 id="structs">Structs</h3>
+
+<ul>
+<li><code>Struct</code> <em>identifier</em> [ <code>=</code> extern-symbol ] <br>
+&nbsp;&nbsp;&nbsp;&nbsp;    <em>struct-members</em> <br>
+<code>End</code> | <code>End Struct</code></li>
+</ul>
+
+
+
+<h3 id="properties">Properties</h3>
+
+<ul>
+<li><p><code>Property</code> <em>identifier</em> <code>:</code> <em>type</em> <code>()</code> <br>
+&nbsp;&nbsp;&nbsp;&nbsp;    <em>statement-block</em> <br>
+[ <code>Setter</code> <code>(</code> <em>param-decl</em> <code>)</code> <br>
+&nbsp;&nbsp;&nbsp;&nbsp;    <em>statement-block</em> ] <br>
+<code>End</code> | <code>End Property</code></p></li>
+<li><p><code>Property</code> <em>identifier</em> <code>(</code> <em>param-decl</em> <code>)</code> <br>
+&nbsp;&nbsp;&nbsp;&nbsp;    <em>statement-block</em> <br>
+[ <code>Getter</code> <code>:</code> <em>type</em> <code>()</code> <br>
+&nbsp;&nbsp;&nbsp;&nbsp;    <em>statement-block</em> ] <br>
+<code>End</code> | <code>End Property</code></p></li>
+</ul>
+
+
+
+<h3 id="functions">Functions</h3>
+
+<ul>
+<li><code>Function</code> <em>identifier</em> [ <code>&lt;</code> <em>generic-types</em> <code>&gt;</code> ] [ <code>:</code> <em>return-type</em> ] <code>(</code> <em>param-decls</em><code>)</code> [ <code>Where</code> <em>where-expression</em> ] [ <code>=</code><em>extern-symbol</em> ] <br>
+&nbsp;&nbsp;&nbsp;&nbsp;    <em>statement-block</em> <br>
+<code>End</code> | <code>End Function</code></li>
+</ul>
+
+
+
+<h3 id="methods">Methods</h3>
+
+<ul>
+<li><code>Method</code> <em>identifier</em> [ <code>&lt;</code> <em>generic-types</em> <code>&gt;</code> ] [ <code>:</code> <em>return-type</em> ] <code>(</code> <em>param-decls</em> <code>)</code> [ <code>Virtual</code> | <code>Override</code> | <code>Final</code> | <code>Override Final</code> ] [ <code>Where</code> <em>where-expression</em> ] [ <code>=</code><em>extern-symbol</em> ] <br>
 &nbsp;&nbsp;&nbsp;&nbsp;    <em>statement-block</em> <br>
 <code>End</code> | <code>End Method</code></li>
 </ul>
 
 
 
-<h3 id="function-declarations">Function declarations</h3>
+<h3 id="properties-1">Properties</h3>
 
 <ul>
-<li><code>Function</code> <em>identifier</em> <code>:</code> <em>return-type</em> <code>(</code> <em>param-decls</em><code>)</code> [ <code>=</code><em>extern-symbol</em> ] <br>
+<li><p><code>Property</code> <em>identifier</em> <code>:</code> <em>type</em> <code>()</code>  [ <code>Virtual</code> | <code>Override</code> | <code>Final</code> | <code>Override Final</code> ] [ <code>Where</code> <em>where-expression</em> ] [ <code>=</code><em>extern-symbol</em> ] <br>
 &nbsp;&nbsp;&nbsp;&nbsp;    <em>statement-block</em> <br>
-<code>End</code> | <code>End Method</code></li>
+[ <code>Setter</code> <code>(</code> <em>param-decl</em> <code>)</code>  [ <code>Virtual</code> | <code>Override</code> | <code>Final</code> | <code>Override Final</code> ] [ <code>Where</code> <em>where-expression</em> ] [ <code>=</code><em>extern-symbol</em> ] <br>
+&nbsp;&nbsp;&nbsp;&nbsp;    <em>statement-block</em> ] <br>
+<code>End</code> | <code>End Property</code></p></li>
+<li><p><code>Property</code> <em>identifier</em> <code>(</code> <em>param-decl</em> <code>)</code>  [ <code>Virtual</code> | <code>Override</code> | <code>Final</code> | <code>Override Final</code> ] [ <code>Where</code> <em>where-expression</em> ] [ <code>=</code><em>extern-symbol</em> ] <br>
+&nbsp;&nbsp;&nbsp;&nbsp;    <em>statement-block</em> <br>
+[ <code>Getter</code> <code>:</code> <em>type</em> <code>()</code>  [ <code>Virtual</code> | <code>Override</code> | <code>Final</code> | <code>Override Final</code> ] [ <code>Where</code> <em>where-expression</em> ] [ <code>=</code><em>extern-symbol</em> ] <br>
+&nbsp;&nbsp;&nbsp;&nbsp;    <em>statement-block</em> ] <br>
+<code>End</code> | <code>End Property</code></p></li>
 </ul>
+
+<p>Example:</p>
+
+<pre>Struct S
+
+    Private
+
+    'Internal storage for the property
+    Field _seconds:Float
+
+    Public
+
+    'Read/Write 'Seconds' property...
+    Property Seconds:Float()
+
+        Return _seconds
+
+    Setter( seconds:Float )
+
+        _seconds=seconds
+    End
+
+    'Read only 'Minutes' property...
+    Property Minutes:Float()
+
+        Return _seconds/60.0
+    End
+
+End
+</pre>
 
 
 
@@ -648,7 +750,7 @@
 <li><p><code>If</code> <em>expression</em> [ <code>Then</code> ] <em>simple-statements</em> { <code>ElseIf</code> <em>expression</em> [ <code>Then</code> ] <em>simple-statements</em> } [ <code>Else</code> <em>simple-statements</em> ]</p></li>
 <li><p><code>If</code> <em>expression</em> [ <code>Then</code> ] <br>
 &nbsp;&nbsp;&nbsp;&nbsp;    <em>statement-block</em> <br>
-{ <code>ElseIf</code> expression  <br>
+{ <code>ElseIf</code> <em>expression</em> <br>
 &nbsp;&nbsp;&nbsp;&nbsp;    <em>statement-block</em> }  <br>
 [ <code>Else</code>  <br>
 &nbsp;&nbsp;&nbsp;&nbsp;    <em>statement-block</em> ]  <br>
@@ -657,7 +759,7 @@
 
 
 
-<h3 id="while-statement">While statement</h3>
+<h3 id="while-loop">While loop</h3>
 
 <ul>
 <li><code>While</code> <em>expression</em> <br>
@@ -667,7 +769,7 @@
 
 
 
-<h3 id="repeat-statement">Repeat statement</h3>
+<h3 id="repeat-loop">Repeat loop</h3>
 
 <ul>
 <li><p><code>Repeat</code> <br>
@@ -680,13 +782,16 @@
 
 
 
-<h3 id="for-statement">For statement</h3>
+<h3 id="for-loop">For loop</h3>
 
 <ul>
 <li><p><code>For</code> <em>variable-expression</em> <code>=</code> <em>expression</em> <code>To</code> | <code>Until</code> <em>expression</em> [ <code>Step</code> <em>expression</em> ] <br>
 &nbsp;&nbsp;&nbsp;&nbsp;    <em>statement-block</em> <br>
 <code>End</code> | <code>End For</code> | <code>Next</code></p></li>
 <li><p><code>For</code> <em>variable-expression</em> <code>= Eachin</code> <em>expression</em> <br>
+&nbsp;&nbsp;&nbsp;&nbsp;    <em>statement-block</em> <br>
+<code>End</code> | <code>End For</code> | <code>Next</code></p></li>
+<li><p><code>For</code> <em>simple-statement</em> <code>,</code> <em>expression</em> <code>,</code> <em>simple-statement</em> <br>
 &nbsp;&nbsp;&nbsp;&nbsp;    <em>statement-block</em> <br>
 <code>End</code> | <code>End For</code> | <code>Next</code></p></li>
 </ul>
