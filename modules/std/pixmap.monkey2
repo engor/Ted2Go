@@ -140,6 +140,8 @@ Class Pixmap
 			p[1]=color.g * 255
 			p[2]=color.b * 255
 			p[3]=color.a * 255
+		Default
+			Assert( False )
 		End
 	End
 
@@ -470,7 +472,7 @@ s
 		Case PixelFormat.RGBA32
 			depth=4
 		Default
-			'THROW
+			Assert( False )
 		End
 		
 		_width=width
