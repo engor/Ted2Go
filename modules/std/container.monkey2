@@ -1,31 +1,27 @@
 
 Namespace std
 
-#rem monkeydoc Container interface
+#rem monkeydoc IContainer interface.
 #end
 Interface IContainer<T>
 
 	Property Empty:Bool()
 	
 	'Method All:IIterator<T>()
-
+	
+	'For sequences...
+	
+	Method Add( value:T )
+	
+	Method AddAll( value:T[] )
+	
+	'Method AddAll<C>( values:C ) Where C Implements IContainer<T>
+	
 End
 
-Interface ISequence<T> Extends IContainer<T>
-
-	Method Remove( value:T )
-
-	Method Append( value:T )
-	
-	Method AppendAll( values:T[] )
-	
-	'Method AppendAll<C>( values:C ) Where C Implements IContainer<T>
-
-End
-
-#rem monkeydoc Iterator interface
+#rem monkeydoc IIterator interface.
 #end
-Interface IIterator<T> 'Extends IContainer<T>
+Interface IIterator<T>
 
 	Property Valid:Bool()
 	
@@ -33,12 +29,10 @@ Interface IIterator<T> 'Extends IContainer<T>
 	
 	Method Bump()
 	
+	'For sequences...
+	
 	Method Erase()
 	
-	Method EraseAll()
-	
-	Method Insert( value:T )	
-	
-	Method InsertAll<C>( values:C ) Where C Implements IContainer<T>
+	Method Insert( value:T )
 	
 End

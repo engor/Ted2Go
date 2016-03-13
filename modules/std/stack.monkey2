@@ -538,7 +538,6 @@ Class Stack<T> Implements IContainer<T>
 	
 	#end
 	Method Swap( index1:Int,index2:Int )
-	
 		DebugAssert( index1>=0 And index1<_length And index2>=0 And index2<_length,"Stack index out of range" )
 		
 		Local t:=_data[index1]

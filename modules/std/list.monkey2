@@ -1,13 +1,7 @@
 
 Namespace std
 
-#rem monkeydoc
-
-The List class provides support for doubly linked lists.
-
-Values can be added to a list using [[AddLast]], [[AddFirst]], [[InsertBefore]] and [[InsertAfter]]and removed from a list using [[Remove]], [[RemoveEach]], [[RemoveFirst]] and [[RemoveLast]].
-
-Lists can be sorted using [[Sort]].
+#rem monkeydoc List class.
 
 #end
 Class List<T> Implements IContainer<T>
