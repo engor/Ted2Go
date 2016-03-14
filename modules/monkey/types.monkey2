@@ -9,7 +9,7 @@ End
 Struct WChar="wchar_t"
 End
 
-Struct Utf8Char="char"
+Struct Utf8Char="unsigned char"
 End
 
 Struct CString="bbCString"
@@ -151,8 +151,6 @@ Struct @Array<T>
 	
 	Property Length:Int()="length"
 	
-	Method Get:T( index:Int )="get"
-	
 	Method Slice:T[]( from:Int )="slice"
 	
 	Method Slice:T[]( from:Int,term:Int )="slice" 
@@ -166,3 +164,23 @@ Class @Object="bbObject"
 	Method typeName:CChar Ptr()="typeName"
 
 End
+
+Class @Throwable="bbThrowable"
+
+	Method DebugStack:String[]()="debugStack"
+	
+End
+
+#rem
+Class @RuntimeError Extends @Throwable="bbRuntimeError"
+
+	Method New()
+	
+	Method New( message:String )
+	
+	Property Message:String()="message"
+
+End
+#end
+
+Function TypeName:String( type:CString )="bbTypeName"

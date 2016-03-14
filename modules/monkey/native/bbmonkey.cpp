@@ -29,6 +29,8 @@ namespace{
 	#endif	
 		}
 		
+		bbAssert( false,err );
+		
 		printf( "Caught signal:%s\n",err );
 		
 #if __APPLE__
@@ -92,32 +94,31 @@ int main( int argc,char **argv ){
 	try{
 	
 		bbGC::init();
-		
-		for( bbInit *init=bbInit::first;init;init=init->succ ){
-//			printf( "Executing initializer '%s'\n",init->info );fflush( stdout );
-			init->init();
+
+		{		
+			bbDBFrame( "_void()","" );
+			
+			for( bbInit *init=bbInit::first;init;init=init->succ ){
+	//			printf( "Executing initializer '%s'\n",init->info );fflush( stdout );
+				init->init();
+			}
 		}
 		
 		bbMain();
 		
 	}catch( bbRuntimeError *ex ){
 	
-		printf( "Monkey2 Runtime Error:%s\n",bbCString( ex->msg ).data() );
+		printf( "\n***** Uncaught RuntimeError exception: %s *****\n\n",ex->message().c_str() );
+		
+		for( int i=0;i<ex->debugStack()->length();++i ){
+			printf( "%s\n",ex->debugStack()->at( i ).c_str() );
+		}
 
 	}catch(...){
 	
-		printf( "Uncaught exception\n" );fflush( stdout );
+		printf( "***** Uncaught native exception *****\n" );fflush( stdout );
 //		throw;
 	}
 	
 	return 0;
 }
-
-/*
-void *operator new( size_t size ){
-}
-
-void operator delete( void *p ){
-	printf( "delete:%p\n",p );
-}
-*/

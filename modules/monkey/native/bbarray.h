@@ -2,10 +2,10 @@
 #ifndef BB_ARRAY_H
 #define BB_ARRAY_H
 
-#include "bbtypes.h"
 #include "bbgc.h"
+#include "bbassert.h"
 
-template<class T,int D=1> class bbArray : public bbGCNode{
+template<class T,int D> class bbArray : public bbGCNode{
 
 	int _sizes[D];
 	T _data[0];
@@ -139,22 +139,24 @@ template<class T,int D=1> class bbArray : public bbGCNode{
 	
 	//fast 1D version	
 	T &at( int index )const{
-		if( index<0 || index>=length() ) puts( "Out of range" );
+		bbDebugAssert( index>=0 && index<length(),"Array index out of range" );
 		return data()[index];
 	}
 	
+	//slower N-D version
 	template<class...Args> T &at( Args...args ){
 	
-		//debug only...
-		if( !this ) puts( "Out of range" );
-		
 		int indices[]{args...};
+		
 		int index=indices[0];
+		bbDebugAssert( index>=0,"Array index out of range" );
+		
 		for( int i=1;i<D;++i ){
-			if( index>=_sizes[i-1] ) puts( "Out of range!" );
+			bbDebugAssert( indices[i]>=0 && index<_sizes[i-1],"Array index out of range" );
 			index+=indices[i]*_sizes[i-1];
 		}
-		if( index>=length() ) puts( "Out of range" );
+		
+		bbDebugAssert( index<length(),"Array index out of range" );
 		return data()[index];
 	}
 	
@@ -326,12 +328,12 @@ template<class T,int D=1> class bbArray{
 	}
 
 	T &operator[]( int index ){
-		if( index<0 || index>=length() ) puts( "OUT OF RANGE" );
+		bbDebugAssert( index>=0 && index<length(),"Array index out of range" );
 		return data()[index];
 	}
 	
 	const T &operator[]( int index )const{
-		if( index<0 || index>=length() ) puts( "OUT OF RANGE" );
+		bbDebugAssert( index>=0 && index<length(),"Array index out of range" );
 		return data()[index];
 	}
 	

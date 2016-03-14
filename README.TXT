@@ -20,9 +20,13 @@ Before getting started, make sure the monkey2 folder is installed alongside (not
 
 2) Once mingw64 is installed, open a command prompt and change to the 'monkey2\src' directory.
 
-3) Enter 'rebuildmods' and hit return.
+3) Enter 'rebuildmods' and hit return. Wait...
 
-4) You should now be able to build and run monkey2 apps with monkey1. There is a 'simple hello-world.monkey2' test in the monkey2 directory.
+4) Enter 'rebuildmx2cc' and hit return. Wait...
+
+5) You should now be able to build and run monkey2 apps with monkey1. There is a 'simple hello-world.monkey2' test in the monkey2 directory.
+
+6) Following a github update, you may need to rebuild the compiler. To do this, perform steps 2-4 again.
 
 
 ***** Installation on MacOS/Linux *****
@@ -33,9 +37,13 @@ Before getting started, make sure the monkey2 folder is installed alongside (not
 
 2) Open a shell and change to the 'monkey2/src' directory.
 
-3) Enter './rebuildmods.sh' and hit return.
+3) Enter './rebuildmods.sh' and hit return. Wait...
 
-4) You should now be able to build and run monkey2 apps with monkey1. There is a simple 'hello-world.monkey2' test in the monkey2 directory.
+4) Enter './rebuildmx2cc.sh' and hit return. Wait...
+
+5) You should now be able to build and run monkey2 apps with monkey1. There is a simple 'hello-world.monkey2' test in the monkey2 directory.
+
+6) Following a github update, you may need to rebuild the compiler. To do this, perform steps 2-4 again.
 
 
 ***** More information *****

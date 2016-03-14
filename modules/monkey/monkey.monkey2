@@ -3,6 +3,7 @@ Namespace monkey
 
 #Import "types.monkey2"
 #Import "math.monkey2"
+#Import "assert.monkey2"
 #Import "debug.monkey2"
 
 #Import "native/bbtypes.cpp"
@@ -15,3 +16,4 @@ Namespace monkey
 #Import "native/bbobject.cpp"
 #Import "native/bbinit.cpp"
 #Import "native/bbdebug.cpp"
+#Import "native/bbassert.cpp"

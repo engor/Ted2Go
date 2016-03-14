@@ -15,6 +15,14 @@ Class NamespaceType Extends Type
 		Return ident
 	End
 	
+	Property Name:String() Override
+		Return scope.Name
+	End
+	
+	Property TypeId:String() Override
+		Return scope.TypeId
+	End
+	
 	'***** Type overrides *****
 
 	Method FindNode:SNode( ident:String ) Override
@@ -44,6 +52,24 @@ Class NamespaceScope Extends Scope
 		Self.ntype=ntype
 	End
 	
+	Property Name:String() Override
+		If Not ntype Return ""
+		If outer
+			Local name:=outer.Name
+			If name Return name+"."+ntype.ident
+		Endif
+		Return ntype.ident
+	End
+	
+	Property TypeId:String() Override
+		If Not ntype Return ""
+		If outer
+			Local id:=outer.TypeId
+			If id Return id+"_"+ntype.ident
+		Endif
+		Return ntype.ident
+	End
+		
 	Method ToString:String() Override
 	
 		If Not ntype Return ""

@@ -2,13 +2,21 @@
 Namespace mx2
 
 Class Stmt
-
+	Field pnode:PNode
+	
+	Method New()
+	End
+	
+	Method New( pnode:PNode )
+		Self.pnode=pnode
+	End
 End
 
 Class PrintStmt Extends Stmt
 	Field value:Value
 	
-	Method New( value:Value )
+	Method New( pnode:PNode,value:Value )
+		Super.New( pnode )
 		Self.value=value
 	End
 	
@@ -18,7 +26,8 @@ Class ReturnStmt Extends Stmt
 
 	Field value:Value
 	
-	Method New( value:Value )
+	Method New( pnode:PNode,value:Value )
+		Super.New( pnode )
 		Self.value=value
 	End
 End
@@ -27,7 +36,8 @@ Class VarDeclStmt Extends Stmt
 
 	Field varValue:VarValue
 	
-	Method New( varValue:VarValue )
+	Method New( pnode:PNode,varValue:VarValue )
+		Super.New( pnode )
 		Self.varValue=varValue
 	End
 
@@ -39,7 +49,8 @@ Class AssignStmt Extends Stmt
 	Field lhs:Value
 	Field rhs:Value
 	
-	Method New( op:String,lhs:Value,rhs:Value )
+	Method New( pnode:PNode,op:String,lhs:Value,rhs:Value )
+		Super.New( pnode )
 		Self.op=op
 		Self.lhs=lhs
 		Self.rhs=rhs
@@ -50,7 +61,8 @@ Class EvalStmt Extends Stmt
 
 	Field value:Value
 	
-	Method New( value:Value )
+	Method New( pnode:PNode,value:Value )
+		Super.New( pnode )
 		Self.value=value
 	End
 End
@@ -60,7 +72,8 @@ Class IfStmt Extends Stmt
 	Field block:Block
 	Field succ:IfStmt
 	
-	Method New( cond:Value,block:Block )
+	Method New( pnode:PNode,cond:Value,block:Block )
+		Super.New( pnode )
 		Self.cond=cond
 		Self.block=block
 	End
@@ -71,7 +84,8 @@ Class WhileStmt Extends Stmt
 	Field cond:Value
 	Field block:Block
 	
-	Method New( cond:Value,block:Block )
+	Method New( pnode:PNode,cond:Value,block:Block )
+		Super.New( pnode )
 		Self.cond=cond
 		Self.block=block
 	End
@@ -82,14 +96,15 @@ Class RepeatStmt Extends Stmt
 	Field cond:Value
 	Field block:Block
 	
-	Method New( cond:Value,block:Block )
+	Method New( pnode:PNode,cond:Value,block:Block )
+		Super.New( pnode )
 		Self.cond=cond
 		Self.block=block
 	End
 	
 End
 
-Class CaseStmt
+Class CaseStmt Extends Stmt
 	Field values:Value[]
 	Field block:Block
 	
@@ -103,7 +118,8 @@ Class SelectStmt Extends Stmt
 	Field value:Value
 	Field cases:CaseStmt[]
 	
-	Method New( value:Value,cases:CaseStmt[] )
+	Method New( pnode:PNode,value:Value,cases:CaseStmt[] )
+		Super.New( pnode )
 		Self.value=value
 		Self.cases=cases
 	End
@@ -116,7 +132,8 @@ Class ForStmt Extends Stmt
 	Field incr:Stmt
 	Field block:Block
 	
-	Method New( iblock:Block,cond:Value,incr:Stmt,block:Block )
+	Method New( pnode:PNode,iblock:Block,cond:Value,incr:Stmt,block:Block )
+		Super.New( pnode )
 		Self.iblock=iblock
 		Self.cond=cond
 		Self.incr=incr
@@ -140,7 +157,8 @@ Class TryStmt Extends Stmt
 	Field block:Block
 	Field catches:CatchStmt[]
 	
-	Method New( block:Block,catches:CatchStmt[] )
+	Method New( pnode:PNode,block:Block,catches:CatchStmt[] )
+		Super.New( pnode )
 		Self.block=block
 		Self.catches=catches
 	End
@@ -150,15 +168,24 @@ End
 Class ThrowStmt Extends Stmt
 	Field value:Value
 	
-	Method New( value:Value )
+	Method New( pnode:PNode,value:Value )
+		Super.New( pnode )
 		Self.value=value
 	End
 End
 
 Class ContinueStmt Extends Stmt
+
+	Method New( pnode:PNode )
+		Super.New( pnode )
+	End
 End
 
 Class ExitStmt Extends Stmt
+
+	Method New( pnode:PNode )
+		Super.New( pnode )
+	End
 End
 
 '***** StmtVisitor *****

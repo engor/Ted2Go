@@ -66,11 +66,11 @@ Class Value Extends SNode
 		Throw New SemantEx( "Value '"+ToString()+"' is Not generic" )
 	End
 	
-	Method Assign:Stmt( op:String,value:Value,block:Block ) Virtual
+	Method Assign:Stmt( pnode:PNode,op:String,value:Value,block:Block ) Virtual
 		If Not IsAssignable SemantError( "Value.Assign()" )
 		ValidateAssignOp( op,type )
 		value=value.UpCast( type )
-		Return New AssignStmt( op,Self,value )
+		Return New AssignStmt( pnode,op,Self,value )
 	End
 	
 	Method CheckAccess( tscope:Scope ) Virtual

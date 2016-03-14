@@ -20,6 +20,8 @@ typedef unsigned short bbChar;
 
 class bbString;
 template<class T> class bbFunction;
-template<class T,int D> class bbArray;
+template<class T,int D=1> class bbArray;
+
+bbString bbTypeName( const char *type );
 
 #endif

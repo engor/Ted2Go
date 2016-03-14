@@ -102,7 +102,7 @@ Class PropertyValue Extends Value
 	End
 	#end
 	
-	Method Assign:Stmt( op:String,rvalue:Value,block:Block ) Override
+	Method Assign:Stmt( pnode:PNode,op:String,rvalue:Value,block:Block ) Override
 	
 		Local inst:=instance
 		
@@ -135,7 +135,7 @@ Class PropertyValue Extends Value
 		args[0]=rvalue
 		Local invoke:=plist.setFunc.ToValue( inst ).Invoke( args )
 		
-		Return New EvalStmt( invoke )
+		Return New EvalStmt( pnode,invoke )
 	End
 
 	'should never be called?

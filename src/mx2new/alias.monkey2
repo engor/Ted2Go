@@ -21,6 +21,15 @@ Class AliasType Extends Type
 		Self.scope=scope
 	End
 	
+	Property Name:String() Override
+		Return "{Alias}"
+	End
+	
+	Property TypeId:String() Override
+		SemantError( "AliasType.TypeId()" )
+		Return ""
+	End
+	
 	Method OnSemant:SNode() Override
 		Local node:=adecl.type.Semant( scope )
 		If Not node Throw New SemantEx( "Can't find type '"+adecl.type.ToString()+"'" )

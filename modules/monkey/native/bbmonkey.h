@@ -6,12 +6,13 @@
 #include "bbtypes.h"
 #include "bbmemory.h"
 #include "bbstring.h"
+#include "bbdebug.h"
+#include "bbassert.h"
 #include "bbgc.h"
-#include "bbfunction.h"
 #include "bbarray.h"
+#include "bbfunction.h"
 #include "bbobject.h"
 #include "bbinit.h"
-#include "bbdebug.h"
 
 extern int bb_argc;
 extern char **bb_argv;

@@ -14,9 +14,13 @@ Using libc
 
 Global StartDir:String
 
-'Const TestArgs:="mx2cc makemods -clean -verbose -config=release monkey libc miniz stb std hoedown"
+'Const TestArgs:="mx2cc makemods -clean -verbose -config=debug"
 
-Const TestArgs:="mx2cc makeapp -clean -verbose -target=desktop -config=release src/mx2new/mx2cc.monkey2"
+Const TestArgs:="mx2cc makeapp -clean -verbose -target=desktop -config=debug src/mx2new/test.monkey2"
+
+'Const TestArgs:="mx2cc makeapp -verbose -target=desktop -config=release src/mx2new/mx2cc.monkey2"
+
+'Const TestArgs:="mx2cc makemods"
 
 Function Main()
 
@@ -41,7 +45,7 @@ Function Main()
 	If args.Length<2
 
 		Print "Usage: mx2cc makeapp|makemods|makedocs [-run] [-clean] [-verbose] [-target=desktop|emscripten] [-config=debug|release] source|modules..."
-		
+
 #If __CONFIG__="release"
 		exit_(0)
 #Endif

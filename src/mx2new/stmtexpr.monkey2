@@ -87,7 +87,7 @@ Class AssignStmtExpr Extends StmtExpr
 				Local args:=New Value[1]
 				args[0]=rhs
 				Local value:=node.Invoke( args )
-				Return New EvalStmt( value )
+				Return New EvalStmt( Self,value )
 			Endif
 			
 			node=lhs.FindValue( op.Slice( 0,-1 ) )
@@ -102,7 +102,7 @@ Class AssignStmtExpr Extends StmtExpr
 		
 		If Not lhs.IsAssignable Throw New SemantEx( "Value '"+lhs.ToString()+"' is not assignable" )
 		
-		Return lhs.Assign( op,rhs,block )
+		Return lhs.Assign( Self,op,rhs,block )
 	End
 End
 
@@ -127,7 +127,7 @@ Class VarDeclStmtExpr Extends StmtExpr
 		
 		block.Insert( decl.ident,value )
 		
-		Return New VarDeclStmt( value )
+		Return New VarDeclStmt( Self,value )
 	End
 
 End
@@ -149,7 +149,7 @@ Class EvalStmtExpr Extends StmtExpr
 	
 		Local value:=expr.SemantRValue( block )
 		
-		Return New EvalStmt( value )
+		Return New EvalStmt( Self,value )
 	End
 
 End
@@ -221,7 +221,7 @@ Class PrintStmtExpr Extends StmtExpr
 	
 		Local value:=expr.SemantRValue( block,Type.StringType )
 		
-		Return New PrintStmt( value )
+		Return New PrintStmt( Self,value )
 	End
 
 End
@@ -254,7 +254,7 @@ Class ReturnStmtExpr Extends StmtExpr
 				value=expr.SemantRValue( block,rtype )
 			Endif
 			
-			block.Emit( New ReturnStmt( value ) )
+			block.Emit( New ReturnStmt( Self,value ) )
 		
 		Catch ex:SemantEx
 		End
@@ -280,7 +280,7 @@ Class ContinueStmtExpr Extends StmtExpr
 	
 		If Not block.loop Throw New SemantEx( "'Exit' must appear inside a loop" )
 		
-		Return New ContinueStmt
+		Return New ContinueStmt( Self )
 	End
 
 End
@@ -299,7 +299,7 @@ Class ExitStmtExpr Extends StmtExpr
 	
 		If Not block.loop Throw New SemantEx( "'Exit' must appear inside a loop" )
 		
-		Return New ExitStmt
+		Return New ExitStmt( Self )
 	End
 End
 
@@ -351,7 +351,7 @@ Class IfStmtExpr Extends StmtExpr
 			
 			tblock.Semant( expr.stmts )
 			
-			Local curr:=New IfStmt( cond,tblock )
+			Local curr:=New IfStmt( Self,cond,tblock )
 			If prev prev.succ=curr Else head=curr
 			prev=curr
 			
@@ -395,7 +395,7 @@ Class WhileStmtExpr Extends StmtExpr
 		
 		iblock.Semant( stmts )
 		
-		return New WhileStmt( cond,iblock )
+		return New WhileStmt( Self,cond,iblock )
 	End
 End
 
@@ -434,7 +434,7 @@ Class RepeatStmtExpr Extends StmtExpr
 		
 		iblock.Semant( stmts )
 		
-		Return New RepeatStmt( cond,iblock )
+		Return New RepeatStmt( Self,cond,iblock )
 	End
 
 End
@@ -501,7 +501,7 @@ Class SelectStmtExpr Extends StmtExpr
 		
 		Next
 		
-		Return New SelectStmt( value,cases.ToArray() )
+		Return New SelectStmt( Self,value,cases.ToArray() )
 	End
 	
 End
@@ -585,7 +585,7 @@ Class ForStmtExpr Extends StmtExpr
 			cond=New BinaryopValue( Type.BoolType,"<",iter,len )
 			
 			'iter+=1			
-			incr=iter.Assign( "+=",LiteralValue.IntValue( 1 ),iblock )
+			incr=iter.Assign( Null,"+=",LiteralValue.IntValue( 1 ),iblock )
 			
 			If atype
 				Local indices:=New Value[1]
@@ -634,7 +634,7 @@ Class ForStmtExpr Extends StmtExpr
 				Local bump:=iter.FindValue( "Bump" )
 				If Not bump Throw New SemantEx( "Iterator has no 'Bump' method" )
 				bump=bump.Invoke( Null )
-				incr=New EvalStmt( bump )
+				incr=New EvalStmt( Null,bump )
 			Endif
 			
 #rem
@@ -657,12 +657,12 @@ Class ForStmtExpr Extends StmtExpr
 		Else
 			Local iter:=varExpr.Semant( block ).RemoveSideEffects( block )
 			If Not iter.IsAssignable Throw New SemantEx( "For loop index '"+iter.ToString()+"' is not assignable" )
-			block.Emit( iter.Assign( "=",curr,block ) )
+			block.Emit( iter.Assign( Null,"=",curr,block ) )
 		Endif
 		
 		block.Semant( stmts )
 		
-		Return New ForStmt( iblock,cond,incr,block )
+		Return New ForStmt( Self,iblock,cond,incr,block )
 	End
 	
 	Method OnSemant:Stmt( block:Block ) Override
@@ -685,7 +685,7 @@ Class ForStmtExpr Extends StmtExpr
 		Else
 			iter=varExpr.Semant( iblock ).RemoveSideEffects( iblock )
 			If Not iter.IsAssignable Throw New SemantEx( "For loop index '"+iter.ToString()+"' is not assignable" )
-			iblock.Emit( iter.Assign( "=",init,iblock ) )
+			iblock.Emit( iter.Assign( Null,"=",init,iblock ) )
 		Endif
 		
 		Local iterExpr:=New ValueExpr( iter,srcpos,endpos )
@@ -703,12 +703,12 @@ Class ForStmtExpr Extends StmtExpr
 		
 		block.Semant( stmts )
 		
-		Return New ForStmt( iblock,cond,incr,block )
+		Return New ForStmt( Self,iblock,cond,incr,block )
 	End
 	
 End
 
-Class CatchStmtExpr
+Class CatchExpr
 
 	Field varIdent:String
 	Field varType:TypeExpr
@@ -725,9 +725,9 @@ End
 Class TryStmtExpr Extends StmtExpr
 
 	Field stmts:StmtExpr[]
-	Field catches:CatchStmtExpr[]
+	Field catches:CatchExpr[]
 	
-	Method New( stmts:StmtExpr[],catches:CatchStmtExpr[],srcpos:Int,endpos:Int )
+	Method New( stmts:StmtExpr[],catches:CatchExpr[],srcpos:Int,endpos:Int )
 		Super.New( srcpos,endpos )
 		Self.stmts=stmts
 		Self.catches=catches
@@ -759,7 +759,7 @@ Class TryStmtExpr Extends StmtExpr
 			catches.Push( New CatchStmt( vvar,iblock ) )
 		Next
 		
-		Return New TryStmt( iblock,catches.ToArray() )
+		Return New TryStmt( Self,iblock,catches.ToArray() )
 	End
 End
 
@@ -776,11 +776,11 @@ Class ThrowStmtExpr Extends StmtExpr
 
 		Try
 			If expr	
-				block.Emit( New ThrowStmt( expr.SemantRValue( block ) ) )
+				block.Emit( New ThrowStmt( Self,expr.SemantRValue( block ) ) )
 			Else If Not block.inex
 				Throw New SemantEx( "Exceptions can only be rethrown inside 'Catch' blocks" )
 			Else
-				block.Emit( New ThrowStmt( Null ) )
+				block.Emit( New ThrowStmt( Self,Null ) )
 			Endif
 			
 		Catch ex:SemantEx

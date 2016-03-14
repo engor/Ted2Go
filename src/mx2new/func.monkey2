@@ -75,8 +75,16 @@ Class FuncValue Extends Value
 		If fdecl.kind="lambda" captures=New Stack<VarValue>
 	End
 	
-	Property IsGeneric:Bool()
+	Property Name:String()
+		Local name:=scope.Name
+		If name name+="."+fdecl.ident Else name=fdecl.ident
+		Local kind:=fdecl.kind.Capitalize()
+		If fdecl.IsOperator kind="Operator"
+'		Return kind+" "+name+":"+ftype.Name
+		Return name+":"+ftype.Name
+	End
 	
+	Property IsGeneric:Bool()
 		If Not ftype SemantError( "FuncValue.IsGeneric()" )
 		
 		Return ftype.IsGeneric
@@ -451,10 +459,17 @@ Class FuncListType Extends Type
 		Return flist.ident+str+"(...)"
 	End
 	
-	Method ToValue:Value( instance:Value ) Override
+	Property Name:String() Override
+		Return "{FuncListType}"
+	End
 	
-		SemantError( "FuncListValue.ToValue()" )
-		
+	Property TypeId:String() Override
+		SemantError( "FuncListType.TypeId()" )
+		Return ""
+	End
+	
+	Method ToValue:Value( instance:Value ) Override
+		SemantError( "FuncListType.ToValue()" )
 		Return Null
 	End
 	

@@ -5,7 +5,7 @@ Class Translator_CPP Extends Translator
 
 	Field _lambdaId:Int
 	
-	Method Translate( fdecl:FileDecl ) Override
+	Method Translate( fdecl:FileDecl ) 'Override
 	
 		_incs[fdecl.ident]=fdecl
 
@@ -123,7 +123,7 @@ Class Translator_CPP Extends Translator
 		Local atype:=Cast<ArrayType>( type )
 		If atype Return "bbGCVar<"+ArrayName( atype )+">"
 		
-		Return Trans( type )
+		Return TransType( type )
 	End
 	
 	Method VarProto:String( vvar:VarValue ) Override
@@ -143,14 +143,14 @@ Class Translator_CPP Extends Translator
 		Local ctype:=func.scope.FindClass()
 	
 		Local retType:=""
-		If Not func.IsCtor retType=Trans( ftype.retType )+" "
+		If Not func.IsCtor retType=TransType( ftype.retType )+" "
 
 		Local params:=""
-		If func.IsExtension params=Trans( ctype )+" l_self"
+		If func.IsExtension params=TransType( ctype )+" l_self"
 
 		For Local p:=Eachin func.params
 			If params params+=","
-			params+=Trans( p.type )+" "+VarName( p )
+			params+=TransType( p.type )+" "+VarName( p )
 		Next
 		
 		Local ident:=FuncName( func )
@@ -566,8 +566,8 @@ Class Translator_CPP Extends Translator
 				Emit( "void mx2_"+mod2.ident+"_main();mx2_"+mod2.ident+"_main();" )
 			Next
 		Endif
-	
-		Emit( func.block )
+		
+		EmitBlock( func )
 		
 		Emit( "}" )
 	End
@@ -584,7 +584,7 @@ Class Translator_CPP Extends Translator
 		Local ctorArgs:="",ctorInits:="",ctorVals:=""
 		
 		For Local vvar:=Eachin func.captures
-			Local varty:=Trans( vvar.type )
+			Local varty:=TransType( vvar.type )
 			Local varid:=VarName( vvar )
 			Emit( varty+" "+varid+";" )
 			ctorArgs+=","+varty+" "+varid
@@ -598,17 +598,17 @@ Class Translator_CPP Extends Translator
 			Emit( "}" )
 		Endif
 		
-		Local retType:=Trans( func.ftype.retType )
+		Local retType:=TransType( func.ftype.retType )
 
 		Local params:=""
 		For Local p:=Eachin func.params
 			If params params+=","
-			params+=Trans( p.type )+" "+VarName( p )
+			params+=TransType( p.type )+" "+VarName( p )
 		Next
 		
 		Emit( retType+" invoke("+params+"){" )
 		
-		Emit( func.block )
+		EmitBlock( func )
 		
 		Emit( "}" )
 
@@ -628,115 +628,151 @@ Class Translator_CPP Extends Translator
 	
 	'***** Block *****
 	
-	Method Emit( block:Block,gc:Bool=True )
+	Method BeginBlock()
+
+		BeginGCFrame()
+
+		If debug Emit( "bbDBBlock db_blk;" )
+	End
 	
-		If gc BeginGCFrame( block )
-		
+	Method EmitStmts( block:Block )
+
 		For Local stmt:=Eachin block.stmts
-		
-			Emit( stmt )
+			EmitStmt( stmt )
 			FreeGCTmps()
-			
 		Next
+
+	End
+	
+	Method EndBlock()
+	
+		EndGCFrame()
+	End
+	
+	Method EmitBlock( block:Block )
+	
+		BeginBlock()
 		
-		If gc EndGCFrame()
+		EmitStmts( block )
+		
+		EndBlock()
+	End
+	
+	Method EmitBlock( func:FuncValue )
+	
+		BeginGCFrame( func )
+		
+		If debug Emit( "bbDBFrame db_f{~q"+func.Name+"~q,~q"+func.pnode.srcfile.path+"~q};" )
+		
+		EmitStmts( func.block )
+	
+		EndGCFrame()
 	End
 	
 	'***** Stmt *****
 	
-	Method Emit( stmt:Stmt )
+	Method EmitStmt( stmt:Stmt )
 	
 		If Not stmt Return
-	
+		
+		If debug And stmt.pnode Emit( "bbDBStmt("+stmt.pnode.srcpos+");" )
+		
 		Local exitStmt:=Cast<ExitStmt>( stmt )
-		If exitStmt Emit( exitStmt ) ; Return
+		If exitStmt EmitStmt( exitStmt ) ; Return
 		
 		Local continueStmt:=Cast<ContinueStmt>( stmt )
-		If continueStmt Emit( continueStmt ) ; Return
+		If continueStmt EmitStmt( continueStmt ) ; Return
 		
 		Local returnStmt:=Cast<ReturnStmt>( stmt )
-		If returnStmt Emit( returnStmt ) ; Return
+		If returnStmt EmitStmt( returnStmt ) ; Return
 		
 		Local varDeclStmt:=Cast<VarDeclStmt>( stmt )
-		If varDeclStmt Emit( varDeclStmt ) ; Return
+		If varDeclStmt EmitStmt( varDeclStmt ) ; Return
 		
 		Local assignStmt:=Cast<AssignStmt>( stmt )
-		If assignStmt Emit( assignStmt ) ; Return
+		If assignStmt EmitStmt( assignStmt ) ; Return
 		
 		Local evalStmt:=Cast<EvalStmt>( stmt )
-		If evalStmt Emit( evalStmt ) ; Return
+		If evalStmt EmitStmt( evalStmt ) ; Return
 		
 		Local ifStmt:=Cast<IfStmt>( stmt )
-		If ifStmt Emit( ifStmt ) ; Return
+		If ifStmt EmitStmt( ifStmt ) ; Return
 		
 		Local whileStmt:=Cast<WhileStmt>( stmt )
-		If whileStmt Emit( whileStmt ) ; Return
+		If whileStmt EmitStmt( whileStmt ) ; Return
 		
 		Local repeatStmt:=Cast<RepeatStmt>( stmt )
-		If repeatStmt Emit( repeatStmt ) ; Return
+		If repeatStmt EmitStmt( repeatStmt ) ; Return
 		
 		Local selectStmt:=Cast<SelectStmt>( stmt )
-		If selectStmt Emit( selectStmt ) ; Return
+		If selectStmt EmitStmt( selectStmt ) ; Return
 		
 		Local forStmt:=Cast<ForStmt>( stmt )
-		If forStmt Emit( forStmt ) ; Return
+		If forStmt EmitStmt( forStmt ) ; Return
 		
 		Local tryStmt:=Cast<TryStmt>( stmt )
-		If tryStmt Emit( tryStmt ) ; Return
+		If tryStmt EmitStmt( tryStmt ) ; Return
 		
 		Local throwStmt:=Cast<ThrowStmt>( stmt )
-		If throwStmt Emit( throwStmt ) ; Return
+		If throwStmt EmitStmt( throwStmt ) ; Return
 		
 		Local printStmt:=Cast<PrintStmt>( stmt )
-		If printStmt Emit( printStmt ) ; Return
+		If printStmt EmitStmt( printStmt ) ; Return
 		
-		Throw New TransEx( "Translator_CPP.Emit() Stmt '"+String.FromCString( stmt.typeName() )+"' not recognized" )
+		Throw New TransEx( "Translator_CPP.EmitStmt() Stmt '"+String.FromCString( stmt.typeName() )+"' not recognized" )
 	End
 	
-	Method Emit( stmt:PrintStmt )
+	Method EmitStmt( stmt:PrintStmt )
 	
 		Emit( "puts("+Trans( stmt.value )+".c_str());fflush( stdout );" )
 	End
 	
-	Method Emit( stmt:ExitStmt )
+	Method EmitStmt( stmt:ExitStmt )
 	
 		Emit( "break;" )
 	End
 	
-	Method Emit( stmt:ContinueStmt )
+	Method EmitStmt( stmt:ContinueStmt )
 	
 		Emit( "continue;" )
 	End
 	
-	Method Emit( stmt:ReturnStmt )
+	Method EmitStmt( stmt:ReturnStmt )
 	
 		If Not stmt.value Emit( "return;" ) ; Return
 		
 		Emit( "return "+Trans( stmt.value )+";" )
 	End
 	
-	Method Emit( stmt:VarDeclStmt )
+	Method EmitStmt( stmt:VarDeclStmt )
 		
 		Local vvar:=stmt.varValue
 		Local vdecl:=vvar.vdecl
 		
 		Refs( vvar.type )
 		
+		Local dbvar:=""
+		
 		If vdecl.kind="local" And IsGCType( vvar.type )
 		
-			Local t:=InsertGCTmp( vvar )
-			If vvar.init Emit( t+"="+Trans( vvar.init )+";" )
-			Return
+			dbvar=InsertGCTmp( vvar )
 
+			If vvar.init Emit( dbvar+"="+Trans( vvar.init )+";" )
+		Else
+
+			dbvar=VarName( vvar )
+
+			Local init:="{}"
+			If vvar.init init="="+Trans( vvar.init )
+			
+			Emit( TransType( vvar.type )+" "+dbvar+init+";" )
 		Endif
-
-		Local init:="{}"
-		If vvar.init init="="+Trans( vvar.init )
 		
-		Emit( Trans( vvar.type )+" "+VarName( vvar )+init+";" )
+		If debug And dbvar Emit( "bbDBLocal(~q"+vvar.vdecl.ident+":"+vvar.type.TypeId+"~q,&"+dbvar+");" )
+
 	End
 	
-	Method Emit( stmt:AssignStmt )
+	Method EmitStmt( stmt:AssignStmt )
 	
 		Local op:=stmt.op
 		Select op
@@ -765,15 +801,15 @@ Class Translator_CPP Extends Translator
 		Emit( lhs+op+rhs+";" )
 	End
 
-	Method Emit( stmt:EvalStmt )
+	Method EmitStmt( stmt:EvalStmt )
 		Emit( Trans( stmt.value )+";" )
 	End
 	
-	Method Emit( stmt:IfStmt )
+	Method EmitStmt( stmt:IfStmt )
 	
 		Emit( "if("+Trans( stmt.cond )+"){" )
 		
-		Emit( stmt.block )
+		EmitBlock( stmt.block )
 		
 		While stmt.succ
 			stmt=stmt.succ
@@ -782,31 +818,31 @@ Class Translator_CPP Extends Translator
 			Else
 				Emit( "}else{" )
 			Endif
-			Emit( stmt.block )
+			EmitBlock( stmt.block )
 		Wend
 
 		Emit( "}" )
 	End
 	
-	Method Emit( stmt:WhileStmt )
+	Method EmitStmt( stmt:WhileStmt )
 	
 		Emit( "while("+Trans( stmt.cond )+"){" )
 		
-		Emit( stmt.block )
+		EmitBlock( stmt.block )
 		
 		Emit( "}" )
 	End
 	
-	Method Emit( stmt:RepeatStmt )
+	Method EmitStmt( stmt:RepeatStmt )
 	
 		If stmt.cond Emit( "do{" ) Else Emit( "for(;;){" )
 		
-		Emit( stmt.block )
+		EmitBlock( stmt.block )
 		
 		If stmt.cond Emit( "}while(!("+Trans( stmt.cond )+"));" ) Else Emit( "}" )
 	End
 	
-	Method Emit( stmt:SelectStmt )
+	Method EmitStmt( stmt:SelectStmt )
 	
 		Local tvalue:=Trans( stmt.value ),head:=True
 		
@@ -826,25 +862,25 @@ Class Translator_CPP Extends Translator
 			Endif
 			head=False
 			
-			Emit( cstmt.block )
+			EmitBlock( cstmt.block )
 		Next
 		
 		Emit( "}" )
 	End
 	
-	Method Emit( stmt:ForStmt )
+	Method EmitStmt( stmt:ForStmt )
 	
 		Emit( "{" )
 		
-		BeginGCFrame()
-		
-		Emit( stmt.iblock,False )
+		BeginBlock()
+
+		EmitStmts( stmt.iblock )
 		
 		Local cond:=Trans( stmt.cond )
 		
 		If stmt.incr
 
-			Emit( stmt.incr )
+			EmitStmt( stmt.incr )
 			Local incr:=_buf.Pop().Trim().Slice( 0,-1 )
 
 			Emit( "for(;"+cond+";"+incr+"){" )
@@ -852,20 +888,20 @@ Class Translator_CPP Extends Translator
 			Emit( "while("+cond+"){" )
 		Endif
 		
-		Emit( stmt.block,False )
+		EmitBlock( stmt.block )
 		
 		Emit( "}" )
-		
-		EndGCFrame()
+
+		EndBlock()		
 		
 		Emit( "}" )
 	End
 	
-	Method Emit( stmt:TryStmt )
+	Method EmitStmt( stmt:TryStmt )
 	
 		Emit( "try{" )
 
-		Emit( stmt.block )
+		EmitBlock( stmt.block )
 		
 		For Local cstmt:=Eachin stmt.catches
 		
@@ -875,21 +911,22 @@ Class Translator_CPP Extends Translator
 			
 			If IsGCType( vvar.type )
 			
-				Emit( "}catch("+Trans( vvar.type )+" ex){" )
+				Emit( "}catch("+TransType( vvar.type )+" ex){" )
 				
-				BeginGCFrame()
+				BeginBlock()
 				
-				Emit( InsertGCTmp( vvar )+"=ex;" )
+				Local tmp:=InsertGCTmp( vvar )
 				
-				Emit( cstmt.block,False )
+				Emit( tmp+"=ex;" )
 				
-				EndGCFrame()
+				EmitStmts( cstmt.block )
 				
+				EndBlock()
 			Else
 			
 				Emit( "}catch("+VarProto( vvar )+"){" )
 				
-				Emit( cstmt.block )
+				EmitBlock( cstmt.block )
 
 			Endif
 			
@@ -898,7 +935,7 @@ Class Translator_CPP Extends Translator
 		Emit( "}" )
 	End
 	
-	Method Emit( stmt:ThrowStmt )
+	Method EmitStmt( stmt:ThrowStmt )
 	
 		Emit( "throw "+Trans( stmt.value )+";" )
 	End
@@ -974,9 +1011,9 @@ Class Translator_CPP Extends Translator
 		
 		Local t:="("+Trans( value.value )+")"
 		
-		If IsValue( value.type ) Return Trans( value.type )+t
+		If IsValue( value.type ) Return TransType( value.type )+t
 
-		Return "(("+Trans( value.type )+")"+t+")"
+		Return "(("+TransType( value.type )+")"+t+")"
 	End
 	
 	Method Trans:String( value:ExplicitCastValue )
@@ -989,9 +1026,9 @@ Class Translator_CPP Extends Translator
 		
 		Local t:="("+Trans( value.value )+")"
 		
-		If IsValue( value.type ) Return Trans( value.type )+t
+		If IsValue( value.type ) Return TransType( value.type )+t
 
-		Return "(("+Trans( value.type )+")"+t+")"
+		Return "(("+TransType( value.type )+")"+t+")"
 	End
 	
 	Method TransNull:String( type:Type )
@@ -1010,7 +1047,7 @@ Class Translator_CPP Extends Translator
 			Return "0"
 		Endif
 		
-		If IsValue( type ) Return Trans( type )+"{}"
+		If IsValue( type ) Return TransType( type )+"{}"
 		
 		Return "nullptr"
 	End
@@ -1029,7 +1066,7 @@ Class Translator_CPP Extends Translator
 			Return "BB_T("+EnquoteCppString( value.value )+")"
 		End
 		
-		If value.value="0" Return Trans( value.type )+"(0)"
+		If value.value="0" Return TransType( value.type )+"(0)"
 		
 		Return value.value
 	End
@@ -1220,13 +1257,7 @@ Class Translator_CPP Extends Translator
 	
 	Method IsVolatile:Bool( arg:Value )
 	
-		If Not IsGCType( arg.type ) Return False
-		
-'		If _gcframe Return True
-		
-		If arg.HasSideEffects Return True
-		
-		Return False
+		Return IsGCType( arg.type ) And arg.HasSideEffects
 	End
 		
 	Method TransArgs:String( args:Value[] )
@@ -1248,65 +1279,66 @@ Class Translator_CPP Extends Translator
 	
 	'***** Type *****
 	
-	Method Trans:String( type:Type ) Override
+	Method TransType:String( type:Type ) Override
 	
 		If type=Type.VoidType Return "void"
 	
 		Local classType:=Cast<ClassType>( type )
-		If classType Return Trans( classType )
+		If classType Return TransType( classType )
 		
 		Local enumType:=Cast<EnumType>( type )
-		If enumType Return Trans( enumType )
+		If enumType Return TransType( enumType )
 	
 		Local primType:=Cast<PrimType>( type )
-		If primType Return Trans( primType )
+		If primType Return TransType( primType )
 		
 		Local funcType:=Cast<FuncType>( type )
-		If funcType Return Trans( funcType )
+		If funcType Return TransType( funcType )
 		
 		Local arrayType:=Cast<ArrayType>( type )
-		If arrayType Return Trans( arrayType )
+		If arrayType Return TransType( arrayType )
 		
 		Local pointerType:=Cast<PointerType>( type )
-		If pointerType Return Trans( pointerType )
+		If pointerType Return TransType( pointerType )
 		
 		Local genArgType:=Cast<GenArgType>( type )
-		If genArgType Return Trans( genArgType )
+		If genArgType Return TransType( genArgType )
 		
 		Throw New TransEx( "Translator_CPP.Trans() Type '"+String.FromCString( type.typeName() )+"' not recognized" )
 	End
 	
-	Method Trans:String( type:ClassType )
+	Method TransType:String( type:ClassType )
 		If IsStruct( type ) Return ClassName( type )
 		Return ClassName( type )+"*"
 	End
 	
-	Method Trans:String( type:EnumType )
+	Method TransType:String( type:EnumType )
 		If type.edecl.IsExtern Return type.edecl.symbol
 		Return "bbInt"
 	End
 	
-	Method Trans:String( type:PrimType )
+	Method TransType:String( type:PrimType )
 		Return type.ctype.cdecl.symbol
 	End
 	
-	Method Trans:String( type:FuncType )
+	Method TransType:String( type:FuncType )
 		Return "bbFunction<"+CFuncType( type )+">"
 	End
 	
-	Method Trans:String( type:ArrayType )
+	Method TransType:String( type:ArrayType )
 		Return ArrayName( type )+"*"
 	End
 	
-	Method Trans:String( type:PointerType )
-		Return Trans( type.elemType )+"*"
+	Method TransType:String( type:PointerType )
+		Return TransType( type.elemType )+"*"
 	End
 	
-	Method Trans:String( type:GenArgType )
+	Method TransType:String( type:GenArgType )
 		Return type.ToString()
 	End
 	
 	Method ArrayName:String( type:ArrayType )
+		If type.rank=1 Return "bbArray<"+VarType( type.elemType )+">"
 		Return "bbArray<"+VarType( type.elemType )+","+type.rank+">"
 	End
 	

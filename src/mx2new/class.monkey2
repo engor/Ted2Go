@@ -95,6 +95,14 @@ Class ClassType Extends Type
 		Return str
 	End
 	
+	Property Name:String() Override
+		Return scope.Name
+	End
+	
+	Property TypeId:String() Override
+		Return scope.TypeId
+	End
+	
 	Method OnSemant:SNode() Override
 	
 		If cdecl.superType
@@ -588,7 +596,7 @@ Class OpIndexValue Extends Value
 	End
 	#end
 	
-	Method Assign:Stmt( op:String,rvalue:Value,block:Block ) Override
+	Method Assign:Stmt( pnode:PNode,op:String,rvalue:Value,block:Block ) Override
 		
 		If Not setters Throw New SemantEx( "Value cannot be index assigned" )
 		
@@ -632,7 +640,7 @@ Class OpIndexValue Extends Value
 		Next
 		args2[args.Length]=rvalue
 		
-		Return New EvalStmt( setters.ToValue( inst ).Invoke( args2 ) )
+		Return New EvalStmt( pnode,setters.ToValue( inst ).Invoke( args2 ) )
 	End
 	
 	'should never be called
@@ -663,6 +671,28 @@ Class ClassScope Extends Scope
 		For Local i:=0 Until genArgs.Length
 			genTypes[genArgs[i]]=ctype.types[i]
 		Next
+	End
+	
+	Property Name:String() Override
+
+		Local args:=""
+		For Local arg:=Eachin ctype.types
+			args+=","+arg.Name
+		Next
+		If args args="<"+args.Slice( 1 )+">"
+		
+		Return outer.Name+"."+ctype.cdecl.ident+args
+	End
+	
+	Property TypeId:String() Override
+	
+		Local args:=""
+		For Local arg:=Eachin ctype.types
+			args+=arg.TypeId
+		Next
+		If args args="_1"+args+"E"
+		
+		Return "T"+outer.TypeId+"_"+ctype.cdecl.ident+args+"E"
 	End
 	
 	Property IsGeneric:Bool() Override

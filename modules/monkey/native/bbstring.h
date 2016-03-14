@@ -4,7 +4,6 @@
 
 #include "bbtypes.h"
 #include "bbmemory.h"
-#include "bbarray.h"
 
 class bbCString;
 
@@ -152,6 +151,10 @@ class bbString{
 		return rep;
 	}
 	
+	bbString operator+( const char *str ){
+		return operator+( bbString( str ) );
+	}
+	
 	bbString operator*( int n ){
 		Rep *rep=Rep::alloc( length()*n );
 		bbChar *p=rep->data;
@@ -177,6 +180,10 @@ class bbString{
 	bbString &operator+=( const bbString &str ){
 		*this=*this+str;
 		return *this;
+	}
+	
+	bbString &operator+=( const char *str ){
+		return operator+=( bbString( str ) );
 	}
 	
 	int find( bbString str,int from=0 )const{

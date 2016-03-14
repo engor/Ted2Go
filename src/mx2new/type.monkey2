@@ -36,6 +36,10 @@ Class Type Extends SNode
 		Return flags & TYPE_GENERIC
 	End
 	
+	Property Name:String() Abstract
+	
+	Property TypeId:String() Abstract
+	
 	Method ToType:Type() Override
 		Return Self
 	End
@@ -99,6 +103,19 @@ Class PrimType Extends Type
 	
 	Method ToString:String() Override
 		Return ctype.cdecl.ident.Slice( 1 )	'slice off '@' prefix
+	End
+	
+	Property Name:String() Override
+		Return ctype.Name
+	End
+	
+	Property TypeId:String() Override
+		Select Self
+		Case IntType Return "i"
+		Case FloatType Return "f"
+		Case StringType Return "s"
+		End
+		Return "?"
 	End
 	
 	Method FindNode:SNode( ident:String ) Override
@@ -197,7 +214,7 @@ Class ArrayType Extends Type
 		
 		If elemType.IsGeneric flags|=TYPE_GENERIC
 
-		If Not IsGeneric 
+		If Not IsGeneric
 			Local types:=New Type[1]
 			types[0]=elemType
 			ctype=Cast<ClassType>( ctype.GenInstance( types ) )
@@ -205,12 +222,21 @@ Class ArrayType Extends Type
 		
 		If Not ctype SemantError( "ArrayType.New()" )
 	End
-
+	
 	Method ToString:String() Override
 
 		Return elemType.ToString()+"[,,,,,,,,,,".Slice( 0,rank )+"]"
 	End
 	
+	Property Name:String() Override
+		Return elemType.Name+"[,,,,,,,,,,".Slice( 0,rank )+"]"
+	End
+	
+	Property TypeId:String() Override
+		If rank>1 Return "A"+rank+elemType.TypeId
+		Return "A"+elemType.TypeId
+	End
+
 	Method FindNode:SNode( ident:String ) Override
 	
 		Return ctype.FindNode( ident )
@@ -279,6 +305,14 @@ Class PointerType Extends Type
 	Method ToString:String() Override
 	
 		Return elemType.ToString()+" Ptr"
+	End
+	
+	Property Name:String() Override
+		Return elemType.Name+" Ptr"
+	End
+	
+	Property TypeId:String() Override
+		Return "P"+elemType.TypeId
 	End
 	
 	Method Index:Value( args:Value[],value:Value ) Override
@@ -353,6 +387,24 @@ Class FuncType Extends Type
 	Method ToString:String() Override
 	
 		Return retType.ToString()+"("+Join( argTypes )+")"
+	End
+	
+	Property Name:String() Override
+	
+		Local args:=""
+		For Local arg:=Eachin argTypes
+			args+=arg.Name
+		Next
+		
+		Return retType.Name+"("+args.Slice( 1 )+")"
+	End
+	
+	Property TypeId:String() Override
+		Local args:=""
+		For Local arg:=Eachin argTypes
+			args+=arg.TypeId
+		Next
+		Return "F"+retType.TypeId+args+"E"
 	End
 	
 	Method Invoke:Value( args:Value[],value:Value ) Override
@@ -432,6 +484,22 @@ Class GenArgType Extends Type
 		Return str+"?"
 	End
 	
+	Property Name:String() Override
+	
+		Local args:=""
+		For Local arg:=Eachin types
+			args+=","+arg.Name
+		Next
+		If args args="<"+args.Slice( 1 )+">"
+		
+		Return ident+args+"?"
+	End
+	
+	Property TypeId:String() Override
+		SemantError( "GenArgType.TypeId()" )
+		Return ""
+	End
+	
 	Method GenInstance:Type( types:Type[] ) Override
 	
 		If Self.types SemantError( "GenArgType.GenInstance()" )
@@ -503,12 +571,29 @@ Class VoidType Extends Type
 		Return "Void"
 	End
 	
+	Property Name:String() Override
+		Return "Void"
+	End
+	
+	Property TypeId:String() Override
+		Return "v"
+	End
+	
 End
 
 Class BadType Extends Type
 
 	Method ToString:String() Override
 		Return "<BadType>"
+	End
+	
+	Property Name:String() Override
+		Return "{BadType}"
+	End
+	
+	Property TypeId:String() Override
+		SemantError( "BadType.TypeId()" )
+		Return ""
 	End
 	
 	Method Equals:Bool( type:Type ) Override
@@ -523,6 +608,15 @@ Class NullType Extends Type
 		Return "<NullType>"
 	End
 
+	Property Name:String() Override
+		Return "{NullType}"
+	End
+
+	Property TypeId:String() Override
+		SemantError( "NullType.TypeId()" )
+		Return ""
+	End
+	
 	Method Equals:Bool( type:Type ) Override
 		Return False
 	End

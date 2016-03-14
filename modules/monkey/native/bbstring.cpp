@@ -1,5 +1,6 @@
 
 #include "bbstring.h"
+#include "bbarray.h"
 
 bbString::Rep bbString::_nullRep;
 

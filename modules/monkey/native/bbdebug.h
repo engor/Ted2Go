@@ -4,28 +4,64 @@
 
 #include "bbstring.h"
 
-struct bbRuntimeError{
+struct bbDBFrame;
 
-	bbString msg;
+struct bbDBVar{
+	const char *decl;
+	void *ptr;
 	
-	bbRuntimeError( bbString msg ):msg( msg ){
+	bbString ident()const;
+	
+	bbString typeName()const;
+	
+	bbString getValue()const;
+};
+
+namespace bbDB{
+	extern bbDBFrame *frames;
+	extern bbDBVar *locals;
+	extern bool stopper;
+	
+	void stop();
+	
+	void stopped();
+}
+
+struct bbDBFrame{
+	bbDBFrame *succ;
+	bbDBVar *locals;
+	const char *decl;
+	const char *srcFile;
+	int srcPos;
+	
+	bbDBFrame( const char *decl,const char *srcFile ):succ( bbDB::frames ),locals( bbDB::locals ),decl( decl ),srcFile( srcFile ){
+		bbDB::frames=this;
+	}
+	
+	~bbDBFrame(){
+		bbDB::locals=locals;
+		bbDB::frames=succ;
 	}
 };
 
-inline void bbAssert( bool cond ){
-	if( !cond ) throw new bbRuntimeError( "Assert failed" );
+struct bbDBBlock{
+	bbDBVar *locals;
+	bbDBBlock():locals( bbDB::locals ){
+	}
+	~bbDBBlock(){
+		bbDB::locals=locals;
+	}
+};
+
+inline void bbDBStmt( int srcPos ){
+	bbDB::frames->srcPos=srcPos;
+	if( bbDB::stopper ) bbDB::stopped();
 }
 
-inline void bbAssert( bool cond,bbString msg ){
-	if( !cond ) throw new bbRuntimeError( msg );
-}
-
-inline void bbDebugAssert( bool cond ){
-	if( !cond ) throw new bbRuntimeError( "Assert failed" );
-}
-
-inline void bbDebugAssert( bool cond,bbString msg ){
-	if( !cond ) throw new bbRuntimeError( msg );
+inline void bbDBLocal( const char *decl,void *ptr ){
+	bbDB::locals->decl=decl;
+	bbDB::locals->ptr=ptr;
+	++bbDB::locals;
 }
 
 #endif

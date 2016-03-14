@@ -18,10 +18,18 @@ Class Scope
 		If outer outer.inner.Push( Self )
 	End
 	
-	Method ToString:String() Virtual
+	Property Name:String() Virtual
+		If outer Return outer.Name
+		Return ""
+	End
 	
+	Property TypeId:String() Virtual
+		If outer Return outer.Name
+		Return ""
+	End
+	
+	Method ToString:String() Virtual
 		If outer Return outer.ToString()
-		
 		Return ""
 	End
 	
@@ -358,7 +366,7 @@ Class Block Extends Scope
 
 		Local varValue:=New VarValue( "local",ident,init,Self )
 		
-		stmts.Push( New VarDeclStmt( varValue ) )
+		stmts.Push( New VarDeclStmt( Null,varValue ) )
 
 		Return varValue
 	End
@@ -367,7 +375,7 @@ Class Block Extends Scope
 
 		Local varValue:=New VarValue( "local",ident,init,Self )
 		
-		stmts.Push( New VarDeclStmt( varValue ) )
+		stmts.Push( New VarDeclStmt( Null,varValue ) )
 
 		Insert( ident,varValue )
 

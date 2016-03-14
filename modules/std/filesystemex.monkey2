@@ -277,7 +277,6 @@ Function GetFileTime:Long( path:String )
 	path=StripSlashes( path )
 
 	Local st:stat_t
-	
 	If stat( path,Varptr st )<0 Return 0
 	
 	Return st.st_mtime
@@ -295,7 +294,6 @@ Function GetFileType:FileType( path:String )
 	path=StripSlashes( path )
 
 	Local st:stat_t
-
 	If stat( path,Varptr st )<0 Return FileType.None
 	
 	Select st.st_mode & S_IFMT
@@ -397,18 +395,9 @@ Function CreateDirectory:Bool( path:String,recursive:Bool=True )
 	Return GetFileType( path )=FileType.Directory
 End
 
-#rem monkeydoc Deletes everything at a filesystem path.
+Private
 
-Warning! As it's name suggests, this function recursively deletes all files and directories - use carefully!
-
-@param path The filesystem path.
-
-@return True if succesful.
-
-#end
-Function DeleteEverything:Bool( path:String )
-
-	path=StripSlashes( path )
+Function DeleteAll:Bool( path:String )
 
 	Select GetFileType( path )
 	Case FileType.None
@@ -422,7 +411,7 @@ Function DeleteEverything:Bool( path:String )
 	Case FileType.Directory
 	
 		For Local f:=Eachin LoadDirectory( path )
-			If Not DeleteEverything( path+"/"+f ) Return False
+			If Not DeleteAll( path+"/"+f ) Return False
 		Next
 		
 		rmdir( path )
@@ -432,6 +421,17 @@ Function DeleteEverything:Bool( path:String )
 	Return False
 End
 
+Public
+
+#rem monkeydoc Deletes a directory at a filesystem path.
+
+@path The filesystem path.
+
+@recursive True to delete subdirectories too.
+
+@return True if the directory was successfully deleted or never existed.
+
+#end
 Function DeleteDirectory:Bool( path:String,recursive:Bool=False )
 
 	path=StripSlashes( path )
@@ -447,7 +447,7 @@ Function DeleteDirectory:Bool( path:String,recursive:Bool=False )
 		
 	Case FileType.Directory
 	
-		If recursive Return DeleteEverything( path )
+		If recursive Return DeleteAll( path )
 		
 		rmdir( path )
 		Return GetFileType( path )=FileType.None
@@ -460,13 +460,12 @@ End
 
 @path The filesystem path.
 
-@return true if the file was successfully deleted.
+@return True if the file was successfully deleted.
 
 #end
 Function DeleteFile:Bool( path:String )
 
 	remove( path )
-	
 	Return GetFileType( path )=FileType.None
 End
 

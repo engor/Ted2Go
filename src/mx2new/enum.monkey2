@@ -30,6 +30,14 @@ Class EnumType Extends Type
 		Return edecl.ident
 	End
 	
+	Property Name:String() Override
+		Return scope.Name+"."+edecl.ident
+	End
+	
+	Property TypeId:String() Override
+		Return scope.TypeId+"_"+edecl.ident
+	End
+	
 	Method OnSemant:SNode() Override
 	
 		If edecl.superType

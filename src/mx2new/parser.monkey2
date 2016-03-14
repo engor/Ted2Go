@@ -937,7 +937,7 @@ Class Parser
 		
 		Local stmts:=ParseStmts( True )
 		
-		Local catches:=New Stack<CatchStmtExpr>
+		Local catches:=New Stack<CatchExpr>
 		
 		While Toke="catch"
 		
@@ -962,7 +962,7 @@ Class Parser
 			
 			Local stmts:=ParseStmts( True )
 			
-			catches.Push( New CatchStmtExpr( varIdent,varType,stmts ) )
+			catches.Push( New CatchExpr( varIdent,varType,stmts ) )
 		Wend
 		
 		Try

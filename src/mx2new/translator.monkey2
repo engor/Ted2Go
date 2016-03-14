@@ -33,40 +33,36 @@ Function HasGCMembers:Bool( scope:Scope )
 	Return False
 End
 	
-'Visitor that looks for assigned params
+'Visitor that looks for gc params on LHS of an assignment.
 '
-Class AssignedParamsVisitor Extends StmtVisitor
+Class AssignedGCParamsVisitor Extends StmtVisitor
 
-	Field params:=New StringMap<VarValue>
+	Field gcparams:=New StringMap<VarValue>
 	
 	Method Visit( stmt:AssignStmt ) Override
 		Local vvar:=Cast<VarValue>( stmt.lhs )
-		If vvar And vvar.vdecl.kind="param" params[vvar.vdecl.ident]=vvar
+		If vvar And vvar.vdecl.kind="param" And IsGCType( vvar.type ) gcparams[vvar.vdecl.ident]=vvar
 	End
 
 End
 
 Class Translator
 
-	Method Translate( fdecl:FileDecl ) Virtual
+	Field debug:Bool
+	
+	Method New()
+		Local builder:=Builder.instance
+		Self.debug=builder.opts.config="debug"
 	End
 	
-	Method Trans:String( value:Value ) Virtual
-		Return "?"
-	End
+	Method Trans:String( value:Value ) Abstract
 	
-	Method Trans:String( type:Type ) Virtual
-		Return  "?"
-	End
+	Method TransType:String( type:Type ) Abstract
+
+	Method VarProto:String( vvar:VarValue ) Abstract
 	
-	Method VarProto:String( vvar:VarValue ) Virtual
-		Return "?"
-	End
-	
-	Method FuncProto:String( func:FuncValue ) Virtual
-		Return "?"
-	End
-	
+	Method FuncProto:String( func:FuncValue ) Abstract
+
 	'***** Emit *****
 	
 	Field _buf:=New StringStack
@@ -145,18 +141,21 @@ Class Translator
 	End
 	
 	Field _gcframe:GCFrame
-
-	Method BeginGCFrame( block:Block=Null )
+	
+	Method BeginGCFrame()
 
 		_gcframe=New GCFrame( _gcframe,InsertPos )
+	End
+	
+	Method BeginGCFrame( func:FuncValue )
+	
+		BeginGCFrame()
 		
-		If _gcframe.outer Or Not block Return
+		Local visitor:=New AssignedGCParamsVisitor
+		visitor.Visit( func.block )
 		
-		Local visitor:=New AssignedParamsVisitor
-		visitor.Visit( block )
-		
-		For Local it:=Eachin visitor.params
-			If IsGCType( it.Value.type ) InsertGCTmp( it.Value )
+		For Local it:=Eachin visitor.gcparams
+			InsertGCTmp( it.Value )
 		Next
 		
 	End
@@ -173,7 +172,7 @@ Class Translator
 			
 			For Local varval:=Eachin _gcframe.vars.Values
 
-				Local varty:=Trans( varval.type )
+				Local varty:=TransType( varval.type )
 				Local varid:=VarName( varval )
 			
 				Emit( varty+" "+varid+"{};" )
@@ -187,7 +186,7 @@ Class Translator
 			Next
 			
 			For Local tmp:=Eachin _gcframe.tmps
-				Emit( Trans( tmp.type )+" "+tmp.ident+"{};" )
+				Emit( TransType( tmp.type )+" "+tmp.ident+"{};" )
 			Next
 			
 			If ctorArgs
@@ -443,12 +442,12 @@ Class Translator
 	
 	Method CFuncType:String( type:FuncType )
 	
-		Local retType:=Trans( type.retType )
+		Local retType:=TransType( type.retType )
 		
 		Local argTypes:=""
 		For Local i:=0 Until type.argTypes.Length
 			If argTypes argTypes+=","
-			argTypes+=Trans( type.argTypes[i] )
+			argTypes+=TransType( type.argTypes[i] )
 		Next
 		
 		Return retType+"("+argTypes+")"
