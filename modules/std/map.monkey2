@@ -1,9 +1,33 @@
 
 Namespace std
 
+#rem monkedoc The Map class.
+#end
 Class Map<K,V>
 
+	#rem monkeydoc The map Node class.
+	#end
 	Class Node
+	
+		#rem monkeydoc Gets the key contained in the node.
+		
+		@return The node's key.
+		
+		#end
+		Property Key:K()
+			Return _key
+		End
+		
+		#rem monkeydoc Gets the value contained in the node.
+		
+		@return The node's value.
+		
+		#end
+		Property Value:V()
+			Return _value
+		End
+	
+		Private	
 	
 		Enum Color
 			Red
@@ -24,14 +48,6 @@ Class Map<K,V>
 			_parent=parent
 		End
 		
-		Property Key:K()
-			Return _key
-		End
-		
-		Property Value:V()
-			Return _value
-		End
-	
 		Method Count:Int( n:Int )
 			If _left n=_left.Count( n )
 			If _right n=_right.Count( n )
@@ -79,14 +95,8 @@ Class Map<K,V>
 	
 	End
 	
-	Struct MapIterator
+	Struct Iterator
 	
-		Field _node:Node
-		
-		Method New( node:Node )
-			_node=node
-		End
-		
 		Property Valid:Bool()
 			Return _node
 		End
@@ -99,16 +109,18 @@ Class Map<K,V>
 			_node=_node.NextNode()
 		End
 		
-	End
-	
-	Struct KeyIterator
-	
+		Private
+		
 		Field _node:Node
 		
 		Method New( node:Node )
 			_node=node
 		End
 		
+	End
+	
+	Struct KeyIterator
+	
 		Property Valid:Bool()
 			Return _node
 		End
@@ -121,16 +133,18 @@ Class Map<K,V>
 			_node=_node.NextNode()
 		End
 		
-	End
-	
-	Struct ValueIterator
-	
+		Private
+		
 		Field _node:Node
 		
 		Method New( node:Node )
 			_node=node
 		End
 		
+	End
+	
+	Struct ValueIterator
+	
 		Property Valid:Bool()
 			Return _node
 		End
@@ -143,75 +157,164 @@ Class Map<K,V>
 			_node=_node.NextNode()
 		End
 		
+		Private
+		
+		Field _node:Node
+		
+		Method New( node:Node )
+			_node=node
+		End
+		
 	End
 	
 	Struct MapKeys
 	
+		Method All:KeyIterator()
+			Return New KeyIterator( _map.FirstNode() )
+		End
+		
+		Private
+		
 		Field _map:Map
 		
 		Method New( map:Map )
 			_map=map
-		End
-		
-		Method Iterator:KeyIterator()
-			Return New KeyIterator( _map.FirstNode() )
 		End
 		
 	End
 	
 	Struct MapValues
 	
+		Method All:ValueIterator()
+			Return New ValueIterator( _map.FirstNode() )
+		End
+		
+		Private
+		
 		Field _map:Map
 		
 		Method New( map:Map )
 			_map=map
 		End
 		
-		Method Iterator:ValueIterator()
-			Return New ValueIterator( _map.FirstNode() )
-		End
-		
 	End
 	
-	Method Iterator:MapIterator()
-		Return New MapIterator( FirstNode() )
+	#rem monkeydoc Creates a new empty map.
+	#end
+	Method New()
 	End
 	
+	#rem monkeydoc Gets a node iterator.
+	
+	#end
+	
+	Method All:Iterator()
+		Return New Iterator( FirstNode() )
+	End
+	
+	#rem monkeydoc Gets a view of the map's keys.
+	
+	The returned value can be used with an Eachin loop to iterate over the map's keys.
+	
+	@return A MapKeys object.
+
+	#end
 	Property Keys:MapKeys()
 		Return New MapKeys( Self )
 	End
+
+	#rem monkeydoc Gets a view of the map's values.
 	
+	The returned value can be used with an Eachin loop to iterate over the map's values.
+	
+	@return A MapValues object.
+	
+	#end	
 	Property Values:MapValues()
 		Return New MapValues( Self )
 	End
 	
+	#rem monkeydoc Removes all keys from the map.
+	#end
 	Method Clear()
 		_root=Null
 	End
 	
+	#rem monkeydoc Gets the number of keys in the map.
+	
+	@return The number of keys in the map.
+	
+	#end
 	Method Count:Int()
 		If Not _root Return 0
 		Return _root.Count( 0 )
 	End
 
+	#rem monkeydoc Checks if the map is empty.
+	
+	@return True if the map is empty.
+	
+	#end
 	Property Empty:Bool()
 		Return _root=Null
 	End
 
+	#rem monkeydoc Checks if the map contains a given key.
+	
+	@param key The key to check for.
+	
+	@return True if the map contains the key.
+	
+	#end
 	Method Contains:Bool( key:K )
 		Return FindNode( key )<>Null
 	End
 	
+	#rem monkeydoc Sets the value associated with a key in the map.
+	
+	If the map does not contain `key`, a new key/value node is added and true is returned.
+	
+	If the map already contains `key`, its associated value is updated and false is returned.
+	
+	This operator functions identically to Set.
+	
+	@param key The key.
+	
+	@param value The value.
+	
+	@return True if a new node was added to the map.
+	
+	#end
+	Operator[]=( key:K,value:V )
+		Set( key,value )
+	End
+
+	#rem monkeydoc Gets the value associated with a key in the map.
+	
+	@param key The key.
+	
+	@return The value associated with `key`, or null if `key` is not in the map.
+	
+	#end
 	Operator[]:V( key:K )
 		Local node:=FindNode( key )
 		If Not node Return Null
 		Return node._value
 	End
 	
-	Operator[]=( key:K,value:V )
-		Set( key,value )
-	End
-
+	#rem monkeydoc Sets the value associated with a key in the map.
+	
+	If the map does not contain `key`, a new key/value node is added to the map and true is returned.
+	
+	If the map already contains `key`, its associated value is updated and false is returned.
+	
+	@param key The key.
+	
+	@param value The value.
+	
+	@return True if a new node was added to the map, false if an existing node was updated.
+	
+	#end
 	Method Set:Bool( key:K,value:V )
 		If Not _root
 			_root=New Node( key,value,Node.Color.Red,Null )
@@ -242,6 +345,19 @@ Class Map<K,V>
 		Return True
 	End
 	
+	#rem monkeydoc Adds a new key/value pair to a map.
+	
+	If the map does not contain `key', a new key/value node is created and true is returned.
+	
+	If the map already contains `key`, nothing happens and false is returned.
+	
+	@param key The key.
+	
+	@param value The value.
+	
+	@return True if a new node was added to the map, false if the map was not modified.
+	
+	#end
 	Method Add:Bool( key:K,value:V )
 		If Not _root
 			_root=New Node( key,value,Node.Color.Red,Null )
@@ -271,6 +387,19 @@ Class Map<K,V>
 		Return True
 	End
 	
+	#rem monkeydoc Updates the value associated with a key in the map.
+
+	If the map does not contain `key', nothing happens and false is returned.
+	
+	If the map already contains `key`, its associated value is updated and true is returned.
+	
+	@param key The key.
+	
+	@param value The value.
+	
+	@return True if the value associated with `key` was updated, false if the map was not modified.
+	
+	#end
 	Method Update:Bool( key:K,value:V )
 		Local node:=FindNode( key )
 		If Not node Return False
@@ -278,18 +407,34 @@ Class Map<K,V>
 		Return True
 	End
 	
+	#rem monkeydoc Gets the value associated with a key in the map.
+	
+	@param key The key.
+	
+	@return The value associated with the key, or null if the key is not in the map.
+	
+	#end
 	Method Get:V( key:K )
 		Local node:=FindNode( key )
 		If node Return node._value
 		Return Null
 	End
 	
+	#rem monkeydoc Removes a key from the map.
+	
+	@param key The key to remove.
+	
+	@return True if the key was removed, or false if the key is not in the map.
+	
+	#end
 	Method Remove:Bool( key:K )
 		Local node:=FindNode( key )
 		If Not node Return False
 		RemoveNode( node )
 		Return True
 	End
+	
+	Private
 	
 	Method FirstNode:Node()
 		If Not _root Return Null
@@ -367,8 +512,6 @@ Class Map<K,V>
 		Endif
 	End
 	
-	Private
-
 	Field _root:Node
 	
 	Method RotateLeft( node:Node )

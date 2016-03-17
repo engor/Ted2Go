@@ -88,9 +88,10 @@ Class Stack<T> Implements IContainer<T>
 		Return _length=0
 	End
 
-	#rem monkeydoc Gets an iterator.
+	#rem monkeydoc Gets an iterator to all values in the stack.
+
+	@return A stack iterator.
 	
-	@return An iterator
 	#end
 	Method All:Iterator()
 		Return New Iterator( Self,0 )
@@ -166,7 +167,7 @@ Class Stack<T> Implements IContainer<T>
 	
 	The capacity of a stack is the number of values it can contain before memory needs to be reallocated to store more values.
 	
-	If a stack's length equals its capacity, then the next Push or Insert operation will need to allocate more memory to 'grow' the stack.
+	If a stack's length equals its capacity, then the next Add, Insert or Push operation will need to allocate more memory to 'grow' the stack.
 	
 	You don't normally need to worry about stack capacity, but it can be useful to use [[Reserve]] to preallocate stack storage if you know in advance
 	how many values a stack is likely to contain, in order to prevent the overhead of excessive memory allocation.
@@ -221,8 +222,8 @@ Class Stack<T> Implements IContainer<T>
 	#end
 	Method Erase( index1:Int,index2:Int )
 		DebugAssert( index1>=0 And index1<=_length And index2>=0 And index2<=_length And index1<=index2 )
-		If index1=_length Return
 		
+		If index1=_length Return
 		_data.CopyTo( _data,index2,index1,_length-index2 )
 		Resize( _length-index2+index1 )
 	End
@@ -248,47 +249,6 @@ Class Stack<T> Implements IContainer<T>
 		_seq+=1
 	End
 	
-	#rem monkeydoc Gets the top element of the stack
-	
-	In debug builds, a runtime error will occur if the stack is empty.
-	
-	@return The top element of the stack.
-	
-	#end
-	Property Top:T()
-		DebugAssert( _length,"Stack is empty" )
-		Return _data[_length-1]
-	End
-	
-	#rem monkeydoc Pops the top element off the stack and returns it.
-	
-	In debug builds, a runtime error will occur if the stack is empty.
-	
-	@return The top element of the stack before it was popped.
-	#end
-	Method Pop:T()
-		DebugAssert( _length,"Stack is empty" )
-		
-		_length-=1
-		_seq+=1
-		Local value:=_data[_length]
-		_data[_length]=Null
-		Return value
-	End
-	
-	#rem monkeydoc Pushes a value on the stack.
-	
-	@param value The value to push.
-	
-	#end
-	Method Push( value:T )
-		Reserve( _length+1 )
-		_data[_length]=value
-		_length+=1
-		_seq+=1
-	End
-	
-	
 	#rem monkeydoc Gets the value of a stack element.
 	
 	In debug builds, a runtime error will occur if `index` is less than 0, or greather than or equal to the length of the stack.
@@ -298,6 +258,7 @@ Class Stack<T> Implements IContainer<T>
 	#end
 	Method Get:T( index:Int )
 		DebugAssert( index>=0 And index<_length,"Stack index out of range" )
+		
 		Return _data[index]
 	End
 	
@@ -312,6 +273,7 @@ Class Stack<T> Implements IContainer<T>
 	#end
 	Method Set( index:Int,value:T )
 		DebugAssert( index>=0 And index<_length,"Stack index out of range" )
+		
 		_data[index]=value
 	End
 	
@@ -324,6 +286,7 @@ Class Stack<T> Implements IContainer<T>
 	#end
 	Operator []:T( index:Int )
 		DebugAssert( index>=0 And index<_length,"Stack index out of range" )
+		
 		Return _data[index]
 	End
 	
@@ -338,18 +301,22 @@ Class Stack<T> Implements IContainer<T>
 	#end
 	Operator []=( index:Int,value:T )
 		DebugAssert( index>=0 And index<_length,"Stack index out of range" )
+		
 		_data[index]=value
 	End
 	
 	#rem monkeydoc Adds a value to the end of the stack.
 	
-	This method behaves identically to Push.
+	This method behaves identically to Push( value:T ).
 	
 	@param value The value to add.
 	
 	#end
 	Method Add( value:T )
-		Push( value )
+		Reserve( _length+1 )
+		_data[_length]=value
+		_length+=1
+		_seq+=1
 	End
 	
 	#rem monkeydoc Adds the values in an array to the end of the stack.
@@ -374,7 +341,7 @@ Class Stack<T> Implements IContainer<T>
 		Next
 	End
 
-	'KILLME!
+	'TODO: KILLME! DON'T USE THIS!
 	Method Append<C>( values:C ) Where C Implements IContainer<T>
 		For Local value:=Eachin values
 			Add( value )
@@ -392,7 +359,7 @@ Class Stack<T> Implements IContainer<T>
 	@return The index of the value in the stack, or -1 if the value was not found.
 	
 	#end
-	Method Find:Int( value:T,start:Int=0 )
+	Method FindIndex:Int( value:T,start:Int=0 )
 		DebugAssert( start>=0 And start<=_length )
 		
 		Local i:=start
@@ -414,7 +381,7 @@ Class Stack<T> Implements IContainer<T>
 	@return The index of the value in the stack, or -1 if the value was not found.
 	
 	#end
-	Method FindLast:Int( value:T,start:Int=0 )
+	Method FindLastIndex:Int( value:T,start:Int=0 )
 		DebugAssert( start>=0 And start<=_length )
 		
 		Local i:=_length
@@ -427,13 +394,13 @@ Class Stack<T> Implements IContainer<T>
 	
 	#rem monkeydoc Checks if the stack contains a value.
 	
-	@param value The value to check.
+	@param value The value to check for.
 	
 	@return True if the stack contains the value, else false.
 	
 	#end
 	Method Contains:Bool( value:T )
-		Return Find( value )<>-1
+		Return FindIndex( value )<>-1
 	End
 	
 	#rem monkeydoc Finds and removes the first matching value from the stack.
@@ -442,10 +409,14 @@ Class Stack<T> Implements IContainer<T>
 	
 	@param value The value to remove.
 	
+	@return True if the value was removed.
+	
 	#end
-	Method Remove( value:T,start:Int=0 )
-		Local i:=Find( value,start )
-		If i<>-1 Erase( i )
+	Method Remove:Bool( value:T,start:Int=0 )
+		Local i:=FindIndex( value,start )
+		If i=-1 Return False
+		Erase( i )
+		Return True
 	End
 	
 	#rem monkeydoc Finds and removes the last matching value from the stack.
@@ -454,25 +425,35 @@ Class Stack<T> Implements IContainer<T>
 	
 	@param value The value to remove.
 	
+	@return True if the value was removed.
+	
 	#end
-	Method RemoveLast( value:T,start:Int=0 )
-		Local i:=FindLast( value,start )
-		If i<>-1 Erase( i )
+	Method RemoveLast:Bool( value:T,start:Int=0 )
+		Local i:=FindLastIndex( value,start )
+		If i=-1 Return False
+		Erase( i )
+		Return True
 	End
 	
 	#rem monkeydoc Finds and removes each matching value from the stack.
 	
 	@param value The value to remove.
 	
+	@return The number of values removed.
+	
 	#end	
-	Method RemoveEach( value:T )
-		Local put:=0
+	Method RemoveEach:Int( value:T )
+		Local put:=0,n:=0
 		For Local get:=0 Until _length
-			If _data[get]=value Continue
+			If _data[get]=value 
+				n+=1
+				Continue
+			Endif
 			_data[put]=_data[get]
 			put+=1
 		Next
 		Resize( put )
+		Return n
 	End
 	
 	#rem monkeydoc Returns a range of elements from the stack
@@ -510,15 +491,13 @@ Class Stack<T> Implements IContainer<T>
 	Method Slice:Stack( index1:Int,index2:Int )
 
 		If index1<0
-			index1+=_length
-			If index1<0 index1=0
+			index1=Max( index1+_length,0 )
 		Else If index1>_length
 			index1=_length
 		Endif
 		
 		If index2<0
-			index2+=_length
-			If index2<index1 index2=index1
+			index2=Max( index2+_length,index1 )
 		Else If index2>_length
 			index2=_length
 		Else If index2<index1
@@ -580,32 +559,32 @@ Class Stack<T> Implements IContainer<T>
 	@param compareFunc The function used to compare values.
 
 	#end	
-	Method Sort( lo:Int,hi:Int,cmp:Int( x:T,y:T ) )
+	Method Sort( lo:Int,hi:Int,compareFunc:Int( x:T,y:T ) )
 	
 		If hi<=lo Return
 		
 		If lo+1=hi
-			If cmp( _data[hi],_data[lo] )<0 Swap( hi,lo )
+			If compareFunc( _data[hi],_data[lo] )<0 Swap( hi,lo )
 			Return
 		Endif
 		
 		Local i:=(lo+hi)/2
 		
-		If cmp( _data[i],_data[lo] )<0 Swap( i,lo )
+		If compareFunc( _data[i],_data[lo] )<0 Swap( i,lo )
 
-		If cmp( _data[hi],_data[i] )<0
+		If compareFunc( _data[hi],_data[i] )<0
 			Swap( hi,i )
-			If cmp( _data[i],_data[lo] )<0 Swap( i,lo )
+			If compareFunc( _data[i],_data[lo] )<0 Swap( i,lo )
 		Endif
 		
 		Local x:=lo+1
 		Local y:=hi-1
 		Repeat
 			Local p:=_data[i]
-			While cmp( _data[x],p )<0
+			While compareFunc( _data[x],p )<0
 				x+=1
 			Wend
-			While cmp( p,_data[y] )<0
+			While compareFunc( p,_data[y] )<0
 				y-=1
 			Wend
 			If x>y Exit
@@ -617,9 +596,55 @@ Class Stack<T> Implements IContainer<T>
 			y-=1
 		Until x>y
 
-		Sort( lo,y,cmp )
-		Sort( x,hi,cmp )
+		Sort( lo,y,compareFunc )
+		Sort( x,hi,compareFunc )
 	End
+	
+	'***** Stack style extensions *****
+	
+	#rem monkeydoc Gets the top element of the stack
+	
+	In debug builds, a runtime error will occur if the stack is empty.
+	
+	@return The top element of the stack.
+	
+	#end
+	Property Top:T()
+		DebugAssert( _length,"Stack is empty" )
+		
+		Return _data[_length-1]
+	End
+	
+	#rem monkeydoc Pops the top element off the stack and returns it.
+	
+	In debug builds, a runtime error will occur if the stack is empty.
+	
+	@return The top element of the stack before it was popped.
+	#end
+	Method Pop:T()
+		DebugAssert( _length,"Stack is empty" )
+		
+		_length-=1
+		_seq+=1
+		Local value:=_data[_length]
+		_data[_length]=Null
+		Return value
+	End
+	
+	#rem monkeydoc Pushes a value on the stack.
+
+	This method behaves identically to Add( value:T ).
+	
+	@param value The value to push.
+	
+	#end
+	Method Push( value:T )
+		Add( value )
+	End
+
+'	Method Join:String( separator:String ) Where T=String
+'		Return separator.Join( ToArray() )
+'	End
 	
 End
 

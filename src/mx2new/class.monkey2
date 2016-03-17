@@ -150,7 +150,9 @@ Class ClassType Extends Type
 					Local type:=iface.Semant( scope )
 					Local ifaceType:=Cast<ClassType>( type )
 					
-					If Not ifaceType Or ifaceType.cdecl.kind<>"interface" Throw New SemantEx( "Type '"+type.ToString()+"' is not a valid interface type" )
+					If Not ifaceType Or (ifaceType.cdecl.kind<>"interface" And ifaceType.cdecl.kind<>"protocol" ) Throw New SemantEx( "Type '"+type.ToString()+"' is not a valid interface type" )
+					
+					If cdecl.kind="interface" And ifaceType.cdecl.kind="protocol" Throw New SemantEx( "Interfaces cannot extends protocols" )
 					
 					If ifaceType.state=SNODE_SEMANTING Throw New SemantEx( "Cyclic inheritance error",cdecl )
 					
@@ -163,6 +165,7 @@ Class ClassType Extends Type
 					For Local iface:=Eachin ifaceType.allIfaces
 						
 						If Not allifaces.Contains( iface ) allifaces.Push( iface )
+
 					Next
 					
 				Catch ex:SemantEx
@@ -177,17 +180,23 @@ Class ClassType Extends Type
 		Endif
 		
 		Local builder:=Builder.instance
-		builder.semantMembers.AddLast( Self )
-	
-		If Not scope.IsGeneric And Not cdecl.IsExtern
 		
-			transFile.classes.Push( Self )
+		If scope.IsGeneric Or cdecl.IsExtern
+		
+			builder.semantMembers.AddLast( Self )
 			
+		Else
+		
 			If IsGenInstance
+				SemantMembers()
 				Local module:=builder.semantingModule 
 				module.genInstances.Push( Self )
+			Else
+				builder.semantMembers.AddLast( Self )
 			Endif
-
+			
+			transFile.classes.Push( Self )
+			
 		Endif
 		
 		Return Self
@@ -195,12 +204,12 @@ Class ClassType Extends Type
 	
 	Method SemantMembers()
 	
-'		Print "SemantMembers "+ToString()
+'		Print "Semanting members: "+ToString()
 	
 		If membersSemanted Or membersSemanting Return
 		membersSemanting=True
 		
-		'enum/semant all funcs
+		'Semant funcs
 		'
 		Local flists:=New Stack<FuncList>
 
@@ -218,195 +227,110 @@ Class ClassType Extends Type
 			flists.Push( flist )
 			
 			For Local func:=Eachin flist.funcs
-				If func.fdecl.IsAbstract Or func.fdecl.IsIfaceMember abstractMethods.Push( func )
+			
+				If func.fdecl.IsIfaceMember abstractMethods.Push( func )
+				
 			Next
+			
 		Next
 		
-		'validate operator methods
-		'
-		For Local flist:=Eachin flists
-				
-			For Local func:=Eachin flist.funcs
-				If func.fdecl.kind<>"method" Or Not func.fdecl.IsOperator Continue
-				
-				Try
-				
-					Local op:=func.fdecl.ident
-					Local opname:="Operator '"+op+"'"
-					
-					Select op
-					Case "=","<>","<",">","<=",">="
-						If func.ftype.retType<>Type.BoolType Throw New SemantEx( opname+" must return Bool" )
-						If func.ftype.argTypes.Length<>1 Or Not func.ftype.argTypes[0].Equals( Self ) Throw New SemantEx( opname+" must have 1 parameter of type '"+ToString()+"'" )
-					Case "<=>"
-						If func.ftype.retType<>Type.IntType Throw New SemantEx( opname+" must return Int" )
-						If func.ftype.argTypes.Length<>1 Or Not func.ftype.argTypes[0].Equals( Self ) Throw New SemantEx( opname+" must have 1 parameter of type '"+ToString()+"'" )
-					End
-
-				Catch ex:SemantEx
-
-				End
-					
-			Next
-
-		Next
+		If (cdecl.kind="class" Or cdecl.kind="struct") And Not scope.IsGeneric
 		
-		'validate class/struct overrides
-		'
-		If cdecl.kind="class" Or cdecl.kind="struct" And Not scope.IsGeneric
-		
-			For Local flist:=Eachin flists
-					
-				For Local func:=Eachin flist.funcs
-					If func.fdecl.kind<>"method" Continue
-					
-					Try
-					
-						If func.fdecl.IsOperator
-							Local op:=func.fdecl.ident
-							Select op
-							Case "=","<>","<",">","<=",">="
-								If func.ftype.retType<>Type.BoolType Throw New SemantEx( "Comparison operator '"+op+"' must return Bool" )
-								If func.ftype.argTypes.Length<>1 Throw New SemantEx( "Comparison operator '"+op+"' must have 1 parameter" )
-								If Not func.ftype.argTypes[0].Equals( Self ) Throw New SemantEx( "Comparison operator '"+op+"' parameter must be of type '"+ToString()+"'" )
-							Case "<=>"
-								If func.ftype.retType<>Type.IntType Throw New SemantEx( "Comparison operator '"+op+"' must return Int" )
-								If func.ftype.argTypes.Length<>1 Throw New SemantEx( "Comparison operator '"+op+"' must have 1 parameter" )
-								If Not func.ftype.argTypes[0].Equals( Self ) Throw New SemantEx( "Comparison operator '"+op+"' parameter must be of type '"+ToString()+"'" )
-							End
-						Endif
-					
-						If IsVirtual And (func.fdecl.IsVirtual Or func.fdecl.IsOverride)
-							Throw New SemantEx( "Virtual class methods cannot be declared 'Virtual' or 'Override'",func.fdecl )
-						Endif
-						
-						Local func2:=FindSuperFunc( flist.ident,func.ftype.argTypes )
-						
-						If func2
-						
-							If Not IsVirtual And Not func.fdecl.IsOverride
-								Throw New SemantEx( "Method '"+func.ToString()+"' overrides a superclass method but is not declared 'Override'",func.fdecl )
-							Endif
-	
-							If func2.fdecl.IsFinal
-								Throw New SemantEx( "Method '"+func.ToString()+"' overrides a final superclass method",func.fdecl )
-							Endif
-							
-							If Not IsVirtual And Not func2.fdecl.IsVirtual And Not func2.fdecl.IsOverride And Not func2.fdecl.IsAbstract
-								 Throw New SemantEx( "Method '"+func.ToString()+"' overrides a non-virtual superclass method",func.fdecl )
-							Endif
-								
-							If Not func.ftype.retType.Equals( func2.ftype.retType ) 
-								Throw New SemantEx( "Method '"+func.ToString()+"' overrides a superclass method but has a different return type" )
-							Endif
-	
-						Else
-						
-							If func.fdecl.IsOverride
-								Throw New SemantEx( "Method '"+func.ToString()+"' is declared 'Override' but does not override any superclass method",func.fdecl )
-							Endif
-							
-						Endif
-						
-					Catch ex:SemantEx
-
-					End
-						
-				Next
-				
-			Next
-		
-			'enum unimplemented superclass abstract methods
+			'Enum unimplemented superclass abstract methods
 			'
 			If superType
 			
 				For Local func:=Eachin superType.abstractMethods
 				
-					Local flist:=Cast<FuncList>( scope.nodes[func.fdecl.ident] )
-					If flist
-						Local func2:=flist.FindFunc( func.ftype.argTypes )
-						If func2
-							If Not func.ftype.retType.Equals( func2.ftype.retType )
-								Try
-									Local t:="superclass method"
-									If func.fdecl.IsIfaceMember t="interface method"
-									Throw New SemantEx( "Method '"+func2.ToString()+"' overrides "+t+" '"+func.ToString()+"' but has a different return type",func2.fdecl )
-								Catch ex:SemantEx
-								End
+					Try
+						Local flist:=Cast<FuncList>( scope.nodes[func.fdecl.ident] )
+						If flist
+							Local func2:=flist.FindFunc( func.ftype.argTypes )
+							If func2
+								If func2.ftype.retType.ExtendsType( func.ftype.retType ) Continue
+								Throw New SemantEx( "Overriding method '"+func2.ToString()+"' has incompatible return type",func2.fdecl )
 							Endif
-							Continue
 						Endif
-					Endif
+						
+						abstractMethods.Push( func )
+						
+					Catch ex:SemantEx
+					End
 					
-					abstractMethods.Push( func )
 				Next
+
 			Endif
 			
-			'enum unimplemented interface methods
+			'Enum unimplemented interface methods
 			'
 			For Local iface:=Eachin allIfaces
-			
-				If superType And superType.DistanceToType( iface )>=0 Continue
-			
+				
+				If superType And superType.ExtendsType( iface ) Continue
+				
 				For Local func:=Eachin iface.abstractMethods
 				
-					Local flist:=Cast<FuncList>( scope.nodes[func.fdecl.ident] )
-					If flist
-						Local func2:=flist.FindFunc( func.ftype.argTypes )
-						If func2
-							If Not func.ftype.retType.Equals( func2.ftype.retType )
-								Try
-									Local t:="superclass method"
-									If func.fdecl.IsIfaceMember t="interface method"
-									Throw New SemantEx( "Method '"+func2.ToString()+"' overrides "+t+" '"+func.ToString()+"' but has a different return type",func2.fdecl )
-								Catch ex:SemantEx
-								End
+'					Print "abstractMethod="+func.ToString()
+
+					Try
+					
+						Local flist:=Cast<FuncList>( scope.nodes[func.fdecl.ident] )
+						If flist
+							Local func2:=flist.FindFunc( func.ftype.argTypes )
+							If func2
+								If func2.ftype.retType.ExtendsType( func.ftype.retType ) Continue
+								Throw New SemantEx( "Overriding method '"+func2.ToString()+"' has incompatible return type",func2.fdecl )
 							Endif
+						Endif
+						
+						If func.fdecl.IsDefault
+							scope.Insert( func.fdecl.ident,func )
 							Continue
 						Endif
-					Endif
+						
+						abstractMethods.Push( func )
 					
-					abstractMethods.Push( func )
+					Catch ex:SemantEx
+					End
+
 				Next
 			
 			Next
+			
+			If superType
+			
+				For Local flist:=Eachin flists
+					
+					Local flist2:=Cast<FuncList>( superType.scope.GetNode( flist.ident ) )
+					If Not flist2 Continue
+						
+					For Local func2:=Eachin flist2.funcs
+						If Not flist.FindFunc( func2.ftype.argTypes ) flist.PushFunc( func2 )
+					Next
+	
+				Next
+			
+			Endif
 		
 		Endif
 		
 		Self.abstractMethods=abstractMethods.ToArray()
-	
-		'add superclass overloads
+		
+		'Finished semanting funcs
 		'
-		If (cdecl.kind="class" Or cdecl.kind="struct") And superType
-		
-			For Local flist:=Eachin flists
-				
-				Local flist2:=Cast<FuncList>( superType.scope.GetNode( flist.ident ) )
-				If Not flist2 Continue
-					
-				For Local func2:=Eachin flist2.funcs
-					If Not flist.FindFunc( func2.ftype.argTypes ) flist.PushFunc( func2 )
-				Next
-
-			Next
-
-		Endif
-		
 		membersSemanting=False
 		membersSemanted=True
 
-		'semant vars - should probably do this in another phase...
+		'Semant vars - should probably do this in another phase?
 		'		
 		For Local it:=Eachin scope.nodes
 		
 			Try
-
 				If Not Cast<FuncList>( it.Value ) it.Value.Semant()
-			
 			Catch ex:SemantEx
 			End
 			
 		Next
+	
 	End
 	
 	Method FindSuperNode:SNode( ident:String )
@@ -490,6 +414,13 @@ Class ClassType Extends Type
 		Return inst
 	End
 	
+	Method ExtendsType:Bool( type:Type ) Override
+	
+		Local t:=DistanceToType( type )
+		
+		Return t>=0 And t<MAX_DISTANCE
+	End
+	
 	Method DistanceToType:Int( type:Type ) Override
 	
 		If type=Self Return 0
@@ -516,7 +447,7 @@ Class ClassType Extends Type
 		
 			If stype.Equals( ctype ) Return dist
 			
-			If ctype.cdecl.kind="interface" 
+			If ctype.cdecl.kind="interface" Or ctype.cdecl.kind="protocol"
 				For Local iface:=Eachin stype.allIfaces
 					If iface.Equals( ctype ) Return dist
 				Next
@@ -692,7 +623,7 @@ Class ClassScope Extends Scope
 		Next
 		If args args="_1"+args+"E"
 		
-		Return "T"+outer.TypeId+"_"+ctype.cdecl.ident+args+"E"
+		Return "T"+outer.TypeId+"_"+ctype.cdecl.ident.Replace( "_","_0" )+args+"_2"
 	End
 	
 	Property IsGeneric:Bool() Override

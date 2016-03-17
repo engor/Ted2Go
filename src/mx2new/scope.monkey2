@@ -383,3 +383,25 @@ Class Block Extends Scope
 	End
 	
 End
+
+Class FuncBlock Extends Block
+
+	Method New( func:FuncValue )
+		Super.New( func )
+	End
+	
+	Method FindType:Type( ident:String ) Override
+	
+		For Local i:=0 Until func.types.Length
+			If ident=func.fdecl.genArgs[i] Return func.types[i]
+		Next
+
+'		If func.ifaceScope
+'			Local type:=func.ifaceScope.FindType( ident )
+'			If type Return type
+'		Endif
+
+		Return Super.FindType( ident )
+	End
+
+End

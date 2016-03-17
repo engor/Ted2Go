@@ -5,17 +5,20 @@ Namespace std
 #end
 Interface IContainer<T>
 
-	Property Empty:Bool()
+	'Property Empty:Bool()
 	
 	'Method All:IIterator<T>()
+
+	'Method Find:IIterator<T>( value:T ) Default...
+
 	
 	'For sequences...
 	
-	Method Add( value:T )
+	'Method Add( value:T )
 	
-	Method AddAll( value:T[] )
+	'Method AddAll( value:T[] ) Default...
 	
-	'Method AddAll<C>( values:C ) Where C Implements IContainer<T>
+	'Method AddAll<C>( values:C ) Where C Implements IContainer<T> Default...
 	
 End
 
@@ -23,16 +26,17 @@ End
 #end
 Interface IIterator<T>
 
-	Property Valid:Bool()
+	'Property Valid:Bool()
 	
-	Property Current:T()
+	'Property Current:T()
 	
-	Method Bump()
+	'Method Bump()
+	
 	
 	'For sequences...
 	
-	Method Erase()
+	'Method Erase()
 	
-	Method Insert( value:T )
+	'Method Insert( value:T )
 	
 End

@@ -76,6 +76,10 @@ Class Type Extends SNode
 		Return type=Self
 	End
 	
+	Method ExtendsType:Bool( type:Type ) Virtual
+		Return Equals( type )
+	End
+	
 	Method DistanceToType:Int( type:Type ) Virtual
 		If Equals( type ) Return 0
 		Return -1
@@ -137,12 +141,17 @@ Class PrimType Extends Type
 	
 	Method Equals:Bool( type:Type ) Override
 
-		Return type=Self Or type=ctype
+		Return type=Self 
+	End
+	
+	Method ExtendsType:Bool( type:Type ) Override
+	
+		Return type=Self Or ctype.DistanceToType( type )>=0
 	End
 	
 	Method DistanceToType:Int( type:Type ) Override
 	
-		If type=Self Or type=ctype Return 0
+		If type=Self Return 0
 
 		Local ptype:=Cast<PrimType>( type )
 		If ptype
@@ -156,7 +165,7 @@ Class PrimType Extends Type
 			Return MAX_DISTANCE
 		End
 		
-'		Return ctype.DistanceToType( type )+1
+'		If ExtendsType( type ) Return MAX_DISTANCE
 		
 		Return -1
 	End
@@ -352,7 +361,7 @@ Class PointerType Extends Type
 		If Cast<PointerType>( type ) Return True
 		
 		Local ptype:=Cast<PrimType>( type )
-		If ptype And ptype.IsNumeric Return True
+		If ptype And ptype.IsIntegral Return True
 		
 		Return False
 	End
@@ -390,10 +399,10 @@ Class FuncType Extends Type
 	End
 	
 	Property Name:String() Override
-	
+
 		Local args:=""
 		For Local arg:=Eachin argTypes
-			args+=arg.Name
+			args+=","+arg.Name
 		Next
 		
 		Return retType.Name+"("+args.Slice( 1 )+")"
@@ -479,9 +488,9 @@ Class GenArgType Extends Type
 	
 	Method ToString:String() Override
 
-		Local str:=ident
+		Local str:=ident+"?"
 		If types str+="<"+Join( types )+">"
-		Return str+"?"
+		Return str
 	End
 	
 	Property Name:String() Override
@@ -492,7 +501,7 @@ Class GenArgType Extends Type
 		Next
 		If args args="<"+args.Slice( 1 )+">"
 		
-		Return ident+args+"?"
+		Return ident+"?"+args
 	End
 	
 	Property TypeId:String() Override

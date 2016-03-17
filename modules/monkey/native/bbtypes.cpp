@@ -33,29 +33,19 @@ namespace{
 		bbString name;
 		
 		const char *p0=p;
+
 		for( ;; ){
 		
-			if( !*p || *p=='E' ){
-
-				name+=bbString( p0,p-p0 );
-				if( *p ) ++p;
-				return name;
-			}
+			if( !*p ) return name+bbString( p0,p-p0 );
 			
 			if( *p++!='_' ) continue;
 			
 			name+=bbString( p0,p-p0-1 );
 			
-			if( *p<'0' || *p>'9' ){
-				name+=".";
-				p0=p;
-				continue;
-			}
-			
-			int c=*p++;
+			char c=*p++;
 			
 			if( c=='0' ){
-
+			
 				name+="_";
 				
 			}else if( c=='1' ){
@@ -68,6 +58,16 @@ namespace{
 				name+="<"+types+">";
 				if( !*p ) return name;
 				++p;
+				
+			}else if( c=='2' ){
+			
+				return name;
+				
+			}else{
+			
+				name+=".";
+				p0=p-1;
+				continue;
 			}
 			
 			p0=p;

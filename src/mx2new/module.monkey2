@@ -33,7 +33,7 @@ Class Module
 		
 		ident=MungPath( name )
 		baseDir=ExtractDir( srcPath )
-		buildDir=baseDir+name+".buildv002/"
+		buildDir=baseDir+name+".buildv"+MX2_BUILDV+"/"
 		outputDir=buildDir+builder.profileName+"/"
 		cacheDir=buildDir+"build_cache/"+builder.profileName+"/"
 		

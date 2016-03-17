@@ -436,8 +436,7 @@ Class Translator
 	
 	Method IsValue:Bool( type:Type )
 	
-		Return Cast<PrimType>( type ) Or IsStruct( type ) Or Cast<FuncType>( type )
-
+		Return Cast<PrimType>( type ) Or Cast<FuncType>( type ) Or IsStruct( type )
 	End
 	
 	Method CFuncType:String( type:FuncType )

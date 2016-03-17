@@ -1,50 +1,82 @@
 
 Namespace test
 
-#Import "<std.monkey2>"
+#Import "<libc.monkey2>"
 
-Using std
+Class List<T>
 
-Class C
-
-	Method Update() Virtual
+	Method First:T()
+		Return Null
+	End
 	
-		Print "C.Update()!"
-		
-		Assert( False )
+End
+
+Interface I
+
+	Method Render()
+
+	Method Update() Default Virtual
+		Render()
+		Print "Update!"
 	End
 
 End
 
-Function Test()
+Class C Implements I
 
-	Print "Test!"
-	
-	Local c:C
-	
-	c.Update()
-	
-	New C().Update()
+	Method Render()
+	End	
 
+End
+
+Class D Extends C
+
+	Method Update() Override
+	End
+	
+End
+
+Function Test<T>:T( x:T,y:T ) Where T Implements INumeric
+	Return x<y ? x Else y
+End
+
+Function Test<T>:T( x:T,y:T ) Where T=String
+	Return x+y
+End
+
+Function Sizeof<T>:Int()
+	Return libc.sizeof( Cast<T Ptr>( Null )[0] )
+End
+
+Function Read<T>:Int()
+	Return Null
+End
+
+Struct S
+	Field x:Float
+	Field y:Float
 End
 
 Function Main()
 
-	Local p:Int[]
+	Print Sizeof<S>()
+
+	Print Int( String Implements INumeric )
+
+	Print Test( 10,20 )
+
+	Print Test( 10.0,20.0 )
+
+	Print Test( "20","10" )
 	
-	Local f:Float
-
-	For Local i:=0 Until 10
-		Local t:=String( i*2 )
-		debug.Stop()
-	Next
-
-	Print "Hello World!"
+	#rem
+	Local c:=New C
 	
-	Local t:=New Int[10]
+	c.Update()
 	
-	t[9]=0
-
-	Test()
-
+	Local list:=New List<Int>
+	
+	Local t:=list.First()
+	#end
+	
 End

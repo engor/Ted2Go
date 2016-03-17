@@ -8,7 +8,7 @@ Using libc
 
 Extern
 
-Function AppDirectory:String()="bbFileSystem::appDir"
+Function AppDir:String()="bbFileSystem::appDir"
 Function AppPath:String()="bbFileSystem::appPath"
 Function AppArgs:String[]()="bbFileSystem::appArgs"
 Function CopyFile:Bool( srcPath:String,dstPath:String )="bbFileSystem::copyFile"
@@ -27,12 +27,12 @@ End
 @return The directory app assets are stored in.
 
 #end
-Function AssetsDirectory:String()
+Function AssetsDir:String()
 
 #If __TARGET__="desktop" And __HOSTOS__="macos"
-	Return AppDirectory()+"../Resources/"
+	Return AppDir()+"../Resources/"
 #Else
-	Return AppDirectory()+"assets/"
+	Return AppDir()+"assets/"
 #Endif
 
 End
@@ -44,7 +44,7 @@ End
 @return The root directory of `path`, or an empty string if `path` is not an absolute path.
  
 #end
-Function GetRootDirectory:String( path:String )
+Function GetRootDir:String( path:String )
 
 	If path.StartsWith( "//" ) Return "//"
 	
@@ -73,7 +73,7 @@ End
 @return True if `path` is a root directory path.
 
 #end
-Function IsRootDirectory:Bool( path:String )
+Function IsRootDir:Bool( path:String )
 
 	If path="//" Return True
 	
@@ -105,7 +105,7 @@ An absolute path is a path that begins with a root directory.
 #end
 Function IsAbsolutePath:Bool( path:String )
 
-	Return GetRootDirectory( path )<>""
+	Return GetRootDir( path )<>""
 End
 
 #rem monkeydoc Strips any trailing slashes from a filesystem path.
@@ -121,7 +121,7 @@ Function StripSlashes:String( path:String )
 
 	If Not path.EndsWith( "/" ) Return path
 	
-	Local root:=GetRootDirectory( path )
+	Local root:=GetRootDir( path )
 	
 	Repeat
 	
@@ -145,10 +145,10 @@ If `path` does not contain a parent directory, an empty string is returned.
 @return The parent directory of `path`.
 
 #end
-Function GetParentDirectory:String( path:String )
+Function GetParentDir:String( path:String )
 
 	path=StripSlashes( path )
-	If IsRootDirectory( path ) Return path
+	If IsRootDir( path ) Return path
 	
 	Local i:=path.FindLast( "/" )
 	If i>=0 Return path.Slice( 0,i+1 )
@@ -167,10 +167,10 @@ If `path` does not contain a parent directory, `path` is returned without modifi
 @return `path` with the parent directory stripped.
 
 #end
-Function StripParentDirectory:String( path:String )
+Function StripParentDir:String( path:String )
 
 	path=StripSlashes( path )
-	If IsRootDirectory( path ) Return ""
+	If IsRootDir( path ) Return ""
 
 	Local i:=path.FindLast( "/" )
 	If i>=0 Return path.Slice( i+1 )
@@ -227,23 +227,21 @@ Function GetAbsolutePath:String( path:String )
 	
 	If IsAbsolutePath( path ) Return path
 	
-	Return GetCurrentDirectory()+path
+	Return CurrentDir()+path
 End
 
 #rem monkeydoc Converts a relative path to a real path.
 
 A real path is a path with any internal './' or '../' references collapsed.
 
-If `path` is a relative path, it is first converted to an absolute path relative to the current directory.
-
 @param path The filesystem path.
 
-@param The path with any './', '../' components collapsed.
+@param The path with any './', '../' references collapsed.
 
 #end
 Function GetRealPath:String( path:String )
 
-	Local rpath:=GetRootDirectory( path )
+	Local rpath:=GetRootDir( path )
 	If rpath path=path.Slice( rpath.Length )
 	
 	While path
@@ -255,8 +253,8 @@ Function GetRealPath:String( path:String )
 		Case ""
 		Case "."
 		Case ".."
-			If Not rpath rpath=GetCurrentDirectory()
-			rpath=GetParentDirectory( rpath )
+			If Not rpath rpath=CurrentDir()
+			rpath=GetParentDir( rpath )
 		Default
 			rpath+=t+"/"
 		End
@@ -279,7 +277,7 @@ Function GetFileTime:Long( path:String )
 	Local st:stat_t
 	If stat( path,Varptr st )<0 Return 0
 	
-	Return st.st_mtime
+	Return libc.tolong( st.st_mtime )
 End
 
 #rem monkeydoc Gets the type of the file at a filesystem path.
@@ -309,7 +307,7 @@ End
 @return The current directory for the running process.
 
 #end
-Function GetCurrentDirectory:String()
+Function CurrentDir:String()
 
 	Local sz:=4096
 	Local buf:=Cast<CChar Ptr>( malloc( sz ) )
@@ -327,7 +325,7 @@ End
 @param path The file system directory to make current.
 
 #end
-Function SetCurrentDirectory( path:String )
+Function ChangeDir( path:String )
 
 	path=StripSlashes( path )
 	
@@ -341,7 +339,7 @@ End
 @return An array containing all filenames in the `path`, excluding '.' and '..' entries.
 
 #end
-Function LoadDirectory:String[]( path:String )
+Function LoadDir:String[]( path:String )
 
 	path=StripSlashes( path )
 
@@ -374,16 +372,16 @@ End
 @return True if a directory at `path` was successfully created or already existed.
 
 #end
-Function CreateDirectory:Bool( path:String,recursive:Bool=True )
+Function CreateDir:Bool( path:String,recursive:Bool=True )
 
 	path=StripSlashes( path )
 
 	If recursive
-		Local parent:=GetParentDirectory( path )
-		If parent And Not IsRootDirectory( parent )
+		Local parent:=GetParentDir( path )
+		If parent And Not IsRootDir( parent )
 			Select GetFileType( parent )
 			Case FileType.None
-				If Not CreateDirectory( parent,True ) Return False
+				If Not CreateDir( parent,True ) Return False
 			Case FileType.File
 				Return False
 			Case FileType.Directory
@@ -410,7 +408,7 @@ Function DeleteAll:Bool( path:String )
 		
 	Case FileType.Directory
 	
-		For Local f:=Eachin LoadDirectory( path )
+		For Local f:=Eachin LoadDir( path )
 			If Not DeleteAll( path+"/"+f ) Return False
 		Next
 		
@@ -432,7 +430,7 @@ Public
 @return True if the directory was successfully deleted or never existed.
 
 #end
-Function DeleteDirectory:Bool( path:String,recursive:Bool=False )
+Function DeleteDir:Bool( path:String,recursive:Bool=False )
 
 	path=StripSlashes( path )
 

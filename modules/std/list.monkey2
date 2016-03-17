@@ -87,7 +87,7 @@ Class List<T> Implements IContainer<T>
 	Field _length:Int
 	Field _seq:Int
 	
-	#rem monkeydoc Creates a new empty list
+	#rem monkeydoc Creates a new empty list.
 	#end
 	Method New()
 	End
@@ -101,6 +101,11 @@ Class List<T> Implements IContainer<T>
 		AddAll( values )
 	End
 	
+	#rem monkeydoc Gets an iterator to all values in the list.
+
+	@return A list iterator.
+	
+	#end
 	Method All:Iterator()
 		Return New Iterator( Self,_first )
 	End
@@ -111,7 +116,7 @@ Class List<T> Implements IContainer<T>
 	
 	#end
 	Property Empty:Bool()
-		Return _first=Null
+		Return _length=0
 	End
 	
 	#rem monkeydoc Gets the number of values in the list.
@@ -141,7 +146,7 @@ Class List<T> Implements IContainer<T>
 	
 	#rem monkeydoc Gets the first value in the list.
 	
-	In debug builds, if the list is empty a runtime error occurs.
+	In debug builds, a runtime error will occur if the list is empty.
 	
 	@return The first value in the list.
 	
@@ -151,9 +156,9 @@ Class List<T> Implements IContainer<T>
 		Return _first._value
 	End
 	
-	#rem monkeydoc Get the last item in a list
+	#rem monkeydoc Gets the last value in the list
 	
-	In debug builds, if the list is empty a runtime error occurs.
+	In debug builds, a runtime error will occur if the list is empty.
 	
 	@return The last value in the list.
 	
@@ -176,6 +181,8 @@ Class List<T> Implements IContainer<T>
 	#rem monkeydoc Adds a value to the start of the list.
 	
 	@param value The value to add to the list.
+	
+	@return The new node containing the value.
 
 	#end
 	Method AddFirst( value:T )
@@ -209,15 +216,16 @@ Class List<T> Implements IContainer<T>
 		_seq+=1
 	End
 	
-	#rem monkeydoc Removes the first item in the list and returns it.
+	#rem monkeydoc Removes and returns the first value in the list.
 	
-	In debug builds, if the list is empty a runtime error occurs.
+	In debug builds, a runtime error will occur if the list is empty.
 	
-	@return The first item in the list before the method was called.
+	@return The value removed from the list.
 
 	#end
 	Method RemoveFirst:T()
-		DebugAssert( Not Empty )
+		DebugAssert( _length )
+		
 		Local value:=_first._value
 		_first=_first._succ
 		If _first _first._pred=Null Else _last=Null
@@ -226,15 +234,16 @@ Class List<T> Implements IContainer<T>
 		Return value
 	End
 	
-	#rem monkeydoc Removes the last value in the list and returns it.
+	#rem monkeydoc Removes and returns the last value in the list.
 	
-	In debug builds, if the list is empty a runtime error occurs.
+	In debug builds, a runtime error will occur if the list is empty.
 	
-	@return The last item in the list before the method was called.
+	@return The value removed from the list.
 
 	#end
 	Method RemoveLast:T()
-		DebugAssert( Not Empty )
+		DebugAssert( _length )
+		
 		Local value:=_last._value
 		_last=_last._pred
 		If _last _last._succ=Null Else _first=Null
@@ -243,20 +252,82 @@ Class List<T> Implements IContainer<T>
 		Return value
 	End
 	
-	#rem monkedoc Removes all values in the list equal to a given value.
+	#rem monkeydoc Finds the first node in the list that contains a given value.
 	
-	@param value The value to check for equality.
+	@param value The value to find.
+	
+	@return Node The node containing the value, or null if the value was not found.
 	
 	#end
-	Method RemoveEach( value:T )
+	Method FindNode:Node( value:T )
 		Local node:=_first
+		While node And node._value<>value
+			node=node._succ
+		Wend
+		Return node
+	End
+	
+	#rem monkeydoc Finds the last node in the list that contains a given value.
+	
+	@param value The value to find.
+	
+	@return Node The node containing the value, or null if the value was not found.
+	
+	#end
+	Method FindLastNode:Node( value:T )
+		Local node:=_last
+		While node And node._value<>value
+			node=node._pred
+		Wend
+		Return node
+	End
+	
+	#rem monkeydoc Removes the first value in the list equal to a given value.
+	
+	@param value The value to remove.
+
+	@return True if a value was removed.
+		
+	#end
+	Method Remove:Bool( value:T )
+		Local node:=FindNode( value )
+		If Not node Return False
+		Erase( node )
+		Return True
+	End
+	
+	#rem monkeydoc Removes the last value in the list equal to a given value.
+	
+	@param value The value to remove.
+	
+	@return True if a value was removed.
+		
+	#end
+	Method RemoveLast:Bool( value:T )
+		Local node:=FindLastNode( value )
+		If Not node Return False
+		Erase( node )
+		Return True
+	End
+	
+	#rem monkedoc Removes all values in the list equal to a given value.
+	
+	@param value The value to remove.
+	
+	@return The number of values removed.
+	
+	#end
+	Method RemoveEach:Int( value:T )
+		Local node:=_first,n:=0
 		While node
 			If node._value=value
 				node=Erase( node )
+				n+=1
 			Else
 				node=node._succ
 			Endif
 		Wend
+		Return n
 	End
 
 	#rem monkeydoc Gets an iterator for the value at a given index in the list.
@@ -313,7 +384,17 @@ Class List<T> Implements IContainer<T>
 		Next
 	End
 
-	Private	
+	Private
+	
+	'could make these public if people REALLY want...
+	'
+	Method FirstNode:Node()
+		Return _first
+	End
+	
+	Method LastNode:Node()
+		Return _last
+	End
 	
 	Method Erase:Node( node:Node )
 		If Not node Return Null	'OK to erase tail element...

@@ -14,9 +14,9 @@ Using libc
 
 Global StartDir:String
 
-'Const TestArgs:="mx2cc makemods -clean -verbose -config=debug"
+'Const TestArgs:="mx2cc makemods -verbose -clean -config=release"
 
-Const TestArgs:="mx2cc makeapp -clean -verbose -target=desktop -config=debug src/mx2new/test.monkey2"
+Const TestArgs:="mx2cc makeapp -verbose -target=desktop -config=debug src/mx2new/test.monkey2"
 
 'Const TestArgs:="mx2cc makeapp -verbose -target=desktop -config=release src/mx2new/mx2cc.monkey2"
 
@@ -24,7 +24,7 @@ Const TestArgs:="mx2cc makeapp -clean -verbose -target=desktop -config=debug src
 
 Function Main()
 
-	Print "MX2CC V0.002"
+	Print "MX2CC V0."+MX2CC_VERSION
 
 	StartDir=CurrentDir()
 
@@ -33,12 +33,17 @@ Function Main()
 	Local env:="bin/env_"+HostOS+".txt"
 	
 	While Not IsRootDir( CurrentDir() ) And FileType( env )<>FILETYPE_FILE
+	
 		ChangeDir( ExtractDir( CurrentDir() ) )
 	Wend
 	
 	If FileType( env )<>FILETYPE_FILE Fail( "Unable to locate mx2cc 'bin' directory" )
 	
 	LoadEnv( env )
+	
+	MX2_BUILDV=GetEnv( "MX2_BUILDV" )
+	
+	Print "MX2_BUILDV="+MX2_BUILDV
 	
 	Local args:=AppArgs()
 	
@@ -200,6 +205,8 @@ Function MakeDocs( args:String[] )
 End
 
 Function ParseOpts:String[]( opts:BuildOpts,args:String[] )
+
+	opts.verbose=Int( GetEnv( "MX2_VERBOSE" ) )
 
 	For Local i:=0 Until args.Length
 	

@@ -1,6 +1,9 @@
 
 '***** COMMON *****
 
+MX2_VERSION=002
+MX2_BUILDV=002
+
 MX2_BUILD_VERBOSE=0
 
 '***** DESKTOP *****

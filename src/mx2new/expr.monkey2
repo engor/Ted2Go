@@ -11,7 +11,17 @@ Class Expr Extends PNode
 		Throw New SemantEx( "OnSemant TODO!" )
 		Return Null
 	End
-
+	
+	Method OnSemantType:Type( scope:Scope ) Virtual
+		Throw New SemantEx( "Invalid type expression" )
+		Return Null
+	End
+	
+	Method OnSemantWhere:Bool( scope:Scope ) Virtual
+		Throw New SemantEx( "Invalid 'Where' expression" )
+		Return False
+	End
+	
 	Method Semant:Value( scope:Scope )
 	
 		Try
@@ -57,7 +67,6 @@ Class Expr Extends PNode
 		Return Null
 	End
 	
-	
 	Method TrySemantRValue:Value( scope:Scope,type:Type=Null )
 	
 		Try
@@ -70,6 +79,44 @@ Class Expr Extends PNode
 		Return Null
 	End
 	
+	Method SemantType:Type( scope:Scope )
+
+		Try
+			semanting.Push( Self )
+
+			Local type:=OnSemantType( scope )
+			
+			semanting.Pop()
+			Return type
+		
+		Catch ex:SemantEx
+		
+			semanting.Pop()
+			Throw ex
+		End
+		
+		Return Null
+	End
+
+	Method SemantWhere:Bool( scope:Scope )
+
+		Try
+			semanting.Push( Self )
+			
+			Local twhere:=OnSemantWhere( scope )
+			
+			semanting.Pop()
+			Return twhere
+		
+		Catch ex:SemantEx
+		
+			semanting.Pop()
+			Throw ex
+		End
+		
+		Return False
+	End
+
 End
 
 Class ValueExpr Extends Expr
@@ -108,6 +155,14 @@ Class IdentExpr Extends Expr
 		
 		Return value
 	End
+	
+	Method OnSemantType:Type( scope:Scope ) Override
+	
+		Local type:=scope.FindType( ident )
+		If Not type Throw New SemantEx( "Type '"+ident+"' not found" )
+		
+		Return type
+	End
 
 End
 
@@ -137,6 +192,16 @@ Class MemberExpr Extends Expr
 		Return tvalue
 	End
 	
+	Method OnSemantType:Type( scope:Scope ) Override
+	
+		Local type:=expr.SemantType( scope )
+		
+		Local type2:=type.FindType( ident )
+		If Not type2 Throw New SemantEx( "Identifier '"+ident+"' not found in type '"+type.Name+"'" )
+		
+		Return type2
+	End
+
 End
 
 Class InvokeExpr Extends Expr
@@ -222,6 +287,9 @@ Class NewObjectExpr Extends Expr
 		
 		Local ctype:=Cast<ClassType>( type )
 		If Not ctype Throw New SemantEx( "Type '"+type.ToString()+"' is not a class" )
+		
+		'hmmm...
+		'ctype.SemantMembers()
 		
 		If ctype.IsGeneric Throw New SemantEx( "Class '"+ctype.ToString()+"' is generic" )
 		
@@ -348,7 +416,7 @@ Class ExtendsExpr Extends Expr
 	Method OnSemant:Value( scope:Scope ) Override
 	
 		Local ctype:=Cast<ClassType>( Self.type.Semant( scope ) )
-		If Not ctype Or (ctype.cdecl.kind<>"class" And ctype.cdecl.kind<>"interface") Throw New SemantEx( "Type must be a class or interface '"+type.ToString()+"'" )
+		If Not ctype Or (ctype.cdecl.kind<>"class" And ctype.cdecl.kind<>"interface" And ctype.cdecl.kind<>"protocol" ) Throw New SemantEx( "Type must be a class or interface '"+type.ToString()+"'" )
 		
 		Local value:=Self.expr.SemantRValue( scope )
 
@@ -367,6 +435,16 @@ Class ExtendsExpr Extends Expr
 		Local cvalue:=New ExplicitCastValue( ctype,value )
 		
 		Return cvalue.UpCast( Type.BoolType )
+	End
+	
+	Method OnSemantWhere:Bool( scope:Scope ) Override
+	
+		Local ctype:=Cast<ClassType>( Self.type.Semant( scope ) )
+		If Not ctype Or (ctype.cdecl.kind<>"class" And ctype.cdecl.kind<>"interface" And ctype.cdecl.kind<>"protocol" ) Throw New SemantEx( "Type must be a class or interface '"+type.ToString()+"'" )
+		
+		Local type:=Self.expr.SemantType( scope )
+
+		Return type.ExtendsType( ctype )
 	End
 
 End
@@ -389,8 +467,14 @@ Class CastExpr Extends Expr
 	Method OnSemant:Value( scope:Scope ) Override
 	
 		Local type:=Self.type.Semant( scope )
+		
+		Local value:=Self.expr.Semant( scope )
+		
+		If value.type.DistanceToType( type )>=0 Return value.UpCast( type )
+		
+		value=value.ToRValue()
 
-		Local value:=Self.expr.SemantRValue( scope )
+'		Local value:=Self.expr.SemantRValue( scope )
 		
 		If Not value.type.CanCastToType( type ) 
 			Throw New SemantEx( "Value of type '"+value.type.ToString()+"' cannot be cast to type '"+type.ToString()+"'" )
@@ -711,6 +795,18 @@ Class BinaryopExpr Extends Expr
 		If Not rhsType rhsType=type
 		
 		Return EvalBinaryop( type,op,lhs.UpCast( lhsType ),rhs.UpCast( rhsType ) )
+	End
+	
+	Method OnSemantWhere:Bool( scope:Scope ) Override
+	
+		If op<>"=" And op<>"<>" Throw New SemantEx( "Types can only be compared for equality" )
+		
+		Local lhs:=Self.lhs.SemantType( scope )
+		Local rhs:=Self.rhs.SemantType( scope )
+		
+		If op="=" Return lhs.Equals( rhs )
+		
+		Return Not lhs.Equals( rhs )
 	End
 	
 End

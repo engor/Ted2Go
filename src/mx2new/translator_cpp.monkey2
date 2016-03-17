@@ -215,6 +215,8 @@ Class Translator_CPP Extends Translator
 	
 	Method EmitClassProto( ctype:ClassType,fdecl:FileDecl,emitted:StringMap<Bool> )
 	
+		If ctype.cdecl.kind="protocol" Return
+		
 		Local insPos:=InsertPos
 		
 		EmitClassProto( ctype )
@@ -269,6 +271,7 @@ Class Translator_CPP Extends Translator
 		
 		If cdecl.kind<>"struct"
 			For Local iface:=Eachin ctype.ifaceTypes
+				If iface.cdecl.kind="protocol" Continue
 				Uses( iface )
 				If xtends xtends+=","
 				xtends+="public virtual "+ClassName( iface )
@@ -402,6 +405,8 @@ Class Translator_CPP Extends Translator
 	
 	Method EmitClassMembers( ctype:ClassType )
 	
+		If ctype.cdecl.kind="protocol" Return
+		
 		Local cdecl:=ctype.cdecl
 		Local cname:=ClassName( ctype )
 	
@@ -662,7 +667,15 @@ Class Translator_CPP Extends Translator
 	
 		BeginGCFrame( func )
 		
-		If debug Emit( "bbDBFrame db_f{~q"+func.Name+"~q,~q"+func.pnode.srcfile.path+"~q};" )
+		If debug 
+		
+			Emit( "bbDBFrame db_f{~q"+func.Name+"~q,~q"+func.pnode.srcfile.path+"~q};" )
+			
+			For Local vvar:=Eachin func.params
+				Emit( "bbDBLocal(~q"+vvar.vdecl.ident+":"+vvar.type.TypeId+"~q,&"+Trans( vvar )+");" )
+			Next
+			
+		Endif
 		
 		EmitStmts( func.block )
 	
@@ -1049,7 +1062,9 @@ Class Translator_CPP Extends Translator
 		
 		If IsValue( type ) Return TransType( type )+"{}"
 		
-		Return "nullptr"
+		Return "(("+TransType( type )+")(0))"
+		
+'		Return "nullptr"
 	End
 
 	Method Trans:String( value:LiteralValue )
@@ -1220,7 +1235,7 @@ Class Translator_CPP Extends Translator
 	End
 	
 	Method Trans:String( value:IfThenElseValue )
-		Return Trans( value.value )+" ? "+Trans( value.thenValue )+" : "+Trans( value.elseValue )
+		Return "("+Trans( value.value )+" ? "+Trans( value.thenValue )+" : "+Trans( value.elseValue )+")"
 	End
 	
 	Method Trans:String( value:PointerValue )

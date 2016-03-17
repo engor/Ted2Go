@@ -616,6 +616,7 @@ Class ForStmtExpr Extends StmtExpr
 				
 				'iter=container.Iterator()
 				Local iter:=init.FindValue( "All" )
+				If Not iter iter=init.FindValue( "GetIterator" )
 				If Not iter iter=init.FindValue( "Iterator" )
 				
 				If Not iter Throw New SemantEx( "Container of type '"+init.type.ToString()+"' has no 'Iterator' method" )
@@ -666,13 +667,13 @@ Class ForStmtExpr Extends StmtExpr
 	End
 	
 	Method OnSemant:Stmt( block:Block ) Override
-	
+
 		If kind="eachin" Return SemantEachin( block )
-		
+
 		Local iblock:=New Block( block )
 		block=New Block( iblock )
 		block.loop=True
-		
+
 		Local cond:Value
 		Local incr:Stmt
 

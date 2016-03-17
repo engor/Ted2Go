@@ -5,17 +5,17 @@ Using std.filesystemex
 
 Function Main()
 
-	Local cd:=GetCurrentDirectory()
-	Local parent:=GetParentDirectory( cd )
+	Local cd:=CurrentDir()
+	Local parent:=GetParentDir( cd )
 	
 	Print cd
 	Print parent
 	
-	SetCurrentDirectory( parent )
-	Print GetCurrentDirectory()
+	ChangeDir( parent )
+	Print CurrentDir()
 	
-	SetCurrentDirectory( cd )
-	Print GetCurrentDirectory()
+	ChangeDir( cd )
+	Print CurrentDir()
 	
 	Print GetRealPath( "test/one" )				'test/one
 	Print GetRealPath( "test//one" )			'test/one
@@ -23,16 +23,16 @@ Function Main()
 	Print GetRealPath( "test//one///" )			'test/one/
 	Print GetRealPath( "test/one/two/../" )		'test/one/
 	
-	CreateDirectory( "one/two/three" )
+	CreateDir( "one/two/three" )
 	Print Int( GetFileType( "one/two/three" ) )	'2
 	
-	DeleteDirectory( "one/two/three" )
+	DeleteDir( "one/two/three" )
 	Print Int( GetFileType( "one/two/three" ) )	'0
 
-	DeleteDirectory( "one" )
+	DeleteDir( "one" )
 	Print Int( GetFileType( "one" ) )			'2
 
-	DeleteDirectory( "one",True )
+	DeleteDir( "one",True )
 	Print Int( GetFileType( "one" ) )			'0
 
 End

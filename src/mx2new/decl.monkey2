@@ -20,6 +20,8 @@ Const DECL_IFACEMEMBER:=2048
 
 Const DECL_EXTENSION:=4096
 
+Const DECL_DEFAULT:=8192
+
 Class Decl Extends PNode
 
 	Field kind:String
@@ -81,6 +83,10 @@ Class Decl Extends PNode
 	
 	Property IsExtension:Bool()
 		Return (flags & DECL_EXTENSION)<>0
+	End
+	
+	Property IsDefault:Bool()
+		Return (flags & DECL_DEFAULT)<>0
 	End
 	
 	Method ToString:String() Override

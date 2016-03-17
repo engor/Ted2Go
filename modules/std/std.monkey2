@@ -33,6 +33,8 @@ Namespace std
 #Import "geom.monkey2"
 '#Import "json.monkey2"
 
+#Import "time.monkey2"
+
 Function Main()
 
 	Stream.OpenFuncs["file"]=Lambda:Stream( proto:String,path:String,mode:String )

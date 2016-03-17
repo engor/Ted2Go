@@ -10,6 +10,14 @@ Function IsCandidate:Bool( func:FuncValue,ret:Type,args:Type[],infered:Type[] )
 	Local argTypes:=ftype.argTypes
 	
 	If args.Length>argTypes.Length Return False
+	
+	If ret
+		If retType.IsGeneric
+			If Not retType.InferType( ret,infered ) Return False
+'		Else
+'			If Not ret.Equals( retType ) Return False
+		Endif
+	Endif
 
 	If ret And retType.IsGeneric And Not retType.InferType( ret,infered ) Return False
 	
@@ -49,6 +57,9 @@ Function IsCandidate:Bool( func:FuncValue,ret:Type,args:Type[],infered:Type[] )
 		If Not infered[i] Or infered[i]=Type.BadType Return False
 	Next
 	
+	Return True
+	
+	#rem
 	If Not func.fdecl.whereExpr Return True
 	
 	'Check where expr is 'true'
@@ -64,6 +75,7 @@ Function IsCandidate:Bool( func:FuncValue,ret:Type,args:Type[],infered:Type[] )
 	If Not value Or value.type<>Type.BoolType Throw New SemantEx( "'Where' expression does not evaluate to a constant bool value" )
 	
 	Return value.value="true"
+	#end
 End
 
 Function CanInfer:Bool( func:FuncValue,args:Type[] )
@@ -155,10 +167,8 @@ Function Linearize( types:Type[],func:FuncValue,funcs:Stack<FuncValue>,j:Int=0 )
 	Next
 	
 	Local func2:=func.TryGenInstance( types )
-	
-	If Not func2 SemantError( "FucListType.Linearize()" )
-	
-	funcs.Push( func2 )
+
+	If func2 funcs.Push( func2 )
 End
 
 Public
@@ -181,9 +191,11 @@ Function FindOverload:FuncValue( funcs:Stack<FuncValue>,ret:Type,args:Type[] )
 		If IsCandidate( func,ret,args,infered ) Linearize( infered,func,candidates )
 		
 	Next
-	
-'	Print "Args:"+Join( args )
+
+'	Print "Funcs:"+Join( funcs.ToArray() )
 '	Print "Candidates:"+Join( candidates.ToArray() )
+'	Print "Argtypes:"+Join( args )
+'	If ret Print "Return:"+ret.ToString()
 	
 	Local match:FuncValue
 	

@@ -88,6 +88,10 @@ Class VarValue Extends Value
 		Return Self
 	End
 	
+	Property Name:String()
+		Return vdecl.ident+":"+type.Name
+	End
+	
 	Method ToString:String() Override
 		Return vdecl.ident
 	End

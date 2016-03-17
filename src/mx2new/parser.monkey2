@@ -122,6 +122,8 @@ Class Parser
 				decls.Push( ParseClass( flags ) )
 			Case "interface"
 				decls.Push( ParseClass( flags ) )
+			Case "protocol"
+				decls.Push( ParseClass( flags ) )
 			Case "enum"
 				decls.Push( ParseEnum( flags ) )
 			Case "function"
@@ -243,7 +245,9 @@ Class Parser
 	
 		Local mflags:=DECL_PUBLIC | (flags & DECL_EXTERN)
 		
-		If kind="interface" mflags|=DECL_IFACEMEMBER
+		If kind="interface" mflags|=DECL_IFACEMEMBER|DECL_ABSTRACT
+		
+		If kind="protocol" mflags|=DECL_IFACEMEMBER|DECL_ABSTRACT
 		
 		Try
 			ident=ParseIdent()
@@ -252,6 +256,8 @@ Class Parser
 			
 			If CParse( "extends" )
 				If kind="interface"
+					ifaceTypes=ParseTypes()
+				Else If kind="protocol"
 					ifaceTypes=ParseTypes()
 				Else
 					superType=ParseType()
@@ -266,6 +272,8 @@ Class Parser
 			Case "virtual","abstract","final"
 			
 				If kind="interface" Error( "Interfaces are implicitly abstract" )
+				
+				If kind="protocol" Error( "Protocols cannot have modifiers" )
 				
 				If CParse( "virtual" )
 					flags|=DECL_VIRTUAL
@@ -404,7 +412,7 @@ Class Parser
 			Select Toke
 			Case "virtual","abstract","override","final","extension"
 			
-				If flags & DECL_IFACEMEMBER Error( "Interface methods are implictly abstract" )
+				If (flags & DECL_IFACEMEMBER) Error( "Interface methods are implictly abstract" )
 				
 				If CParse( "virtual" )
 					flags|=DECL_VIRTUAL
@@ -425,6 +433,14 @@ Class Parser
 			If CParse( "where" )
 				whereExpr=ParseExpr()
 			Endif
+			
+			If CParse( "default" )
+				If Not (flags & DECL_IFACEMEMBER) Error( "Only interface methods can be declared 'Default'" )
+				flags&=~DECL_ABSTRACT
+				flags|=DECL_DEFAULT
+				If CParse( "virtual" ) flags|=DECL_VIRTUAL
+			Endif
+			
 			
 			If flags & DECL_EXTERN
 				If CParse( "=" ) symbol=ParseString()
@@ -448,7 +464,7 @@ Class Parser
 		decl.whereExpr=whereExpr
 		decl.symbol=symbol
 		
-		If flags & (DECL_EXTERN|DECL_ABSTRACT|DECL_IFACEMEMBER)
+		If (flags & (DECL_EXTERN|DECL_ABSTRACT)) And Not (flags & DECL_DEFAULT)
 			decl.endpos=EndPos
 			Return decl
 		Endif

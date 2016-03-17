@@ -40,3 +40,7 @@ Using std.chartype
 Using std.filesystem
 Using lib.c
 'Using libc
+
+Global MX2CC_VERSION:="002"
+
+Global MX2_BUILDV:="000"

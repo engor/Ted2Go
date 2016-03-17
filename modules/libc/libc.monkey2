@@ -54,7 +54,32 @@ Function memmove:Void Ptr( dst:Void Ptr,src:Void Ptr,length:Int )
 
 '***** time.h *****
 
-Alias time_t:Long
+Struct time_t
+End
+
+Struct tm_t
+	Field tm_sec:Int
+	Field tm_min:Int
+	Field tm_hour:Int
+	Field tm_mday:Int
+	Field tm_mon:Int
+	Field tm_year:Int
+	Field tm_wday:Int
+	Field tm_yday:Int
+	Field tm_isdst:Int
+End
+
+Const CLOCKS_PER_SEC:Long="((bbLong)CLOCKS_PER_SEC)"
+
+Function clock:Long()="(bbLong)clock"
+
+'dodgy!
+Function tolong:long( timer:time_t )="bbLong"
+
+Function time:time_t( timer:time_t Ptr )
+Function localtime:tm_t Ptr( timer:time_t Ptr )
+Function gmtime:tm_t Ptr( timer:time_t Ptr )
+Function difftime:Double( endtime:time_t,starttime:time_t ) 
 
 '***** unistd.h *****
 
@@ -67,7 +92,7 @@ Function rmdir:Int( path:CString )
 Enum mode_t
 End
 
-Const S_IFMT:mode_t	'$f000
+Const S_IFMT:mode_t		'$f000
 Const S_IFIFO:mode_t	'$1000
 Const S_IFCHR:mode_t	'$2000
 Const S_IFBLK:mode_t	'$3000

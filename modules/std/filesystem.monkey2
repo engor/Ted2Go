@@ -168,7 +168,7 @@ Function RealPath:String( path:String )
 	Return rpath
 End
 
-Function FileTime:Long( path:String )
+Function FileTime:long( path:String )
 
 	path=StripSlashes( path )
 
@@ -176,7 +176,7 @@ Function FileTime:Long( path:String )
 	
 	If stat( path,Varptr st )<0 Return 0
 	
-	Return st.st_mtime
+	Return libc.tolong( st.st_mtime )
 End
 
 Function FileType:Int( path:String )

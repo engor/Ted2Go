@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <time.h>
 
 #if _WIN32
 #include <direct.h>
@@ -21,5 +22,7 @@ typedef struct stat stat_t;
 int system_( const char *command );
 void setenv_( const char *name,const char *value,int overwrite );
 int mkdir_( const char *path,int mode );
+
+typedef struct tm tm_t;
 
 #endif
