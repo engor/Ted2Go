@@ -25,9 +25,13 @@
 !/modules/miniz
 !/modules/hoedown
 !/modules/stb-image
+!/modules/stb-truetype
 !/modules/std
 !/modules/gles20
 !/modules/sdl2
+!/modules/sdl2-mixer
+
+__PAGES__/
 
 /src/createrelease
 /src/launcher
