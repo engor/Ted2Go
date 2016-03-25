@@ -1,4 +1,6 @@
 
+echo off
+
 echo.
 echo ***** Updating modules *****
 echo.

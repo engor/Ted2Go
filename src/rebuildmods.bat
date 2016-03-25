@@ -1,6 +1,8 @@
 
+echo off
+
 echo.
-echo ***** Rebuildingg modules *****
+echo ***** Rebuilding modules *****
 echo.
 
 ..\bin\mx2cc_windows makemods -clean -config=release -target=desktop
