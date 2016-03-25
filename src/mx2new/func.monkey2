@@ -175,11 +175,12 @@ Class FuncValue Extends Value
 				Case "=","<>","<",">","<=",">="
 					If ftype.retType<>Type.BoolType Throw New SemantEx( "Comparison operator '"+op+"' must return Bool" )
 					If ftype.argTypes.Length<>1 Throw New SemantEx( "Comparison operator '"+op+"' must have 1 parameter" )
-					If Not ftype.argTypes[0].Equals( ctype ) Throw New SemantEx( "Comparison operator '"+op+"' parameter must be of type '"+ctype.ToString()+"'" )
+'					If Not ftype.argTypes[0].Equals( ctype ) Throw New SemantEx( "Comparison operator '"+op+"' parameter must be of type '"+ctype.ToString()+"'" )
 				Case "<=>"
-					If ftype.retType<>Type.IntType Throw New SemantEx( "Comparison operator '"+op+"' must return Int" )
+					Local ptype:=Cast<PrimType>( ftype.retType )
+					If Not ptype Or Not ptype.IsNumeric Throw New SemantEx( "Comparison operator '<=>' must return a numeric type" )
 					If ftype.argTypes.Length<>1 Throw New SemantEx( "Comparison operator '"+op+"' must have 1 parameter" )
-					If Not ftype.argTypes[0].Equals( ctype ) Throw New SemantEx( "Comparison operator '"+op+"' parameter must be of type '"+ctype.ToString()+"'" )
+'					If Not ftype.argTypes[0].Equals( ctype ) Throw New SemantEx( "Comparison operator '"+op+"' parameter must be of type '"+ctype.ToString()+"'" )
 				End
 			Endif
 			

@@ -758,13 +758,20 @@ Class BinaryopExpr Extends Expr
 			
 		Case "=","<>","<",">","<=",">="
 		
-			'Local node:=lhs.FindValue( "<=>" )
+			Local node:=lhs.FindValue( "<=>" )
 			If node
 			
 				Local args:=New Value[1]
 				args[0]=rhs
 				lhs=node.Invoke( args )
-				rhs=New LiteralValue( lhs.type,"" )
+
+				lhsType=lhs.type
+				rhsType=lhsType
+				
+				Local ptype:=Cast<PrimType>( lhsType )
+				Assert( ptype And ptype.IsNumeric )
+				
+				rhs=New LiteralValue( rhsType,"" )
 				type=Type.BoolType
 				
 			Else If plhs=Type.BoolType Or prhs=Type.BoolType
