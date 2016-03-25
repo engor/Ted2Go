@@ -573,7 +573,7 @@ Class Builder
 		
 		If Not opts.run Return
 		
-		Exec( outputFile )
+		Exec( "~q"+outputFile+"~q" )
 		
 	End
 	
