@@ -550,10 +550,10 @@ Class Builder
 		
 		Local cmd:="g++"
 		
-		cmd+=" -o "+outputFile
-		
 		cmd+=" "+LD_OPTS.Join( " " )
 
+		cmd+=" -o ~q"+outputFile+"~q"
+		
 		For Local obj:=Eachin OBJ_FILES
 			cmd+=" ~q"+obj+"~q"
 		Next
