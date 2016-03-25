@@ -1,0 +1,214 @@
+
+/*! Tweaked version of milligram!
+
+ * Milligram v1.1.0
+ * http://milligram.github.io
+ *
+ * Copyright (c) 2016 CJ Patoilo
+ * Licensed under the MIT license
+
+*/
+
+/* ***** color ***** */
+
+/*
+$color-initial: #fff !default
+$color-primary: #9b4dca !default
+$color-secondary: #606c76 !default
+$color-tertiary: #f4f5f6 !default
+$color-quaternary: #d1d1d1 !default
+*/
+
+/* ***** base ***** */
+
+html{
+	box-sizing: border-box;
+	font-size: 62.5%;
+	width: 100%;
+	height: 100%;
+	padding:0;
+	border:0;
+	margin:0;
+}
+
+body{
+	color: #606c76;	/* $color-secondary */
+	font-family: "Roboto", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+	font-size: 1.6em; /* currently ems cause chrome bug misinterpreting rems on body element */
+	font-weight: 300;
+	letter-spacing: .01em;
+	line-height: 1.4;
+	padding:0;
+	border:0;
+	margin:0;
+}
+
+*,
+*:after,
+*:before{
+	box-sizing: inherit;
+}
+
+/* ***** code ***** */
+
+code{
+	background: #f4f5f6;	/* $color-tertiary */
+	border-radius: .4rem;
+	font-size: 86%;
+	padding: .2rem .5rem;
+	margin: 0 .2rem;
+	white-space: nowrap;
+}
+
+pre{
+	background: #f4f5f6;	/* $color-tertiary */
+	border-left: .3rem solid #9b4dca;	/* $color-primary */
+	font-family: 'Menlo', 'Consolas', 'Bitstream Vera Sans Mono', 'DejaVu Sans Mono', 'Monaco', monospace;
+}
+pre>code{
+	background: transparent;
+	border-radius: 0;
+	display: block;
+	padding: 1rem 1.5rem;
+	white-space: pre;
+}
+
+/* ***** link ***** */
+
+a{
+	color: #9b4dca;	/* $color-primary */
+	text-decoration: none;
+}
+
+a:hover{
+	color: #606c76;	/* $color-secondary */
+}
+
+/* ***** spacing ***** */
+
+.button,
+button{
+	margin-bottom: 1rem;
+}
+
+input,
+textarea,
+select,
+fieldset{
+	margin-bottom: 1.5rem;
+}
+
+pre,
+blockquote,
+dl,
+figure,
+table,
+p,
+ul,
+ol,
+form{
+	margin-bottom: 2.5rem;
+}
+
+/* ***** table ***** */
+
+table{
+	width: 100%;
+}
+
+th,
+td{
+	border-bottom: .1rem solid #e1e1e1;
+	padding: 0.8rem 1.0rem;
+	text-align: left;
+
+	/*
+	&:first-child
+		padding-left: 0
+
+	&:last-child
+		padding-right: 0
+	*/
+}
+
+/* ***** typography ***** */
+
+p{
+	margin-top: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6{
+	font-weight: 300;
+	margin-bottom: 2.0rem;
+	margin-top: 0;
+}
+
+h1{
+	font-size: 4.0rem;
+	letter-spacing: -.1rem;
+	line-height: 1.2;
+}
+
+h2{
+	font-size: 3.6rem;
+	letter-spacing: -.1rem;
+	line-height: 1.25;
+}
+
+h3{
+	font-size: 3.0rem;
+	letter-spacing: -.1rem;
+	line-height: 1.3;
+}
+
+h4{
+	font-size: 2.4rem;
+	letter-spacing: -.08rem;
+	line-height: 1.35;
+}
+
+h5{
+	font-size: 1.8rem;
+	letter-spacing: -.05rem;
+	line-height: 1.5;
+}
+
+h6{
+	font-size: 1.6rem;
+	letter-spacing: 0;
+	line-height: 1.4;
+}
+
+/* Larger than mobile screen */
+
+@media (min-width: 40.0rem){
+
+	h1{
+		font-size: 5.0rem;
+	}
+
+	h2{
+		font-size: 4.2rem;
+	}
+	
+	h3{
+		font-size: 3.6rem;
+	}
+	
+	h4{
+		font-size: 3.0rem;
+	}
+	
+	h5{
+		font-size: 2.4rem;
+	}
+	
+	h6{
+		font-size: 1.5rem;
+	}
+}

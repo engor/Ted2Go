@@ -1,0 +1,910 @@
+<!doctype html>
+
+<html>
+
+<head>
+
+<title>Monkey2 Modules Reference</title>
+
+<link rel='stylesheet' href='css/microgram.css'>
+
+<link rel='stylesheet' href='js-treeview/treeview.css' />
+
+</head>
+
+<body style='position:fixed; width:100%; height:100%;'>
+
+<div style='position:absolute; left:0; width:249px; height:100%; overflow:auto; padding:8px; border-right:1px solid #d1d1d1;'>
+<div id='tree' style='border:0; width:100%; height:100%;'></div>
+</div>
+
+<div style='position:absolute; left:250px; right:0; height:100%; padding:0;'>
+<iframe id='page' style='border:0; width:100%; height:100%;'></iframe>
+</div>
+
+<!--
+<div style='position:absolute; left:250px; right:0; height:100%; margin:0;'>
+<iframe id='page' style='padding:0; border:0; margin:0; width:100%; height:100%;'></iframe>
+</div>
+-->
+
+<script type='text/javascript' src='js-treeview/treeview.js'></script>
+
+<script type='text/javascript'>
+
+	var tree = [ { name:'<monkey>',module:'monkey',children:[
+  { name:'monkey.debug',module:'monkey',page:'monkey_debug.html',children:[
+    { name:'Functions',module:'monkey',children:[
+      { name:'Assert',module:'monkey',page:'monkey_debug_f_Assert.html',children:[] }
+      ,{ name:'DebugAssert',module:'monkey',page:'monkey_debug_f_DebugAssert.html',children:[] }
+      ,{ name:'DebugStack',module:'monkey',page:'monkey_debug_f_DebugStack.html',children:[] }
+      ,{ name:'DebugStop',module:'monkey',page:'monkey_debug_f_DebugStop.html',children:[] }
+    ] }
+  ] }
+  ,{ name:'monkey.math',module:'monkey',page:'monkey_math.html',children:[
+    { name:'Constants',module:'monkey',children:[
+      { name:'Pi',module:'monkey',page:'monkey_math_c_Pi.html',children:[] }
+    ] }
+    ,{ name:'Functions',module:'monkey',children:[
+      { name:'ACos',module:'monkey',page:'monkey_math_f_ACos.html',children:[] }
+      ,{ name:'ASin',module:'monkey',page:'monkey_math_f_ASin.html',children:[] }
+      ,{ name:'ATan',module:'monkey',page:'monkey_math_f_ATan.html',children:[] }
+      ,{ name:'ATan2',module:'monkey',page:'monkey_math_f_ATan2.html',children:[] }
+      ,{ name:'Abs',module:'monkey',page:'monkey_math_f_Abs.html',children:[] }
+      ,{ name:'Ceil',module:'monkey',page:'monkey_math_f_Ceil.html',children:[] }
+      ,{ name:'Clamp',module:'monkey',page:'monkey_math_f_Clamp.html',children:[] }
+      ,{ name:'Cos',module:'monkey',page:'monkey_math_f_Cos.html',children:[] }
+      ,{ name:'Floor',module:'monkey',page:'monkey_math_f_Floor.html',children:[] }
+      ,{ name:'Max',module:'monkey',page:'monkey_math_f_Max.html',children:[] }
+      ,{ name:'Min',module:'monkey',page:'monkey_math_f_Min.html',children:[] }
+      ,{ name:'Round',module:'monkey',page:'monkey_math_f_Round.html',children:[] }
+      ,{ name:'Sgn',module:'monkey',page:'monkey_math_f_Sgn.html',children:[] }
+      ,{ name:'Sin',module:'monkey',page:'monkey_math_f_Sin.html',children:[] }
+      ,{ name:'Sqrt',module:'monkey',page:'monkey_math_f_Sqrt.html',children:[] }
+      ,{ name:'Tan',module:'monkey',page:'monkey_math_f_Tan.html',children:[] }
+    ] }
+  ] }
+  ,{ name:'monkey.types',module:'monkey',page:'monkey_types.html',children:[
+    { name:'Aliases',module:'monkey',children:[
+      { name:'Exception',module:'monkey',children:[] }
+    ] }
+    ,{ name:'Structs',module:'monkey',children:[
+      { name:'Array',module:'monkey',page:'monkey_types_s__6Array.html',children:[
+        { name:'Properties',module:'monkey',children:[
+          { name:'Data',module:'monkey',page:'Array_1T_4_2_p_Data.html',children:[] }
+          ,{ name:'Length',module:'monkey',page:'Array_1T_4_2_p_Length.html',children:[] }
+        ] }
+        ,{ name:'Methods',module:'monkey',children:[
+          { name:'CopyTo',module:'monkey',page:'Array_1T_4_2_m_CopyTo.html',children:[] }
+          ,{ name:'Slice',module:'monkey',page:'Array_1T_4_2_m_Slice.html',children:[] }
+        ] }
+      ] }
+      ,{ name:'Bool',module:'monkey',page:'monkey_types_s__6bool.html',children:[
+      ] }
+      ,{ name:'Byte',module:'monkey',page:'monkey_types_s__6byte.html',children:[
+      ] }
+      ,{ name:'Double',module:'monkey',page:'monkey_types_s__6double.html',children:[
+      ] }
+      ,{ name:'Float',module:'monkey',page:'monkey_types_s__6float.html',children:[
+      ] }
+      ,{ name:'Int',module:'monkey',page:'monkey_types_s__6int.html',children:[
+      ] }
+      ,{ name:'Long',module:'monkey',page:'monkey_types_s__6long.html',children:[
+      ] }
+      ,{ name:'Short',module:'monkey',page:'monkey_types_s__6short.html',children:[
+      ] }
+      ,{ name:'String',module:'monkey',page:'monkey_types_s__6string.html',children:[
+        { name:'Properties',module:'monkey',children:[
+          { name:'Length',module:'monkey',page:'String_p_Length.html',children:[] }
+          ,{ name:'Utf8Length',module:'monkey',page:'String_p_Utf8Length.html',children:[] }
+        ] }
+        ,{ name:'Methods',module:'monkey',children:[
+          { name:'Capitalize',module:'monkey',page:'String_m_Capitalize.html',children:[] }
+          ,{ name:'Contains',module:'monkey',page:'String_m_Contains.html',children:[] }
+          ,{ name:'EndsWith',module:'monkey',page:'String_m_EndsWith.html',children:[] }
+          ,{ name:'Find',module:'monkey',page:'String_m_Find.html',children:[] }
+          ,{ name:'FindLast',module:'monkey',page:'String_m_FindLast.html',children:[] }
+          ,{ name:'Join',module:'monkey',page:'String_m_Join.html',children:[] }
+          ,{ name:'Left',module:'monkey',page:'String_m_Left.html',children:[] }
+          ,{ name:'Mid',module:'monkey',page:'String_m_Mid.html',children:[] }
+          ,{ name:'Replace',module:'monkey',page:'String_m_Replace.html',children:[] }
+          ,{ name:'Right',module:'monkey',page:'String_m_Right.html',children:[] }
+          ,{ name:'Slice',module:'monkey',page:'String_m_Slice.html',children:[] }
+          ,{ name:'Split',module:'monkey',page:'String_m_Split.html',children:[] }
+          ,{ name:'StartsWith',module:'monkey',page:'String_m_StartsWith.html',children:[] }
+          ,{ name:'ToCString',module:'monkey',page:'String_m_ToCString.html',children:[] }
+          ,{ name:'ToLower',module:'monkey',page:'String_m_ToLower.html',children:[] }
+          ,{ name:'ToUpper',module:'monkey',page:'String_m_ToUpper.html',children:[] }
+          ,{ name:'ToUtf8',module:'monkey',page:'String_m_ToUtf8.html',children:[] }
+          ,{ name:'Trim',module:'monkey',page:'String_m_Trim.html',children:[] }
+        ] }
+        ,{ name:'Functions',module:'monkey',children:[
+          { name:'FromCString',module:'monkey',page:'String_f_FromCString.html',children:[] }
+          ,{ name:'FromChar',module:'monkey',page:'String_f_FromChar.html',children:[] }
+          ,{ name:'FromUtf8',module:'monkey',page:'String_f_FromUtf8.html',children:[] }
+          ,{ name:'FromUtf8String',module:'monkey',page:'String_f_FromUtf8String.html',children:[] }
+          ,{ name:'FromWString',module:'monkey',page:'String_f_FromWString.html',children:[] }
+        ] }
+      ] }
+      ,{ name:'Ubyte',module:'monkey',page:'monkey_types_s__6ubyte.html',children:[
+      ] }
+      ,{ name:'Uint',module:'monkey',page:'monkey_types_s__6uint.html',children:[
+      ] }
+      ,{ name:'Ulong',module:'monkey',page:'monkey_types_s__6ulong.html',children:[
+      ] }
+      ,{ name:'Ushort',module:'monkey',page:'monkey_types_s__6ushort.html',children:[
+      ] }
+      ,{ name:'CString',module:'monkey',page:'monkey_types_s_CString.html',children:[
+      ] }
+      ,{ name:'Utf8String',module:'monkey',page:'monkey_types_s_Utf8String.html',children:[
+      ] }
+      ,{ name:'WString',module:'monkey',page:'monkey_types_s_WString.html',children:[
+      ] }
+    ] }
+    ,{ name:'Classes',module:'monkey',children:[
+      { name:'Exception',module:'monkey',page:'monkey_types_c__6Exception.html',children:[
+        { name:'Contructors',module:'monkey',children:[
+          { name:'New',module:'monkey',page:'Exception_m_new.html',children:[] }
+        ] }
+        ,{ name:'Properties',module:'monkey',children:[
+          { name:'DebugStack',module:'monkey',page:'Exception_p_DebugStack.html',children:[] }
+          ,{ name:'Message',module:'monkey',page:'Exception_p_Message.html',children:[] }
+        ] }
+      ] }
+      ,{ name:'Object',module:'monkey',page:'monkey_types_c__6object.html',children:[
+      ] }
+      ,{ name:'Throwable',module:'monkey',page:'monkey_types_c__6throwable.html',children:[
+      ] }
+    ] }
+    ,{ name:'Interfaces',module:'monkey',children:[
+      { name:'IIntegral',module:'monkey',page:'monkey_types_i_IIntegral.html',children:[
+      ] }
+      ,{ name:'INumeric',module:'monkey',page:'monkey_types_i_INumeric.html',children:[
+      ] }
+      ,{ name:'IReal',module:'monkey',page:'monkey_types_i_IReal.html',children:[
+      ] }
+    ] }
+  ] }
+] },{ name:'<libc>',module:'libc',children:[
+  { name:'libc',module:'libc',page:'libc.html',children:[
+    { name:'Enums',module:'libc',children:[
+      { name:'mode\_t',module:'libc',page:'libc_e_mode_0t.html',children:[] }
+    ] }
+    ,{ name:'Structs',module:'libc',children:[
+      { name:'DIR',module:'libc',page:'libc_s_DIR.html',children:[
+      ] }
+      ,{ name:'FILE',module:'libc',page:'libc_s_FILE.html',children:[
+      ] }
+      ,{ name:'char\_t',module:'libc',page:'libc_s_char_0t.html',children:[
+      ] }
+      ,{ name:'dirent',module:'libc',page:'libc_s_dirent.html',children:[
+        { name:'Fields',module:'libc',children:[
+          { name:'d\_name',module:'libc',page:'libc_dirent_f_d_0name.html',children:[] }
+        ] }
+      ] }
+      ,{ name:'schar\_t',module:'libc',page:'libc_s_schar_0t.html',children:[
+      ] }
+      ,{ name:'size\_t',module:'libc',page:'libc_s_size_0t.html',children:[
+      ] }
+      ,{ name:'stat\_t',module:'libc',page:'libc_s_stat_0t.html',children:[
+        { name:'Fields',module:'libc',children:[
+          { name:'st\_atime',module:'libc',page:'libc_stat_0t_f_st_0atime.html',children:[] }
+          ,{ name:'st\_ctime',module:'libc',page:'libc_stat_0t_f_st_0ctime.html',children:[] }
+          ,{ name:'st\_mode',module:'libc',page:'libc_stat_0t_f_st_0mode.html',children:[] }
+          ,{ name:'st\_mtime',module:'libc',page:'libc_stat_0t_f_st_0mtime.html',children:[] }
+        ] }
+      ] }
+      ,{ name:'time\_t',module:'libc',page:'libc_s_time_0t.html',children:[
+      ] }
+      ,{ name:'tm\_t',module:'libc',page:'libc_s_tm_0t.html',children:[
+        { name:'Fields',module:'libc',children:[
+          { name:'tm\_hour',module:'libc',page:'libc_tm_0t_f_tm_0hour.html',children:[] }
+          ,{ name:'tm\_isdst',module:'libc',page:'libc_tm_0t_f_tm_0isdst.html',children:[] }
+          ,{ name:'tm\_mday',module:'libc',page:'libc_tm_0t_f_tm_0mday.html',children:[] }
+          ,{ name:'tm\_min',module:'libc',page:'libc_tm_0t_f_tm_0min.html',children:[] }
+          ,{ name:'tm\_mon',module:'libc',page:'libc_tm_0t_f_tm_0mon.html',children:[] }
+          ,{ name:'tm\_sec',module:'libc',page:'libc_tm_0t_f_tm_0sec.html',children:[] }
+          ,{ name:'tm\_wday',module:'libc',page:'libc_tm_0t_f_tm_0wday.html',children:[] }
+          ,{ name:'tm\_yday',module:'libc',page:'libc_tm_0t_f_tm_0yday.html',children:[] }
+          ,{ name:'tm\_year',module:'libc',page:'libc_tm_0t_f_tm_0year.html',children:[] }
+        ] }
+      ] }
+      ,{ name:'uchar\_t',module:'libc',page:'libc_s_uchar_0t.html',children:[
+      ] }
+      ,{ name:'wchar\_t',module:'libc',page:'libc_s_wchar_0t.html',children:[
+      ] }
+    ] }
+    ,{ name:'Constants',module:'libc',children:[
+      { name:'CLOCKS\_PER\_SEC',module:'libc',page:'libc_c_CLOCKS_0PER_0SEC.html',children:[] }
+      ,{ name:'SEEK\_CUR',module:'libc',page:'libc_c_SEEK_0CUR.html',children:[] }
+      ,{ name:'SEEK\_END',module:'libc',page:'libc_c_SEEK_0END.html',children:[] }
+      ,{ name:'SEEK\_SET',module:'libc',page:'libc_c_SEEK_0SET.html',children:[] }
+      ,{ name:'S\_IFBLK',module:'libc',page:'libc_c_S_0IFBLK.html',children:[] }
+      ,{ name:'S\_IFCHR',module:'libc',page:'libc_c_S_0IFCHR.html',children:[] }
+      ,{ name:'S\_IFDIR',module:'libc',page:'libc_c_S_0IFDIR.html',children:[] }
+      ,{ name:'S\_IFIFO',module:'libc',page:'libc_c_S_0IFIFO.html',children:[] }
+      ,{ name:'S\_IFMT',module:'libc',page:'libc_c_S_0IFMT.html',children:[] }
+      ,{ name:'S\_IFREG',module:'libc',page:'libc_c_S_0IFREG.html',children:[] }
+    ] }
+    ,{ name:'Functions',module:'libc',children:[
+      { name:'abort',module:'libc',page:'libc_f_abort.html',children:[] }
+      ,{ name:'chdir',module:'libc',page:'libc_f_chdir.html',children:[] }
+      ,{ name:'clock',module:'libc',page:'libc_f_clock.html',children:[] }
+      ,{ name:'closedir',module:'libc',page:'libc_f_closedir.html',children:[] }
+      ,{ name:'difftime',module:'libc',page:'libc_f_difftime.html',children:[] }
+      ,{ name:'exit\_',module:'libc',page:'libc_f_exit_0.html',children:[] }
+      ,{ name:'fclose',module:'libc',page:'libc_f_fclose.html',children:[] }
+      ,{ name:'fopen',module:'libc',page:'libc_f_fopen.html',children:[] }
+      ,{ name:'fread',module:'libc',page:'libc_f_fread.html',children:[] }
+      ,{ name:'free',module:'libc',page:'libc_f_free.html',children:[] }
+      ,{ name:'fseek',module:'libc',page:'libc_f_fseek.html',children:[] }
+      ,{ name:'ftell',module:'libc',page:'libc_f_ftell.html',children:[] }
+      ,{ name:'fwrite',module:'libc',page:'libc_f_fwrite.html',children:[] }
+      ,{ name:'getcwd',module:'libc',page:'libc_f_getcwd.html',children:[] }
+      ,{ name:'getenv',module:'libc',page:'libc_f_getenv.html',children:[] }
+      ,{ name:'gmtime',module:'libc',page:'libc_f_gmtime.html',children:[] }
+      ,{ name:'localtime',module:'libc',page:'libc_f_localtime.html',children:[] }
+      ,{ name:'malloc',module:'libc',page:'libc_f_malloc.html',children:[] }
+      ,{ name:'memcpy',module:'libc',page:'libc_f_memcpy.html',children:[] }
+      ,{ name:'memmove',module:'libc',page:'libc_f_memmove.html',children:[] }
+      ,{ name:'memset',module:'libc',page:'libc_f_memset.html',children:[] }
+      ,{ name:'mkdir',module:'libc',page:'libc_f_mkdir.html',children:[] }
+      ,{ name:'opendir',module:'libc',page:'libc_f_opendir.html',children:[] }
+      ,{ name:'readdir',module:'libc',page:'libc_f_readdir.html',children:[] }
+      ,{ name:'remove',module:'libc',page:'libc_f_remove.html',children:[] }
+      ,{ name:'rewind',module:'libc',page:'libc_f_rewind.html',children:[] }
+      ,{ name:'rmdir',module:'libc',page:'libc_f_rmdir.html',children:[] }
+      ,{ name:'setenv',module:'libc',page:'libc_f_setenv.html',children:[] }
+      ,{ name:'sizeof',module:'libc',page:'libc_f_sizeof.html',children:[] }
+      ,{ name:'stat',module:'libc',page:'libc_f_stat.html',children:[] }
+      ,{ name:'strlen',module:'libc',page:'libc_f_strlen.html',children:[] }
+      ,{ name:'system',module:'libc',page:'libc_f_system.html',children:[] }
+      ,{ name:'time',module:'libc',page:'libc_f_time.html',children:[] }
+      ,{ name:'tolong',module:'libc',page:'libc_f_tolong.html',children:[] }
+    ] }
+  ] }
+] },{ name:'<std>',module:'std',children:[
+  { name:'std.chartype',module:'std',page:'std_chartype.html',children:[
+    { name:'Functions',module:'std',children:[
+      { name:'IsAlpha',module:'std',page:'std_chartype_f_IsAlpha.html',children:[] }
+      ,{ name:'IsDigit',module:'std',page:'std_chartype_f_IsDigit.html',children:[] }
+      ,{ name:'IsHexDigit',module:'std',page:'std_chartype_f_IsHexDigit.html',children:[] }
+      ,{ name:'IsIdent',module:'std',page:'std_chartype_f_IsIdent.html',children:[] }
+      ,{ name:'IsSpace',module:'std',page:'std_chartype_f_IsSpace.html',children:[] }
+    ] }
+  ] }
+  ,{ name:'std.collections',module:'std',page:'std_collections.html',children:[
+    { name:'Aliases',module:'std',children:[
+      { name:'FloatList',module:'std',children:[] }
+      ,{ name:'FloatStack',module:'std',children:[] }
+      ,{ name:'IntList',module:'std',children:[] }
+      ,{ name:'IntStack',module:'std',children:[] }
+      ,{ name:'StringList',module:'std',children:[] }
+      ,{ name:'StringStack',module:'std',children:[] }
+    ] }
+    ,{ name:'Classes',module:'std',children:[
+      { name:'FloatMap',module:'std',page:'std_collections_c_FloatMap.html',children:[
+      ] }
+      ,{ name:'IntMap',module:'std',page:'std_collections_c_IntMap.html',children:[
+      ] }
+      ,{ name:'List',module:'std',page:'std_collections_c_List.html',children:[
+        { name:'Structs',module:'std',children:[
+          { name:'Iterator',module:'std',page:'std_collections_List_1T_4_2_s_Iterator.html',children:[
+            { name:'Contructors',module:'std',children:[
+              { name:'New',module:'std',page:'std_collections_List_1T_4_2_Iterator_m_new.html',children:[] }
+            ] }
+            ,{ name:'Properties',module:'std',children:[
+              { name:'AtEnd',module:'std',page:'std_collections_List_1T_4_2_Iterator_p_AtEnd.html',children:[] }
+              ,{ name:'Current',module:'std',page:'std_collections_List_1T_4_2_Iterator_p_Current.html',children:[] }
+            ] }
+            ,{ name:'Methods',module:'std',children:[
+              { name:'Bump',module:'std',page:'std_collections_List_1T_4_2_Iterator_m_Bump.html',children:[] }
+              ,{ name:'Erase',module:'std',page:'std_collections_List_1T_4_2_Iterator_m_Erase.html',children:[] }
+              ,{ name:'Insert',module:'std',page:'std_collections_List_1T_4_2_Iterator_m_Insert.html',children:[] }
+            ] }
+          ] }
+        ] }
+        ,{ name:'Contructors',module:'std',children:[
+          { name:'New',module:'std',page:'std_collections_List_1T_4_2_m_new.html',children:[] }
+        ] }
+        ,{ name:'Properties',module:'std',children:[
+          { name:'Empty',module:'std',page:'std_collections_List_1T_4_2_p_Empty.html',children:[] }
+          ,{ name:'First',module:'std',page:'std_collections_List_1T_4_2_p_First.html',children:[] }
+          ,{ name:'Last',module:'std',page:'std_collections_List_1T_4_2_p_Last.html',children:[] }
+          ,{ name:'Length',module:'std',page:'std_collections_List_1T_4_2_p_Length.html',children:[] }
+        ] }
+        ,{ name:'Methods',module:'std',children:[
+          { name:'Add',module:'std',page:'std_collections_List_1T_4_2_m_Add.html',children:[] }
+          ,{ name:'AddAll',module:'std',page:'std_collections_List_1T_4_2_m_AddAll.html',children:[] }
+          ,{ name:'AddFirst',module:'std',page:'std_collections_List_1T_4_2_m_AddFirst.html',children:[] }
+          ,{ name:'AddLast',module:'std',page:'std_collections_List_1T_4_2_m_AddLast.html',children:[] }
+          ,{ name:'Clear',module:'std',page:'std_collections_List_1T_4_2_m_Clear.html',children:[] }
+          ,{ name:'Index',module:'std',page:'std_collections_List_1T_4_2_m_Index.html',children:[] }
+          ,{ name:'Join',module:'std',page:'std_collections_List_1T_4_2_m_Join.html',children:[] }
+          ,{ name:'Remove',module:'std',page:'std_collections_List_1T_4_2_m_Remove.html',children:[] }
+          ,{ name:'RemoveEach',module:'std',page:'std_collections_List_1T_4_2_m_RemoveEach.html',children:[] }
+          ,{ name:'RemoveFirst',module:'std',page:'std_collections_List_1T_4_2_m_RemoveFirst.html',children:[] }
+          ,{ name:'RemoveLast',module:'std',page:'std_collections_List_1T_4_2_m_RemoveLast.html',children:[] }
+          ,{ name:'Sort',module:'std',page:'std_collections_List_1T_4_2_m_Sort.html',children:[] }
+          ,{ name:'ToArray',module:'std',page:'std_collections_List_1T_4_2_m_ToArray.html',children:[] }
+        ] }
+      ] }
+      ,{ name:'Map',module:'std',page:'std_collections_c_Map.html',children:[
+        { name:'Structs',module:'std',children:[
+          { name:'Iterator',module:'std',page:'std_collections_Map_1K_4_3V_4_2_s_Iterator.html',children:[
+            { name:'Properties',module:'std',children:[
+              { name:'Current',module:'std',page:'std_collections_Map_1K_4_3V_4_2_Iterator_p_Current.html',children:[] }
+              ,{ name:'Valid',module:'std',page:'std_collections_Map_1K_4_3V_4_2_Iterator_p_Valid.html',children:[] }
+            ] }
+            ,{ name:'Methods',module:'std',children:[
+              { name:'Bump',module:'std',page:'std_collections_Map_1K_4_3V_4_2_Iterator_m_Bump.html',children:[] }
+            ] }
+          ] }
+          ,{ name:'KeyIterator',module:'std',page:'std_collections_Map_1K_4_3V_4_2_s_KeyIterator.html',children:[
+            { name:'Properties',module:'std',children:[
+              { name:'Current',module:'std',page:'std_collections_Map_1K_4_3V_4_2_KeyIterator_p_Current.html',children:[] }
+              ,{ name:'Valid',module:'std',page:'std_collections_Map_1K_4_3V_4_2_KeyIterator_p_Valid.html',children:[] }
+            ] }
+            ,{ name:'Methods',module:'std',children:[
+              { name:'Bump',module:'std',page:'std_collections_Map_1K_4_3V_4_2_KeyIterator_m_Bump.html',children:[] }
+            ] }
+          ] }
+          ,{ name:'MapKeys',module:'std',page:'std_collections_Map_1K_4_3V_4_2_s_MapKeys.html',children:[
+            { name:'Methods',module:'std',children:[
+              { name:'All',module:'std',page:'std_collections_Map_1K_4_3V_4_2_MapKeys_m_All.html',children:[] }
+            ] }
+          ] }
+          ,{ name:'MapValues',module:'std',page:'std_collections_Map_1K_4_3V_4_2_s_MapValues.html',children:[
+            { name:'Methods',module:'std',children:[
+              { name:'All',module:'std',page:'std_collections_Map_1K_4_3V_4_2_MapValues_m_All.html',children:[] }
+            ] }
+          ] }
+          ,{ name:'ValueIterator',module:'std',page:'std_collections_Map_1K_4_3V_4_2_s_ValueIterator.html',children:[
+            { name:'Properties',module:'std',children:[
+              { name:'Current',module:'std',page:'std_collections_Map_1K_4_3V_4_2_ValueIterator_p_Current.html',children:[] }
+              ,{ name:'Valid',module:'std',page:'std_collections_Map_1K_4_3V_4_2_ValueIterator_p_Valid.html',children:[] }
+            ] }
+            ,{ name:'Methods',module:'std',children:[
+              { name:'Bump',module:'std',page:'std_collections_Map_1K_4_3V_4_2_ValueIterator_m_Bump.html',children:[] }
+            ] }
+          ] }
+        ] }
+        ,{ name:'Classes',module:'std',children:[
+          { name:'Node',module:'std',page:'std_collections_Map_1K_4_3V_4_2_c_Node.html',children:[
+            { name:'Properties',module:'std',children:[
+              { name:'Key',module:'std',page:'std_collections_Map_1K_4_3V_4_2_Node_p_Key.html',children:[] }
+              ,{ name:'Value',module:'std',page:'std_collections_Map_1K_4_3V_4_2_Node_p_Value.html',children:[] }
+            ] }
+          ] }
+        ] }
+        ,{ name:'Contructors',module:'std',children:[
+          { name:'New',module:'std',page:'std_collections_Map_1K_4_3V_4_2_m_new.html',children:[] }
+        ] }
+        ,{ name:'Properties',module:'std',children:[
+          { name:'Empty',module:'std',page:'std_collections_Map_1K_4_3V_4_2_p_Empty.html',children:[] }
+          ,{ name:'Keys',module:'std',page:'std_collections_Map_1K_4_3V_4_2_p_Keys.html',children:[] }
+          ,{ name:'Values',module:'std',page:'std_collections_Map_1K_4_3V_4_2_p_Values.html',children:[] }
+        ] }
+        ,{ name:'Operators',module:'std',children:[
+          { name:'Operator []',module:'std',page:'std_collections_Map_1K_4_3V_4_2_m_[].html',children:[] }
+          ,{ name:'Operator []=',module:'std',page:'std_collections_Map_1K_4_3V_4_2_m_[]=.html',children:[] }
+        ] }
+        ,{ name:'Methods',module:'std',children:[
+          { name:'Add',module:'std',page:'std_collections_Map_1K_4_3V_4_2_m_Add.html',children:[] }
+          ,{ name:'All',module:'std',page:'std_collections_Map_1K_4_3V_4_2_m_All.html',children:[] }
+          ,{ name:'Clear',module:'std',page:'std_collections_Map_1K_4_3V_4_2_m_Clear.html',children:[] }
+          ,{ name:'Contains',module:'std',page:'std_collections_Map_1K_4_3V_4_2_m_Contains.html',children:[] }
+          ,{ name:'Count',module:'std',page:'std_collections_Map_1K_4_3V_4_2_m_Count.html',children:[] }
+          ,{ name:'Get',module:'std',page:'std_collections_Map_1K_4_3V_4_2_m_Get.html',children:[] }
+          ,{ name:'Remove',module:'std',page:'std_collections_Map_1K_4_3V_4_2_m_Remove.html',children:[] }
+          ,{ name:'Set',module:'std',page:'std_collections_Map_1K_4_3V_4_2_m_Set.html',children:[] }
+          ,{ name:'Update',module:'std',page:'std_collections_Map_1K_4_3V_4_2_m_Update.html',children:[] }
+        ] }
+      ] }
+      ,{ name:'Stack',module:'std',page:'std_collections_c_Stack.html',children:[
+        { name:'Structs',module:'std',children:[
+          { name:'Iterator',module:'std',page:'std_collections_Stack_1T_4_2_s_Iterator.html',children:[
+            { name:'Contructors',module:'std',children:[
+              { name:'New',module:'std',page:'std_collections_Stack_1T_4_2_Iterator_m_new.html',children:[] }
+            ] }
+            ,{ name:'Properties',module:'std',children:[
+              { name:'AtEnd',module:'std',page:'std_collections_Stack_1T_4_2_Iterator_p_AtEnd.html',children:[] }
+              ,{ name:'Current',module:'std',page:'std_collections_Stack_1T_4_2_Iterator_p_Current.html',children:[] }
+            ] }
+            ,{ name:'Methods',module:'std',children:[
+              { name:'Bump',module:'std',page:'std_collections_Stack_1T_4_2_Iterator_m_Bump.html',children:[] }
+              ,{ name:'Erase',module:'std',page:'std_collections_Stack_1T_4_2_Iterator_m_Erase.html',children:[] }
+              ,{ name:'Insert',module:'std',page:'std_collections_Stack_1T_4_2_Iterator_m_Insert.html',children:[] }
+            ] }
+          ] }
+        ] }
+        ,{ name:'Contructors',module:'std',children:[
+          { name:'New',module:'std',page:'std_collections_Stack_1T_4_2_m_new.html',children:[] }
+        ] }
+        ,{ name:'Properties',module:'std',children:[
+          { name:'Capacity',module:'std',page:'std_collections_Stack_1T_4_2_p_Capacity.html',children:[] }
+          ,{ name:'Data',module:'std',page:'std_collections_Stack_1T_4_2_p_Data.html',children:[] }
+          ,{ name:'Empty',module:'std',page:'std_collections_Stack_1T_4_2_p_Empty.html',children:[] }
+          ,{ name:'Length',module:'std',page:'std_collections_Stack_1T_4_2_p_Length.html',children:[] }
+          ,{ name:'Top',module:'std',page:'std_collections_Stack_1T_4_2_p_Top.html',children:[] }
+        ] }
+        ,{ name:'Operators',module:'std',children:[
+          { name:'Operator []',module:'std',page:'std_collections_Stack_1T_4_2_m_[].html',children:[] }
+          ,{ name:'Operator []=',module:'std',page:'std_collections_Stack_1T_4_2_m_[]=.html',children:[] }
+        ] }
+        ,{ name:'Methods',module:'std',children:[
+          { name:'Add',module:'std',page:'std_collections_Stack_1T_4_2_m_Add.html',children:[] }
+          ,{ name:'AddAll',module:'std',page:'std_collections_Stack_1T_4_2_m_AddAll.html',children:[] }
+          ,{ name:'Append',module:'std',page:'std_collections_Stack_1T_4_2_m_Append.html',children:[] }
+          ,{ name:'Clear',module:'std',page:'std_collections_Stack_1T_4_2_m_Clear.html',children:[] }
+          ,{ name:'Contains',module:'std',page:'std_collections_Stack_1T_4_2_m_Contains.html',children:[] }
+          ,{ name:'Erase',module:'std',page:'std_collections_Stack_1T_4_2_m_Erase.html',children:[] }
+          ,{ name:'FindIndex',module:'std',page:'std_collections_Stack_1T_4_2_m_FindIndex.html',children:[] }
+          ,{ name:'FindLastIndex',module:'std',page:'std_collections_Stack_1T_4_2_m_FindLastIndex.html',children:[] }
+          ,{ name:'Get',module:'std',page:'std_collections_Stack_1T_4_2_m_Get.html',children:[] }
+          ,{ name:'Insert',module:'std',page:'std_collections_Stack_1T_4_2_m_Insert.html',children:[] }
+          ,{ name:'Join',module:'std',page:'std_collections_Stack_1T_4_2_m_Join.html',children:[] }
+          ,{ name:'Pop',module:'std',page:'std_collections_Stack_1T_4_2_m_Pop.html',children:[] }
+          ,{ name:'Push',module:'std',page:'std_collections_Stack_1T_4_2_m_Push.html',children:[] }
+          ,{ name:'Remove',module:'std',page:'std_collections_Stack_1T_4_2_m_Remove.html',children:[] }
+          ,{ name:'RemoveEach',module:'std',page:'std_collections_Stack_1T_4_2_m_RemoveEach.html',children:[] }
+          ,{ name:'RemoveLast',module:'std',page:'std_collections_Stack_1T_4_2_m_RemoveLast.html',children:[] }
+          ,{ name:'Reserve',module:'std',page:'std_collections_Stack_1T_4_2_m_Reserve.html',children:[] }
+          ,{ name:'Resize',module:'std',page:'std_collections_Stack_1T_4_2_m_Resize.html',children:[] }
+          ,{ name:'Set',module:'std',page:'std_collections_Stack_1T_4_2_m_Set.html',children:[] }
+          ,{ name:'Slice',module:'std',page:'std_collections_Stack_1T_4_2_m_Slice.html',children:[] }
+          ,{ name:'Sort',module:'std',page:'std_collections_Stack_1T_4_2_m_Sort.html',children:[] }
+          ,{ name:'Swap',module:'std',page:'std_collections_Stack_1T_4_2_m_Swap.html',children:[] }
+          ,{ name:'ToArray',module:'std',page:'std_collections_Stack_1T_4_2_m_ToArray.html',children:[] }
+        ] }
+      ] }
+      ,{ name:'StringMap',module:'std',page:'std_collections_c_StringMap.html',children:[
+      ] }
+    ] }
+    ,{ name:'Interfaces',module:'std',children:[
+      { name:'IContainer',module:'std',page:'std_collections_i_IContainer.html',children:[
+      ] }
+      ,{ name:'IIterator',module:'std',page:'std_collections_i_IIterator.html',children:[
+      ] }
+    ] }
+  ] }
+  ,{ name:'std.fiber',module:'std',page:'std_fiber.html',children:[
+    { name:'Classes',module:'std',children:[
+      { name:'Future',module:'std',page:'std_fiber_c_Future.html',children:[
+        { name:'Fields',module:'std',children:[
+          { name:'\_fiber',module:'std',page:'std_fiber_Future_1T_4_2_f__0fiber.html',children:[] }
+          ,{ name:'\_value',module:'std',page:'std_fiber_Future_1T_4_2_f__0value.html',children:[] }
+        ] }
+        ,{ name:'Contructors',module:'std',children:[
+          { name:'New',module:'std',page:'std_fiber_Future_1T_4_2_m_new.html',children:[] }
+        ] }
+        ,{ name:'Methods',module:'std',children:[
+          { name:'Get',module:'std',page:'std_fiber_Future_1T_4_2_m_Get.html',children:[] }
+          ,{ name:'Set',module:'std',page:'std_fiber_Future_1T_4_2_m_Set.html',children:[] }
+        ] }
+      ] }
+      ,{ name:'Generator',module:'std',page:'std_fiber_c_Generator.html',children:[
+        { name:'Properties',module:'std',children:[
+          { name:'HasNext',module:'std',page:'std_fiber_Generator_1T_4_2_p_HasNext.html',children:[] }
+        ] }
+        ,{ name:'Methods',module:'std',children:[
+          { name:'GetNext',module:'std',page:'std_fiber_Generator_1T_4_2_m_GetNext.html',children:[] }
+          ,{ name:'Start',module:'std',page:'std_fiber_Generator_1T_4_2_m_Start.html',children:[] }
+          ,{ name:'Yield',module:'std',page:'std_fiber_Generator_1T_4_2_m_Yield.html',children:[] }
+        ] }
+      ] }
+    ] }
+    ,{ name:'Functions',module:'std',children:[
+      { name:'Await',module:'std',page:'std_fiber_f_Await.html',children:[] }
+      ,{ name:'CreateFiber',module:'std',page:'std_fiber_f_CreateFiber.html',children:[] }
+      ,{ name:'GetCurrentFiber',module:'std',page:'std_fiber_f_GetCurrentFiber.html',children:[] }
+      ,{ name:'ResumeFiber',module:'std',page:'std_fiber_f_ResumeFiber.html',children:[] }
+      ,{ name:'StartFiber',module:'std',page:'std_fiber_f_StartFiber.html',children:[] }
+      ,{ name:'SuspendCurrentFiber',module:'std',page:'std_fiber_f_SuspendCurrentFiber.html',children:[] }
+      ,{ name:'TerminateFiber',module:'std',page:'std_fiber_f_TerminateFiber.html',children:[] }
+    ] }
+  ] }
+  ,{ name:'std.filesystem',module:'std',page:'std_filesystem.html',children:[
+    { name:'Enums',module:'std',children:[
+      { name:'FileType',module:'std',page:'std_filesystem_e_FileType.html',children:[] }
+    ] }
+    ,{ name:'Functions',module:'std',children:[
+      { name:'AppArgs',module:'std',page:'std_filesystem_f_AppArgs.html',children:[] }
+      ,{ name:'AppDir',module:'std',page:'std_filesystem_f_AppDir.html',children:[] }
+      ,{ name:'AppPath',module:'std',page:'std_filesystem_f_AppPath.html',children:[] }
+      ,{ name:'AssetsDir',module:'std',page:'std_filesystem_f_AssetsDir.html',children:[] }
+      ,{ name:'ChangeDir',module:'std',page:'std_filesystem_f_ChangeDir.html',children:[] }
+      ,{ name:'CopyFile',module:'std',page:'std_filesystem_f_CopyFile.html',children:[] }
+      ,{ name:'CreateDir',module:'std',page:'std_filesystem_f_CreateDir.html',children:[] }
+      ,{ name:'CurrentDir',module:'std',page:'std_filesystem_f_CurrentDir.html',children:[] }
+      ,{ name:'DeleteDir',module:'std',page:'std_filesystem_f_DeleteDir.html',children:[] }
+      ,{ name:'DeleteFile',module:'std',page:'std_filesystem_f_DeleteFile.html',children:[] }
+      ,{ name:'ExtractDir',module:'std',page:'std_filesystem_f_ExtractDir.html',children:[] }
+      ,{ name:'ExtractExt',module:'std',page:'std_filesystem_f_ExtractExt.html',children:[] }
+      ,{ name:'ExtractRootDir',module:'std',page:'std_filesystem_f_ExtractRootDir.html',children:[] }
+      ,{ name:'GetFileTime',module:'std',page:'std_filesystem_f_GetFileTime.html',children:[] }
+      ,{ name:'GetFileType',module:'std',page:'std_filesystem_f_GetFileType.html',children:[] }
+      ,{ name:'IsRootDir',module:'std',page:'std_filesystem_f_IsRootDir.html',children:[] }
+      ,{ name:'LoadDir',module:'std',page:'std_filesystem_f_LoadDir.html',children:[] }
+      ,{ name:'RealPath',module:'std',page:'std_filesystem_f_RealPath.html',children:[] }
+      ,{ name:'StripDir',module:'std',page:'std_filesystem_f_StripDir.html',children:[] }
+      ,{ name:'StripExt',module:'std',page:'std_filesystem_f_StripExt.html',children:[] }
+      ,{ name:'StripSlashes',module:'std',page:'std_filesystem_f_StripSlashes.html',children:[] }
+    ] }
+  ] }
+  ,{ name:'std.graphics',module:'std',page:'std_graphics.html',children:[
+    { name:'Aliases',module:'std',children:[
+      { name:'Mat4f',module:'std',children:[] }
+      ,{ name:'Rectf',module:'std',children:[] }
+      ,{ name:'Recti',module:'std',children:[] }
+      ,{ name:'Vec2f',module:'std',children:[] }
+      ,{ name:'Vec2i',module:'std',children:[] }
+      ,{ name:'Vec3f',module:'std',children:[] }
+      ,{ name:'Vec3i',module:'std',children:[] }
+      ,{ name:'Vec4f',module:'std',children:[] }
+      ,{ name:'Vec4i',module:'std',children:[] }
+    ] }
+    ,{ name:'Enums',module:'std',children:[
+      { name:'PixelFormat',module:'std',page:'std_graphics_e_PixelFormat.html',children:[] }
+    ] }
+    ,{ name:'Structs',module:'std',children:[
+      { name:'Color',module:'std',page:'std_graphics_s_Color.html',children:[
+        { name:'Constants',module:'std',children:[
+          { name:'Black',module:'std',page:'std_graphics_Color_c_Black.html',children:[] }
+          ,{ name:'Blue',module:'std',page:'std_graphics_Color_c_Blue.html',children:[] }
+          ,{ name:'Cyan',module:'std',page:'std_graphics_Color_c_Cyan.html',children:[] }
+          ,{ name:'DarkGrey',module:'std',page:'std_graphics_Color_c_DarkGrey.html',children:[] }
+          ,{ name:'Green',module:'std',page:'std_graphics_Color_c_Green.html',children:[] }
+          ,{ name:'Grey',module:'std',page:'std_graphics_Color_c_Grey.html',children:[] }
+          ,{ name:'LightGrey',module:'std',page:'std_graphics_Color_c_LightGrey.html',children:[] }
+          ,{ name:'Magenta',module:'std',page:'std_graphics_Color_c_Magenta.html',children:[] }
+          ,{ name:'None',module:'std',page:'std_graphics_Color_c_None.html',children:[] }
+          ,{ name:'Red',module:'std',page:'std_graphics_Color_c_Red.html',children:[] }
+          ,{ name:'White',module:'std',page:'std_graphics_Color_c_White.html',children:[] }
+          ,{ name:'Yellow',module:'std',page:'std_graphics_Color_c_Yellow.html',children:[] }
+        ] }
+        ,{ name:'Fields',module:'std',children:[
+          { name:'a',module:'std',page:'std_graphics_Color_f_a.html',children:[] }
+          ,{ name:'b',module:'std',page:'std_graphics_Color_f_b.html',children:[] }
+          ,{ name:'g',module:'std',page:'std_graphics_Color_f_g.html',children:[] }
+          ,{ name:'r',module:'std',page:'std_graphics_Color_f_r.html',children:[] }
+        ] }
+        ,{ name:'Contructors',module:'std',children:[
+          { name:'New',module:'std',page:'std_graphics_Color_m_new.html',children:[] }
+        ] }
+        ,{ name:'Properties',module:'std',children:[
+          { name:'A',module:'std',page:'std_graphics_Color_p_A.html',children:[] }
+          ,{ name:'B',module:'std',page:'std_graphics_Color_p_B.html',children:[] }
+          ,{ name:'G',module:'std',page:'std_graphics_Color_p_G.html',children:[] }
+          ,{ name:'R',module:'std',page:'std_graphics_Color_p_R.html',children:[] }
+        ] }
+        ,{ name:'Methods',module:'std',children:[
+          { name:'ToARGB',module:'std',page:'std_graphics_Color_m_ToARGB.html',children:[] }
+        ] }
+        ,{ name:'Functions',module:'std',children:[
+          { name:'FromARGB',module:'std',page:'std_graphics_Color_f_FromARGB.html',children:[] }
+          ,{ name:'FromHSV',module:'std',page:'std_graphics_Color_f_FromHSV.html',children:[] }
+        ] }
+      ] }
+    ] }
+    ,{ name:'Classes',module:'std',children:[
+      { name:'Pixmap',module:'std',page:'std_graphics_c_Pixmap.html',children:[
+        { name:'Contructors',module:'std',children:[
+          { name:'New',module:'std',page:'std_graphics_Pixmap_m_new.html',children:[] }
+        ] }
+        ,{ name:'Properties',module:'std',children:[
+          { name:'Data',module:'std',page:'std_graphics_Pixmap_p_Data.html',children:[] }
+          ,{ name:'Depth',module:'std',page:'std_graphics_Pixmap_p_Depth.html',children:[] }
+          ,{ name:'Format',module:'std',page:'std_graphics_Pixmap_p_Format.html',children:[] }
+          ,{ name:'Height',module:'std',page:'std_graphics_Pixmap_p_Height.html',children:[] }
+          ,{ name:'Pitch',module:'std',page:'std_graphics_Pixmap_p_Pitch.html',children:[] }
+          ,{ name:'Width',module:'std',page:'std_graphics_Pixmap_p_Width.html',children:[] }
+        ] }
+        ,{ name:'Methods',module:'std',children:[
+          { name:'Clear',module:'std',page:'std_graphics_Pixmap_m_Clear.html',children:[] }
+          ,{ name:'Convert',module:'std',page:'std_graphics_Pixmap_m_Convert.html',children:[] }
+          ,{ name:'Copy',module:'std',page:'std_graphics_Pixmap_m_Copy.html',children:[] }
+          ,{ name:'Discard',module:'std',page:'std_graphics_Pixmap_m_Discard.html',children:[] }
+          ,{ name:'GetPixel',module:'std',page:'std_graphics_Pixmap_m_GetPixel.html',children:[] }
+          ,{ name:'GetPixelARGB',module:'std',page:'std_graphics_Pixmap_m_GetPixelARGB.html',children:[] }
+          ,{ name:'PasteTo',module:'std',page:'std_graphics_Pixmap_m_PasteTo.html',children:[] }
+          ,{ name:'PixelPtr',module:'std',page:'std_graphics_Pixmap_m_PixelPtr.html',children:[] }
+          ,{ name:'PremultiplyAlpha',module:'std',page:'std_graphics_Pixmap_m_PremultiplyAlpha.html',children:[] }
+          ,{ name:'SetPixel',module:'std',page:'std_graphics_Pixmap_m_SetPixel.html',children:[] }
+          ,{ name:'SetPixelARGB',module:'std',page:'std_graphics_Pixmap_m_SetPixelARGB.html',children:[] }
+          ,{ name:'Window',module:'std',page:'std_graphics_Pixmap_m_Window.html',children:[] }
+        ] }
+        ,{ name:'Functions',module:'std',children:[
+          { name:'LoadPixmap',module:'std',page:'std_graphics_Pixmap_f_LoadPixmap.html',children:[] }
+        ] }
+      ] }
+    ] }
+    ,{ name:'Functions',module:'std',children:[
+      { name:'PixelFormatDepth',module:'std',page:'std_graphics_f_PixelFormatDepth.html',children:[] }
+    ] }
+  ] }
+  ,{ name:'std.json',module:'std',page:'std_json.html',children:[
+    { name:'Classes',module:'std',children:[
+      { name:'JsonArray',module:'std',page:'std_json_c_JsonArray.html',children:[
+        { name:'Contructors',module:'std',children:[
+          { name:'New',module:'std',page:'std_json_JsonArray_m_new.html',children:[] }
+        ] }
+        ,{ name:'Properties',module:'std',children:[
+          { name:'Data',module:'std',page:'std_json_JsonArray_p_Data.html',children:[] }
+        ] }
+        ,{ name:'Operators',module:'std',children:[
+          { name:'Operator []',module:'std',page:'std_json_JsonArray_m_[].html',children:[] }
+          ,{ name:'Operator []=',module:'std',page:'std_json_JsonArray_m_[]=.html',children:[] }
+        ] }
+      ] }
+      ,{ name:'JsonBool',module:'std',page:'std_json_c_JsonBool.html',children:[
+        { name:'Constants',module:'std',children:[
+          { name:'FalseValue',module:'std',page:'std_json_JsonBool_c_FalseValue.html',children:[] }
+          ,{ name:'TrueValue',module:'std',page:'std_json_JsonBool_c_TrueValue.html',children:[] }
+        ] }
+        ,{ name:'Contructors',module:'std',children:[
+          { name:'New',module:'std',page:'std_json_JsonBool_m_new.html',children:[] }
+        ] }
+        ,{ name:'Properties',module:'std',children:[
+          { name:'Data',module:'std',page:'std_json_JsonBool_p_Data.html',children:[] }
+        ] }
+        ,{ name:'Methods',module:'std',children:[
+          { name:'ToBool',module:'std',page:'std_json_JsonBool_m_ToBool.html',children:[] }
+          ,{ name:'ToJson',module:'std',page:'std_json_JsonBool_m_ToJson.html',children:[] }
+          ,{ name:'ToNumber',module:'std',page:'std_json_JsonBool_m_ToNumber.html',children:[] }
+          ,{ name:'ToString',module:'std',page:'std_json_JsonBool_m_ToString.html',children:[] }
+        ] }
+      ] }
+      ,{ name:'JsonError',module:'std',page:'std_json_c_JsonError.html',children:[
+      ] }
+      ,{ name:'JsonNumber',module:'std',page:'std_json_c_JsonNumber.html',children:[
+        { name:'Contructors',module:'std',children:[
+          { name:'New',module:'std',page:'std_json_JsonNumber_m_new.html',children:[] }
+        ] }
+        ,{ name:'Properties',module:'std',children:[
+          { name:'Data',module:'std',page:'std_json_JsonNumber_p_Data.html',children:[] }
+        ] }
+        ,{ name:'Methods',module:'std',children:[
+          { name:'ToBool',module:'std',page:'std_json_JsonNumber_m_ToBool.html',children:[] }
+          ,{ name:'ToJson',module:'std',page:'std_json_JsonNumber_m_ToJson.html',children:[] }
+          ,{ name:'ToNumber',module:'std',page:'std_json_JsonNumber_m_ToNumber.html',children:[] }
+          ,{ name:'ToString',module:'std',page:'std_json_JsonNumber_m_ToString.html',children:[] }
+        ] }
+      ] }
+      ,{ name:'JsonObject',module:'std',page:'std_json_c_JsonObject.html',children:[
+        { name:'Contructors',module:'std',children:[
+          { name:'New',module:'std',page:'std_json_JsonObject_m_new.html',children:[] }
+        ] }
+        ,{ name:'Properties',module:'std',children:[
+          { name:'Data',module:'std',page:'std_json_JsonObject_p_Data.html',children:[] }
+        ] }
+        ,{ name:'Operators',module:'std',children:[
+          { name:'Operator []',module:'std',page:'std_json_JsonObject_m_[].html',children:[] }
+          ,{ name:'Operator []=',module:'std',page:'std_json_JsonObject_m_[]=.html',children:[] }
+        ] }
+      ] }
+      ,{ name:'JsonParser',module:'std',page:'std_json_c_JsonParser.html',children:[
+        { name:'Contructors',module:'std',children:[
+          { name:'New',module:'std',page:'std_json_JsonParser_m_new.html',children:[] }
+        ] }
+        ,{ name:'Methods',module:'std',children:[
+          { name:'ParseJson',module:'std',page:'std_json_JsonParser_m_ParseJson.html',children:[] }
+        ] }
+      ] }
+      ,{ name:'JsonString',module:'std',page:'std_json_c_JsonString.html',children:[
+        { name:'Contructors',module:'std',children:[
+          { name:'New',module:'std',page:'std_json_JsonString_m_new.html',children:[] }
+        ] }
+        ,{ name:'Properties',module:'std',children:[
+          { name:'Data',module:'std',page:'std_json_JsonString_p_Data.html',children:[] }
+        ] }
+        ,{ name:'Methods',module:'std',children:[
+          { name:'ToBool',module:'std',page:'std_json_JsonString_m_ToBool.html',children:[] }
+          ,{ name:'ToJson',module:'std',page:'std_json_JsonString_m_ToJson.html',children:[] }
+          ,{ name:'ToNumber',module:'std',page:'std_json_JsonString_m_ToNumber.html',children:[] }
+          ,{ name:'ToString',module:'std',page:'std_json_JsonString_m_ToString.html',children:[] }
+        ] }
+      ] }
+      ,{ name:'JsonValue',module:'std',page:'std_json_c_JsonValue.html',children:[
+        { name:'Operators',module:'std',children:[
+          { name:'Operator []',module:'std',page:'std_json_JsonValue_m_[].html',children:[] }
+          ,{ name:'Operator []=',module:'std',page:'std_json_JsonValue_m_[]=.html',children:[] }
+        ] }
+        ,{ name:'Methods',module:'std',children:[
+          { name:'ToBool',module:'std',page:'std_json_JsonValue_m_ToBool.html',children:[] }
+          ,{ name:'ToDouble',module:'std',page:'std_json_JsonValue_m_ToDouble.html',children:[] }
+          ,{ name:'ToFloat',module:'std',page:'std_json_JsonValue_m_ToFloat.html',children:[] }
+          ,{ name:'ToInt',module:'std',page:'std_json_JsonValue_m_ToInt.html',children:[] }
+          ,{ name:'ToJson',module:'std',page:'std_json_JsonValue_m_ToJson.html',children:[] }
+          ,{ name:'ToLong',module:'std',page:'std_json_JsonValue_m_ToLong.html',children:[] }
+          ,{ name:'ToNumber',module:'std',page:'std_json_JsonValue_m_ToNumber.html',children:[] }
+          ,{ name:'ToString',module:'std',page:'std_json_JsonValue_m_ToString.html',children:[] }
+        ] }
+      ] }
+    ] }
+  ] }
+  ,{ name:'std.markdown',module:'std',page:'std_markdown.html',children:[
+    { name:'Functions',module:'std',children:[
+      { name:'MarkdownToHtml',module:'std',page:'std_markdown_f_MarkdownToHtml.html',children:[] }
+    ] }
+  ] }
+  ,{ name:'std.memory',module:'std',page:'std_memory.html',children:[
+    { name:'Enums',module:'std',children:[
+      { name:'ByteOrder',module:'std',page:'std_memory_e_ByteOrder.html',children:[] }
+    ] }
+    ,{ name:'Classes',module:'std',children:[
+      { name:'DataBuffer',module:'std',page:'std_memory_c_DataBuffer.html',children:[
+        { name:'Contructors',module:'std',children:[
+          { name:'New',module:'std',page:'std_memory_DataBuffer_m_new.html',children:[] }
+        ] }
+        ,{ name:'Properties',module:'std',children:[
+          { name:'ByteOrder',module:'std',page:'std_memory_DataBuffer_p_ByteOrder.html',children:[] }
+          ,{ name:'Data',module:'std',page:'std_memory_DataBuffer_p_Data.html',children:[] }
+          ,{ name:'Length',module:'std',page:'std_memory_DataBuffer_p_Length.html',children:[] }
+        ] }
+        ,{ name:'Methods',module:'std',children:[
+          { name:'CopyTo',module:'std',page:'std_memory_DataBuffer_m_CopyTo.html',children:[] }
+          ,{ name:'Discard',module:'std',page:'std_memory_DataBuffer_m_Discard.html',children:[] }
+          ,{ name:'PeekByte',module:'std',page:'std_memory_DataBuffer_m_PeekByte.html',children:[] }
+          ,{ name:'PeekDouble',module:'std',page:'std_memory_DataBuffer_m_PeekDouble.html',children:[] }
+          ,{ name:'PeekFloat',module:'std',page:'std_memory_DataBuffer_m_PeekFloat.html',children:[] }
+          ,{ name:'PeekInt',module:'std',page:'std_memory_DataBuffer_m_PeekInt.html',children:[] }
+          ,{ name:'PeekLong',module:'std',page:'std_memory_DataBuffer_m_PeekLong.html',children:[] }
+          ,{ name:'PeekShort',module:'std',page:'std_memory_DataBuffer_m_PeekShort.html',children:[] }
+          ,{ name:'PeekUByte',module:'std',page:'std_memory_DataBuffer_m_PeekUByte.html',children:[] }
+          ,{ name:'PeekUInt',module:'std',page:'std_memory_DataBuffer_m_PeekUInt.html',children:[] }
+          ,{ name:'PeekULong',module:'std',page:'std_memory_DataBuffer_m_PeekULong.html',children:[] }
+          ,{ name:'PeekUShort',module:'std',page:'std_memory_DataBuffer_m_PeekUShort.html',children:[] }
+          ,{ name:'PokeByte',module:'std',page:'std_memory_DataBuffer_m_PokeByte.html',children:[] }
+          ,{ name:'PokeDouble',module:'std',page:'std_memory_DataBuffer_m_PokeDouble.html',children:[] }
+          ,{ name:'PokeFloat',module:'std',page:'std_memory_DataBuffer_m_PokeFloat.html',children:[] }
+          ,{ name:'PokeInt',module:'std',page:'std_memory_DataBuffer_m_PokeInt.html',children:[] }
+          ,{ name:'PokeLong',module:'std',page:'std_memory_DataBuffer_m_PokeLong.html',children:[] }
+          ,{ name:'PokeShort',module:'std',page:'std_memory_DataBuffer_m_PokeShort.html',children:[] }
+          ,{ name:'PokeUByte',module:'std',page:'std_memory_DataBuffer_m_PokeUByte.html',children:[] }
+          ,{ name:'PokeUInt',module:'std',page:'std_memory_DataBuffer_m_PokeUInt.html',children:[] }
+          ,{ name:'PokeULong',module:'std',page:'std_memory_DataBuffer_m_PokeULong.html',children:[] }
+          ,{ name:'PokeUShort',module:'std',page:'std_memory_DataBuffer_m_PokeUShort.html',children:[] }
+          ,{ name:'Resize',module:'std',page:'std_memory_DataBuffer_m_Resize.html',children:[] }
+          ,{ name:'Save',module:'std',page:'std_memory_DataBuffer_m_Save.html',children:[] }
+        ] }
+        ,{ name:'Functions',module:'std',children:[
+          { name:'Load',module:'std',page:'std_memory_DataBuffer_f_Load.html',children:[] }
+        ] }
+      ] }
+    ] }
+  ] }
+  ,{ name:'std.random',module:'std',page:'std_random.html',children:[
+    { name:'Functions',module:'std',children:[
+      { name:'Rnd',module:'std',page:'std_random_f_Rnd.html',children:[] }
+      ,{ name:'RndULong',module:'std',page:'std_random_f_RndULong.html',children:[] }
+      ,{ name:'SeedRnd',module:'std',page:'std_random_f_SeedRnd.html',children:[] }
+    ] }
+  ] }
+  ,{ name:'std.stream',module:'std',page:'std_stream.html',children:[
+    { name:'Classes',module:'std',children:[
+      { name:'DataStream',module:'std',page:'std_stream_c_DataStream.html',children:[
+        { name:'Contructors',module:'std',children:[
+          { name:'New',module:'std',page:'std_stream_DataStream_m_new.html',children:[] }
+        ] }
+        ,{ name:'Properties',module:'std',children:[
+          { name:'Eof',module:'std',page:'std_stream_DataStream_p_Eof.html',children:[] }
+          ,{ name:'Length',module:'std',page:'std_stream_DataStream_p_Length.html',children:[] }
+          ,{ name:'Position',module:'std',page:'std_stream_DataStream_p_Position.html',children:[] }
+        ] }
+        ,{ name:'Methods',module:'std',children:[
+          { name:'Close',module:'std',page:'std_stream_DataStream_m_Close.html',children:[] }
+          ,{ name:'Read',module:'std',page:'std_stream_DataStream_m_Read.html',children:[] }
+          ,{ name:'Seek',module:'std',page:'std_stream_DataStream_m_Seek.html',children:[] }
+          ,{ name:'Write',module:'std',page:'std_stream_DataStream_m_Write.html',children:[] }
+        ] }
+      ] }
+      ,{ name:'FileStream',module:'std',page:'std_stream_c_FileStream.html',children:[
+        { name:'Properties',module:'std',children:[
+          { name:'Eof',module:'std',page:'std_stream_FileStream_p_Eof.html',children:[] }
+          ,{ name:'Length',module:'std',page:'std_stream_FileStream_p_Length.html',children:[] }
+          ,{ name:'Position',module:'std',page:'std_stream_FileStream_p_Position.html',children:[] }
+        ] }
+        ,{ name:'Methods',module:'std',children:[
+          { name:'Close',module:'std',page:'std_stream_FileStream_m_Close.html',children:[] }
+          ,{ name:'Read',module:'std',page:'std_stream_FileStream_m_Read.html',children:[] }
+          ,{ name:'Seek',module:'std',page:'std_stream_FileStream_m_Seek.html',children:[] }
+          ,{ name:'Write',module:'std',page:'std_stream_FileStream_m_Write.html',children:[] }
+        ] }
+        ,{ name:'Functions',module:'std',children:[
+          { name:'Open',module:'std',page:'std_stream_FileStream_f_Open.html',children:[] }
+        ] }
+      ] }
+      ,{ name:'Stream',module:'std',page:'std_stream_c_Stream.html',children:[
+        { name:'Aliases',module:'std',children:[
+          { name:'OpenFunc',module:'std',children:[] }
+        ] }
+        ,{ name:'Properties',module:'std',children:[
+          { name:'ByteOrder',module:'std',page:'std_stream_Stream_p_ByteOrder.html',children:[] }
+          ,{ name:'Eof',module:'std',page:'std_stream_Stream_p_Eof.html',children:[] }
+          ,{ name:'Length',module:'std',page:'std_stream_Stream_p_Length.html',children:[] }
+          ,{ name:'Position',module:'std',page:'std_stream_Stream_p_Position.html',children:[] }
+        ] }
+        ,{ name:'Methods',module:'std',children:[
+          { name:'Close',module:'std',page:'std_stream_Stream_m_Close.html',children:[] }
+          ,{ name:'Read',module:'std',page:'std_stream_Stream_m_Read.html',children:[] }
+          ,{ name:'ReadByte',module:'std',page:'std_stream_Stream_m_ReadByte.html',children:[] }
+          ,{ name:'ReadCString',module:'std',page:'std_stream_Stream_m_ReadCString.html',children:[] }
+          ,{ name:'ReadDouble',module:'std',page:'std_stream_Stream_m_ReadDouble.html',children:[] }
+          ,{ name:'ReadFloat',module:'std',page:'std_stream_Stream_m_ReadFloat.html',children:[] }
+          ,{ name:'ReadInt',module:'std',page:'std_stream_Stream_m_ReadInt.html',children:[] }
+          ,{ name:'ReadLong',module:'std',page:'std_stream_Stream_m_ReadLong.html',children:[] }
+          ,{ name:'ReadShort',module:'std',page:'std_stream_Stream_m_ReadShort.html',children:[] }
+          ,{ name:'ReadUByte',module:'std',page:'std_stream_Stream_m_ReadUByte.html',children:[] }
+          ,{ name:'ReadUInt',module:'std',page:'std_stream_Stream_m_ReadUInt.html',children:[] }
+          ,{ name:'ReadULong',module:'std',page:'std_stream_Stream_m_ReadULong.html',children:[] }
+          ,{ name:'ReadUShort',module:'std',page:'std_stream_Stream_m_ReadUShort.html',children:[] }
+          ,{ name:'Seek',module:'std',page:'std_stream_Stream_m_Seek.html',children:[] }
+          ,{ name:'Write',module:'std',page:'std_stream_Stream_m_Write.html',children:[] }
+          ,{ name:'WriteByte',module:'std',page:'std_stream_Stream_m_WriteByte.html',children:[] }
+          ,{ name:'WriteCString',module:'std',page:'std_stream_Stream_m_WriteCString.html',children:[] }
+          ,{ name:'WriteDouble',module:'std',page:'std_stream_Stream_m_WriteDouble.html',children:[] }
+          ,{ name:'WriteFloat',module:'std',page:'std_stream_Stream_m_WriteFloat.html',children:[] }
+          ,{ name:'WriteInt',module:'std',page:'std_stream_Stream_m_WriteInt.html',children:[] }
+          ,{ name:'WriteLong',module:'std',page:'std_stream_Stream_m_WriteLong.html',children:[] }
+          ,{ name:'WriteShort',module:'std',page:'std_stream_Stream_m_WriteShort.html',children:[] }
+          ,{ name:'WriteUByte',module:'std',page:'std_stream_Stream_m_WriteUByte.html',children:[] }
+          ,{ name:'WriteUInt',module:'std',page:'std_stream_Stream_m_WriteUInt.html',children:[] }
+          ,{ name:'WriteULong',module:'std',page:'std_stream_Stream_m_WriteULong.html',children:[] }
+          ,{ name:'WriteUShort',module:'std',page:'std_stream_Stream_m_WriteUShort.html',children:[] }
+        ] }
+        ,{ name:'Functions',module:'std',children:[
+          { name:'Open',module:'std',page:'std_stream_Stream_f_Open.html',children:[] }
+        ] }
+      ] }
+    ] }
+  ] }
+  ,{ name:'std.stringio',module:'std',page:'std_stringio.html',children:[
+    { name:'Functions',module:'std',children:[
+      { name:'Hex',module:'std',page:'std_stringio_f_Hex.html',children:[] }
+      ,{ name:'LoadString',module:'std',page:'std_stringio_f_LoadString.html',children:[] }
+      ,{ name:'SaveString',module:'std',page:'std_stringio_f_SaveString.html',children:[] }
+    ] }
+  ] }
+] } ];
+
+	var t=new TreeView( tree,'tree' );
+	
+	t.on( 'select',function( args ){
+	
+		var data=args.data;
+		if( !data ) return;
+		
+		var page=data['page'];
+		if( !page ) return;
+		
+		var module=data['module'];
+		
+		page="../modules/"+module+"/docs/__PAGES__/"+page;
+		
+		document.getElementById( 'page' ).src=page;
+		
+	} );
+
+	t.on( 'expand',function( args ){
+	
+		var data=JSON.parse( args.target.getAttribute( 'data-item' ) );
+		if( !data ) return;
+		
+		var page=data['page'];
+		if( !page ) return;
+
+		var module=data['module'];
+		
+		page="../modules/"+module+"/docs/__PAGES__/"+page;
+		
+		document.getElementById( 'page' ).src=page;
+		
+	} );
+	
+	
+</script>
+
+</body>
+
+</html>
