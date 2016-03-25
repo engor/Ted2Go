@@ -558,7 +558,10 @@ Class Builder
 			cmd+=" ~q"+obj+"~q"
 		Next
 		
-		cmd+=" "+LD_LIBS.Join( " " )
+		For Local lib:=Eachin LD_LIBS
+			cmd+=" ~q"+lib+"~q"
+		Next
+
 		cmd+=" "+LD_SYSLIBS.Join( " " )
 		
 		Exec( cmd )
