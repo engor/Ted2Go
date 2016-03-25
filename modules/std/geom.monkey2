@@ -1,5 +1,5 @@
 
-Namespace std
+Namespace std.graphics
 
 Alias Vec2i:Vec2<Int>
 Alias Vec2f:Vec2<Float>
@@ -15,6 +15,8 @@ Alias Mat4f:Mat4<Float>
 Alias Recti:Rect<Int>
 Alias Rectf:Rect<Float>
 
+#rem monkeydoc @hidden
+#end
 Struct Vec2<T>
 
 	Field x:T
@@ -146,6 +148,8 @@ Struct Vec2<T>
 
 End
 
+#rem monkeydoc @hidden
+#end
 Struct Vec3<T>
 
 	Field x:T
@@ -282,6 +286,8 @@ Struct Vec3<T>
 	
 End
 
+#rem monkeydoc @hidden
+#end
 Struct Vec4<T>
 
 	Field x:T
@@ -419,6 +425,8 @@ Struct Vec4<T>
 	
 End
 
+#rem monkeydoc @hidden
+#end
 Struct Mat4<T>
 
 	Field i:Vec4<T>
@@ -462,6 +470,8 @@ Struct Mat4<T>
 	
 End
 
+#rem monkeydoc @hidden
+#end
 Struct Rect<T>
 
 	Field min:Vec2<T>

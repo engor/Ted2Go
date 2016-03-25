@@ -1,5 +1,5 @@
 
-Namespace std
+Namespace std.fiber
 
 Class Generator<T>
 

@@ -29,15 +29,18 @@ struct bbObject : public bbGCNode{
 	}
 };
 
-class bbInterface{
-public:
-	virtual ~bbInterface(){
-	}
+struct bbThrowable : public bbObject{
 };
 
-struct bbThrowable : public bbObject{
+struct bbException : public bbThrowable{
 
-	bbThrowable();
+	bbException();
+	
+	bbException( bbString message );
+	
+	bbString message()const{
+		return _message;
+	}
 	
 	bbArray<bbString> *debugStack()const{
 		return _debugStack;
@@ -46,23 +49,14 @@ struct bbThrowable : public bbObject{
 	private:
 	
 	bbGCVar<bbArray<bbString>> _debugStack;
-};
-
-struct bbRuntimeError : public bbThrowable{
-
-	bbRuntimeError(){
-	}
-
-	bbRuntimeError( bbString message ):_message( message ){
-	}
-	
-	bbString message()const{ 
-		return _message; 
-	}
-	
-	private:
 	
 	bbString _message;
+};
+
+struct bbInterface{
+
+	virtual ~bbInterface(){
+	}
 };
 
 template<class T,class...A> T *bbGCNew( A...a ){

@@ -1,5 +1,5 @@
 
-Namespace std
+Namespace std.stream
 
 #rem monkeydoc DataStream class.
 #end
@@ -31,7 +31,7 @@ Class DataStream Extends Stream
 		Return _end
 	End
 	
-	#rem monkedoc Closes the datastream.
+	#rem monkeydoc Closes the datastream.
 	
 	Closing a datastream also sets its position and length to 0.
 	
@@ -43,7 +43,7 @@ Class DataStream Extends Stream
 		_end=0
 	End
 	
-	#rem monkedoc Seeks to a position in the datastream.
+	#rem monkeydoc Seeks to a position in the datastream.
 	
 	@param position The position to seek to.
 	
@@ -54,7 +54,7 @@ Class DataStream Extends Stream
 		_pos=position
 	End
 	
-	#rem monkedoc Reads data from the datastream.
+	#rem monkeydoc Reads data from the datastream.
 	
 	@param buf A pointer to the memory to read the data into.
 	

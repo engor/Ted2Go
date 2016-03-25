@@ -1,5 +1,5 @@
 
-Namespace std
+Namespace std.graphics
 
 Struct Color
 	
@@ -62,8 +62,8 @@ Struct Color
 		Self.a=a
 	End
 	
-	Property ARGB:UInt()
-		Return Int(a*255) Shl 24 | Int(r*255) Shl 16 | Int(g*255) Shl 8 | Int(b*255)
+	Method ToARGB:UInt()
+		Return UInt(a*255) Shl 24 | UInt(r*255) Shl 16 | UInt(g*255) Shl 8 | UInt(b*255)
 	End
 	
 	Function FromHSV:Color( h:Float,s:Float,v:Float,a:Float=1 )
@@ -87,6 +87,14 @@ Struct Color
 		Case 5 r=v ; g=p ; b=q
 		End
 		
+		Return New Color( r,g,b,a )
+	End
+	
+	Function FromARGB:Color( argb:UInt )
+		Local a:=(argb Shr 24 & $ff)/255.0
+		Local r:=(argb Shr 16 & $ff)/255.0
+		Local g:=(argb Shr 8 & $ff)/255.0
+		Local b:=(argb & $ff)/255.0
 		Return New Color( r,g,b,a )
 	End
 	

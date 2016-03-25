@@ -29,7 +29,7 @@ Function hoedown_buffer_free( buf:hoedown_buffer Ptr )
 
 Function hoedown_buffer_put( buf:hoedown_buffer Ptr,data:UByte Ptr,size:Int )
 
-Function hoedown_buffer_cstr:CString( buf:hoedown_buffer Ptr )
+Function hoedown_buffer_cstr:Void Ptr( buf:hoedown_buffer Ptr )
 
 'renderer
 

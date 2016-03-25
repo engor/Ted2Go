@@ -1,5 +1,5 @@
 
-Namespace std
+Namespace std.stream
 
 Using libc
 
@@ -62,7 +62,7 @@ Class FileStream Extends Stream
 		DebugAssert( ftell( _file )=_pos )	'Sanity check...
 	End
 	
-	#rem monkedoc Reads data from the filestream.
+	#rem monkeydoc Reads data from the filestream.
 	
 	@param buf A pointer to the memory to read the data into.
 	

@@ -1,15 +1,16 @@
 
-Namespace std
+Namespace std.memory
 
-#rem monkdoc ByteOrder enumeration.
+#rem monkeydoc ByteOrder enumeration.
+
+| ByterOrder		| Description 
+|:------------------|:-----------
+| `LittleEndian`	| Least significant byte first.
+| `BigEndian`		| Most significant byte first.
+
 #end
 Enum ByteOrder
 
-	#rem monkeydoc Little endian byte order.
-	#end
-	LittleEndian
-
-	#rem monkeydoc Big endian byte order.
-	#end
-	BigEndian
+	LittleEndian,BigEndian
+	
 End

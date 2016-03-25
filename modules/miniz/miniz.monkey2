@@ -59,8 +59,8 @@ Struct mz_zip_archive_file_stat
 	Field m_external_attr:UInt
 	Field m_local_header_ofs:ULong
 	Field m_comment_size:UInt
-	Field m_filename:CChar Ptr
-	Field m_comment:CChar Ptr
+	Field m_filename:char_t Ptr
+	Field m_comment:char_t Ptr
 End
 
 Function mz_free:Void( address:Void Ptr )

@@ -1,7 +1,7 @@
 
-Namespace std
+Namespace std.collections
 
-#rem monkedoc The Map class.
+#rem monkeydoc The Map class.
 #end
 Class Map<K,V>
 

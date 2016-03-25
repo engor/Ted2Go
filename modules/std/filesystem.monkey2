@@ -8,18 +8,75 @@ Using libc
 
 Extern
 
+#rem monkeydoc Gets application directory.
+
+@return The directory containing the application executable.
+
+#end
 Function AppDir:String()="bbFileSystem::appDir"
+
+#rem monkeydoc Gets the application file path.
+
+@return The path of the application executable.
+
+#end
 Function AppPath:String()="bbFileSystem::appPath"
+
+#rem monkeydoc Gets application command line arguments.
+
+@return The application command line arguments.
+#end
 Function AppArgs:String[]()="bbFileSystem::appArgs"
+
+#rem monkeydoc Copies a file.
+
+@return True if the file was successfully copied.
+
+#end
 Function CopyFile:Bool( srcPath:String,dstPath:String )="bbFileSystem::copyFile"
 
 Public
 
-Const FILETYPE_UNKNOWN:=-1
-Const FILETYPE_NONE:=0
-Const FILETYPE_FILE:=1
-Const FILETYPE_DIR:=2
+#rem monkeydoc FileType enumeration.
 
+| FileType		| Description
+|:--------------|:-----------
+| `None`		| File does not exist.
+| `File`		| File is a normal file.
+| `Directory`	| File is a directory.
+| `Unknown`		| File is of unknown type.
+
+#end
+Enum FileType
+	None=0
+	File=1
+	Directory=2
+	Unknown=3
+End
+
+'For backward compatibility - don't use!
+'
+#rem monkeydoc @hidden
+#end
+Const FILETYPE_NONE:=FileType.None
+
+#rem monkeydoc @hidden
+#end
+Const FILETYPE_FILE:=FileType.File
+
+#rem monkeydoc @hidden
+#end
+Const FILETYPE_DIR:=FileType.Directory
+
+#rem monkeydoc @hidden
+#end
+Const FILETYPE_UNKNOWN:=FileType.Unknown
+
+#rem monkeydoc Gets the filesystem directory of the assets folder.
+
+@return The directory app assets are stored in.
+
+#end
 Function AssetsDir:String()
 
 #If __TARGET__="desktop" And __HOSTOS__="macos"
@@ -30,6 +87,13 @@ Function AssetsDir:String()
 
 End
 
+#rem monkeydoc Extracts the root directory from a file system path.
+
+@param path The filesystem path.
+
+@return The root directory of `path`, or an empty string if `path` is not an absolute path.
+ 
+#end
 Function ExtractRootDir:String( path:String )
 
 	If path.StartsWith( "//" ) Return "//"
@@ -52,6 +116,13 @@ Function ExtractRootDir:String( path:String )
 	
 End
 
+#rem monkeydoc Checks if a path is a root directory.
+
+@param path The filesystem path to check.
+
+@return True if `path` is a root directory path.
+
+#end
 Function IsRootDir:Bool( path:String )
 
 	If path="//" Return True
@@ -73,11 +144,15 @@ Function IsRootDir:Bool( path:String )
 	Return False
 End
 
-Function IsRealPath:Bool( path:String )
+#rem monkeydoc Strips any trailing slashes from a filesystem path.
 
-	Return ExtractRootDir( path )<>""
-End
+This function will not strip slashes from a root directory path.
 
+@param path The filesystem path.
+
+@return The path stripped of trailing slashes.
+
+#end
 Function StripSlashes:String( path:String )
 
 	If Not path.EndsWith( "/" ) Return path
@@ -95,6 +170,17 @@ Function StripSlashes:String( path:String )
 	Return path
 End
 
+#rem monkeydoc Extracts the directory component from a filesystem path.
+
+If `path` is a root directory it is returned without modification.
+
+If `path` does not contain a directory component, an empty string is returned.
+
+@param path The filesystem path.
+
+@return The directory component of `path`.
+
+#end
 Function ExtractDir:String( path:String )
 
 	path=StripSlashes( path )
@@ -106,6 +192,17 @@ Function ExtractDir:String( path:String )
 	Return ""
 End
 
+#rem monkeydoc Strips the directory component from a filesystem path.
+
+If `path` is a root directory an empty string is returned.
+
+If `path` does not contain a directory component, `path` is returned without modification.
+
+@param path The filesystem path.
+
+@return The path with the directory component stripped.
+
+#end
 Function StripDir:String( path:String )
 
 	path=StripSlashes( path )
@@ -117,6 +214,13 @@ Function StripDir:String( path:String )
 	Return path
 End
 
+#rem monkeydoc Extracts the extension component from a filesystem path.
+
+@param path The filesystem path.
+
+@return The extension component of `path` including  the '.' if any.
+
+#end
 Function ExtractExt:String( path:String )
 
 	Local i:=path.FindLast( "." )
@@ -128,6 +232,13 @@ Function ExtractExt:String( path:String )
 	Return ""
 End
 
+#rem monkeydoc Strips the extension component from a filesystem path
+
+@param path The filesystem path.
+
+@return The path with the extension stripped.
+
+#end
 Function StripExt:String( path:String )
 
 	Local i:=path.FindLast( "." )
@@ -139,16 +250,25 @@ Function StripExt:String( path:String )
 	Return path
 End
 
+#rem monkeydoc Converts a path to a real path.
+
+If `path` is a relative path, it is first converted into an absolute path by prefixing the current directory.
+
+Then, any internal './' or '../' references in the path are collapsed.
+
+@param path The filesystem path.
+
+@return An absolute path with any './', '../' references collapsed.
+
+#end
 Function RealPath:String( path:String )
 
 	Local rpath:=ExtractRootDir( path )
-	If rpath
+	If rpath 
 		path=path.Slice( rpath.Length )
 	Else
 		rpath=CurrentDir()
 	Endif
-	
-	If Not rpath rpath=CurrentDir()
 	
 	While path
 		Local i:=path.Find( "/" )
@@ -159,6 +279,7 @@ Function RealPath:String( path:String )
 		Case ""
 		Case "."
 		Case ".."
+			If Not rpath rpath=CurrentDir()
 			rpath=ExtractDir( rpath )
 		Default
 			rpath+=t+"/"
@@ -168,60 +289,54 @@ Function RealPath:String( path:String )
 	Return rpath
 End
 
-Function FileTime:long( path:String )
+#rem monkeydoc Gets the time a file was most recently modified.
+
+@param path The filesystem path.
+
+@return The time the file at `path` was most recently modified.
+
+#end
+Function GetFileTime:Long( path:String )
 
 	path=StripSlashes( path )
 
 	Local st:stat_t
-	
 	If stat( path,Varptr st )<0 Return 0
 	
 	Return libc.tolong( st.st_mtime )
 End
 
-Function FileType:Int( path:String )
+#rem monkeydoc Gets the type of the file at a filesystem path.
+
+@param path The filesystem path.
+
+@return The file type of the file at `path`, one of: FileType.None, FileType.File or FileType.Directory.
+
+#end
+Function GetFileType:FileType( path:String )
 
 	path=StripSlashes( path )
 
 	Local st:stat_t
-
-	If stat( path,Varptr st )<0 Return FILETYPE_NONE
+	If stat( path,Varptr st )<0 Return FileType.None
 	
 	Select st.st_mode & S_IFMT
-	Case S_IFDIR Return FILETYPE_DIR
-	Case S_IFREG Return FILETYPE_FILE
+	Case S_IFREG Return FileType.File
+	Case S_IFDIR Return FileType.Directory
 	End
 	
-	Return FILETYPE_UNKNOWN
+	Return FileType.Unknown
 End
 
-Function DeleteFile:Bool( path:String )
+#rem monkeydoc Gets the process current directory.
 
-	remove( path )
-	
-	Return FileType( path )=FILETYPE_NONE
-End
+@return The current directory for the running process.
 
-Function CreateDir:Bool( path:String,recursive:Bool=True )
-
-	path=StripSlashes( path )
-
-	If recursive
-		Local parent:=ExtractDir( path )
-		If parent And Not IsRootDir( parent ) 
-			If FileType( parent )=FILETYPE_NONE And Not CreateDir( parent,True ) Return False
-		Endif
-	Endif
-
-	mkdir( path,$1ff )
-
-	Return FileType( path )=FILETYPE_DIR
-End
-
+#end
 Function CurrentDir:String()
 
 	Local sz:=4096
-	Local buf:=Cast<CChar Ptr>( malloc( sz ) )
+	Local buf:=Cast<char_t Ptr>( malloc( sz ) )
 	getcwd( buf,sz )
 	Local path:=String.FromCString( buf )
 	free( buf )
@@ -231,6 +346,11 @@ Function CurrentDir:String()
 	Return path+"/"
 End
 
+#rem monkeydoc Changes the process current directory.
+
+@param path The filesystem path of the directory to make current.
+
+#end
 Function ChangeDir( path:String )
 
 	path=StripSlashes( path )
@@ -238,6 +358,13 @@ Function ChangeDir( path:String )
 	chdir( path )
 End
 
+#rem monkeydoc Loads a directory.
+
+@param path The filesystem path of the directory to load.
+
+@return An array containing all filenames in the `path`, excluding '.' and '..' entries.
+
+#end
 Function LoadDir:String[]( path:String )
 
 	path=StripSlashes( path )
@@ -251,7 +378,7 @@ Function LoadDir:String[]( path:String )
 		Local ent:=readdir( dir )
 		If Not ent Exit
 		
-		Local file:=String.FromTString( ent[0].d_name )
+		Local file:=String.FromCString( ent[0].d_name )
 		If file="." Or file=".." Continue
 		
 		files.Push( file )
@@ -262,53 +389,107 @@ Function LoadDir:String[]( path:String )
 	Return files.ToArray()
 End
 
-Function DeleteAll:Bool( path:String )
+#rem monkeydoc Creates a directory at a filesystem path.
+
+@param path The filesystem path of ther directory to create.
+
+@param recursive If true, any required parent directories are also created.
+
+@return True if a directory at `path` was successfully created or already existed.
+
+#end
+Function CreateDir:Bool( path:String,recursive:Bool=True )
 
 	path=StripSlashes( path )
 
-	Select FileType( path )
-	Case FILETYPE_NONE
+	If recursive
+		Local parent:=ExtractDir( path )
+		If parent And Not IsRootDir( parent )
+			Select GetFileType( parent )
+			Case FileType.None
+				If Not CreateDir( parent,True ) Return False
+			Case FileType.File
+				Return False
+			Case FileType.Directory
+			End
+		Endif
+	Endif
+
+	mkdir( path,$1ff )
+	Return GetFileType( path )=FileType.Directory
+End
+
+Private
+
+Function DeleteAll:Bool( path:String )
+
+	Select GetFileType( path )
+	Case FileType.None
 	
 		Return True
 		
-	Case FILETYPE_FILE
+	Case FileType.File
 	
 		Return DeleteFile( path )
 		
-	Case FILETYPE_DIR
+	Case FileType.Directory
 	
 		For Local f:=Eachin LoadDir( path )
 			If Not DeleteAll( path+"/"+f ) Return False
 		Next
 		
 		rmdir( path )
-		Return FileType( path )=FILETYPE_NONE
+		Return GetFileType( path )=FileType.None
 	End
 	
 	Return False
 End
 
-Function DeleteDir:Bool( path:String,recursive:Bool=True )
+Public
+
+#rem monkeydoc Deletes a directory at a filesystem path.
+
+@param path The filesystem path.
+
+@param recursive True to delete subdirectories too.
+
+@return True if the directory was successfully deleted or never existed.
+
+#end
+Function DeleteDir:Bool( path:String,recursive:Bool=False )
 
 	path=StripSlashes( path )
 
-	Select FileType( path )
-	Case FILETYPE_NONE
+	Select GetFileType( path )
+	Case FileType.None
 
 		Return True
-
-	Case FILETYPE_FILE
+		
+	Case FileType.File
 	
 		Return False
 		
-	Case FILETYPE_DIR
+	Case FileType.Directory
 	
 		If recursive Return DeleteAll( path )
 		
 		rmdir( path )
-		Return FileType( path )=FILETYPE_NONE
+		Return GetFileType( path )=FileType.None
 	End
 	
 	Return False
+End
+
+#rem monkeydoc Deletes a file at a filesystem path.
+
+@param path The filesystem path.
+
+@return True if the file was successfully deleted.
+
+#end
+Function DeleteFile:Bool( path:String )
+
+	remove( path )
+	Return GetFileType( path )=FileType.None
 End
 

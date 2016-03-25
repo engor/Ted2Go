@@ -1,25 +1,9 @@
 
-Namespace monkey
+Namespace monkey.types
+
+Alias Exception:Throwable
 
 Extern
-
-Struct CChar="char"
-End
-
-Struct WChar="wchar_t"
-End
-
-Struct Utf8Char="unsigned char"
-End
-
-Struct CString="bbCString"
-End
-
-Struct WString="bbWString"
-End
-
-Struct Utf8String="bbUtf8String"
-End
 
 Interface INumeric
 End
@@ -30,57 +14,57 @@ End
 Interface IReal Extends INumeric
 End
 
-#rem monkeydoc Primitive bool type
+#rem monkeydoc Primitive bool type.
 #end
 Struct @Bool Implements IIntegral ="bbBool"
 End
 
-#rem monkeydoc Primitive byte type
+#rem monkeydoc Primitive 8 bit byte type.
 #end
 Struct @Byte Implements IIntegral ="bbByte"
 End
 
-#rem monkeydoc Primitive unsigned byte type
+#rem monkeydoc Primitive 8 bit unsigned byte type.
 #end
 Struct @UByte Implements IIntegral ="bbUByte"
 End
 
-#rem monkeydoc Primitive short type
+#rem monkeydoc Primitive 16 bit short type.
 #end
 Struct @Short Implements IIntegral ="bbShort"
 End
 
-#rem monkeydoc Primitive unsigned short type
+#rem monkeydoc Primitive 16 bit unsigned short type.
 #end
 Struct @UShort Implements IIntegral ="bbUShort"
 End
 
-#rem monkeydoc Primitive int type
+#rem monkeydoc Primitive 32 bit int type.
 #end
 Struct @Int Implements IIntegral ="bbInt"
 End
 
-#rem monkeydoc Primitive unsigned int type
+#rem monkeydoc Primitive 32 bit unsigned int type.
 #end
 Struct @UInt Implements IIntegral ="bbUInt"
 End
 
-#rem monkeydoc Primitive long type
+#rem monkeydoc Primitive 64 bit long type.
 #end
 Struct @Long Implements IIntegral ="bbLong"
 End
 
-#rem monkeydoc Primitive unsigned long type
+#rem monkeydoc Primitive 64 bit unsigned long type.
 #end
 Struct @ULong Implements IIntegral ="bbULong"
 End
 
-#rem monkeydoc Primitive float type
+#rem monkeydoc Primitive 32 bit float type.
 #end
 Struct @Float Implements IReal ="bbFloat"
 End
 
-#rem monkeydoc Primitive double type
+#rem monkeydoc Primitive 64 bit double type.
 #end
 Struct @Double Implements IReal ="bbDouble"
 End
@@ -89,8 +73,18 @@ End
 #end
 Struct @String ="bbString"
 
+	#rem monkeydoc Gets the length of the string.
+	
+	@return The number of characters in the string.
+	
+	#end
 	Property Length:Int()="length"
 	
+	#rem monkeydoc Gets the utf8 length of the string.
+	
+	@return The size of the buffer required to store a utf8 representation of the string.
+	
+	#end
 	Property Utf8Length:Int()="utf8Length"
 	
 	Method Find:Int( str:String,from:Int=0 )="find"
@@ -139,12 +133,12 @@ Struct @String ="bbString"
 	
 	Function FromUtf8String:String( data:Void Ptr )="bbString::fromUtf8String"
 	
-	Function FromTString:String( data:Void Ptr )="bbString::fromTString"
-	
 	Function FromUtf8:String( data:Void Ptr,size:Int )="bbString::fromUtf8"
 	
 End
 
+#rem monkeydoc Primtive array type.
+#end
 Struct @Array<T>
 
 	Property Data:T Ptr()="data"
@@ -159,28 +153,60 @@ Struct @Array<T>
 
 End
 
+#rem monkeydoc Base class of all objects.
+#end
 Class @Object="bbObject"
 
-	Method typeName:CChar Ptr()="typeName"
+	#rem monkeydoc @hidden
+	#end
+	Method typeName:Void Ptr()="typeName"
 
 End
 
+#rem monkeydoc Base class of all throwable objects.
+#end
 Class @Throwable="bbThrowable"
 
-	Method DebugStack:String[]()="debugStack"
-	
 End
 
-#rem
-Class @RuntimeError Extends @Throwable="bbRuntimeError"
+#rem monkeydoc Base class of all exception objects.
+#end
+Class @Exception Extends Throwable="bbException"
 
 	Method New()
 	
 	Method New( message:String )
-	
+
 	Property Message:String()="message"
 
+	Property DebugStack:String[]()="debugStack"
+	
 End
-#end
 
+#rem monkeydoc @hidden
+#end
 Function TypeName:String( type:CString )="bbTypeName"
+
+#rem monkeydoc String wrapper type for native 'char *' strings.
+
+This type should only be used when declaring parameters for extern functions.
+
+#end
+Struct CString="bbCString"
+End
+
+#rem monkeydoc String wrapper type for native 'wchar_t *' strings.
+
+This type should only be used when declaring parameters for extern functions.
+
+#end
+Struct WString="bbWString"
+End
+
+#rem monkeydoc String wrapper type for native utf8 'unsigned char*' strings.
+
+This type should only be used when declaring parameters for extern functions.
+
+#end
+Struct Utf8String="bbUtf8String"
+End

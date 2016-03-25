@@ -463,16 +463,16 @@ class bbCString{
 		return *this;
 	}
 	
+	operator bbString()const{
+		return _str;
+	}
+	
 	char *data()const{
 		if( _data ) return _data;
 		_data=(char*)malloc( _str.length()+1 );
 		for( int i=0;i<_str.length();++i ) _data[i]=_str.data()[i];
 		_data[_str.length()]=0;
 		return _data;
-	}
-	
-	operator bbString()const{
-		return _str;
 	}
 	
 	operator char*()const{
@@ -503,16 +503,16 @@ class bbWString{
 		return *this;
 	}
 	
+	operator bbString()const{
+		return _str;
+	}
+	
 	wchar_t *data()const{
 		if( _data ) return _data;
 		_data=(wchar_t*)malloc( (_str.length()+1)*sizeof( wchar_t ) );
 		for( int i=0;i<_str.length();++i ) _data[i]=_str.data()[i];
 		_data[_str.length()]=0;
 		return _data;
-	}
-	
-	operator bbString()const{
-		return _str;
 	}
 	
 	operator wchar_t*()const{
@@ -522,7 +522,7 @@ class bbWString{
 
 class bbUtf8String{
 	bbString _str;
-	mutable char *_data=nullptr;
+	mutable unsigned char *_data=nullptr;
 	
 	public:
 	
@@ -543,20 +543,24 @@ class bbUtf8String{
 		return *this;
 	}
 	
-	char *data()const{
-		if( _data ) return _data;
-		int n=_str.utf8Length()+1;
-		_data=(char*)malloc( n );
-		_str.toUtf8( _data,n );
-		return _data;
-	}
-
 	operator bbString()const{
 		return _str;
 	}
 	
-	operator char*()const{
+	unsigned char *data()const{
+		if( _data ) return _data;
+		int n=_str.utf8Length()+1;
+		_data=(unsigned char*)malloc( n );
+		_str.toUtf8( _data,n );
+		return _data;
+	}
+	
+	operator unsigned char*()const{
 		return data();
+	}
+	
+	operator char*()const{
+		return (char*)data();
 	}
 };
 

@@ -1,5 +1,5 @@
 
-Namespace std
+Namespace std.collections
 
 #rem monkeydoc IContainer interface.
 #end
@@ -26,7 +26,7 @@ End
 #end
 Interface IIterator<T>
 
-	'Property Valid:Bool()
+	'Property AtEnd:Bool()
 	
 	'Property Current:T()
 	

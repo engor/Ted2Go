@@ -1,16 +1,28 @@
 
-Namespace std
+Namespace std.collections
 
-#rem monkeydoc List class.
+Alias IntList:List<Int>
+
+Alias FloatList:List<Float>
+
+Alias StringList:List<String>
+
+#rem monkeydoc The List class.
 
 #end
 Class List<T> Implements IContainer<T>
 
+	Private
+	
 	Class Node
+	
+		Private
 	
 		Field _succ:Node
 		Field _pred:Node
 		Field _value:T
+		
+		Public
 		
 		Method New( value:T )
 			_value=value
@@ -30,11 +42,25 @@ Class List<T> Implements IContainer<T>
 		
 	End
 	
+	Public
+	
 	Struct Iterator 'Implements IIterator<T>
+	
+		Private
 	
 		Field _list:List
 		Field _node:Node
 		Field _seq:Int
+		
+		Method AssertSeq()
+			DebugAssert( _seq=_list._seq,"Concurrent list modification" )
+		End
+		
+		Method AssertCurrent()
+			DebugAssert( Valid,"Invalid list iterator" )
+		End
+		
+		Public
 		
 		Method New( list:List,node:Node )
 			_list=list
@@ -42,30 +68,28 @@ Class List<T> Implements IContainer<T>
 			_seq=list._seq
 		End
 		
-		Method AssertSeq()
-			DebugAssert( _seq=_list._seq,"Concurrent list modification" )
-		End
-		
-		Method AssertValid()
-			DebugAssert( Valid,"Invalid list iterator" )
-		End
-		
-		Property Valid:Bool()
+		Property AtEnd:Bool()
 			AssertSeq()
-			Return _node<>Null
+			Return _node=Null
+		End
+		
+		#rem monkeydoc @hidden
+		#end
+		Property Valid:Bool()
+			Return Not AtEnd
 		End
 		
 		Property Current:T()
-			AssertValid()
+			AssertCurrent()
 			Return _node._value
 			
 		Setter( current:T )
-			AssertValid()
+			AssertCurrent()
 			_node._value=current
 		End
 		
 		Method Bump()
-			AssertValid()
+			AssertCurrent()
 			_node=_node._succ
 		End
 		
@@ -82,10 +106,14 @@ Class List<T> Implements IContainer<T>
 		End
 	End
 	
+	Private
+	
 	Field _first:Node
 	Field _last:Node
 	Field _length:Int
 	Field _seq:Int
+	
+	Public
 	
 	#rem monkeydoc Creates a new empty list.
 	#end
@@ -101,10 +129,16 @@ Class List<T> Implements IContainer<T>
 		AddAll( values )
 	End
 	
-	#rem monkeydoc Gets an iterator to all values in the list.
+	#rem monkeydoc Gets an iterator to the list.
 
 	@return A list iterator.
 	
+	#end
+'	Method GetIterator:Iterator()
+'		Return New Iterator( Self,_first )
+'	End
+	
+	#rem monkeydoc @hidden
 	#end
 	Method All:Iterator()
 		Return New Iterator( Self,_first )
@@ -216,6 +250,54 @@ Class List<T> Implements IContainer<T>
 		_seq+=1
 	End
 	
+	#rem monkeydoc Removes the first value in the list equal to a given value.
+	
+	@param value The value to remove.
+
+	@return True if a value was removed.
+		
+	#end
+	Method Remove:Bool( value:T )
+		Local node:=FindNode( value )
+		If Not node Return False
+		Erase( node )
+		Return True
+	End
+	
+	#rem monkeydoc Removes the last value in the list equal to a given value.
+	
+	@param value The value to remove.
+	
+	@return True if a value was removed.
+		
+	#end
+	Method RemoveLast:Bool( value:T )
+		Local node:=FindLastNode( value )
+		If Not node Return False
+		Erase( node )
+		Return True
+	End
+	
+	#rem monkeydoc Removes all values in the list equal to a given value.
+	
+	@param value The value to remove.
+	
+	@return The number of values removed.
+	
+	#end
+	Method RemoveEach:Int( value:T )
+		Local node:=_first,n:=0
+		While node
+			If node._value=value
+				node=Erase( node )
+				n+=1
+			Else
+				node=node._succ
+			Endif
+		Wend
+		Return n
+	End
+	
 	#rem monkeydoc Removes and returns the first value in the list.
 	
 	In debug builds, a runtime error will occur if the list is empty.
@@ -251,84 +333,6 @@ Class List<T> Implements IContainer<T>
 		_seq+=1
 		Return value
 	End
-	
-	#rem monkeydoc Finds the first node in the list that contains a given value.
-	
-	@param value The value to find.
-	
-	@return Node The node containing the value, or null if the value was not found.
-	
-	#end
-	Method FindNode:Node( value:T )
-		Local node:=_first
-		While node And node._value<>value
-			node=node._succ
-		Wend
-		Return node
-	End
-	
-	#rem monkeydoc Finds the last node in the list that contains a given value.
-	
-	@param value The value to find.
-	
-	@return Node The node containing the value, or null if the value was not found.
-	
-	#end
-	Method FindLastNode:Node( value:T )
-		Local node:=_last
-		While node And node._value<>value
-			node=node._pred
-		Wend
-		Return node
-	End
-	
-	#rem monkeydoc Removes the first value in the list equal to a given value.
-	
-	@param value The value to remove.
-
-	@return True if a value was removed.
-		
-	#end
-	Method Remove:Bool( value:T )
-		Local node:=FindNode( value )
-		If Not node Return False
-		Erase( node )
-		Return True
-	End
-	
-	#rem monkeydoc Removes the last value in the list equal to a given value.
-	
-	@param value The value to remove.
-	
-	@return True if a value was removed.
-		
-	#end
-	Method RemoveLast:Bool( value:T )
-		Local node:=FindLastNode( value )
-		If Not node Return False
-		Erase( node )
-		Return True
-	End
-	
-	#rem monkedoc Removes all values in the list equal to a given value.
-	
-	@param value The value to remove.
-	
-	@return The number of values removed.
-	
-	#end
-	Method RemoveEach:Int( value:T )
-		Local node:=_first,n:=0
-		While node
-			If node._value=value
-				node=Erase( node )
-				n+=1
-			Else
-				node=node._succ
-			Endif
-		Wend
-		Return n
-	End
 
 	#rem monkeydoc Gets an iterator for the value at a given index in the list.
 	
@@ -351,7 +355,7 @@ Class List<T> Implements IContainer<T>
 		Return New Iterator( Self,Null )
 	End
 	
-	#rem monkeydocs Adds a value to the end of the list.
+	#rem monkeydoc Adds a value to the end of the list.
 	
 	This method behaves identically to AddLast.
 	
@@ -362,7 +366,7 @@ Class List<T> Implements IContainer<T>
 		AddLast( value )
 	End
 	
-	#rem monkeydocs Adds all values in an array to the end of the list.
+	#rem monkeydoc Adds all values in an array to the end of the list.
 	
 	@param values The values to add.
 	
@@ -373,7 +377,7 @@ Class List<T> Implements IContainer<T>
 		Next
 	End
 
-	#rem monkedoc Adds all value in a container to the end of the list.
+	#rem monkedoc Adds all values in a container to the end of the list.
 	
 	@param values The values to add.
 	
@@ -383,17 +387,135 @@ Class List<T> Implements IContainer<T>
 			AddLast( value )
 		Next
 	End
+	
+	#rem monkeydoc Sorts the list.
+	
+	@param ascending True to sort the stack in ascending order, false to sort in descending order.
+	
+	@param compareFunc Function to be used to compare values when sorting.
+	
+	#end
+	Method Sort( ascending:Bool=True )
+		If ascending
+			Sort( Lambda:Int( x:T,y:T )
+				Return x<=>y
+			End )
+		Else
+			Sort( Lambda:Int( x:T,y:T )
+				Return -(x<=>y)
+			End )
+		Endif
+	End
+
+	Method Sort( compareFunc:Int( x:T,y:T ) )
+	
+		If _first=_last Return
+	
+		Local insize:=1
+		
+		Repeat
+		
+			Local merges:=0
+			Local p:=_first,tail:Node
+			
+			While p
+
+				merges+=1
+				Local q:=p._succ,qsize:=insize,psize:=1
+				
+				While psize<insize And q
+					psize+=1
+					q=q._succ
+				Wend
+
+				Repeat
+					Local t:Node
+					
+					If psize And qsize And q
+						Local cc:=compareFunc( p._value,q._value )
+						If cc<=0
+							t=p
+							p=p._succ
+							psize-=1
+						Else
+							t=q
+							q=q._succ
+							qsize-=1
+						Endif
+					Else If psize
+						t=p
+						p=p._succ
+						psize-=1
+					Else If qsize And q
+						t=q
+						q=q._succ
+						qsize-=1
+					Else
+						Exit
+					Endif
+					
+					t._pred=tail
+					If tail tail._succ=t Else _first=t
+					tail=t
+					
+'					t._pred=tail
+'					tail._succ=t
+'					tail=t
+					
+				Forever
+				
+				p=q
+				
+			Wend
+			
+			tail._succ=Null
+			_last=tail
+			
+'			tail._succ=_head
+'			_head._pred=tail
+
+			If merges<=1 Return
+
+			insize*=2
+		Forever
+
+	End Method
+	
+	#rem monkeydoc Joins the values in the string list.
+	
+	@param sepeator The separator to be used when joining values.
+	
+	@return The joined values.
+	
+	#end
+	Method Join:String( separator:String="" ) Where T=String
+		Return separator.Join( ToArray() )
+	End
 
 	Private
 	
-	'could make these public if people REALLY want...
-	'
 	Method FirstNode:Node()
 		Return _first
 	End
 	
 	Method LastNode:Node()
 		Return _last
+	End
+	
+	Method FindNode:Node( value:T )
+		Local node:=_first
+		While node And node._value<>value
+			node=node._succ
+		Wend
+		Return node
+	End
+	
+	Method FindLastNode:Node( value:T )
+		Local node:=_last
+		While node And node._value<>value
+			node=node._pred
+		Wend
+		Return node
 	End
 	
 	Method Erase:Node( node:Node )
@@ -433,13 +555,4 @@ Class List<T> Implements IContainer<T>
 		Return node
 	End
 	
-End
-
-Class IntList Extends List<Int>
-End
-
-Class FloatList Extends List<Float>
-End
-
-Class StringList Extends List<String>
 End

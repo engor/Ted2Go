@@ -106,9 +106,9 @@ int main( int argc,char **argv ){
 		
 		bbMain();
 		
-	}catch( bbRuntimeError *ex ){
+	}catch( bbException *ex ){
 	
-		printf( "\n***** Uncaught RuntimeError exception: %s *****\n\n",ex->message().c_str() );
+		printf( "\n***** Uncaught Monkey 2 Exception: %s *****\n\n",ex->message().c_str() );
 		
 		for( int i=0;i<ex->debugStack()->length();++i ){
 			printf( "%s\n",ex->debugStack()->at( i ).c_str() );
@@ -116,7 +116,7 @@ int main( int argc,char **argv ){
 
 	}catch(...){
 	
-		printf( "***** Uncaught native exception *****\n" );fflush( stdout );
+		printf( "***** Uncaught Native Exception *****\n" );fflush( stdout );
 //		throw;
 	}
 	

@@ -1,10 +1,5 @@
 
-Namespace std
-
-#Import "<stb-image.monkey2>"
-
-Using libc
-Using stb.image
+Namespace std.graphics
 
 #rem monkeydoc Pixmap class.
 
@@ -21,9 +16,41 @@ Class Pixmap
 	
 	@param format The pixmap format.
 	
+	@param data A pointer to the pixmap data.
+	
+	@param pitch The pitch of the data.
+	
+	@param onDiscard A function to free the data when pixmap is discarded.
+	
 	#end
-	Method New( width:Int,height:Int,format:PixelFormat=PixelFormat.Any )
-		Self.New( width,height,format,Null,0,Null )
+	Method New( width:Int,height:Int,format:PixelFormat=PixelFormat.RGBA32 )
+
+		Local depth:=PixelFormatDepth( format )
+		Local pitch:=depth * height
+		Local data:=Cast<UByte Ptr>( libc.malloc( width*height*pitch ) )
+		
+		_width=width
+		_height=height
+		_format=format
+		_depth=depth
+		_data=data
+		_pitch=pitch
+		_onDiscard=Lambda( data:UByte Ptr )
+			libc.free( data )
+		End
+	End
+	
+	Method New( width:Int,height:Int,format:PixelFormat,data:UByte Ptr,pitch:Int,onDiscard:Void( data:UByte Ptr ) )
+	
+		Local depth:=PixelFormatDepth( format )
+		
+		_width=width
+		_height=height
+		_format=format
+		_depth=depth
+		_data=data
+		_pitch=pitch
+		_onDiscard=onDiscard
 	End
 
 	#rem monkeydoc Releases the memory used by a pixmap.
@@ -37,14 +64,13 @@ Class Pixmap
 	#end
 	Method Discard()
 		If Not _data Return
-		If Not _owner libc.free( _data )
+		_onDiscard( _data )
 		_width=0
 		_height=0
 		_pitch=0
 		_depth=0
-		_format=PixelFormat.None
 		_data=Null
-		_owner=Null
+		_onDiscard=Null
 	End
 	
 	#rem monkeydoc The pixmap width.
@@ -347,7 +373,7 @@ Class Pixmap
 	#rem monkeydoc Returns a rectangular window into the pixmap.
 	
 	In debug builds, a runtime error will occur if the rectangle lies outside of the pixmap area.
-s	
+	
 	@param x The x coordinate of the top left of the rectangle.
 
 	@param y The y coordinate of the top left of the rectangle.
@@ -360,7 +386,7 @@ s
 	Method Window:Pixmap( x:Int,y:Int,width:Int,height:Int )
 		DebugAssert( x>=0 And y>=0 And width>=0 And height>=0 And x+width<=_width And y+height<=_height )
 		
-		Return New Pixmap( width,height,_format,PixelPtr( x,y ),_pitch,Self )
+		Return New Pixmap( width,height,_format,PixelPtr( x,y ),_pitch,Null )
 	End
 	
 	#rem monkeydoc Loads a pixmap from a file.
@@ -372,58 +398,10 @@ s
 	@return Null if the file could not be opened, or contained invalid image data.
 	
 	#end
-	Function Load:Pixmap( path:String,format:PixelFormat=PixelFormat.Any )
+	Function LoadPixmap:Pixmap( path:String,format:PixelFormat=PixelFormat.Unknown )
 	
-		Local x:Int,y:Int,comp:Int,req_comp:Int
-		
-		Select format
-		Case PixelFormat.Any
-			req_comp=0
-		Case PixelFormat.A8,PixelFormat.I8
-			req_comp=1
-		Case PixelFormat.IA16
-			req_comp=2
-		Case PixelFormat.RGB24
-			req_comp=3
-		Case PixelFormat.RGBA32
-			req_comp=4
-		Default
-			'THROW
-		End
-		
-		Local stream:=Stream.Open( path,"r" )
-		If Not stream Return Null
-		
-		Local user:stbi_user
-		user.stream=stream
-		
-		Local clbks:stbi_io_callbacks
-		clbks.read=stbi_read
-		clbks.skip=stbi_skip
-		clbks.eof=stbi_eof
-		
-		Local data:=stbi_load_from_callbacks( Varptr clbks,Varptr user,Varptr x,Varptr y,Varptr comp,req_comp )
-		
-		stream.Close()
-		
-		If Not data Return Null
-		
-		If format=PixelFormat.Any
-			Select comp
-			Case 1 
-				format=PixelFormat.I8
-			Case 2
-				format=PixelFormat.IA16
-			Case 3
-				format=PixelFormat.RGB24
-			Case 4
-				format=PixelFormat.RGBA32
-			Default
-				Assert( False )
-			End
-		End
-		
-		Return New Pixmap( x,y,format,data,0,null )
+		Return internal.LoadPixmap( path,format )
+
 	End
 	
 	Private
@@ -434,59 +412,6 @@ s
 	Field _depth:Int
 	Field _data:UByte Ptr
 	Field _pitch:Int
-	Field _owner:Pixmap
-	
-	Struct stbi_user
-		Field stream:Stream
-	End
-	
-	Function stbi_read:Int( user:Void Ptr,data:stbi_char Ptr,count:Int )
-		Local stream:=Cast<stbi_user Ptr>( user )[0].stream
-		Return stream.Read( data,count )
-	End
-	
-	Function stbi_skip:Void( user:Void Ptr,count:Int )
-		Local stream:=Cast<stbi_user Ptr>( user )[0].stream
-		stream.Seek( stream.Position+count )
-	End
-	
-	Function stbi_eof:Int( user:Void Ptr )
-		Local stream:=Cast<stbi_user Ptr>( user )[0].stream
-		Return stream.Eof
-	End
-	
-	Method New( width:Int,height:Int,format:PixelFormat,data:UByte Ptr,pitch:Int,owner:Pixmap )
-	
-		If format=PixelFormat.Any format=PixelFormat.RGBA32
-	
-		Local depth:=0
-		Select format
-		Case PixelFormat.A8
-			depth=1
-		Case PixelFormat.I8
-			depth=1
-		Case PixelFormat.IA16
-			depth=2
-		Case PixelFormat.RGB24
-			depth=3
-		Case PixelFormat.RGBA32
-			depth=4
-		Default
-			Assert( False )
-		End
-		
-		_width=width
-		_height=height
-		_format=format
-		_depth=depth
-		
-		_data=data
-		_pitch=pitch
-		_owner=owner
-		
-		If Not _pitch _pitch=_width*_depth
-		
-		If Not _data _data=Cast<UByte Ptr>( libc.malloc( _pitch*_height ) )
-	End
+	Field _onDiscard:Void( data:UByte Ptr )
 
 End

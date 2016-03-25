@@ -1,5 +1,7 @@
 
-Namespace std
+Namespace std.memory
+
+Using std.stream
 
 #rem monkeydoc DataBuffer class.
 #end
@@ -9,7 +11,31 @@ Class DataBuffer
 	
 	The new databuffer initally uses little endian byte order. You can change this via the ByteOrder property.
 	
-	#param length The length of the databuffer to create, in bytes.
+	@example
+	
+	\#Import "<std>"
+	
+	Using std.memory
+	
+	Function Main()
+
+		Local buf:=New DataBuffer( 10 )
+		
+		Print buf.Length
+	
+		For Local i:=0 Until 10
+			buf.PokeByte( i,i*2 )
+		Next
+		
+		For Local i:=0 Until 10
+			Print buf.PeekByte( i )
+		Next
+		
+	End
+	
+	@end
+	
+	@param length The length of the databuffer to create, in bytes.
 	
 	#end
 	Method New( length:Int )
@@ -46,7 +72,6 @@ Class DataBuffer
 	End
 	
 	#rem monkeydoc The byte order of the databuffer.
-	
 	#end
 	Property ByteOrder:ByteOrder()
 		Return _byteOrder

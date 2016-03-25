@@ -1,321 +1,275 @@
 
-Namespace std
+Namespace std.json
 
-Private
-
-Function ThrowError:Void()
-'	DebugStop
-	Throw New JsonError
+#rem monkeydoc JsonError class.
+#end
+Class JsonError Extends Throwable
 End
 
-Public
+#rem monkeydoc JsonValue class.
 
-Class JsonError
-End
+This is base class of all JsonValue types.
 
+#end
 Class JsonValue Abstract
 
-	Method ToBool:Bool()
-		ThrowError()
-		Return False
+	Method ToBool:Bool() Virtual
+		Assert( False )
+		Return Null
 	End
 	
-	Method ToInt:Int()
-		ThrowError()
-		Return 0
+	Method ToNumber:Double() Virtual
+		Assert( False )
+		Return Null
+	End	
+	
+	Method ToString:String() Virtual
+		Assert( False )
+		Return Null
 	End
 	
-	Method ToFloat:Float()
-		ThrowError()
-		Return 0.0
+	Operator[]:JsonValue( index:Int ) Virtual
+		Assert( False )
+		Return Null
 	End
 	
-	Method ToString:String()
-		ThrowError()
-		Return ""
+	Operator[]=( index:Int,value:JsonValue ) Virtual
+		Assert( False )
 	End
 	
-	Method ToJson:String()
+	Operator[]:JsonValue( key:String ) Virtual
+		Assert( False )
+		Return Null
+	End
+	
+	Operator[]=( key:String,value:JsonValue ) Virtual
+		Assert( False )
+	End
+	
+	Method ToJson:String() Virtual
 		Local buf:=New StringStack
 		PushJson( buf )
 		Return buf.Join( "" )
 	End
 		
-	Method PushJson:Void( buf:StringStack )
-		buf.Push( ToJson() )
-	End
-
-End
-
-Class JsonObject Extends JsonValue
-
-	Method New()
-		_data=New StringMap<JsonValue>
+	Method ToInt:Int()
+		Return Int( ToNumber() )
 	End
 	
-	Method New( json:String )
-		_data=(New JsonParser( json ) ).ParseObject()
+	Method ToLong:Long()
+		Return Long( ToNumber() )
 	End
+	
+	Method ToFloat:Float()
+		Return Float( ToNumber() )
+	End
+	
+	Method ToDouble:Double()
+		Return ToNumber()
+	End
+	
+	Protected
+	
+	#rem monkeydoc @hidden
+	#end
+	Method PushJson:Void( buf:StringStack ) Virtual
+		buf.Push( ToJson() )
+	End
+	
+End
 
-	Method New( data:StringMap<JsonValue> )
+#rem monkeydoc JsonBool class.
+#end
+Class JsonBool Extends JsonValue
+
+	Const TrueValue:JsonBool=New JsonBool( True )
+	
+	Const FalseValue:JsonBool=New JsonBool( False )
+
+	Method New( data:Bool=False )
 		_data=data
 	End
 	
-	Method Contains:Bool( key:String )
-		Return _data.Contains( key )
+	Property Data:Bool()
+		Return _data
+	Setter( data:Bool )
+		_data=data
 	End
 	
-	Method Set:Void( key:String,value:JsonValue )
-		_data.Set( key,value )
-	End
-
-	Method SetBool:Void( key:String,value:Bool )
-		Set( key,New JsonBool( value ) )
-	End
-	
-	Method SetInt:Void( key:String,value:Int )
-		Set( key,New JsonNumber( value ) )
-	End
-	
-	Method SetFloat:Void( key:String,value:Float )
-		Set( key,New JsonNumber( value ) )
-	End
-	
-	Method SetString:Void( key:String,value:String )
-		Set( key,New JsonString( value ) )
-	End
-	
-	Method Get:JsonValue( key:String,defval:JsonValue=Null )
-		If Not _data.Contains( key ) Return defval
-		Local val:=_data.Get( key )
-		If val Return val
-		Return JsonNull.Instance()
-	End
-	
-	Method GetBool:Bool( key:String,defval:Bool=False )
-		If Not _data.Contains( key ) Return defval
-		Return Get( key ).ToBool()
-	End
-		
-	Method GetInt:Int( key:String,defval:Int=0 )
-		If Not _data.Contains( key ) Return defval
-		Return Get( key ).ToInt()
-	End
-		
-	Method GetFloat:Float( key:String,defval:Float=0 )
-		If Not _data.Contains( key ) Return defval
-		Return Get( key ).ToFloat()
-	End
-		
-	Method GetString:String( key:String,defval:String="" )
-		If Not _data.Contains( key ) Return defval
-		Return Get( key ).ToString()
-	End
-	
-	Method GetData:StringMap<JsonValue>()
+	Method ToBool:Bool() Override
 		Return _data
 	End
-		
-	Method PushJson:Void( buf:StringStack ) Override
-		buf.Push( "{" )
-		Local t:=False
-		For Local it:=Eachin _data
-			If t buf.Push( "," )
-			buf.Push( "~q"+it.Key.Replace( "~q","\~q" )+"~q:" )
-			If it.Value<>Null it.Value.PushJson( buf ) Else buf.Push( "null" )
-			t=True
-		Next
-		buf.Push( "}" )
+	
+	Method ToNumber:Double() Override
+		Return _data
+	End
+	
+	Method ToString:String() Override
+		Return _data ? "true" Else "false"
+	End
+	
+	Method ToJson:String() Override
+		Return _data ? "true" Else "false"
+	End
+
+	Private
+	
+	Field _data:Bool
+End
+
+#rem monkeydoc JsonNumber class.
+#end
+Class JsonNumber Extends JsonValue
+
+	Method New( data:Double=0 )
+		_data=data
+	End
+	
+	Property Data:Double()
+		Return _data
+	Setter( data:Double )
+		_data=data
+	End
+	
+	Method ToBool:Bool() Override
+		Return _data
+	End
+	
+	Method ToNumber:Double() Override
+		Return _data
+	End
+	
+	Method ToString:String() Override
+		Return _data
+	End
+	
+	Method ToJson:String() Override
+		Return _data
+	End
+
+	Private
+	
+	Field _data:Double
+End
+
+#rem monkeydoc JsonString class.
+#end
+Class JsonString Extends JsonValue
+
+	Method New( data:String="" )
+		_data=data
+	End
+	
+	Property Data:String()
+		Return _data
+	Setter( data:String )
+		_data=data
+	End
+	
+	Method ToBool:Bool() Override
+		Return _data
+	End
+	
+	Method ToNumber:Double() Override
+		Return Double( _data )
+	End
+	
+	Method ToString:String() Override
+		Return _data
+	End
+	
+	Method ToJson:String() Override
+		Return "~q"+_data.Replace( "~q","\~q" )+"~q"
+	End
+
+	Private
+	
+	Field _data:String
+End
+
+#rem monkeydoc JsonArray class.
+#end
+Class JsonArray Extends JsonValue
+
+	Method New( data:Stack<JsonValue> =Null )
+		If Not data data=New Stack<JsonValue>
+		_data=data
+	End
+	
+	Property Data:Stack<JsonValue>()
+		Return _data
+	Setter( data:Stack<JsonValue> )
+		_data=data
+	End
+	
+	Operator[]:JsonValue( index:Int ) Override
+		Return _data[index]
+	End
+	
+	Operator[]=( index:Int,value:JsonValue ) Override
+		_data[index]=value
 	End
 	
 	Private
 	
-	Field _data:StringMap<JsonValue>
-	
-End
-
-Class JsonArray Extends JsonValue
-
-	Method New( length:Int )
-		_data=New JsonValue[length]
-	End
-	
-	Method New( data:JsonValue[] )
-		_data=data
-	End
-	
-	Property Length:Int()
-		Return _data.Length
-	End
-	
-	Method Set:Void( index:Int,value:JsonValue )
-		If index<0 Or index>=_data.Length ThrowError()
-		_data[index]=value
-	End
-	
-	Method SetBool:Void( index:Int,value:Bool )
-		Set( index,New JsonBool( value ) )
-	End
-	
-	Method SetInt:Void( index:Int,value:Int )
-		Set( index,New JsonNumber( value ) )
-	End
-	
-	Method SetFloat:Void( index:Int,value:Float )
-		Set( index,New JsonNumber( value ) )
-	End
-	
-	Method SetString:Void( index:Int,value:String )
-		Set( index,New JsonString( value ) )
-	End
-	
-	Method Get:JsonValue( index:Int )
-		If index<0 Or index>=_data.Length ThrowError()
-		Local val:=_data[index]
-		If val Return val
-		Return JsonNull.Instance()
-	End
-	
-	Method GetBool:Bool( index:Int )
-		Return Get( index ).ToBool()
-	End
-	
-	Method GetInt:Int( index:Int )
-		Return Get( index ).ToInt()
-	End
-	
-	Method GetFloat:Float( index:Int )
-		Return Get( index ).ToFloat()
-	End
-	
-	Method GetString:String( index:Int )
-		Return Get( index ).ToString()
-	End
-
-	Method GetData:JsonValue[]()
-		Return _data
-	End
+	Field _data:Stack<JsonValue>
 	
 	Method PushJson:Void( buf:StringStack ) Override
 		buf.Push( "[" )
 		Local t:=False
 		For Local value:=Eachin _data
 			If t buf.Push( "," )
-			If value<>Null value.PushJson( buf ) Else buf.Push( "null" )
+			If value value.PushJson( buf ) Else buf.Push( "null" )
 			t=True
 		Next
 		buf.Push( "]" )
 	End
-
-	Private
-	
-	Field _data:JsonValue[]
 	
 End
 
-Class JsonNull Extends JsonValue
+#rem monkeydoc JsonObject class.
+#end
+Class JsonObject Extends JsonValue
 
-	Method ToJson:String() Override
-		Return "null"
+	Method New( data:StringMap<JsonValue> =Null )
+		If Not data data=New StringMap<JsonValue>
+		_data=data
 	End
 	
-	Function Instance:JsonNull()
-		Return _instance
+	Property Data:StringMap<JsonValue>()
+		Return _data
+	Setter( data:StringMap<JsonValue> )
+		_data=data
 	End
 	
-	Private
-	
-	Global _instance:=New JsonNull
-	
-End
-
-Class JsonBool Extends JsonValue
-
-	Method New( value:Bool )
-		_value=value
+	Operator[]:JsonValue( key:String ) Override
+		Return _data[key]
 	End
 	
-	Method ToBool:Bool() Override
-		Return _value
-	End
-	
-	Method ToJson:String() Override
-		If _value Return "true"
-		Return "false"
-	End
-	
-	Function Instance:JsonBool( value:Bool )
-		If value Return _true
-		Return _false
+	Operator[]=( key:String,value:JsonValue ) Override
+		_data[key]=value
 	End
 	
 	Private
 	
-	Field _value:Bool
-	
-	Global _true:=New JsonBool( True )
-	Global _false:=New JsonBool( False )
+	Field _data:StringMap<JsonValue>
+
+	Method PushJson:Void( buf:StringStack ) Override
+		buf.Push( "{" )
+		Local t:=False
+		For Local it:=Eachin _data
+			If t buf.Push( "," )
+			buf.Push( "~q"+it.Key.Replace( "~q","\~q" )+"~q:" )
+			If it.Value it.Value.PushJson( buf ) Else buf.Push( "null" )
+			t=True
+		Next
+		buf.Push( "}" )
+	End
 	
 End
 
-Class JsonString Extends JsonValue
-
-	Method New( value:String )
-		_value=value
-	End
-	
-	Method ToString:String() Override
-		Return _value
-	End
-	
-	Method ToJson:String() Override
-		Return "~q"+_value.Replace( "~q","\~q" )+"~q"
-	End
-	
-	Function Instance:JsonString( value:String )
-		If value Return New JsonString( value )
-		Return _null
-	End
-	
-	Private
-	
-	Field _value:String
-	
-	Global _null:=New JsonString( "" )
-	
-End
-
-Class JsonNumber Extends JsonValue
-
-	Method New( value:String )
-		'error check value!
-		_value=value
-	End
-	
-	Method ToInt:Int() Override
-		Return Int( _value )
-	End
-	
-	Method ToFloat:Float() Override
-		Return Float( _value )
-	End	
-	
-	Method ToJson:String() Override
-		Return _value
-	End
-	
-	Function Instance:JsonNumber( value:String )
-		If value<>"0" Return New JsonNumber( value )
-		Return _zero
-	End
-	
-	Private
-	
-	Field _value:String
-	
-	Global _zero:=New JsonNumber( "0" )
-End
-
+#rem monkeydoc JsonParser class.
+#end
 Class JsonParser
 
 	Method New( json:String )
@@ -323,15 +277,15 @@ Class JsonParser
 		Bump()
 	End
 	
-	Method ParseValue:JsonValue()
-		If TokeType=T_STRING Return JsonString.Instance( ParseString() )
-		If TokeType=T_NUMBER Return JsonNumber.Instance( ParseNumber() )
+	Method ParseJson:JsonValue()
+		If TokeType=T_STRING Return New JsonString( ParseString() )
+		If TokeType=T_NUMBER Return New JsonNumber( Double( ParseNumber() ) )
 		If Toke="{" Return New JsonObject( ParseObject() )
 		If Toke="[" Return New JsonArray( ParseArray() )
-		If CParse("true") Return JsonBool.Instance( True )
-		If CParse("false") Return JsonBool.Instance( False )
-		If CParse("null") Return JsonNull.Instance()
-		ThrowError()
+		If CParse("true") Return JsonBool.TrueValue
+		If CParse("false") Return JsonBool.FalseValue
+		If CParse("null") Return Null
+		Return Null
 	End
 
 	Private
@@ -348,7 +302,7 @@ Class JsonParser
 	Field _pos:Int
 	
 	Method GetChar:Int()
-		If _pos=_text.Length ThrowError()
+		If _pos=_text.Length Throw New JsonError()
 		_pos+=1
 		Return _text[_pos-1]
 	End
@@ -359,7 +313,7 @@ Class JsonParser
 	End
 	
 	Method ParseChar:Void( chr:Int )
-		If _pos>=_text.Length Or _text[_pos]<>chr ThrowError()
+		If _pos>=_text.Length Or _text[_pos]<>chr Throw New JsonError()
 		_pos+=1
 	End
 	
@@ -402,7 +356,7 @@ Class JsonParser
 		Else If chr=45 Or (chr>=48 And chr<=57)
 			If chr=45 '-
 				chr=GetChar()
-				If chr<48 Or chr>57 ThrowError()
+				If chr<48 Or chr>57 Throw New JsonError()
 			Endif
 			If chr<>48 '0
 				CParseDigits()
@@ -412,7 +366,7 @@ Class JsonParser
 			Endif
 			If CParseChar( 69 ) Or CParseChar( 101 ) 'e E
 				If PeekChar()=43 Or PeekChar()=45 GetChar()	'+ -
-				If Not CParseDigits() ThrowError()
+				If Not CParseDigits() Throw New JsonError()
 			Endif
 			_type=T_NUMBER
 		Else If (chr>=65 And chr<91) Or (chr>=97 And chr<123)
@@ -444,7 +398,7 @@ Class JsonParser
 	End
 	
 	Method Parse:Void( toke:String )
-		If Not CParse( toke ) ThrowError()
+		If Not CParse( toke ) Throw New JsonError()
 	End
 
 	Method ParseObject:StringMap<JsonValue>()
@@ -454,33 +408,33 @@ Class JsonParser
 		Repeat
 			Local name:=ParseString()
 			Parse( ":" )
-			Local value:=ParseValue()
+			Local value:=ParseJson()
 			map.Set( name,value )
 		Until Not CParse( "," )
 		Parse( "}" )
 		Return map
 	End
 	
-	Method ParseArray:JsonValue[]()
+	Method ParseArray:Stack<JsonValue>()
 		Parse( "[" )
 		If CParse( "]" ) Return Null
 		Local stack:=New Stack<JsonValue>
 		Repeat
-			Local value:=ParseValue()
+			Local value:=ParseJson()
 			stack.Push( value )
 		Until Not CParse( "," )
 		Parse( "]" )
-		Return stack.ToArray()
+		Return stack
 	End
 	
 	Method ParseString:String()
-		If TokeType<>T_STRING ThrowError()
+		If TokeType<>T_STRING Throw New JsonError()
 		Local toke:=Toke.Slice( 1,-1 )
 		Local i:=toke.Find( "\" )
 		If i<>-1
 			Local frags:=New StringStack,p:=0,esc:=""
 			Repeat
-				If i+1>=toke.Length ThrowError()
+				If i+1>=toke.Length Throw New JsonError()
 				frags.Push( toke.Slice( p,i ) )
 				Select toke[i+1]
 				Case 34  esc="~q"				'\"
@@ -491,7 +445,7 @@ Class JsonParser
 				Case 114 esc=String.FromChar( 13 )	'\r
 				Case 110 esc=String.FromChar( 10 )	'\n
 				Case 117								'\uxxxx
-					If i+6>toke.Length ThrowError()
+					If i+6>toke.Length Throw New JsonError()
 					Local val:=0
 					For Local j:=2 Until 6
 						Local chr:=toke[i+j]
@@ -499,16 +453,16 @@ Class JsonParser
 							val=val Shl 4 | (chr-48)
 						Else If chr>=65 And chr<123
 							chr&=31
-							If chr<1 Or chr>6 ThrowError()
+							If chr<1 Or chr>6 Throw New JsonError()
 							val=val Shl 4 | (chr+9)
 						Else
-							ThrowError()
+							Throw New JsonError()
 						Endif
 					Next
 					esc=String.FromChar( val )
 					i+=4
 				Default 
-					ThrowError()
+					Throw New JsonError()
 				End
 				frags.Push( esc )
 				p=i+2
@@ -524,7 +478,7 @@ Class JsonParser
 	End
 	
 	Method ParseNumber:String()
-		If TokeType<>T_NUMBER ThrowError()
+		If TokeType<>T_NUMBER Throw New JsonError()
 		Local toke:=Toke
 		Bump()
 		Return toke

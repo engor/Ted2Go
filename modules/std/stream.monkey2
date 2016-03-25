@@ -1,7 +1,9 @@
 
-Namespace std
+Namespace std.stream
 
 Using libc
+Using std.memory
+Using std.collections
 
 #rem monkeydoc Stream class.
 #end
@@ -38,27 +40,27 @@ Class Stream
 	#end
 	Method Seek( position:Int ) Abstract
 	
-	#rem monkedoc Reads data from the filestream to memory.
+	#rem monkeydoc Reads data from the filestream to memory.
 	
-	@param buf A pointer to the memory to read the data into.
+	@param mem A pointer to the memory to read the data into.
 	
 	@param count The number of bytes to read.
 	
 	@return The number of bytes actually read.
 	
 	#end
-	Method Read:Int( buf:Void Ptr,count:Int ) Abstract
+	Method Read:Int( mem:Void Ptr,count:Int ) Abstract
 	
 	#rem monkeydoc Writes data to the stream from memory.
 	
-	@param buf A pointer to the memory to write the data from.
+	@param mem A pointer to the memory to write the data from.
 	
 	@param count The number of bytes to write.
 	
 	@return The number of bytes actually written.
 	
 	#end
-	Method Write:Int( buf:Void Ptr,count:Int ) Abstract
+	Method Write:Int( mem:Void Ptr,count:Int ) Abstract
 	
 	#rem monkeydoc The byte order of the stream.
 	#end
@@ -362,8 +364,12 @@ Class Stream
 
 	End
 	
+	#rem monkeydoc @hidden
+	#end
 	Alias OpenFunc:Stream( proto:String,path:String,mode:String )
 	
+	#rem monkeydoc @hidden
+	#end
 	Const OpenFuncs:=New StringMap<OpenFunc>
 	
 	Private

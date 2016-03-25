@@ -5,19 +5,19 @@
 #include "bbobject.h"
 
 inline void bbAssert( bool cond ){
-	if( !cond ) throw new bbRuntimeError( "Assert failed" );
+	if( !cond ) throw new bbException( "Assert failed" );
 }
 
 inline void bbAssert( bool cond,bbString msg ){
-	if( !cond ) throw new bbRuntimeError( msg );
+	if( !cond ) throw new bbException( msg );
 }
 
 inline void bbDebugAssert( bool cond ){
-	if( !cond ) throw new bbRuntimeError( "Assert failed" );
+	if( !cond ) throw new bbException( "Assert failed" );
 }
 
 inline void bbDebugAssert( bool cond,bbString msg ){
-	if( !cond ) throw new bbRuntimeError( msg );
+	if( !cond ) throw new bbException( msg );
 }
 
 #endif

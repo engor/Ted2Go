@@ -6,7 +6,29 @@ Namespace libc
 
 Extern
 
-Struct size_t
+#rem monkeydoc C/C++ 'char' type.
+#end
+Struct char_t="char"
+End
+
+#rem monkeydoc C/C++ 'signed char' type.
+#end
+Struct schar_t="signed char"
+End
+
+#rem monkeydoc C/C++ 'unsigned char' type
+#end
+Struct uchar_t="unsigned char"
+End
+
+#rem monkeydoc C/C++ 'wchar_t' type
+#end
+Struct wchar_t="wchar_t"
+End
+
+#rem monkeydoc C/C++ 'size_t' type
+#end
+Struct size_t="size_t"
 End
 
 Function sizeof<T>:Int( t:T )="(int)sizeof"
@@ -39,7 +61,7 @@ Function free:Void( mem:Void Ptr )
 
 Function system:Int( cmd:CString )="system_"
 Function setenv:Int( name:CString,value:CString,overwrite:Int )="setenv_"
-Function getenv:CChar Ptr( name:CString )
+Function getenv:char_t Ptr( name:CString )
 
 Function exit_:Void( status:Int )="exit"
 Function abort:Void()
@@ -83,7 +105,7 @@ Function difftime:Double( endtime:time_t,starttime:time_t )
 
 '***** unistd.h *****
 
-Function getcwd:CChar Ptr( buf:CChar Ptr,size:Int )
+Function getcwd:char_t Ptr( buf:char_t Ptr,size:Int )
 Function chdir:Int( path:CString )
 Function rmdir:Int( path:CString )
 

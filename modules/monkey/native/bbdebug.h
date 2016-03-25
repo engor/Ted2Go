@@ -25,6 +25,8 @@ namespace bbDB{
 	void stop();
 	
 	void stopped();
+	
+	bbArray<bbString> *stack();
 }
 
 struct bbDBFrame{

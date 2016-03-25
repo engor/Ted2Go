@@ -1,11 +1,13 @@
 
-Namespace std
+Namespace std.stream
 
 #Import "<miniz.monkey2>"
 
 Using libc
 Using miniz
 
+#rem monkeydoc @hidden ZipStream class.
+#end
 Class ZipStream Extends DataStream
 
 	Method New( buf:DataBuffer )

@@ -1,5 +1,6 @@
 
 #include "bbdebug.h"
+#include "bbarray.h"
 
 namespace bbDB{
 
@@ -38,6 +39,21 @@ namespace bbDB{
 		stopper=false;
 	}
 	
+	bbArray<bbString> *stack(){
+	
+		int n=0;
+		for( bbDBFrame *frame=frames;frame;frame=frame->succ ) ++n;
+		
+		//TODO: Fix GC issues! Can't have a free local like this in case bbString ctors cause gc sweep!!!!
+		bbArray<bbString> *st=bbArray<bbString>::create( n );
+		
+		int i=0;
+		for( bbDBFrame *frame=frames;frame;frame=frame->succ ){
+			st->at( i++ )=BB_T( frame->srcFile )+" ["+bbString( frame->srcPos>>12 )+"] "+frame->decl;
+		}
+		
+		return st;
+	}
 }
 
 bbString bbDBVar::ident()const{

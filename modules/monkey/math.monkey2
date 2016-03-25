@@ -1,30 +1,32 @@
 
-Namespace monkey
+Namespace monkey.math
 
-Const Pi:Float=3.14159265359
+Using monkey.types
+
+Const Pi:Double=3.1415926535897932384626433832795028841971693993751058209749445923078164062
 
 Extern
 
-'Function Sin:Int( x:Int )="std::sin"
-Function Sin:Float( x:Float )="std::sin"
 Function Sin:Double( x:Double )="std::sin"
 
-'Function Cos:Int( x:Int )="std::cos"
-Function Cos:Float( x:Float )="std::cos"
 Function Cos:Double( x:Double )="std::cos"
 
-'Function Sqrt:Int( x:Int )="std::sqrt"
-Function Sqrt:Float( x:Int )="std::sqrt"
-Function Sqrt:Float( x:Float )="std::sqrt"
+Function Tan:Double( x:Double )="std::tan"
+
+Function ASin:Double( x:Double)="std::asin"
+
+Function ACos:Double( x:Double)="std::acos"
+
+Function ATan:Double( x:Double)="std::atan"
+
+Function ATan2:Double( x:Double)="std::atan2"
+
 Function Sqrt:Double( x:Double )="std::sqrt"
 
-Function Floor:Float( x:Float )="std::floor"
 Function Floor:Double( x:Double )="std::floor"
 
-Function Ceil:Float( x:Float )="std::ceil"
 Function Ceil:Double( x:Double )="std::ceil"
 
-Function Round:Float( x:Float )="std::round"
 Function Round:Double( x:Double )="std::round"
 
 Public
@@ -55,7 +57,7 @@ End
 
 #rem monkeydoc
 
-Clamps a value to range.
+Clamps a value to a range.
 
 If `x` is less than `min`, `min` is returned.
 
@@ -83,7 +85,7 @@ If `x` is greater than or equal to 0, then `x` is returned.
 @return the absolute value of `x`.
 
 #end
-Function Abs<T>:T( x:T )
+Function Abs<T>:T( x:T ) Where T Implements INumeric
 	If x>=0 Return x
 	Return -x
 End
@@ -101,9 +103,14 @@ Otherwise, if `x` is equal to 0, 0 is returned.
 @return the sign of `x`.
 
 #end
-Function Sgn<T>:Int( x:T )
+Function Sgn<T>:Int( x:T ) Where T Implements IIntegral
 	If x<0 Return -1
 	If x>0 Return 1
 	Return 0
 End
 
+Function Sgn<T>:Double( x:T ) Where T Implements IReal
+	If x<0 Return -1
+	If x>0 Return 1
+	Return 0
+End

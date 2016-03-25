@@ -1,15 +1,33 @@
 
-Namespace std
+Namespace std.collections
 
-Using std
+Alias IntStack:Stack<Int>
 
+Alias FloatStack:Stack<Float>
+
+Alias StringStack:Stack<String>
+
+#rem monkeydoc The Stack class.
+#end
 Class Stack<T> Implements IContainer<T>
 
 	Struct Iterator 'Implements IIterator<T>
 	
+		Private
+
 		Field _stack:Stack
 		Field _index:Int
 		Field _seq:Int
+		
+		Method AssertSeq()
+			DebugAssert( _seq=_stack._seq,"Concurrent list modification" )
+		End
+		
+		Method AssertCurrent()
+			DebugAssert( Valid,"Invalid list iterator" )
+		End
+		
+		Public
 		
 		Method New( stack:Stack,index:Int )
 			_stack=stack
@@ -17,29 +35,27 @@ Class Stack<T> Implements IContainer<T>
 			_seq=stack._seq
 		End
 		
-		Method AssertSeq()
-			DebugAssert( _seq=_stack._seq,"Concurrent list modification" )
-		End
-		
-		Method AssertValid()
-			DebugAssert( Valid,"Invalid list iterator" )
-		End
-		
-		Property Valid:Bool()
+		Property AtEnd:Bool()
 			AssertSeq()
-			Return _index<_stack._length
+			Return _index=_stack._length
+		End
+		
+		#rem monkeydoc @hidden
+		#end
+		Property Valid:Bool()
+			Return Not AtEnd
 		End
 		
 		Property Current:T()
-			AssertValid()
+			AssertCurrent()
 			Return _stack._data[_index]
 		Setter( current:T )
-			AssertValid()
+			AssertCurrent()
 			_stack._data[_index]=current
 		End
 		
 		Method Bump()
-			AssertValid()
+			AssertCurrent()
 			_index+=1
 		End
 		
@@ -56,7 +72,7 @@ Class Stack<T> Implements IContainer<T>
 		End
 	End
 	
-	Protected
+	Private
 
 	Field _data:T[]
 	Field _length:Int
@@ -64,7 +80,7 @@ Class Stack<T> Implements IContainer<T>
 	
 	Public
 	
-	#rem monkeydoc Creates a new empty stack.
+	#rem monkeydoc Creates a new stack.
 	#end
 	Method New()
 		_data=New T[10]
@@ -88,10 +104,16 @@ Class Stack<T> Implements IContainer<T>
 		Return _length=0
 	End
 
-	#rem monkeydoc Gets an iterator to all values in the stack.
-
+	#rem monkeydoc Gets an iterator to the stack.
+	
 	@return A stack iterator.
 	
+	#end
+'	Method GetIterator:Iterator()
+'		Return New Iterator( Self,0 )
+'	End
+
+	#rem monkeydoc @hidden
 	#end
 	Method All:Iterator()
 		Return New Iterator( Self,0 )
@@ -106,7 +128,7 @@ Class Stack<T> Implements IContainer<T>
 		Return _data.Slice( 0,_length )
 	End
 	
-	#rem monkedoc Gets the underlying array used by the stack.
+	#rem monkeydoc Gets the underlying array used by the stack.
 	
 	Note that the returned array may be longer than the stack length.
 	
@@ -277,7 +299,7 @@ Class Stack<T> Implements IContainer<T>
 		_data[index]=value
 	End
 	
-	#rem monkeydoc Gets the value a stack element.
+	#rem monkeydoc Gets the value of a stack element.
 	
 	In debug builds, a runtime error will occur if `index` is less than 0, or greather than or equal to the length of the stack.
 	
@@ -527,39 +549,31 @@ Class Stack<T> Implements IContainer<T>
 	#rem monkeydoc Sorts the stack.
 
 	@param ascending True to sort the stack in ascending order, false to sort in descending order.
+	
+	@param compareFunc Function to be used to compare values when sorting.
+	
+	@param lo Index of first value to sort.
+	
+	@param hi Index of last value to sort.
 
 	#end
 	Method Sort( ascending:Bool=True )
 		If ascending
-			Sort( 0,_length-1,Lambda:Int( x:T,y:T )
+			Sort( Lambda:Int( x:T,y:T )
 				Return x<=>y
 			End )
 		Else
-			Sort( 0,_length-1,Lambda:Int( x:T,y:T )
+			Sort( Lambda:Int( x:T,y:T )
 				Return y<=>x
 			End )
 		Endif
 	End
-	
-	#rem monkeydoc Sorts the stack using a comparison function.
-	
-	@param compareFunc The function used to compare values.
-	
-	#end
+
 	Method Sort( compareFunc:Int( x:T,y:T ) )
-		Sort( 0,_length-1,compareFunc )
+		Sort( compareFunc,0,_length-1 )
 	End
-	
-	#rem monkeydoc Sorts a range of stack elements using a comparison function.
 
-	@param lo The first element.
-	
-	@param hi The last element.
-	 
-	@param compareFunc The function used to compare values.
-
-	#end	
-	Method Sort( lo:Int,hi:Int,compareFunc:Int( x:T,y:T ) )
+	Method Sort( compareFunc:Int( x:T,y:T ),lo:Int,hi:int )
 	
 		If hi<=lo Return
 		
@@ -596,8 +610,8 @@ Class Stack<T> Implements IContainer<T>
 			y-=1
 		Until x>y
 
-		Sort( lo,y,compareFunc )
-		Sort( x,hi,compareFunc )
+		Sort( compareFunc,lo,y )
+		Sort( compareFunc,x,hi )
 	End
 	
 	'***** Stack style extensions *****
@@ -642,21 +656,14 @@ Class Stack<T> Implements IContainer<T>
 		Add( value )
 	End
 
-'	Method Join:String( separator:String ) Where T=String
-'		Return separator.Join( ToArray() )
-'	End
+	#rem monkeydoc Joins the values in the string list.
 	
-End
-
-Class IntStack Extends Stack<Int>
-End
-
-Class FloatStack Extends Stack<Float>
-End
-
-Class StringStack Extends Stack<String>
-
-	Method Join:String( separator:String )
+	@param sepeator The separator to be used when joining values.
+	
+	@return The joined values.
+	
+	#end
+	Method Join:String( separator:String ) Where T=String
 		Return separator.Join( ToArray() )
 	End
 	

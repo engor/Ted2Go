@@ -1,7 +1,9 @@
 
 Namespace std.time
 
-#rem monkeydoc DateTime class.
+Private
+
+#rem monkeydoc @hidden Time class.
 #end
 Class Time
 
@@ -103,7 +105,7 @@ Class Time
 	
 End
 
-#rem monkeydoc Gets the number of seconds since the app started.
+#rem monkeydoc @hidden Gets the number of seconds since the app started.
 #end
 Function Seconds:Double()
 	Return Double(clock())/Double(CLOCKS_PER_SEC)
@@ -111,7 +113,7 @@ End
 
 #rem monkeydoc Gets the number of milliseconds since the app started.
 #end
-Function Millisecs:Long()
+Function Millisecs:Int()
 	'Note:CLOCKS_PER_SECOND=1000000 on macos/linux, 1000 on windows...
 	If CLOCKS_PER_SEC>=1000 Return clock()/(CLOCKS_PER_SEC/1000)
 	Return clock()*(1000/CLOCKS_PER_SEC)	'is that right?!?

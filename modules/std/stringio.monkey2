@@ -5,7 +5,7 @@ Using libc
 
 'These will eventually be string extensions, eg: Function String.Load() and Method String.Save()
 
-#rem monkeydoc Load a utf8 encoded string from a file.
+#rem monkeydoc Loads a utf8 encoded string from a file.
 
 An empty string will be returned if the file could not be opened.
 
