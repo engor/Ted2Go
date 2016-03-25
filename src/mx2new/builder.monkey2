@@ -384,7 +384,7 @@ Class Builder
 	
 	Method Compile()
 	
-		If opts.verbose=0 Print "Compiling..."
+		If opts.verbose=0 Print "Compiling...."
 		
 		Local module:=modules[0]
 	
@@ -408,15 +408,15 @@ Class Builder
 			
 			'Check dependancies
 			'			
-			Local objTime:=FileTime( obj )
+			Local objTime:=GetFileTime( obj )
 			
 			Local deps:=StripExt( obj )+".deps"
 			
-			If opts.fast And objTime>=FileTime( src )	'source file up to date?
+			If opts.fast And objTime>=GetFileTime( src )	'source file up to date?
 			
-				If FileType( deps )=FILETYPE_NONE
+				If GetFileType( deps )=FILETYPE_NONE
 				
-					If opts.verbose Print "Scanning "+src
+					If opts.verbose>0 Print "Scanning "+src
 			
 					Exec( cmd+" -MM ~q"+src+"~q >~q"+deps+"~q" ) 
 					
@@ -428,7 +428,7 @@ Class Builder
 				
 				For Local i:=1 Until srcs.Length
 				
-					If FileTime( srcs[i].Trim() )>objTime
+					If GetFileTime( srcs[i].Trim() )>objTime
 						uptodate=False
 						Exit
 					Endif
@@ -453,7 +453,7 @@ Class Builder
 			
 			Exec( cmd ) 
 
-			maxObjTime=Max( maxObjTime,FileTime( obj ) )
+			maxObjTime=Max( maxObjTime,GetFileTime( obj ) )
 			OBJ_FILES.Push( obj )
 			
 		Next
@@ -565,7 +565,7 @@ Class Builder
 		
 		For Local src:=Eachin DLL_FILES
 			Local dst:=ExtractDir( outputFile )+StripDir( src )
-			If FileTime( src )>FileTime( dst ) CopyFile( src,dst )
+			If GetFileTime( src )>GetFileTime( dst ) CopyFile( src,dst )
 		Next
 		
 		If Not opts.run Return
@@ -644,29 +644,41 @@ Class Builder
 		Type.StringType=Null
 		Type.ArrayClass=Null
 		Type.ObjectClass=Null
+		Type.ThrowableClass=Null
 	End
 	
 	Method CreatePrimTypes()
+	
+		Local types:=monkeyNamespace
 
-		Type.BoolType=New PrimType( Cast<ClassType>( monkeyNamespace.nodes["@bool"] ) )
-		Type.ByteType=New PrimType( Cast<ClassType>( monkeyNamespace.nodes["@byte"] ) )
-		Type.UByteType=New PrimType( Cast<ClassType>( monkeyNamespace.nodes["@ubyte"] ) )
-		Type.ShortType=New PrimType( Cast<ClassType>( monkeyNamespace.nodes["@short"] ) )
-		Type.UShortType=New PrimType( Cast<ClassType>( monkeyNamespace.nodes["@ushort"] ) )
-		Type.IntType=New PrimType( Cast<ClassType>( monkeyNamespace.nodes["@int"] ) )
-		Type.UIntType=New PrimType( Cast<ClassType>( monkeyNamespace.nodes["@uint"] ) )
-		Type.LongType=New PrimType( Cast<ClassType>( monkeyNamespace.nodes["@long"] ) )
-		Type.ULongType=New PrimType( Cast<ClassType>( monkeyNamespace.nodes["@ulong"] ) )
-		Type.FloatType=New PrimType( Cast<ClassType>( monkeyNamespace.nodes["@float"] ) )
-		Type.DoubleType=New PrimType( Cast<ClassType>( monkeyNamespace.nodes["@double"] ) )
-		Type.StringType=New PrimType( Cast<ClassType>( monkeyNamespace.nodes["@string"] ) )
+		'Find new 'monkey.types' namespace...
+		For Local scope:=Eachin monkeyNamespace.inner
+			Local nmspace:=Cast<NamespaceScope>( scope )
+			If Not nmspace Or nmspace.ntype.ident<>"types" Continue
+			types=nmspace
+			Exit
+		Next
+
+		Type.BoolType=New PrimType( Cast<ClassType>( types.nodes["@bool"] ) )
+		Type.ByteType=New PrimType( Cast<ClassType>( types.nodes["@byte"] ) )
+		Type.UByteType=New PrimType( Cast<ClassType>( types.nodes["@ubyte"] ) )
+		Type.ShortType=New PrimType( Cast<ClassType>( types.nodes["@short"] ) )
+		Type.UShortType=New PrimType( Cast<ClassType>( types.nodes["@ushort"] ) )
+		Type.IntType=New PrimType( Cast<ClassType>( types.nodes["@int"] ) )
+		Type.UIntType=New PrimType( Cast<ClassType>( types.nodes["@uint"] ) )
+		Type.LongType=New PrimType( Cast<ClassType>( types.nodes["@long"] ) )
+		Type.ULongType=New PrimType( Cast<ClassType>( types.nodes["@ulong"] ) )
+		Type.FloatType=New PrimType( Cast<ClassType>( types.nodes["@float"] ) )
+		Type.DoubleType=New PrimType( Cast<ClassType>( types.nodes["@double"] ) )
+		Type.StringType=New PrimType( Cast<ClassType>( types.nodes["@string"] ) )
 		
-		Type.ArrayClass=Cast<ClassType>( monkeyNamespace.nodes["@Array"] )
-		Type.ObjectClass=Cast<ClassType>( monkeyNamespace.nodes["@object"] )
+		Type.ArrayClass=Cast<ClassType>( types.nodes["@Array"] )
+		Type.ObjectClass=Cast<ClassType>( types.nodes["@object"] )
+		Type.ThrowableClass=Cast<ClassType>( types.nodes["@throwable"] )
 		
-		Type.CStringClass=Cast<ClassType>( monkeyNamespace.nodes["CString"] )
-		Type.WStringClass=Cast<ClassType>( monkeyNamespace.nodes["WString"] )
-		Type.Utf8StringClass=Cast<ClassType>( monkeyNamespace.nodes["Utf8String"] )
+		Type.CStringClass=Cast<ClassType>( types.nodes["CString"] )
+		Type.WStringClass=Cast<ClassType>( types.nodes["WString"] )
+		Type.Utf8StringClass=Cast<ClassType>( types.nodes["Utf8String"] )
 
 		rootNamespace.Insert( "void",Type.VoidType )
 		rootNamespace.Insert( "bool",Type.BoolType )
@@ -682,14 +694,11 @@ Class Builder
 		rootNamespace.Insert( "double",Type.DoubleType )
 		rootNamespace.Insert( "string",Type.StringType )
 		rootNamespace.Insert( "object",Type.ObjectClass )
+		rootNamespace.Insert( "throwable",Type.ThrowableClass )
 		
 		rootNamespace.Insert( "CString",Type.CStringClass )
 		rootNamespace.Insert( "WString",Type.WStringClass )
 		rootNamespace.Insert( "Utf8String",Type.Utf8StringClass )
-		
-		rootNamespace.Insert( "CChar",monkeyNamespace.FindType( "CChar" ) )
-		rootNamespace.Insert( "WChar",monkeyNamespace.FindType( "WChar" ) )
-		rootNamespace.Insert( "Utf8Char",monkeyNamespace.FindType( "Utf8Char" ) )
 		
 		Type.BoolType.Semant()
 		Type.ByteType.Semant()
@@ -705,8 +714,10 @@ Class Builder
 		Type.StringType.Semant()
 		Type.ArrayClass.Semant()
 		Type.ObjectClass.Semant()
+		Type.ThrowableClass.Semant()
 	End
 	
+	#rem
 	Method AllocTmp:String()
 
 		tmpId+=1
@@ -726,7 +737,8 @@ Class Builder
 		
 		Return ""
 	End
-
+	#end
+	
 	Method ImportFile:Void( path:String )
 	
 		If path.StartsWith( "<" ) And path.EndsWith( ">" )
@@ -793,7 +805,7 @@ Class Builder
 
 		If name="*"
 			Local dir:=ExtractDir( path )
-			If FileType( dir )<>FILETYPE_DIR
+			If GetFileType( dir )<>FILETYPE_DIR
 				New BuildEx( "Directory '"+dir+"' not found" )
 				Return
 			Endif
@@ -816,7 +828,7 @@ Class Builder
 			Return
 		Endif
 		
-		If FileType( path )<>FILETYPE_FILE
+		If GetFileType( path )<>FILETYPE_FILE
 			New BuildEx( "File '"+path+"' not found" )
 			Return
 		Endif

@@ -272,7 +272,25 @@ Class ClassType Extends Type
 '					Print "abstractMethod="+func.ToString()
 
 					Try
-					
+						#rem
+						Local flist:=Cast<FuncList>( scope.nodes[func.fdecl.ident] )
+						If flist
+							Local func2:=overload.FindOverload( flist.funcs,func.ftype.retType,func.ftype.argTypes )
+							If func2
+								If func2.IsGeneric Continue
+								If TypesEqual( func2.ftype.argTypes,func.ftype.argTypes ) Continue
+								Throw New SemantEx( "ERROR!",func2.fdecl )
+							Endif
+						Endif
+						
+						If func.fdecl.IsDefault
+							scope.Insert( func.fdecl.ident,func )
+							Continue
+						Endif
+						
+						abstractMethods.Push( func )
+						#end
+						
 						Local flist:=Cast<FuncList>( scope.nodes[func.fdecl.ident] )
 						If flist
 							Local func2:=flist.FindFunc( func.ftype.argTypes )
@@ -559,7 +577,6 @@ Class OpIndexValue Extends Value
 				Local rtype:=value.type
 				If op2="shl" Or op2="shr" rtype=Type.IntType
 				rvalue=New BinaryopValue( value.type,op2,value,rvalue.UpCast( rtype ) )
-'				rvalue=New BinaryopValue( value.type,op,value,rvalue.UpCast( value.type ) )
 			Endif
 		
 		Endif
@@ -611,6 +628,8 @@ Class ClassScope Extends Scope
 			args+=","+arg.Name
 		Next
 		If args args="<"+args.Slice( 1 )+">"
+		
+		If ctype.cdecl.ident.StartsWith( "@" ) Return ctype.cdecl.ident.Slice( 1  ).Capitalize()+args
 		
 		Return outer.Name+"."+ctype.cdecl.ident+args
 	End

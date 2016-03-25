@@ -14,8 +14,8 @@ Function IsCandidate:Bool( func:FuncValue,ret:Type,args:Type[],infered:Type[] )
 	If ret
 		If retType.IsGeneric
 			If Not retType.InferType( ret,infered ) Return False
-'		Else
-'			If Not ret.Equals( retType ) Return False
+		Else If Not ret.IsGeneric
+			If Not retType.ExtendsType( ret ) Return False
 		Endif
 	Endif
 
@@ -32,12 +32,12 @@ Function IsCandidate:Bool( func:FuncValue,ret:Type,args:Type[],infered:Type[] )
 		Else If argTypes[i].IsGeneric
 		
 			Local arg:=args[i]
-		
+			
 			Local flist:=Cast<FuncListType>( arg )
 			If flist
 				Local ftype:=Cast<FuncType>( argTypes[i] )
 				If Not ftype Return False
-				Local func:=flist.FindOverload( ftype.retType,ftype.argTypes )
+				Local func:=flist.FindOverload( Null,ftype.argTypes )'ftype.retType,ftype.argTypes )
 				If Not func Return False
 				arg=func.ftype
 			Endif
@@ -58,24 +58,6 @@ Function IsCandidate:Bool( func:FuncValue,ret:Type,args:Type[],infered:Type[] )
 	Next
 	
 	Return True
-	
-	#rem
-	If Not func.fdecl.whereExpr Return True
-	
-	'Check where expr is 'true'
-	'
-	'FIXME: A little messy right now...
-	'
-	Local scope:=New Scope( func.scope )
-	For Local i:=0 Until func.fdecl.genArgs.Length
-		scope.Insert( func.fdecl.genArgs[i],infered[i] )
-	Next
-	
-	Local value:=Cast<LiteralValue>( func.fdecl.whereExpr.SemantRValue( scope ) )
-	If Not value Or value.type<>Type.BoolType Throw New SemantEx( "'Where' expression does not evaluate to a constant bool value" )
-	
-	Return value.value="true"
-	#end
 End
 
 Function CanInfer:Bool( func:FuncValue,args:Type[] )
@@ -193,9 +175,9 @@ Function FindOverload:FuncValue( funcs:Stack<FuncValue>,ret:Type,args:Type[] )
 	Next
 
 '	Print "Funcs:"+Join( funcs.ToArray() )
-'	Print "Candidates:"+Join( candidates.ToArray() )
 '	Print "Argtypes:"+Join( args )
 '	If ret Print "Return:"+ret.ToString()
+'	Print "Candidates:"+Join( candidates.ToArray() )
 	
 	Local match:FuncValue
 	

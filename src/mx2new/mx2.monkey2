@@ -32,15 +32,14 @@ Namespace mx2
 #Import "mung.monkey2"
 
 #Import "builder.monkey2"
-#Import "docsmaker.monkey2"
 
 Using std
 Using std.stringio
 Using std.chartype
 Using std.filesystem
+Using std.collections
 Using lib.c
 'Using libc
 
-Global MX2CC_VERSION:="002"
-
-Global MX2_BUILDV:="000"
+Const MX2CC_VERSION:="002"
+Const MX2_BUILDV:="002"

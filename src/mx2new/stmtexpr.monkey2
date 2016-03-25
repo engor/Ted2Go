@@ -597,58 +597,49 @@ Class ForStmtExpr Extends StmtExpr
 			
 		Else
 		
+			'iter=container.All()
 			Local iter:=init.FindValue( "GetIterator" )
-			If iter
-				iter=iter.Invoke( Null ).RemoveSideEffects( iblock )
-
-				Local hasNext:=iter.FindValue( "HasNext" )
-				If Not hasNext Throw New SemantEx( "Iterator has no 'HasNext' property or field" )
-				hasNext=hasNext.UpCast( Type.BoolType )
-				cond=hasNext
-				
-				Local getNext:=iter.FindValue( "GetNext" )
-				If Not getNext Throw New SemantEx( "Iterator has no 'GetNext' method" )
-				getNext=getNext.Invoke( Null )
-				curr=getNext
+			If Not iter iter=init.FindValue( "All" )
+			If Not iter Throw New SemantEx( "Container of type '"+init.type.ToString()+"' has no 'GetIterator' method" )
+			iter=iter.Invoke( Null ).RemoveSideEffects( iblock )
 			
-			Else
-				'So we can still build with old modules for now...
-				
-				'iter=container.Iterator()
-				Local iter:=init.FindValue( "All" )
-				If Not iter iter=init.FindValue( "GetIterator" )
-				If Not iter iter=init.FindValue( "Iterator" )
-				
-				If Not iter Throw New SemantEx( "Container of type '"+init.type.ToString()+"' has no 'Iterator' method" )
-				iter=iter.Invoke( Null ).RemoveSideEffects( iblock )
-				
-				'iter.IsValid
+			'iter.AtEnd
+			Local atEnd:=iter.FindValue( "AtEnd" )
+			If Not atEnd 'Throw New SemantEx( "Iterator has no 'AtEnd' property" )
 				Local isValid:=iter.FindValue( "Valid" )
-				If Not isValid Throw New SemantEx( "Iterator has no 'Valid' property" )
+				If Not isValid Throw New SemantEx( "Iterator has no 'AtEnd' property" )
 				isValid=isValid.UpCast( Type.BoolType )
 				cond=isValid
-				
-				curr=iter.FindValue( "Current" )
-				If Not curr Throw New SemantEx( "Iterator has no 'Current' property" )
-				curr=curr.ToRValue()
-				
-				Local bump:=iter.FindValue( "Bump" )
-				If Not bump Throw New SemantEx( "Iterator has no 'Bump' method" )
-				bump=bump.Invoke( Null )
-				incr=New EvalStmt( Null,bump )
+			Else
+				atEnd=atEnd.UpCast( Type.BoolType )
+				atEnd=New UnaryopValue( Type.BoolType,"not",atEnd )
+				cond=atEnd
 			Endif
+
+			'iter.Current			
+			curr=iter.FindValue( "Current" )
+			If Not curr Throw New SemantEx( "Iterator has no 'Current' property" )
+			curr=curr.ToRValue()
 			
-#rem
+			'iter.Bump()
+			Local bump:=iter.FindValue( "Bump" )
+			If Not bump Throw New SemantEx( "Iterator has no 'Bump' method" )
+			bump=bump.Invoke( Null )
+			incr=New EvalStmt( Null,bump )
+			
+			#rem
+			'iterator.HasNext
 			Local hasNext:=iter.FindValue( "HasNext" )
 			If Not hasNext Throw New SemantEx( "Iterator has no 'HasNext' property or field" )
 			hasNext=hasNext.UpCast( Type.BoolType )
 			cond=hasNext
-			
+		
+			'iterator.GetNext()
 			Local getNext:=iter.FindValue( "GetNext" )
 			If Not getNext Throw New SemantEx( "Iterator has no 'GetNext' method" )
 			getNext=getNext.Invoke( Null )
 			curr=getNext
-#end
+			#end
 
 		Endif
 		
@@ -774,20 +765,29 @@ Class ThrowStmtExpr Extends StmtExpr
 	End
 	
 	Method OnSemant:Stmt( block:Block ) Override
-
-		Try
-			If expr	
-				block.Emit( New ThrowStmt( Self,expr.SemantRValue( block ) ) )
-			Else If Not block.inex
-				Throw New SemantEx( "Exceptions can only be rethrown inside 'Catch' blocks" )
-			Else
-				block.Emit( New ThrowStmt( Self,Null ) )
+	
+		If expr
+		
+			Local value:=expr.SemantRValue( block )
+			Local ctype:=Cast<ClassType>( value.type )
+			
+			If Not ctype 'Or Not ctype.ExtendsType( Type.ThrowableClass )
+				Throw New SemantEx( "Thrown value type must extend 'Throwable'" )
 			Endif
 			
-		Catch ex:SemantEx
-		End
+			block.Emit( New ThrowStmt( Self,value ) )
+			block.reachable=False
+			
+		Else If block.inex
+
+			block.Emit( New ThrowStmt( Self,Null ) )
+			block.reachable=False
 		
-		block.reachable=False
+		Else
+		
+			Throw New SemantEx( "Exceptions can only be rethrown inside 'Catch' blocks" )
+			
+		Endif
 		
 		Return Null
 	End

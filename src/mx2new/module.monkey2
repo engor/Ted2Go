@@ -39,8 +39,6 @@ Class Module
 		
 		cfileDir=cacheDir
 		If productType="module" hfileDir=outputDir Else hfileDir=cacheDir
-		
-		If name<>"monkey" Or productType<>"module" usings.Push( builder.monkeyNamespace )
 	End
 End
 

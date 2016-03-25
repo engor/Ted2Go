@@ -158,14 +158,16 @@ Class FileScope Extends Scope
 		Local builder:=Builder.instance
 		
 		nmspace=builder.GetNamespace( fdecl.nmspace )
-		outer=nmspace
 		nmspace.inner.Push( Self )
+		outer=nmspace
 		
+		#rem
 		For Local use:=Eachin fdecl.usings
 			Local nmspace:=builder.GetNamespace( use )
 			If usings.Contains( nmspace ) Continue
 			usings.Push( nmspace )
 		Next
+		#end
 		
 		For Local member:=Eachin fdecl.members
 
@@ -179,6 +181,69 @@ Class FileScope Extends Scope
 
 			toSemant.Push( node )
 		Next
+	End
+	
+	Method UsingNamespace:Bool( nmspace:NamespaceScope )
+		If usings.Contains( nmspace ) Return True
+		usings.Push( nmspace )
+		Return False
+	End
+		
+	Method UsingInner( nmspace:NamespaceScope )
+		For Local scope:=Eachin nmspace.inner
+			Local nmspace:=Cast<NamespaceScope>( scope )
+			If nmspace UsingNamespace( nmspace )
+		Next
+	End
+	
+	Method UsingAll( nmspace:NamespaceScope )
+		If UsingNamespace( nmspace ) Return
+		For Local scope:=Eachin nmspace.inner
+			Local nmspace:=Cast<NamespaceScope>( scope )
+			If nmspace UsingAll( nmspace )
+		Next
+	End
+	
+	Method Semant()
+	
+'		Print "Semating:"+fdecl.path
+
+		Local builder:=Builder.instance
+		
+		If nmspace<>builder.monkeyNamespace
+			UsingAll( builder.monkeyNamespace )
+		Endif
+
+		For Local use:=Eachin fdecl.usings
+		
+			If use="*"
+				UsingAll( builder.rootNamespace )
+				Continue
+			Endif
+		
+			If use.EndsWith( ".." )
+				Local nmspace:=builder.GetNamespace( use.Slice( 0,-2 ) )
+				UsingAll( nmspace )
+				Continue
+			Endif
+		
+			If use.EndsWith( ".*" )
+				Local nmspace:=builder.GetNamespace( use.Slice( 0,-2 ) )
+				UsingInner( nmspace )
+				Continue
+			Endif
+			
+			Local nmspace:=builder.GetNamespace( use )
+			If nmspace UsingNamespace( nmspace )
+		Next
+	
+		For Local node:=Eachin toSemant
+			Try			
+				node.Semant()
+			Catch ex:SemantEx
+			End
+		Next
+		
 	End
 	
 	Method FindNode:SNode( ident:String ) Override
@@ -258,17 +323,6 @@ Class FileScope Extends Scope
 		Return Self
 	End
 	
-	Method Semant()
-	
-		For Local node:=Eachin toSemant
-			Try			
-				node.Semant()
-			Catch ex:SemantEx
-			End
-		Next
-		
-	End
-	
 End
 
 Class Block Extends Scope
@@ -296,12 +350,12 @@ Class Block Extends Scope
 		inex=outer.inex
 	End
 	
-	Property IsGeneric:Bool() Override
+'	Property IsGeneric:Bool() Override
 
-		If func.IsGeneric Return True
+'		If func.IsGeneric Return True
 
-		Return Super.IsGeneric
-	End
+'		Return Super.IsGeneric
+'	End
 
 	Method FindValue:Value( ident:String ) Override
 
@@ -387,7 +441,15 @@ End
 Class FuncBlock Extends Block
 
 	Method New( func:FuncValue )
+
 		Super.New( func )
+	End
+	
+	Property IsGeneric:Bool() Override
+	
+		If func.IsGeneric Return True
+		
+		Return Super.IsGeneric
 	End
 	
 	Method FindType:Type( ident:String ) Override
@@ -395,11 +457,6 @@ Class FuncBlock Extends Block
 		For Local i:=0 Until func.types.Length
 			If ident=func.fdecl.genArgs[i] Return func.types[i]
 		Next
-
-'		If func.ifaceScope
-'			Local type:=func.ifaceScope.FindType( ident )
-'			If type Return type
-'		Endif
 
 		Return Super.FindType( ident )
 	End

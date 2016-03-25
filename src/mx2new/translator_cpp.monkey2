@@ -669,7 +669,7 @@ Class Translator_CPP Extends Translator
 		
 		If debug 
 		
-			Emit( "bbDBFrame db_f{~q"+func.Name+"~q,~q"+func.pnode.srcfile.path+"~q};" )
+			Emit( "bbDBFrame db_f{~q"+func.Name+":"+func.ftype.retType.Name+"("+func.ParamNames+")~q,~q"+func.pnode.srcfile.path+"~q};" )
 			
 			For Local vvar:=Eachin func.params
 				Emit( "bbDBLocal(~q"+vvar.vdecl.ident+":"+vvar.type.TypeId+"~q,&"+Trans( vvar )+");" )
@@ -949,8 +949,7 @@ Class Translator_CPP Extends Translator
 	End
 	
 	Method EmitStmt( stmt:ThrowStmt )
-	
-		Emit( "throw "+Trans( stmt.value )+";" )
+		If stmt.value Emit( "throw "+Trans( stmt.value )+";" ) Else Emit( "throw;" )
 	End
 	
 	'***** Value *****

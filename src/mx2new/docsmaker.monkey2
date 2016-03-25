@@ -1,28 +1,27 @@
 
-Namespace mx2
-
-#If __CONFIG__="mx2new"
-#Import "<hoedown.monkey2>"
-Using hoedown
-#Else
-Using lib.hoedown
-#Endif
+Namespace mx2.docs
 
 Class DocsMaker
 
-	Method MakeDocs:String( module:Module )
+	Protected
 	
-		_module=module
-		_buf.Clear()
-		_indent=""
-		_sep=False
-		
-		EmitModule()
-		
-		Return _buf.Join( "~n" )
-	End
+	Field _module:Module
 
-	Private
+	Field _pagesDir:String			'module/docs
+	Field _pageTemplate:String
+	
+	Field _buf:=New StringStack
+	Field _params:=New StringStack
+	Field _return:String
+	
+	Function JsonEscape:String( str:String )
+		str=str.Replace( "\","\\" )
+		str=str.Replace( "~q","\~q" )
+		str=str.Replace( "~n","\n" )
+		str=str.Replace( "~r","\r" )
+		str=str.Replace( "~t","\t" )
+		Return "~q"+str+"~q"
+	End
 	
 	Function FindSpc:Int( str:String )
 	
@@ -42,554 +41,605 @@ Class DocsMaker
 		Return -1
 	End
 	
-	Function JsonEscape:String( str:String )
-		str=str.Replace( "\","\\" )
-		str=str.Replace( "~q","\~q" )
-		str=str.Replace( "~n","\n" )
-		str=str.Replace( "~r","\r" )
-		str=str.Replace( "~t","\t" )
-		Return "~q"+str+"~q"
+	Method EmitBr()
+		_buf.Push( "" )
 	End
 	
-	Function MarkdownToHtml:String( markdown:String )
+	Method Emit( docs:String )
 	
-		Return markdown
+		If Not docs.Contains( "~n" )
+			_buf.Push( docs )
+			Return
+		Endif
 		
-		#rem
-		Local ob:=hoedown_buffer_new( 4096 )
+		Local lines:=docs.Split( "~n" )
 		
-		Local r:=hoedown_html_renderer_new( HOEDOWN_HTML_NONE,10 )
+		For Local i:=0 Until lines.Length
 		
-		Local doc:=hoedown_document_new( r,HOEDOWN_EXT_TABLES|HOEDOWN_EXT_FENCED_CODE,10 )
+			Local line:=lines[i].Trim()
 			
-		hoedown_document_render( doc,ob,UByte Ptr(markdown.ToUtf8String()),markdown.Utf8Length )
-'		hoedown_document_render( doc,ob,markdown,markdown.Utf8Length )
-		
-		Local html:=String.FromCString( hoedown_buffer_cstr( ob ) )
-		
-		hoedown_document_free( doc )
-		
-		hoedown_html_renderer_free( r )
-		
-		hoedown_buffer_free( ob )
-		
-		Return html
-		#end
+			If line.StartsWith( "@" )
+
+				Local j:=FindSpc( line )
+				Local id:=line.Slice( 1,j )
+				line=line.Slice( j ).Trim()
+				
+				Select id
+				Case "param"
+					_params.Push( line )
+				Case "return"
+					_return=line
+				Case "example"
+				
+					Local indent:=FindChar( lines[i] )
+					i+=1
+					
+					_buf.Push( "```" )
+					
+					Local buf:=New StringStack
+					
+					While i<lines.Length
+						Local line:=lines[i]
+						If line.Trim().StartsWith( "@end" ) Exit
+						i+=1
+						line=line.Slice( indent )
+						If line.StartsWith( "\#" ) line=line.Slice( 1 )
+						buf.Push( line )
+					Wend
+					
+					_buf.Push( buf.Join( "~n" ).Trim() )
+					
+					_buf.Push( "```" )
+					
+				Case "see"
+					'TODO
+					Continue
+				
+				Default
+					Print "MAKEDOCS ERROR: '"+lines[i]+"'"
+				End
+
+				Continue
+			Endif
+
+			_buf.Push( line )
+			
+		Next
 	End
 	
-	Function FixIdent:String( ident:String )
-	
-		If ident.StartsWith( "@" ) Return ident.Slice( 1 ).Capitalize()
-		Return ident
+	Method FlushParams()
+
+		If Not _params.Length Return
+		
+		EmitBr()
+		Emit( "| Parameters |    |" )
+		Emit( "|:-----------|:---|" )
+		
+		For Local p:=Eachin _params
+		
+			Local i:=FindSpc( p )
+			Local id:=p.Slice( 0,i )
+			p=p.Slice( i ).Trim()
+			
+			If Not id Or Not p Continue
+			
+			Emit( "| `"+id+"` | "+p+" |" )
+		Next
+		
+		_params.Clear()
 	End
 	
-	Function ScopePath:String( scope:Scope )
+	Method Flush:String()
+	
+		FlushParams()
+	
+		Local markdown:=_buf.Join( "~n" ).Trim()+"~n"
+		
+		_buf.Clear()
+		
+		Local docs:=std.markdown.MarkdownToHtml( markdown )
+		
+		Return docs
+	End
+	
+	Method MungUrl:String( url:String )
+		url=url.Replace( "_","_0" )
+		url=url.Replace( "<","_1" )
+		url=url.Replace( ">","_2" )
+		url=url.Replace( ",","_3" )
+		url=url.Replace( "?","_4" )
+		url=url.Replace( "&","_5" )
+		url=url.Replace( "@","_6" )
+		url=url.Replace( ".","_" )
+		Return url
+	End
+	
+	Method HtmlEsc:String( str:String )
+		str=str.Replace( "&","&amp;" )
+		str=str.Replace( "<","&lt;" )
+		str=str.Replace( ">","&gt;" )
+		Return str
+	End
+	
+	Method MarkdownEsc:String( str:String )
+		str=str.Replace( "\","\\" )
+		str=str.Replace( "_","\_" )
+		str=str.Replace( "<","\<" )
+		str=str.Replace( ">","\>" )
+		Return str
+	End
+	
+	Method DeclPage:String( decl:Decl,scope:Scope )
+	
+		Local ident:=""
+		If decl ident="."+decl.ident
+	
+		Local page:=MungUrl( scope.Name+"."+decl.kind.Slice( 0,1 )+ident )+".html"
+		
+		Return page
+	End
+	
+	Method NamespacePage:String( nmspace:NamespaceScope )
+		Return MungUrl( nmspace.Name )+".html"
+	End
+	
+	Method MakeLink:String( text:String,url:String )
+		Return "<a href='"+url+"'>"+text+"</a>"
+	End
+	
+	Method MakeLink:String( text:String,module:String,page:String )
+		
+		Return "<a href='javascript:void(0)' onclick=~qgopage('"+page+"','"+module+"')~q>"+text+"</a>"
+	End
+	
+	Method MakeLink:String( text:String,decl:Decl,scope:Scope )
+	
+		Local module:=scope.FindFile().fdecl.module.name
+		Local page:=DeclPage( decl,scope )
+		
+		Return MakeLink( text,module,page )
+	End
+	
+	Method DeclIdent:String( decl:Decl,gen:Bool=False )
+
+		Local ident:=decl.ident
+		
+		If decl.IsOperator
+			ident="Operator "+ident
+		Else If ident="new"
+			ident="New"
+		Else If ident.StartsWith( "@" )
+			ident=ident.Slice( 1 ).Capitalize()
+		Endif
+		
+		If gen
+			Local cdecl:=Cast<ClassDecl>( decl )
+			If cdecl And cdecl.genArgs ident+="<"+(",".Join( cdecl.genArgs ))+">"
+			
+			Local fdecl:=Cast<FuncDecl>( decl )
+			If fdecl And fdecl.genArgs ident+="<"+(",".Join( fdecl.genArgs ))+">"
+		Endif
+		
+		Return MarkdownEsc( ident )
+	End
+	
+	Method DeclIdent:String( decl:Decl,scope:Scope,gen:Bool=False )
+		Return MakeLink( DeclIdent( decl,gen ),decl,scope )
+	End
+	
+	Method DeclName:String( decl:Decl,scope:Scope )
 	
 		Local path:=""
-		If scope.outer path=ScopePath( scope.outer )
+		Local nmspace:=scope.FindFile().nmspace
 		
-		Local nmspace:=Cast<NamespaceScope>( scope )
-		If Not nmspace Or Not nmspace.ntype Or Not nmspace.ntype.ident Return path
+		While scope<>nmspace
+			If Not scope Return "?????"
+			Local cscope:=Cast<ClassScope>( scope )
+			If cscope
+				Local decl:=cscope.ctype.cdecl
+				path=DeclIdent( decl,cscope.outer,True )+"."+path
+			Endif
+			scope=scope.outer
+		Wend
 		
-		If path Return path+"."+nmspace.ntype.ident
+		If path path=path.Slice( 0,-1 )+"."
 		
-		Return nmspace.ntype.ident
+		Return path+DeclIdent( decl )
 	End
 	
-	Function DeclPath:String( node:SNode )
-	
-		Local etype:=Cast<EnumType>( node )
-		If etype Return ScopePath( etype.scope.outer )+"."+FixIdent( etype.edecl.ident )
-	
-		Local ctype:=Cast<ClassType>( node )
-		If ctype Return ScopePath( ctype.scope.outer )+"."+FixIdent( ctype.cdecl.ident )
-		
-		Local func:=Cast<FuncValue>( node )
-		If func Return ScopePath( func.scope )+"."+FixIdent( func.fdecl.ident )
-		
-		Local vvar:=Cast<VarValue>( node )
-		If vvar Return ScopePath( vvar.scope )+"."+FixIdent( vvar.vdecl.ident )
-		
-		Return "?????"
+	Method SavePage( docs:String,page:String )
+		docs=_pageTemplate.Replace( "${CONTENT}",docs )
+		stringio.SaveString( docs,_pagesDir+page )
 	End
 	
-	Function TypeName:String( type:Type )
+	Method DeclDesc:String( decl:Decl )
+		Local desc:=decl.docs
+		Local i:=desc.Find( "~n" )
+		If i<>-1 Return desc.Slice( 0,i )
+		Return desc
+	End
 	
-		If type=Type.VoidType Return "Void"
-		
+	Method TypeName:String( type:Type,prefix:String )
+	
+		Local vtype:=Cast<VoidType>( type )
+		If vtype
+			Return vtype.Name
+		Endif
+	
 		Local gtype:=Cast<GenArgType>( type )
-		If gtype Return gtype.ident
-		
-		Local etype:=Cast<EnumType>( type )
-		If etype Return DeclPath( etype )
-		
+		If gtype
+			Return gtype.Name.Replace( "?","" )
+		Endif
+	
 		Local ptype:=Cast<PrimType>( type )
-		If ptype Return TypeName( ptype.ctype )
+		If ptype
+			Local ctype:=ptype.ctype
+			Return MakeLink( ptype.Name,ctype.cdecl,ctype.scope.outer )
+		Endif
 		
-		Local atype:=Cast<ArrayType>( type )
-		If atype Return TypeName( atype.elemType )+"[,,,,,,,,,,".Slice( 0,atype.rank )+"]"
-		
-		Local ptrtype:=Cast<PointerType>( type )
-		If ptrtype Return TypeName( ptrtype.elemType )+" Ptr"
+		Local ntype:=Cast<NamespaceType>( type )
+		If ntype
+			Return ntype.Name
+		Endif
 		
 		Local ctype:=Cast<ClassType>( type )
 		If ctype
-			Local name:=DeclPath( type )
-			If Not ctype.types Return name
 			Local args:=""
 			For Local type:=Eachin ctype.types
-				If args args+=","
-				args+=TypeName( type )
+				args+=","+TypeName( type,prefix )
 			Next
-			Return name+"<"+args+">"
+			If args args="\< "+args.Slice( 1 )+" \>"
+			
+			If ctype.instanceOf ctype=ctype.instanceOf
+			
+			Return MakeLink( MarkdownEsc( ctype.cdecl.ident ),ctype.cdecl,ctype.scope.outer )+args
 		Endif
+		
+		Local etype:=Cast<EnumType>( type )
+		If etype
+			Local name:=etype.Name
+			If name.StartsWith( prefix ) name=name.Slice( prefix.Length )
+			Return MakeLink( MarkdownEsc( name ),etype.edecl,etype.scope.outer )
+		Endif
+		
+		Local qtype:=Cast<PointerType>( type )
+		If qtype
+			Return TypeName( qtype.elemType,prefix )+" Ptr"
+		Endif
+		
+		Local atype:=Cast<ArrayType>( type )
+		If atype
+			If atype.rank=1 Return TypeName( atype.elemType,prefix )+"\[ \]"
+			Return TypeName( atype.elemType,prefix )+"\[ ,,,,,,,,,".Slice( 0,atype.rank+2 )+" \]"
+		End
 		
 		Local ftype:=Cast<FuncType>( type )
 		If ftype
-			Local ret:=TypeName( ftype.retType )
 			Local args:=""
-			For Local type:=Eachin ftype.argTypes
-				If args args+=","
-				args+=TypeName( type )
+			For Local arg:=Eachin ftype.argTypes
+				args+=","+TypeName( arg,prefix )
 			Next
-			Return ret+"("+args+")"
+			args=args.Slice( 1 )
+			Return TypeName( ftype.retType,prefix )+"( "+args+" )"
 		Endif
 		
-		Return "?????"
+		Print type.Name+"!!!!!!"
+		Assert( False )
+		Return ""
 	End
 	
-	Field _module:Module
-	Field _buf:=New StringStack
-	Field _indent:String
-	Field _sep:Bool
-	
-	Class Docs
-	
-		Field buf:=New StringStack
-		Field params:=New StringMap<String>
-		Field retrn:String
-		
-		Method Append( docs:String )
-		
-			Local lines:=docs.Split( "~n" )
-			
-			'unindent
-			Local min:=10000
-			For Local line:=Eachin lines
-				If Not line.Trim() Continue
-				Local i:=FindChar( line )
-				If i<>-1 min=Min( min,i )
-			Next
-			
-			For Local i:=0 Until lines.Length
-			
-				Local line:=lines[i].Slice( min )
-				
-				If line.StartsWith( "@" )
-				
-					Local i:=FindSpc( line )
-					Local id:=line.Slice( 1,i )
-					line=line.Slice( i ).Trim()
-					
-					If id="param"
-	
-						Local i:=FindSpc( line )
-						Local id:=line.Slice( 0,i )
-						line=line.Slice( i ).Trim()
-						
-						If Not id Or Not line Continue
-						
-						params[id]=line
-						
-						
-					Else If id="return"
-					
-						retrn=line
-						
-					Endif
-					
-				Else
-				
-					If line.Trim() buf.Push( line ) Else buf.Push( "" )
-					
-				Endif
-				
-			Next
-			
-		End
-		
-		Method Join:String()
-			While Not buf.Empty And Not buf.Top
-				buf.Pop()
-			Wend
-			Return buf.Join( "~n" )
-		End
-	
+	Method TypeName:String( type:Type,scope:Scope )
+		Local prefix:=scope.FindFile().nmspace.Name+"."
+		Return TypeName( type,prefix )
 	End
 	
-	Method Emit( str:String )
-	
-		If str="}" Or str="]" 
-		
-			_indent=_indent.Slice( 0,-2 )
-			_sep=False
-	
-			If _buf.Length
-				Local top:=_buf.Top
-				If top.EndsWith( "{" ) Or top.EndsWith( "[" )
-					_sep=top.Trim().StartsWith( "," )
-					_buf.Pop()
-					Return
-				Endif
-			Endif
-		Endif
-	
-		If _sep str=","+str
-		_sep=True
-		
-		_buf.Push( _indent+str )
-	
-		If str.EndsWith( "{" ) Or str.EndsWith( "[" ) 
-			_indent+="  "
-			_sep=False
-		Endif
-	
+	Method EmitHeader( decl:Decl,scope:Scope )
+		Local fscope:=scope.FindFile()
+		Local module:=fscope.fdecl.module.name
+		Local nmspace:=fscope.nmspace.Name
+		Emit( "_Module: &lt;"+module+"&gt;_  " )
+		Emit( "_Namespace:_ <em>"+MakeLink( nmspace,module,NamespacePage( fscope.nmspace ) )+"</em>" )
+		EmitBr()
+		Emit( "#### "+DeclName( decl,scope ) )
+		EmitBr()
 	End
 	
-	Method EmitString( key:String,value:String )
-		Emit( "~q"+key+"~q:"+JsonEscape( value ) )
+	Method DocsHidden:Bool( decl:Decl )
+		Return (decl.IsPrivate And Not decl.docs) Or decl.docs.StartsWith( "@hidden" )
 	End
 	
-	Method EmitIdent( ident:String )
-		Emit( "~qident~q:~q"+FixIdent( ident )+"~q" )
-	End
+	Method EmitMembers( kind:String,scope:Scope,inherited:Bool )
 	
-	Method EmitIdent( decl:Decl )
-		EmitIdent( decl.ident )
-	End
-	
-	Method EmitDocs( docs:String )
-		If docs EmitString( "docs",MarkdownToHtml( docs ) )
-	End
-	
-	Method EmitDocs( decl:Decl )
-		If Not decl.docs Return
-		
-		Local docs:=New Docs
-		docs.Append( decl.docs )
-		
-		EmitDocs( docs.Join() )
-	End
-	
-	Method EmitFlags( decl:Decl )
-		Emit( "~qflags~q:"+decl.flags )
-	End
-	
-	Method EmitType( type:Type )
-		EmitString( "type",TypeName( type ) )
-	End
-	
-	Method EmitGenArgs( genArgs:String[] )
-		If genArgs EmitString( "genArgs",",".Join( genArgs ) )
-	End
-	
-	Method EmitScope( scope:Scope )
-	
-		Emit( "~qnamespaces~q:[" )
-		EmitNamespaces( scope )
-		Emit( "]" )
-		
-		Emit( "~qaliases~q:[" )
-		EmitAliases( scope,"alias" )
-		Emit( "]" )
-		
-		Emit( "~qenums~q:[" )
-		EmitEnums( scope,"enum" )
-		Emit( "]" )
-		
-		Emit( "~qclasses~q:[" )
-		EmitClasses( scope,"class" )
-		Emit( "]" )
-		
-		Emit( "~qconstants~q:[" )
-		EmitVars( scope,"const" )
-		Emit( "]" )
-		
-		Emit( "~qglobals~q:[" )
-		EmitVars( scope,"global" )
-		Emit( "]" )
-		
-		Emit( "~qfields~q:[" )
-		EmitVars( scope,"field" )
-		Emit( "]" )
-		
-		Emit( "~qconstructors~q:[" )
-		EmitFuncs( scope,"method",True,False )
-		Emit( "]" )
-		
-		Emit( "~qproperties~q:[" )
-		EmitProperties( scope,"property" )
-		Emit( "]" )
-		
-		Emit( "~qoperators~q:[" )
-		EmitFuncs( scope,"method",False,True )
-		Emit( "]" )
-		
-		Emit( "~qmethods~q:[" )
-		EmitFuncs( scope,"method" )
-		Emit( "]" )
-		
-		Emit( "~qfunctions~q:[" )
-		EmitFuncs( scope,"function" )
-		Emit( "]" )
-		
-	End
-	
-	Method EmitModule()
-	
-		Local nmspaces:=New StringMap<NamespaceScope>
-		
-		For Local fscope:=Eachin _module.fileScopes
-		
-			Local nmspace:=Cast<NamespaceScope>( fscope.outer )
-			If Not nmspace Continue
-			
-			nmspaces[nmspace.FindRoot().ntype.ident]=nmspace
-		Next
-		
-		Emit( "{" )
-		
-		Emit( "~qmodule~q:{" )
-		
-		Emit( "~qname~q:~q"+_module.name+"~q" )
-		
-		Emit( "~qnamespaces~q:[" )
-		For Local nmspace:=Eachin nmspaces.Values
-				
-			Emit( "{" )
-			
-			EmitIdent( nmspace.ntype.ident )
-			
-			EmitScope( nmspace )
-			
-			Emit( "}" )
-		Next
-		Emit( "]" )
-		
-		Emit( "}" )
-		
-		Emit( "}" )
-	End
-	
-	Method EmitNamespaces( scope:Scope )
+		Local init:=True
 	
 		For Local node:=Eachin scope.nodes
-		
-			Local ntype:=Cast<NamespaceType>( node.Value )
-			If Not ntype Continue
-			
-			Emit( "{" )
-			
-			EmitIdent( ntype.ident )
-			
-			EmitScope( ntype.scope )
-			
-			Emit( "}" )
-		Next
-	
-	End
-	
-	Method EmitVars( scope:Scope,kind:String )
-	
-		For Local node:=Eachin scope.nodes
-	
-			Local vvar:=Cast<VarValue>( node.Value )
-			If Not vvar Or vvar.transFile.module<>_module Or vvar.vdecl.kind<>kind Continue
-			
-			Local decl:=vvar.vdecl
-			
-			Emit( "{" )
-			
-			EmitIdent( decl )
-			EmitDocs( decl )
-			EmitFlags( decl )
-			EmitType( vvar.type )
-			
-			Emit( "}" )
-		Next
-	
-	End
-	
-	Method EmitEnums( scope:Scope,kind:String )
-	
-		For Local node:=Eachin scope.nodes
-	
-			Local etype:=Cast<EnumType>( node.Value )
-			If Not etype Or etype.edecl.kind<>kind Continue
-			
-			Local decl:=etype.edecl
-			
-			Emit( "{" )
-			
-			EmitIdent( decl )
-			EmitDocs( decl )
-			EmitFlags( decl )
-			
-			EmitScope( etype.scope )
-			
-			Emit( "}" )
-		Next
-	
-	End
-	
-	Method EmitClasses( scope:Scope,kind:String )
-	
-		For Local node:=Eachin scope.nodes
-	
+
 			Local ctype:=Cast<ClassType>( node.Value )
-			If Not ctype Or ctype.transFile.module<>_module Or ctype.cdecl.kind<>kind Continue
-	
-			Local decl:=ctype.cdecl
-					
-			Emit( "{" )
+			If ctype
+				Local decl:=ctype.cdecl
+				If kind<>decl.kind Continue
+				If DocsHidden( decl ) Continue
+				If inherited<>(scope<>ctype.scope.outer) Continue
+				
+				If init
+					init=False
+					Local kinds:=kind.Capitalize() + (kind="class" ? "es" Else "s")
+					EmitBr()
+					Emit( "| "+kinds+" | |" )
+					Emit( "|:---|:---|" )
+				Endif
+				
+				Emit( "| "+DeclIdent( decl,ctype.scope.outer )+" | "+DeclDesc( decl )+" |" )
+				Continue
+			End
 			
-			EmitIdent( decl )
-			EmitDocs( decl )
-			EmitFlags( decl )
-			EmitGenArgs( decl.genArgs )
-			If ctype.superType EmitString( "superType",TypeName( ctype.superType ) )
-			If ctype.ifaceTypes
-				Local str:=""
-				For Local iface:=Eachin ctype.ifaceTypes
-					If str str+=","
-					str+=JsonEscape( TypeName( iface ) )
-				Next
-				Emit( "~qifaceTypes~q:["+str+"]" )
+			Local etype:=Cast<EnumType>( node.Value )
+			If etype
+				If kind<>"enum" Continue
+				Local decl:=etype.edecl
+				If DocsHidden( decl ) Continue
+				If inherited<>(scope<>etype.scope.outer) Continue
+				
+				If init
+					init=False
+					EmitBr()
+					Emit( "| Enums | |" )
+					Emit( "|:---|:---|" )
+				Endif
+
+				Emit( "| "+DeclIdent( decl,etype.scope.outer )+" | "+DeclDesc( decl )+" |" )
+				Continue
+			End
+
+			Local vvar:=Cast<VarValue>( node.Value )
+			If vvar
+				Local decl:=vvar.vdecl
+				If kind<>decl.kind Continue
+				If DocsHidden( decl ) Continue
+				If inherited<>(scope<>vvar.scope) Continue
+
+				If init
+					init=False
+					EmitBr()
+					Emit( "| "+kind.Capitalize()+"s | |" )
+					Emit( "|:---|:---|" )
+				Endif
+
+				Emit( "| "+DeclIdent( decl,vvar.scope )+" | "+DeclDesc( decl )+" |" )
+				Continue
 			Endif
 			
-			EmitScope( ctype.scope )
-			
-			Emit( "}" )
-		Next
-	
-	End
-	
-	Method EmitProperties( scope:Scope,kind:String )
-	
-		For Local node:=Eachin scope.nodes
-		
 			Local plist:=Cast<PropertyList>( node.Value )
-			If Not plist Or plist.pdecl.kind<>kind Continue
-			
-			Local decl:=plist.pdecl
-			
-			Emit( "{" )
-			
-			EmitIdent( decl )
-			EmitDocs( decl )
-			EmitFlags( decl )
-			EmitType( plist.type )
-			
-			Emit( "}" )
-		Next
-	
-	End
-	
-	Method EmitAliases( scope:Scope,kind:String )
-	
-		For Local node:=Eachin scope.nodes
-		
-			Local atype:=Cast<AliasType>( node.Value )
-			If Not atype Or atype.scope.FindFile().fdecl.module<>_module Or atype.adecl.kind<>kind Continue
-	
-			Local decl:=atype.adecl
-					
-			Emit( "{" )
-			
-			EmitIdent( decl )
-			EmitDocs( decl )
-			EmitFlags( decl )
-			EmitType( Cast<Type>( atype.semanted ) )
-			
-			Emit( "}" )
-		Next
-	
-	End
-	
-	Method EmitFuncs( scope:Scope,kind:String,ctor:Bool=False,optor:Bool=False )
-	
-		For Local node:=Eachin scope.nodes
+			If plist
+				If kind<>"property" Continue
+				
+				Local decl:=plist.pdecl
+				If DocsHidden( decl ) Continue
+				If inherited<>(scope<>plist.scope) Continue
+				
+				If init
+					init=False
+					EmitBr()
+					Emit( "| Properties | |" )
+					Emit( "|:---|:---|" )
+				Endif
+
+				Emit( "| "+DeclIdent( decl,plist.scope )+" | "+DeclDesc( decl )+" |" )
+				Continue
+			Endif
 		
 			Local flist:=Cast<FuncList>( node.Value )
-			If Not flist Continue
-			
-			If kind="method" And ctor And flist.ident<>"new" Continue
-			If kind="method" And Not ctor And flist.ident="new" Continue
-			
-			Local docs:Docs
-			For Local func:=Eachin flist.funcs
-				If func.fdecl.kind<>kind Continue
-				If optor And Not func.fdecl.IsOperator Continue
-				
-				If Not docs docs=New Docs
-				
-				docs.Append( func.fdecl.docs )
-			Next
-			If Not docs Return
-	
-			Emit( "{" )
-			
-			EmitIdent( flist.ident )
-			EmitDocs( docs.Join() )
-	
-			Emit( "~qoverloads~q:[" )
-			For Local func:=Eachin flist.funcs
-				If func.fdecl.kind<>kind Continue
-				If optor And Not func.fdecl.IsOperator Continue
-				
-				Emit( "{" )
-				
-				If func.ftype.retType<>Type.VoidType Or docs.retrn
-				
-					Emit( "~qreturn~q:{" )
+			If flist
+				If kind<>"constructor" And kind<>"operator" And kind<>"method" And kind<>"function" Continue
+
+				For Local func:=Eachin flist.funcs
+					Local decl:=func.fdecl
+					If DocsHidden( decl ) Continue
+					If inherited<>(scope<>func.scope) Continue
 					
-					EmitType( func.ftype.retType )
+					If kind="constructor" 
+						If decl.ident<>"new" Continue
+					Else If kind="operator"
+						If Not decl.IsOperator Continue
+					Else If kind<>decl.kind Or decl.ident="new" Or decl.IsOperator
+						Continue
+					Endif
 					
-					EmitDocs( docs.retrn )
+					If init
+						init=False
+						EmitBr()
+						Emit( "| "+kind.Capitalize()+"s | |" )
+						Emit( "|:---|:---|" )
+					Endif
 					
-					Emit( "}" )
-					
-				Endif
-				
-				Emit( "~qparams~q:[" )
-				For Local p:=Eachin func.params
-				
-					Local decl:=p.vdecl
-				
-					Emit( "{" )
-					
-					EmitIdent( decl )
-					
-					If docs.params.Contains( p.vdecl.ident ) EmitDocs( docs.params[decl.ident] )
-					
-					EmitFlags( decl )
-					
-					EmitType( p.type )
-						
-					If p.init EmitString( "default",p.init.ToString() )
-						
-					Emit( "}" )
+					Emit( "| "+DeclIdent( decl,func.scope )+" | "+DeclDesc( decl )+" |" )
+					Exit
 					
 				Next
-				Emit( "]" )
-				
-				Emit( "}" )
-			Next
-			Emit( "]" )
+				Continue
+			Endif
 			
-			Emit( "}" )
 		Next
-	
-	End
 
+	End
+	
+	Method MakeNamespaceDocs:String( nmspace:NamespaceScope )
+	
+		Emit( "_Module: &lt;"+_module.name+"&gt;_  " )
+		Emit( "_Namespace: "+nmspace.Name+"_" )
+		
+		EmitMembers( "enum",nmspace,True )
+		EmitMembers( "struct",nmspace,True )
+		EmitMembers( "class",nmspace,True )
+		EmitMembers( "interface",nmspace,True )
+		EmitMembers( "const",nmspace,True )
+		EmitMembers( "global",nmspace,True )
+		EmitMembers( "function",nmspace,True )
+		
+		Return Flush()
+	End
+	
+	Method MakeEnumDocs:String( etype:EnumType )
+		Local decl:=etype.edecl
+		
+		If DocsHidden( decl ) Return ""
+
+		EmitHeader( decl,etype.scope.outer )
+		
+		Emit( "##### Enum "+DeclIdent( decl ) )
+		
+		Emit( decl.docs )
+		
+		Return Flush()
+	End
+	
+	Method MakeClassDocs:String( ctype:ClassType )
+	
+		Local decl:=ctype.cdecl
+		
+		If DocsHidden( decl ) Return ""
+		
+		EmitHeader( decl,ctype.scope.outer )
+		
+		Local xtends:=""
+		If decl.superType
+			xtends=" Extends "+TypeName( ctype.superType,ctype.scope.outer )
+		Endif
+		
+		Local implments:=""
+		If decl.ifaceTypes
+			Local ifaces:=""
+			For Local iface:=Eachin ctype.ifaceTypes
+				ifaces+=","+TypeName( iface,ctype.scope.outer )
+			Next
+			ifaces=ifaces.Slice( 1 )
+			If decl.kind="interface"
+				xtends=" Extends "+ifaces
+			Else
+				implments=" Implements "+ifaces
+			Endif
+		Endif
+		
+		Local mods:=""
+		If decl.IsVirtual
+			mods+=" Virtual"
+		Else If decl.IsAbstract
+			mods+=" Abstract"
+		Else If decl.IsFinal
+			mods+=" Final"
+		Endif
+		
+		Emit( "##### "+decl.kind.Capitalize()+" "+DeclIdent( decl,True )+xtends+implments+mods )
+		
+		Emit( decl.docs )
+		
+		For Local inh:=0 Until 1
+			EmitMembers( "enum",ctype.scope,inh )
+			EmitMembers( "struct",ctype.scope,inh )
+			EmitMembers( "class",ctype.scope,inh )
+			EmitMembers( "interface",ctype.scope,inh )
+			EmitMembers( "const",ctype.scope,inh )
+			EmitMembers( "global",ctype.scope,inh )
+			EmitMembers( "field",ctype.scope,inh )
+			EmitMembers( "property",ctype.scope,inh )
+			EmitMembers( "constructor",ctype.scope,inh )
+			EmitMembers( "operator",ctype.scope,inh )
+			EmitMembers( "method",ctype.scope,inh )
+			EmitMembers( "function",ctype.scope,inh )
+		End
+		
+		Return Flush()
+	End
+	
+	Method MakeVarDocs:String( vvar:VarValue )
+	
+		Local decl:=vvar.vdecl
+		
+		If DocsHidden( decl ) Return ""
+		
+		EmitHeader( decl,vvar.scope )
+		
+		Emit( "##### "+decl.kind.Capitalize()+" "+DeclIdent( decl )+" : "+TypeName( vvar.type,vvar.scope ) )
+		
+		Emit( decl.docs )
+		
+		Return Flush()
+	End
+		
+	Method MakePropertyDocs:String( plist:PropertyList )
+	
+		Local decl:=plist.pdecl
+		
+		If DocsHidden( decl ) Return ""
+
+		Local func:=plist.getFunc
+		If Not func func=plist.setFunc
+		If Not func Return ""
+		Local type:=func.ftype.argTypes ? func.ftype.argTypes[1] Else func.ftype.retType
+		
+'		Local fdecl:=func.fdecl
+		
+		EmitHeader( decl,func.scope )
+		
+		Emit( "##### Property "+DeclIdent( decl )+" : "+TypeName( type,func.scope ) )
+		
+		Emit( decl.docs )
+		
+		Return Flush()
+	End
+	
+	Method MakeFuncDocs:String( flist:FuncList,kind:String )
+
+		If Cast<PropertyList>( flist ) Return ""
+
+		Local docs:StringStack
+				
+		For Local func:=Eachin flist.funcs
+			Local decl:=func.fdecl
+			
+			If DocsHidden( decl ) Continue
+			
+			If kind="constructor"
+				If decl.ident<>"new" Continue
+			Else If kind="operator"
+				If Not decl.IsOperator Continue
+			Else If kind<>decl.kind Or decl.ident="new" Or decl.IsOperator
+				Continue
+			Endif
+			
+			If Not docs
+				docs=New StringStack
+				EmitHeader( decl,func.scope )
+			Endif
+			
+			docs.Push( decl.docs )
+			
+			Local tkind:=decl.kind.Capitalize()+" "
+			If decl.IsOperator tkind=""
+			
+			Local params:=""
+			For Local i:=0 Until func.ftype.argTypes.Length
+				Local ident:=MarkdownEsc( func.fdecl.type.params[i].ident )
+				Local type:=TypeName( func.ftype.argTypes[i],func.scope )
+				Local init:=""
+				If func.fdecl.type.params[i].init
+					init=" ="+func.fdecl.type.params[i].init.ToString()
+				Endif
+				params+=" , "+ident+" : "+type+init
+			Next
+			params=params.Slice( 3 )
+			
+			Emit( "##### "+tkind+DeclIdent( decl )+" : "+TypeName( func.ftype.retType,func.scope )+" ( "+params+" ) " )
+
+		Next
+		
+		If Not docs Return ""
+		
+		For Local doc:=Eachin docs
+			Emit( doc )
+		Next
+		
+		Return Flush()
+	End
+	
 End

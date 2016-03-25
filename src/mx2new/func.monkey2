@@ -75,21 +75,46 @@ Class FuncValue Extends Value
 		If fdecl.kind="lambda" captures=New Stack<VarValue>
 	End
 	
+	Property GenArgsName:String()
+		If Not types Return ""
+		Local tys:=""
+		For Local ty:=Eachin types
+			tys+=","+ty.Name
+		Next
+		Return "<"+tys.Slice( 1 )+">"
+	End
+	
 	Property Name:String()
-		Local name:=scope.Name+"."+fdecl.ident,ps:=""
+	
+'		Local name:=scope.Name+"."+fdecl.ident,ps:=""
+
+		Local tys:=""
+		For Local ty:=Eachin types
+			tys+=","+ty.Name
+		Next
+		If tys tys="<"+tys.Slice( 1 )+">"
+
+		Local name:=fdecl.ident,ps:=""
 		For Local p:=Eachin params
 			ps+=","+p.Name
 		Next
-		Return name+":"+ftype.retType.Name+"("+ps.Slice( 1 )+")"
+		
+		Return name+tys
+'		Return name+":"+ftype.retType.Name+"("+ps.Slice( 1 )+")"
+	End
+	
+	Property ParamNames:String()
+		Local ps:=""
+		For Local p:=Eachin params
+			ps+=","+p.Name
+		Next
+		Return ps.Slice( 1 )
 	End
 	
 	Property IsGeneric:Bool()
 		If Not ftype SemantError( "FuncValue.IsGeneric()" )
-		Return ftype.IsGeneric
-	End
-	
-	Property IsGenInstance:Bool()
-		Return instanceOf
+		
+		Return ftype.IsGeneric Or (types And Not instanceOf)
 	End
 	
 	Property IsCtor:Bool()
@@ -104,15 +129,12 @@ Class FuncValue Extends Value
 		Return (fdecl.kind="method" And types) Or fdecl.IsExtension
 	End
 	
-	Property IsExtMethod:Bool()
-	
-		Return fdecl.kind="method" And types
-	End
-	
 	Method ToString:String() Override
-		Local str:=fdecl.ident
-		If types str+="<"+Join( types )+">"
-		Return str+":"+ftype.retType.ToString()+"("+Join( ftype.argTypes )+")"
+	
+		Local args:=Join( types )
+		If args args="<"+args+">"
+		
+		Return fdecl.ident+args+":"+ftype.retType.ToString()+"("+Join( ftype.argTypes )+")"
 	End
 	
 	Method OnSemant:SNode() Override
@@ -133,16 +155,15 @@ Class FuncValue Extends Value
 		type=fdecl.type.Semant( block )
 		ftype=Cast<FuncType>( type )
 		
-		'That's it for generics
+		'That's it for generic funcs
 		'
-		If block.IsGeneric 
-			
+		If block.IsGeneric
 			Return Self
 		Endif
 		
 		'Sanity checks!
 		'
-		If fdecl.kind="method" And fdecl.ident<>"new"
+		If IsMethod
 		
 			Local cscope:=Cast<ClassScope>( scope )
 			Local ctype:=cscope.ctype
@@ -194,10 +215,10 @@ Class FuncValue Extends Value
 				
 			Endif
 		Endif
-
-		'Check 'where' if present...
+		
+		'Check 'where' if present
 		'		
-		If fdecl.whereExpr
+		If fdecl.whereExpr 'And (Not types Or instanceOf)
 			Local t:=fdecl.whereExpr.SemantWhere( block )
 '			Print "Semanted where for "+Name+" -> "+Int(t)
 			If Not t Return Null
@@ -212,6 +233,7 @@ Class FuncValue Extends Value
 			Local builder:=Builder.instance
 			builder.semantStmts.Push( Self )
 		Endif
+		
 		Return Self
 		
 	End
@@ -229,7 +251,6 @@ Class FuncValue Extends Value
 			If Not instance Throw New SemantEx( "Method '"+ToString()+"' cannot be accessed without an instance" )
 			
 			If Not instance.type.ExtendsType( Cast<ClassScope>( scope ).ctype )
-'			If instance.type.DistanceToType( Cast<ClassScope>( scope ).ctype )<0 
 				Throw New SemantEx( "Method '"+ToString()+"' cannot be accessed from instance of a different class" )
 			Endif
 			
@@ -282,14 +303,18 @@ Class FuncValue Extends Value
 			Catch ex:SemantEx
 			End
 		Next
-	
-		If IsExtMethod
-
-			selfValue=New VarValue( "capture","self",New LiteralValue( Cast<ClassScope>( scope ).ctype,"" ),scope )
-			
-		Else If fdecl.kind="method"
 		
-			selfValue=New SelfValue( Cast<ClassScope>( scope ).ctype )
+		If fdecl.kind="method"
+	
+			If IsExtension
+	
+				selfValue=New VarValue( "capture","self",New LiteralValue( Cast<ClassScope>( scope ).ctype,"" ),scope )
+				
+			Else If fdecl.kind="method"
+			
+				selfValue=New SelfValue( Cast<ClassScope>( scope ).ctype )
+				
+			Endif
 			
 		Else If fdecl.kind="lambda"
 		
@@ -320,7 +345,7 @@ Class FuncValue Extends Value
 	
 	Method SemantStmts()
 	
-		If block.IsGeneric SemantError( "FuncValue.SemantStmts()" )
+		If block.IsGeneric SemantError( "FuncValue.SemantStmts(1)" )
 	
 		Try
 		
@@ -340,7 +365,7 @@ Class FuncValue Extends Value
 			
 		Endif
 		
-		If fdecl.kind="function" Or IsExtMethod
+		If fdecl.kind="function" Or IsExtension
 		
 			transFile.functions.Push( Self )
 			
@@ -350,7 +375,7 @@ Class FuncValue Extends Value
 				module.main=Self
 			Endif
 			
-			If IsGenInstance
+			If instanceOf'IsGenInstance
 				Local builder:=Builder.instance
 				Local module:=builder.semantingModule
 				module.genInstances.Push( Self )
@@ -449,7 +474,11 @@ Class FuncListValue Extends Value
 	End
 	
 	Method ToString:String() Override
-		Return flistType.flist.ident
+
+		Local args:=Join( flistType.types )
+		If args args="<"+args+">"
+		
+		Return flistType.flist.ident+args+"(...)"
 	End
 	
 	Method GenInstance:Value( types:Type[] ) Override
@@ -488,6 +517,7 @@ Class FuncListValue Extends Value
 		
 		Local func:=flistType.FindOverload( ftype.retType,ftype.argTypes )
 		If Not func Throw New OverloadEx( Self,ftype.argTypes )
+		
 		If Not func.ftype.Equals( ftype ) Throw New UpCastEx( Self,type )
 		
 		Return func.ToValue( instance )
@@ -586,7 +616,10 @@ Class FuncList Extends SNode
 		If AnyTypeGeneric( argTypes ) SemantError( "FuncList.FindFunc()" )
 	
 		For Local func:=Eachin funcs
-			If Not func.IsGeneric And TypesEqual( func.ftype.argTypes,argTypes ) Return func
+			If func.IsGeneric Continue
+'			If func.ftype.IsGeneric Continue
+'			If func.types And Not func.instanceOf Continue
+			If TypesEqual( func.ftype.argTypes,argTypes ) Return func
 		Next
 		
 		Return Null

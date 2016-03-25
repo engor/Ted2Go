@@ -263,7 +263,8 @@ Class LiteralValue Extends Value
 '		If Not ptype SemantError( "LiteralValue.UpCast()" )
 		
 		Local ptype2:=Cast<PrimType>( Self.type )
-		If Not ptype2 SemantError( "LiteralValue.UpCast()" )
+		If Not ptype2 Return New UpCastValue( type,Self )
+'		If Not ptype2 SemantError( "LiteralValue.UpCast()" )
 		
 		Local result:=""
 		

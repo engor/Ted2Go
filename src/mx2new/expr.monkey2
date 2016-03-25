@@ -187,7 +187,8 @@ Class MemberExpr Extends Expr
 		Local value:=expr.SemantRValue( scope )
 		
 		Local tvalue:=value.FindValue( ident )
-		If Not tvalue Throw New IdentEx( ident )
+		If Not tvalue Throw New SemantEx( "Value of type '"+value.type.ToString()+"' has no member named '"+ident+"'" )
+'		If Not tvalue Throw New IdentEx( ident )
 		
 		Return tvalue
 	End
@@ -259,6 +260,15 @@ Class GenericExpr Extends Expr
 		If tvalue Return New TypeValue( tvalue.ttype.GenInstance( types ) )
 		
 		Return value.GenInstance( types )
+	End
+	
+	Method OnSemantType:Type( scope:Scope ) Override
+	
+		Local types:=SemantTypes( Self.types,scope )
+		
+		Local type:=Self.expr.SemantType( scope )
+		
+		Return type.GenInstance( types )
 	End
 
 End

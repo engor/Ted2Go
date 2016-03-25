@@ -1,7 +1,7 @@
 
 Namespace mx2
 
-Class TryParseEx
+Class TryParseEx Extends Throwable
 End
 
 Class Parser
@@ -38,7 +38,7 @@ Class Parser
 		
 		If CParse( "namespace" )
 			Try
-				_fdecl.nmspace=ParseDottedIdent()
+				_fdecl.nmspace=ParseNamespaceIdent()
 				ParseEol()
 			Catch ex:ParseEx
 				SkipToNextLine()
@@ -63,7 +63,7 @@ Class Parser
 			Case "using"
 				Try
 					Bump()
-					usings.Push( ParseDottedIdent() )
+					usings.Push( ParseUsingIdent() )
 					ParseEol()
 				Catch ex:ParseEx
 					SkipToNextLine()
@@ -83,6 +83,33 @@ Class Parser
 		PNode.parsing=Null
 		
 		Return _fdecl
+	End
+	
+	'THROWS!
+	Method ParseNamespaceIdent:String()
+		Local ident:=ParseIdent()
+
+		While CParse( "." )
+			ident+="."+ParseIdent()
+		Wend
+		
+		Return ident
+	End
+		
+	'THROWS!
+	Method ParseUsingIdent:String()
+	
+		If CParse( "*" ) Return "*"
+		
+		Local ident:=ParseIdent()
+
+		While CParse( "." )
+			If CParse( "*" ) Return ident+".*"
+			If CParse( "." ) Return ident+".."
+			ident+="."+ParseIdent()
+		Wend
+		
+		Return ident
 	End
 	
 	Method ParseDecls:Decl[]( parent:Decl,flags:Int )
@@ -430,6 +457,10 @@ Class Parser
 				
 			End
 			
+			If CParse( "=" )
+				symbol=ParseString()
+			Endif
+
 			If CParse( "where" )
 				whereExpr=ParseExpr()
 			Endif
@@ -439,11 +470,6 @@ Class Parser
 				flags&=~DECL_ABSTRACT
 				flags|=DECL_DEFAULT
 				If CParse( "virtual" ) flags|=DECL_VIRTUAL
-			Endif
-			
-			
-			If flags & DECL_EXTERN
-				If CParse( "=" ) symbol=ParseString()
 			Endif
 			
 			ParseEol()
@@ -995,6 +1021,11 @@ Class Parser
 		Return New TryStmtExpr( stmts,catches.ToArray(),srcpos,EndPos )
 	End
 	
+	'At end of statement?
+	Method AtEos:Bool()
+		Return TokeType=TOKE_EOL Or Toke=";" Or Toke="else" Or Toke="elseif"
+	End
+	
 	'THROWS!
 	Method ParseSimpleStmt:StmtExpr()
 	
@@ -1008,13 +1039,16 @@ Class Parser
 		Case "return"
 			Bump()
 			Local expr:Expr
-			If TokeType And TokeType<>TOKE_EOL And Toke<>";" And Toke<>"else"
-				expr=ParseExpr()
-			Endif
+			If Not AtEos() expr=ParseExpr()
+'			If TokeType And TokeType<>TOKE_EOL And Toke<>";" And Toke<>"else" And Toke<>"elseif"
+'				expr=ParseExpr()
+'			Endif
 			Return New ReturnStmtExpr( expr,srcpos,EndPos )
 		Case "throw"
 			Bump()
-			Local expr:=ParseExpr()
+			Local expr:Expr
+			If Not AtEos() expr=ParseExpr()
+'			Local expr:=ParseExpr()
 			Return New ThrowStmtExpr( expr,srcpos,EndPos )
 		Case "continue"
 			Bump()
@@ -1068,7 +1102,7 @@ Class Parser
 	
 	Method IsTypeIdent:Bool( ident:String )
 		Select ident
-		Case "void","bool","byte","ubyte","short","ushort","int","uint","long","ulong","float","double","string","object"
+		Case "void","bool","byte","ubyte","short","ushort","int","uint","long","ulong","float","double","string","object","throwable"
 			Return True
 		End
 		Return False
@@ -1703,26 +1737,6 @@ Class Parser
 		Return ident
 	End
 	
-	'THROWS!
-	Method ParseTypeIdent:String()
-		Select Toke
-		Case "bool","byte","short","int","long","ubyte","ushort","uint","ulong","float","double","string","object"
-			Return Parse()
-		End
-		Return ParseIdent()
-	End
-	
-	'THROWS!
-	Method ParseDottedIdent:String()
-		Local ident:=ParseIdent()
-
-		While CParse( "." )
-			ident+="."+ParseIdent()
-		Wend
-		
-		Return ident
-	End
-
 	Method CParseIdent:String()
 		If TokeType<>TOKE_IDENT Return ""
 		Local ident:=Toke
@@ -1833,11 +1847,22 @@ Class Parser
 		Return _toker.EndPos
 	End
 	
+	'Throw a ParseEx
+	'
 	Method Error( msg:String )
 	
 		If Not _stateStack.Empty Throw New TryParseEx
 	
 		Throw New ParseEx( msg,_fdecl.path,SrcPos )
+	End
+	
+	'Generate a ParseEx without throwing an exception
+	'
+	Method ErrorNx( msg:String )
+
+		If Not _stateStack.Empty Throw New TryParseEx
+		
+		New ParseEx( msg,_fdecl.path,SrcPos )
 	End
 	
 	Field _fdecl:FileDecl
@@ -2002,6 +2027,9 @@ Class Parser
 				If _ccnest=_ifnest 
 					p.Bump()
 					Local path:=p.ParseString()
+					If path.StartsWith( "<" ) And path.EndsWith( ">" )
+						If Not ExtractExt( path ) path=path.Slice( 0,-1 )+".monkey2>"
+					Endif
 					_imports.Push( path )
 				Endif
 				

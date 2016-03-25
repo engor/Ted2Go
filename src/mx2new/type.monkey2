@@ -25,6 +25,7 @@ Class Type Extends SNode
 	
 	Global ArrayClass:ClassType
 	Global ObjectClass:ClassType
+	Global ThrowableClass:ClassType
 	
 	Global CStringClass:ClassType
 	Global WStringClass:ClassType

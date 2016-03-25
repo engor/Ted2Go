@@ -1,9 +1,14 @@
 
 Namespace mx2cc
 
+Using mx2.docs
+
 #Import "<std.monkey2>"
 
 #Import "mx2.monkey2"
+
+#Import "docsmaker.monkey2"
+#Import "htmldocsmaker.monkey2"
 
 Using std
 Using mx2
@@ -14,9 +19,13 @@ Using libc
 
 Global StartDir:String
 
+Const TestArgs:="mx2cc makedocs monkey libc std"' monkey libc std"
+
+'Const TestArgs:="mx2cc makemods -verbose -clean -config=debug"
+
 'Const TestArgs:="mx2cc makemods -verbose -clean -config=release"
 
-Const TestArgs:="mx2cc makeapp -verbose -target=desktop -config=debug src/mx2new/test.monkey2"
+'Const TestArgs:="mx2cc makeapp -target=desktop -config=debug src/mx2new/test.monkey2"
 
 'Const TestArgs:="mx2cc makeapp -verbose -target=desktop -config=release src/mx2new/mx2cc.monkey2"
 
@@ -32,18 +41,14 @@ Function Main()
 		
 	Local env:="bin/env_"+HostOS+".txt"
 	
-	While Not IsRootDir( CurrentDir() ) And FileType( env )<>FILETYPE_FILE
+	While Not IsRootDir( CurrentDir() ) And GetFileType( env )<>FILETYPE_FILE
 	
 		ChangeDir( ExtractDir( CurrentDir() ) )
 	Wend
 	
-	If FileType( env )<>FILETYPE_FILE Fail( "Unable to locate mx2cc 'bin' directory" )
+	If GetFileType( env )<>FILETYPE_FILE Fail( "Unable to locate mx2cc 'bin' directory" )
 	
 	LoadEnv( env )
-	
-	MX2_BUILDV=GetEnv( "MX2_BUILDV" )
-	
-	Print "MX2_BUILDV="+MX2_BUILDV
 	
 	Local args:=AppArgs()
 	
@@ -142,7 +147,7 @@ Function MakeMods( args:String[] )
 	For Local modid:=Eachin args
 	
 		Local path:="modules/"+modid+"/"+modid+".monkey2"
-		If FileType( path )<>FILETYPE_FILE Fail( "Module file '"+path+"' not found" )
+		If GetFileType( path )<>FILETYPE_FILE Fail( "Module file '"+path+"' not found" )
 	
 		Print ""
 		Print "***** Making module '"+modid+"' *****"
@@ -179,12 +184,14 @@ Function MakeDocs( args:String[] )
 	args=ParseOpts( opts,args )
 	If Not args args=EnumModules()
 	
-	Local docsMaker:=New DocsMaker
+	Local docsMaker:=New HtmlDocsMaker
+	
+	Local mx2_api:=""
 	
 	For Local modid:=Eachin args
 
 		Local path:="modules/"+modid+"/"+modid+".monkey2"
-		If FileType( path )<>FILETYPE_FILE Fail( "Module file '"+path+"' not found" )
+		If GetFileType( path )<>FILETYPE_FILE Fail( "Module file '"+path+"' not found" )
 	
 		Print ""
 		Print "***** Doccing module '"+modid+"' *****"
@@ -197,10 +204,16 @@ Function MakeDocs( args:String[] )
 		builder.Parse()
 		builder.Semant()
 		
-		Local docs:=docsMaker.MakeDocs( builder.modules[0] )
+		Local tree:=docsMaker.MakeDocs( builder.modules[0] )
 		
-		SaveString( docs,"modules/"+modid+"/"+modid+".json" )
+		If mx2_api mx2_api+=","
+		mx2_api+=tree
+
 	Next
+	
+	Local index:=stringio.LoadString( "docs/modules_template.html" )
+	index=index.Replace( "${MX2_API}",mx2_api )
+	stringio.SaveString( index,"docs/modules.html" )
 
 End
 

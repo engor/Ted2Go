@@ -1,7 +1,7 @@
 
 Namespace mx2
 
-Class ErrorEx
+Class ErrorEx Extends Throwable
 	Field msg:String
 	
 	Method New( msg:String )
