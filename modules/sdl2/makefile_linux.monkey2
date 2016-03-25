@@ -1,5 +1,5 @@
 
-Namespace lib.sdl2
+Namespace sdl2
 
 'Nice and easy! To install SDL2:
 '

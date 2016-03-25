@@ -1,17 +1,15 @@
 
 Namespace sdl2
 
-#Import "<gles20.monkey2>"
-
-#Import "mixer.monkey2"
+#Import "<libc>"
+#Import "<gles20>"
 
 #Import "makefile.monkey2"
 
 #Import "SDL/include/*.h"
 #Import "<SDL.h>"
 
-'Alias SDL_bool:Int'Bool
-'Alias SDL_GestureID:Long
+Using libc
 
 Extern
 
@@ -48,7 +46,7 @@ Function SDL_Quit:Void()
 
 'FILE="sdl2/SDL_error.h"
 
-Function SDL_GetError:Utf8Char Ptr()
+Function SDL_GetError:char_t Ptr()
 Function SDL_ClearError:Void()
 Const SDL_OutOfMemory:Int
 Const SDL_Unsupported:Int
@@ -197,12 +195,12 @@ End
 Const SDL_GL_CONTEXT_RELEASE_BEHAVIOR_NONE:SDL_GLcontextReleaseFlag
 Const SDL_GL_CONTEXT_RELEASE_BEHAVIOR_FLUSH:SDL_GLcontextReleaseFlag
 Function SDL_GetNumVideoDrivers:Int()
-Function SDL_GetVideoDriver:Utf8Char Ptr(index_:Int)
+Function SDL_GetVideoDriver:char_t Ptr(index_:Int)
 Function SDL_VideoInit:Int(driver_name_:Utf8String)
 Function SDL_VideoQuit:Void()
-Function SDL_GetCurrentVideoDriver:Utf8Char Ptr()
+Function SDL_GetCurrentVideoDriver:char_t Ptr()
 Function SDL_GetNumVideoDisplays:Int()
-Function SDL_GetDisplayName:Utf8Char Ptr(displayIndex_:Int)
+Function SDL_GetDisplayName:char_t Ptr(displayIndex_:Int)
 Function SDL_GetDisplayBounds:Int(displayIndex_:Int,rect_:SDL_Rect Ptr)
 Function SDL_GetDisplayDPI:Int( displayIndex:Int,ddpi:Float Ptr,hdpi:Float Ptr,vdpi:Float Ptr )
 Function SDL_GetNumDisplayModes:Int(displayIndex_:Int)
@@ -214,13 +212,13 @@ Function SDL_GetWindowDisplayIndex:Int(window_:SDL_Window Ptr)
 Function SDL_SetWindowDisplayMode:Int(window_:SDL_Window Ptr,mode_:SDL_DisplayMode Ptr)
 Function SDL_GetWindowDisplayMode:Int(window_:SDL_Window Ptr,mode_:SDL_DisplayMode Ptr)
 Function SDL_GetWindowPixelFormat:Int(window_:SDL_Window Ptr)
-Function SDL_CreateWindow:SDL_Window Ptr(title_:monkey.Utf8String,x_:Int,y_:Int,w_:Int,h_:Int,flags_:Int)
+Function SDL_CreateWindow:SDL_Window Ptr(title_:Utf8String,x_:Int,y_:Int,w_:Int,h_:Int,flags_:Int)
 Function SDL_CreateWindowFrom:SDL_Window Ptr(data_:Void Ptr)
 Function SDL_GetWindowID:Int(window_:SDL_Window Ptr)
 Function SDL_GetWindowFromID:SDL_Window Ptr(id_:Int)
 Function SDL_GetWindowFlags:Int(window_:SDL_Window Ptr)
 Function SDL_SetWindowTitle:Void(window_:SDL_Window Ptr,title_:Utf8String)
-Function SDL_GetWindowTitle:Utf8Char Ptr(window_:SDL_Window Ptr)
+Function SDL_GetWindowTitle:char_t Ptr(window_:SDL_Window Ptr)
 Function SDL_SetWindowIcon:Void(window_:SDL_Window Ptr,icon_:SDL_Surface Ptr)
 Function SDL_SetWindowData:Void Ptr(window_:SDL_Window Ptr,name_:Utf8String,userdata_:Void Ptr)
 Function SDL_GetWindowData:Void Ptr(window_:SDL_Window Ptr,name_:Utf8String)
@@ -360,9 +358,9 @@ Struct SDL_JoystickGUID
 End
 Alias SDL_JoystickID:Int
 Function SDL_NumJoysticks:Int()
-Function SDL_JoystickNameForIndex:Utf8Char Ptr(device_index_:Int)
+Function SDL_JoystickNameForIndex:char_t Ptr(device_index_:Int)
 Function SDL_JoystickOpen:SDL_Joystick Ptr(device_index_:Int)
-Function SDL_JoystickName:Utf8Char Ptr(joystick_:SDL_Joystick Ptr)
+Function SDL_JoystickName:char_t Ptr(joystick_:SDL_Joystick Ptr)
 Function SDL_JoystickGetDeviceGUID:SDL_JoystickGUID(device_index_:Int)
 Function SDL_JoystickGetGUID:SDL_JoystickGUID(joystick_:SDL_Joystick Ptr)
 Function SDL_JoystickGetGUIDString:Void(guid_:SDL_JoystickGUID,pszGUID_:Byte Ptr,cbGUID_:Int)
@@ -673,9 +671,9 @@ Function SDL_GetModState:SDL_Keymod()
 Function SDL_SetModState:Void(modstate_:SDL_Keymod)
 Function SDL_GetKeyFromScancode:SDL_Keycode(scancode_:SDL_Scancode)
 Function SDL_GetScancodeFromKey:SDL_Scancode(key_:SDL_Keycode)
-Function SDL_GetScancodeName:Utf8Char Ptr(scancode_:SDL_Scancode)
+Function SDL_GetScancodeName:char_t Ptr(scancode_:SDL_Scancode)
 Function SDL_GetScancodeFromName:SDL_Scancode(name_:Utf8String)
-Function SDL_GetKeyName:Utf8Char Ptr(key_:SDL_Keycode)
+Function SDL_GetKeyName:char_t Ptr(key_:SDL_Keycode)
 Function SDL_GetKeyFromName:SDL_Keycode(name_:Utf8String)
 Function SDL_StartTextInput:Void()
 Function SDL_IsTextInputActive:SDL_bool()
@@ -1047,14 +1045,14 @@ Struct SDL_AudioCVT
 End
 Alias SDL_AudioFilter:Void(SDL_AudioCVT Ptr,SDL_AudioFormat)
 Function SDL_GetNumAudioDrivers:Int()
-Function SDL_GetAudioDriver:Utf8Char Ptr(index_:Int)
+Function SDL_GetAudioDriver:char_t Ptr(index_:Int)
 Function SDL_AudioInit:Int(driver_name_:Utf8String)
 Function SDL_AudioQuit:Void()
-Function SDL_GetCurrentAudioDriver:Utf8Char Ptr()
+Function SDL_GetCurrentAudioDriver:char_t Ptr()
 Function SDL_OpenAudio:Int(desired_:SDL_AudioSpec Ptr,obtained_:SDL_AudioSpec Ptr)
 Alias SDL_AudioDeviceID:Int
 Function SDL_GetNumAudioDevices:Int(iscapture_:Int)
-Function SDL_GetAudioDeviceName:Utf8Char Ptr(index_:Int,iscapture_:Int)
+Function SDL_GetAudioDeviceName:char_t Ptr(index_:Int,iscapture_:Int)
 Function SDL_OpenAudioDevice:SDL_AudioDeviceID(device_:Utf8String,iscapture_:Int,desired_:SDL_AudioSpec Ptr,obtained_:SDL_AudioSpec Ptr,allowed_changes_:Int)
 Enum SDL_AudioStatus
 End
@@ -1087,7 +1085,7 @@ Function SDL_CloseAudioDevice:Void(dev_:SDL_AudioDeviceID)
 
 Function SDL_SetClipboardText( text:Utf8String )
 
-Function SDL_GetClipboardText:Utf8Char Ptr()
+Function SDL_GetClipboardText:char_t Ptr()
 
 Function SDL_HasClipboardText:SDL_bool()
 

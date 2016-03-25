@@ -1,5 +1,5 @@
 
-Namespace lib.sdl2
+Namespace sdl2
 
 'frameworks
 #Import "<CoreVideo.framework>"

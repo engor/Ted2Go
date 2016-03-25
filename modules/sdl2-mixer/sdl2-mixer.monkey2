@@ -1,7 +1,9 @@
 
 Namespace sdl2.mixer
 
-#Import "mixer_makefile.monkey2"
+#Import "<sdl2>"
+
+#Import "makefile.monkey2"
 
 #Import "SDL_mixer/*.h"
 #Import "<SDL_mixer.h>"
