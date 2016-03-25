@@ -1307,7 +1307,7 @@ Class Parser
 			If CParse( "[" )
 				Local sizes:=ParseExprs()
 				Parse( "]" )
-				Return New NewArrayExpr( New ArrayTypeExpr( type,1,srcpos,EndPos ),sizes,Null,srcpos,EndPos )
+				Return New NewArrayExpr( New ArrayTypeExpr( type,sizes.Length,srcpos,EndPos ),sizes,Null,srcpos,EndPos )
 			Endif
 			
 			If Toke="("

@@ -1,8 +1,6 @@
 
 Namespace monkey.types
 
-Alias Exception:Throwable
-
 Extern
 
 Interface INumeric
@@ -144,6 +142,8 @@ Struct @Array<T>
 	Property Data:T Ptr()="data"
 	
 	Property Length:Int()="length"
+	
+	Method Size:Int( dimension:Int )="size"
 	
 	Method Slice:T[]( from:Int )="slice"
 	

@@ -114,6 +114,10 @@ int main( int argc,char **argv ){
 			printf( "%s\n",ex->debugStack()->at( i ).c_str() );
 		}
 
+	}catch( bbThrowable *t ){
+	
+		printf( "\n***** Uncaught Monkey 2 Throwable *****\n\n" );
+
 	}catch(...){
 	
 		printf( "***** Uncaught Native Exception *****\n" );fflush( stdout );

@@ -683,6 +683,8 @@ Class Builder
 		Type.WStringClass=Cast<ClassType>( types.nodes["WString"] )
 		Type.Utf8StringClass=Cast<ClassType>( types.nodes["Utf8String"] )
 
+		Type.ExceptionClass=Cast<ClassType>( types.nodes["@Exception"] )
+
 		rootNamespace.Insert( "void",Type.VoidType )
 		rootNamespace.Insert( "bool",Type.BoolType )
 		rootNamespace.Insert( "byte",Type.ByteType )
@@ -702,6 +704,8 @@ Class Builder
 		rootNamespace.Insert( "CString",Type.CStringClass )
 		rootNamespace.Insert( "WString",Type.WStringClass )
 		rootNamespace.Insert( "Utf8String",Type.Utf8StringClass )
+		
+		rootNamespace.Insert( "Exception",Type.ExceptionClass )
 		
 		Type.BoolType.Semant()
 		Type.ByteType.Semant()

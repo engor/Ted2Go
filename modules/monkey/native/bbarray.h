@@ -84,6 +84,7 @@ template<class T,int D> class bbArray : public bbGCNode{
 	}
 	
 	int size( int q )const{
+		bbDebugAssert( q<D );
 		return this ? (q ? _sizes[q]/_sizes[q-1] : _sizes[0]) : 0;
 	}
 	

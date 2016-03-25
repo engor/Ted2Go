@@ -31,6 +31,8 @@ Class Type Extends SNode
 	Global WStringClass:ClassType
 	Global Utf8StringClass:ClassType
 	
+	Global ExceptionClass:ClassType
+	
 	Field flags:Int
 	
 	Property IsGeneric:Bool()

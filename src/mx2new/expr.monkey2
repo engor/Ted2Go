@@ -151,7 +151,7 @@ Class IdentExpr Extends Expr
 	Method OnSemant:Value( scope:Scope ) Override
 	
 		Local value:=scope.FindValue( ident )
-		If Not value Throw New IdentEx( ident )
+		If Not value Throw New SemantEx( "Identifier '"+ident+"' not found" )
 		
 		Return value
 	End
@@ -187,7 +187,7 @@ Class MemberExpr Extends Expr
 		Local value:=expr.SemantRValue( scope )
 		
 		Local tvalue:=value.FindValue( ident )
-		If Not tvalue Throw New SemantEx( "Value of type '"+value.type.ToString()+"' has no member named '"+ident+"'" )
+		If Not tvalue Throw New SemantEx( "Value of type '"+value.type.Name+"' has no member named '"+ident+"'" )
 '		If Not tvalue Throw New IdentEx( ident )
 		
 		Return tvalue
@@ -198,7 +198,7 @@ Class MemberExpr Extends Expr
 		Local type:=expr.SemantType( scope )
 		
 		Local type2:=type.FindType( ident )
-		If Not type2 Throw New SemantEx( "Identifier '"+ident+"' not found in type '"+type.Name+"'" )
+		If Not type2 Throw New SemantEx( "Type '"+type.Name+"' has no member type named '"+ident+"'" )
 		
 		Return type2
 	End
@@ -296,12 +296,12 @@ Class NewObjectExpr Extends Expr
 		Local type:=Self.type.Semant( scope )
 		
 		Local ctype:=Cast<ClassType>( type )
-		If Not ctype Throw New SemantEx( "Type '"+type.ToString()+"' is not a class" )
+		If Not ctype Throw New SemantEx( "Type '"+type.Name+"' is not a class" )
 		
 		'hmmm...
 		'ctype.SemantMembers()
 		
-		If ctype.IsGeneric Throw New SemantEx( "Class '"+ctype.ToString()+"' is generic" )
+		If ctype.IsGeneric Throw New SemantEx( "Class '"+ctype.Name+"' is generic" )
 		
 		If ctype.IsAbstract
 			Local t:=""
@@ -309,8 +309,8 @@ Class NewObjectExpr Extends Expr
 				If t t+=","
 				t+=func.ToString()
 			Next
-			If t Throw New SemantEx( "Class '"+ctype.ToString()+"' is abstract due to unimplemented method(s) "+t )
-			Throw New SemantEx( "Class '"+ctype.ToString()+"' is abstract" )
+			If t Throw New SemantEx( "Class '"+ctype.Name+"' is abstract due to unimplemented method(s) "+t )
+			Throw New SemantEx( "Class '"+ctype.Name+"' is abstract" )
 		Endif
 		
 		Local args:=SemantArgs( Self.args,scope )
@@ -323,7 +323,7 @@ Class NewObjectExpr Extends Expr
 
 			Local invoke:=Cast<InvokeValue>( ctor.ToValue( Null ).Invoke( args ) )
 			
-			If Not invoke Throw New SemantEx( "Can't invoke class '"+ctype.ToString()+"' constuctor with arguments '"+Join( args )+"'" )
+			If Not invoke Throw New SemantEx( "Can't invoke class '"+ctype.Name+"' constuctor with arguments '"+Join( args )+"'" )
 			
 			ctorFunc=Cast<FuncValue>( invoke.value )
 			If Not ctorFunc SemantError( "NewObjectExpr.OnSemant()" )
@@ -332,7 +332,7 @@ Class NewObjectExpr Extends Expr
 
 		Else If args
 		
-			Throw New SemantEx( "Class '"+type.ToString()+"' has no constructors" )
+			Throw New SemantEx( "Class '"+type.Name+"' has no constructors" )
 			
 		Endif
 		
@@ -364,7 +364,7 @@ Class NewArrayExpr Extends Expr
 		Local atype:=Cast<ArrayType>( type.Semant( scope ) )
 		If Not atype SemantError( "NewArrayExpr.OnSemant()" )
 		
-		If atype.elemType.IsGeneric Throw New SemantEx( "Array element type '"+atype.elemType.ToString()+"' is generic" )
+		If atype.elemType.IsGeneric Throw New SemantEx( "Array element type '"+atype.elemType.Name+"' is generic" )
 		
 		Local sizes:Value[],inits:Value[]
 		If Self.inits
@@ -426,7 +426,9 @@ Class ExtendsExpr Extends Expr
 	Method OnSemant:Value( scope:Scope ) Override
 	
 		Local ctype:=Cast<ClassType>( Self.type.Semant( scope ) )
-		If Not ctype Or (ctype.cdecl.kind<>"class" And ctype.cdecl.kind<>"interface" And ctype.cdecl.kind<>"protocol" ) Throw New SemantEx( "Type must be a class or interface '"+type.ToString()+"'" )
+		If Not ctype Or (ctype.cdecl.kind<>"class" And ctype.cdecl.kind<>"interface" And ctype.cdecl.kind<>"protocol" ) 
+			Throw New SemantEx( "Type '"+type.ToString()+"' is not a class or interface type" )
+		Endif
 		
 		Local value:=Self.expr.SemantRValue( scope )
 
@@ -450,7 +452,9 @@ Class ExtendsExpr Extends Expr
 	Method OnSemantWhere:Bool( scope:Scope ) Override
 	
 		Local ctype:=Cast<ClassType>( Self.type.Semant( scope ) )
-		If Not ctype Or (ctype.cdecl.kind<>"class" And ctype.cdecl.kind<>"interface" And ctype.cdecl.kind<>"protocol" ) Throw New SemantEx( "Type must be a class or interface '"+type.ToString()+"'" )
+		If Not ctype Or (ctype.cdecl.kind<>"class" And ctype.cdecl.kind<>"interface" And ctype.cdecl.kind<>"protocol" ) 
+			Throw New SemantEx( "Type '"+type.ToString()+"' is not a class or interface type" )
+		endif
 		
 		Local type:=Self.expr.SemantType( scope )
 
@@ -479,15 +483,15 @@ Class CastExpr Extends Expr
 		Local type:=Self.type.Semant( scope )
 		
 		Local value:=Self.expr.Semant( scope )
-		
-		If value.type.DistanceToType( type )>=0 Return value.UpCast( type )
-		
-		value=value.ToRValue()
 
-'		Local value:=Self.expr.SemantRValue( scope )
+		'simple upcast?		
+		If value.type.DistanceToType( type )>=0 Return value.UpCast( type )
+
+		'nope...		
+		value=value.ToRValue()
 		
 		If Not value.type.CanCastToType( type ) 
-			Throw New SemantEx( "Value of type '"+value.type.ToString()+"' cannot be cast to type '"+type.ToString()+"'" )
+			Throw New SemantEx( "Value of type '"+value.type.Name+"' cannot be cast to type '"+type.Name+"'" )
 		Endif
 		
 		Return New ExplicitCastValue( type,value )
@@ -537,7 +541,7 @@ Class SuperExpr Extends Expr
 				Local superType:=ctype.superType
 				If superType Return New SuperValue( superType )
 
-				Throw New SemantEx( "Class '"+ctype.ToString()+"' has no super class" )
+				Throw New SemantEx( "Class '"+ctype.Name+"' has no super class" )
 
 			Endif
 		Endif
@@ -684,7 +688,7 @@ Class BinaryopExpr Extends Expr
 		If lhs.DistanceToType( rhs )>=0 Return rhs		'And rhs.DistanceToType( lhs )<=0 Return rhs
 		If rhs.DistanceToType( lhs )>=0 Return lhs		'And lhs.DistanceToType( rhs )<=0 Return lhs
 		
-		Throw New SemantEx( "Types '"+lhs.ToString()+"' and '"+rhs.ToString()+"' are incompatible" )
+		Throw New SemantEx( "Types '"+lhs.Name+"' and '"+rhs.Name+"' are incompatible" )
 		
 		Return Null
 	End
