@@ -6,7 +6,7 @@ Using std.filesystemex
 Function Main()
 
 	Local cd:=CurrentDir()
-	Local parent:=GetParentDir( cd )
+	Local parent:=ExtractDir( cd )
 	
 	Print cd
 	Print parent
@@ -17,11 +17,11 @@ Function Main()
 	ChangeDir( cd )
 	Print CurrentDir()
 	
-	Print GetRealPath( "test/one" )				'test/one
-	Print GetRealPath( "test//one" )			'test/one
-	Print GetRealPath( "test//one/" )			'test/one/
-	Print GetRealPath( "test//one///" )			'test/one/
-	Print GetRealPath( "test/one/two/../" )		'test/one/
+	Print RealPath( "test/one" )				'test/one
+	Print RealPath( "test//one" )				'test/one
+	Print RealPath( "test//one/" )				'test/one/
+	Print RealPath( "test//one///" )			'test/one/
+	Print RealPath( "test/one/two/../" )		'test/one/
 	
 	CreateDir( "one/two/three" )
 	Print Int( GetFileType( "one/two/three" ) )	'2

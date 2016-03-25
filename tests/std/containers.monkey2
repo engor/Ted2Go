@@ -3,17 +3,20 @@ Namespace test
 
 #Import "<std.monkey2>"
 
-Using std
+Using std.collections
 
 Function RemoveOddValues<C,T>( c:C<T> ) Where C<T> Implements IContainer<T>
 
-	Local it:=c.All()
-	While it.Valid
+	Local it:=c.All()'GetIterator()
+	
+	While it.Valid	'Not it.AtEnd
+	
 		If it.Current & 1
 			it.Erase()
 		Else
 			it.Bump()
 		Endif
+		
 	Wend
 	
 End
@@ -23,6 +26,7 @@ Function PrintEachin<C,T>( c:C<T> ) Where C<T> Implements IContainer<T>
 	For Local value:=Eachin c
 		Print value
 	Next
+	
 End
 
 Function Main()
