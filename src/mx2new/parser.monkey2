@@ -120,52 +120,54 @@ Class Parser
 		Local decls:=New Stack<Decl>
 		
 		While Toke
-			Select Toke
-			Case "end"
-				Exit
-			Case "extern"
-				Bump()
-				flags&=~DECL_ACCESSMASK
-				flags|= DECL_EXTERN | DECL_PUBLIC
-				flags=CParseAccess( flags )
-				CParseEol()
-			Case "public","private","protected"
-				flags&=~DECL_EXTERN
-				flags=CParseAccess( flags )
-				CParseEol()
-			Case "const"
-				ParseVars( decls,flags )
-			Case "global"
-				ParseVars( decls,flags )
-			Case "field"
-				ParseVars( decls,flags )
-			Case "local"
-				ParseVars( decls,flags )
-			Case "alias"
-				ParseAliases( decls,flags )
-			Case "class"
-				decls.Push( ParseClass( flags ) )
-			Case "struct"
-				decls.Push( ParseClass( flags ) )
-			Case "interface"
-				decls.Push( ParseClass( flags ) )
-			Case "protocol"
-				decls.Push( ParseClass( flags ) )
-			Case "enum"
-				decls.Push( ParseEnum( flags ) )
-			Case "function"
-				decls.Push( ParseFunc( flags ) )
-			Case "method"
-				decls.Push( ParseFunc( flags ) )
-			Case "operator"
-				decls.Push( ParseFunc( flags ) )
-			Case "property"
-				decls.Push( ParseProperty( flags ) )
-			Default
-				Try
+			Try
+				Select Toke
+				Case "end"
+					Exit
+				Case "extern"
+					Bump()
+					If parent ErrorNx( "Extern must appear at file scope" )
+					flags&= ~DECL_ACCESSMASK
+					flags|= DECL_EXTERN | DECL_PUBLIC
+					flags=CParseAccess( flags )
+					CParseEol()
+				Case "public","private","protected"
+					flags&= ~DECL_ACCESSMASK
+					If Not parent flags&= ~DECL_EXTERN
+					flags=CParseAccess( flags )
+					CParseEol()
+				Case "const"
+					ParseVars( decls,flags )
+				Case "global"
+					ParseVars( decls,flags )
+				Case "field"
+					ParseVars( decls,flags )
+				Case "local"
+					ParseVars( decls,flags )
+				Case "alias"
+					ParseAliases( decls,flags )
+				Case "class"
+					decls.Push( ParseClass( flags ) )
+				Case "struct"
+					decls.Push( ParseClass( flags ) )
+				Case "interface"
+					decls.Push( ParseClass( flags ) )
+				Case "protocol"
+					decls.Push( ParseClass( flags ) )
+				Case "enum"
+					decls.Push( ParseEnum( flags ) )
+				Case "function"
+					decls.Push( ParseFunc( flags ) )
+				Case "method"
+					decls.Push( ParseFunc( flags ) )
+				Case "operator"
+					decls.Push( ParseFunc( flags ) )
+				Case "property"
+					decls.Push( ParseProperty( flags ) )
+				Default
 					Error( "Unexpected token '"+Toke+"'" )
-				Catch ex:ParseEx
 				End
+			Catch ex:ParseEx
 				SkipToNextLine()
 			End
 		Wend
@@ -413,9 +415,11 @@ Class Parser
 				type=ParseFuncType( New IdentTypeExpr( "void",SrcPos,SrcPos ) )
 			Endif
 			
-			For Local param:=Eachin type.params
-				If Not param.ident Error( "Missing parameter identifier" )
-			Next
+			If Not (flags & DECL_EXTERN)
+				For Local param:=Eachin type.params
+					If Not param.ident Error( "Missing parameter identifier" )
+				Next
+			Endif
 			
 			Select kind
 			Case "property"
@@ -1861,7 +1865,7 @@ Class Parser
 	Method ErrorNx( msg:String )
 
 		If Not _stateStack.Empty Throw New TryParseEx
-		
+
 		New ParseEx( msg,_fdecl.path,SrcPos )
 	End
 	
@@ -1961,7 +1965,7 @@ Class Parser
 	
 		Try
 		
-			Select p.Toke
+			Select p.Toke.ToLower()
 			Case "if"
 				
 				If _ccnest=_ifnest
