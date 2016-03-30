@@ -4,13 +4,10 @@
 #Import "map2d.json"
 
 Using std.json
-Using std.stringio
 
 Function LoadMap2d:Int[,]( path:String )
 
-	Local src:=LoadString( "asset::map2d.json" )
-	
-	Local json:=New JsonParser( src ).ParseJson()
+	Local json:=JsonValue.Load( path )
 	
 	Local w:=json["width"].ToInt()
 	Local h:=json["height"].ToInt()

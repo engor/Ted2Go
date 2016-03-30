@@ -68,6 +68,26 @@ Class JsonValue Abstract
 		Return ToNumber()
 	End
 	
+	Method Save:Bool( path:String )
+	
+		Local buf:=New StringStack
+		PushJson( buf )
+		
+		Local src:=buf.Join( "" )
+		Return stringio.SaveString( src,path )
+	End
+	
+	Function Load:JsonValue( path:String )
+	
+		Local src:=stringio.LoadString( path )
+		If Not src Return Null
+		
+		Local parser:=New JsonParser( src )
+		Local value:=parser.ParseValue()
+		
+		Return value
+	End
+	
 	Protected
 	
 	#rem monkeydoc @hidden
@@ -277,7 +297,7 @@ Class JsonParser
 		Bump()
 	End
 	
-	Method ParseJson:JsonValue()
+	Method ParseValue:JsonValue()
 		If TokeType=T_STRING Return New JsonString( ParseString() )
 		If TokeType=T_NUMBER Return New JsonNumber( Double( ParseNumber() ) )
 		If Toke="{" Return New JsonObject( ParseObject() )
@@ -408,7 +428,7 @@ Class JsonParser
 		Repeat
 			Local name:=ParseString()
 			Parse( ":" )
-			Local value:=ParseJson()
+			Local value:=ParseValue()
 			map.Set( name,value )
 		Until Not CParse( "," )
 		Parse( "}" )
@@ -420,7 +440,7 @@ Class JsonParser
 		If CParse( "]" ) Return Null
 		Local stack:=New Stack<JsonValue>
 		Repeat
-			Local value:=ParseJson()
+			Local value:=ParseValue()
 			stack.Push( value )
 		Until Not CParse( "," )
 		Parse( "]" )
