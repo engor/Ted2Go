@@ -63,9 +63,9 @@ Function Main()
 
 	New C				'C::C()
 	New C( New D )		'C::C(), D::D(), C::C( D* )
-	New D				'D::D()
+	New D				'C::C(), D::D()
 	
-	Local s:=String.FromCString( New D().M2( "Hello!" ) )
+	Local s:=String.FromCString( New D().M2( "Hello!" ) )	'C::C(), D::D()
 	Print s				'Goodbye!
 	
 	New T				'T::T()
@@ -75,6 +75,6 @@ Function Main()
 	
 	T.Destroy( t )		'T::~T()
 	
-	New C().E()			'::glue_E()
+	New C().E()			'C::C(), ::glue_E()
 End
 
