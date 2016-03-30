@@ -80,8 +80,8 @@ Class Toker
 		_pos=0
 		_toke=""
 		_tokePos=0
-		_tokeType=TOKE_EOF
-		_line=1
+		_tokeType=TOKE_EOL
+		_line=0
 		_srcPos=0
 		_endPos=0
 		_linePos=0
