@@ -1857,7 +1857,7 @@ Class Parser
 	
 		If Not _stateStack.Empty Throw New TryParseEx
 	
-		Throw New ParseEx( msg,_fdecl.path,SrcPos )
+		Throw New ParseEx( msg,_fdecl ? _fdecl.path Else "",SrcPos )
 	End
 	
 	'Generate a ParseEx without throwing an exception
@@ -2045,6 +2045,7 @@ Class Parser
 				Endif
 				
 			End
+			
 		Catch ex:ParseEx
 		End
 		
