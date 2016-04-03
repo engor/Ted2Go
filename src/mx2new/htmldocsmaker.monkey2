@@ -193,7 +193,7 @@ Class HtmlDocsMaker Extends DocsMaker
 		Local docs:=MakeNamespaceDocs( nmspace )
 		If Not docs Return
 		
-		Local page:=MungUrl( nmspace.Name )+".html"
+		Local page:=NamespacePage( nmspace )
 		SavePage( docs,page )
 		
 		EmitNode( nmspace.ntype.Name,nmspace,page )

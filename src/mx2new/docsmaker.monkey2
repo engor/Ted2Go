@@ -6,6 +6,8 @@ Class DocsMaker
 	Protected
 	
 	Field _module:Module
+	
+	Field _scope:Scope
 
 	Field _pagesDir:String			'module/docs
 	Field _pageTemplate:String
@@ -45,10 +47,27 @@ Class DocsMaker
 		_buf.Push( "" )
 	End
 	
+	Method ReplaceLinks:String( line:String )
+		Repeat
+			Local i0:=line.Find( "[[" )
+			If i0=-1 Return line
+			Local i1:=line.Find( "]]",i0+2 )
+			If i1=-1 Return line
+			Local path:=line.Slice( i0+2,i1 )
+			Local link:=ResolveLink( path,_scope )
+			If Not link
+				Print "Makedocs error: Can't resolve link '"+path+"'"
+				link=path
+			Endif
+			line=line.Slice( 0,i0 )+link+line.Slice( i1+2 )
+		Forever
+		Return line
+	End
+	
 	Method Emit( docs:String )
 	
 		If Not docs.Contains( "~n" )
-			_buf.Push( docs )
+			_buf.Push( ReplaceLinks( docs ) )
 			Return
 		Endif
 		
@@ -66,9 +85,13 @@ Class DocsMaker
 				
 				Select id
 				Case "param"
+				
 					_params.Push( line )
+					
 				Case "return"
+				
 					_return=line
+					
 				Case "example"
 				
 					Local indent:=FindChar( lines[i] )
@@ -96,13 +119,13 @@ Class DocsMaker
 					Continue
 				
 				Default
-					Print "MAKEDOCS ERROR: '"+lines[i]+"'"
+					Print "Makedocs: unrecognized '"+lines[i]+"'"
 				End
 
 				Continue
 			Endif
-
-			_buf.Push( line )
+			
+			_buf.Push( ReplaceLinks( line ) )
 			
 		Next
 	End
@@ -169,27 +192,46 @@ Class DocsMaker
 		Return str
 	End
 	
+	Method DeclSlug:String( decl:Decl,scope:Scope )
+		Local ident:=decl.ident.Replace( "@","" )
+		If Not IsIdent( ident[0] ) ident=OpSym( ident )
+		
+		Local slug:=scope.Name+"."+ident
+		Repeat
+			Local i:=slug.Find( "<" )
+			If i=-1 Exit
+			Local i2:=slug.Find( ">",i+1 )
+			If i2=-1 Exit
+			slug=slug.Slice( 0,i )+slug.Slice( i2+1 )
+		Forever
+		slug=slug.Replace( ".","-" )
+		Return slug
+	End
+	
+	Method NamespaceSlug:String( nmspace:NamespaceScope )
+		Local slug:=nmspace.Name
+		slug=slug.Replace( ".","-" )
+		Return slug
+	End
+	
 	Method DeclPage:String( decl:Decl,scope:Scope )
 	
-		Local ident:=""
-		If decl ident="."+decl.ident
-	
-		Local page:=MungUrl( scope.Name+"."+decl.kind.Slice( 0,1 )+ident )+".html"
-		
-		Return page
+		Return DeclSlug( decl,scope )
 	End
 	
 	Method NamespacePage:String( nmspace:NamespaceScope )
-		Return MungUrl( nmspace.Name )+".html"
+	
+		Return NamespaceSlug( nmspace )
 	End
 	
 	Method MakeLink:String( text:String,url:String )
+
 		Return "<a href='"+url+"'>"+text+"</a>"
 	End
 	
 	Method MakeLink:String( text:String,module:String,page:String )
 		
-		Return "<a href='javascript:void(0)' onclick=~qgopage('"+page+"','"+module+"')~q>"+text+"</a>"
+		Return "<a href='javascript:void(0)' onclick=~qdocsLinkClicked('"+page+"','"+module+"')~q>"+text+"</a>"
 	End
 	
 	Method MakeLink:String( text:String,decl:Decl,scope:Scope )
@@ -198,6 +240,69 @@ Class DocsMaker
 		Local page:=DeclPage( decl,scope )
 		
 		Return MakeLink( text,module,page )
+	End
+	
+	Method ResolveLink:String( path:String,scope:Scope )
+	
+		Local i0:=0
+		
+		Repeat
+		
+			Local i1:=path.Find( ".",i0 )
+			If i1=-1	'find 'leaf'
+			
+				Local id:=path.Slice( i0 )
+				Print "Finding node "+id+" in "+scope.Name
+				
+				Local node:=scope.FindNode( id )
+				If Not node Return ""
+				
+				Local vvar:=Cast<VarValue>( node )
+				If vvar Return MakeLink( id,vvar.vdecl,vvar.scope )
+				
+				Local flist:=Cast<FuncList>( node )
+				If flist Return MakeLink( id,flist.funcs[0].fdecl,flist.funcs[0].scope )
+				
+				Local etype:=Cast<EnumType>( node )
+				If etype Return MakeLink( id,etype.edecl,etype.scope.outer )
+				
+				Local ctype:=Cast<ClassType>( node )
+				If ctype Return MakeLink( id,ctype.cdecl,ctype.scope.outer )
+				
+				Return ""
+			Endif
+			
+			Local id:=path.Slice( i0,i1 )
+			i0=i1+1
+			
+			Print "Finding type "+id+" in "+scope.Name
+			
+			Local type:=scope.FindType( id )
+			If Not type Return ""
+			
+			Local ntype:=Cast<NamespaceType>( type )
+			If ntype
+				scope=ntype.scope
+				Continue
+			Endif
+			
+			Local etype:=Cast<EnumType>( type )
+			If etype
+				'stop at enum!
+				Return MakeLink( id+"."+path.Slice( i0 ),etype.edecl,etype.scope.outer )
+			Endif
+			
+			Local ctype:=Cast<ClassType>( type )
+			If ctype
+				scope=ctype.scope
+				Continue
+			Endif
+			
+			Return ""
+			
+		Forever
+			
+		Return ""
 	End
 	
 	Method DeclIdent:String( decl:Decl,gen:Bool=False )
@@ -247,16 +352,16 @@ Class DocsMaker
 		Return path+DeclIdent( decl )
 	End
 	
-	Method SavePage( docs:String,page:String )
-		docs=_pageTemplate.Replace( "${CONTENT}",docs )
-		stringio.SaveString( docs,_pagesDir+page )
-	End
-	
 	Method DeclDesc:String( decl:Decl )
 		Local desc:=decl.docs
 		Local i:=desc.Find( "~n" )
 		If i<>-1 Return desc.Slice( 0,i )
 		Return desc
+	End
+	
+	Method SavePage( docs:String,page:String )
+		docs=_pageTemplate.Replace( "${CONTENT}",docs )
+		stringio.SaveString( docs,_pagesDir+page+".html" )
 	End
 	
 	Method TypeName:String( type:Type,prefix:String )
@@ -465,6 +570,8 @@ Class DocsMaker
 	
 	Method MakeNamespaceDocs:String( nmspace:NamespaceScope )
 	
+		_scope=nmspace
+	
 		Emit( "_Module: &lt;"+_module.name+"&gt;_  " )
 		Emit( "_Namespace: "+nmspace.Name+"_" )
 		
@@ -483,6 +590,8 @@ Class DocsMaker
 		Local decl:=etype.edecl
 		
 		If DocsHidden( decl ) Return ""
+		
+		_scope=etype.scope.outer
 
 		EmitHeader( decl,etype.scope.outer )
 		
@@ -498,6 +607,8 @@ Class DocsMaker
 		Local decl:=ctype.cdecl
 		
 		If DocsHidden( decl ) Return ""
+		
+		_scope=ctype.scope.outer
 		
 		EmitHeader( decl,ctype.scope.outer )
 		
@@ -557,6 +668,8 @@ Class DocsMaker
 		
 		If DocsHidden( decl ) Return ""
 		
+		_scope=vvar.scope
+		
 		EmitHeader( decl,vvar.scope )
 		
 		Emit( "##### "+decl.kind.Capitalize()+" "+DeclIdent( decl )+" : "+TypeName( vvar.type,vvar.scope ) )
@@ -578,6 +691,8 @@ Class DocsMaker
 		Local type:=func.ftype.argTypes ? func.ftype.argTypes[1] Else func.ftype.retType
 		
 '		Local fdecl:=func.fdecl
+
+		_scope=func.scope
 		
 		EmitHeader( decl,func.scope )
 		
@@ -606,6 +721,8 @@ Class DocsMaker
 			Else If kind<>decl.kind Or decl.ident="new" Or decl.IsOperator
 				Continue
 			Endif
+			
+			_scope=func.scope
 			
 			If Not docs
 				docs=New StringStack
