@@ -72,6 +72,11 @@ Class Builder
 	Field ASSET_FILES:=New StringStack
 	Field STD_INCLUDES:=New StringStack
 	
+	Field AR_CMD:="ar"
+	Field CC_CMD:="gcc"
+	Field CXX_CMD:="g++"
+	Field LD_CMD:="g++"
+	
 	Method New( opts:BuildOpts )
 	
 '		If instance Print "OOPS! There is already a builder instance!"
@@ -99,6 +104,19 @@ Class Builder
 		
 		copts=GetEnv( "MX2_CPP_OPTS_"+opts.target.ToUpper()+"_"+opts.config.ToUpper() )
 		If copts CPP_OPTS.Push( copts )
+		
+		Select opts.target
+		Case "desktop"
+			AR_CMD="ar"
+			CC_CMD="gcc"
+			CXX_CMD="g++"
+			LD_CMD="g++"
+		Case "emscripten"
+			AR_CMD="emar"
+			CC_CMD="emcc"
+			CXX_CMD="em++"
+			LD_CMD="em++"
+		End
 		
 		ppsyms["__HOSTOS__"]="~q"+HostOS+"~q"
 		ppsyms["__TARGET__"]="~q"+opts.target+"~q"
@@ -395,9 +413,9 @@ Class Builder
 			Local cmd:=""
 			Select ExtractExt( src )
 			Case ".c",".m"
-				cmd="gcc "+CC_OPTS.Join( " " )
+				cmd=CC_CMD+" "+CC_OPTS.Join( " " )
 			Case ".cpp",".mm"
-				cmd="g++ -std=c++11 -g "+CPP_OPTS.Join( " " )
+				cmd=CXX_CMD+" -std=c++11 -g "+CPP_OPTS.Join( " " )
 			End
 			
 			cmd+=" -Wno-int-to-pointer-cast"
@@ -476,19 +494,28 @@ Class Builder
 		
 		Local outputFile:="",assetsDir:=""
 		
+		Local cmd:=LD_CMD
+		cmd+=" "+LD_OPTS.Join( " " )
+		
 		If opts.target="emscripten"
 		
+			outputFile=module.outputDir+module.name+".html"
 			assetsDir=module.buildDir+"assets/"
+			
+'			Note: mserver can't handle --emrun as it tries to POST stdout
+'			cmd="em++ --emrun --preload-file ~q"+assetsDir+"@/assets~q"
+
+			cmd="em++ --preload-file ~q"+assetsDir+"@/assets~q"
 			
 		Else If HostOS="windows"
 		
 			outputFile=module.outputDir+module.name+".exe"
-			assetsDir=module.outputDir+"assets"
+			assetsDir=module.outputDir+"assets/"
 			
 		Else If HostOS="linux"
 		
 			outputFile=module.outputDir+module.name
-			assetsDir=module.outputDir+"assets"
+			assetsDir=module.outputDir+"assets/"
 			
 		Else If HostOS="macos"
 		
@@ -548,10 +575,6 @@ Class Builder
 			CopyFile( ass,dst+StripDir( ass ) )
 		Next
 		
-		Local cmd:="g++"
-		
-		cmd+=" "+LD_OPTS.Join( " " )
-
 		cmd+=" -o ~q"+outputFile+"~q"
 		
 		For Local obj:=Eachin OBJ_FILES
@@ -564,6 +587,8 @@ Class Builder
 
 		cmd+=" "+LD_SYSLIBS.Join( " " )
 		
+		Print cmd
+		
 		Exec( cmd )
 		
 		For Local src:=Eachin DLL_FILES
@@ -573,8 +598,15 @@ Class Builder
 		
 		If Not opts.run Return
 		
-		Exec( "~q"+outputFile+"~q" )
+		Local run:=""
+		If opts.target="emscripten"
+			Local mserver:=GetEnv( "MX2_MSERVER" )
+			run=mserver+" ~q"+outputFile+"~q"
+		Else
+			run="~q"+outputFile+"~q"
+		Endif
 		
+		Exec( run )
 	End
 	
 	Method CreateArchive()
@@ -583,9 +615,6 @@ Class Builder
 		Local outputFile:=module.outputDir+module.name+".a"
 		
 		If opts.verbose>=0 Print "Archiving "+outputFile
-		
-		Local ar:="ar"
-		If opts.target="emscripten" ar="emar"
 		
 		DeleteFile( outputFile )
 		
@@ -597,7 +626,7 @@ Class Builder
 			
 			If objs.Length<1000 And i<OBJ_FILES.Length-1 Continue
 
-			Local cmd:=ar+" q ~q"+outputFile+"~q"+objs
+			Local cmd:=AR_CMD+" q ~q"+outputFile+"~q"+objs
 
 			Exec( cmd )
 			
