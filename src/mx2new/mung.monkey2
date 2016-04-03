@@ -1,8 +1,6 @@
 
 Namespace mx2
 
-Private
-
 Function OpSym:String( id:String )
 	Select id
 	Case "*" Return "_mul"
@@ -31,8 +29,6 @@ Function OpSym:String( id:String )
 	End
 	Return "????? OpSym ?????"
 End
-
-Public
 
 Function MungIdent:String( ident:String )
 
