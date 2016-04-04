@@ -51,6 +51,8 @@ public:
 	T( int x );
 	
 	~T();
+	
+	bool operator==( T *that );
 };
 
 void glue_E( C *c );

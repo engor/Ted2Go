@@ -47,6 +47,8 @@ Class T Extends Void
 	
 	Method New( x:Int )
 	
+	Operator=:Bool( t:T )="operator=="
+	
 	Function Destroy( t:T )="delete"
 	
 End
@@ -72,6 +74,8 @@ Function Main()
 	New T( 10 )			'T::T( int )
 	
 	Local t:=New T		'T::T()
+	
+	If t=t Print "Yes"	'T::operator==(T*), "Yes"
 	
 	T.Destroy( t )		'T::~T()
 	

@@ -47,6 +47,11 @@ T::~T(){
 	puts( "T::~T()" );
 }
 
+bool T::operator==( T *that ){
+	puts( "T::operator==(T*)" );
+	return this==that;
+}
+
 void glue_E( C *c ){
 	puts( "::glue_E( C* )" );
 }
