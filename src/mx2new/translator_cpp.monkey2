@@ -810,7 +810,7 @@ Class Translator_CPP Extends Translator
 				rhs=lhs+op.Slice( 0,-1 )+rhs
 				op="="
 			Endif
-			rhs=etype.edecl.symbol+"("+rhs+")"
+			rhs=EnumName( etype )+"("+rhs+")"
 		Endif
 		
 		Emit( lhs+op+rhs+";" )
@@ -1056,16 +1056,11 @@ Class Translator_CPP Extends Translator
 		Endif
 
 		Local etype:=Cast<EnumType>( type )
-		If etype
-			If etype.edecl.IsExtern Return etype.edecl.symbol+"(0)"
-			Return "0"
-		Endif
-		
+		If etype Return EnumName( etype )+"(0)"
+
 		If IsValue( type ) Return TransType( type )+"{}"
 		
-		Return "(("+TransType( type )+")(0))"
-		
-'		Return "nullptr"
+		Return "(("+TransType( type )+")0)"
 	End
 
 	Method Trans:String( value:LiteralValue )
@@ -1081,6 +1076,9 @@ Class Translator_CPP Extends Translator
 		Case Type.StringType
 			Return "BB_T("+EnquoteCppString( value.value )+")"
 		End
+		
+		Local etype:=Cast<EnumType>( value.type )
+		If etype Return EnumValueName( etype,value.value )
 		
 		If value.value="0" Return TransType( value.type )+"(0)"
 		
@@ -1198,7 +1196,7 @@ Class Translator_CPP Extends Translator
 		Local t:=op+Trans( value.value )
 		
 		Local etype:=Cast<EnumType>( value.type )
-		If etype And etype.edecl.IsExtern t=etype.edecl.symbol+t
+		If etype And etype.edecl.IsExtern t=EnumName( etype )+"("+t+")"
 		
 		Return t
 	End
@@ -1206,7 +1204,8 @@ Class Translator_CPP Extends Translator
 	Method Trans:String( value:BinaryopValue )
 		Local op:=value.op
 		Select op
-		Case "<=>" 
+		Case "<=>"
+ 
 			Return "bbCompare("+Trans( value.lhs )+","+Trans( value.rhs )+")"
 			
 		Case "=","<>","<",">","<=",">="
@@ -1230,7 +1229,7 @@ Class Translator_CPP Extends Translator
 		Local t:="("+Trans( value.lhs )+op+Trans( value.rhs )+")"
 		
 		Local etype:=Cast<EnumType>( value.type )
-		If etype And etype.edecl.IsExtern t=etype.edecl.symbol+t
+		If etype And etype.edecl.IsExtern t=EnumName( etype )+t
 		
 		Return t
 	End
@@ -1329,8 +1328,7 @@ Class Translator_CPP Extends Translator
 	End
 	
 	Method TransType:String( type:EnumType )
-		If type.edecl.IsExtern Return type.edecl.symbol
-		Return "bbInt"
+		Return EnumName( type )
 	End
 	
 	Method TransType:String( type:PrimType )

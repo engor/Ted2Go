@@ -15,7 +15,7 @@ End
 Class EnumType Extends Type
 
 	Field edecl:EnumDecl
-	Field scope:Scope
+	Field scope:EnumScope
 	
 	Field superType:EnumType
 	Field nextInit:Int
@@ -23,7 +23,7 @@ Class EnumType Extends Type
 	Method New( edecl:EnumDecl,outer:Scope )
 		Self.pnode=edecl
 		Self.edecl=edecl
-		Self.scope=New Scope( outer )
+		Self.scope=New EnumScope( Self,outer )
 	End
 	
 	Method ToString:String() Override
@@ -66,8 +66,10 @@ Class EnumType Extends Type
 			Local vdecl:=Cast<VarDecl>( decl )
 			
 			If edecl.IsExtern
-			
-				Local value:=New LiteralValue( Self,vdecl.symbol )
+
+				Local symbol:=vdecl.symbol
+				If Not symbol symbol="@"+vdecl.ident			
+				Local value:=New LiteralValue( Self,symbol )
 				scope.Insert( decl.ident,value )
 				
 			Else
@@ -128,3 +130,14 @@ Class EnumType Extends Type
 
 End
 
+Class EnumScope Extends Scope
+
+	Field etype:EnumType
+
+	Method New( etype:EnumType,outer:Scope )
+		Super.New( outer )
+		
+		Self.etype=etype
+	End
+
+End

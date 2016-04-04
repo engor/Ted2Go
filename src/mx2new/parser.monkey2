@@ -240,7 +240,7 @@ Class Parser
 				If flags & DECL_EXTERN
 					Parse( ":" )
 					decl.type=ParseType()
-					If CParse( "=" ) decl.symbol=ParseString() Else decl.symbol=decl.ident
+					If CParse( "=" ) decl.symbol=ParseString() 'Else decl.symbol=decl.ident
 				Else If CParse( ":" )
 					decl.type=ParseType()
 					If CParse( "=" ) decl.init=ParseExpr()
@@ -540,7 +540,7 @@ Class Parser
 			If CParse( "extends" ) decl.superType=ParseType()
 			
 			If flags & DECL_EXTERN
-				If CParse( "=" ) decl.symbol=ParseString() Else decl.symbol=decl.ident
+				If CParse( "=" ) decl.symbol=ParseString() 'Else decl.symbol=decl.ident
 			Endif
 			
 			ParseEol()
@@ -565,7 +565,7 @@ Class Parser
 				decl.docs=Docs()
 				
 				If flags & DECL_EXTERN
-					If CParse( "=" ) decl.symbol=ParseString() Else decl.symbol=decl.ident
+					If CParse( "=" ) decl.symbol=ParseString() 'Else decl.symbol=decl.ident
 				Else
 					If CParse( "=" ) decl.init=ParseExpr()
 				Endif

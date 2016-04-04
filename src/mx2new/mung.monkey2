@@ -107,7 +107,7 @@ Function ScopeName:String( scope:Scope )
 	If fscope
 		Return MungIdent( fscope.fdecl.nmspace ).Replace( ".","_" )
 	Endif
-
+	
 	Local cscope:=Cast<ClassScope>( scope )
 	If cscope 
 		Local ctype:=cscope.ctype
@@ -119,13 +119,55 @@ Function ScopeName:String( scope:Scope )
 	Return ScopeName( scope.outer )
 End
 
+Function EnumName:String( etype:EnumType )
+
+	Local edecl:=etype.edecl
+	
+	If edecl.symbol
+		If edecl.symbol.EndsWith( "::" ) Return "int"
+		Return edecl.symbol
+	Endif
+	
+	If edecl.IsExtern Return edecl.ident
+	
+	Return "bbInt"
+End
+
+Function EnumValueName:String( etype:EnumType,value:String )
+
+	If Not value.StartsWith( "@" ) Return value
+	
+	value=value.Slice( 1 )
+	
+	Local edecl:=etype.edecl
+
+	If edecl.symbol
+		If edecl.symbol.EndsWith( "::" ) 
+			If edecl.symbol<>"::" value=edecl.symbol+value
+			Return "int("+value+")"
+		Endif
+		Local i:=edecl.symbol.FindLast( "::" )
+		If i<>-1 Return edecl.symbol.Slice( 0,i+2 )+value
+	Endif
+	
+	Return value
+End
+
 Function ClassName:String( ctype:ClassType )
 
 	Local cdecl:=ctype.cdecl
 
 	If cdecl.symbol Return cdecl.symbol
 	
-	If cdecl.IsExtern Return cdecl.ident
+	If cdecl.IsExtern
+	
+		Local symbol:=cdecl.ident
+		
+		Local cscope:=Cast<ClassScope>( ctype.scope.outer )
+		If cscope symbol=ClassName( cscope.ctype )+"::"+symbol
+	
+		Return symbol
+	Endif
 
 	Return "t_"+ScopeName( ctype.scope )
 End
@@ -136,7 +178,17 @@ Function FuncName:String( func:FuncValue )
 
 	If fdecl.symbol Return fdecl.symbol
 	
-	If fdecl.IsExtern Return fdecl.ident
+	If fdecl.IsExtern
+
+		Local symbol:=fdecl.ident
+		
+		If fdecl.kind="function"
+			Local cscope:=Cast<ClassScope>( func.scope )
+			If cscope symbol=ClassName( cscope.ctype )+"::"+symbol
+		Endif
+		
+		Return symbol
+	Endif
 	
 	If fdecl.kind="function" Or func.types
 
@@ -169,11 +221,25 @@ End
 
 Function VarName:String( vvar:VarValue )
 
-	If vvar.vdecl.symbol Return vvar.vdecl.symbol
+	Local vdecl:=vvar.vdecl
+	
+	If vdecl.symbol Return vdecl.symbol
+	
+	If vdecl.IsExtern 
+	
+		Local symbol:=vdecl.ident
+		
+		If vdecl.kind="global" Or vdecl.kind="const"
+			Local cscope:=Cast<ClassScope>( vvar.scope )
+			If cscope symbol=ClassName( cscope.ctype )+"::"+symbol
+		Endif
+		
+		Return symbol
+	Endif
 
-	Local sym:=MungIdent( vvar.vdecl.ident )
+	Local sym:=MungIdent( vdecl.ident )
 
-	Select vvar.vdecl.kind
+	Select vdecl.kind
 	
 	Case "local","param","capture"
 	
