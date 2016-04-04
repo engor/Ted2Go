@@ -19,13 +19,13 @@ Using libc
 
 Global StartDir:String
 
-Const TestArgs:="mx2cc makedocs monkey libc std"' monkey libc std"
+Const TestArgs:="mx2cc makedocs monkey libc std"
 
-'Const TestArgs:="mx2cc makemods -verbose -clean -config=debug"
+'Const TestArgs:="mx2cc makemods -verbose -clean -target=emscripten -config=debug"
 
 'Const TestArgs:="mx2cc makemods -verbose -clean -config=release"
 
-'Const TestArgs:="mx2cc makeapp -target=desktop -config=debug src/mx2new/test.monkey2"
+'Const TestArgs:="mx2cc makeapp -target=desktop -target=emscripten -config=debug src/mx2new/test.monkey2"
 
 'Const TestArgs:="mx2cc makeapp -verbose -target=desktop -config=release src/mx2new/mx2cc.monkey2"
 

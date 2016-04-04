@@ -23,18 +23,20 @@ Class Translator_CPP Extends Translator
 			Emit( "#include ~q"+MakeRelativePath( fdecl.exhfile,ExtractDir( fdecl.hfile ) )+"~q" )
 		End
 		
-		For Local imp:=Eachin fdecl.imports
+		For Local ipath:=Eachin fdecl.imports
 		
-			If imp.Contains( "*.h" ) Continue
+			If ipath.Contains( "*." ) Continue
 		
-			If imp.EndsWith( ".h>" )
-				Emit( "#include "+imp )
+			Local imp:=ipath.ToLower()
+			
+			If imp.EndsWith( ".h" ) Or imp.EndsWith( ".hh" ) Or imp.EndsWith( ".hpp" )
+				Local path:=ExtractDir( fdecl.path )+ipath
+				Emit( "#include ~q"+MakeRelativePath( path,ExtractDir( fdecl.hfile ) )+"~q" )
 				Continue
 			Endif
 			
-			If imp.EndsWith( ".h" )
-				Local path:=ExtractDir( fdecl.path )+imp
-				Emit( "#include ~q"+MakeRelativePath( path,ExtractDir( fdecl.hfile ) )+"~q" )
+			If imp.EndsWith( ".h>" ) Or imp.EndsWith( ".hh>" ) Or imp.EndsWith( ".hpp>" )
+				Emit( "#include "+ipath )
 				Continue
 			Endif
 			

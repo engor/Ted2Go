@@ -70,7 +70,6 @@ Class Builder
 	Field LD_SYSLIBS:=New StringStack
 	Field DLL_FILES:=New StringStack
 	Field ASSET_FILES:=New StringStack
-	Field STD_INCLUDES:=New StringStack
 	
 	Field AR_CMD:="ar"
 	Field CC_CMD:="gcc"
@@ -414,7 +413,7 @@ Class Builder
 			Select ExtractExt( src )
 			Case ".c",".m"
 				cmd=CC_CMD+" "+CC_OPTS.Join( " " )
-			Case ".cpp",".mm"
+			Case ".cc",".cxx",".cpp",".mm"
 				cmd=CXX_CMD+" -std=c++11 -g "+CPP_OPTS.Join( " " )
 			End
 			
@@ -492,7 +491,7 @@ Class Builder
 	
 		Local module:=modules[0]
 		
-		Local outputFile:="",assetsDir:=""
+		Local outputFile:="",assetsDir:="",dllsDir:=""
 		
 		Local cmd:=LD_CMD
 		cmd+=" "+LD_OPTS.Join( " " )
@@ -501,6 +500,7 @@ Class Builder
 		
 			outputFile=module.outputDir+module.name+".html"
 			assetsDir=module.buildDir+"assets/"
+			dllsDir=ExtractDir( outputFile )
 			
 '			Note: mserver can't handle --emrun as it tries to POST stdout
 '			cmd="em++ --emrun --preload-file ~q"+assetsDir+"@/assets~q"
@@ -511,11 +511,7 @@ Class Builder
 		
 			outputFile=module.outputDir+module.name+".exe"
 			assetsDir=module.outputDir+"assets/"
-			
-		Else If HostOS="linux"
-		
-			outputFile=module.outputDir+module.name
-			assetsDir=module.outputDir+"assets/"
+			dllsDir=ExtractDir( outputFile )
 			
 		Else If HostOS="macos"
 		
@@ -525,6 +521,7 @@ Class Builder
 			
 			outputFile=outputDir+"Contents/MacOS/"+module.name
 			assetsDir=outputDir+"Contents/Resources/"
+			dllsDir=ExtractDir( outputFile )
 			
 			CreateDir( outputDir )
 			CreateDir( outputDir+"Contents" )
@@ -547,9 +544,11 @@ Class Builder
 			
 			SaveString( plist,outputDir+"Contents/Info.plist" )
 			
-		Else
+		Else	'linux!
 		
+			outputFile=module.outputDir+module.name
 			assetsDir=module.outputDir+"assets/"
+			dllsDir=ExtractDir( outputFile )
 
 		Endif
 		
@@ -587,13 +586,24 @@ Class Builder
 
 		cmd+=" "+LD_SYSLIBS.Join( " " )
 		
-		Print cmd
-		
+'		Print cmd
 		Exec( cmd )
 		
 		For Local src:=Eachin DLL_FILES
-			Local dst:=ExtractDir( outputFile )+StripDir( src )
-			If GetFileTime( src )>GetFileTime( dst ) CopyFile( src,dst )
+		
+			Local dir:=dllsDir
+			
+			Local ext:=ExtractExt( src )
+			If ext
+				Local rdir:=GetEnv( "MX2_APP_DIR_"+ext.Slice( 1 ).ToUpper() )
+				If rdir dir=RealPath( dir+rdir )
+			Endif
+			
+			If Not dir.EndsWith( "/" ) dir+="/"
+			
+			Local dst:=dir+StripDir( src )
+			
+			If Not CopyAll( src,dst ) Throw New BuildEx( "Failed to copy '"+src+"' to '"+dst+"'" )
 		Next
 		
 		If Not opts.run Return
@@ -607,6 +617,38 @@ Class Builder
 		Endif
 		
 		Exec( run )
+	End
+	
+	Function CopyAll:Bool( src:String,dst:String )
+	
+		Select GetFileType( src )
+
+		Case FILETYPE_FILE
+		
+			If Not CreateDir( ExtractDir( dst ) ) Return False
+		
+			If GetFileTime( src )>GetFileTime( dst )
+				If Not CopyFile( src,dst ) Return False
+			Endif
+			
+			Return GetFileType( dst )=FILETYPE_FILE
+			
+		Case FILETYPE_DIR
+		
+			If Not CreateDir( dst ) Return False
+			
+			For Local file:=Eachin LoadDir( src )
+			
+				If Not CopyAll( src+"/"+file,dst+"/"+file ) Return False
+			
+			Next
+			
+			Return True
+		
+		End
+		
+		Return False
+		
 	End
 	
 	Method CreateArchive()
@@ -780,6 +822,7 @@ Class Builder
 		If path.StartsWith( "<" ) And path.EndsWith( ">" )
 			ImportSystemFile( path.Slice( 1,-1 ) )
 		Else
+			If currentDir path=currentDir+path
 			ImportLocalFile( path )
 		Endif
 		
@@ -799,17 +842,17 @@ Class Builder
 			If name.StartsWith( "lib" ) name=name.Slice( 3 ) Else name=path
 			LD_SYSLIBS.Push( "-l"+name )
 			
-		Case ".lib"
+		Case ".lib",".dylib"
 		
 			LD_SYSLIBS.Push( "-l"+name )
-			
-		Case ".h"
-		
-			STD_INCLUDES.Push( "<"+path+">" )
 			
 		Case ".framework"
 		
 			LD_SYSLIBS.Push( "-framework "+name )
+			
+		Case ".h",".hh",".hpp"
+		
+'			STD_INCLUDES.Push( "<"+path+">" )
 			
 		Case ".monkey2"
 		
@@ -831,30 +874,41 @@ Class Builder
 	
 	Method ImportLocalFile:Void( path:String )
 	
-		If currentDir path=currentDir+path
-	
 		If imported.Contains( path ) Return
 		imported[path]=True
 		
-		Local ext:=ExtractExt( path )
+		Local ext:=ExtractExt( path ).ToLower()
+		
 		Local name:=StripDir( StripExt( path ) )
 
 		If name="*"
+		
 			Local dir:=ExtractDir( path )
+			
 			If GetFileType( dir )<>FILETYPE_DIR
 				New BuildEx( "Directory '"+dir+"' not found" )
 				Return
 			Endif
 			
+			Local qdir:="~q"+dir+"~q"
+			
 			Select ext
 			Case ".h"
 			
-				CC_OPTS.Push( "-I~q"+dir+"~q" )
-				CPP_OPTS.Push( "-I~q"+dir+"~q" )
+				CC_OPTS.Push( "-I"+qdir )
+				CPP_OPTS.Push( "-I"+qdir )
 				
-			Case ".a",".lib"
+			Case ".hh",".hpp"
 			
-				LD_OPTS.Push( "-L~q"+dir+"~q" )
+				CPP_OPTS.Push( "-I"+qdir )
+				
+			Case ".a",".lib",".dylib"
+			
+				LD_OPTS.Push( "-L"+qdir )
+				
+			Case ".framework"
+			
+				LD_OPTS.Push( "-F"+qdir )
 				
 			Default
 			
@@ -864,17 +918,35 @@ Class Builder
 			Return
 		Endif
 		
-		If GetFileType( path )<>FILETYPE_FILE
-			New BuildEx( "File '"+path+"' not found" )
-			Return
-		Endif
+		Local qpath:="~q"+path+"~q"
 		
-		Select ext.ToLower()
+		Select ext
+		Case ".framework"
+			
+			If GetFileType( path )<>FILETYPE_DIR
+				New BuildEx( "Framework "+qpath+" not found" )
+				Return
+			Endif
+			
+		Default
+		
+			If GetFileType( path )<>FILETYPE_FILE
+				New BuildEx( "File "+qpath+" not found" )
+				Return
+			Endif
+			
+		End
+		
+		Select ext
 		Case ".mx2",".monkey2"
 		
 			MX2_FILES.AddLast( path )
 			
-		Case ".c",".cpp",".m",".mm"
+		Case ".h",".hh",".hpp"
+		
+'			STD_INCLUDES.Push( qpath )
+			
+		Case ".c",".cc",".cxx",".cpp",".m",".mm"
 		
 			If modules.Length=1
 				SRC_FILES.Push( path )
@@ -886,20 +958,28 @@ Class Builder
 			
 		Case ".a",".lib"
 		
-			LD_SYSLIBS.Push( "~q"+path+"~q" )
+			LD_SYSLIBS.Push( qpath )
 			
 		Case ".so",".dll",".exe"
 		
 			DLL_FILES.Push( path )
 			
-		Case ".h"
+		Case ".dylib"
 		
-			STD_INCLUDES.Push( "~q"+path+"~q" )
+			LD_SYSLIBS.Push( qpath )
+			
+			DLL_FILES.Push( path )
 			
 		Case ".framework"
 		
-			New BuildEx( "Can't import local framework" )
+			'OK, this is ugly...
+		
+			ImportLocalFile( ExtractDir( path )+"*.framework" )
 			
+			ImportSystemFile( StripDir( path ) )
+			
+			DLL_FILES.Push( path )
+		
 		Default
 		
 			ASSET_FILES.Push( path )

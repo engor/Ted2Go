@@ -1,22 +1,18 @@
 
 Namespace test
 
-#Import "<std>"
+#Import "<libc>"
 
-Using std.collections
+Function Test2()
+	Print "Debug Stack:"
+	Print "~n".Join( GetDebugStack() )
+End
 
-Function Test<T>() Where T Implements IContainer<Int>
-
-'	If T Extends IContainer<Int>
-'		Print "YES!"
-'	Else
-'		Print "NO!"
-'	Endif
-	
+Function Test()
+	Test2()
 End
 
 Function Main()
-
-	Test< List<Int> >()
-	
+	Test()
+	Print "Bye!"
 End

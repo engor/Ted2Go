@@ -252,7 +252,7 @@ Class DocsMaker
 			If i1=-1	'find 'leaf'
 			
 				Local id:=path.Slice( i0 )
-				Print "Finding node "+id+" in "+scope.Name
+'				Print "Finding node "+id+" in "+scope.Name
 				
 				Local node:=scope.FindNode( id )
 				If Not node Return ""
