@@ -3,39 +3,172 @@ Namespace monkey.math
 
 Using monkey.types
 
-Const Pi:Double=3.1415926535897932384626433832795028841971693993751058209749445923078164062
+#rem monkeydoc The value _Pi_.
+#end
+Const Pi:Double=3.1415926535897931
+
+#rem monkeydoc The value _Pi_ times 2.
+#end
+Const TwoPi:Double=6.2831853071795862
 
 Extern
 
+#rem monkeydoc Computes the sine of an angle.
+
+@param `x` the angle, in radians.
+
+@return The sine of `x`.
+
+#end
 Function Sin:Double( x:Double )="std::sin"
 
+#rem monkeydoc Computes the cosine of an angle.
+
+@param `x` the angle, in radians.
+
+@return The cosine of `x`.
+
+#end
 Function Cos:Double( x:Double )="std::cos"
 
+#rem monkeydoc Computes the tangent of an angle.
+
+@param `x` the angle, in radians.
+
+@return The tangent of `x`.
+
+#end
 Function Tan:Double( x:Double )="std::tan"
 
-Function ASin:Double( x:Double)="std::asin"
+#rem monkeydoc Computes the inverse sine of a number.
 
-Function ACos:Double( x:Double)="std::acos"
+@param `x` The number.
 
-Function ATan:Double( x:Double)="std::atan"
+@return The inverse sine of `x`, in radians.
 
-Function ATan2:Double( x:Double)="std::atan2"
+#end
+Function ASin:Double( x:Double )="std::asin"
 
+#rem monkeydoc Computes the inverse cosine of a number.
+
+@param `x` The number.
+
+@return The inverse cosine of `x`, in radians.
+
+#end
+Function ACos:Double( x:Double )="std::acos"
+
+#rem monkeydoc Computes the inverse tagent of a number.
+
+@param `x` The number.
+
+@return The inverse tangent of `x`, in radians.
+
+#end
+Function ATan:Double( x:Double )="std::atan"
+
+#rem monkeydoc Computes the inverse tangent of a ratio.
+
+The function uses the signs of `x` and `y` to compute the correct sign for the result.
+
+@param `x` The numerator.
+
+@param `y` The denominator.
+
+@return The inverse tangent of `x`/`y`, in radians.
+
+#end
+Function ATan2:Double( x:Double,y:Double )="std::atan2"
+
+#rem monkeydoc Computes the square root of a number.
+
+@param `x` The number.
+
+@return The square root of `x`.
+
+#end
 Function Sqrt:Double( x:Double )="std::sqrt"
 
+#rem monkeydoc Computes the floor of a number.
+
+@param `x` The number.
+
+@return The largest integral value not greater than `x`.
+
+#end
 Function Floor:Double( x:Double )="std::floor"
 
+#rem monkeydoc Computes the ceiling of a number.
+
+@param `x` The number.
+
+@return The smallest integral value not less than `x`.
+
+#end
 Function Ceil:Double( x:Double )="std::ceil"
 
+#rem monkeydoc Rounds a number to the nearest integral value.
+
+@param `x` The number.
+
+@return The integral value nearest to `x`.
+
+#end
 Function Round:Double( x:Double )="std::round"
+
+
+#rem monkeydoc Raises a number to a power.
+
+@param `x` The number.
+
+@return `x` raised to the power of `y`.
+
+#end
+Function Pow:Double( x:Double,y:Double )="std::pow"
+
+
+#rem monkeydoc Computes the natural logarithm of a number.
+
+@param `x` The number.
+
+@return The natural logarithm of `x`.
+
+#end
+Function Log:Double( x:Double )="std::log"
+
+#rem monkeydoc Computes the base 2 logarithm of a number.
+
+@param `x` The number.
+
+@return The base 2 logarithm of `x`.
+
+#end
+Function Log2:Double( x:Double )="std::log2"
+
+#rem monkeydoc Computes the base 10 logarithm of a number.
+
+@param `x` The number.
+
+@return The base 10 logarithm of `x`.
+
+#end
+Function Log10:Double( x:Double )="std::log10"
+
+#rem monkeydoc Raise _e_ to a power.
+
+@param `x` The number.
+
+@return The value _e_ raised to the power of `x`.
+
+#end
+Function Exp:Double( x:Double )="std::exp"
+
 
 Public
 
-#rem monkeydoc
+#rem monkeydoc Gets the smaller of two numbers.
 
-Returns the smaller of two values.
-
-@return the smaller of `x` and `y`.
+@return The smaller of `x` and `y`.
 
 #end
 Function Min<T>:T( x:T,y:T )
@@ -43,11 +176,9 @@ Function Min<T>:T( x:T,y:T )
 	Return y
 End
 
-#rem monkeydoc
+#rem monkeydoc Gets the larger of two number.
 
-Returns the larger of two values.
-
-@return the larger of `x` and `y`.
+@return The larger of `x` and `y`.
 
 #end
 Function Max<T>:T( x:T,y:T )
@@ -55,9 +186,7 @@ Function Max<T>:T( x:T,y:T )
 	Return y
 End
 
-#rem monkeydoc
-
-Clamps a value to a range.
+#rem monkeydoc Clamps a value to a range.
 
 If `x` is less than `min`, `min` is returned.
 
@@ -74,15 +203,13 @@ Function Clamp<T>:T( value:T,min:T,max:T )
 	Return value
 End
 
-#rem monkeydoc
-
-Returns the absolute value of a number.
+#rem monkeydoc Gets the absolute value of a number.
 
 If `x` is less than 0, then `-x` is returned.
 
 If `x` is greater than or equal to 0, then `x` is returned.
 
-@return the absolute value of `x`.
+@return The absolute value of `x`.
 
 #end
 Function Abs<T>:T( x:T ) Where T Implements INumeric
@@ -90,17 +217,11 @@ Function Abs<T>:T( x:T ) Where T Implements INumeric
 	Return -x
 End
 
-#rem monkeydoc
+#rem monkeydoc Gets the sign of a number.
 
-Returns the sign of a number.
+Returns -1 is `x` less than 0, 1 if `x` is greater than 0 or 0 if `x` is equal to 0.
 
-If `x` is less than 0, the value -1 is returned.
-
-If `x` is equal to 0, the value 1 is returned.
-
-Otherwise, if `x` is equal to 0, 0 is returned.
-
-@return the sign of `x`.
+@return The sign of `x`.
 
 #end
 Function Sgn<T>:Int( x:T ) Where T Implements IIntegral

@@ -38,6 +38,7 @@ Const SDL_INIT_GAMECONTROLLER:Int
 Const SDL_INIT_EVENTS:Int
 Const SDL_INIT_NOPARACHUTE:Int
 Const SDL_INIT_EVERYTHING:Int
+
 Function SDL_Init:Int(flags_:Int)
 Function SDL_InitSubSystem:Int(flags_:Int)
 Function SDL_QuitSubSystem:Void(flags_:Int)

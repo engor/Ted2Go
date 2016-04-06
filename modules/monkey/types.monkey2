@@ -85,19 +85,76 @@ Struct @String ="bbString"
 	#end
 	Property Utf8Length:Int()="utf8Length"
 	
-	Method Find:Int( str:String,from:Int=0 )="find"
+	#rem monkeydoc Finds a substring in the string.
 	
-	Method FindLast:Int( str:String,from:Int=0 )="findLast"
+	If `substr` is not found, -1 is returned.
 	
-	Method Contains:Bool( str:String )="contains"
+	@param substr The substring to search for.
 	
+	@param from The start index for the search.
+	
+	@return The index of the first occurance of `substr` in the string, or -1 if `substr` was not found.
+	
+	#end
+	Method Find:Int( substr:String,from:Int=0 )="find"
+	
+	#rem monkeydoc Finds the last occurance of a substring in the string.
+	
+	If `substr` is not found, -1 is returned.
+	
+	@param substr The substring to search for.
+	
+	@param from The start index for the search.
+	
+	@return The index of the last occurance of `substr` in the string, or -1 if `substr` was not found.
+	
+	#end
+	Method FindLast:Int( substr:String,from:Int=0 )="findLast"
+	
+	#rem monkeydoc Checks if the string contains a substring.
+	
+	@param substr The substring to check for.
+	
+	@return True if the string contains `substr`.
+	
+	#end
+	Method Contains:Bool( substr:String )="contains"
+	
+	#rem monkeydoc Check if the string starts with another string.
+	
+	@param substr The string to check for.
+	
+	@return True if the string starts with `substr`.
+	
+	#end
 	Method StartsWith:Bool( str:String )="startsWith"
 	
+	#rem monkeydoc Check if the string ends with another string.
+	
+	@param substr The string to check for.
+	
+	@return True if the string ends with `substr`.
+	
+	#end
 	Method EndsWith:Bool( str:String )="endsWith"
 	
+	#rem monkeydoc Extracts a substring from the string.
+	
+	Returns a string consisting of all characters from `from` until (but not including) `tail`, or until the end of the string if `tail` 
+	is not specified.
+	
+	If either `from` or `tail` is negative, it represents an offset from the end of the string.
+	
+	@param `from` The starting index.
+	
+	@param `tail` The ending index.
+	
+	@return A substring.
+	
+	#end
 	Method Slice:String( from:Int )="slice"
 	
-	Method Slice:String( from:Int,term:Int )="slice"
+	Method Slice:String( from:Int,tail:Int )="slice"
 	
 	Method Left:String( count:Int )="left"
 	
@@ -105,14 +162,43 @@ Struct @String ="bbString"
 	
 	Method Mid:String( from:Int,count:Int )="mid"
 	
+	#rem monkeydoc Convert the string to uppercase.
+	
+	@return The string converted to uppercase.
+	
+	#end
 	Method ToUpper:String()="toUpper"
 	
-	Method ToLower:String()="toLower"
+	#rem monkeydoc Convert the string to lowercase.
 	
+	@return The string converted to lowercase.
+	
+	#end
+	Method ToLower:String()="toLower"
+
+	#rem monkeydoc Capitalizes the string.
+	
+	@return The string with the first character converted to uppercase and the remaining characters unmodified.
+	
+	#end	
 	Method Capitalize:String()="capitalize"
 	
+	#rem monkeydoc Trim whitespace from a string.
+	
+	@return The string with leading and trailing whitespace removed.
+	
+	#end
 	Method Trim:String()="trim"
 	
+	#rem monkeydoc Replace all occurances of a substring with another string.
+	
+	@param find The string to search for.
+	
+	@param replace The string to replace with.
+	
+	@return The string with `find` replaced with `replace`.
+	
+	#end
 	Method Replace:String( find:String,replace:String )="replace"
 	
 	Method Split:String[]( separator:String )="split"
@@ -136,18 +222,50 @@ Struct @String ="bbString"
 End
 
 #rem monkeydoc Primtive array type.
+
+This is a 'pseduo type' extended by all array types.
+
 #end
 Struct @Array<T>
 
+	#rem monkeydoc The raw memory used by the array.
+	
+	#end
 	Property Data:T Ptr()="data"
 	
+	#rem monkeydoc The length of the array.
+	
+	In the case of multi-dimensional arrays, the length of the array is the product of the sizes of all dimensions.
+	
+	#end
 	Property Length:Int()="length"
 	
-	Method Size:Int( dimension:Int )="size"
+	#rem monkeydoc Extracts a subarray from the array.
 	
+	Returns an array consisting of all elements from `from` until (but not including) `tail`, or until the end of the string
+	if `tail` is not specified.
+	
+	If either `from` or `tail` is negative, it represents an offset from the end of the array.
+	
+	@param `from` The starting index.
+	
+	@param `tail` The ending index.
+	
+	@return A subarray.
+	
+	#end
 	Method Slice:T[]( from:Int )="slice"
 	
 	Method Slice:T[]( from:Int,term:Int )="slice" 
+	
+	#rem monkeydoc Gets the size of a single array dimension.
+	
+	@param dimensions The dimension.
+	
+	@return The size of array in the given dimension.
+	
+	#end
+	Method GetSize:Int( dimension:Int )="size"
 	
 	Method CopyTo( dstArray:T[],srcOffset:Int,dstOffset:Int,count:Int )="copyTo"
 

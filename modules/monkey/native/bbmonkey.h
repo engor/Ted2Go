@@ -17,7 +17,7 @@
 extern int bb_argc;
 extern char **bb_argv;
 
-template<class T> int bbCompare( T x,T y ){
+template<class X,class Y> int bbCompare( X x,Y y ){
 	if( y>x ) return -1;
 	return x>y;
 }
