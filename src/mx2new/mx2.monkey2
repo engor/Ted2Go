@@ -39,7 +39,8 @@ Using std.chartype
 Using std.filesystem
 Using std.collections
 Using lib.c
-'Using libc
 
-Const MX2CC_VERSION:="002"
-Const MX2_BUILDV:="002"
+Const MX2CC_VERSION:="003"
+
+Global MX2_MODULES_VERSION:=""
+Global MX2_PRODUCT_VERSION:=""

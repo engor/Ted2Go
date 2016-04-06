@@ -165,32 +165,10 @@ Class DocsMaker
 		Return docs
 	End
 	
-	Method MungUrl:String( url:String )
-		url=url.Replace( "_","_0" )
-		url=url.Replace( "<","_1" )
-		url=url.Replace( ">","_2" )
-		url=url.Replace( ",","_3" )
-		url=url.Replace( "?","_4" )
-		url=url.Replace( "&","_5" )
-		url=url.Replace( "@","_6" )
-		url=url.Replace( ".","_" )
-		Return url
-	End
-	
-	Method HtmlEsc:String( str:String )
-		str=str.Replace( "&","&amp;" )
-		str=str.Replace( "<","&lt;" )
-		str=str.Replace( ">","&gt;" )
-		Return str
-	End
-	
-	Method MarkdownEsc:String( str:String )
-		str=str.Replace( "\","\\" )
-		str=str.Replace( "_","\_" )
-		str=str.Replace( "<","\<" )
-		str=str.Replace( ">","\>" )
-		Return str
-	End
+	Method Esc:String( id:String )
+		id=id.Replace( "_","\_" )
+		Return id
+	End	
 	
 	Method DeclSlug:String( decl:Decl,scope:Scope )
 		Local ident:=decl.ident.Replace( "@","" )
@@ -263,10 +241,10 @@ Class DocsMaker
 				Local flist:=Cast<FuncList>( node )
 				If flist Return MakeLink( id,flist.funcs[0].fdecl,flist.funcs[0].scope )
 				
-				Local etype:=Cast<EnumType>( node )
+				Local etype:=TCast<EnumType>( node )
 				If etype Return MakeLink( id,etype.edecl,etype.scope.outer )
 				
-				Local ctype:=Cast<ClassType>( node )
+				Local ctype:=TCast<ClassType>( node )
 				If ctype Return MakeLink( id,ctype.cdecl,ctype.scope.outer )
 				
 				Return ""
@@ -280,19 +258,19 @@ Class DocsMaker
 			Local type:=scope.FindType( id )
 			If Not type Return ""
 			
-			Local ntype:=Cast<NamespaceType>( type )
+			Local ntype:=TCast<NamespaceType>( type )
 			If ntype
 				scope=ntype.scope
 				Continue
 			Endif
 			
-			Local etype:=Cast<EnumType>( type )
+			Local etype:=TCast<EnumType>( type )
 			If etype
 				'stop at enum!
 				Return MakeLink( id+"."+path.Slice( i0 ),etype.edecl,etype.scope.outer )
 			Endif
 			
-			Local ctype:=Cast<ClassType>( type )
+			Local ctype:=TCast<ClassType>( type )
 			If ctype
 				scope=ctype.scope
 				Continue
@@ -318,6 +296,9 @@ Class DocsMaker
 		Endif
 		
 		If gen
+			Local adecl:=Cast<AliasDecl>( decl )
+			If adecl And adecl.genArgs ident+="<"+(",".Join( adecl.genArgs ))+">"
+			
 			Local cdecl:=Cast<ClassDecl>( decl )
 			If cdecl And cdecl.genArgs ident+="<"+(",".Join( cdecl.genArgs ))+">"
 			
@@ -325,10 +306,11 @@ Class DocsMaker
 			If fdecl And fdecl.genArgs ident+="<"+(",".Join( fdecl.genArgs ))+">"
 		Endif
 		
-		Return MarkdownEsc( ident )
+		Return Esc( ident )
 	End
 	
 	Method DeclIdent:String( decl:Decl,scope:Scope,gen:Bool=False )
+
 		Return MakeLink( DeclIdent( decl,gen ),decl,scope )
 	End
 	
@@ -366,28 +348,36 @@ Class DocsMaker
 	
 	Method TypeName:String( type:Type,prefix:String )
 	
-		Local vtype:=Cast<VoidType>( type )
+		Local xtype:=Cast<AliasType>( type )
+		If xtype
+		
+			If xtype.instanceOf xtype=xtype.instanceOf
+			
+			Return MakeLink( Esc( xtype.adecl.ident ),xtype.adecl,xtype.scope )
+		Endif
+	
+		Local vtype:=TCast<VoidType>( type )
 		If vtype
 			Return vtype.Name
 		Endif
 	
-		Local gtype:=Cast<GenArgType>( type )
+		Local gtype:=TCast<GenArgType>( type )
 		If gtype
 			Return gtype.Name.Replace( "?","" )
 		Endif
 	
-		Local ptype:=Cast<PrimType>( type )
+		Local ptype:=TCast<PrimType>( type )
 		If ptype
 			Local ctype:=ptype.ctype
-			Return MakeLink( ptype.Name,ctype.cdecl,ctype.scope.outer )
+			Return MakeLink( Esc( ptype.Name ),ctype.cdecl,ctype.scope.outer )
 		Endif
 		
-		Local ntype:=Cast<NamespaceType>( type )
+		Local ntype:=TCast<NamespaceType>( type )
 		If ntype
-			Return ntype.Name
+			Return Esc( ntype.Name )
 		Endif
 		
-		Local ctype:=Cast<ClassType>( type )
+		Local ctype:=TCast<ClassType>( type )
 		If ctype
 			Local args:=""
 			For Local type:=Eachin ctype.types
@@ -397,28 +387,28 @@ Class DocsMaker
 			
 			If ctype.instanceOf ctype=ctype.instanceOf
 			
-			Return MakeLink( MarkdownEsc( ctype.cdecl.ident ),ctype.cdecl,ctype.scope.outer )+args
+			Return MakeLink( Esc( ctype.cdecl.ident ),ctype.cdecl,ctype.scope.outer )+args
 		Endif
 		
-		Local etype:=Cast<EnumType>( type )
+		Local etype:=TCast<EnumType>( type )
 		If etype
 			Local name:=etype.Name
 			If name.StartsWith( prefix ) name=name.Slice( prefix.Length )
-			Return MakeLink( MarkdownEsc( name ),etype.edecl,etype.scope.outer )
+			Return MakeLink( Esc( name ),etype.edecl,etype.scope.outer )
 		Endif
 		
-		Local qtype:=Cast<PointerType>( type )
+		Local qtype:=TCast<PointerType>( type )
 		If qtype
 			Return TypeName( qtype.elemType,prefix )+" Ptr"
 		Endif
 		
-		Local atype:=Cast<ArrayType>( type )
+		Local atype:=TCast<ArrayType>( type )
 		If atype
 			If atype.rank=1 Return TypeName( atype.elemType,prefix )+"\[ \]"
 			Return TypeName( atype.elemType,prefix )+"\[ ,,,,,,,,,".Slice( 0,atype.rank+2 )+" \]"
 		End
 		
-		Local ftype:=Cast<FuncType>( type )
+		Local ftype:=TCast<FuncType>( type )
 		If ftype
 			Local args:=""
 			For Local arg:=Eachin ftype.argTypes
@@ -458,6 +448,25 @@ Class DocsMaker
 		Local init:=True
 	
 		For Local node:=Eachin scope.nodes
+		
+			Local atype:=Cast<AliasType>( node.Value )
+			If atype
+				If kind<>"alias" Continue
+				Local decl:=atype.adecl
+				If DocsHidden( decl ) Continue
+				If inherited<>(scope<>atype.scope) Continue
+				
+				If init
+					init=False
+					EmitBr()
+					Emit( "| Aliases | |" )
+					Emit( "|:---|:---" )
+				Endif
+				
+				Emit( "| "+DeclIdent( decl,atype.scope )+" | "+DeclDesc( decl )+" |" )
+				Continue
+			Endif
+				
 
 			Local ctype:=Cast<ClassType>( node.Value )
 			If ctype
@@ -476,7 +485,7 @@ Class DocsMaker
 				
 				Emit( "| "+DeclIdent( decl,ctype.scope.outer )+" | "+DeclDesc( decl )+" |" )
 				Continue
-			End
+			Endif
 			
 			Local etype:=Cast<EnumType>( node.Value )
 			If etype
@@ -494,7 +503,7 @@ Class DocsMaker
 
 				Emit( "| "+DeclIdent( decl,etype.scope.outer )+" | "+DeclDesc( decl )+" |" )
 				Continue
-			End
+			Endif
 
 			Local vvar:=Cast<VarValue>( node.Value )
 			If vvar
@@ -517,7 +526,6 @@ Class DocsMaker
 			Local plist:=Cast<PropertyList>( node.Value )
 			If plist
 				If kind<>"property" Continue
-				
 				Local decl:=plist.pdecl
 				If DocsHidden( decl ) Continue
 				If inherited<>(scope<>plist.scope) Continue
@@ -575,6 +583,7 @@ Class DocsMaker
 		Emit( "_Module: &lt;"+_module.name+"&gt;_  " )
 		Emit( "_Namespace: "+nmspace.Name+"_" )
 		
+		EmitMembers( "alias",nmspace,True )
 		EmitMembers( "enum",nmspace,True )
 		EmitMembers( "struct",nmspace,True )
 		EmitMembers( "class",nmspace,True )
@@ -582,6 +591,22 @@ Class DocsMaker
 		EmitMembers( "const",nmspace,True )
 		EmitMembers( "global",nmspace,True )
 		EmitMembers( "function",nmspace,True )
+		
+		Return Flush()
+	End
+	
+	Method MakeAliasDocs:String( atype:AliasType )
+		Local decl:=atype.adecl
+		
+		If DocsHidden( decl ) Return ""
+		
+		_scope=atype.scope
+		
+		EmitHeader( decl,atype.scope )
+		
+		Emit( "##### Alias "+DeclIdent( decl,True )+" : "+TypeName( atype._alias,atype.scope ) )
+		
+		Emit( decl.docs )
 		
 		Return Flush()
 	End
@@ -645,6 +670,7 @@ Class DocsMaker
 		Emit( decl.docs )
 		
 		For Local inh:=0 Until 1
+			EmitMembers( "alias",ctype.scope,inh )
 			EmitMembers( "enum",ctype.scope,inh )
 			EmitMembers( "struct",ctype.scope,inh )
 			EmitMembers( "class",ctype.scope,inh )
@@ -736,7 +762,7 @@ Class DocsMaker
 			
 			Local params:=""
 			For Local i:=0 Until func.ftype.argTypes.Length
-				Local ident:=MarkdownEsc( func.fdecl.type.params[i].ident )
+				Local ident:=Esc( func.fdecl.type.params[i].ident )
 				Local type:=TypeName( func.ftype.argTypes[i],func.scope )
 				Local init:=""
 				If func.fdecl.type.params[i].init
@@ -746,7 +772,7 @@ Class DocsMaker
 			Next
 			params=params.Slice( 3 )
 			
-			Emit( "##### "+tkind+DeclIdent( decl )+" : "+TypeName( func.ftype.retType,func.scope )+" ( "+params+" ) " )
+			Emit( "##### "+tkind+DeclIdent( decl,True )+" : "+TypeName( func.ftype.retType,func.scope )+" ( "+params+" ) " )
 
 		Next
 		

@@ -19,13 +19,21 @@ Using libc
 
 Global StartDir:String
 
-Const TestArgs:="mx2cc makedocs monkey libc std"
+Const TestArgs:="mx2cc makemods -clean"
+
+'Const TestArgs:="mx2cc makeapp src/mx2new/test.monkey2"
+
+'Const TestArgs:="mx2cc makeapp tests/monkey/generics.monkey2"
+
+'Const TestArgs:="mx2cc makedocs monkey libc std"
+
+'Const TestArgs:="mx2cc makemods -clean"
+
+'Const TestArgs:="mx2cc makeapp src/mx2new/test.monkey2"
 
 'Const TestArgs:="mx2cc makemods -verbose -clean -target=emscripten -config=debug"
 
 'Const TestArgs:="mx2cc makemods -verbose -clean -config=release"
-
-'Const TestArgs:="mx2cc makeapp -target=desktop -target=emscripten -config=debug src/mx2new/test.monkey2"
 
 'Const TestArgs:="mx2cc makeapp -verbose -target=desktop -config=release src/mx2new/mx2cc.monkey2"
 
@@ -49,6 +57,24 @@ Function Main()
 	If GetFileType( env )<>FILETYPE_FILE Fail( "Unable to locate mx2cc 'bin' directory" )
 	
 	LoadEnv( env )
+	
+	MX2_PRODUCT_VERSION=GetEnv( "MX2_PRODUCT_VERSION" )
+	If MX2_PRODUCT_VERSION
+		If MX2_PRODUCT_VERSION<>MX2CC_VERSION
+			Print "MX2_PRODUCT_VERSION="+MX2_PRODUCT_VERSION
+		Endif
+	Else
+		MX2_PRODUCT_VERSION=MX2CC_VERSION
+	Endif
+	
+	MX2_MODULES_VERSION=GetEnv( "MX2_MODULES_VERSION" )
+	If MX2_MODULES_VERSION
+		If MX2_MODULES_VERSION<>MX2CC_VERSION
+			Print "MX2_MODULES_VERSION="+MX2_MODULES_VERSION
+		Endif
+	Else
+		MX2_MODULES_VERSION=MX2CC_VERSION
+	Endif
 	
 	Local args:=AppArgs()
 	

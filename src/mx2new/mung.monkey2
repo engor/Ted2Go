@@ -39,10 +39,11 @@ End
 
 Function MungArg:String( type:Type )
 
-	If type=Type.VoidType Return "v"
+	If type.Dealias=Type.VoidType Return "v"
 	
-	If Cast<PrimType>( type )
-		Select type
+	Local ptype:=TCast<PrimType>( type )
+	If ptype
+		Select ptype
 		Case Type.BoolType	Return "z"
 		Case Type.ByteType	Return "b"
 		Case Type.UByteType	Return "c"
@@ -59,14 +60,14 @@ Function MungArg:String( type:Type )
 		Return "????? MungArg ?????"
 	End
 	
-	Local atype:=Cast<ArrayType>( type )
+	Local atype:=TCast<ArrayType>( type )
 	If atype
 		Local sym:="A"
 		If atype.rank>1 sym+=String( atype.rank )
 		Return sym+MungArg( atype.elemType )
 	Endif
 	
-	Local ftype:=Cast<FuncType>( type )
+	Local ftype:=TCast<FuncType>( type )
 	If ftype
 		Local sym:="F"+MungArg( ftype.retType )
 		For Local ty:=Eachin ftype.argTypes
@@ -75,14 +76,14 @@ Function MungArg:String( type:Type )
 		Return sym+"E"
 	Endif
 	
-	Local ctype:=Cast<ClassType>( type )
+	Local ctype:=TCast<ClassType>( type )
 	If ctype
 		Return "T"+ClassName( ctype )+"_2"
 	Endif
 
-	Local ptype:=Cast<PointerType>( type )
-	If ptype
-		Return "P"+MungArg( ptype.elemType )
+	Local qtype:=TCast<PointerType>( type )
+	If qtype
+		Return "P"+MungArg( qtype.elemType )
 	Endif
 	
 	Return "????? MungArg "+String.FromCString( type.typeName() )+" ?????"
@@ -92,7 +93,7 @@ Function MungArgs:String( types:Type[] )
 
 	Local sym:="_1"
 	For Local ty:=Eachin types
-		If Cast<GenArgType>( ty ) Continue
+		If TCast<GenArgType>( ty ) Continue
 		sym+=MungArg( ty )
 	Next
 	Return sym

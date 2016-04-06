@@ -124,5 +124,6 @@ Class OverloadEx Extends SemantEx
 End
 
 Function SemantError( func:String )
+	Print "~n".Join( GetDebugStack() )
 	Throw New SemantEx( func+" Internal Error" )
 End

@@ -119,10 +119,10 @@ Class Translator_CPP Extends Translator
 	
 	Method VarType:String( type:Type )
 	
-		Local ctype:=Cast<ClassType>( type )
+		Local ctype:=TCast<ClassType>( type )
 		If ctype And IsGCType( ctype ) Return "bbGCVar<"+ClassName( ctype )+">"
 		
-		Local atype:=Cast<ArrayType>( type )
+		Local atype:=TCast<ArrayType>( type )
 		If atype Return "bbGCVar<"+ArrayName( atype )+">"
 		
 		Return TransType( type )
@@ -565,7 +565,7 @@ Class Translator_CPP Extends Translator
 			Emit( "done=true;" )
 			
 			Local builder:=Builder.instance
-			For Local dep:=Eachin module.moduleDeps
+			For Local dep:=Eachin module.moduleDeps.Keys
 			
 				Local mod2:=builder.modulesMap[dep]
 				If Not mod2.main Continue
@@ -686,11 +686,21 @@ Class Translator_CPP Extends Translator
 	
 	'***** Stmt *****
 	
+	Method DebugInfo:String( stmt:Stmt )
+		If debug And stmt.pnode Return "bbDBStmt("+stmt.pnode.srcpos+")"
+		Return ""
+	End
+	
+	Method EmitDebugInfo( stmt:Stmt )
+		Local db:=DebugInfo( stmt )
+		If db Emit( db+";" )
+	End
+	
 	Method EmitStmt( stmt:Stmt )
 	
 		If Not stmt Return
 		
-		If debug And stmt.pnode Emit( "bbDBStmt("+stmt.pnode.srcpos+");" )
+		EmitDebugInfo( stmt )
 		
 		Local exitStmt:=Cast<ExitStmt>( stmt )
 		If exitStmt EmitStmt( exitStmt ) ; Return
@@ -803,7 +813,7 @@ Class Translator_CPP Extends Translator
 		Local lhs:=Trans( stmt.lhs )
 		Local rhs:=Trans( stmt.rhs )
 
-		Local etype:=Cast<EnumType>( stmt.lhs.type )
+		Local etype:=TCast<EnumType>( stmt.lhs.type )
 		If etype And etype.edecl.IsExtern
 			If op<>"="
 				If stmt.lhs.HasSideEffects Print "Danger Will Robinson!!!!!!"
@@ -827,12 +837,18 @@ Class Translator_CPP Extends Translator
 		EmitBlock( stmt.block )
 		
 		While stmt.succ
+		
 			stmt=stmt.succ
+			
 			If stmt.cond
-				Emit( "}else if("+Trans( stmt.cond )+"){" )
+				Local db:=DebugInfo( stmt )
+				If db db+=","
+				Emit( "}else if("+db+Trans( stmt.cond )+"){" )
 			Else
 				Emit( "}else{" )
+				EmitDebugInfo( stmt )
 			Endif
+			
 			EmitBlock( stmt.block )
 		Wend
 
@@ -1020,7 +1036,7 @@ Class Translator_CPP Extends Translator
 	
 	Method Trans:String( value:UpCastValue )
 	
-		Local ctype:=Cast<ClassType>( value.value.type )
+		Local ctype:=TCast<ClassType>( value.value.type )
 		If ctype Uses( ctype )
 		
 		Local t:="("+Trans( value.value )+")"
@@ -1032,7 +1048,7 @@ Class Translator_CPP Extends Translator
 	
 	Method Trans:String( value:ExplicitCastValue )
 	
-		Local ctype:=Cast<ClassType>( value.type )
+		Local ctype:=TCast<ClassType>( value.type )
 		If ctype 
 			Uses( ctype )
 			Return "bb_object_cast<"+ClassName( ctype )+"*>("+Trans( value.value )+")"
@@ -1047,7 +1063,7 @@ Class Translator_CPP Extends Translator
 	
 	Method TransNull:String( type:Type )
 	
-		Local ptype:=Cast<PrimType>( type )
+		Local ptype:=TCast<PrimType>( type )
 		If ptype
 			If ptype.IsIntegral Return "0"
 			If ptype=Type.FloatType Return ".0f"
@@ -1055,7 +1071,7 @@ Class Translator_CPP Extends Translator
 			If ptype=Type.BoolType Return "false"
 		Endif
 
-		Local etype:=Cast<EnumType>( type )
+		Local etype:=TCast<EnumType>( type )
 		If etype Return EnumName( etype )+"(0)"
 
 		If IsValue( type ) Return TransType( type )+"{}"
@@ -1067,17 +1083,18 @@ Class Translator_CPP Extends Translator
 	
 		If Not value.value Return TransNull( value.type )
 		
-		Select value.type
+		Local ptype:=TCast<PrimType>( value.type )
+		Select ptype
 		Case Type.FloatType,Type.DoubleType
 			Local t:=value.value
 			If t.Find( "." )=-1 And t.Find( "e" )=-1 And t.Find( "E" )=-1 t+=".0"
-			If value.type=Type.FloatType Return t+"f"
+			If ptype=Type.FloatType Return t+"f"
 			Return t
 		Case Type.StringType
 			Return "BB_T("+EnquoteCppString( value.value )+")"
 		End
 		
-		Local etype:=Cast<EnumType>( value.type )
+		Local etype:=TCast<EnumType>( value.type )
 		If etype Return EnumValueName( etype,value.value )
 		
 		If value.value="0" Return TransType( value.type )+"(0)"
@@ -1098,11 +1115,11 @@ Class Translator_CPP Extends Translator
 	
 	Method TransMember:String( instance:Value,member:Value )
 	
-		Local ctype:=Cast<ClassType>( instance.type )
+		Local ctype:=TCast<ClassType>( instance.type )
 		If ctype Uses( ctype )
 
 		Local supr:=Cast<SuperValue>( instance )
-		If supr Return ClassName( Cast<ClassType>( supr.type ) )+"::"+Trans( member )
+		If supr Return ClassName( TCast<ClassType>( supr.type ) )+"::"+Trans( member )
 		
 		Local tinst:=Trans( instance )
 		Local tmember:=Trans( member )
@@ -1195,7 +1212,7 @@ Class Translator_CPP Extends Translator
 		
 		Local t:=op+Trans( value.value )
 		
-		Local etype:=Cast<EnumType>( value.type )
+		Local etype:=TCast<EnumType>( value.type )
 		If etype And etype.edecl.IsExtern t=EnumName( etype )+"("+t+")"
 		
 		Return t
@@ -1212,12 +1229,13 @@ Class Translator_CPP Extends Translator
 		
 			If op="=" op="==" Else If op="<>" op="!="
 			
-			If IsStruct( value.lhs.type ) Or (Cast<FuncType>( value.lhs.type ) And op<>"==" And op<>"!=" )
+			If IsStruct( value.lhs.type ) Or (TCast<FuncType>( value.lhs.type ) And op<>"==" And op<>"!=" )
 				Return "(bbCompare("+Trans( value.lhs )+","+Trans( value.rhs )+")"+op+"0)"
 			Endif
 			
 		Case "mod"
-			If value.type=Type.FloatType Or value.type=Type.DoubleType Return "std::fmod("+Trans( value.lhs )+","+Trans( value.rhs )+")"
+			Local ptype:=TCast<PrimType>( value.type )
+			If ptype=Type.FloatType Or ptype=Type.DoubleType Return "std::fmod("+Trans( value.lhs )+","+Trans( value.rhs )+")"
 			op="%"
 		Case "and" op="&&"
 		Case "or" op="||"
@@ -1228,7 +1246,7 @@ Class Translator_CPP Extends Translator
 		
 		Local t:="("+Trans( value.lhs )+op+Trans( value.rhs )+")"
 		
-		Local etype:=Cast<EnumType>( value.type )
+		Local etype:=TCast<EnumType>( value.type )
 		If etype And etype.edecl.IsExtern t=EnumName( etype )+t
 		
 		Return t
@@ -1296,27 +1314,27 @@ Class Translator_CPP Extends Translator
 	
 	Method TransType:String( type:Type ) Override
 	
-		If type=Type.VoidType Return "void"
+		If TCast<VoidType>( type ) Return "void"
 	
-		Local classType:=Cast<ClassType>( type )
+		Local classType:=TCast<ClassType>( type )
 		If classType Return TransType( classType )
 		
-		Local enumType:=Cast<EnumType>( type )
+		Local enumType:=TCast<EnumType>( type )
 		If enumType Return TransType( enumType )
 	
-		Local primType:=Cast<PrimType>( type )
+		Local primType:=TCast<PrimType>( type )
 		If primType Return TransType( primType )
 		
-		Local funcType:=Cast<FuncType>( type )
+		Local funcType:=TCast<FuncType>( type )
 		If funcType Return TransType( funcType )
 		
-		Local arrayType:=Cast<ArrayType>( type )
+		Local arrayType:=TCast<ArrayType>( type )
 		If arrayType Return TransType( arrayType )
 		
-		Local pointerType:=Cast<PointerType>( type )
+		Local pointerType:=TCast<PointerType>( type )
 		If pointerType Return TransType( pointerType )
 		
-		Local genArgType:=Cast<GenArgType>( type )
+		Local genArgType:=TCast<GenArgType>( type )
 		If genArgType Return TransType( genArgType )
 		
 		Throw New TransEx( "Translator_CPP.Trans() Type '"+String.FromCString( type.typeName() )+"' not recognized" )

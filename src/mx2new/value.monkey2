@@ -110,7 +110,7 @@ Class Value Extends SNode
 
 		If op="=" Return True
 
-		Local ptype:=Cast<PrimType>( type )
+		Local ptype:=TCast<PrimType>( type )
 		If ptype
 			Select op
 			Case "+=" Return ptype=Type.StringType Or ptype.IsNumeric
@@ -122,9 +122,9 @@ Class Value Extends SNode
 			Return False
 		Endif
 		
-		If Cast<EnumType>( type ) Return op="&=" Or op="|=" Or op="~="
+		If TCast<EnumType>( type ) Return op="&=" Or op="|=" Or op="~="
 		
-		If Cast<FuncType>( type ) Return op="+=" Or op="-="
+		If TCast<FuncType>( type ) Return op="+=" Or op="-="
 		
 		Return False
 	End
@@ -258,11 +258,11 @@ Class LiteralValue Extends Value
 		If d=0 Return Self
 		
 		'upcast to...
-		Local ptype:=Cast<PrimType>( type )
+		Local ptype:=TCast<PrimType>( type )
 		If Not ptype Return New UpCastValue( type,Self )
 '		If Not ptype SemantError( "LiteralValue.UpCast()" )
 		
-		Local ptype2:=Cast<PrimType>( Self.type )
+		Local ptype2:=TCast<PrimType>( Self.type )
 		If Not ptype2 Return New UpCastValue( type,Self )
 '		If Not ptype2 SemantError( "LiteralValue.UpCast()" )
 		
@@ -307,7 +307,7 @@ Class LiteralValue Extends Value
 	End
 	
 	Property HasSideEffects:Bool() Override
-		Return type=Type.StringType
+		Return type.Dealias=Type.StringType
 	End
 	
 	Method RemoveSideEffects:Value( block:Block ) Override
@@ -353,7 +353,7 @@ Class InvokeValue Extends Value
 	Field args:Value[]
 	
 	Method New( value:Value,args:Value[] )
-		Self.ftype=Cast<FuncType>( value.type )
+		Self.ftype=TCast<FuncType>( value.type )
 		Self.type=ftype.retType
 		Self.value=value
 		Self.args=args

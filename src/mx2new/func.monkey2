@@ -114,7 +114,7 @@ Class FuncValue Extends Value
 	Property IsGeneric:Bool()
 		If Not ftype SemantError( "FuncValue.IsGeneric()" )
 		
-		Return ftype.IsGeneric Or (types And Not instanceOf)
+		Return ftype.IsGeneric Or (types And Not instanceOf)	
 	End
 	
 	Property IsCtor:Bool()
@@ -146,18 +146,18 @@ Class FuncValue Extends Value
 		'Checks for generic funcs
 		'
 		If types
-			If fdecl.IsAbstract Or fdecl.IsVirtual Or fdecl.IsOverride Throw New SemantEx( "Virtual methods cannot be generic" )
+			If fdecl.IsAbstract Or fdecl.IsVirtual Or fdecl.IsOverride Throw New SemantEx( "Generic methods cannot be virtual" )
 			If IsCtor Throw New SemantEx( "Constructors cannot be generic" )	'TODO
 		Endif
 
 		'Semant func type
 		'
 		type=fdecl.type.Semant( block )
-		ftype=Cast<FuncType>( type )
+		ftype=TCast<FuncType>( type )
 		
 		'That's it for generic funcs
 		'
-		If block.IsGeneric
+		If block.IsGeneric 
 			Return Self
 		Endif
 		
@@ -177,7 +177,7 @@ Class FuncValue Extends Value
 					If ftype.argTypes.Length<>1 Throw New SemantEx( "Comparison operator '"+op+"' must have 1 parameter" )
 '					If Not ftype.argTypes[0].Equals( ctype ) Throw New SemantEx( "Comparison operator '"+op+"' parameter must be of type '"+ctype.ToString()+"'" )
 				Case "<=>"
-					Local ptype:=Cast<PrimType>( ftype.retType )
+					Local ptype:=TCast<PrimType>( ftype.retType )
 					If Not ptype Or Not ptype.IsNumeric Throw New SemantEx( "Comparison operator '<=>' must return a numeric type" )
 					If ftype.argTypes.Length<>1 Throw New SemantEx( "Comparison operator '"+op+"' must have 1 parameter" )
 '					If Not ftype.argTypes[0].Equals( ctype ) Throw New SemantEx( "Comparison operator '"+op+"' parameter must be of type '"+ctype.ToString()+"'" )
@@ -219,24 +219,31 @@ Class FuncValue Extends Value
 		
 		'Check 'where' if present
 		'		
-		If fdecl.whereExpr 'And (Not types Or instanceOf)
+		If fdecl.whereExpr
 			Local t:=fdecl.whereExpr.SemantWhere( block )
 '			Print "Semanted where for "+Name+" -> "+Int(t)
 			If Not t Return Null
 		Endif
 		
-		'Good to go
-		'
 		If fdecl.kind="lambda"
+			used=True
 			semanted=Self
 			SemantStmts()
-		Else If Not types And Not fdecl.IsExtern
-			Local builder:=Builder.instance
-			builder.semantStmts.Push( Self )
+		Else If fdecl.IsExtern
+			used=True
+		Else If Not types
+			Used()
 		Endif
 		
 		Return Self
-		
+	End
+	
+	Method Used()
+	
+		If used Return
+		used=True
+
+		Builder.instance.semantStmts.Push( Self )
 	End
 	
 	Method ToValue:Value( instance:Value ) Override
@@ -370,20 +377,22 @@ Class FuncValue Extends Value
 		
 			transFile.functions.Push( Self )
 			
-			If fdecl.ident="Main" And ftype.retType=Type.VoidType And Not ftype.argTypes
+			If fdecl.ident="Main" And TCast<VoidType>( ftype.retType ) And Not ftype.argTypes
 				Local module:=scope.FindFile().fdecl.module
 				If module.main Throw New SemantEx( "Duplicate declaration of 'Main'" )
 				module.main=Self
 			Endif
 			
-			If instanceOf'IsGenInstance
+			If instanceOf
 				Local builder:=Builder.instance
 				Local module:=builder.semantingModule
 				module.genInstances.Push( Self )
 			Endif
 
 		Else
+		
 			scope.transMembers.Push( Self )
+
 		Endif
 	End
 	
@@ -420,18 +429,6 @@ Class FuncValue Extends Value
 		Return args2
 	End
 
-	Method Used()
-	
-		If used Return
-		used=True
-		
-		If fdecl.kind<>"lambda" And types And Not fdecl.IsExtern
-			Local builder:=Builder.instance
-			builder.semantStmts.Push( Self )
-		Endif
-		
-	End
-	
 End
 
 '***** MemberFuncValue *****
@@ -513,7 +510,7 @@ Class FuncListValue Extends Value
 	
 	Method UpCast:Value( type:Type ) Override
 	
-		Local ftype:=Cast<FuncType>( type )
+		Local ftype:=TCast<FuncType>( type )
 		If Not ftype Throw New UpCastEx( Self,type )
 		
 		Local func:=flistType.FindOverload( ftype.retType,ftype.argTypes )
@@ -574,7 +571,7 @@ Class FuncListType Extends Type
 	
 	Method DistanceToType:Int( type:Type ) Override
 
-		Local ftype:=Cast<FuncType>( type )
+		Local ftype:=TCast<FuncType>( type )
 		If Not ftype Return -1
 		
 		Local func:=FindOverload( ftype.retType,ftype.argTypes )
@@ -617,9 +614,7 @@ Class FuncList Extends SNode
 		If AnyTypeGeneric( argTypes ) SemantError( "FuncList.FindFunc()" )
 	
 		For Local func:=Eachin funcs
-			If func.IsGeneric Continue
-'			If func.ftype.IsGeneric Continue
-'			If func.types And Not func.instanceOf Continue
+			If func.block.IsGeneric Continue
 			If TypesEqual( func.ftype.argTypes,argTypes ) Return func
 		Next
 		
@@ -640,7 +635,7 @@ Class FuncList Extends SNode
 				Local func:=Cast<FuncValue>( tfunc.Semant() )
 				If Not func Continue
 				
-				If Not func.IsGeneric
+				If Not func.block.IsGeneric
 					Local func2:=FindFunc( func.ftype.argTypes )
 					If func2 Throw New SemantEx( "Duplicate declaration '"+func.ToString()+"'",tfunc.pnode )
 				Endif

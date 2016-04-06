@@ -1,18 +1,9 @@
 
 Namespace test
 
-#Import "<libc>"
-
-Function Test2()
-	Print "Debug Stack:"
-	Print "~n".Join( GetDebugStack() )
-End
-
-Function Test()
-	Test2()
-End
+#Import "<std>"
+#Import "<mojo2>"
 
 Function Main()
-	Test()
-	Print "Bye!"
+	Print "Yes"
 End

@@ -109,7 +109,7 @@ Class ClassType Extends Type
 		
 			Try
 				Local type:=cdecl.superType.Semant( scope )
-				If type=Type.VoidType
+				If TCast<VoidType>( type )
 				
 					If Not cdecl.IsExtern Or cdecl.kind<>"class" Throw New SemantEx( "Only extern classes can extend 'Void'" )
 					
@@ -117,7 +117,7 @@ Class ClassType Extends Type
 					
 				Else
 				
-					superType=Cast<ClassType>( type )
+					superType=TCast<ClassType>( type )
 					
 					If Not superType Or superType.cdecl.kind<>cdecl.kind Throw New SemantEx( "Type '"+type.ToString()+"' is not a valid super class type" )
 					
@@ -148,7 +148,7 @@ Class ClassType Extends Type
 			
 				Try
 					Local type:=iface.Semant( scope )
-					Local ifaceType:=Cast<ClassType>( type )
+					Local ifaceType:=TCast<ClassType>( type )
 					
 					If Not ifaceType Or (ifaceType.cdecl.kind<>"interface" And ifaceType.cdecl.kind<>"protocol" ) Throw New SemantEx( "Type '"+type.ToString()+"' is not a valid interface type" )
 					
@@ -448,14 +448,14 @@ Class ClassType Extends Type
 
 		#rem
 		'cast native classes to void ptr		
-		Local ptype:=Cast<PointerType>( type )
+		Local ptype:=TCast<PointerType>( type )
 		If ptype 
 			If IsVoid And ptype.elemType=Type.VoidType Return MAX_DISTANCE
 			Return -1
 		Endif
 		#end
 		
-		Local ctype:=Cast<ClassType>( type )
+		Local ctype:=TCast<ClassType>( type )
 		If Not ctype Return -1
 	
 		Local dist:=0
@@ -482,7 +482,7 @@ Class ClassType Extends Type
 	
 		If Not IsGeneric Return Super.InferType( type,infered )
 		
-		Local ctype:=Cast<ClassType>( type )
+		Local ctype:=TCast<ClassType>( type )
 		If Not ctype Return Null
 		
 		If types.Length<>ctype.types.Length Return Null

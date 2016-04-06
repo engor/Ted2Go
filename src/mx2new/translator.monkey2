@@ -5,11 +5,11 @@ Namespace mx2
 
 Function IsGCType:Bool( type:Type )
 
-	If Cast<FuncType>( type ) Return True
+	If TCast<FuncType>( type ) Return True
 	
-	If Cast<ArrayType>( type ) Return True
+	If TCast<ArrayType>( type ) Return True
 	
-	Local ctype:=Cast<ClassType>( type )
+	Local ctype:=TCast<ClassType>( type )
 	If Not ctype Return False
 	
 	If ctype.IsVoid Return False
@@ -381,7 +381,7 @@ Class Translator
 	
 	Method Refs( type:Type )
 	
-		Local ctype:=Cast<ClassType>( type )
+		Local ctype:=TCast<ClassType>( type )
 		If ctype
 			If IsStruct( ctype ) Uses( ctype ) ; Return
 			If AddRef( ClassName( ctype ),ctype ) Return
@@ -389,7 +389,7 @@ Class Translator
 			Return
 		Endif
 		
-		Local ftype:=Cast<FuncType>( type )
+		Local ftype:=TCast<FuncType>( type )
 		If ftype
 			Refs( ftype.retType )
 			For Local type:=Eachin ftype.argTypes
@@ -398,13 +398,13 @@ Class Translator
 			Return
 		Endif
 		
-		Local atype:=Cast<ArrayType>( type )
+		Local atype:=TCast<ArrayType>( type )
 		If atype
 			Refs( atype.elemType )
 			Return
 		Endif
 		
-		Local ptype:=Cast<PointerType>( type )
+		Local ptype:=TCast<PointerType>( type )
 		If ptype
 			Refs( ptype.elemType )
 			Return
@@ -413,7 +413,7 @@ Class Translator
 	End
 	
 	Method Uses( type:Type )
-		Local ctype:=Cast<ClassType>( type )
+		Local ctype:=TCast<ClassType>( type )
 		If ctype Uses( ctype )
 	End
 	
@@ -430,13 +430,13 @@ Class Translator
 
 	Method IsStruct:Bool( type:Type )
 
-		Local ctype:=Cast<ClassType>( type )
+		Local ctype:=TCast<ClassType>( type )
 		Return ctype And ctype.cdecl.kind="struct"
 	End
 	
 	Method IsValue:Bool( type:Type )
 	
-		Return Cast<PrimType>( type ) Or Cast<FuncType>( type ) Or IsStruct( type )
+		Return TCast<PrimType>( type ) Or TCast<FuncType>( type ) Or IsStruct( type )
 	End
 	
 	Method CFuncType:String( type:FuncType )

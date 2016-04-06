@@ -218,6 +218,25 @@ Class HtmlDocsMaker Extends DocsMaker
 	
 	End
 	
+	Method EmitAliases( scope:Scope,kind:String )
+	
+		For Local node:=Eachin scope.nodes
+		
+			Local atype:=Cast<AliasType>( node.Value )
+			If Not atype Or atype.adecl.kind<>kind Continue
+			
+			Local docs:=MakeAliasDocs( atype )
+			If Not docs Continue
+			
+			Local page:=DeclPage( atype.adecl,atype.scope )
+			SavePage( docs,page )
+			
+			EmitLeaf( atype.adecl,page )
+
+		Next
+	
+	End
+	
 	Method EmitEnums( scope:Scope,kind:String )
 	
 		For Local node:=Eachin scope.nodes
@@ -269,21 +288,6 @@ Class HtmlDocsMaker Extends DocsMaker
 			SavePage( docs,page )
 			
 			EmitLeaf( plist.pdecl,page )
-
-		Next
-	
-	End
-	
-	Method EmitAliases( scope:Scope,kind:String )
-	
-		For Local node:=Eachin scope.nodes
-		
-			Local atype:=Cast<AliasType>( node.Value )
-			If Not atype Or atype.scope.FindFile().fdecl.module<>_module Or atype.adecl.kind<>kind Continue
-			
-			If atype.adecl.IsPrivate And Not atype.adecl.docs Continue
-			
-			EmitLeaf( atype.adecl,"" )
 
 		Next
 	

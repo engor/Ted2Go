@@ -33,9 +33,9 @@ Function IsCandidate:Bool( func:FuncValue,ret:Type,args:Type[],infered:Type[] )
 		
 			Local arg:=args[i]
 			
-			Local flist:=Cast<FuncListType>( arg )
+			Local flist:=TCast<FuncListType>( arg )
 			If flist
-				Local ftype:=Cast<FuncType>( argTypes[i] )
+				Local ftype:=TCast<FuncType>( argTypes[i] )
 				If Not ftype Return False
 				Local func:=flist.FindOverload( Null,ftype.argTypes )'ftype.retType,ftype.argTypes )
 				If Not func Return False
@@ -132,7 +132,7 @@ Function Linearize( types:Type[],func:FuncValue,funcs:Stack<FuncValue>,j:Int=0 )
 	
 		Local type:=types[i]
 	
-		Local flist:=Cast<FuncListType>( type )
+		Local flist:=TCast<FuncListType>( type )
 		If Not flist Continue
 		
 		types=types.Slice( 0 )

@@ -38,7 +38,7 @@ Function EvalBinaryop:LiteralValue( type:Type,op:String,lhs:LiteralValue,rhs:Lit
 		Return New LiteralValue( Type.IntType,String( r ) )
 	End
 	
-	Local etype:=Cast<EnumType>( type )
+	Local etype:=TCast<EnumType>( type )
 	If etype And Not etype.edecl.IsExtern
 		Local r:Int,x:=Int( lhs.value ),y:=Int( rhs.value )
 		Select op

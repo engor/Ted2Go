@@ -3,37 +3,80 @@ Namespace mx2
 
 Class AliasDecl Extends Decl
 
+	Field genArgs:String[]
 	Field type:TypeExpr
 	
 	Method ToNode:SNode( scope:Scope ) Override
-		Return New AliasType( Self,scope )
+	
+		Local types:=New Type[genArgs.Length]
+		For Local i:=0 Until types.Length
+			types[i]=New GenArgType( i,genArgs[i],Null,Null )
+		Next
+		
+		Return New AliasType( Self,scope,types,Null )
 	End
 End
 
-Class AliasType Extends Type
+Class AliasType Extends ProxyType
 
 	Field adecl:AliasDecl
 	Field scope:Scope
+	Field types:Type[]
+	Field instanceOf:AliasType
 	
-	Method New( adecl:AliasDecl,scope:Scope )
-		Self.pnode=adecl
+	Field instances:Stack<AliasType>
+	
+	Method New( adecl:AliasDecl,scope:Scope,types:Type[],instanceOf:AliasType )
 		Self.adecl=adecl
 		Self.scope=scope
+		Self.types=types
+		Self.instanceOf=instanceOf
+		
+		If AnyTypeGeneric( types ) flags|=TYPE_GENERIC
 	End
 	
 	Property Name:String() Override
-		Return "{Alias}"
+
+		Return adecl.ident+":"+_alias.Name
 	End
-	
-	Property TypeId:String() Override
-		SemantError( "AliasType.TypeId()" )
-		Return ""
-	End
-	
+
 	Method OnSemant:SNode() Override
-		Local node:=adecl.type.Semant( scope )
-		If Not node Throw New SemantEx( "Can't find type '"+adecl.type.ToString()+"'" )
-		Return node
+	
+'		If IsGeneric Return Self
+		
+		Local tscope:=scope
+		If types
+			tscope=New Scope( tscope )
+			For Local i:=0 Until types.Length
+				tscope.Insert( adecl.genArgs[i],types[i] )
+			Next
+		Endif
+		
+		_alias=adecl.type.Semant( tscope )
+		
+		flags=_alias.flags
+		
+		Return Self
+	End
+	
+	Method GenInstance:Type( types:Type[] ) Override
+
+		If Not IsGeneric Return Super.GenInstance( types )
+
+		If types.Length<>Self.types.Length Throw New SemantEx( "Wrong number of generic type parameters" )
+
+		If Not instances instances=New Stack<AliasType>
+	
+		For Local inst:=Eachin instances
+			If TypesEqual( inst.types,types ) Return inst
+		Next
+		
+		Local inst:=New AliasType( adecl,scope,types,Self )
+		instances.Push( inst )
+		
+		inst.Semant()
+		
+		Return inst
 	End
 
 End

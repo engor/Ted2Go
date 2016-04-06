@@ -42,7 +42,7 @@ Class EnumType Extends Type
 	
 		If edecl.superType
 			Try
-				superType=Cast<EnumType>( edecl.superType.Semant( scope ) )
+				superType=TCast<EnumType>( edecl.superType.Semant( scope ) )
 				
 				If Not superType Or superType.edecl.kind<>"enum"
 					Throw New SemantEx( "Cant find super type "+edecl.superType.ToString(),edecl )
@@ -108,15 +108,14 @@ Class EnumType Extends Type
 	
 		If type=Self Return 0
 		
-		If type=Type.BoolType Return MAX_DISTANCE
-		
-		Local ptype:=Cast<PrimType>( type )
+		Local ptype:=TCast<PrimType>( type )
 		If ptype
+			If ptype=Type.BoolType Return MAX_DISTANCE
 			If ptype.IsIntegral Return MAX_DISTANCE
 			Return -1
 		Endif
 	
-		Local etype:=Cast<EnumType>( type )
+		Local etype:=TCast<EnumType>( type )
 		If Not etype Return -1
 		
 		Local dist:=0

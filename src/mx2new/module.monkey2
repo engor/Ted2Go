@@ -22,9 +22,9 @@ Class Module
 	Field usings:=New Stack<NamespaceScope>
 	Field main:FuncValue
 	
-	Field moduleDeps:=New Stack<String>
+	Field moduleDeps:=New StringMap<Bool>
 	
-	Method New( name:String,srcPath:String,productType:String )
+	Method New( name:String,srcPath:String,productType:String,version:String )
 		Self.name=name
 		Self.srcPath=srcPath
 		Self.productType=productType
@@ -33,7 +33,7 @@ Class Module
 		
 		ident=MungPath( name )
 		baseDir=ExtractDir( srcPath )
-		buildDir=baseDir+name+".buildv"+MX2_BUILDV+"/"
+		buildDir=baseDir+name+".buildv"+version+"/"
 		outputDir=buildDir+builder.profileName+"/"
 		cacheDir=buildDir+"build_cache/"+builder.profileName+"/"
 		

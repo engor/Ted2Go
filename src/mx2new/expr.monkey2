@@ -295,7 +295,7 @@ Class NewObjectExpr Extends Expr
 	
 		Local type:=Self.type.Semant( scope )
 		
-		Local ctype:=Cast<ClassType>( type )
+		Local ctype:=TCast<ClassType>( type )
 		If Not ctype Throw New SemantEx( "Type '"+type.Name+"' is not a class" )
 		
 		'hmmm...
@@ -361,7 +361,7 @@ Class NewArrayExpr Extends Expr
 	
 	Method OnSemant:Value( scope:Scope ) Override
 	
-		Local atype:=Cast<ArrayType>( type.Semant( scope ) )
+		Local atype:=TCast<ArrayType>( type.Semant( scope ) )
 		If Not atype SemantError( "NewArrayExpr.OnSemant()" )
 		
 		If atype.elemType.IsGeneric Throw New SemantEx( "Array element type '"+atype.elemType.Name+"' is generic" )
@@ -425,7 +425,7 @@ Class ExtendsExpr Extends Expr
 	
 	Method OnSemant:Value( scope:Scope ) Override
 	
-		Local ctype:=Cast<ClassType>( Self.type.Semant( scope ) )
+		Local ctype:=TCast<ClassType>( Self.type.Semant( scope ) )
 		If Not ctype Or (ctype.cdecl.kind<>"class" And ctype.cdecl.kind<>"interface" And ctype.cdecl.kind<>"protocol" ) 
 			Throw New SemantEx( "Type '"+type.ToString()+"' is not a class or interface type" )
 		Endif
@@ -435,7 +435,7 @@ Class ExtendsExpr Extends Expr
 		Local tvalue:=Cast<TypeValue>( value )
 		If tvalue
 			If tvalue.ttype.DistanceToType( ctype )>=0 Return LiteralValue.BoolValue( True )
-			Local ptype:=Cast<PrimType>( tvalue.ttype )
+			Local ptype:=TCast<PrimType>( tvalue.ttype )
 			If ptype And ptype.ctype.DistanceToType( ctype )>=0 Return LiteralValue.BoolValue( True )
 			Return LiteralValue.BoolValue( False )
 		Endif
@@ -451,7 +451,8 @@ Class ExtendsExpr Extends Expr
 	
 	Method OnSemantWhere:Bool( scope:Scope ) Override
 	
-		Local ctype:=Cast<ClassType>( Self.type.Semant( scope ) )
+		Local ctype:=TCast<ClassType>( Self.type.Semant( scope ) )
+		
 		If Not ctype Or (ctype.cdecl.kind<>"class" And ctype.cdecl.kind<>"interface" And ctype.cdecl.kind<>"protocol" ) 
 			Throw New SemantEx( "Type '"+type.ToString()+"' is not a class or interface type" )
 		endif
@@ -483,6 +484,9 @@ Class CastExpr Extends Expr
 		Local type:=Self.type.Semant( scope )
 		
 		Local value:=Self.expr.Semant( scope )
+		
+		Local castOp:=value.FindValue( "cast" )
+		If castOp value=castOp.Invoke( Null )
 
 		'simple upcast?		
 		If value.type.DistanceToType( type )>=0 Return value.UpCast( type )
@@ -535,7 +539,7 @@ Class SuperExpr Extends Expr
 		Local block:=Cast<Block>( scope )
 		If block And block.func.selfValue
 		
-			Local ctype:=Cast<ClassType>( block.func.selfValue.type )
+			Local ctype:=TCast<ClassType>( block.func.selfValue.type )
 			If ctype
 
 				Local superType:=ctype.superType
@@ -592,7 +596,7 @@ Class UnaryopExpr Extends Expr
 		Local node:=value.FindValue( op )
 		If node Return node.Invoke( Null )
 		
-		Local ptype:=Cast<PrimType>( type )
+		Local ptype:=TCast<PrimType>( type )
 		
 		Select op
 		Case "+","-"
@@ -603,7 +607,7 @@ Class UnaryopExpr Extends Expr
 				Throw New SemantEx( "Type cannot be unsigned" )
 			Endif
 		Case "~"
-			Local etype:=Cast<EnumType>( type )
+			Local etype:=TCast<EnumType>( type )
 			If etype
 				type=etype
 			Else If Not ptype Or Not ptype.IsIntegral
@@ -680,8 +684,8 @@ Class BinaryopExpr Extends Expr
 	
 	Function BalanceTypes:Type( lhs:Type,rhs:Type )
 	
-		Local plhs:=Cast<PrimType>( lhs )
-		Local prhs:=Cast<PrimType>( rhs )
+		Local plhs:=TCast<PrimType>( lhs )
+		Local prhs:=TCast<PrimType>( rhs )
 		
 		If plhs And prhs Return BalancePrimTypes( plhs,prhs )
 		
@@ -709,6 +713,8 @@ Class BinaryopExpr Extends Expr
 			rhs=rhs.ToRValue()
 		Endif
 		
+		'check for overloaded operator
+		'
 		Local node:=lhs.FindValue( op )
 		If node 
 			Local args:=New Value[1]
@@ -718,8 +724,8 @@ Class BinaryopExpr Extends Expr
 
 		'handle pointer arithmetic
 		'
-		Local lptype:=Cast<PointerType>( lhs.type )
-		Local rptype:=Cast<PointerType>( rhs.type )
+		Local lptype:=TCast<PointerType>( lhs.type )
+		Local rptype:=TCast<PointerType>( rhs.type )
 		If lptype Or rptype
 			If lptype And (op="+" Or op="-")	
 				'pointer=pointer +/- int
@@ -731,8 +737,8 @@ Class BinaryopExpr Extends Expr
 			Throw New SemantEx( "Pointer arithmetic error" )
 		Endif
 		
-		Local plhs:=Cast<PrimType>( lhs.type )
-		Local prhs:=Cast<PrimType>( rhs.type )
+		Local plhs:=TCast<PrimType>( lhs.type )
+		Local prhs:=TCast<PrimType>( rhs.type )
 		
 		Local type:Type,lhsType:Type,rhsType:Type
 		
@@ -747,8 +753,8 @@ Class BinaryopExpr Extends Expr
 			
 		Case "&","|","~"
 		
-			Local elhs:=Cast<EnumType>( lhs.type )
-			Local erhs:=Cast<EnumType>( rhs.type )
+			Local elhs:=TCast<EnumType>( lhs.type )
+			Local erhs:=TCast<EnumType>( rhs.type )
 			If elhs Or erhs
 				If elhs.Equals( erhs ) type=elhs
 			Else
@@ -761,7 +767,7 @@ Class BinaryopExpr Extends Expr
 			rhsType=Type.IntType
 			
 		Case "=","<>","<",">","<=",">="
-		
+
 			Local node:=lhs.FindValue( "<=>" )
 			If node
 			
@@ -772,7 +778,7 @@ Class BinaryopExpr Extends Expr
 				lhsType=lhs.type
 				rhsType=lhsType
 				
-				Local ptype:=Cast<PrimType>( lhsType )
+				Local ptype:=TCast<PrimType>( lhsType )
 				Assert( ptype And ptype.IsNumeric )
 				
 				rhs=New LiteralValue( rhsType,"" )
@@ -907,7 +913,7 @@ Class LiteralExpr Extends Expr
 		 
 			type=typeExpr.Semant( scope )
 
-			Local ptype:=Cast<PrimType>( type )
+			Local ptype:=TCast<PrimType>( type )
 			If Not ptype Throw New SemantEx( "Literal type must be a primitive type" )
 			
 			Select tokeType
@@ -940,7 +946,7 @@ Class LiteralExpr Extends Expr
 		
 		Local t:=toke
 		
-		Local ptype:=Cast<PrimType>( type )
+		Local ptype:=TCast<PrimType>( type )
 		
 		If ptype And ptype.IsIntegral And t And t[0]=CHAR_DOLLAR
 		

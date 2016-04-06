@@ -170,7 +170,7 @@ Class InvokeNewStmtExpr Extends StmtExpr
 		Local value:=expr.SemantRValue( block )
 		If Not Cast<SelfValue>( value ) And Not Cast<SuperValue>( value ) Throw New SemantEx( "'New' cannot be directly invoked" )
 
-		Local ctype:=Cast<ClassType>( value.type )
+		Local ctype:=TCast<ClassType>( value.type )
 		
 		Local func:=block.func
 
@@ -351,7 +351,7 @@ Class IfStmtExpr Extends StmtExpr
 			
 			tblock.Semant( expr.stmts )
 			
-			Local curr:=New IfStmt( Self,cond,tblock )
+			Local curr:=New IfStmt( expr,cond,tblock )
 			If prev prev.succ=curr Else head=curr
 			prev=curr
 			
@@ -570,7 +570,7 @@ Class ForStmtExpr Extends StmtExpr
 		Local curr:Value
 		Local init:=Self.init.SemantRValue( iblock )
 		
-		Local atype:=Cast<ArrayType>( init.type )
+		Local atype:=TCast<ArrayType>( init.type )
 		If atype And atype.rank<>1 Throw New SemantEx( "'Eachin' can only be used with 1 dimensional arrays" )
 		
 		If atype Or init.type=Type.StringType
@@ -769,7 +769,7 @@ Class ThrowStmtExpr Extends StmtExpr
 		If expr
 		
 			Local value:=expr.SemantRValue( block )
-			Local ctype:=Cast<ClassType>( value.type )
+			Local ctype:=TCast<ClassType>( value.type )
 			
 			If Not ctype 'Or Not ctype.ExtendsType( Type.ThrowableClass )
 				Throw New SemantEx( "Thrown value type must extend 'Throwable'" )

@@ -204,6 +204,7 @@ Class Parser
 				decl.flags=flags
 				decl.ident=ParseIdent()
 				decl.idscope=_idscope
+				decl.genArgs=ParseGenArgs()
 				
 				Parse( ":" )
 				decl.type=ParseType()
@@ -388,6 +389,8 @@ Class Parser
 				Case "*=","/=","+=","-=","&=","|=","~~="
 					ident=Parse()
 				Case "<",">","<=",">=","=","<>","<=>"
+					ident=Parse()
+				Case "cast"
 					ident=Parse()
 				Case "["
 					Bump()

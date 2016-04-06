@@ -35,6 +35,10 @@ Class Builder
 	
 	Field ppsyms:=New StringMap<String>
 
+	Field mainModule:Module
+	
+	Field parsingModule:Module
+	
 	Field modules:=New Stack<Module>
 	
 	Field modulesMap:=New StringMap<Module>
@@ -58,8 +62,8 @@ Class Builder
 	
 	Field maxObjTime:Long
 
-	Field MX2_FILES:=New StringList
-	Field MX2_LIBS:=New StringList
+	Field MX2_SRCS:=New StringStack
+	Field MX2_LIBS:=New StringStack
 	
 	Field SRC_FILES:=New StringStack
 	Field OBJ_FILES:=New StringStack
@@ -137,53 +141,49 @@ Class Builder
 	Method Parse()
 	
 		If opts.verbose=0 Print "Parsing..."
+		
+		Local name:=StripDir( StripExt( opts.mainSource ) )
 
-		Local module:=New Module( StripDir( StripExt( opts.mainSource ) ),opts.mainSource,opts.productType )
+		Local module:=New Module( name,opts.mainSource,opts.productType,MX2_PRODUCT_VERSION )
+		modulesMap[name]=module
 		modules.Push( module )
 		
-		Local monkeyDone:=(module.name="monkey" And module.productType="module")
+		mainModule=module
+		If name="monkey" And module.productType="module" modulesMap["monkey"]=module
 		
 		If opts.clean 
 			DeleteDir( module.outputDir,True )
 			DeleteDir( module.cacheDir,True )
 		Endif
 		
-		MX2_FILES.AddLast( module.srcPath )
+		parsingModule=module
+		MX2_SRCS.Push( module.srcPath )
 		
 		Repeat
 		
-			If MX2_FILES.Empty
+			If MX2_SRCS.Empty
+			
+				parsingModule=Null
 			
 				If MX2_LIBS.Empty
 				
-					If monkeyDone Exit
-					monkeyDone=True
+					If modulesMap["monkey"] Exit
 					
-					MX2_LIBS.AddLast( "monkey" )
+					MX2_LIBS.Push( "monkey" )
 				Endif
 				
-				Local lib:=MX2_LIBS.RemoveFirst()
-				If lib="monkey" And Not monkeyDone Continue
+				Local name:=MX2_LIBS.Pop()
+				Local srcPath:=modulesDir+name+"/"+name+".monkey2"
 				
-				Local module2:=modulesMap[lib]
-				If module2
-					modules.Remove( module2 )
-					modules.Push( module2 )
-					Continue
-				Endif
-				
-				Local srcPath:=modulesDir+lib+"/"+lib+".monkey2"
-				
-				module=New Module( lib,srcPath,"module" )
-				modulesMap[lib]=module
+				module=New Module( name,srcPath,"module",MX2_MODULES_VERSION )
+				modulesMap[name]=module
 				modules.Push( module )
-
-				LD_LIBS.Push( module.outputDir+lib+".a" )
 				
-				MX2_FILES.AddLast( module.srcPath )
+				parsingModule=module
+				MX2_SRCS.Push( module.srcPath )
 			Endif
 			
-			Local path:=MX2_FILES.RemoveFirst()
+			Local path:=MX2_SRCS.Pop()
 			
 			If opts.verbose>0 Print "Parsing "+path
 			
@@ -214,14 +214,61 @@ Class Builder
 		Forever
 	
 	End
+	
+	Method SortModules( module:Module,done:StringMap<Bool>,deps:Stack<Module> )
+	
+		If done.Contains( module.name ) Return
+		
+		For Local dep:=Eachin module.moduleDeps.Keys
+		
+			Local module2:=modulesMap[dep]
+		
+			SortModules( module2,done,deps )
+		
+		Next
+		
+		If done.Contains( module.name ) Return
+		
+		done[module.name]=True
+		
+		deps.Push( module )
+		
+	End
+	
+	Method SortModules()
+
+		'sort modules into dependency order
+		Local sorted:=New Stack<Module>
+		Local done:=New StringMap<Bool>
+		
+		sorted.Push( modulesMap["monkey"] )
+		done["monkey"]=True
+		
+		For Local i:=0 Until modules.Length
+			SortModules( modules[i],done,sorted )
+		Next
+		
+		modules=sorted
+		
+		For Local i:=0 Until modules.Length
+		
+			Local module:=modules[modules.Length-i-1]
+
+			If module<>mainModule LD_LIBS.Push( module.outputDir+module.name+".a" )
+			
+		Next
+		
+	End
 
 	Method Semant()
 	
 		If opts.verbose=0 Print "Semanting..."
-
+		
+		SortModules()
+		
 		For Local i:=0 Until modules.Length
-
-			Local module:=modules[modules.Length-i-1]
+		
+			Local module:=modules[i]
 			
 '			Print ""		
 '			Print "Semanting module:"+module.srcPath
@@ -246,15 +293,7 @@ Class Builder
 				
 			Next
 			
-			Local count:=0
-			
 			Repeat
-			
-				count+=1
-				If count=1000 
-'					Print "Giving up!"
-'					Exit
-				Endif
 			
 				If Not semantMembers.Empty
 				
@@ -286,19 +325,22 @@ Class Builder
 					PNode.semanting.Pop()
 				
 				Else
-			
 					Exit
 				Endif
 
 			Forever
 			
+			semantingModule=Null
+
+			'Check Main
+			'			
 			Local main:=module.main
 			
-			If opts.productType="app" And module=modules[0]
+			If opts.productType="app" And module=mainModule
 				If main
 					main.fdecl.symbol="bbMain"
 				Else
-					Print "Can't find Main:Void()"
+					New BuildEx( "Can't find Main:Void()" )
 				Endif
 			Else If opts.productType="module"
 				If main
@@ -306,8 +348,8 @@ Class Builder
 				Endif
 			Endif
 			
-			semantingModule=Null
-			
+			'Ugly stuff for generic instances
+			'
 			Local transFiles:=New StringMap<FileDecl>
 			
 			For Local inst:=Eachin module.genInstances
@@ -316,7 +358,7 @@ Class Builder
 				
 				Local vvar:=Cast<VarValue>( inst )
 				Local func:=Cast<FuncValue>( inst )
-				Local ctype:=Cast<ClassType>( inst )
+				Local ctype:=TCast<ClassType>( inst )
 				
 				If vvar
 					transFile=vvar.transFile
@@ -376,7 +418,7 @@ Class Builder
 	
 		If opts.verbose=0 Print "Translating..."
 		
-		Local module:=modules[0]
+		Local module:=mainModule
 		
 		CreateDir( module.buildDir )
 		CreateDir( module.buildDir+"build_cache" )
@@ -403,7 +445,7 @@ Class Builder
 	
 		If opts.verbose=0 Print "Compiling...."
 		
-		Local module:=modules[0]
+		Local module:=mainModule
 	
 		For Local src:=Eachin SRC_FILES
 		
@@ -489,7 +531,7 @@ Class Builder
 	
 	Method CreateApp()
 	
-		Local module:=modules[0]
+		Local module:=mainModule
 		
 		Local outputFile:="",assetsDir:="",dllsDir:=""
 		
@@ -653,7 +695,8 @@ Class Builder
 	
 	Method CreateArchive()
 
-		Local module:=modules[0]
+		Local module:=mainModule
+		
 		Local outputFile:=module.outputDir+module.name+".a"
 		
 		If opts.verbose>=0 Print "Archiving "+outputFile
@@ -689,7 +732,7 @@ Class Builder
 			Local id:=path.Slice( i0,i1 )
 			i0=i1+1
 			
-			Local ntype:=Cast<NamespaceType>( nmspace.GetType( id ) )
+			Local ntype:=TCast<NamespaceType>( nmspace.GetType( id ) )
 			If Not ntype
 				ntype=New NamespaceType( id,nmspace )
 				nmspace.Insert( id,ntype )
@@ -733,28 +776,28 @@ Class Builder
 			Exit
 		Next
 
-		Type.BoolType=New PrimType( Cast<ClassType>( types.nodes["@bool"] ) )
-		Type.ByteType=New PrimType( Cast<ClassType>( types.nodes["@byte"] ) )
-		Type.UByteType=New PrimType( Cast<ClassType>( types.nodes["@ubyte"] ) )
-		Type.ShortType=New PrimType( Cast<ClassType>( types.nodes["@short"] ) )
-		Type.UShortType=New PrimType( Cast<ClassType>( types.nodes["@ushort"] ) )
-		Type.IntType=New PrimType( Cast<ClassType>( types.nodes["@int"] ) )
-		Type.UIntType=New PrimType( Cast<ClassType>( types.nodes["@uint"] ) )
-		Type.LongType=New PrimType( Cast<ClassType>( types.nodes["@long"] ) )
-		Type.ULongType=New PrimType( Cast<ClassType>( types.nodes["@ulong"] ) )
-		Type.FloatType=New PrimType( Cast<ClassType>( types.nodes["@float"] ) )
-		Type.DoubleType=New PrimType( Cast<ClassType>( types.nodes["@double"] ) )
-		Type.StringType=New PrimType( Cast<ClassType>( types.nodes["@string"] ) )
+		Type.BoolType=New PrimType( TCast<ClassType>( types.nodes["@bool"] ) )
+		Type.ByteType=New PrimType( TCast<ClassType>( types.nodes["@byte"] ) )
+		Type.UByteType=New PrimType( TCast<ClassType>( types.nodes["@ubyte"] ) )
+		Type.ShortType=New PrimType( TCast<ClassType>( types.nodes["@short"] ) )
+		Type.UShortType=New PrimType( TCast<ClassType>( types.nodes["@ushort"] ) )
+		Type.IntType=New PrimType( TCast<ClassType>( types.nodes["@int"] ) )
+		Type.UIntType=New PrimType( TCast<ClassType>( types.nodes["@uint"] ) )
+		Type.LongType=New PrimType( TCast<ClassType>( types.nodes["@long"] ) )
+		Type.ULongType=New PrimType( TCast<ClassType>( types.nodes["@ulong"] ) )
+		Type.FloatType=New PrimType( TCast<ClassType>( types.nodes["@float"] ) )
+		Type.DoubleType=New PrimType( TCast<ClassType>( types.nodes["@double"] ) )
+		Type.StringType=New PrimType( TCast<ClassType>( types.nodes["@string"] ) )
 		
-		Type.ArrayClass=Cast<ClassType>( types.nodes["@Array"] )
-		Type.ObjectClass=Cast<ClassType>( types.nodes["@object"] )
-		Type.ThrowableClass=Cast<ClassType>( types.nodes["@throwable"] )
+		Type.ArrayClass=TCast<ClassType>( types.nodes["@Array"] )
+		Type.ObjectClass=TCast<ClassType>( types.nodes["@object"] )
+		Type.ThrowableClass=TCast<ClassType>( types.nodes["@throwable"] )
 		
-		Type.CStringClass=Cast<ClassType>( types.nodes["CString"] )
-		Type.WStringClass=Cast<ClassType>( types.nodes["WString"] )
-		Type.Utf8StringClass=Cast<ClassType>( types.nodes["Utf8String"] )
+		Type.CStringClass=TCast<ClassType>( types.nodes["CString"] )
+		Type.WStringClass=TCast<ClassType>( types.nodes["WString"] )
+		Type.Utf8StringClass=TCast<ClassType>( types.nodes["Utf8String"] )
 
-		Type.ExceptionClass=Cast<ClassType>( types.nodes["@Exception"] )
+		Type.ExceptionClass=TCast<ClassType>( types.nodes["@Exception"] )
 
 		rootNamespace.Insert( "void",Type.VoidType )
 		rootNamespace.Insert( "bool",Type.BoolType )
@@ -831,10 +874,14 @@ Class Builder
 	Method ImportSystemFile:Void( path:String )
 	
 		Local ext:=ExtractExt( path )
-		
-		If ext<>".monkey2" And imported.Contains( path ) Return
-		
+
 		Local name:=StripExt( path )
+		
+		If ext=".monkey2" parsingModule.moduleDeps[name]=True
+		
+		If imported.Contains( path ) Return
+		
+		imported[path]=True
 		
 		Select ext.ToLower()
 		Case ".a"
@@ -855,20 +902,14 @@ Class Builder
 '			STD_INCLUDES.Push( "<"+path+">" )
 			
 		Case ".monkey2"
-		
-			If Not imported.Contains( path )
-				modules.Top.moduleDeps.Push( name )
-			Endif
-			
-			MX2_LIBS.AddLast( name )
+
+			MX2_LIBS.Push( name )
 		
 		Default
 
 			New BuildEx( "Unrecognized import file type: '"+path+"'" )
 			
 		End
-		
-		imported[path]=True
 
 	End
 	
@@ -930,7 +971,12 @@ Class Builder
 			
 		Default
 		
-			If GetFileType( path )<>FILETYPE_FILE
+			Local tpath:=path
+		
+			Local i:=tpath.Find( "@/" )
+			If i<>-1 tpath=tpath.Slice( 0,i )
+		
+			If GetFileType( tpath )<>FILETYPE_FILE
 				New BuildEx( "File "+qpath+" not found" )
 				Return
 			Endif
@@ -940,7 +986,7 @@ Class Builder
 		Select ext
 		Case ".mx2",".monkey2"
 		
-			MX2_FILES.AddLast( path )
+			MX2_SRCS.Push( path )
 			
 		Case ".h",".hh",".hpp"
 		
@@ -948,9 +994,11 @@ Class Builder
 			
 		Case ".c",".cc",".cxx",".cpp",".m",".mm"
 		
-			If modules.Length=1
-				SRC_FILES.Push( path )
-			Endif
+			If parsingModule=mainModule SRC_FILES.Push( path )
+		
+'			If modules.Length=1
+'				SRC_FILES.Push( path )
+'			Endif
 			
 		Case ".o"
 		

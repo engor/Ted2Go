@@ -33,23 +33,50 @@ Class Type Extends SNode
 	
 	Global ExceptionClass:ClassType
 	
+	Field _alias:Type
 	Field flags:Int
+	
+	Method New()
+		_alias=Self
+	End
+	
+	Property Dealias:Type()
+		Return _alias
+	End
 	
 	Property IsGeneric:Bool()
 		Return flags & TYPE_GENERIC
 	End
 	
-	Property Name:String() Abstract
+	'Not nice - should fix comparison ops
+	Operator=:Bool( type:Type )
+		If Not Self Return Object(type)=Null
+		If type Return Object(type._alias)=_alias
+		Return _alias=Null
+	End
 	
-	Property TypeId:String() Abstract
+	Operator<>:Bool( type:Type )
+		If Not Self Return Object(type)<>Null
+		If type Return Object(type._alias)<>_alias
+		Return _alias<>Null
+	End
 	
-	Method ToType:Type() Override
+	Operator<=>:Int( type:Type )
+		SemantError( "Type.Operator<=>()" )
+		Return 0
+	End
+	
+	Method ToType:Type() Override Final
 		Return Self
 	End
 
 	Method ToValue:Value( instance:Value ) Override
 		Return New TypeValue( Self )
 	End
+	
+	Property Name:String() Abstract
+	
+	Property TypeId:String() Abstract
 	
 	Method FindNode:SNode( ident:String ) Virtual
 		Return Null
@@ -96,7 +123,77 @@ Class Type Extends SNode
 	Method CanCastToType:Bool( type:Type ) Virtual
 		Return DistanceToType( type )>=0 Or type.CanCastToType( Self )
 	End
+End
+
+Class ProxyType Extends Type
+
+	Property Name:String() Override
+		Return _alias.Name
+	End
 	
+	Property TypeId:String() Override
+		Return _alias.TypeId
+	End
+	
+	Method ToString:String() Override
+		Return _alias.ToString()
+	End
+	
+	Method ToValue:Value( instance:Value ) Override
+		Return _alias.ToValue( instance )
+	End
+	
+	Method FindNode:SNode( ident:String ) Override
+		Return _alias.FindNode( ident )
+	End
+	
+	Method FindType:Type( ident:String ) Override
+		Return _alias.FindType( ident )
+	End
+	
+	Method Invoke:Value( args:Value[],value:Value ) Override
+		Return _alias.Invoke( args,value )
+	End
+	
+	Method Index:Value( args:Value[],value:Value ) Override
+		Return _alias.Index( args,value )
+	End
+	
+	Method GenInstance:Type( types:Type[] ) Override
+		Return _alias.GenInstance( types )
+	End
+	
+	Method Equals:Bool( type:Type ) Override
+		Return _alias.Equals( type )
+	End
+	
+	Method ExtendsType:Bool( type:Type ) Override
+		Return _alias.ExtendsType( type )
+	End
+	
+	Method DistanceToType:Int( type:Type ) Override
+		Return _alias.DistanceToType( type )
+	End
+	
+	Method InferType:Type( type:Type,args:Type[] ) Override
+		Return _alias.InferType( type,args )
+	End
+	
+	Method CanCastToType:Bool( type:Type ) Override
+		Return _alias.CanCastToType( type )
+	End
+	
+End
+
+Function TCast<T>:T( type:Type )
+	If type Return Cast<T>( type._alias )
+	Return Null
+End
+
+Function TCast<T>:T( node:SNode )
+	Local type:=Cast<Type>( node )
+	If type Return Cast<T>( type._alias )
+	Return Null
 End
 
 Class PrimType Extends Type
@@ -156,7 +253,7 @@ Class PrimType Extends Type
 	
 		If type=Self Return 0
 
-		Local ptype:=Cast<PrimType>( type )
+		Local ptype:=TCast<PrimType>( type )
 		If ptype
 			If ptype=BoolType Return MAX_DISTANCE
 			If IsNumeric And (ptype=StringType Or ptype.IsNumeric) Return MAX_DISTANCE
@@ -167,8 +264,6 @@ Class PrimType Extends Type
 		Case CStringClass,WStringClass,Utf8StringClass
 			Return MAX_DISTANCE
 		End
-		
-'		If ExtendsType( type ) Return MAX_DISTANCE
 		
 		Return -1
 	End
@@ -229,7 +324,7 @@ Class ArrayType Extends Type
 		If Not IsGeneric
 			Local types:=New Type[1]
 			types[0]=elemType
-			ctype=Cast<ClassType>( ctype.GenInstance( types ) )
+			ctype=TCast<ClassType>( ctype.GenInstance( types ) )
 		Endif
 		
 		If Not ctype SemantError( "ArrayType.New()" )
@@ -276,7 +371,7 @@ Class ArrayType Extends Type
 	
 		If type=Self Or type=ctype Return True
 	
-		Local atype:=Cast<ArrayType>( type )
+		Local atype:=TCast<ArrayType>( type )
 		Return atype And rank=atype.rank And elemType.Equals( atype.elemType )
 	End
 	
@@ -284,7 +379,7 @@ Class ArrayType Extends Type
 	
 		If Equals( type ) Return 0
 		
-		If type=BoolType Return MAX_DISTANCE
+		If TCast<PrimType>( type )=BoolType Return MAX_DISTANCE
 		
 		Return -1
 	End
@@ -293,7 +388,7 @@ Class ArrayType Extends Type
 	
 		If Not IsGeneric Return Super.InferType( type,infered )
 		
-		Local atype:=Cast<ArrayType>( type )
+		Local atype:=TCast<ArrayType>( type )
 		If Not atype Or rank<>atype.rank Return Null
 		
 		Local elemType:=Self.elemType.InferType( atype.elemType,infered )
@@ -338,7 +433,7 @@ Class PointerType Extends Type
 	
 		If type=Self Return True
 	
-		Local ptype:=Cast<PointerType>( type )
+		Local ptype:=TCast<PointerType>( type )
 		Return ptype And elemType.Equals( ptype.elemType )
 	End
 	
@@ -346,9 +441,9 @@ Class PointerType Extends Type
 	
 		If type=Self Return 0
 		
-		If type=Type.BoolType Return MAX_DISTANCE
+		If type.Dealias=BoolType Return MAX_DISTANCE
 		
-		Local ptype:=Cast<PointerType>( type )
+		Local ptype:=TCast<PointerType>( type )
 		If Not ptype Return -1
 		
 		If elemType.Equals( ptype.elemType ) Return 0
@@ -361,9 +456,9 @@ Class PointerType Extends Type
 	
 	Method CanCastToType:Bool( type:Type ) Override
 	
-		If Cast<PointerType>( type ) Return True
+		If TCast<PointerType>( type ) Return True
 		
-		Local ptype:=Cast<PrimType>( type )
+		Local ptype:=TCast<PrimType>( type )
 		If ptype And ptype.IsIntegral Return True
 		
 		Return False
@@ -373,7 +468,7 @@ Class PointerType Extends Type
 	
 		If Not IsGeneric Return Super.InferType( type,infered )
 	
-		Local ptype:=Cast<PointerType>( type )
+		Local ptype:=TCast<PointerType>( type )
 		If Not ptype Return Null
 		
 		Local elemType:=Self.elemType.InferType( ptype.elemType,infered )
@@ -436,7 +531,7 @@ Class FuncType Extends Type
 	
 		If type=Self Return True
 	
-		Local ftype:=Cast<FuncType>( type )
+		Local ftype:=TCast<FuncType>( type )
 		If Not ftype Or argTypes.Length<>ftype.argTypes.Length Return False
 		
 		Return retType.Equals( ftype.retType ) And TypesEqual( argTypes,ftype.argTypes )
@@ -446,7 +541,7 @@ Class FuncType Extends Type
 	
 		If Equals( type ) Return 0
 		
-		If type=BoolType Return MAX_DISTANCE
+		If type.Dealias Return MAX_DISTANCE
 		
 		Return -1
 	End
@@ -455,7 +550,7 @@ Class FuncType Extends Type
 	
 		If Not IsGeneric Return Super.InferType( type,infered )
 		
-		Local ftype:=Cast<FuncType>( type )
+		Local ftype:=TCast<FuncType>( type )
 		If Not ftype Or argTypes.Length<>ftype.argTypes.Length Return Null
 		
 		Local retType:=Self.retType.InferType( ftype.retType,infered )
@@ -523,7 +618,7 @@ Class GenArgType Extends Type
 	
 		If type=Self Return True
 		
-		Local gtype:=Cast<GenArgType>( type )
+		Local gtype:=TCast<GenArgType>( type )
 	
 		If Not gtype Or ident<>gtype.ident Return False
 		
@@ -540,8 +635,8 @@ Class GenArgType Extends Type
 	
 		If types
 		
-			Local ctype:=Cast<ClassType>( type )
-			Local gtype:=Cast<GenArgType>( type )
+			Local ctype:=TCast<ClassType>( type )
+			Local gtype:=TCast<GenArgType>( type )
 			
 			Local gtypes:Type[]
 			
