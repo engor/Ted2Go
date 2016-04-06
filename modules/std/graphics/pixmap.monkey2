@@ -217,7 +217,7 @@ Class Pixmap
 	
 	@param y The y coordinate of the pixel.
 	
-	@param pixel The pixel to set in ARGB format.
+	@param color The pixel to set in ARGB format.
 	
 	#end
 	Method SetPixelARGB( x:Int,y:Int,color:UInt )
@@ -296,27 +296,38 @@ Class Pixmap
 		Next
 	End
 	
-	'Optimize!
-	'
-	#rem monkeydoc Pastes the pixmap to another pixmap.
+	#rem monkeydoc Clears the pixmap to an ARGB color.
 	
-	In debug builds, a runtime error will occur if the operation would write to pixels outside of the target pixmap.
-
-	@param pixmap The pixmap to paste to.
-	
-	@param x The x coordinate to paste to.
-	
-	@param y The y coordinate to paste to.
+	@param color ARGB color to clear the pixmap to.
 	
 	#end
-	Method PasteTo( pixmap:Pixmap,x:Int,y:Int )
-		DebugAssert( x>=0 And x+_width<=pixmap._width And y>=0 And y+_height=pixmap._height )
+	Method ClearARGB( color:UInt )
+		For Local y:=0 Until _height
+			For Local x:=0 Until _width
+				SetPixelARGB( x,y,color )
+			Next
+		next
+	End
+	
+	#rem monkeydoc Paste a pixmap to the pixmap.
+	
+	In debug builds, a runtime error will occur if the operation would write to pixels outside of the pixmap.
+
+	Note: No alpha blending is performed - pixels in the pixmap are simply overwritten.
+	
+	@param pixmap The pixmap to paste.
+	
+	@param x The x coordinate.
+	
+	@param y The y coordinate.
+	
+	#end
+	Method Paste( pixmap:Pixmap,x:Int,y:Int )
+		DebugAssert( x>=0 And x+pixmap._width<=_width And y>=0 And y+pixmap._height<=_height )
 		
-		'TODO: Check for overlapping rects in same pixmap!
-		'
-		For Local ty:=0 Until _height
+		For Local ty:=0 Until pixmap._height
 			For Local tx:=0 Until pixmap._width
-				pixmap.SetPixel( tx,ty,GetPixel( tx,ty ) )
+				SetPixel( x+tx,y+ty,pixmap.GetPixel( tx,ty ) )
 			Next
 		Next
 	End
@@ -398,7 +409,7 @@ Class Pixmap
 	@return Null if the file could not be opened, or contained invalid image data.
 	
 	#end
-	Function LoadPixmap:Pixmap( path:String,format:PixelFormat=PixelFormat.Unknown )
+	Function Load:Pixmap( path:String,format:PixelFormat=PixelFormat.Unknown )
 	
 		Return internal.LoadPixmap( path,format )
 

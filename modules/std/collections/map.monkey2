@@ -1,6 +1,10 @@
 
 Namespace std.collections
 
+Alias IntMap<V>:Map<Int,V>
+Alias FloatMap<V>:Map<Float,V>
+Alias StringMap<V>:Map<String,V>
+
 #rem monkeydoc The Map class.
 #end
 Class Map<K,V>
@@ -659,6 +663,7 @@ Class Map<K,V>
 	
 End
 
+#rem
 Class IntMap<T> Extends Map<Int,T>
 End
 
@@ -667,3 +672,4 @@ End
 
 Class StringMap<T> Extends Map<String,T>
 End
+#end
