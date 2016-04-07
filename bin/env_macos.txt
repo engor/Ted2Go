@@ -6,6 +6,9 @@ MX2_BUILDV=002
 
 MX2_BUILD_VERBOSE=0
 
+MX2_MODULES_VERSION=003
+MX2_PRODUCT_VERSION=003
+
 'These relative to app exe
 MX2_APP_DIR_DYLIB=						'ie: dylibs go in app Contents/MacOS dir
 MX2_APP_DIR_FRAMEWORK=../Frameworks		'ie: frameworks go in app Contents/Frameworks dir
