@@ -30,6 +30,7 @@
 !/modules/gles20
 !/modules/sdl2
 !/modules/sdl2-mixer
+!/modules/mojo2
 
 /docs/modules.html
 __PAGES__/
@@ -37,6 +38,7 @@ __PAGES__/
 /src/createrelease
 /src/launcher
 /src/ted2
+/src/mojox/
 
 /src/*.save
 
