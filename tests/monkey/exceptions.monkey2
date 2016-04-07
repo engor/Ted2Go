@@ -1,10 +1,10 @@
 
 Namespace test
 
-Class E1 'Extends Throwable
+Class E1 Extends Throwable
 End
 
-Class E2 'Extends Throwable
+Class E2 Extends Throwable
 End
 
 Function F1()

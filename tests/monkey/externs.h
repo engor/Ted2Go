@@ -1,60 +1,41 @@
 
-#ifndef BB_TEST_EXTERNS_H
-#define BB_TEST_EXTERNS_H
+#ifndef EXTERNS_H
+#define EXTERNS_H
 
-#include <bbmonkey.h>
+namespace test{
 
-class C;
-class D;
-class T;
-
-extern int G;
-
-extern void F();
-
-enum E{
-	E1,
-	E2,
-	E3
-};
-
-class C : public bbObject{
-
-	bbGCVar<D> _d;
-
-public:
+	enum E{
+		V1,
+		V2
+	};
 	
-	C();
-	C( D *d );
+	namespace E2{
+		enum{
+			V1,
+			V2
+		};
+	}
 	
-	void gcMark();
-};
-
-class D : public C{
-
-public:
-
-	D();
+	struct C{
 	
-	void M();
-	
-	const char *M2( const char *str );
-	
-	void gcMark();
-};
+		int P;
+		
+		static int G;
+		
+		static const int T=0;
+		
+		void M(){}
+		
+		static void F(){}
+		
+		static inline void Update(){}
+		
+		struct D{
+		
+			static inline void F(){}
+		};
+	};
 
-class T{
-
-public:
-
-	T();
-	T( int x );
-	
-	~T();
-	
-	bool operator==( T *that );
-};
-
-void glue_E( C *c );
+}
 
 #endif

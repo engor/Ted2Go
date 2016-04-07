@@ -1,7 +1,7 @@
 
 Namespace test
 
-Class Ex Extends Throwable
+Class Ex Extends Exception
 End
 
 Function Test2( test:Int )
