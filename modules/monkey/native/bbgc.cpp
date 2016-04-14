@@ -242,6 +242,6 @@ namespace bbGC{
 
 		reclaim();
 		
-		printf( "GCCollect: in use=%i\n",(int)unmarkedBytes );fflush( stdout );
+//		printf( "GCCollect: in use=%i\n",(int)unmarkedBytes );fflush( stdout );
 	}
 }

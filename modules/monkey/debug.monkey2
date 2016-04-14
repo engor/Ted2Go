@@ -20,7 +20,7 @@ Function Assert( condition:Bool,message:String )="bbAssert"
 
 #rem monkeydoc Generates a runtime error if a boolean expression is false (Debug builds only).
 
-This function does not execute at all in release builds, so make sure that @condition doesn't inadvertantly execute
+This function does not execute at all in release builds, so make sure that `condition` doesn't inadvertantly execute
 any critical code.
 
 @param condition The boolean condition to check.

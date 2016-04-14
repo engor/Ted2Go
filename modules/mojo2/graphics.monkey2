@@ -1232,6 +1232,7 @@ Class Font
 	
 	Function LoadTTF:Font( path:String,height:Int,firstChar:Int,numChars:Int )
 	
+		#rem
 		'scale height DPI...
 		Local ddpi:Float,hdpi:Float,vdpi:Float
 		If sdl2.SDL_GetDisplayDPI( 0,Varptr ddpi,Varptr hdpi,Varptr vdpi )=0
@@ -1244,6 +1245,7 @@ Class Font
 			
 '			Print "height0="+height0+", height="+height
 		Endif
+		#end
 		
 		Local data:=DataBuffer.Load( path )
 		If Not data Return Null
@@ -1299,7 +1301,7 @@ Class Font
 	End
 	
 	Function Load:Font( path:String,firstChar:Int,numChars:Int,padded:Bool )
-
+	
 		Local image:=Image.Load( path )
 		If Not image Return Null
 		
@@ -1768,13 +1770,6 @@ Class DrawList
 		Translate( tx,ty )
 		DrawImage( image )
 		PopMatrix()
-		#rem
-		BeginPrim image._material,4
-		PrimVert image._x0 + tx,image._y0 + ty,image._s0,image._t0
-		PrimVert image._x1 + tx,image._y0 + ty,image._s1,image._t0
-		PrimVert image._x1 + tx,image._y1 + ty,image._s1,image._t1
-		PrimVert image._x0 + tx,image._y1 + ty,image._s0,image._t1
-		#end
 	End
 
 	Method DrawImage:Void( image:Image,tx:Float,ty:Float,rz:Float )
@@ -1782,17 +1777,6 @@ Class DrawList
 		TranslateRotate( tx,ty,rz )
 		DrawImage( image )
 		PopMatrix()
-		#rem
-		Local ix:=Cos( rz ),iy:=-Sin( rz )
-		Local jx:=Sin( rz ),jy:= Cos( rz )
-		Local x0:=image._x0,y0:=image._y0
-		Local x1:=image._x1,y1:=image._y1
-		BeginPrim image._material,4
-		PrimVert x0 * ix + y0 * jx + tx,x0 * iy + y0 * jy + ty,image._s0,image._t0
-		PrimVert x1 * ix + y0 * jx + tx,x1 * iy + y0 * jy + ty,image._s1,image._t0
-		PrimVert x1 * ix + y1 * jx + tx,x1 * iy + y1 * jy + ty,image._s1,image._t1
-		PrimVert x0 * ix + y1 * jx + tx,x0 * iy + y1 * jy + ty,image._s0,image._t1
-		#end
 	End
 	
 	Method DrawImage:Void( image:Image,tx:Float,ty:Float,rz:Float,sx:Float,sy:Float )
@@ -1800,17 +1784,6 @@ Class DrawList
 		TranslateRotateScale( tx,ty,rz,sx,sy )
 		DrawImage( image )
 		PopMatrix()
-		#rem		
-		Local ix:=Cos( rz ),iy:=-Sin( rz )
-		Local jx:=Sin( rz ),jy:= Cos( rz )
-		Local x0:=image._x0 * sx,y0:=image._y0 * sy
-		Local x1:=image._x1 * sx,y1:=image._y1 * sy
-		BeginPrim image._material,4
-		PrimVert x0 * ix + y0 * jx + tx,x0 * iy + y0 * jy + ty,image._s0,image._t0
-		PrimVert x1 * ix + y0 * jx + tx,x1 * iy + y0 * jy + ty,image._s1,image._t0
-		PrimVert x1 * ix + y1 * jx + tx,x1 * iy + y1 * jy + ty,image._s1,image._t1
-		PrimVert x0 * ix + y1 * jx + tx,x0 * iy + y1 * jy + ty,image._s0,image._t1
-		#end
 	End
 	
 	Method DrawText:Void( text:String,x:Float,y:Float,xhandle:Float=0,yhandle:Float=0 )

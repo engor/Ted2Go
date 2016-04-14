@@ -4,6 +4,7 @@ Namespace monkey
 #Import "types.monkey2"
 #Import "math.monkey2"
 #Import "debug.monkey2"
+#Import "gc.monkey2"
 
 #Import "native/bbtypes.cpp"
 #Import "native/bbmemory.cpp"

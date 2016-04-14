@@ -1,6 +1,7 @@
 
 Namespace std.geom
 
+Alias Vec2i:Vec2<Int>
 Alias Vec2f:Vec2<Float>
 
 Struct Vec2<T>

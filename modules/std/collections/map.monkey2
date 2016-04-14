@@ -2,7 +2,9 @@
 Namespace std.collections
 
 Alias IntMap<V>:Map<Int,V>
+
 Alias FloatMap<V>:Map<Float,V>
+
 Alias StringMap<V>:Map<String,V>
 
 #rem monkeydoc The Map class.
@@ -91,10 +93,10 @@ Class Map<K,V>
 		End
 		
 		Method Copy:Node( parent:Node )
-			Local t:=New Node( _key,_value,_color,_parent )
-			If _left t._left=_left.Copy( t )
-			If _right t._right=_right.Copy( t )
-			Return t
+			Local node:=New Node( _key,_value,_color,parent )
+			If _left node._left=_left.Copy( node )
+			If _right node._right=_right.Copy( node )
+			Return node
 		End
 	
 	End
@@ -236,6 +238,17 @@ Class Map<K,V>
 	#end	
 	Property Values:MapValues()
 		Return New MapValues( Self )
+	End
+	
+	#rem monkeydocs Copies the map.
+	
+	@return A new map.
+	
+	#end
+	Method Copy:Map()
+		Local root:Node
+		If _root root=_root.Copy( Null )
+		Return New Map( root )
 	End
 	
 	#rem monkeydoc Removes all keys from the map.
@@ -440,6 +453,12 @@ Class Map<K,V>
 	
 	Private
 	
+	Field _root:Node
+	
+	Method New( root:Node )
+		_root=root
+	End
+	
 	Method FirstNode:Node()
 		If Not _root Return Null
 
@@ -515,8 +534,6 @@ Class Map<K,V>
 			DeleteFixup( child,parent )
 		Endif
 	End
-	
-	Field _root:Node
 	
 	Method RotateLeft( node:Node )
 		Local child:=node._right
@@ -662,14 +679,3 @@ Class Map<K,V>
 	End
 	
 End
-
-#rem
-Class IntMap<T> Extends Map<Int,T>
-End
-
-Class FloatMap<T> Extends Map<Float,T>
-End
-
-Class StringMap<T> Extends Map<String,T>
-End
-#end

@@ -5,6 +5,8 @@
 
 static size_t malloced;
 
+static size_t max_malloced;
+
 static void *pools[256>>3];
 
 void *bbMalloc( size_t size ){
@@ -14,6 +16,7 @@ void *bbMalloc( size_t size ){
 	size=(size+7)&~7;
 	
 	size_t *p;
+	
 /*	
 	if( size<256 && pools[size>>3] ){
 		p=(size_t*)pools[size>>3];
@@ -23,15 +26,20 @@ void *bbMalloc( size_t size ){
 	}
 */
 	p=(size_t*)malloc( size );
+
+	malloced+=size;
 	
 	memset( p,0,size );
 	
 	*p=size;
-
-	malloced+=size;
 	
-//	printf( "Malloced:%p, size=%i, total=%i\n",p,size,malloced );
-//	fflush( stdout );
+	/*
+	if( malloced>max_malloced ){
+		max_malloced=malloced;
+		printf( "Max malloced:%ul\n",max_malloced );
+		fflush( stdout );
+	}
+	*/
 
 	return p+1;
 }
@@ -48,7 +56,9 @@ void bbFree( void *q ){
 	
 	size_t size=*p;
 	
-	//free( p );
+	free( p );
+	
+	malloced-=size;
 	
 	/*
 	if( size<256 ){
@@ -59,8 +69,6 @@ void bbFree( void *q ){
 	}
 	*/
 	
-	malloced-=size;
-	
 //	printf( "Freed:%p, size=%i, total=%i\n",p,size,malloced );
-//	fflush( stdout );
+	//fflush( stdout );
 }

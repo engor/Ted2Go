@@ -9,6 +9,9 @@ Struct Rect<T>
 	Field min:Vec2<T>
 	Field max:Vec2<T>
 	
+	Method New()
+	End
+	
 	Method New( min:Vec2<T>,max:Vec2<T> )
 		Self.min=min
 		Self.max=max

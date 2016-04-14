@@ -130,7 +130,15 @@ namespace bbFileSystem{
 		
 #elif __APPLE__
 
-		return copyfile( bbTString( srcPath ),bbTString( dstPath ),0,COPYFILE_DATA )>=0;
+		int ret=copyfile( bbTString( srcPath ),bbTString( dstPath ),0,COPYFILE_ALL );
+		
+		if( ret>=0 ) return true;
+		
+//		printf( "copyfile failed, ret=%i\n",ret );
+//		printf( "src=%s\n",srcPath.c_str() );
+//		printf( "dst=%s\n",dstPath.c_str() );
+
+		return false;
 	
 #else
 		//TODO: use sendfile() here?

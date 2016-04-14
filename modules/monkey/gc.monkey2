@@ -3,4 +3,4 @@ Namespace monkey.gc
 
 Extern
 
-Function Collect:Void()="bbGC::collect"
+Function GCCollect:Void()="bbGC::collect"

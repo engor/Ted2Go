@@ -24,6 +24,7 @@ Namespace std
 #Import "geom/affinemat3.monkey2"
 '#Import "geom/affinemat4.monkey2"
 #Import "geom/rect.monkey2"
+#Import "geom/axis.monkey2"
 
 #Import "graphics/pixelformat.monkey2"
 #Import "graphics/pixmap.monkey2"
