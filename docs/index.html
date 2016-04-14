@@ -1,15 +1,16 @@
-
 <!doctype html>
+
+<html>
 
 <head>
 
 <title>Monkey2 Documentation</title>
 
-<link rel='stylesheet' href='css/microgram.css'>
+<link rel="stylesheet" href="js-treeview/treeview.css">
 
-<link rel='stylesheet' href='js-treeview/treeview.css' />
+<link rel="stylesheet" href="style.css">
 
-<script type='text/javascript'>
+<script type="text/javascript">
 
 function navto( url ){
 	document.getElementById( 'content' ).src=url;
@@ -24,33 +25,50 @@ window.onload=function(){
 
 </head>
 
-<html>
-
-<body style='position:fixed; width:100%; height:100%;'>
+<body class="page_body" style="overflow:hidden">
 
 <!-- header -->
-<div style='position:absolute; width:100%; top:0; height:63px; border-bottom:1px solid #9b4dca; padding-left:12px; padding-right:16px; line-height:63px; text-align-y:center;'>
+<div class="page_header">
 
-<a href='http://monkey2.monkey-x.com' style='float:left;'><img src='img/monkey2-logo-63.png' style='float:left;'></a>
+	<div class="header_title_strip">
 
-<span style='float:left;'>
-Monkey 2 Documentation
-</span>
+		<div class="header_logo">
+			<img src="img/monkey2-logo-63.png">
+		</div>
 
-<span style='float:right;'>
+		<div class="header_text">Monkey 2</div>
+		
+	</div>
 
-<a>Manual</a>
-&middot; <a href='javascript:void(0);' onclick="navto( 'modules.html' );">Modules</a>
-&middot; <a href='javascript:void(0);' onclick="navto( 'Monkey2-quick-reference.html' );">Language</a>
-&middot; <a href='http://monkey2.monkey-x.com'>Support</a>
+	<div class="header_button_strip">
+	
+		<a class="header_button" href="javascript:void;" onclick="document.getElementById( 'content' ).src='modules.html';">Modules</a>
 
-</span>
+		<a class="header_button" href="http://monkey2.monkey-x.com/language-reference/">Language</a>
+		
+	</div>
+	
+	<div class="header_donate_strip">
+	
+		<form class="header_paypal" action='https://www.paypal.com/cgi-bin/webscr' method='post' target='_top'>
+			<input type='hidden' name='cmd' value='_s-xclick'>
+			<input type='hidden' name='hosted_button_id' value='SEPSTY3L7J6B6'>
+			<input type='image' src='https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif' border='0' name='submit' alt='PayPal - The safer, easier way to pay online!' style='vertical-align:middle'>
+		</form>
+	
+		<a class="header_patreon" href="https://www.patreon.com/monkey2">
+			<img src="img/patreon_20.png" style="position:relative; top:5px;">
+		</a>
+
+	</div>
 
 </div>
 
 <!-- content -->
-<div style='position:absolute; width:100%; top:64px; bottom:0;'>
-<iframe id='content' name='content' href='Monkey2-quick-reference.html' style='border:0; width:100%; height:100%;'></iframe>
+<div class="page_content">
+
+<iframe id="content" name="content" href="language.html" class="modules_docs_iframe"></iframe>
+
 </div>
 
 </body>
