@@ -230,7 +230,7 @@ Function MakeDocs( args:String[] )
 		builder.Parse()
 		builder.Semant()
 		
-		Local tree:=docsMaker.MakeDocs( builder.modules[0] )
+		Local tree:=docsMaker.MakeDocs( builder.modules.Top )
 		
 		If mx2_api mx2_api+=","
 		mx2_api+=tree

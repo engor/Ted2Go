@@ -49,6 +49,8 @@ Class FuncValue Extends Value
 	Field block:Block
 	Field ftype:FuncType
 	
+	Field overrides:FuncValue
+	
 	Field params:VarValue[]
 	Field selfValue:Value
 	
@@ -207,6 +209,8 @@ Class FuncValue Extends Value
 				If Not ftype.retType.ExtendsType( func2.ftype.retType ) 
 					Throw New SemantEx( "Method '"+ToString()+"' overrides a method with incompatible return type" )
 				Endif
+				
+				overrides=func2
 
 			Else
 			

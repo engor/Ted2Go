@@ -2036,6 +2036,8 @@ Class Parser
 					Local path:=p.ParseString()
 					If path.StartsWith( "<" ) And path.EndsWith( ">" )
 						If Not ExtractExt( path ) path=path.Slice( 0,-1 )+".monkey2>"
+					Else
+						If Not ExtractExt( path ) And Not path.Contains( "@/" )path+=".monkey2"
 					Endif
 					_imports.Push( path )
 				Endif

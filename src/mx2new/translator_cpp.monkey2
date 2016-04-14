@@ -546,7 +546,12 @@ Class Translator_CPP Extends Translator
 		Local proto:=FuncProto( func,False )
 		
 		If func.invokeNew
+		
 			proto+=":"+ClassName( func.invokeNew.ctype )+"("+TransArgs( func.invokeNew.args )+")"
+			
+			'Don't call init if we start with self.new!
+			Local cscope:=Cast<ClassScope>( func.scope )
+			If func.invokeNew.ctype=cscope.ctype init=False
 		End
 		
 		EmitBr()

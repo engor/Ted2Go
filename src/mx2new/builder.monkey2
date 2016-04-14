@@ -645,7 +645,19 @@ Class Builder
 			
 			Local dst:=dir+StripDir( src )
 			
+			'FIXME! Hack for copying frameworks on macos!
+			'		
+#If __HOSTOS__="macos"
+			If ExtractExt( src ).ToLower()=".framework"
+				CreateDir( ExtractDir( dst ) )
+				If Not Exec( "rm -f -R "+dst ) Throw New BuildEx( "rm failed" )
+				If Not Exec( "cp -f -R "+src+" "+dst ) Throw New BuildEx( "cp failed" )
+				Continue
+			Endif
+#Endif
+			
 			If Not CopyAll( src,dst ) Throw New BuildEx( "Failed to copy '"+src+"' to '"+dst+"'" )
+			
 		Next
 		
 		If Not opts.run Return
@@ -661,8 +673,8 @@ Class Builder
 		Exec( run )
 	End
 	
-	Function CopyAll:Bool( src:String,dst:String )
-	
+	Method CopyAll:Bool( src:String,dst:String )
+		
 		Select GetFileType( src )
 
 		Case FILETYPE_FILE
@@ -673,7 +685,7 @@ Class Builder
 				If Not CopyFile( src,dst ) Return False
 			Endif
 			
-			Return GetFileType( dst )=FILETYPE_FILE
+			Return True
 			
 		Case FILETYPE_DIR
 		

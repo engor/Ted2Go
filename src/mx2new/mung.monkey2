@@ -175,6 +175,8 @@ End
 
 Function FuncName:String( func:FuncValue )
 
+	If func.overrides Return FuncName( func.overrides )
+
 	Local fdecl:=func.fdecl
 
 	If fdecl.symbol Return fdecl.symbol
