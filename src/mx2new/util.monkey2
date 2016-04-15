@@ -56,13 +56,13 @@ Function MungPath:String( path:String )
 End
 
 Function GetEnv:String( name:String )
-	Local p:=getenv( name.ToCString() )
+	Local p:=getenv( name )
 	If p Return String.FromCString( p )
 	Return ""
 End
 
 Function SetEnv( name:String,value:String )
-	setenv( name.ToCString(),value.ToCString(),1 )
+	setenv( name,value,1 )
 End
 
 Function CSaveString( str:String,path:String )

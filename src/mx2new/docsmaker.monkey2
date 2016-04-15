@@ -638,8 +638,10 @@ Class DocsMaker
 		EmitHeader( decl,ctype.scope.outer )
 		
 		Local xtends:=""
-		If decl.superType
+		If ctype.superType
 			xtends=" Extends "+TypeName( ctype.superType,ctype.scope.outer )
+		Else If ctype.isvoid
+			xtends=" Extends Void"
 		Endif
 		
 		Local implments:=""
