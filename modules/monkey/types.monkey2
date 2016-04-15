@@ -205,19 +205,106 @@ Struct @String ="bbString"
 	
 	Method Join:String( bits:String[] )="join"
 	
-	Method ToUtf8:Int( buf:Void Ptr,size:Int )="toUtf8"
+	#rem monkeydoc Converts the string to a CString.
 	
-	Method ToCString:CString()="bbString::toCString"
+	If there is enough room in the memory buffer, a null terminating '0' is appended to the CString.
 	
+	@param buf Memory buffer to write the CString to.
+	
+	@param bufSize Size of the memory buffer in bytes.
+	
+	#end
+	Method ToCString( buf:Void Ptr )="toCString"
+
+	#rem monkeydoc Converts the string to a WString
+	
+	If there is enough room in the memory buffer, a null terminating '0' is appended to the WString.
+	
+	@param buf Memory buffer to write the WString to.
+	
+	@param bufSize Size of the memory buffer in bytes.
+	
+	#end
+	Method ToWString( buf:Void Ptr,bufSize:Int )="toWString"
+	
+	#rem monkeydoc Converts the string to a Utf8String
+	
+	If there is enough room in the memory buffer, a null terminating '0' is appended to the Utf8String.
+	
+	@param buf Memory buffer to write the Utf8String to.
+	
+	@param bufSize Size of the memory buffer in bytes.
+	
+	#end
+	Method ToUtf8String( buf:Void Ptr,bufSize:Int )="toUtf8String"
+	
+	#rem monkeydoc Creates a string containing a single character.
+	
+	@param chr The character.
+	
+	#end
 	Function FromChar:String( chr:Int )="bbString::fromChar"
 	
-	Function FromCString:String( data:Void Ptr )="bbString::fromCString"
+	#rem monkeydoc Creates a string from a null terminated CString.
 	
-	Function FromWString:String( data:Void Ptr )="bbString::fromWString"
+	Note: Only `bufSize` bytes at most will be used to create the string, so this method is safe to call even if the string is not null terminated.
 	
-	Function FromUtf8String:String( data:Void Ptr )="bbString::fromUtf8String"
+	@param buf The memory buffer containing the CString.
 	
-	Function FromUtf8:String( data:Void Ptr,size:Int )="bbString::fromUtf8"
+	@param bufSize The size of the memory buffer in bytes.
+	
+	#end	
+	Function FromCString:String( buf:Void Ptr,bufSize:Int )="bbString::fromCString"
+	
+	#rem monkeydoc Creates a string from a null terminated WString.
+	
+	Note: Only `bufSize` bytes at most will be used to create the string, so this method is safe to call even if the string is not null terminated.
+	
+	@param buf The memory buffer containing the WString.
+	
+	@param bufSize The size of the memory buffer in bytes.
+	
+	#end	
+	Function FromWString:String( buf:Void Ptr,bufSize:Int )="bbString::fromWString"
+
+	#rem monkeydoc Creates a string from a null terminated Utf8String.
+	
+	Note: Only `bufSize` bytes at most will be used to create the string, so this method is safe to call even if the string is not null terminated.
+	
+	@param buf The memory buffer containing the Utf8String.
+	
+	@param bufSize The size of the memory buffer in bytes.
+	
+	#end	
+	Function FromUtf8String:String( buf:Void Ptr,bufSize:Int )="bbString::fromUtf8String"
+	
+	
+	#rem monkeydoc Creates a string from a null terminated CString.
+	
+	Note: The CString must be correctly null terminated, or Bad Things Will Happen.
+	
+	@param buf The memory buffer containing the CString.
+	
+	#end	
+	Function FromCString:String( buf:Void Ptr )="bbString::fromCString"
+
+	#rem monkeydoc Creates a string from a null terminated WString.
+	
+	Note: The WString must be correctly null terminated, or Bad Things Will Happen.
+	
+	@param buf The memory buffer containing the WString.
+	
+	#end	
+	Function FromWString:String( buf:Void Ptr )="bbString::fromWString"
+
+	#rem monkeydoc Creates a string from a null terminated Utf8String.
+	
+	Note: The Utf8String must be correctly null terminated, or Bad Things Will Happen.
+	
+	@param buf The memory buffer containing the Utf8String.
+	
+	#end	
+	Function FromUtf8String:String( buf:Void Ptr )="bbString::fromUtf8String"
 	
 End
 

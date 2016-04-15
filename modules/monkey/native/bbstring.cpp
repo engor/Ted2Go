@@ -25,7 +25,31 @@ int bbString::utf8Length()const{
 	return n;
 }
 
-int bbString::toUtf8( void *buf,int size )const{
+void bbString::toCString( void *buf,int size )const{
+	if( size<=0 ) return;
+	
+	int sz=length();
+	if( sz>size ) sz=size;
+	
+	for( int i=0;i<sz;++i ) ((char*)buf)[i]=data()[i];
+	
+	if( sz<size ) ((char*)buf)[sz]=0;
+}
+
+void bbString::toWString( void *buf,int size )const{
+
+	size=size/sizeof(wchar_t);
+	if( size<=0 ) return;
+	
+	int sz=length();
+	if( sz>size ) sz=size;
+	
+	for( int i=0;i<sz;++i ) ((wchar_t*)buf)[i]=data()[i];
+	
+	if( sz<size ) ((wchar_t*)buf)[sz]=0;
+}
+
+void bbString::toUtf8String( void *buf,int size )const{
 
 	char *dst=(char*)buf;
 	char *end=dst+size;
@@ -48,12 +72,7 @@ int bbString::toUtf8( void *buf,int size )const{
 			*dst++=0x80 | (c & 0x3f);
 		}
 	}
-	
-	int n=dst-(char*)buf;
-
 	if( dst<end ) *dst++=0;
-	
-	return n;
 }
 
 const char *bbString::c_str()const{
@@ -77,39 +96,49 @@ bbString bbString::fromChar( int chr ){
 	return buf;
 }
 
-bbString bbString::fromCString( const void *data ){
-	return (const char*)data;
-}
-
-bbString bbString::fromWString( const void *data ){
-	return (const wchar_t*)data;
-}
-
-bbString bbString::fromUtf8String( const void *data ){
+bbString bbString::fromCString( const void *data,int size ){
 	const char *p=(const char*)data;
-	return fromUtf8( p,strlen( p ) );
+	int sz=strlen( p );
+	if( sz>size ) sz=size;
+	return bbString( p,sz );
+}
+
+bbString bbString::fromWString( const void *data,int size ){
+	size/=sizeof(wchar_t);
+	const wchar_t *p=(const wchar_t*)data;
+	const wchar_t *e=p;
+	while( e<p+size && *e ) ++e;
+	return bbString( p,e-p );
 }
 
 bbString bbString::fromUtf8String( const void *data,int size ){
-
 	const char *p=(const char*)data;
-	const char *e=p+size;
+	int sz=strlen( p );
+	if( sz>size ) sz=size;
+	const char *e=p+sz;
 	
 	bbChar *tmp=(bbChar*)malloc( size*sizeof(bbChar) );
 	bbChar *put=tmp;
 	
 	while( p<e ){
 		int c=*p++;
+		
 		if( c & 0x80 ){
+		
 			if( (c & 0xe0)==0xc0 ){
+			
 				if( p>=e || (p[0] & 0xc0)!=0x80 ) break;
 				c=((c & 0x1f)<<6) | (p[0] & 0x3f);
 				p+=1;
+				
 			}else if( (c & 0xf0)==0xe0 ){
+			
 				if( p+1>=e || (p[0] & 0xc0)!=0x80 || (p[1] & 0xc0)!=0x80 ) break;
 				c=((c & 0x0f)<<12) | ((p[0] & 0x3f)<<6) | (p[1] & 0x3f);
 				p+=2;
+				
 			}else{
+			
 				break;
 			}
 		}

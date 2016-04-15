@@ -411,33 +411,43 @@ class bbString{
 	
 	int utf8Length()const;
 	
-	int toUtf8( void *buf,int size )const;
+	void toCString( void *buf,int size )const;
+
+	void toWString( void *buf,int size )const;
 	
-	inline bbCString toCString()const;
+	void toUtf8String( void *buf,int size )const;
 	
 	static bbString fromChar( int chr );
 	
-	static bbString fromCString( const void *data );
-	
-	static bbString fromWString( const void *data );
-	
-	static bbString fromUtf8String( const void *data );
+	static bbString fromCString( const void *data,int size );
 
+	static bbString fromWString( const void *data,int size );
+	
 	static bbString fromUtf8String( const void *data,int size );
-
-	static bbString fromUtf8( const void *data,int size ){
-		return fromUtf8String( data,size );
-	}
-
 	
-	static bbString fromTString( const void *data ){
+	static bbString fromTString( const void *data,int size ){
 #if _WIN32
-		return fromCString( data );
+		return fromCString( data,size );
 #else
-		return fromUtf8String( data );
+		return fromUtf8String( data,size );
 #endif
 	}
-
+	
+	static bbString fromCString( const void *data ){
+		return fromCString( data,0x7fffffff );
+	}
+	
+	static bbString fromWString( const void *data ){
+		return fromWString( data,0x7fffffff );
+	}
+	
+	static bbString fromUtf8String( const void *data ){
+		return fromUtf8String( data,0x7fffffff );
+	}
+	
+	static bbString fromTString( const void *data ){
+		return fromTString( data,0x7fffffff );
+	}
 };
 
 class bbCString{
@@ -456,6 +466,10 @@ class bbCString{
 		free( _data );
 	}
 	
+	operator bbString()const{
+		return _str;
+	}
+	
 	bbCString &operator=( const bbCString &str ){
 		free( _data );
 		_data=nullptr;
@@ -463,15 +477,11 @@ class bbCString{
 		return *this;
 	}
 	
-	operator bbString()const{
-		return _str;
-	}
-	
 	char *data()const{
 		if( _data ) return _data;
-		_data=(char*)malloc( _str.length()+1 );
-		for( int i=0;i<_str.length();++i ) _data[i]=_str.data()[i];
-		_data[_str.length()]=0;
+		int size=_str.length()+1;
+		_data=(char*)malloc( size );
+		_str.toCString( _data,size );
 		return _data;
 	}
 	
@@ -496,6 +506,10 @@ class bbWString{
 		free( _data );
 	}
 	
+	operator bbString()const{
+		return _str;
+	}
+	
 	bbWString &operator=( const bbWString &str ){
 		free( _data );
 		_data=nullptr;
@@ -503,15 +517,11 @@ class bbWString{
 		return *this;
 	}
 	
-	operator bbString()const{
-		return _str;
-	}
-	
 	wchar_t *data()const{
 		if( _data ) return _data;
-		_data=(wchar_t*)malloc( (_str.length()+1)*sizeof( wchar_t ) );
-		for( int i=0;i<_str.length();++i ) _data[i]=_str.data()[i];
-		_data[_str.length()]=0;
+		int size=(_str.length()+1)*sizeof(wchar_t);
+		_data=(wchar_t*)malloc( size );
+		_str.toWString( _data,size );
 		return _data;
 	}
 	
@@ -549,18 +559,18 @@ class bbUtf8String{
 	
 	unsigned char *data()const{
 		if( _data ) return _data;
-		int n=_str.utf8Length()+1;
-		_data=(unsigned char*)malloc( n );
-		_str.toUtf8( _data,n );
+		int size=_str.utf8Length()+1;
+		_data=(unsigned char*)malloc( size );
+		_str.toUtf8String( _data,size );
 		return _data;
-	}
-	
-	operator unsigned char*()const{
-		return data();
 	}
 	
 	operator char*()const{
 		return (char*)data();
+	}
+	
+	operator unsigned char*()const{
+		return data();
 	}
 };
 
@@ -569,10 +579,6 @@ typedef bbCString bbTString;
 #else
 typedef bbUtf8String bbTString;
 #endif
-
-bbCString bbString::toCString()const{
-	return bbCString( *this );
-}
 
 template<class C> bbString operator+( const C *str,const bbString &str2 ){
 	return bbString( str )+str2;

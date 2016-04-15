@@ -19,7 +19,7 @@ Function LoadString:String( path:String )
 	Local data:=DataBuffer.Load( path )
 	If Not data Return ""
 
-	Local str:=String.FromUtf8( data.Data,data.Length )
+	Local str:=String.FromUtf8String( data.Data,data.Length )
 
 	data.Discard()
 	
@@ -37,9 +37,9 @@ End
 #end
 Function SaveString:Bool( str:String,path:String )
 
-	Local data:=New DataBuffer( str.Utf8Length )
+	Local data:=New DataBuffer( str.Utf8Length+1 )
 
-	str.ToUtf8( data.Data,data.Length )
+	str.ToUtf8String( data.Data,data.Length )
 
 	Local ok:=data.Save( path )
 
