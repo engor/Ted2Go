@@ -31,6 +31,7 @@
 !/modules/sdl2
 !/modules/sdl2-mixer
 !/modules/mojo2
+!/modules/litehtml
 
 /docs/modules.html
 __PAGES__/
