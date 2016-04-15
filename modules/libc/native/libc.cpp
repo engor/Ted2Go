@@ -13,7 +13,7 @@ void setenv_( const char *name,const char *value,int overwrite ){
 	if( !overwrite && getenv( name ) ) return;
 
 	bbString tmp=bbString( name )+BB_T( "=" )+bbString( value );
-	putenv( tmp.toCString() );
+	putenv( tmp.c_str() );
 
 #else
 	setenv( name,value,overwrite );
@@ -29,7 +29,7 @@ int system_( const char *cmd ){
 	PROCESS_INFORMATION pi={0};
 	STARTUPINFOA si={sizeof(si)};
 	
-	if( !CreateProcessA( 0,(LPSTR)tmp.toCString(),0,0,1,CREATE_DEFAULT_ERROR_MODE,0,0,&si,&pi ) ) return -1;
+	if( !CreateProcessA( 0,(LPSTR)tmp.c_str(),0,0,1,CREATE_DEFAULT_ERROR_MODE,0,0,&si,&pi ) ) return -1;
 
 	WaitForSingleObject( pi.hProcess,INFINITE );
 	
