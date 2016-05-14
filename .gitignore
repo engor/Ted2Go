@@ -30,8 +30,9 @@
 !/modules/gles20
 !/modules/sdl2
 !/modules/sdl2-mixer
-!/modules/mojo2
+!/modules/mojo
 !/modules/litehtml
+!/modules/freetype
 
 /docs/modules.html
 __PAGES__/
