@@ -89,19 +89,28 @@ Class Image
 		UpdateVertices()
 	End
 	
-	Property Vertices:Rectf()
+	Property Bounds:Rectf()
 	
 		Return _vertices
-	End
-	
-	Property TexCoords:Rectf()
-	
-		Return _texCoords
 	End
 
 	Property Radius:Float()
 	
 		Return _radius
+	End
+	
+	#rem monkeydoc @hidden
+	#end
+	Property Vertices:Rectf()
+	
+		Return _vertices
+	End
+	
+	#rem monkeydoc @hidden
+	#end
+	Property TexCoords:Rectf()
+	
+		Return _texCoords
 	End
 	
 	Function Load:Image( path:String,shader:Shader=Null )
