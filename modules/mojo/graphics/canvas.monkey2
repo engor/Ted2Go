@@ -393,11 +393,12 @@ Class Canvas
 	End
 	
 	Method DrawRect( rect:Rectf,srcImage:Image )
+		Local tc:=srcImage.TexCoords
 		AddDrawOp( srcImage.Material,4,1 )
-		AddVertex( rect.min.x,rect.min.y,srcImage.S0,srcImage.T0 )
-		AddVertex( rect.max.x,rect.min.y,srcImage.S1,srcImage.T0 )
-		AddVertex( rect.max.x,rect.max.y,srcImage.S1,srcImage.T1 )
-		AddVertex( rect.min.x,rect.max.y,srcImage.S0,srcImage.T1 )
+		AddVertex( rect.min.x,rect.min.y,tc.min.x,tc.min.y )
+		AddVertex( rect.max.x,rect.min.y,tc.max.x,tc.min.y )
+		AddVertex( rect.max.x,rect.max.y,tc.max.x,tc.max.y )
+		AddVertex( rect.min.x,rect.max.y,tc.min.x,tc.max.y )
 	End
 	
 	Method DrawRect( x:Float,y:Float,width:Float,height:Float,srcImage:Image )
@@ -421,11 +422,13 @@ Class Canvas
 	End
 	
 	Method DrawImage( image:Image,tx:Float,ty:Float )
+		Local vs:=image.Vertices
+		Local tc:=image.TexCoords
 		AddDrawOp( image.Material,4,1 )
-		AddVertex( image.X0+tx,image.Y0+ty,image.S0,image.T0 )
-		AddVertex( image.X1+tx,image.Y0+ty,image.S1,image.T0 )
-		AddVertex( image.X1+tx,image.Y1+ty,image.S1,image.T1 )
-		AddVertex( image.X0+tx,image.Y1+ty,image.S0,image.T1 )
+		AddVertex( vs.min.x+tx,vs.min.y+ty,tc.min.x,tc.min.y )
+		AddVertex( vs.max.x+tx,vs.min.y+ty,tc.max.x,tc.min.y )
+		AddVertex( vs.max.x+tx,vs.max.y+ty,tc.max.x,tc.max.y )
+		AddVertex( vs.min.x+tx,vs.max.y+ty,tc.min.x,tc.max.y )
 	End
 	
 	Method DrawImage( image:Image,trans:Vec2f )
@@ -436,11 +439,7 @@ Class Canvas
 		Local matrix:=_matrix
 		Translate( tx,ty )
 		Rotate( rz )
-		AddDrawOp( image.Material,4,1 )
-		AddVertex( image.X0,image.Y0,image.S0,image.T0 )
-		AddVertex( image.X1,image.Y0,image.S1,image.T0 )
-		AddVertex( image.X1,image.Y1,image.S1,image.T1 )
-		AddVertex( image.X0,image.Y1,image.S0,image.T1 )
+		DrawImage( image,0,0 )
 		_matrix=matrix
 	End
 
@@ -454,11 +453,7 @@ Class Canvas
 		Translate( tx,ty )
 		Rotate( rz )
 		Scale( sx,sy )
-		AddDrawOp( image.Material,4,1 )
-		AddVertex( image.X0,image.Y0,image.S0,image.T0 )
-		AddVertex( image.X1,image.Y0,image.S1,image.T0 )
-		AddVertex( image.X1,image.Y1,image.S1,image.T1 )
-		AddVertex( image.X0,image.Y1,image.S0,image.T1 )
+		DrawImage( image,0,0 )
 		_matrix=matrix
 	End
 

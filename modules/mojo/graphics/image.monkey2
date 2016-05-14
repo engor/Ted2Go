@@ -81,59 +81,19 @@ Class Image
 		UpdateVertices()
 	End
 	
-	Property Width:Float()
+	Property Vertices:Rectf()
 	
-		Return _x1-_x0
+		Return _vertices
 	End
 	
-	Property Height:Float()
+	Property TexCoords:Rectf()
 	
-		Return _y1-_y0
+		Return _texCoords
 	End
-	
+
 	Property Radius:Float()
 	
 		Return _radius
-	End
-	
-	Property X0:Float()
-	
-		Return _x0
-	End
-	
-	Property Y0:Float()
-	
-		Return _y0
-	End
-	
-	Property X1:Float()
-	
-		Return _x1
-	End
-	
-	Property Y1:Float()
-	
-		Return _y1
-	End
-	
-	Property S0:Float()
-	
-		Return _s0
-	End
-	
-	Property T0:Float()
-	
-		Return _t0
-	End
-	
-	Property S1:Float()
-	
-		Return _s1
-	End
-	
-	Property T1:Float()
-	
-		Return _t1
 	End
 	
 	Function Load:Image( path:String,shader:Shader=Null )
@@ -166,15 +126,9 @@ Class Image
 	
 	Field _handle:=New Vec2f( 0,0 )
 	Field _scale:=New Vec2f( 1,1 )
+	Field _vertices:Rectf
+	Field _texCoords:Rectf
 	Field _radius:Float
-	Field _x0:Float
-	Field _y0:Float
-	Field _x1:Float
-	Field _y1:Float
-	Field _s0:Float
-	Field _t0:Float
-	Field _s1:Float
-	Field _t1:Float
 	
 	Method Init( material:Material,texture:Texture,rect:Recti,shader:Shader )
 		
@@ -193,22 +147,22 @@ Class Image
 	End
 	
 	Method UpdateVertices()
-		_x0=Float(_renderRect.Width)*(0-_handle.x)*_scale.x
-		_y0=Float(_renderRect.Height)*(0-_handle.y)*_scale.y
-		_x1=Float(_renderRect.Width)*(1-_handle.x)*_scale.x
-		_y1=Float(_renderRect.Height)*(1-_handle.y)*_scale.y
-		_radius=_x0*_x0+_y0*_y0
-		_radius=Max( _radius,_x1*_x1+_y0*_y0 )
-		_radius=Max( _radius,_x1*_x1+_y1*_y1 )
-		_radius=Max( _radius,_x0*_x0+_y1*_y1 )
+		_vertices.min.x=Float(_renderRect.Width)*(0-_handle.x)*_scale.x
+		_vertices.min.y=Float(_renderRect.Height)*(0-_handle.y)*_scale.y
+		_vertices.max.x=Float(_renderRect.Width)*(1-_handle.x)*_scale.x
+		_vertices.max.y=Float(_renderRect.Height)*(1-_handle.y)*_scale.y
+		_radius=_vertices.min.x*_vertices.min.x+_vertices.min.y*_vertices.min.y
+		_radius=Max( _radius,_vertices.max.x*_vertices.max.x+_vertices.min.y*_vertices.min.y )
+		_radius=Max( _radius,_vertices.max.x*_vertices.max.x+_vertices.max.y*_vertices.max.y )
+		_radius=Max( _radius,_vertices.min.x*_vertices.min.x+_vertices.max.y*_vertices.max.y )
 		_radius=Sqrt( _radius )
 	End
 	
 	Method UpdateTexCoords()
-		_s0=Float(_renderRect.min.x)/_texture.Width
-		_t0=Float(_renderRect.min.y)/_texture.Height
-		_s1=Float(_renderRect.max.x)/_texture.Width
-		_t1=Float(_renderRect.max.y)/_texture.Height
+		_texCoords.min.x=Float(_renderRect.min.x)/_texture.Width
+		_texCoords.min.y=Float(_renderRect.min.y)/_texture.Height
+		_texCoords.max.x=Float(_renderRect.max.x)/_texture.Width
+		_texCoords.max.y=Float(_renderRect.max.y)/_texture.Height
 	End
 	
 End
