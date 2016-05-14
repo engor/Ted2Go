@@ -240,11 +240,11 @@ bbBool bbProcess::start( bbString cmd ){
 	CreatePipe( &err[0],&err[1],&sa,0 );
 
 	STARTUPINFOA si={sizeof(si)};
-	si.dwFlags=STARTF_USESTDHANDLES|STARTF_USESHOWWINDOW;
+	si.dwFlags=STARTF_USESTDHANDLES;//|STARTF_USESHOWWINDOW;
 	si.hStdInput=in[0];
 	si.hStdOutput=out[1];
 	si.hStdError=err[1];
-	si.wShowWindow=SW_HIDE;
+//	si.wShowWindow=SW_HIDE;
 
 	PROCESS_INFORMATION pi={0};
     
