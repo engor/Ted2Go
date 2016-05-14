@@ -429,9 +429,9 @@ Class Translator_CPP Extends Translator
 
 			EmitBr()
 			If hasCmp
-				Emit( "inline int bbCompare("+cname+"&x,"+cname+"&y){return x.m__cmp(y);}" )
+				Emit( "inline int bbCompare(const "+cname+"&x,const "+cname+"&y){return x.m__cmp(y);}" )
 			Else
-				Emit( "int bbCompare("+cname+"&x,"+cname+"&y);" )
+				Emit( "int bbCompare(const "+cname+"&x,const "+cname+"&y);" )
 			Endif
 		
 			If needsMark
@@ -553,7 +553,7 @@ Class Translator_CPP Extends Translator
 
 			If Not hasCmp
 				EmitBr()
-				Emit( "int bbCompare("+cname+"&x,"+cname+"&y){" )
+				Emit( "int bbCompare(const "+cname+"&x,const "+cname+"&y){" )
 				For Local node:=Eachin ctype.fields	'scope.transMembers
 					Local vvar:=Cast<VarValue>( node )
 					If Not vvar Continue
