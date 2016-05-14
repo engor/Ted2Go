@@ -82,11 +82,9 @@ namespace bbDB{
 		case 'e':currentContext->stopped=1;return;
 		case 'l':currentContext->stopped=-1;return;
 		case 'r':currentContext->stopped=-0x10000000;return;
-		case 'q':
-			printf( "Quitting!!!!!\n" );fflush( stdout );
-			exit( 0 );
+		case 'q':exit( 0 );
 		}
-		printf( "???? %s\n",buf );fflush( stdout );
+		printf( "Unrecognized debug cmd: %s\n",buf );fflush( stdout );
 		exit( -1 );
 	}
 	
