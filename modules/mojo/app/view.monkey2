@@ -627,13 +627,6 @@ Class View
 			view.Render( canvas )
 		Next
 
-		canvas.RenderMatrix=_rmatrix		
-		canvas.RenderBounds=_rbounds
-		canvas.Viewport=_bounds
-		
-		OnRenderBounds( canvas )
-		canvas.ClearMatrix()
-
 		canvas.RenderMatrix=rmatrix
 		canvas.RenderBounds=rbounds
 		canvas.Viewport=viewport
