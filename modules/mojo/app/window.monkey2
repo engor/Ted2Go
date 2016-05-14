@@ -61,31 +61,11 @@ Class Window Extends View
 		_clearColor=clearColor
 	End
 	
-	#rem monkeydoc @hidden - Frame should work here...
-	#end
-	Property WindowRect:Recti()
-	
-		Local pos:Vec2i,size:Vec2i
-		SDL_GetWindowPosition( _sdlWindow,Varptr pos.x,Varptr pos.y )
-		SDL_GetWindowSize( _sdlWindow,Varptr size.x,Varptr size.y )
-		
-		Return New Recti( pos,pos+size )
-	End
-	
-	Setter( windowRect:Recti )
-	
-		Local pos:=windowRect.Origin
-		Local size:=windowRect.Size
-		SDL_SetWindowPosition( _sdlWindow,pos.x,pos.y )
-		SDL_SetWindowSize( _sdlWindow,size.x,size.y )
-	End
-	
 	#rem monkeydoc @hidden
 	#end
 	Method Update()
 	
-		'a bit ugyl...fixme!
-		#rem
+		'ugly...fixme.
 		If MinSize<>_minSize Or MaxSize<>_maxSize Or Frame<>_frame
 			_minSize=MinSize
 			_maxSize=MaxSize
@@ -95,7 +75,6 @@ Class Window Extends View
 			SDL_SetWindowPosition( _sdlWindow,_frame.X,_frame.Y )
 			SDL_SetWindowSize( _sdlWindow,_frame.Width,_frame.Height )
 		Endif
-		#end
 		
 		Measure()
 		
@@ -258,6 +237,7 @@ Class Window Extends View
 		If flags & WindowFlags.Fullscreen sdlFlags|=SDL_WINDOW_FULLSCREEN
 	
 		_sdlWindow=SDL_CreateWindow( title,x,y,rect.Width,rect.Height,sdlFlags )
+		Assert( _sdlWindow,"Failed to create SDL_Window" )
 
 		_allWindows.Push( Self )
 		If Not (flags & WindowFlags.Hidden) _visibleWindows.Push( Self )
