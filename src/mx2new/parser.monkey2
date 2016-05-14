@@ -1,4 +1,6 @@
 
+'Help!
+
 Namespace mx2
 
 Class TryParseEx Extends Throwable
@@ -24,58 +26,21 @@ Class Parser
 		_fdecl=New FileDecl
 		_fdecl.ident=ident
 		_fdecl.path=srcPath
-		_fdecl.nmspace="default"
+		_fdecl.nmspace=""
 		
 		Local source:=LoadString( srcPath )
 		_toker=New Toker( source )
-		
-		'PARSE!
 		
 		PNode.parsing=_fdecl
 
 		Bump()
 		CParseEol()
 		
-		If CParse( "namespace" )
-			Try
-				_fdecl.nmspace=ParseNamespaceIdent()
-				ParseEol()
-			Catch ex:ParseEx
-				SkipToNextLine()
-			End
-		Endif
+		_fdecl.members=ParseDecls( DECL_PUBLIC,True )
 		
-		_idscope=_fdecl.nmspace+"."
+		If Not _fdecl.nmspace _fdecl.nmspace="default"
 		
-		Local flags:=DECL_PUBLIC
-		
-		Local usings:=New StringStack
-		usings.Push( "monkey" )
-		
-		While Toke
-			Select Toke
-			Case "public"
-				flags=CParseAccess( flags )
-				CParseEol()
-			Case "private"
-				flags=CParseAccess( flags )
-				CParseEol()
-			Case "using"
-				Try
-					Bump()
-					usings.Push( ParseUsingIdent() )
-					ParseEol()
-				Catch ex:ParseEx
-					SkipToNextLine()
-				End
-			Default
-				Exit
-			End
-		Wend
-		
-		_fdecl.members=ParseDecls( Null,flags )
-		
-		_fdecl.usings=usings.ToArray()
+		_fdecl.usings=_usings.ToArray()
 		_fdecl.imports=_imports.ToArray()
 		_fdecl.errors=_errors.ToArray()
 		_fdecl.endpos=EndPos
@@ -112,10 +77,7 @@ Class Parser
 		Return ident
 	End
 	
-	Method ParseDecls:Decl[]( parent:Decl,flags:Int )
-	
-		Local idscope:=_idscope
-		If parent _idscope+=parent.ident+"."
+	Method ParseDecls:Decl[]( flags:Int,fileScope:Bool )
 	
 		Local decls:=New Stack<Decl>
 		
@@ -124,26 +86,15 @@ Class Parser
 				Select Toke
 				Case "end"
 					Exit
-				Case "extern"
-					Bump()
-					If parent ErrorNx( "Extern must appear at file scope" )
-					flags&= ~DECL_ACCESSMASK
-					flags|= DECL_EXTERN | DECL_PUBLIC
-					flags=CParseAccess( flags )
-					CParseEol()
-				Case "public","private","protected"
-					flags&= ~DECL_ACCESSMASK
-					If Not parent flags&= ~DECL_EXTERN
-					flags=CParseAccess( flags )
-					CParseEol()
 				Case "const"
 					ParseVars( decls,flags )
 				Case "global"
 					ParseVars( decls,flags )
 				Case "field"
+					If fileScope Error( "Fields can only be declared inside a class, struct or interface" )
 					ParseVars( decls,flags )
 				Case "local"
-					ParseVars( decls,flags )
+					Error( "Locals can only be declared in a statement block" )
 				Case "alias"
 					ParseAliases( decls,flags )
 				Case "class"
@@ -152,18 +103,58 @@ Class Parser
 					decls.Push( ParseClass( flags ) )
 				Case "interface"
 					decls.Push( ParseClass( flags ) )
-				Case "protocol"
-					decls.Push( ParseClass( flags ) )
+'				Case "protocol"
+'					decls.Push( ParseClass( flags ) )
 				Case "enum"
 					decls.Push( ParseEnum( flags ) )
 				Case "function"
 					decls.Push( ParseFunc( flags ) )
 				Case "method"
+					If fileScope Error( "Methods can only be declared inside a class, struct or interface" )
 					decls.Push( ParseFunc( flags ) )
 				Case "operator"
+					If fileScope Error( "Operators can only be declared inside a class, struct or interface" )
 					decls.Push( ParseFunc( flags ) )
 				Case "property"
+					If fileScope Error( "Properties can only be declared inside a class, struct or interface" )
 					decls.Push( ParseProperty( flags ) )
+				Case "namespace"
+					If Not fileScope Or decls.Length Or _usings.Length Error( "'Namespace' must appear at the start of the file" )
+					If _fdecl.nmspace Error( "Duplicate namespace declaration" )
+					Bump()					
+					_fdecl.nmspace=ParseNamespaceIdent()
+					ParseEol()
+				Case "using"
+					If Not fileScope Or decls.Length Error( "Usings must appear before any declarations in a file" )
+					Bump()
+					_usings.Push( ParseUsingIdent() )
+					ParseEol()
+				Case "extern"
+					If Not fileScope Error( "'Extern' must appear at file scope" )
+					Bump()
+					flags=(flags & ~DECL_ACCESSMASK) | DECL_EXTERN
+					If CParse( "private" )
+						flags|=DECL_PRIVATE
+					Else
+						CParse( "public" )
+						flags|=DECL_PUBLIC
+					Endif
+					ParseEol()
+				Case "public","private"
+					flags&=~DECL_ACCESSMASK
+					If fileScope flags&=~DECL_EXTERN
+					If CParse( "private" )
+						flags|=DECL_PRIVATE
+					Else
+						Parse( "public" )
+						flags|=DECL_PUBLIC
+					Endif
+					ParseEol()
+				Case "protected"
+					If fileScope Error( "'Protected' can only be used in a class, struct or interface" )
+					Bump()
+					flags=(flags & ~DECL_ACCESSMASK)|DECL_PROTECTED
+					ParseEol()
 				Default
 					Error( "Unexpected token '"+Toke+"'" )
 				End
@@ -171,8 +162,6 @@ Class Parser
 				SkipToNextLine()
 			End
 		Wend
-		
-		_idscope=idscope
 		
 		Return decls.ToArray()
 	End
@@ -183,6 +172,7 @@ Class Parser
 		Case "public" flags=flags & ~(DECL_ACCESSMASK) | DECL_PUBLIC
 		Case "private" flags=flags & ~(DECL_ACCESSMASK) | DECL_PRIVATE
 		Case "protected" flags=flags & ~(DECL_ACCESSMASK) | DECL_PROTECTED
+		Case "internal" flags=flags & ~(DECL_ACCESSMASK) | DECL_INTERNAL
 		Default Return flags
 		End
 		Bump()
@@ -203,7 +193,6 @@ Class Parser
 				decl.docs=Docs()
 				decl.flags=flags
 				decl.ident=ParseIdent()
-				decl.idscope=_idscope
 				decl.genArgs=ParseGenArgs()
 				
 				Parse( ":" )
@@ -236,12 +225,11 @@ Class Parser
 				decl.docs=Docs()
 				decl.flags=flags
 				decl.ident=ParseIdent()
-				decl.idscope=_idscope
 				
 				If flags & DECL_EXTERN
 					Parse( ":" )
 					decl.type=ParseType()
-					If CParse( "=" ) decl.symbol=ParseString() 'Else decl.symbol=decl.ident
+					If CParse( "=" ) decl.symbol=ParseString()
 				Else If CParse( ":" )
 					decl.type=ParseType()
 					If CParse( "=" ) decl.init=ParseExpr()
@@ -263,47 +251,37 @@ Class Parser
 	End
 	
 	Method ParseClass:ClassDecl( flags:Int )
-	
-		Local srcpos:=SrcPos
-		Local kind:=Parse()
-		Local docs:=Docs()
-		Local ident:="?????"
-		Local genArgs:String[]
-		Local superType:TypeExpr
-		Local ifaceTypes:TypeExpr[]
-		Local symbol:=""
-	
-		Local mflags:=DECL_PUBLIC | (flags & DECL_EXTERN)
 		
-		If kind="interface" mflags|=DECL_IFACEMEMBER|DECL_ABSTRACT
-		
-		If kind="protocol" mflags|=DECL_IFACEMEMBER|DECL_ABSTRACT
+		Local decl:=New ClassDecl
+		decl.srcpos=SrcPos
+		decl.kind=Parse()
+		decl.docs=Docs()
+		decl.ident="?????"
 		
 		Try
-			ident=ParseIdent()
-
-			genArgs=ParseGenArgs()
+			decl.ident=ParseIdent()
+			
+			decl.genArgs=ParseGenArgs()
 			
 			If CParse( "extends" )
-				If kind="interface"
-					ifaceTypes=ParseTypes()
-				Else If kind="protocol"
-					ifaceTypes=ParseTypes()
+				If decl.kind="interface" Or decl.kind="protocol"
+					decl.ifaceTypes=ParseTypes()
 				Else
-					superType=ParseType()
+					decl.superType=ParseType()
 				Endif
 			Endif
 			
 			If CParse( "implements" )
-				ifaceTypes=ParseTypes()
+				If decl.kind<>"class" And decl.kind<>"struct" Error( "'Implements' can only be used with classes and structs" )
+				decl.ifaceTypes=ParseTypes()
 			Endif
 			
 			Select Toke
 			Case "virtual","abstract","final"
 			
-				If kind="interface" Error( "Interfaces are implicitly abstract" )
+				If decl.kind="interface" Error( "Interfaces are implicitly abstract" )
 				
-				If kind="protocol" Error( "Protocols cannot have modifiers" )
+				If decl.kind="protocol" Error( "Protocols cannot have modifiers" )
 				
 				If CParse( "virtual" )
 					flags|=DECL_VIRTUAL
@@ -315,9 +293,10 @@ Class Parser
 				
 			End
 			
-			If flags & DECL_EXTERN
-				If CParse( "=" ) symbol=ParseString()
-			Endif
+			If CParse( "=" )
+				If Not (flags & DECL_EXTERN) Error( "Non-extern declaration cannot be assigned an extern symbol" )
+				decl.symbol=ParseString()
+			End
 		
 			ParseEol()
 		
@@ -326,18 +305,12 @@ Class Parser
 			SkipToNextLine()
 		End
 		
-		Local decl:=New ClassDecl
-		decl.srcpos=srcpos
-		decl.kind=kind
-		decl.ident=ident
 		decl.flags=flags
-		decl.docs=docs
-		decl.genArgs=genArgs
-		decl.superType=superType
-		decl.ifaceTypes=ifaceTypes
-		decl.symbol=symbol
 		
-		decl.members=ParseDecls( decl,mflags )
+		Local mflags:=(flags & DECL_EXTERN) | DECL_PUBLIC
+		If decl.kind="interface" Or decl.kind="protocol" mflags|=DECL_IFACEMEMBER|DECL_ABSTRACT
+		
+		decl.members=ParseDecls( mflags,False )
 		
 		Try
 			Parse( "end" )
@@ -350,7 +323,7 @@ Class Parser
 		decl.endpos=EndPos
 		Return decl
 	End
-	
+
 	Method ParseFunc:FuncDecl( flags:Int )
 	
 		Local srcpos:=SrcPos
@@ -433,7 +406,7 @@ Class Parser
 					kind="method"
 					flags|=DECL_SETTER
 				Else
-					Error( "Property must have 0 or 1 parameters" )
+					Error( "Properties must have 0 or 1 parameters" )
 				End
 			Case "method"
 				If (flags & DECL_GETTER)
@@ -465,6 +438,7 @@ Class Parser
 			End
 			
 			If CParse( "=" )
+				If Not (flags & DECL_EXTERN) Error( "Non-extern declarations cannot be assigned an extern symbol" )
 				symbol=ParseString()
 			Endif
 
@@ -538,12 +512,12 @@ Class Parser
 		
 		Try
 			decl.ident=ParseIdent()
-			decl.idscope=_idscope
 			
 			If CParse( "extends" ) decl.superType=ParseType()
 			
-			If flags & DECL_EXTERN
-				If CParse( "=" ) decl.symbol=ParseString() 'Else decl.symbol=decl.ident
+			If CParse( "=" )
+				If Not (flags & DECL_EXTERN) Error( "Non-extern declaration cannot be assigned an extern symbol" )
+				decl.symbol=ParseString()
 			Endif
 			
 			ParseEol()
@@ -564,11 +538,10 @@ Class Parser
 				decl.kind="const"
 				decl.flags=DECL_PUBLIC|(flags & DECL_EXTERN)
 				decl.ident=ParseIdent()
-				decl.idscope=_idscope
 				decl.docs=Docs()
 				
 				If flags & DECL_EXTERN
-					If CParse( "=" ) decl.symbol=ParseString() 'Else decl.symbol=decl.ident
+					If CParse( "=" ) decl.symbol=ParseString()
 				Else
 					If CParse( "=" ) decl.init=ParseExpr()
 				Endif
@@ -1145,7 +1118,6 @@ Class Parser
 				If ident
 					If CParse( ":" )
 						decl.ident=ident
-						decl.idscope=_idscope
 						decl.type=ParseType()
 						If CParse( "=" ) decl.init=ParseExpr()
 					Else
@@ -1725,7 +1697,7 @@ Class Parser
 	
 	'THROWS!
 	Method ParseEol()
-		If TokeType<>TOKE_EOL Error( "Expecting end of line" )
+		If TokeType And TokeType<>TOKE_EOL Error( "Expecting end of line" )
 		EatEols()
 	End
 	
@@ -1874,8 +1846,8 @@ Class Parser
 	
 	Field _fdecl:FileDecl
 	Field _toker:Toker
-	Field _idscope:String
 	Field _stateStack:=New Stack<Toker>
+	Field _usings:=New StringStack
 	Field _errors:=New Stack<ParseEx>
 	
 	'***** Messy Preprocessor - FIXME! *****
@@ -1897,12 +1869,17 @@ Class Parser
 	End
 	
 	Method EvalError()
-	
-		Error( "Failed to evaluate preprocessor expression" )
+		Error( "Failed to evaluate preprocessor expression: toke='"+Toke+"'" )
 	End
 		
 	Method EvalPrimary:String()
 	
+		If CParse( "(" )
+			Local expr:=Eval()
+			Parse( ")" )
+			Return expr
+		Endif
+		
 		Select TokeType
 		Case TOKE_IDENT
 			Local id:=Parse()
@@ -1912,53 +1889,61 @@ Class Parser
 		Case TOKE_STRINGLIT
 			Return Parse()
 		End
-		
+
 		EvalError()
 		Return Null
 	End
 	
 	Method EvalUnary:String()
-	
-		If Toke="not"
-			Local t:=ToBool( EvalPrimary() )
-			If t="true" Return "false" Else Return "true"
+		If CParse( "not" )
+			Local expr:=ToBool( EvalUnary() )
+			If expr="true" Return "false" Else Return "true"
 		Endif
-		
 		Return EvalPrimary()
 	End
 	
-	Method EvalCompare:String()
-	
-		Local t:=EvalUnary()
-		Repeat
-			Select Toke
-			Case "=","<>"
-				Local op:=Parse()
-				Local v:=EvalUnary()
-				If IsBool( t ) Or IsBool( v )
-					t=ToBool( t )
-					v=ToBool( v )
-				Endif
-				Select op
-				Case "="
-					If t=v t="true" Else t="false"
-				Case "<>"
-					If t<>v t="true" Else t="false"
-				End
-			Default
-				Exit
+	Method EvalEquals:String()
+		Local lhs:=EvalUnary()
+		While Toke="=" Or Toke="<>"
+			Local op:=Parse()
+			Local rhs:=EvalUnary()
+			If IsBool( lhs ) Or IsBool( rhs ) 
+				lhs=ToBool( lhs )
+				rhs=ToBool( rhs )
+			Endif
+			Select op
+			Case "=" If lhs=rhs lhs="true" Else lhs="false"
+			Case "<>" If lhs<>rhs lhs="true" Else lhs="false"
 			End
-		Forever
-		Return t
+		Wend
+		Return  lhs
+	End
+	
+	Method EvalAnd:String()
+		Local lhs:=EvalEquals()
+		While CParse( "and" )
+			lhs=ToBool( lhs )
+			Local rhs:=ToBool( EvalEquals() )
+			If lhs="true" And rhs="true" lhs="true" Else lhs="false"
+		Wend
+		Return lhs
+	End
+	
+	Method EvalOr:String()
+		Local lhs:=EvalAnd()
+		While CParse( "or" )
+			lhs=ToBool( lhs )
+			Local rhs:=ToBool( EvalAnd() )
+			If lhs="true" Or rhs="true" lhs="true" Else lhs="false"
+		Wend
+		Return lhs
 	End
 	
 	Method Eval:String()
-	
-		Return EvalCompare()
+		Return EvalOr()
 	End
 	
 	Method EvalBool:Bool()
-	
 		Return ToBool( Eval() )="true"
 	End
 	

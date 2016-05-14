@@ -24,7 +24,7 @@ Function InitToker:Void()
 	tokerInited=True
 
 	Local keyWords:="Namespace;Using;Import;Extern;"
-	keyWords+="Public;Private;Protected;Friend;"
+	keyWords+="Public;Private;Protected;Internal;Friend;"
 	keyWords+="Void;Bool;Byte;UByte;Short;UShort;Int;UInt;Long;ULong;Float;Double;String;Object;Continue;Exit;"
 	keyWords+="New;Self;Super;Eachin;True;False;Null;Where;"
 	keyWords+="Alias;Const;Local;Global;Field;Method;Function;Property;Getter;Setter;Operator;Lambda;"

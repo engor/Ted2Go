@@ -182,13 +182,13 @@ Class DocsMaker
 			If i2=-1 Exit
 			slug=slug.Slice( 0,i )+slug.Slice( i2+1 )
 		Forever
-		slug=slug.Replace( ".","-" )
+		'slug=slug.Replace( ".","-" )
 		Return slug
 	End
 	
 	Method NamespaceSlug:String( nmspace:NamespaceScope )
 		Local slug:=nmspace.Name
-		slug=slug.Replace( ".","-" )
+		'slug=slug.Replace( ".","-" )
 		Return slug
 	End
 	
@@ -208,8 +208,12 @@ Class DocsMaker
 	End
 	
 	Method MakeLink:String( text:String,module:String,page:String )
+	
+		Local url:=module+":"+page
 		
-		Return "<a href='javascript:void(0)' onclick=~qdocsLinkClicked('"+page+"','"+module+"')~q>"+text+"</a>"
+		Return "<a href=~qjavascript:void('"+url+"')~q onclick=~qdocsLinkClicked('"+url+"')~q>"+text+"</a>"
+		
+'		Return "<a href='javascript:void(0)' onclick=~qdocsLinkClicked('"+module+":"+page+"')~q>"+text+"</a>"
 	End
 	
 	Method MakeLink:String( text:String,decl:Decl,scope:Scope )
@@ -253,7 +257,7 @@ Class DocsMaker
 			Local id:=path.Slice( i0,i1 )
 			i0=i1+1
 			
-			Print "Finding type "+id+" in "+scope.Name
+'			Print "Finding type "+id+" in "+scope.Name
 			
 			Local type:=scope.FindType( id )
 			If Not type Return ""
@@ -342,6 +346,7 @@ Class DocsMaker
 	End
 	
 	Method SavePage( docs:String,page:String )
+		page=page.Replace( ".","-" )
 		docs=_pageTemplate.Replace( "${CONTENT}",docs )
 		stringio.SaveString( docs,_pagesDir+page+".html" )
 	End
@@ -459,7 +464,7 @@ Class DocsMaker
 				If init
 					init=False
 					EmitBr()
-					Emit( "| Aliases | |" )
+					Emit( "| Aliases | &nbsp; |" )
 					Emit( "|:---|:---" )
 				Endif
 				
@@ -639,7 +644,9 @@ Class DocsMaker
 		
 		Local xtends:=""
 		If ctype.superType
-			xtends=" Extends "+TypeName( ctype.superType,ctype.scope.outer )
+			If ctype.superType<>Type.ObjectClass
+				xtends=" Extends "+TypeName( ctype.superType,ctype.scope.outer )
+			Endif
 		Else If ctype.isvoid
 			xtends=" Extends Void"
 		Endif

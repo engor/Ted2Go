@@ -124,7 +124,6 @@ Class Builder
 		ppsyms["__HOSTOS__"]="~q"+HostOS+"~q"
 		ppsyms["__TARGET__"]="~q"+opts.target+"~q"
 		ppsyms["__CONFIG__"]="~q"+opts.config+"~q"
-'		ppsyms["__CONFIG__"]="~qmx2new~q"
 		
 		profileName=opts.target+"_"+opts.config+"_"+HostOS
 		
@@ -144,7 +143,7 @@ Class Builder
 		
 		Local name:=StripDir( StripExt( opts.mainSource ) )
 
-		Local module:=New Module( name,opts.mainSource,opts.productType,MX2_PRODUCT_VERSION )
+		Local module:=New Module( name,opts.mainSource,opts.productType,MX2CC_VERSION )
 		modulesMap[name]=module
 		modules.Push( module )
 		
@@ -175,7 +174,7 @@ Class Builder
 				Local name:=MX2_LIBS.Pop()
 				Local srcPath:=modulesDir+name+"/"+name+".monkey2"
 				
-				module=New Module( name,srcPath,"module",MX2_MODULES_VERSION )
+				module=New Module( name,srcPath,"module",MX2CC_VERSION )
 				modulesMap[name]=module
 				modules.Push( module )
 				
@@ -456,7 +455,7 @@ Class Builder
 			Case ".c",".m"
 				cmd=CC_CMD+" "+CC_OPTS.Join( " " )
 			Case ".cc",".cxx",".cpp",".mm"
-				cmd=CXX_CMD+" -std=c++11 -g "+CPP_OPTS.Join( " " )
+				cmd=CXX_CMD+" "+CPP_OPTS.Join( " " )
 			End
 			
 			cmd+=" -Wno-int-to-pointer-cast"
@@ -510,26 +509,29 @@ Class Builder
 			
 			cmd+=" -c -o ~q"+obj+"~q ~q"+src+"~q"
 			
-			Exec( cmd ) 
-
+			Exec( cmd )
+			
 			maxObjTime=Max( maxObjTime,GetFileTime( obj ) )
+			
 			OBJ_FILES.Push( obj )
 			
 		Next
 	
 	End
 	
-	Method Link()
+	Method Link:String()
 	
 		Select opts.productType
 		Case "app"
-			CreateApp()
+			Return CreateApp()
 		Case "module"
-			CreateArchive()
+			Return CreateArchive()
 		End
+		
+		Return ""
 	End
 	
-	Method CreateApp()
+	Method CreateApp:String()
 	
 		Local module:=mainModule
 		
@@ -660,8 +662,8 @@ Class Builder
 			
 		Next
 		
-		If Not opts.run Return
-		
+		If Not opts.run Return outputFile
+	
 		Local run:=""
 		If opts.target="emscripten"
 			Local mserver:=GetEnv( "MX2_MSERVER" )
@@ -670,7 +672,10 @@ Class Builder
 			run="~q"+outputFile+"~q"
 		Endif
 		
+		If opts.verbose>=0 Print "Running "+outputFile
 		Exec( run )
+		
+		Return outputFile
 	End
 	
 	Method CopyAll:Bool( src:String,dst:String )
@@ -705,11 +710,14 @@ Class Builder
 		
 	End
 	
-	Method CreateArchive()
+	Method CreateArchive:String()
 
 		Local module:=mainModule
 		
 		Local outputFile:=module.outputDir+module.name+".a"
+		
+		'AR is slow! This is probably not quite right, but it'll do for now...
+		If GetFileTime( outputFile )>maxObjTime Return outputFile
 		
 		If opts.verbose>=0 Print "Archiving "+outputFile
 		
@@ -730,6 +738,8 @@ Class Builder
 			objs=""
 			
 		Next
+		
+		Return outputFile
 		
 	End
 	
@@ -1048,12 +1058,20 @@ Class Builder
 	End
 	
 	Method Exec:Bool( cmd:String )
-	
-		If Not system( cmd+" 2>errs.txt" ) Return True
+
+		Local errs:=""
+		For Local i:=1 Until 10
+			errs="tmp/errs"+i+".txt"
+			DeleteFile( errs )
+			If GetFileType( errs )=FileType.None Exit
+			errs=""
+		Next
+			
+		If Not system( cmd+" 2>"+errs ) Return True
 		
-		Local errs:=LoadString( "errs.txt" )
+		Local terrs:=LoadString( errs )
 		
-		Throw New BuildEx( "System command '"+cmd+"' failed.~n~n"+cmd+"~n~n"+errs )
+		Throw New BuildEx( "System command '"+cmd+"' failed.~n~n"+cmd+"~n~n"+terrs )
 		
 		Return False
 	End

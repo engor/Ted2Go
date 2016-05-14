@@ -314,19 +314,20 @@ Class NewObjectExpr Extends Expr
 		Endif
 		
 		Local args:=SemantArgs( Self.args,scope )
-		
-		Local ctor:=ctype.FindNode( "new" )
-		
 		Local ctorFunc:FuncValue
 		
+		Local ctor:=ctype.FindNode( "new" )
 		If ctor
 
-			Local invoke:=Cast<InvokeValue>( ctor.ToValue( Null ).Invoke( args ) )
+			Local ctorValue:=ctor.ToValue( Null )
 			
+			Local invoke:=Cast<InvokeValue>( ctorValue.Invoke( args ) )
 			If Not invoke Throw New SemantEx( "Can't invoke class '"+ctype.Name+"' constuctor with arguments '"+Join( args )+"'" )
 			
 			ctorFunc=Cast<FuncValue>( invoke.value )
 			If Not ctorFunc SemantError( "NewObjectExpr.OnSemant()" )
+			
+			ctorFunc.CheckAccess( scope )
 			
 			args=invoke.args
 

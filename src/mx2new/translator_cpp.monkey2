@@ -95,7 +95,10 @@ Class Translator_CPP Extends Translator
 
 		EmitBr()
 		For Local vvar:=Eachin fdecl.globals
-			Emit( VarProto( vvar )+";" )
+			Uses( vvar.type )
+			Local proto:=VarProto( vvar )
+			If IsStruct( vvar.type ) proto+="( bbNullCtor )"
+			Emit( proto+";" )
 		Next
 		
 		For Local func:=Eachin fdecl.functions
@@ -107,7 +110,7 @@ Class Translator_CPP Extends Translator
 		Next
 		
 		EmitGlobalInits( fdecl )
-		
+
 		EndDeps()
 		
 		EmitBr()
@@ -117,13 +120,28 @@ Class Translator_CPP Extends Translator
 	
 	'***** Decls *****
 	
+	Method IsGCVarType:Bool( type:Type )
+	
+		Local ctype:=TCast<ClassType>( type )
+		If ctype Return (ctype.cdecl.kind="class" Or ctype.cdecl.kind="interface") 
+
+		Local atype:=TCast<ArrayType>( type )
+		If atype Return True
+		
+		Return False
+	End
+	
 	Method VarType:String( type:Type )
 	
 		Local ctype:=TCast<ClassType>( type )
-		If ctype And IsGCType( ctype ) Return "bbGCVar<"+ClassName( ctype )+">"
+		If ctype And (ctype.cdecl.kind="class" Or ctype.cdecl.kind="interface")
+			Return "bbGCVar<"+ClassName( ctype )+">"
+		Endif
 		
 		Local atype:=TCast<ArrayType>( type )
-		If atype Return "bbGCVar<"+ArrayName( atype )+">"
+		If atype
+			Return "bbGCVar<"+ArrayName( atype )+">"
+		Endif
 		
 		Return TransType( type )
 	End
@@ -305,7 +323,7 @@ Class Translator_CPP Extends Translator
 			Next
 		Endif
 		
-		Emit( "const char *typeName(){return~q"+cname+"~q;}" )
+		Emit( "const char *typeName()const{return ~q"+cname+"~q;}" )
 		
 		'Emit fields...
 		'
@@ -313,9 +331,17 @@ Class Translator_CPP Extends Translator
 		Local needsMark:=False
 
 		EmitBr()		
-		For Local node:=Eachin ctype.scope.transMembers
+		For Local node:=Eachin ctype.fields	'scope.transMembers
 			Local vvar:=Cast<VarValue>( node )
 			If Not vvar Continue
+
+			#rem			
+			If cdecl.kind="struct"
+				Uses( vvar.type )
+			Else
+				Refs( vvar.type )
+			Endif
+			#end
 			
 			Refs( vvar.type )
 
@@ -350,7 +376,7 @@ Class Translator_CPP Extends Translator
 		Local hasDefaultCtor:=False
 		
 		EmitBr()
-		For Local node:=Eachin ctype.scope.transMembers
+		For Local node:=Eachin ctype.methods	'scope.transMembers
 			Local func:=Cast<FuncValue>( node )
 			If Not func Or func.fdecl.ident<>"new" Continue
 			
@@ -366,7 +392,7 @@ Class Translator_CPP Extends Translator
 		Local hasCmp:=False
 		
 		EmitBr()
-		For Local node:=Eachin ctype.scope.transMembers
+		For Local node:=Eachin ctype.methods	'scope.transMembers
 			Local func:=Cast<FuncValue>( node )
 			If Not func Or func.fdecl.ident="new" Continue
 			
@@ -383,9 +409,21 @@ Class Translator_CPP Extends Translator
 			Emit( cname+"(){" )
 			If needsInit Emit( "init();" )
 			Emit( "}" )
-		End
+		Endif
+		
+		If IsStruct( ctype )
+			EmitBr()
+			Emit( cname+"(bbNullCtor_t){" )
+			Emit( "}" )
+		Endif
 		
 		Emit( "};" )
+		
+		If debug
+			Local tname:=cname
+			If Not IsStruct( ctype ) tname+="*"
+			Emit( "template<> bbDBType *bbDBTypeOf("+tname+"*);" )
+		Endif
 		
 		If IsStruct( ctype )
 
@@ -411,14 +449,14 @@ Class Translator_CPP Extends Translator
 		
 		Local cdecl:=ctype.cdecl
 		Local cname:=ClassName( ctype )
-	
+		
 		'Emit fields...
 		'
 		Local needsInit:=False
 		Local needsMark:=False
 
 		EmitBr()		
-		For Local node:=Eachin ctype.scope.transMembers
+		For Local node:=Eachin ctype.fields	'scope.transMembers
 			Local vvar:=Cast<VarValue>( node )
 			If Not vvar Continue
 			
@@ -435,7 +473,7 @@ Class Translator_CPP Extends Translator
 			
 			BeginGCFrame()
 			
-			For Local node:=Eachin ctype.scope.transMembers
+			For Local node:=Eachin ctype.fields	'scope.transMembers
 				Local vvar:=Cast<VarValue>( node )
 				If Not vvar Or Not vvar.init Or Cast<LiteralValue>( vvar.init ) Continue
 				
@@ -459,7 +497,7 @@ Class Translator_CPP Extends Translator
 				Emit( ClassName( ctype.superType )+"::gcMark();" )
 			End
 		
-			For Local node:=Eachin ctype.scope.transMembers
+			For Local node:=Eachin ctype.fields	'scope.transMembers
 				Local vvar:=Cast<VarValue>( node )
 				If Not vvar Or Not IsGCType( vvar.type ) Continue
 				
@@ -473,7 +511,7 @@ Class Translator_CPP Extends Translator
 	
 		'Emit ctor methods
 		'
-		For Local node:=Eachin ctype.scope.transMembers
+		For Local node:=Eachin ctype.methods	'scope.transMembers
 			Local func:=Cast<FuncValue>( node )
 			If Not func Or func.fdecl.ident<>"new" Continue
 			
@@ -485,7 +523,7 @@ Class Translator_CPP Extends Translator
 		'
 		Local hasCmp:=False
 		
-		For Local node:=Eachin ctype.scope.transMembers
+		For Local node:=Eachin ctype.methods	'scope.transMembers
 			Local func:=Cast<FuncValue>( node )
 			If Not func Or func.fdecl.ident="new" Continue
 			
@@ -497,6 +535,18 @@ Class Translator_CPP Extends Translator
 			EmitFunc( func )
 		Next
 		
+		If debug
+			Local tname:=cname
+			If Not IsStruct( ctype ) tname+="*"
+			Emit(	"template<> bbDBType *bbDBTypeOf("+tname+"*){" )
+			Emit(		"struct type : public bbDBType{" )
+			Emit(			"bbString name(){return ~q"+ctype.Name+"~q;}" )
+			Emit(		"};" )
+			Emit(		"static type _type;" )
+			Emit(	 	"return &_type;" )
+			Emit(	"}" )
+		Endif
+
 		'Emit static struct methods
 		'
 		If IsStruct( ctype ) 
@@ -504,7 +554,7 @@ Class Translator_CPP Extends Translator
 			If Not hasCmp
 				EmitBr()
 				Emit( "int bbCompare("+cname+"&x,"+cname+"&y){" )
-				For Local node:=Eachin ctype.scope.transMembers
+				For Local node:=Eachin ctype.fields	'scope.transMembers
 					Local vvar:=Cast<VarValue>( node )
 					If Not vvar Continue
 					Local vname:=VarName( vvar )
@@ -523,7 +573,7 @@ Class Translator_CPP Extends Translator
 					Emit( "bbGCMark(("+ClassName( ctype.superType )+"&)t);" )
 				Endif
 	
-				For Local node:=Eachin ctype.scope.transMembers
+				For Local node:=Eachin ctype.fields	'scope.transMembers
 					Local vvar:=Cast<VarValue>( node )
 					If Not vvar Or Not IsGCType( vvar.type ) Continue
 					
@@ -573,10 +623,12 @@ Class Translator_CPP Extends Translator
 			For Local dep:=Eachin module.moduleDeps.Keys
 			
 				Local mod2:=builder.modulesMap[dep]
-				If Not mod2.main Continue
 				
-				Emit( "void mx2_"+mod2.ident+"_main();mx2_"+mod2.ident+"_main();" )
+				If mod2.main
+					Emit( "void mx2_"+mod2.ident+"_main();mx2_"+mod2.ident+"_main();" )
+				Endif
 			Next
+			
 		Endif
 		
 		EmitBlock( func )
@@ -679,7 +731,7 @@ Class Translator_CPP Extends Translator
 			Emit( "bbDBFrame db_f{~q"+func.Name+":"+func.ftype.retType.Name+"("+func.ParamNames+")~q,~q"+func.pnode.srcfile.path+"~q};" )
 			
 			For Local vvar:=Eachin func.params
-				Emit( "bbDBLocal(~q"+vvar.vdecl.ident+":"+vvar.type.TypeId+"~q,&"+Trans( vvar )+");" )
+				Emit( "bbDBLocal(~q"+vvar.vdecl.ident+"~q,&"+Trans( vvar )+");" )
 			Next
 			
 		Endif
@@ -798,7 +850,7 @@ Class Translator_CPP Extends Translator
 			Emit( TransType( vvar.type )+" "+dbvar+init+";" )
 		Endif
 		
-		If debug And dbvar Emit( "bbDBLocal(~q"+vvar.vdecl.ident+":"+vvar.type.TypeId+"~q,&"+dbvar+");" )
+		If debug And dbvar Emit( "bbDBLocal(~q"+vvar.vdecl.ident+"~q,&"+dbvar+");" )
 
 	End
 	
@@ -1180,7 +1232,6 @@ Class Translator_CPP Extends Translator
 	Method Trans:String( value:NewObjectValue )
 	
 		Local ctype:=value.ctype
-	
 		Uses( ctype )
 	
 		If IsStruct( ctype ) Return ClassName( ctype )+"("+TransArgs( value.args )+")"
@@ -1192,9 +1243,12 @@ Class Translator_CPP Extends Translator
 	
 	Method Trans:String( value:NewArrayValue )
 	
-		If value.inits Return ArrayName( value.atype )+"::create({"+TransArgs( value.inits )+"},"+value.inits.Length+")"
+		Local atype:=value.atype
+		Uses( atype )
+	
+		If value.inits Return ArrayName( atype )+"::create({"+TransArgs( value.inits )+"},"+value.inits.Length+")"
 		
-		Return ArrayName( value.atype )+"::create("+TransArgs( value.sizes )+")"
+		Return ArrayName( atype )+"::create("+TransArgs( value.sizes )+")"
 	End
 	
 	Method Trans:String( value:ArrayIndexValue )

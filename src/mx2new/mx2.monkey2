@@ -40,7 +40,11 @@ Using std.filesystem
 Using std.collections
 Using lib.c
 
-Const MX2CC_VERSION:="003"
-
-Global MX2_MODULES_VERSION:=""
-Global MX2_PRODUCT_VERSION:=""
+' Messy, but to update version:
+'
+' 1) Update MX2CC_VERSION below
+' 2) ./updatemx2cc
+' 3) edit .sh and .bat files to use new version (common.sh, updatemx2cc.bat, rebuildmx2cc.bat)
+' 4) ./rebuildall
+'
+Const MX2CC_VERSION:="004"

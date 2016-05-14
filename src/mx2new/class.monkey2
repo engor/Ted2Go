@@ -48,6 +48,9 @@ Class ClassType Extends Type
 
 	Field abstractMethods:FuncValue[]
 	
+	Field fields:=New Stack<SNode>
+	Field methods:=New Stack<SNode>
+	
 	Method New( cdecl:ClassDecl,outer:Scope,types:Type[],instanceOf:ClassType )
 	
 		Self.pnode=cdecl
@@ -63,6 +66,10 @@ Class ClassType Extends Type
 		For Local member:=Eachin cdecl.members
 			Local node:=member.ToNode( scope )
 			scope.Insert( member.ident,node )
+			Select member.kind
+			Case "field" fields.Push( node )
+'			Case "method" methods.Push( node )
+			End
 		Next
 		
 	End
@@ -378,7 +385,7 @@ Class ClassType Extends Type
 		If membersSemanting SemantError( "ClassType.FindNode() class='"+ToString()+"', ident='"+ident+"'" )
 	
 		Local node:=scope.GetNode( ident )
-		If node Return node
+		If node Or ident="new" Return node
 		
 		If superType Return superType.FindNode( ident )
 		

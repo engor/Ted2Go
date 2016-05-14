@@ -80,6 +80,11 @@ Function MungArg:String( type:Type )
 	If ctype
 		Return "T"+ClassName( ctype )+"_2"
 	Endif
+	
+	Local etype:=TCast<EnumType>( type )
+	If etype
+		Return "T"+EnumName( etype )+"_2"
+	Endif
 
 	Local qtype:=TCast<PointerType>( type )
 	If qtype

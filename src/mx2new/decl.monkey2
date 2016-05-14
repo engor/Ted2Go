@@ -1,32 +1,30 @@
 
 Namespace mx2
 
-Const DECL_PUBLIC:=1
-Const DECL_PRIVATE:=2
-Const DECL_PROTECTED:=4
-Const DECL_ACCESSMASK:=DECL_PUBLIC|DECL_PRIVATE|DECL_PROTECTED
+Const DECL_PUBLIC:=		$000001
+Const DECL_PRIVATE:=	$000002
+Const DECL_PROTECTED:=	$000004
+Const DECL_INTERNAL:=	$000008
 
-Const DECL_VIRTUAL:=8
-Const DECL_OVERRIDE:=16
-Const DECL_ABSTRACT:=32
-Const DECL_FINAL:=64
+Const DECL_VIRTUAL:=	$000100
+Const DECL_OVERRIDE:=	$000200
+Const DECL_ABSTRACT:=	$000400
+Const DECL_FINAL:=		$000800
+Const DECL_EXTERN:=		$001000
+Const DECL_EXTENSION:=	$002000
+Const DECL_DEFAULT:=	$004000
 
-Const DECL_EXTERN:=128
+Const DECL_GETTER:=		$010000
+Const DECL_SETTER:=		$020000
+Const DECL_OPERATOR:=	$040000
+Const DECL_IFACEMEMBER:=$080000
 
-Const DECL_GETTER:=256
-Const DECL_SETTER:=512
-Const DECL_OPERATOR:=1024
-Const DECL_IFACEMEMBER:=2048
-
-Const DECL_EXTENSION:=4096
-
-Const DECL_DEFAULT:=8192
+Const DECL_ACCESSMASK:=DECL_PUBLIC|DECL_PRIVATE|DECL_PROTECTED|DECL_INTERNAL
 
 Class Decl Extends PNode
 
 	Field kind:String
 	Field ident:String
-	Field idscope:String
 	Field flags:Int
 	Field symbol:String
 	Field docs:String
@@ -41,12 +39,16 @@ Class Decl Extends PNode
 		Return (flags & DECL_PUBLIC)<>0
 	End
 	
+	Property IsPrivate:Bool()
+		Return (flags & DECL_PRIVATE)<>0
+	End
+
 	Property IsProtected:Bool()
 		Return (flags & DECL_PROTECTED)<>0
 	End
 	
-	Property IsPrivate:Bool()
-		Return (flags & DECL_PRIVATE)<>0
+	Property IsInternal:Bool()
+		Return (flags & DECL_INTERNAL)<>0
 	End
 	
 	Property IsVirtual:Bool()
@@ -90,7 +92,7 @@ Class Decl Extends PNode
 	End
 	
 	Method ToString:String() Override
-		Return kind.Capitalize()+" "+idscope+ident
+		Return kind.Capitalize()+" "+ident
 	End
 	
 	Method Emit( buf:StringStack,spc:String ) Virtual
@@ -117,7 +119,6 @@ Class FileDecl Extends Decl
 	Field imports:String[]
 	Field errors:ParseEx[]
 
-	'for trans...!
 	Field module:Module	
 	Field exhfile:String	
 	Field hfile:String

@@ -45,6 +45,7 @@ Class FuncValue Extends Value
 	Field instanceOf:FuncValue
 	Field pdecls:VarDecl[]
 	Field transFile:FileDecl
+	Field cscope:ClassScope
 	
 	Field block:Block
 	Field ftype:FuncType
@@ -73,6 +74,7 @@ Class FuncValue Extends Value
 		Self.instanceOf=instanceOf
 		Self.pdecls=fdecl.type.params
 		Self.transFile=scope.FindFile().fdecl
+		Self.cscope=Cast<ClassScope>( scope )
 		
 		If fdecl.kind="lambda" captures=New Stack<VarValue>
 	End
@@ -293,6 +295,7 @@ Class FuncValue Extends Value
 	End
 	
 	Method CheckAccess( tscope:Scope ) Override
+
 		CheckAccess( fdecl,scope,tscope )
 	End
 	
@@ -394,6 +397,8 @@ Class FuncValue Extends Value
 			Endif
 
 		Else
+		
+			If fdecl.kind="method" cscope.ctype.methods.Push( Self )
 		
 			scope.transMembers.Push( Self )
 

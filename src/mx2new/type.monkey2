@@ -51,14 +51,14 @@ Class Type Extends SNode
 	'Not nice - should fix comparison ops
 	Operator=:Bool( type:Type )
 		If Not Self Return Object(type)=Null
-		If type Return Object(type._alias)=_alias
-		Return _alias=Null
+		If Not type Return Object(_alias)=Null
+		Return Object(type._alias)=_alias
 	End
 	
 	Operator<>:Bool( type:Type )
 		If Not Self Return Object(type)<>Null
-		If type Return Object(type._alias)<>_alias
-		Return _alias<>Null
+		If Not type Return Object(_alias)<>Null
+		Return Object(type._alias)<>_alias
 	End
 	
 	Operator<=>:Int( type:Type )

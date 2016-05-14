@@ -21,6 +21,15 @@ Function IsGCType:Bool( type:Type )
 	Return False
 End
 
+Function IsGCVarType:Bool( type:Type )
+
+	Local ctype:=TCast<ClassType>( type )
+	If ctype Return ctype.cdecl.kind="class" Or ctype.cdecl.kind="interface"
+	
+	Local atype:=TCast<ArrayType>( type )
+	Return atype<>Null
+End
+
 Function HasGCMembers:Bool( scope:Scope )
 
 	For Local node:=Eachin scope.transMembers
@@ -299,7 +308,18 @@ Class Translator
 		EmitBr()
 		For Local ctype:=Eachin _refsTypes
 		
-			If Not Included( ctype.transFile ) Emit( "struct "+ClassName( ctype )+";" )
+			If Not Included( ctype.transFile ) 
+			
+				Local cname:=ClassName( ctype )
+				Emit( "struct "+ClassName( ctype )+";" )
+				
+				If debug
+					Local tname:=cname
+					If Not IsStruct( ctype ) tname+="*"
+					Emit( "template<> bbDBType *bbDBTypeOf("+tname+"*);" )
+				Endif
+				
+			Endif
 		Next
 		_refsTypes.Clear()
 		
@@ -415,6 +435,9 @@ Class Translator
 	Method Uses( type:Type )
 		Local ctype:=TCast<ClassType>( type )
 		If ctype Uses( ctype )
+		
+		Local atype:=TCast<ArrayType>( type )
+		If atype Uses( atype.elemType )
 	End
 	
 	Method Uses( ctype:ClassType )

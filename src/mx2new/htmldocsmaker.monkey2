@@ -80,11 +80,17 @@ Class HtmlDocsMaker Extends DocsMaker
 	End
 	
 	Method BeginNode( name:String,page:String="" )
-		If page page=",page:'"+page+"'"
-		Local module:=",module:'"+_module.name+"'"
+	
+		If page page=",page:'"+_module.name+":"+page+"'"
 		_posStack.Push( _sep )
 		_posStack.Push( _buf.Length )
-		EmitTree( "{ name:'"+name+"'"+module+page+",children:[" )
+		EmitTree( "{ name:'"+name+"'"+page+",children:[" )
+			
+'		If page page=",page:'"+page+"'"
+'		Local module:=",module:'"+_module.name+"'"
+'		_posStack.Push( _sep )
+'		_posStack.Push( _buf.Length )
+'		EmitTree( "{ name:'"+name+"'"+module+page+",children:[" )
 	End
 	
 	Method EndNode( force:Bool=False )
@@ -97,19 +103,28 @@ Class HtmlDocsMaker Extends DocsMaker
 	End
 	
 	Method EmitLeaf( name:String,page:String="" )
-		If page page=",page:'"+page+"'"
-		Local module:=",module:'"+_module.name+"'"
-		EmitTree( "{ name:'"+name+"'"+module+page+",children:[] }" )
+	
+		If page page=",page:'"+_module.name+":"+page+"'"
+		EmitTree( "{ name:'"+name+"'"+page+",children:[] }" )
+
+'		If page page=",page:'"+page+"'"
+'		Local module:=",module:'"+_module.name+"'"
+'		EmitTree( "{ name:'"+name+"'"+module+page+",children:[] }" )
+		
 	End
 	
 	Method EmitLeaf( decl:Decl,page:String="" )
 
-		EmitLeaf( DeclIdent( decl,False ),page )
+		EmitLeaf( decl.ident,page )
+
+'		EmitLeaf( DeclIdent( decl,False ),page )
 	End
 	
 	Method EmitNode( decl:Decl,scope:Scope,page:String="",force:Bool=False )
 	
-		EmitNode( DeclIdent( decl,False ),scope,page,force )
+		EmitNode( decl.ident,scope,page,force )
+
+'		EmitNode( DeclIdent( decl,False ),scope,page,force )
 	End
 	
 	Method EmitNode( name:String,scope:Scope,page:String="",force:Bool=False )
