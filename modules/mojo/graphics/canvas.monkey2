@@ -19,7 +19,7 @@ Class Canvas
 
 	Method New( image:Image )
 	
-		Init( image.Texture,image.Texture.Rect.Size,image.RenderRect )
+		Init( image.Texture,image.Texture.Rect.Size,image.Rect )
 	End
 	
 	#rem monkeydoc @hidden
@@ -406,10 +406,10 @@ Class Canvas
 	End
 	
 	Method DrawRect( rect:Rectf,srcImage:Image,srcRect:Recti )
-		Local s0:=Float(srcImage.RenderRect.min.x+srcRect.min.x)/srcImage.Texture.Width
-		Local t0:=Float(srcImage.RenderRect.min.y+srcRect.min.y)/srcImage.Texture.Height
-		Local s1:=Float(srcImage.RenderRect.min.x+srcRect.max.x)/srcImage.Texture.Width
-		Local t1:=Float(srcImage.RenderRect.min.y+srcRect.max.y)/srcImage.Texture.Height
+		Local s0:=Float(srcImage.Rect.min.x+srcRect.min.x)/srcImage.Texture.Width
+		Local t0:=Float(srcImage.Rect.min.y+srcRect.min.y)/srcImage.Texture.Height
+		Local s1:=Float(srcImage.Rect.min.x+srcRect.max.x)/srcImage.Texture.Width
+		Local t1:=Float(srcImage.Rect.min.y+srcRect.max.y)/srcImage.Texture.Height
 		AddDrawOp( srcImage.Material,4,1 )
 		AddVertex( rect.min.x,rect.min.y,s0,t0 )
 		AddVertex( rect.max.x,rect.min.y,s1,t0 )
@@ -467,7 +467,7 @@ Class Canvas
 		ty-=_font.Height * handleY
 	
 		Local image:=_font.Image
-		Local sx:=image.RenderRect.min.x,sy:=image.RenderRect.min.y
+		Local sx:=image.Rect.min.x,sy:=image.Rect.min.y
 		Local tw:=image.Texture.Width,th:=image.Texture.Height
 		
 		AddDrawOp( image.Material,4,text.Length )

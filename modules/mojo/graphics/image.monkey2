@@ -52,13 +52,21 @@ Class Image
 		Return _texture
 	End
 	
-	#rem monkeydoc @hidden
-	#end
-	Property RenderRect:Recti()
+	Property Rect:Recti()
 	
-		Return _renderRect
+		Return _rect
 	End
 	
+	Property Width:Int()
+	
+		Return _rect.Width
+	End
+	
+	Property Height:Int()
+	
+		Return _rect.Height
+	End
+
 	Property Handle:Vec2f()
 	
 		Return _handle
@@ -122,7 +130,7 @@ Class Image
 	
 	Field _material:Material
 	Field _texture:Texture
-	Field _renderRect:Recti
+	Field _rect:Recti
 	
 	Field _handle:=New Vec2f( 0,0 )
 	Field _scale:=New Vec2f( 1,1 )
@@ -140,17 +148,17 @@ Class Image
 		
 		_material=material
 		_texture=texture
-		_renderRect=rect
+		_rect=rect
 		
 		UpdateVertices()
 		UpdateTexCoords()
 	End
 	
 	Method UpdateVertices()
-		_vertices.min.x=Float(_renderRect.Width)*(0-_handle.x)*_scale.x
-		_vertices.min.y=Float(_renderRect.Height)*(0-_handle.y)*_scale.y
-		_vertices.max.x=Float(_renderRect.Width)*(1-_handle.x)*_scale.x
-		_vertices.max.y=Float(_renderRect.Height)*(1-_handle.y)*_scale.y
+		_vertices.min.x=Float(_rect.Width)*(0-_handle.x)*_scale.x
+		_vertices.min.y=Float(_rect.Height)*(0-_handle.y)*_scale.y
+		_vertices.max.x=Float(_rect.Width)*(1-_handle.x)*_scale.x
+		_vertices.max.y=Float(_rect.Height)*(1-_handle.y)*_scale.y
 		_radius=_vertices.min.x*_vertices.min.x+_vertices.min.y*_vertices.min.y
 		_radius=Max( _radius,_vertices.max.x*_vertices.max.x+_vertices.min.y*_vertices.min.y )
 		_radius=Max( _radius,_vertices.max.x*_vertices.max.x+_vertices.max.y*_vertices.max.y )
@@ -159,10 +167,10 @@ Class Image
 	End
 	
 	Method UpdateTexCoords()
-		_texCoords.min.x=Float(_renderRect.min.x)/_texture.Width
-		_texCoords.min.y=Float(_renderRect.min.y)/_texture.Height
-		_texCoords.max.x=Float(_renderRect.max.x)/_texture.Width
-		_texCoords.max.y=Float(_renderRect.max.y)/_texture.Height
+		_texCoords.min.x=Float(_rect.min.x)/_texture.Width
+		_texCoords.min.y=Float(_rect.min.y)/_texture.Height
+		_texCoords.max.x=Float(_rect.max.x)/_texture.Width
+		_texCoords.max.y=Float(_rect.max.y)/_texture.Height
 	End
 	
 End
