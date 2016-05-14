@@ -3,72 +3,72 @@
 
 #include <cstring>
 
-static size_t malloced;
+namespace{
 
-static size_t max_malloced;
+	void *pools[32];
+	
+	unsigned char *poolBuf;
+	size_t poolBufSize;
+}
 
-static void *pools[256>>3];
+size_t bbMallocedBytes;
 
 void *bbMalloc( size_t size ){
 
-	size+=sizeof(size_t);
+	size=(size+sizeof( size_t )+7)&~7;
 	
-	size=(size+7)&~7;
+	void *p;
 	
-	size_t *p;
-	
-/*	
-	if( size<256 && pools[size>>3] ){
-		p=(size_t*)pools[size>>3];
-		pools[size>>3]=*((void**)p);
-	}else{
-		p=(size_t*)malloc( size );
-	}
-*/
-	p=(size_t*)malloc( size );
-
-	malloced+=size;
-	
-	memset( p,0,size );
-	
-	*p=size;
-	
-	/*
-	if( malloced>max_malloced ){
-		max_malloced=malloced;
-		printf( "Max malloced:%ul\n",max_malloced );
-		fflush( stdout );
-	}
-	*/
-
-	return p+1;
-}
-
-size_t bbMallocSize( const void *q ){
-	return *((const size_t*)q-1);
-}
-
-void bbFree( void *q ){
-
-	if( !q ) return;
-
-	size_t *p=(size_t*)q-1;
-	
-	size_t size=*p;
-	
-	free( p );
-	
-	malloced-=size;
-	
-	/*
 	if( size<256 ){
-		*((void**)p)=pools[size>>3];
-		pools[size>>3]=p;
+		if( pools[size>>3] ){
+			p=pools[size>>3];
+			pools[size>>3]=*(void**)p;
+		}else{
+			if( size>poolBufSize ){
+				if( poolBufSize ){
+					*(void**)poolBuf=pools[poolBufSize>>3];
+					pools[poolBufSize>>3]=poolBuf;
+				}
+				poolBufSize=65536;
+				poolBuf=(unsigned char*)::malloc( poolBufSize );
+			}
+			p=poolBuf;
+			poolBuf+=size;
+			poolBufSize-=size;
+		}
 	}else{
-		free( p );
+		p=::malloc( size );
 	}
-	*/
 	
-//	printf( "Freed:%p, size=%i, total=%i\n",p,size,malloced );
-	//fflush( stdout );
+	bbMallocedBytes+=size;
+
+	size_t *q=(size_t*)p;
+	*q++=size;
+	return q;
+}
+
+size_t bbMallocSize( void *p ){
+
+	if( p ) return *((size_t*)p-1);
+	
+	return 0;
+}
+
+void bbFree( void *p ){
+
+	if( !p ) return;
+	
+	size_t *q=(size_t*)p-1;
+	
+	size_t size=*q;
+	
+	bbMallocedBytes-=size;
+
+	if( size<256 ){
+		*(void**)q=pools[size>>3];
+		pools[size>>3]=q;
+	}else{
+		::free( q );
+	}
+
 }

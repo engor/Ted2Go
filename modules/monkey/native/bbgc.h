@@ -26,7 +26,7 @@
 
 #if BBGC_DEBUG
 #define BBGC_VALIDATE( P ) \
-	if( (P) && ((P)->flags&3)==3 ){ \
+	if( (P) && (P)->flags==3 ){ \
 		printf( "Attempt to use deleted object %p of type '%s'\n",(P),(P)->typeName() ); \
 		fflush( stdout ); \
 		abort(); \
@@ -71,10 +71,6 @@ struct bbGCNode{
 	virtual ~bbGCNode(){
 	}
 
-	size_t gcSize(){
-		return flags&~7;
-	}
-	
 	virtual void gcMark(){
 	}
 	
@@ -149,13 +145,13 @@ namespace bbGC{
 	inline void enqueue( bbGCNode *p ){
 		BBGC_VALIDATE( p )
 
-		if( !p || (p->flags&3)!=unmarkedBit ) return;
+		if( !p || p->flags!=unmarkedBit ) return;
 		
 		remove( p );
 		p->succ=markQueue;
 		markQueue=p;
 		
-		p->flags=(p->flags & ~3)|markedBit;
+		p->flags=markedBit;
 	}
 	
 	inline void beginCtor( bbGCNode *p ){
@@ -168,9 +164,9 @@ namespace bbGC{
 #if BBGC_INCREMENTAL
 		p->succ=markQueue;
 		markQueue=p;
-		p->flags|=markedBit;
+		p->flags=markedBit;
 #else
-		p->flags|=unmarkedBit;
+		p->flags=unmarkedBit;
 		insert( p,unmarkedList );
 #endif
 	}

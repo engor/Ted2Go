@@ -90,10 +90,12 @@ int main( int argc,char **argv ){
 
 //	printf( "bbMain() : sizeof(bbBool)=%i sizeof(bbByte)=%i sizeof(bbShort)=%i sizeof(bbInt)=%i, sizeof(bbLong)=%i, sizeof(bbChar)=%i sizeof(void*)=%i, sizeof(size_t)=%i\n",(int)sizeof(bbBool),(int)sizeof(bbByte),(int)sizeof(bbShort),(int)sizeof(bbInt),(int)sizeof(bbLong),(int)sizeof(bbChar),(int)sizeof(void*),(int)sizeof(size_t) );
 //	fflush( stdout );
-	
+
 	try{
 	
 		bbGC::init();
+		
+		bbDB::init();
 
 		{		
 			bbDBFrame( "_void()","" );

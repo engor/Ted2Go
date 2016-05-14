@@ -24,6 +24,8 @@ int system_( const char *cmd ){
 
 #if _WIN32
 
+//	return system( cmd );
+
 	bbString tmp=BB_T( "cmd /S /C\"" )+BB_T( cmd )+BB_T( "\"" );
 
 	PROCESS_INFORMATION pi={0};

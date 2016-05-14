@@ -3,6 +3,7 @@
 #define BB_ARRAY_H
 
 #include "bbgc.h"
+#include "bbdebug.h"
 #include "bbassert.h"
 
 template<class T,int D> class bbArray : public bbGCNode{
@@ -170,5 +171,15 @@ template<class T,int D> class bbArray : public bbGCNode{
 		return length();
 	}
 };
+
+template<class T,int N> bbDBType *bbDBTypeOf( bbArray<T,N>** ){
+	struct type : public bbDBType{
+		bbDBType *elemType=bbDBTypeOf<T>();
+		int rank=N;
+		bbString name(){ return elemType->name()+BB_T("[]"); }
+	};
+	static type _type;
+	return &_type;
+}
 
 #endif

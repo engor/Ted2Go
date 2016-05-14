@@ -11,5 +11,6 @@ std
 gles20
 sdl2
 sdl2-mixer
-mojo2
+freetype
+mojo
 litehtml

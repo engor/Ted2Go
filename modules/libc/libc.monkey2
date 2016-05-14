@@ -91,17 +91,22 @@ Struct tm_t
 	Field tm_isdst:Int
 End
 
-Const CLOCKS_PER_SEC:Long="((bbLong)CLOCKS_PER_SEC)"
+Struct timeval
+	Field tv_sec:Long	'dodgy - should be time_t
+	Field tv_usec:Long	'dodyy - should be suseconds_t
+End
 
+'Note: clock() scary - pauses while process sleeps!
+Const CLOCKS_PER_SEC:Long="((bbLong)CLOCKS_PER_SEC)"
 Function clock:Long()="(bbLong)clock"
 
-'dodgy!
-Function tolong:long( timer:time_t )="bbLong"
+Function tolong:Long( timer:time_t )="bbLong"
 
 Function time:time_t( timer:time_t Ptr )
 Function localtime:tm_t Ptr( timer:time_t Ptr )
 Function gmtime:tm_t Ptr( timer:time_t Ptr )
 Function difftime:Double( endtime:time_t,starttime:time_t ) 
+Function gettimeofday:Int( tv:timeval Ptr,tz:Void Ptr )
 
 '***** unistd.h *****
 

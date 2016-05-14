@@ -3,6 +3,10 @@ Namespace std.time
 
 Private
 
+Global _us0:Long
+
+Public
+
 #rem monkeydoc @hidden Time class.
 #end
 Class Time
@@ -105,16 +109,25 @@ Class Time
 	
 End
 
-#rem monkeydoc @hidden Gets the number of seconds since the app started.
+#rem monkeydoc Gets the number of microseconds since the app started.
 #end
-Function Seconds:Double()
-	Return Double(clock())/Double(CLOCKS_PER_SEC)
+Function Microsecs:Long()
+	Local tv:timeval
+	gettimeofday( Varptr tv,Null )
+	Local us:=tv.tv_sec*1000000+tv.tv_usec
+	If _us0 Return us-_us0
+	_us0=us
+	Return 0
 End
 
 #rem monkeydoc Gets the number of milliseconds since the app started.
 #end
 Function Millisecs:Int()
-	'Note:CLOCKS_PER_SECOND=1000000 on macos/linux, 1000 on windows...
-	If CLOCKS_PER_SEC>=1000 Return clock()/(CLOCKS_PER_SEC/1000)
-	Return clock()*(1000/CLOCKS_PER_SEC)	'is that right?!?
+	Return Microsecs()/1000
+End
+
+#rem monkeydoc @hidden Gets the number of seconds since the app started.
+#end
+Function Seconds:Double()
+	Return Microsecs()/1000000.0
 End

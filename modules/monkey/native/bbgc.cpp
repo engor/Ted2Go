@@ -86,12 +86,6 @@ namespace bbGC{
 		
 #if BBGC_DEBUG
 
-//		p->~bbGCNode();
-			
-//		size_t sz=(size_t)&((bbGCNode*)0)->flags;
-		
-//		memset( (char*)p+sz,0xaa,size-sz );
-		
 		p->flags=3;
 
 #else
@@ -106,7 +100,8 @@ namespace bbGC{
 		while( freeList.succ!=&freeList ){
 		
 			bbGCNode *p=freeList.succ;
-			size_t psize=p->gcSize();
+			
+			size_t psize=bbMallocSize( p );
 			
 			remove( p );
 			destroy( p );
@@ -117,13 +112,14 @@ namespace bbGC{
 	}
 	
 	void mark( bbGCNode *p ){
-		if( !p || (p->flags&3)==markedBit ) return;
+		if( !p || p->flags==markedBit ) return;
 		
 		remove( p );
 		insert( p,markedList );
 		
-		p->flags=(p->flags & ~3)|markedBit;
-		markedBytes+=p->gcSize();
+		p->flags=markedBit;
+		
+		markedBytes+=bbMallocSize( p );
 
 		p->gcMark();
 	}
@@ -165,7 +161,8 @@ namespace bbGC{
 			markQueue=p->succ;
 			
 			insert( p,markedList );
-			markedBytes+=p->gcSize();
+			
+			markedBytes+=bbMallocSize( p );
 			
 			p->gcMark();
 		}
@@ -187,7 +184,7 @@ namespace bbGC{
 			freeList.pred->succ=unmarkedList->succ;
 			freeList.pred=unmarkedList->pred;
 			
-			//clear unmarked
+			//clear unmarkedmpor
 			unmarkedList->succ=unmarkedList->pred=unmarkedList;
 		}
 		
@@ -196,43 +193,46 @@ namespace bbGC{
 		
 		unmarkedBytes=markedBytes;
 
-		markedBytes=allocedBytes=0;
+		markedBytes=0;
+		
+		allocedBytes=0;
 		
 		markRoots();
 	}
-
+	
 	bbGCNode *alloc( size_t size ){
 	
-		size=(size+7)&~7;
-		
-		allocedBytes+=size;
-		
 		if( allocedBytes>=BBGC_TRIGGER ){
-		
+
 			sweep();
-			
+		
 #if BBGC_AGGRESSIVE
 			reclaim();
 #endif
 		}else{
 		
 #if BBGC_INCREMENTAL
-			size_t tomark=double(allocedBytes) / double(BBGC_TRIGGER) * double(unmarkedBytes+allocedBytes);
 
+//			size_t tomark=double( allocedBytes ) / double( BBGC_TRIGGER ) * double( unmarkedBytes + allocedBytes );
+			size_t tomark=double( allocedBytes ) / double( BBGC_TRIGGER ) * double( unmarkedBytes + BBGC_TRIGGER );
+	
 			markQueued( tomark );
 #endif
 		}
-		
-#if !BBGC_AGGRESSIVE
-		reclaim( size );
-#endif
-
+	
 		bbGCNode *p=(bbGCNode*)bbMalloc( size );
 		
 		*((void**)p)=(void*)0xcafebabe;
 		
-		p->flags=size;
+		p->flags=0;
 		
+		size=bbMallocSize( p );
+		
+		allocedBytes+=size;
+		
+#if !BBGC_AGGRESSIVE
+		reclaim( size );
+#endif
 		return p;
 	}
 	

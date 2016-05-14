@@ -4,6 +4,7 @@
 
 #include "bbtypes.h"
 #include "bbgc.h"
+#include "bbdebug.h"
 
 template<class T> class bbFunction;
 
@@ -255,6 +256,15 @@ template<class R,class...A> void bbGCMark( const bbFunction<R(A...)> &t ){
 
 template<class R,class...A> int bbCompare( const bbFunction<R(A...)> &x,const bbFunction<R(A...)> &y ){
 	return x._rep->compare( y._rep );
+}
+
+template<class R,class...A> struct bbDBFuncType : public bbDBType{
+	bbString name(){ return bbDBTypeOf<R>()->name()+"(...)"; }
+};
+
+template<class R,class...A> bbDBType *bbDBTypeOf( bbFunction<R(A...)>* ){
+	static bbDBFuncType<R,A...> _type;
+	return &_type;
 }
 
 #endif

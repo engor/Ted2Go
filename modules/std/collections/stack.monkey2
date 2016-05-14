@@ -11,6 +11,8 @@ Alias StringStack:Stack<String>
 #end
 Class Stack<T> Implements IContainer<T>
 
+	#rem monkeydoc The Stack.Iterator class
+	#end
 	Struct Iterator 'Implements IIterator<T>
 	
 		Private
@@ -29,12 +31,16 @@ Class Stack<T> Implements IContainer<T>
 		
 		Public
 		
+		#rem monkeydoc Creates a new iterator.
+		#end
 		Method New( stack:Stack,index:Int )
 			_stack=stack
 			_index=index
 			_seq=stack._seq
 		End
 		
+		#rem monkeydoc Checks if the iterator has reached the end of the stack.
+		#end
 		Property AtEnd:Bool()
 			AssertSeq()
 			Return _index=_stack._length
@@ -46,6 +52,8 @@ Class Stack<T> Implements IContainer<T>
 			Return Not AtEnd
 		End
 		
+		#rem monkeydoc The value currently pointed to by the iterator.
+		#end
 		Property Current:T()
 			AssertCurrent()
 			Return _stack._data[_index]
@@ -54,17 +62,32 @@ Class Stack<T> Implements IContainer<T>
 			_stack._data[_index]=current
 		End
 		
+		#rem monkeydoc Bumps the iterator so it points to the next value in the stack.
+		#end
 		Method Bump()
 			AssertCurrent()
 			_index+=1
 		End
 		
+		#rem monkeydoc Safely erases the value pointed to by the iterator.
+		
+		After calling this method, the iterator will point to the value after the removed value.
+		
+		Therefore, if you are manually iterating through a stack you should not call [[Bump]] after calling this method or you
+		will end up skipping a value.
+		
+		#end
 		Method Erase()
 			AssertSeq()
 			_stack.Erase( _index )
 			_seq=_stack._seq
 		End
 		
+		#rem monkeydoc Safely inserts a value before the value pointed to by the iterator.
+
+		After calling this method, the iterator will point to the newly added value.
+		
+		#end
 		Method Insert( value:T )
 			AssertSeq()
 			_stack.Insert( _index,value )
@@ -81,17 +104,42 @@ Class Stack<T> Implements IContainer<T>
 	Public
 	
 	#rem monkeydoc Creates a new stack.
+	
+	New() creates an empty stack.
+	
+	New( length:Int ) creates a stack that initially contains `length` null values.
+	
+	New( values:T[] ) creates a stack with the contents of an array.
+	
+	New( values:List<T> ) creates a stack with the contents of a list.
+	
+	New( values:Stack<T> ) create a stack with the contents of another stack.
+	
+	@param length The length of the stack.
+	
+	@param values An array, list or stack.
+	
 	#end
 	Method New()
 		_data=New T[10]
 	End
-
-	#rem monkeydoc Creates a new stack with the contents of an array.
-
-	@param data The array to create the stack with.
 	
-	#end
+	Method New( length:Int )
+		_length=length
+		_data=New T[_length]
+	End
+
 	Method New( values:T[] )
+		AddAll( values )
+	End
+	
+	Method New( values:Stack<T> )
+		_length=values.Length
+		_data=New T[_length]
+		values.Data.CopyTo( _data,0,0,_length )
+	End
+	
+	Method New( values:List<T> )
 		AddAll( values )
 	End
 	
@@ -104,16 +152,12 @@ Class Stack<T> Implements IContainer<T>
 		Return _length=0
 	End
 
-	#rem monkeydoc Gets an iterator to the stack.
+	#rem monkeydoc Gets an iterator to all values in the stack.
+	
+	Returns an iterator suitable for use with [[Eachin]], or for manual iteration.
 	
 	@return A stack iterator.
 	
-	#end
-'	Method GetIterator:Iterator()
-'		Return New Iterator( Self,0 )
-'	End
-
-	#rem monkeydoc @hidden
 	#end
 	Method All:Iterator()
 		Return New Iterator( Self,0 )
@@ -613,8 +657,6 @@ Class Stack<T> Implements IContainer<T>
 		Sort( compareFunc,lo,y )
 		Sort( compareFunc,x,hi )
 	End
-	
-	'***** Stack style extensions *****
 	
 	#rem monkeydoc Gets the top element of the stack
 	

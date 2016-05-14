@@ -411,7 +411,7 @@ Class Pixmap
 	#end
 	Function Load:Pixmap( path:String,format:PixelFormat=PixelFormat.Unknown )
 	
-		Return internal.LoadPixmap( path,format )
+		Return LoadPixmap( path,format )
 
 	End
 	

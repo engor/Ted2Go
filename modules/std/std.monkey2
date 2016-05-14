@@ -3,48 +3,53 @@ Namespace std
 
 #Import "<libc.monkey2>"
 
-#Import "collections/container.monkey2"
-#Import "collections/stack.monkey2"
-#Import "collections/list.monkey2"
-#Import "collections/map.monkey2"
+#Import "collections/container"
+#Import "collections/stack"
+#Import "collections/list"
+#Import "collections/map"
 
-#Import "memory/byteorder.monkey2"
-#Import "memory/databuffer.monkey2"
+#Import "memory/byteorder"
+#Import "memory/databuffer"
 
-#Import "stream/stream.monkey2"
-#Import "stream/filestream.monkey2"
-#Import "stream/datastream.monkey2"
-#Import "stream/zipstream.monkey2"
+#Import "stream/stream"
+#Import "stream/filestream"
+#Import "stream/datastream"
+#Import "stream/zipstream"
 
-#Import "geom/vec2.monkey2"
-#Import "geom/vec3.monkey2"
-#Import "geom/vec4.monkey2"
-#Import "geom/mat3.monkey2"
-#Import "geom/mat4.monkey2"
-#Import "geom/affinemat3.monkey2"
-'#Import "geom/affinemat4.monkey2"
-#Import "geom/rect.monkey2"
-#Import "geom/axis.monkey2"
+#Import "geom/vec2"
+#Import "geom/vec3"
+#Import "geom/vec4"
+#Import "geom/mat3"
+#Import "geom/mat4"
+#Import "geom/affinemat3"
+'#Import "geom/affinemat4"
+#Import "geom/rect"
+#Import "geom/axis"
 
-#Import "graphics/pixelformat.monkey2"
-#Import "graphics/pixmap.monkey2"
-#Import "graphics/pixmaploader.monkey2"
-#Import "graphics/color.monkey2"
+#Import "graphics/pixelformat"
+#Import "graphics/pixmap"
+#Import "graphics/pixmaploader"
+#Import "graphics/color"
 
-#Import "misc/random.monkey2"
-#Import "misc/chartype.monkey2"
-#Import "misc/filesystem.monkey2"
-#Import "misc/stringio.monkey2"
-#Import "misc/json.monkey2"
-#Import "misc/markdown.monkey2"
-#Import "misc/time.monkey2"
+#Import "misc/random"
+#Import "misc/chartype"
+#Import "misc/filesystem"
+#Import "misc/stringio"
+#Import "misc/json"
+#Import "misc/markdown"
+#Import "misc/time"
 
-'#Import "_dev/fiber.monkey2"
-'#Import "_dev/generator.monkey2"
+#Import "fiber/fiber"
+#Import "fiber/future"
+'#Import "_dev/fiber"
+'#Import "_dev/generator"
 
 Private
 
 Function Main()
+
+	'capture app start time
+	std.time.Microsecs()
 
 	Stream.OpenFuncs["file"]=Lambda:Stream( proto:String,path:String,mode:String )
 

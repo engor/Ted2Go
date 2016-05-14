@@ -233,3 +233,12 @@ Struct Rect<T>
 	End
 	
 End
+
+Function TransformRecti<T>:Recti( rect:Recti,matrix:AffineMat3<T> )
+	
+	Local min:=matrix * New Vec2f( rect.min.x,rect.min.y )
+	Local max:=matrix * New Vec2f( rect.max.x,rect.max.y )
+		
+	Return New Recti( Round( min.x ),Round( min.y ),Round( max.x ),Round( max.y ) )
+End
+

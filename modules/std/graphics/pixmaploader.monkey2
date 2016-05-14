@@ -1,5 +1,5 @@
 
-Namespace std.graphics.internal
+Namespace std.graphics
 
 #Import "<stb-image>"
 

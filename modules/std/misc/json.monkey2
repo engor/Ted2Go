@@ -3,7 +3,7 @@ Namespace std.json
 
 #rem monkeydoc JsonError class.
 #end
-Class JsonError Extends Throwable
+Class JsonError Extends Exception
 End
 
 #rem monkeydoc JsonValue class.
@@ -28,22 +28,14 @@ Class JsonValue Abstract
 		Return Null
 	End
 	
-	Operator[]:JsonValue( index:Int ) Virtual
+	Method ToArray:Stack<JsonValue>() Virtual
 		Assert( False )
 		Return Null
 	End
 	
-	Operator[]=( index:Int,value:JsonValue ) Virtual
-		Assert( False )
-	End
-	
-	Operator[]:JsonValue( key:String ) Virtual
+	Method ToObject:StringMap<JsonValue>() Virtual
 		Assert( False )
 		Return Null
-	End
-	
-	Operator[]=( key:String,value:JsonValue ) Virtual
-		Assert( False )
 	End
 	
 	Method ToJson:String() Virtual
@@ -211,8 +203,15 @@ End
 #end
 Class JsonArray Extends JsonValue
 
-	Method New( data:Stack<JsonValue> =Null )
-		If Not data data=New Stack<JsonValue>
+	Method New( length:Int=0 )
+		_data=New Stack<JsonValue>( length )
+	End
+
+	Method New( data:JsonValue[] )
+		_data=New Stack<JsonValue>( data )
+	End
+	
+	Method New( data:Stack<JsonValue> )
 		_data=data
 	End
 	
@@ -222,12 +221,16 @@ Class JsonArray Extends JsonValue
 		_data=data
 	End
 	
-	Operator[]:JsonValue( index:Int ) Override
-		Return _data[index]
+	Property Length:Int()
+		Return _data.Length
 	End
 	
-	Operator[]=( index:Int,value:JsonValue ) Override
-		_data[index]=value
+	Method Add( value:JsonValue )
+		_data.Add( value )
+	End
+	
+	Method ToArray:Stack<JsonValue>() Override
+		Return _data
 	End
 	
 	Private
@@ -262,12 +265,24 @@ Class JsonObject Extends JsonValue
 		_data=data
 	End
 	
-	Operator[]:JsonValue( key:String ) Override
+	Method Contains:Bool( key:String )
+		Return _data.Contains( key )
+	End
+	
+	Operator[]:JsonValue( key:String )
 		Return _data[key]
 	End
 	
-	Operator[]=( key:String,value:JsonValue ) Override
+	Operator[]=( key:String,value:JsonValue )
 		_data[key]=value
+	End
+	
+	Method ToObject:StringMap<JsonValue>() Override
+		Return Data
+	End
+	
+	Function Load:JsonObject( path:String )
+		Return Cast<JsonObject>( JsonValue.Load( path ) )
 	End
 	
 	Private
@@ -299,15 +314,15 @@ Class JsonParser
 	
 	Method ParseValue:JsonValue()
 		If TokeType=T_STRING Return New JsonString( ParseString() )
-		If TokeType=T_NUMBER Return New JsonNumber( Double( ParseNumber() ) )
+		If TokeType=T_NUMBER Return New JsonNumber( ParseNumber() )
 		If Toke="{" Return New JsonObject( ParseObject() )
 		If Toke="[" Return New JsonArray( ParseArray() )
-		If CParse("true") Return JsonBool.TrueValue
-		If CParse("false") Return JsonBool.FalseValue
-		If CParse("null") Return Null
+		If CParse( "true" ) Return JsonBool.TrueValue
+		If CParse( "false" ) Return JsonBool.FalseValue
+		If CParse( "null" ) Return Null
 		Return Null
 	End
-
+	
 	Private
 	
 	Const T_EOF:=0
@@ -373,7 +388,14 @@ Class JsonParser
 				If chr=92 GetChar()
 			Forever
 			_type=T_STRING
-		Else If chr=45 Or (chr>=48 And chr<=57)
+		Else If chr=39
+			Repeat
+				Local chr:=GetChar()
+				If chr=39 Exit
+				If chr=92 GetChar()
+			Forever
+			_type=T_STRING
+		Else If (chr>=48 And chr<=57) Or chr=45
 			If chr=45 '-
 				chr=GetChar()
 				If chr<48 Or chr>57 Throw New JsonError()
@@ -389,9 +411,9 @@ Class JsonParser
 				If Not CParseDigits() Throw New JsonError()
 			Endif
 			_type=T_NUMBER
-		Else If (chr>=65 And chr<91) Or (chr>=97 And chr<123)
+		Else If (chr>=65 And chr<91) Or (chr>=97 And chr<123) Or chr=95
 			chr=PeekChar()
-			While (chr>=65 And chr<91) Or (chr>=97 And chr<123)
+			While (chr>=65 And chr<91) Or (chr>=97 And chr<123) Or (chr>=48 And chr<58) Or chr=95
 				GetChar()
 				chr=PeekChar()
 			Wend
@@ -407,7 +429,7 @@ Class JsonParser
 		Return _toke
 	End
 	
-	property TokeType:Int()
+	Property TokeType:Int()
 		Return _type
 	End
 	
@@ -426,7 +448,12 @@ Class JsonParser
 		Local map:=New StringMap<JsonValue>
 		If CParse( "}" ) Return map
 		Repeat
-			Local name:=ParseString()
+			Local name:=Toke
+			If TokeType=T_IDENT
+				Bump()
+			Else
+				name=ParseString()
+			Endif
 			Parse( ":" )
 			Local value:=ParseValue()
 			map.Set( name,value )
@@ -437,19 +464,22 @@ Class JsonParser
 	
 	Method ParseArray:Stack<JsonValue>()
 		Parse( "[" )
-		If CParse( "]" ) Return Null
 		Local stack:=New Stack<JsonValue>
+		If CParse( "]" ) Return stack
 		Repeat
 			Local value:=ParseValue()
-			stack.Push( value )
+			stack.Add( value )
 		Until Not CParse( "," )
 		Parse( "]" )
 		Return stack
 	End
 	
 	Method ParseString:String()
+	
 		If TokeType<>T_STRING Throw New JsonError()
+		
 		Local toke:=Toke.Slice( 1,-1 )
+		
 		Local i:=toke.Find( "\" )
 		If i<>-1
 			Local frags:=New StringStack,p:=0,esc:=""
@@ -457,10 +487,10 @@ Class JsonParser
 				If i+1>=toke.Length Throw New JsonError()
 				frags.Push( toke.Slice( p,i ) )
 				Select toke[i+1]
-				Case 34  esc="~q"				'\"
+				Case 34  esc="~q"					'\"
 				Case 92  esc="\"					'\\
 				Case 47  esc="/"					'\/
-				Case 98  esc=String.FromChar( 8 )		'\b
+				Case 98  esc=String.FromChar( 8 )	'\b
 				Case 102 esc=String.FromChar( 12 )	'\f
 				Case 114 esc=String.FromChar( 13 )	'\r
 				Case 110 esc=String.FromChar( 10 )	'\n
@@ -497,11 +527,11 @@ Class JsonParser
 		Return toke
 	End
 	
-	Method ParseNumber:String()
+	Method ParseNumber:Double()
 		If TokeType<>T_NUMBER Throw New JsonError()
 		Local toke:=Toke
 		Bump()
-		Return toke
+		Return Double( toke )
 	End
-
+	
 End

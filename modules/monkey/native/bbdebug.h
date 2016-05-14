@@ -4,23 +4,59 @@
 
 #include "bbstring.h"
 
+struct bbDBFiber;
+
 struct bbDBFrame;
 
+struct bbDBVar;
+
+//subclasses can't add data!
+struct bbDBType{
+	virtual bbString name(){ return "<?>"; }
+	virtual bbString value( void *var ){ return "?????"; }
+//	virtual void members( bbDBVar *var,bbDBVar **vars ){}
+};
+
+template<class T> bbDBType *bbDBTypeOf( T* ){
+	static bbDBType _type;
+	return &_type;
+}
+
+template<class T> bbDBType *bbDBTypeOf( T** ){
+	struct type : public bbDBType{
+		bbString name(){ return bbDBTypeOf( (T*)0 )->name()+" Ptr"; }
+	};
+	static type _type;
+	return &_type;
+}
+
+template<class T> bbDBType *bbDBTypeOf(){
+	return bbDBTypeOf( (T*)0 );
+}
+
 struct bbDBVar{
-	const char *decl;
-	void *ptr;
+	const char *name;
+	bbDBType *type;
+	void *var;
+};
+
+struct bbDBContext{
+
+	bbDBFrame *frames=nullptr;
+	bbDBVar *localsBuf=nullptr;
+	bbDBVar *locals=nullptr;
+	int stopped;
 	
-	bbString ident()const;
+	~bbDBContext();
 	
-	bbString typeName()const;
-	
-	bbString getValue()const;
+	void init();
 };
 
 namespace bbDB{
-	extern bbDBFrame *frames;
-	extern bbDBVar *locals;
-	extern bool stopper;
+
+	extern bbDBContext *currentContext;
+	
+	void init();
 	
 	void stop();
 	
@@ -36,34 +72,45 @@ struct bbDBFrame{
 	const char *srcFile;
 	int srcPos;
 	
-	bbDBFrame( const char *decl,const char *srcFile ):succ( bbDB::frames ),locals( bbDB::locals ),decl( decl ),srcFile( srcFile ){
-		bbDB::frames=this;
+	bbDBFrame( const char *decl,const char *srcFile ):succ( bbDB::currentContext->frames ),locals( bbDB::currentContext->locals ),decl( decl ),srcFile( srcFile ){
+		bbDB::currentContext->frames=this;
+		--bbDB::currentContext->stopped;
 	}
 	
 	~bbDBFrame(){
-		bbDB::locals=locals;
-		bbDB::frames=succ;
+		++bbDB::currentContext->stopped;
+		bbDB::currentContext->locals=locals;
+		bbDB::currentContext->frames=succ;
 	}
 };
 
 struct bbDBBlock{
 	bbDBVar *locals;
-	bbDBBlock():locals( bbDB::locals ){
+	bbDBBlock():locals( bbDB::currentContext->locals ){
+		--bbDB::currentContext->stopped;
 	}
 	~bbDBBlock(){
-		bbDB::locals=locals;
+		++bbDB::currentContext->stopped;
+		bbDB::currentContext->locals=locals;
 	}
 };
 
 inline void bbDBStmt( int srcPos ){
-	bbDB::frames->srcPos=srcPos;
-	if( bbDB::stopper ) bbDB::stopped();
+	bbDB::currentContext->frames->srcPos=srcPos;
+	if( bbDB::currentContext->stopped>=0 ) bbDB::stopped();
 }
 
-inline void bbDBLocal( const char *decl,void *ptr ){
-	bbDB::locals->decl=decl;
-	bbDB::locals->ptr=ptr;
-	++bbDB::locals;
+template<class T> void bbDBLocal( const char *name,T *var ){
+	bbDB::currentContext->locals->name=name;
+	bbDB::currentContext->locals->type=bbDBTypeOf<T>();
+	bbDB::currentContext->locals->var=var;
+	++bbDB::currentContext->locals;
 }
+
+template<> bbDBType *bbDBTypeOf( void* );
+
+template<> bbDBType *bbDBTypeOf( bbInt* );
+
+template<> bbDBType *bbDBTypeOf( bbString* );
 
 #endif
