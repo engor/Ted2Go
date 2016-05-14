@@ -37,7 +37,7 @@ End
 #end
 Function SaveString:Bool( str:String,path:String )
 
-	Local data:=New DataBuffer( str.Utf8Length+1 )
+	Local data:=New DataBuffer( str.Utf8Length )
 
 	str.ToUtf8String( data.Data,data.Length )
 
