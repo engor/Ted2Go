@@ -458,10 +458,6 @@ Class Builder
 				cmd=CXX_CMD+" "+CPP_OPTS.Join( " " )
 			End
 			
-			cmd+=" -Wno-int-to-pointer-cast"
-			cmd+=" -Wno-parentheses-equality"
-			cmd+=" -Wno-comment"
-			
 			cmd+=" -I~q"+modulesDir+"monkey/native~q"
 			
 			'Check dependancies
