@@ -8,9 +8,11 @@
 
 <script type='text/javascript'>
 
-function docsLinkClicked( page,module ){
+function docsLinkClicked( page ){
 
-	document.location.href='../../../'+module+'/docs/__PAGES__/'+page+'.html';
+	var url='../../../'+page.replace( ':','/docs/__PAGES__/' ).replace( /\./g,'-' )+'.html';
+
+	document.location.href=url;
 	
 	return false;
 }

@@ -12,11 +12,11 @@
 
 <script type="text/javascript">
 
-function docsNodeClicked( page,module ){
+function docsNodeClicked( page ){
 
-	var page='../modules/'+module+'/docs/__PAGES__/'+page+'.html';
+	var url='../modules/'+page.replace( ':','/docs/__PAGES__/' ).replace( /\./g,'-' )+'.html';
 
-	document.getElementById( 'docs' ).src=page;
+	document.getElementById( 'docs' ).src=url;
 }
 
 </script>
@@ -53,9 +53,7 @@ function docsNodeClicked( page,module ){
 		var page=data['page'];
 		if( !page ) return;
 		
-		var module=data['module'];
-		
-		docsNodeClicked( page,module );
+		docsNodeClicked( page );
 	} );
 
 	t.on( 'expand',function( args ){
@@ -65,10 +63,8 @@ function docsNodeClicked( page,module ){
 		
 		var page=data['page'];
 		if( !page ) return;
-
-		var module=data['module'];
 		
-		docsNodeClicked( page,module );
+		docsNodeClicked( page );
 	} );
 	
 	

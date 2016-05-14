@@ -27,8 +27,8 @@ Function Main()
 
 	Local map:=LoadMap2d( "asset::map2d.json" )
 	
-	Local w:=map.Size( 0 )
-	Local h:=map.Size( 1 )
+	Local w:=map.GetSize( 0 )
+	Local h:=map.GetSize( 1 )
 	
 	Print "w="+w
 	Print "h="+h
