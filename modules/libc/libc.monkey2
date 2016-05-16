@@ -96,6 +96,9 @@ Struct timeval
 	Field tv_usec:Long	'dodyy - should be suseconds_t
 End
 
+Struct timezone
+End
+
 'Note: clock() scary - pauses while process sleeps!
 Const CLOCKS_PER_SEC:Long="((bbLong)CLOCKS_PER_SEC)"
 Function clock:Long()="(bbLong)clock"
@@ -106,7 +109,7 @@ Function time:time_t( timer:time_t Ptr )
 Function localtime:tm_t Ptr( timer:time_t Ptr )
 Function gmtime:tm_t Ptr( timer:time_t Ptr )
 Function difftime:Double( endtime:time_t,starttime:time_t ) 
-Function gettimeofday:Int( tv:timeval Ptr,tz:Void Ptr )
+Function gettimeofday:Int( tv:timeval Ptr,tz:timezone Ptr )
 
 '***** unistd.h *****
 
