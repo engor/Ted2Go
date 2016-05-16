@@ -18,12 +18,13 @@
 #include <unistd.h>
 #endif
 
+typedef struct tm tm_t;
+
 typedef struct stat stat_t;
 
 int system_( const char *command );
 void setenv_( const char *name,const char *value,int overwrite );
 int mkdir_( const char *path,int mode );
-
-typedef struct tm tm_t;
+int gettimeofday_( timeval *tv );
 
 #endif

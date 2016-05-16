@@ -109,7 +109,7 @@ Function time:time_t( timer:time_t Ptr )
 Function localtime:tm_t Ptr( timer:time_t Ptr )
 Function gmtime:tm_t Ptr( timer:time_t Ptr )
 Function difftime:Double( endtime:time_t,starttime:time_t ) 
-Function gettimeofday:Int( tv:timeval Ptr,tz:timezone Ptr )
+Function gettimeofday:Int( tv:timeval Ptr )="gettimeofday_"
 
 '***** unistd.h *****
 

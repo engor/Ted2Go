@@ -57,3 +57,7 @@ int mkdir_( const char *path,int mode ){
 	return mkdir( path,0777 );
 #endif
 }
+
+int gettimeofday_( timeval *tv ){
+	return gettimeofday( tv,0 );
+}

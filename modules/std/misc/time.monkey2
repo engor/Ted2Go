@@ -113,7 +113,7 @@ End
 #end
 Function Microsecs:Long()
 	Local tv:timeval
-	gettimeofday( Varptr tv,Null )
+	gettimeofday( Varptr tv )
 	Local us:=tv.tv_sec*1000000+tv.tv_usec
 	If _us0 Return us-_us0
 	_us0=us
