@@ -48,8 +48,9 @@ Class ClassType Extends Type
 
 	Field abstractMethods:FuncValue[]
 	
-	Field fields:=New Stack<SNode>
-	Field methods:=New Stack<SNode>
+	Field ctors:=New Stack<FuncValue>
+	Field methods:=New Stack<FuncValue>
+	Field fields:=New Stack<VarValue>
 	
 	Method New( cdecl:ClassDecl,outer:Scope,types:Type[],instanceOf:ClassType )
 	
@@ -67,7 +68,7 @@ Class ClassType Extends Type
 			Local node:=member.ToNode( scope )
 			scope.Insert( member.ident,node )
 			Select member.kind
-			Case "field" fields.Push( node )
+			Case "field" fields.Push( Cast<VarValue>( node ) )
 '			Case "method" methods.Push( node )
 			End
 		Next

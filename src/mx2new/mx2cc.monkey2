@@ -19,9 +19,9 @@ Using libc
 
 Global StartDir:String
 
-'Const TestArgs:="mx2cc makemods -clean"
+Const TestArgs:="mx2cc makemods -clean"
 
-Const TestArgs:="mx2cc makeapp src/ted2/ted2.monkey2"
+'Const TestArgs:="mx2cc makeapp src/ted2/ted2.monkey2"
 
 'Const TestArgs:="mx2cc makeapp src/mx2new/test.monkey2"
 

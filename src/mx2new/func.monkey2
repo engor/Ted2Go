@@ -398,7 +398,13 @@ Class FuncValue Extends Value
 
 		Else
 		
-			If fdecl.kind="method" cscope.ctype.methods.Push( Self )
+			If fdecl.kind="method"
+'				If fdecl.ident="new"
+'					cscope.ctype.ctors.Push( Self )
+'				Else
+					cscope.ctype.methods.Push( Self )
+'				Endif
+			Endif
 		
 			scope.transMembers.Push( Self )
 

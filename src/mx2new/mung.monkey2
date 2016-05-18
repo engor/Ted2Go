@@ -259,6 +259,8 @@ Function VarName:String( vvar:VarValue )
 		
 	Case "global","const"
 	
+		If Cast<Block>( vvar.scope ) Return "g_"+sym
+	
 		Return "g_"+ScopeName( vvar.scope )+"_"+sym
 	
 	End

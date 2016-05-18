@@ -47,4 +47,4 @@ Using lib.c
 ' 3) edit .sh and .bat files to use new version (common.sh, updatemx2cc.bat, rebuildmx2cc.bat)
 ' 4) ./rebuildall
 '
-Const MX2CC_VERSION:="004"
+Const MX2CC_VERSION:="005"
