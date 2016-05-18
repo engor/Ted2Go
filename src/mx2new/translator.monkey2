@@ -3,6 +3,9 @@ Namespace mx2
 
 'Really only for c++ translator right now, but splits out some grunt work from main translator!
 
+
+'Does type need bbGCMark()ing?
+'
 Function IsGCType:Bool( type:Type )
 
 	If TCast<FuncType>( type ) Return True
@@ -16,11 +19,19 @@ Function IsGCType:Bool( type:Type )
 	
 	If ctype.cdecl.kind="class" Or ctype.cdecl.kind="interface" Return True
 	
-	If ctype.cdecl.kind="struct" Return HasGCMembers( ctype.scope )
+	If ctype.cdecl.kind="struct"
+		For Local vvar:=Eachin ctype.fields
+			If IsGCType( vvar.type ) Return True
+		Next
+		Return False
+	Endif
+	
+'	 Return HasGCMembers( ctype.scope )
 	
 	Return False
 End
 
+#rem
 Function IsGCVarType:Bool( type:Type )
 
 	Local ctype:=TCast<ClassType>( type )
@@ -29,7 +40,9 @@ Function IsGCVarType:Bool( type:Type )
 	Local atype:=TCast<ArrayType>( type )
 	Return atype<>Null
 End
+#end
 
+#rem
 Function HasGCMembers:Bool( scope:Scope )
 
 	For Local node:=Eachin scope.transMembers
@@ -41,7 +54,8 @@ Function HasGCMembers:Bool( scope:Scope )
 	
 	Return False
 End
-	
+#end
+
 'Visitor that looks for gc params on LHS of an assignment.
 '
 Class AssignedGCParamsVisitor Extends StmtVisitor
@@ -292,7 +306,7 @@ Class Translator
 		_depsPos=InsertPos
 	End
 	
-	Method EndDeps()
+	Method EndDeps( baseDir:String )
 	
 		BeginInsert( _depsPos )
 	
@@ -302,7 +316,7 @@ Class Translator
 		EmitBr()
 		For Local fdecl:=Eachin _usesFiles.Values
 
-			EmitInclude( fdecl )
+			EmitInclude( fdecl,baseDir )
 		Next
 		
 		EmitBr()
@@ -313,10 +327,11 @@ Class Translator
 				Local cname:=ClassName( ctype )
 				Emit( "struct "+ClassName( ctype )+";" )
 				
-				If debug
+				If debug And Not ctype.cdecl.IsExtern
 					Local tname:=cname
 					If Not IsStruct( ctype ) tname+="*"
-					Emit( "template<> bbDBType *bbDBTypeOf("+tname+"*);" )
+					Emit( "bbString bbDBType("+tname+"*);" )
+					Emit( "bbString bbDBValue("+tname+"*);" )
 				Endif
 				
 			Endif
@@ -347,11 +362,11 @@ Class Translator
 		Return _incs.Contains( fdecl.ident )
 	End
 	
-	Method EmitInclude( fdecl:FileDecl )
+	Method EmitInclude( fdecl:FileDecl,baseDir:String )
 	
 		If _incs.Contains( fdecl.ident ) Return
 		
-		Emit( "#include ~q"+fdecl.hfile+"~q" )
+		Emit( "#include ~q"+MakeRelativePath( fdecl.hfile,baseDir )+"~q" )
 		
 		_incs[fdecl.ident]=fdecl
 	End

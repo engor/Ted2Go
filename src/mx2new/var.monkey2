@@ -48,7 +48,7 @@ Class VarValue Extends Value
 		Self.scope=scope
 		Self.transFile=scope.FindFile().fdecl
 		
-		If vdecl.kind="global" Or vdecl.kind="local" Or vdecl.kind="param"	flags|=VALUE_LVALUE|VALUE_ASSIGNABLE
+		If vdecl.kind="global" Or vdecl.kind="local" Or vdecl.kind="param" flags|=VALUE_LVALUE|VALUE_ASSIGNABLE
 	End
 	
 	Method New( kind:String,ident:String,init:Value,scope:Scope )
@@ -62,7 +62,7 @@ Class VarValue Extends Value
 		Self.scope=scope
 		Self.init=init
 		
-		If vdecl.kind="global" Or vdecl.kind="local" Or vdecl.kind="param"	flags|=VALUE_LVALUE|VALUE_ASSIGNABLE
+		If vdecl.kind="global" Or vdecl.kind="local" Or vdecl.kind="param" flags|=VALUE_LVALUE|VALUE_ASSIGNABLE
 		
 		semanted=Self
 	End
@@ -77,7 +77,13 @@ Class VarValue Extends Value
 			type=init.type
 		Endif
 		
-		If Not type.IsGeneric And Not vdecl.IsExtern
+		'struct field?
+'		Local cscope:=Cast<ClassScope>( scope )
+'		If vdecl.kind="field" And cscope And cscope.ctype.cdecl.kind="struct"
+'			If init And init.HasSideEffects Throw New SemantEx( "Struct field initializers cannot have side effects" )
+'		Endif
+		
+		If Not type.IsGeneric And Not vdecl.IsExtern And Not Cast<Block>( scope )
 			If vdecl.kind="global" Or vdecl.kind="const"
 				transFile.globals.Push( Self )
 			Else
