@@ -13,11 +13,15 @@ inline void bbAssert( bool cond,bbString msg ){
 }
 
 inline void bbDebugAssert( bool cond ){
+#ifndef NDEBUG
 	if( !cond ) throw new bbException( "Assert failed" );
+#endif
 }
 
 inline void bbDebugAssert( bool cond,bbString msg ){
+#ifndef NDEBUG
 	if( !cond ) throw new bbException( msg );
+#endif
 }
 
 #endif
