@@ -172,14 +172,12 @@ template<class T,int D> class bbArray : public bbGCNode{
 	}
 };
 
-template<class T,int N> bbDBType *bbDBTypeOf( bbArray<T,N>** ){
-	struct type : public bbDBType{
-		bbDBType *elemType=bbDBTypeOf<T>();
-		int rank=N;
-		bbString name(){ return elemType->name()+BB_T("[]"); }
-	};
-	static type _type;
-	return &_type;
+template<class T,int N> bbString bbDBType( bbArray<T,N> **p ){
+	return bbDBType<T>()+"[]";
+}
+
+template<class T,int N> bbString bbDBValue( bbArray<T,N> **p ){
+	return "array?????";
 }
 
 #endif

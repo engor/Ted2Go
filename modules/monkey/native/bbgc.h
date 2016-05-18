@@ -173,16 +173,16 @@ namespace bbGC{
 }
 
 template<class T> struct bbGCVar{
+
+	public:
+	
 	T *_ptr;
 	
 	void enqueue(){
-	
 #if BBGC_INCREMENTAL
 		bbGC::enqueue( dynamic_cast<bbGCNode*>( _ptr ) );
 #endif
 	}
-	
-	public:
 	
 	bbGCVar():_ptr( nullptr ){
 	}
@@ -217,6 +217,42 @@ template<class T> struct bbGCVar{
 	
 	operator T*()const{
 		return _ptr;
+	}
+};
+
+template<class T> struct bbGCRootVar : public bbGCVar<T>,public bbGCRoot{
+	
+	using bbGCVar<T>::_ptr;
+	using bbGCVar<T>::enqueue;
+
+	bbGCRootVar(){
+	}
+	
+	bbGCRootVar( T *p ){
+		_ptr=p;
+		enqueue();
+	}
+	
+	bbGCRootVar( const bbGCVar<T> &p ){
+		_ptr=p._ptr;
+		enqueue();
+	}
+	
+
+	bbGCRootVar &operator=( T *p ){
+		_ptr=p;
+		enqueue();
+		return *this;
+	}
+	
+	bbGCRootVar &operator=( const bbGCVar<T> &p ){
+		_ptr=p._ptr;
+		enqueue();
+		return *this;
+	}
+	
+	virtual void gcMark(){
+		bbGC::enqueue( dynamic_cast<bbGCNode*>( _ptr ) );
 	}
 };
 

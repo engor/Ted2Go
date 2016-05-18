@@ -14,12 +14,3 @@ bbException::bbException( bbString message ):bbException(){
 
 	_message=message;
 }
-
-template<> bbDBType *bbDBTypeOf( bbObject** ){
-	struct type : public bbDBType{
-		bbString name(){ return "Object"; }
-	};
-	static type _type;
-	return &_type;
-}
-

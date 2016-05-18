@@ -5,38 +5,74 @@
 #include "bbstring.h"
 
 struct bbDBFiber;
-
 struct bbDBFrame;
-
+struct bbDBVarType;
 struct bbDBVar;
 
-//subclasses can't add data!
-struct bbDBType{
-	virtual bbString name(){ return "<?>"; }
-	virtual bbString value( void *var ){ return "?????"; }
-//	virtual void members( bbDBVar *var,bbDBVar **vars ){}
+inline bbString bbDBType( void *p ){
+	return "Void";
+}
+
+inline bbString bbDBValue( void *p ){
+	return "?????";
+}
+
+inline bbString bbDBType( bbInt *p ){
+	return "Int";
+}
+
+inline bbString bbDBValue( bbInt *p ){
+	return bbString( *p );
+}
+
+inline bbString bbDBType( bbFloat *p ){
+	return "Float";
+}
+
+inline bbString bbDBValue( bbFloat *p ){
+	return bbString( *p );
+}
+
+inline bbString bbDBType( bbString *p ){
+	return "String";
+}
+
+inline bbString bbDBValue( bbString *p ){
+	return BB_T("\"")+(*p)+"\"";
+}
+
+template<class T> bbString bbDBType( T **p ){
+	return bbDBType( (void*)0 )+" Ptr";
+}
+
+template<class T> bbString bbDBType(){
+	return bbDBType( (T*)0 );
+}
+
+struct bbDBVarType{
+	virtual bbString type()=0;
+	virtual bbString value( void *p )=0;
 };
 
-template<class T> bbDBType *bbDBTypeOf( T* ){
-	static bbDBType _type;
-	return &_type;
-}
+template<class T> struct bbDBVarType_t : public bbDBVarType{
 
-template<class T> bbDBType *bbDBTypeOf( T** ){
-	struct type : public bbDBType{
-		bbString name(){ return bbDBTypeOf( (T*)0 )->name()+" Ptr"; }
-	};
-	static type _type;
-	return &_type;
-}
+	bbString type(){
+		return bbDBType( (T*)0 );
+	}
+	
+	bbString value( void *p ){
+		return bbDBValue( (T*)p );
+	}
+	
+	static bbDBVarType_t info;
+};
 
-template<class T> bbDBType *bbDBTypeOf(){
-	return bbDBTypeOf( (T*)0 );
-}
+template<class T> bbDBVarType_t<T> bbDBVarType_t<T>::info;
 
 struct bbDBVar{
+
 	const char *name;
-	bbDBType *type;
+	bbDBVarType *type;
 	void *var;
 };
 
@@ -46,13 +82,15 @@ struct bbDBContext{
 	bbDBVar *localsBuf=nullptr;
 	bbDBVar *locals=nullptr;
 	int stopped;
-	
+
 	~bbDBContext();
 	
 	void init();
 };
 
 namespace bbDB{
+
+	extern int nextSeq;
 
 	extern bbDBContext *currentContext;
 	
@@ -71,13 +109,16 @@ struct bbDBFrame{
 	const char *decl;
 	const char *srcFile;
 	int srcPos;
+	int seq;
 	
 	bbDBFrame( const char *decl,const char *srcFile ):succ( bbDB::currentContext->frames ),locals( bbDB::currentContext->locals ),decl( decl ),srcFile( srcFile ){
 		bbDB::currentContext->frames=this;
 		--bbDB::currentContext->stopped;
+		seq=++bbDB::nextSeq;
 	}
 	
 	~bbDBFrame(){
+		++bbDB::nextSeq;
 		++bbDB::currentContext->stopped;
 		bbDB::currentContext->locals=locals;
 		bbDB::currentContext->frames=succ;
@@ -100,17 +141,20 @@ inline void bbDBStmt( int srcPos ){
 	if( bbDB::currentContext->stopped>=0 ) bbDB::stopped();
 }
 
-template<class T> void bbDBLocal( const char *name,T *var ){
+template<class T> void bbDBEmit( const char *name,T *var ){
+	bbDBVarType *type=&bbDBVarType_t<T>::info;
+	puts( (BB_T( name )+":"+type->type()+"="+type->value( var )).c_str() );
+}
+
+template<class T> void bbDBEmit( const char *name,bbGCVar<T> *p ){
+	T *var=p->get();return bbDBEmit( name,&var );
+}
+
+template<class T> void bbDBLocal ( const char *name,T *var ){
 	bbDB::currentContext->locals->name=name;
-	bbDB::currentContext->locals->type=bbDBTypeOf<T>();
+	bbDB::currentContext->locals->type=&bbDBVarType_t<T>::info;
 	bbDB::currentContext->locals->var=var;
 	++bbDB::currentContext->locals;
 }
-
-template<> bbDBType *bbDBTypeOf( void* );
-
-template<> bbDBType *bbDBTypeOf( bbInt* );
-
-template<> bbDBType *bbDBTypeOf( bbString* );
 
 #endif

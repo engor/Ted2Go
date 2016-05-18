@@ -10,6 +10,8 @@
 
 namespace bbDB{
 
+	int nextSeq;
+	
 	bbDBContext *currentContext;
 	
 #if _WIN32
@@ -40,23 +42,33 @@ namespace bbDB{
 #endif
 	}
 	
+	void emitVar( bbDBVar *v ){
+		bbString id=v->name;
+		bbString type=v->type->type();
+		bbString value=v->type->value( v->var );
+		bbString t=id+":"+type+"="+value+"\n";
+		printf( t.c_str() );
+	}
+	
 	void emitStack(){
 		bbDBVar *ev=currentContext->locals;
 		
 		for( bbDBFrame *f=currentContext->frames;f;f=f->succ ){
 
-			printf( ">%s;%s;%i\n",f->decl,f->srcFile,f->srcPos );
+			printf( ">%s;%s;%i;%i\n",f->decl,f->srcFile,f->srcPos,f->seq );
 			
 			for( bbDBVar *v=f->locals;v!=ev;++v ){
-				char id[64],type[64],value[128];
-				strcpy( id,v->name );
-				strcpy( type,v->type->name().c_str() );
-				strcpy( value,v->type->value( v->var ).c_str() );
-				printf( "%s:%s=%s\n",id,type,value );
+				emitVar( v );
 			}
 
 			ev=f->locals;
 		}
+	}
+	
+	void emitObject( bbObject *p ){
+		if( p ) p->dbEmit();
+		printf( "\n" );
+		fflush( stdout );
 	}
 	
 	void stop(){
@@ -73,19 +85,23 @@ namespace bbDB{
 		printf( "\n" );
 		fflush( stdout );
 		
-		char buf[256];
-		char *e=fgets( buf,256,stdin );
-		if( !e ) exit( -1 );
+		for(;;){
 		
-		switch( e[0] ){
-		case 's':currentContext->stopped=0;return;
-		case 'e':currentContext->stopped=1;return;
-		case 'l':currentContext->stopped=-1;return;
-		case 'r':currentContext->stopped=-0x10000000;return;
-		case 'q':exit( 0 );
+			char buf[256];
+			char *e=fgets( buf,256,stdin );
+			if( !e ) exit( -1 );
+			
+			switch( e[0] ){
+			case 's':currentContext->stopped=0;return;
+			case 'e':currentContext->stopped=1;return;
+			case 'l':currentContext->stopped=-1;return;
+			case 'r':currentContext->stopped=-0x10000000;return;
+			case '@':emitObject( (bbObject*)strtol( e+1,0,16 ) );continue;
+			case 'q':exit( 0 );return;
+			}
+			printf( "Unrecognized debug cmd: %s\n",buf );fflush( stdout );
+			exit( -1 );
 		}
-		printf( "Unrecognized debug cmd: %s\n",buf );fflush( stdout );
-		exit( -1 );
 	}
 	
 	bbArray<bbString> *stack(){
@@ -114,30 +130,4 @@ void bbDBContext::init(){
 
 bbDBContext::~bbDBContext(){
 	delete[] localsBuf;
-}
-
-template<> bbDBType *bbDBTypeOf( void* ){
-	struct type : public bbDBType{
-		bbString name(){ return "Void"; }
-	};
-	static type _type;
-	return &_type;
-}
-
-template<> bbDBType *bbDBTypeOf( bbInt* ){
-	struct type : public bbDBType{
-		bbString name(){ return "Int"; }
-		bbString value( void *var ){ return *(bbInt*)var; }
-	};
-	static type _type;
-	return &_type;
-}
-
-template<> bbDBType *bbDBTypeOf( bbString* ){
-	struct type : public bbDBType{
-		bbString name(){ return "String"; }
-		bbString value( void *var ){ return BB_T("\"")+*(bbString*)var+BB_T( "\"" ); }
-	};
-	static type _type;
-	return &_type;
 }

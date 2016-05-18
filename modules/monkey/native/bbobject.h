@@ -19,7 +19,7 @@ struct bbObject : public bbGCNode{
 		return "monkey.Object";
 	}
 	
-	virtual void debugVars( bbDBVar *p )const{
+	virtual void dbEmit(){
 	}
 
 	void *operator new( size_t size ){
@@ -74,14 +74,28 @@ template<class T,class...A> T *bbGCNew( A...a ){
 	return p;
 }
 
-inline bbDBType *bbDBTypeOf( const bbObject*& ){
-	struct type : public bbDBType{
-		bbString name(){ return "Object"; }
-	};
-	static type _type;
-	return &_type;
+inline bbString bbDBObjectValue( bbObject *p ){
+	char buf[64];
+	sprintf( buf,"@%p",p );
+	return buf;
 }
 
-template<> bbDBType *bbDBTypeOf( bbObject** );
+inline bbString bbDBInterfaceValue( bbInterface *p ){
+	return bbDBObjectValue( dynamic_cast<bbObject*>( p ) );
+}
+
+inline bbString bbDBStructValue( void *p ){
+	char buf[64];
+	sprintf( buf,"&%p",p );
+	return buf;
+}
+
+inline bbString bbDBType( bbObject **p ){
+	return "Object";
+}
+
+inline bbString bbDBValue( bbObject **p ){
+	return bbDBObjectValue( *p );
+}
 
 #endif
