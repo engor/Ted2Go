@@ -1,26 +1,32 @@
 
 Namespace test
 
-'#Import "<std.monkey2>"
-
-Class B
+Function Test:Float()
+	Return 10
 End
 
-Struct Test
-	Field z:Int
-	Field y:Int
-	Field x:Int
-	Field a:Int
-	Field b:Int
-	Field c:Int
-	Field m:B
-End
+Global GlobalColor:Color
 
-Class C
-	Field t:=New Test[10]
+Struct Color
+
+	Field r:Float
+	Field g:Float
+	Field b:Float
+	Field a:Float=1
+	
+	Method New()
+		a=Test()
+	End
+	
 End
 
 Function Main()
-	Local c:=New C
-	c.t[0].x=10
+
+	Local color:Color
+	
+	Print color.a
+	
+	color=New Color
+	
+	Print color.a
 End
