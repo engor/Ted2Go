@@ -81,6 +81,34 @@ Class Texture
 		Return _flags
 	End
 	
+	Method PastePixmap( pixmap:Pixmap,x:Int,y:Int )
+	
+		If _managed
+
+			_managed.Paste( pixmap,x,y )
+			
+		Else
+		
+			glPushTexture2d( GLTexture )
+			
+			glPixelStorei( GL_UNPACK_ALIGNMENT,1 )
+			
+			If pixmap.Pitch=pixmap.Width*pixmap.Depth
+				glTexSubImage2D( GL_TEXTURE_2D,0,x,y,pixmap.Width,pixmap.Height,glFormat( _format ),GL_UNSIGNED_BYTE,pixmap.Data )
+			Else
+				For Local iy:=0 Until pixmap.Height
+					glTexSubImage2D( GL_TEXTURE_2D,0,x,y+iy,pixmap.Width,1,glFormat( _format ),GL_UNSIGNED_BYTE,pixmap.PixelPtr( 0,iy ) )
+				Next
+			Endif
+			
+			glPopTexture2d()
+		
+		Endif
+		
+		_texDirty=True
+	
+	End
+	
 	Function Load:Texture( path:String,flags:TextureFlags=TextureFlags.DefaultFlags )
 	
 		Local pixmap:=Pixmap.Load( path )
@@ -106,60 +134,64 @@ Class Texture
 	#end	
 	Property GLTexture:GLuint()
 	
-		If _texSeq=glGraphicsSeq 
-			Return _glTexture
-		Endif
+		If _texSeq=glGraphicsSeq And Not _texDirty Return _glTexture
 		
-		glGenTextures( 1,Varptr _glTexture )
+		If _texSeq=glGraphicsSeq
 		
-		glPushTexture2d( _glTexture )
+			glPushTexture2d( _glTexture )
 		
-		If _flags & TextureFlags.Filter
-			glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR )
 		Else
-			glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST )
-		Endif
+			_texSeq=glGraphicsSeq
 		
-		If (_flags & TextureFlags.Mipmap) And (_flags & TextureFlags.Filter)
-			glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR )
-		Else If _flags & TextureFlags.Mipmap
-			glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST_MIPMAP_NEAREST )
-		Else If _flags & TextureFlags.Filter
-			glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR )
-		Else
-			glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST )
+			glGenTextures( 1,Varptr _glTexture )
+			
+			glPushTexture2d( _glTexture )
+		
+			If _flags & TextureFlags.Filter
+				glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR )
+			Else
+				glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST )
+			Endif
+			
+			If (_flags & TextureFlags.Mipmap) And (_flags & TextureFlags.Filter)
+				glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR )
+			Else If _flags & TextureFlags.Mipmap
+				glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST_MIPMAP_NEAREST )
+			Else If _flags & TextureFlags.Filter
+				glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR )
+			Else
+				glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST )
+			Endif
+	
+			If _flags & TextureFlags.ClampS glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE )
+			If _flags & TextureFlags.ClampT glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE )
+		
+			glTexImage2D( GL_TEXTURE_2D,0,glFormat( _format ),Width,Height,0,glFormat( _format ),GL_UNSIGNED_BYTE,Null )
+			
 		Endif
-
-		If _flags & TextureFlags.ClampS glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE )
-		If _flags & TextureFlags.ClampT glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE )
 		
 		If _managed
 		
-			If True'_managed.Pitch & 4
-			
-				glTexImage2D( GL_TEXTURE_2D,0,glFormat( _format ),Width,Height,0,glFormat( _format ),GL_UNSIGNED_BYTE,Null )
-				
-				For Local y:=0 Until Height
-					glTexSubImage2D( GL_TEXTURE_2D,0,0,y,Width,1,glFormat( _format ),GL_UNSIGNED_BYTE,_managed.PixelPtr( 0,y ) )
-				Next
+			glPixelStorei( GL_UNPACK_ALIGNMENT,1 )
+		
+			If _managed.Pitch=_managed.Width*_managed.Depth
+				glTexSubImage2D( GL_TEXTURE_2D,0,0,0,_managed.Width,_managed.Height,glFormat( _format ),GL_UNSIGNED_BYTE,_managed.Data )
 			Else
-				glTexImage2D( GL_TEXTURE_2D,0,glFormat( _format ),Width,Height,0,glFormat( _format ),GL_UNSIGNED_BYTE,_managed.Data )
+				For Local iy:=0 Until Height
+					glTexSubImage2D( GL_TEXTURE_2D,0,0,iy,Width,1,glFormat( _format ),GL_UNSIGNED_BYTE,_managed.PixelPtr( 0,iy ) )
+				Next
 			Endif
 			
 			glFlush()	'macos nvidia bug!
 		
 			If _flags & TextureFlags.Mipmap glGenerateMipmap( GL_TEXTURE_2D )
-
-		Else
-		
-			glTexImage2D( GL_TEXTURE_2D,0,glFormat( _format ),Width,Height,0,glFormat( _format ),GL_UNSIGNED_BYTE,Null )
-		
+			
 		Endif
-		
+			
 		glPopTexture2d()
 		
-		_texSeq=glGraphicsSeq
-		
+		_texDirty=False
+	
 		Return _glTexture
 	End
 	
@@ -193,7 +225,9 @@ Class Texture
 	Field _managed:Pixmap
 	
 	Field _texSeq:Int
+	Field _texDirty:Bool
 	Field _glTexture:GLuint
+	
 	Field _fbSeq:Int
 	Field _glFramebuffer:GLuint
 	
