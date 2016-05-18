@@ -63,6 +63,17 @@ Class Window Extends View
 	
 	#rem monkeydoc @hidden
 	#end
+	Property SwapInterval:Int()
+	
+		Return _swapInterval
+	
+	Setter( swapInterval:Int )
+	
+		_swapInterval=swapInterval
+	End
+	
+	#rem monkeydoc @hidden
+	#end
 	Method Update()
 	
 		'ugly...fixme.
@@ -86,6 +97,8 @@ Class Window Extends View
 	Method Render()
 	
 		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )
+		
+		SDL_GL_SetSwapInterval( _swapInterval )
 		
 		Local viewport:=New Recti( 0,0,Frame.Size )
 		
@@ -208,6 +221,7 @@ Class Window Extends View
 	
 	Field _sdlWindow:SDL_Window Ptr
 	Field _sdlGLContext:SDL_GLContext
+	Field _swapInterval:Int=1
 	
 	Field _canvas:Canvas
 
