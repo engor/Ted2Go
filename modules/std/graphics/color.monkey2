@@ -62,6 +62,14 @@ Struct Color
 		Self.a=a
 	End
 	
+	Operator*:Color( color:Color )
+		Return New Color( r*color.r,g*color.g,b*color.b,a*color.a )
+	End
+	
+	Operator*:Color( scale:Float )
+		Return New Color( r*scale,g*scale,b*scale,a*scale )
+	End
+	
 	Method ToARGB:UInt()
 		Return UInt(a*255) Shl 24 | UInt(r*255) Shl 16 | UInt(g*255) Shl 8 | UInt(b*255)
 	End
