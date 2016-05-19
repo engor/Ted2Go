@@ -255,11 +255,10 @@ Class ReturnStmtExpr Extends StmtExpr
 			Endif
 			
 			block.Emit( New ReturnStmt( Self,value ) )
+			block.reachable=False
 		
 		Catch ex:SemantEx
 		End
-		
-		block.reachable=False
 		
 		Return Null
 	End

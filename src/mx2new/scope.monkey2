@@ -331,7 +331,7 @@ Class Block Extends Scope
 
 	Field stmts:=New Stack<Stmt>
 	
-	Field reachable:Bool
+	Field reachable:Bool=True
 	
 	Field loop:Bool
 	Field inex:Bool
@@ -389,28 +389,17 @@ Class Block Extends Scope
 		If reachable stmts.Push( stmt )
 	End
 	
-	Method Semant:Bool( stmts:StmtExpr[] )
+	Method Semant( stmts:StmtExpr[] )
 	
-		reachable=True
-
 		For Local expr:=Eachin stmts
-		
 			Try
-			
+
 				Local stmt:=expr.Semant( Self )
-				
 				If stmt Emit( stmt )
 				
 			Catch ex:SemantEx
 			End
-
 		Next
-		
-		Local result:=reachable
-		
-		reachable=True
-		
-		Return result
 	End
 	
 	Method AllocLocal:VarValue( init:Value )

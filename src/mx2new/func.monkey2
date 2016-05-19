@@ -372,12 +372,12 @@ Class FuncValue Extends Value
 		
 		If Not fdecl.IsAbstract
 			
-			Local reachable:=block.Semant( fdecl.stmts )
+			block.Semant( fdecl.stmts )
 			
-			If reachable And ftype.retType<>Type.VoidType Throw New SemantEx( "Missing return statement" )
+			If block.reachable And ftype.retType<>Type.VoidType Throw New SemantEx( "Missing return statement" )
 
 			SemantInvokeNew()
-			
+
 		Endif
 		
 		If fdecl.kind="function" Or IsExtension
