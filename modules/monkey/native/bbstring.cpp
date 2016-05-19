@@ -98,9 +98,9 @@ bbString bbString::fromChar( int chr ){
 
 bbString bbString::fromCString( const void *data,int size ){
 	const char *p=(const char*)data;
-	int sz=strlen( p );
-	if( sz>size ) sz=size;
-	return bbString( p,sz );
+	const char *e=p;
+	while( e<p+size && *e ) ++e;
+	return bbString( p,e-p );
 }
 
 bbString bbString::fromWString( const void *data,int size ){
@@ -113,14 +113,12 @@ bbString bbString::fromWString( const void *data,int size ){
 
 bbString bbString::fromUtf8String( const void *data,int size ){
 	const char *p=(const char*)data;
-	int sz=strlen( p );
-	if( sz>size ) sz=size;
-	const char *e=p+sz;
-	
+	const char *e=p+size;
+		
 	bbChar *tmp=(bbChar*)malloc( size*sizeof(bbChar) );
 	bbChar *put=tmp;
 	
-	while( p<e ){
+	while( p<e && *p ){
 		int c=*p++;
 		
 		if( c & 0x80 ){
