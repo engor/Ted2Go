@@ -128,11 +128,18 @@ struct bbDBFrame{
 struct bbDBBlock{
 	bbDBVar *locals;
 	bbDBBlock():locals( bbDB::currentContext->locals ){
-		--bbDB::currentContext->stopped;
 	}
 	~bbDBBlock(){
-		++bbDB::currentContext->stopped;
 		bbDB::currentContext->locals=locals;
+	}
+};
+
+struct bbDBLoop : public bbDBBlock{
+	bbDBLoop(){
+		--bbDB::currentContext->stopped;
+	}
+	~bbDBLoop(){
+		++bbDB::currentContext->stopped;
 	}
 };
 

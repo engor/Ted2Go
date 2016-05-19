@@ -769,8 +769,8 @@ Class Translator_CPP Extends Translator
 	Method BeginBlock()
 
 		BeginGCFrame()
-
 		If debug Emit( "bbDBBlock db_blk;" )
+
 	End
 	
 	Method EmitStmts( block:Block )
@@ -991,24 +991,6 @@ Class Translator_CPP Extends Translator
 		Emit( "}" )
 	End
 	
-	Method EmitStmt( stmt:WhileStmt )
-	
-		Emit( "while("+Trans( stmt.cond )+"){" )
-		
-		EmitBlock( stmt.block )
-		
-		Emit( "}" )
-	End
-	
-	Method EmitStmt( stmt:RepeatStmt )
-	
-		If stmt.cond Emit( "do{" ) Else Emit( "for(;;){" )
-		
-		EmitBlock( stmt.block )
-		
-		If stmt.cond Emit( "}while(!("+Trans( stmt.cond )+"));" ) Else Emit( "}" )
-	End
-	
 	Method EmitStmt( stmt:SelectStmt )
 	
 		Local tvalue:=Trans( stmt.value ),head:=True
@@ -1035,12 +1017,45 @@ Class Translator_CPP Extends Translator
 		Emit( "}" )
 	End
 	
+	Method EmitStmt( stmt:WhileStmt )
+	
+		If debug
+			Emit( "{" )
+			Emit( "bbDBLoop db_loop;" )
+		Endif
+	
+		Emit( "while("+Trans( stmt.cond )+"){" )
+		
+		EmitBlock( stmt.block )
+		
+		Emit( "}" )
+		
+		If debug Emit( "}" )
+	End
+	
+	Method EmitStmt( stmt:RepeatStmt )
+	
+		If debug
+			Emit( "{" )
+			Emit( "bbDBLoop db_loop;" )
+		Endif
+	
+	
+		If stmt.cond Emit( "do{" ) Else Emit( "for(;;){" )
+		
+		EmitBlock( stmt.block )
+		
+		If stmt.cond Emit( "}while(!("+Trans( stmt.cond )+"));" ) Else Emit( "}" )
+		
+		If debug Emit( "}" )
+	End
+	
 	Method EmitStmt( stmt:ForStmt )
 	
 		Emit( "{" )
-		
-		BeginBlock()
-
+		BeginGCFrame()
+		If debug Emit( "bbDBLoop db_loop;" )
+	
 		EmitStmts( stmt.iblock )
 		
 		Local cond:=Trans( stmt.cond )
@@ -1058,9 +1073,8 @@ Class Translator_CPP Extends Translator
 		EmitBlock( stmt.block )
 		
 		Emit( "}" )
-
-		EndBlock()		
 		
+		EndGCFrame()
 		Emit( "}" )
 	End
 	
