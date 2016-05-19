@@ -97,7 +97,9 @@ Class Window Extends View
 	Method Render()
 	
 		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )
-		
+
+'		Causes a warning in SDL2 on windows...
+'		
 		SDL_GL_SetSwapInterval( _swapInterval )
 		
 		Local viewport:=New Recti( 0,0,Frame.Size )
