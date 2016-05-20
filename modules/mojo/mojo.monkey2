@@ -1,6 +1,7 @@
 
 Namespace mojo
 
+#Import "<emscripten>"
 #Import "<std>"
 #Import "<sdl2>"
 
@@ -26,6 +27,7 @@ Namespace mojo
 #Import "graphics/texture"
 #Import "graphics/vertex"
 
+Using emscripten..
 Using std..
 Using sdl2..
 Using gles20..

@@ -1,6 +1,8 @@
 
 Namespace sdl2
 
+#rem
+
 'source files
 
 'root
@@ -130,3 +132,5 @@ Namespace sdl2
 #Import "SDL/src/video/emscripten/SDL_emscriptenmouse.c"
 #Import "SDL/src/video/emscripten/SDL_emscriptenopengles.c"
 #Import "SDL/src/video/emscripten/SDL_emscriptenvideo.c"
+
+#end

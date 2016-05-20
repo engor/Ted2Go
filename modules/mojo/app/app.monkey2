@@ -43,6 +43,8 @@ Class AppInstance
 	
 		SDL_Init( SDL_INIT_EVERYTHING )
 
+#If __TARGET__<>"emscripten"
+
 		_glWindow=SDL_CreateWindow( "",0,0,0,0,SDL_WINDOW_HIDDEN|SDL_WINDOW_OPENGL )
 
 		_glContext=SDL_GL_CreateContext( _glWindow )
@@ -51,12 +53,13 @@ Class AppInstance
 		
 		SDL_GL_SetAttribute( SDL_GL_SHARE_WITH_CURRENT_CONTEXT,1 )
 		
+#Endif
 		_keyMatrix=SDL_GetKeyboardState( Varptr _numKeys )
-			
+		
 		_defaultFont=Font.Open( DefaultFontName,16 )
 		
 		_defaultMonoFont=Font.Open( DefaultMonoFontName,16 )
-		
+
 		Local style:=Style.GetStyle( "" )
 		style.DefaultFont=_defaultFont
 		style.DefaultColor=Color.White
@@ -158,11 +161,20 @@ Class AppInstance
 	#end	
 	Property DesktopSize:Vec2i()
 	
+#If __TARGET__="emscripten"
+
+		Return New Vec2i( 1280,960 )
+
+#Else
+	
 		Local dm:SDL_DisplayMode
 		
 		If SDL_GetDesktopDisplayMode( 0,Varptr dm ) Return New Vec2i
 		
 		Return New Vec2i( dm.w,dm.h )
+		
+#Endif
+
 	End
 
 	#rem monkeydoc The current active window.
@@ -228,35 +240,54 @@ Class AppInstance
 		_requestRender=True
 	End
 
+	#rem @hidden
+	#end
+	Method MainLoop()
+	
+		If Not _requestRender 
+		
+			SDL_WaitEvent( Null )
+			
+		Endif
+	
+		UpdateEvents()
+		
+		If Not _requestRender Return
+		
+		_requestRender=False
+			
+		For Local window:=Eachin Window.VisibleWindows()
+			window.Render()
+		Next
+			
+	End
+	
+	Function EmscriptenMainLoop()
+	
+		App._requestRender=True
+		
+		App.MainLoop()
+	End
+	
 	#rem monkeydoc Run the app.
 	#end
 	Method Run()
 	
 		SDL_AddEventWatch( _EventFilter,Null )
-	
+		
 		RequestRender()
-	
+		
+#If __TARGET__="emscripten"
+
+		emscripten_set_main_loop( EmscriptenMainLoop,0,1 )
+		
+#Else
 		Repeat
 		
-			If Not _requestRender 
-			
-				SDL_WaitEvent( Null )
-				
-			Endif
-		
-			UpdateEvents()
-		
-			If _requestRender
-
-				_requestRender=False
-				
-				For Local window:=Eachin Window.VisibleWindows()
-					window.Render()
-				Next
-				
-			Endif
+			MainLoop()
 			
 		Forever
+#Endif
 	
 	End
 

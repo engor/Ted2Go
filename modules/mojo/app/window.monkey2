@@ -77,6 +77,13 @@ Class Window Extends View
 	Method Update()
 	
 		'ugly...fixme.
+#If __TARGET__="emscripten"
+		Local w:Int,h:Int,fs:Int
+		emscripten_get_canvas_size( Varptr w,Varptr h,Varptr fs )
+		If w<>Frame.Width Or h<>Frame.Height Frame=New Recti( 0,0,w,h )
+#Endif
+
+		'ugly...fixme.
 		If MinSize<>_minSize Or MaxSize<>_maxSize Or Frame<>_frame
 			_minSize=MinSize
 			_maxSize=MaxSize
