@@ -27,7 +27,7 @@ Class Pixmap
 
 		Local depth:=PixelFormatDepth( format )
 		Local pitch:=width*depth
-		Local data:=Cast<UByte Ptr>( libc.malloc( width*height*pitch ) )
+		Local data:=Cast<UByte Ptr>( libc.malloc( pitch*height ) )
 		
 		_width=width
 		_height=height
