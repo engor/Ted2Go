@@ -129,6 +129,10 @@ Class FuncValue Extends Value
 		Return fdecl.kind="method" And fdecl.ident<>"new"
 	End
 	
+	Property IsFunction:Bool()
+		Return fdecl.kind="function"
+	End
+	
 	Property IsExtension:Bool()
 		Return (fdecl.kind="method" And types) Or fdecl.IsExtension
 	End
@@ -167,11 +171,27 @@ Class FuncValue Extends Value
 		
 		'Sanity checks!
 		'
-		If IsMethod
+		If IsCtor
 		
-			Local cscope:=Cast<ClassScope>( scope )
+			If cscope.ctype.cdecl.kind="struct"
+			
+				If ftype.argTypes.Length And ftype.argTypes[0].Equals( cscope.ctype )
+					Local ok:=False
+					For Local i:=1 Until ftype.argTypes.Length
+						If pdecls[i].init Continue
+						ok=True
+						Exit
+					Next
+					If Not ok Throw New SemantEx( "Illegal struct constructor - 'copy constructors' are automatically generated and cannot be redefined" )
+				Endif
+			
+			Endif
+		
+		Else If IsMethod
+		
+'			Local cscope:=Cast<ClassScope>( scope )
 			Local ctype:=cscope.ctype
-			Local cdecl:=ctype.cdecl
+'			Local cdecl:=ctype.cdecl
 			
 			If fdecl.IsOperator
 				Local op:=fdecl.ident

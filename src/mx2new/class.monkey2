@@ -85,6 +85,18 @@ Class ClassType Extends Type
 		Return False
 	End
 	
+	Property IsClass:Bool()
+		Return cdecl.kind="class"
+	End
+	
+	Property IsInterface:Bool()
+		Return cdecl.kind="interface"
+	End
+	
+	Property IsStruct:Bool()
+		Return cdecl.kind="struct"
+	End
+	
 	Property IsAbstract:Bool()
 		Return cdecl.IsAbstract Or abstractMethods
 	End
