@@ -189,10 +189,11 @@ Class Translator_CPP Extends Translator
 			params+=TransType( p.type )+" "+VarName( p )
 		Next
 
-		'default struct ctor?		
-		If func.IsCtor And ctype.cdecl.kind="struct" And Not ftype.argTypes.Length
-			Assert( Not params )
-			params="bbNullCtor_t"
+		If func.IsCtor And ctype.IsStruct
+			If Not ftype.argTypes.Length Or ftype.argTypes[0].Equals( ctype )
+				If params params+=","
+				params+="bbNullCtor_t"
+			Endif
 		Endif
 		
 		Local ident:=FuncName( func )
@@ -1333,6 +1334,7 @@ Class Translator_CPP Extends Translator
 		
 		If IsStruct( ctype )
 			If Not value.args Return ClassName( ctype )+"(bbNullCtor)"
+			If value.args[0].type.Equals( ctype ) Return ClassName( ctype )+"("+TransArgs( value.args )+",bbNullCtor)"
 			Return ClassName( ctype )+"("+TransArgs( value.args )+")"
 		Endif
 		
