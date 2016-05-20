@@ -15,20 +15,21 @@ Struct Color
 	Const Grey:=New Color( .5,.5,.5 )
 	Const LightGrey:=New Color( .75,.75,.75 )
 	Const DarkGrey:=New Color( .25,.25,.25 )
-
+	
 	Field r:Float
 	Field g:Float
 	Field b:Float
 	Field a:Float
 	
-	Method New()
+	Method New( a:Float=1 )
+		Self.a=a
 	End
 	
-	Method New( argb:UInt )
-		a=(argb Shr 24 & $ff)/255.0
-		r=(argb Shr 16 & $ff)/255.0
-		g=(argb Shr 8 & $ff)/255.0
-		b=(argb & $ff)/255.0
+	Method New( i:Float,a:Float=1 )
+		Self.r=i
+		Self.g=i
+		Self.b=i
+		Self.a=1
 	End
 	
 	Method New( r:Float,g:Float,b:Float,a:Float=1 )
@@ -66,8 +67,21 @@ Struct Color
 		Return New Color( r*color.r,g*color.g,b*color.b,a*color.a )
 	End
 	
-	Operator*:Color( scale:Float )
-		Return New Color( r*scale,g*scale,b*scale,a*scale )
+	Operator/:Color( color:Color )
+		Return New Color( r/color.r,g/color.g,b/color.b,a/color.a )
+	End
+	
+	Operator+:Color( color:Color )
+		Return New Color( r+color.r,g+color.g,b+color.b,a+color.a )
+	End
+
+	Operator-:Color( color:Color )
+		Return New Color( r-color.r,g-color.g,b-color.b,a-color.a )
+	End
+	
+	Method Blend:Color( color:Color,delta:Float )
+		Local idelta:=1-delta
+		Return New Color( r*idelta+color.r*delta,g*idelta+color.g*delta,b*idelta+color.b*delta,a*idelta+color.a*delta )
 	End
 	
 	Method ToARGB:UInt()
