@@ -2,6 +2,7 @@
 'NOTE: Must be in dependancy order!
 
 monkey
+emscripten
 libc
 miniz
 hoedown
