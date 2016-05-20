@@ -545,7 +545,7 @@ Class Builder
 '			Note: mserver can't handle --emrun as it tries to POST stdout
 '			cmd="em++ --emrun --preload-file ~q"+assetsDir+"@/assets~q"
 
-			cmd="em++ --preload-file ~q"+assetsDir+"@/assets~q"
+			cmd+=" --preload-file ~q"+assetsDir+"@/assets~q"
 			
 		Else If HostOS="windows"
 		
