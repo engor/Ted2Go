@@ -1,0 +1,7 @@
+
+* SDL_windowsopengles.c - enabled SwapInterval.
+
+* SDL_events.c - used semaphore for WaitEvent instead SDL_Delay( 10 )!
+
+* SDL_timer.c - fixed 'slippage' bug.
+
