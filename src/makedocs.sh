@@ -1,4 +1,5 @@
 
 source common.sh
 
-$mx2cc makedocs
+$mx2cc makedocs monkey std mojo
+

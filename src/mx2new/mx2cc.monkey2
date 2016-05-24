@@ -3,7 +3,8 @@ Namespace mx2cc
 
 Using mx2.docs
 
-#Import "<std.monkey2>"
+#Import "<hoedown>"
+#Import "<std>"
 
 #Import "mx2.monkey2"
 
@@ -19,7 +20,7 @@ Using libc
 
 Global StartDir:String
 
-Const TestArgs:="mx2cc makemods -clean"
+Const TestArgs:="mx2cc makedocs std"
 
 'Const TestArgs:="mx2cc makeapp src/ted2/ted2.monkey2"
 

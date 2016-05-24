@@ -38,8 +38,19 @@ Class HtmlDocsMaker Extends DocsMaker
 			
 			nmspaces[nmspace.ntype.ident]=nmspace
 		Next
+
+		Local page:=""
+		Local md:=stringio.LoadString( _module.baseDir+"/docs/"+_module.name+".md" )
+		If md
+			_scope=Null
+			page="module"
+			Emit( md )
+			Local html:=Flush()
+			SavePage( html,page )
+		Endif
 		
-		BeginNode( "<"+_module.name+">" )
+'		BeginNode( "<"+_module.name+">",page )
+		BeginNode( _module.name,page )
 		
 		For Local nmspace:=Eachin nmspaces.Values
 		
@@ -85,12 +96,7 @@ Class HtmlDocsMaker Extends DocsMaker
 		_posStack.Push( _sep )
 		_posStack.Push( _buf.Length )
 		EmitTree( "{ name:'"+name+"'"+page+",children:[" )
-			
-'		If page page=",page:'"+page+"'"
-'		Local module:=",module:'"+_module.name+"'"
-'		_posStack.Push( _sep )
-'		_posStack.Push( _buf.Length )
-'		EmitTree( "{ name:'"+name+"'"+module+page+",children:[" )
+
 	End
 	
 	Method EndNode( force:Bool=False )
@@ -106,10 +112,6 @@ Class HtmlDocsMaker Extends DocsMaker
 	
 		If page page=",page:'"+_module.name+":"+page+"'"
 		EmitTree( "{ name:'"+name+"'"+page+",children:[] }" )
-
-'		If page page=",page:'"+page+"'"
-'		Local module:=",module:'"+_module.name+"'"
-'		EmitTree( "{ name:'"+name+"'"+module+page+",children:[] }" )
 		
 	End
 	
@@ -117,24 +119,18 @@ Class HtmlDocsMaker Extends DocsMaker
 
 		EmitLeaf( decl.ident,page )
 
-'		EmitLeaf( DeclIdent( decl,False ),page )
 	End
 	
 	Method EmitNode( decl:Decl,scope:Scope,page:String="",force:Bool=False )
 	
 		EmitNode( decl.ident,scope,page,force )
 
-'		EmitNode( DeclIdent( decl,False ),scope,page,force )
 	End
 	
 	Method EmitNode( name:String,scope:Scope,page:String="",force:Bool=False )
 	
 		BeginNode( name,page )
 	
-'		BeginNode( "Namespaces" )
-'		EmitNamespaces( scope )
-'		EndNode()
-
 		BeginNode( "Aliases" )
 		EmitAliases( scope,"alias" )
 		EndNode()

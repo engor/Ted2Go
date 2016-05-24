@@ -1,4 +1,4 @@
 
 source common.sh
 
-$mx2cc makemods -clean -config=debug -target=emscripten
+$mx2cc makemods -clean -config=release -target=emscripten

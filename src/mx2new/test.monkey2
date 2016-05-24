@@ -1,32 +1,15 @@
 
-Namespace test
+#Import "<std.monkey2>"
 
-Function Test:Float()
-	Return 10
-End
+Using std..
 
-Global GlobalColor:Color
+Struct S
 
-Struct Color
-
-	Field r:Float
-	Field g:Float
-	Field b:Float
-	Field a:Float=1
-	
-	Method New()
-		a=Test()
+	Method New( s:S )
 	End
-	
+
 End
 
 Function Main()
 
-	Local color:Color
-	
-	Print color.a
-	
-	color=New Color
-	
-	Print color.a
 End

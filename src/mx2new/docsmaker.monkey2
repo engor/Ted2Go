@@ -160,7 +160,7 @@ Class DocsMaker
 		
 		_buf.Clear()
 		
-		Local docs:=std.markdown.MarkdownToHtml( markdown )
+		Local docs:=hoedown.MarkdownToHtml( markdown )
 		
 		Return docs
 	End
@@ -235,7 +235,7 @@ Class DocsMaker
 			
 				Local id:=path.Slice( i0 )
 '				Print "Finding node "+id+" in "+scope.Name
-				
+
 				Local node:=scope.FindNode( id )
 				If Not node Return ""
 				
@@ -258,8 +258,17 @@ Class DocsMaker
 			i0=i1+1
 			
 '			Print "Finding type "+id+" in "+scope.Name
-			
-			Local type:=scope.FindType( id )
+
+			Local type:Type
+			If scope
+				type=scope.FindType( id )
+			Else
+				For Local fscope:=Eachin _module.fileScopes
+					If id<>fscope.nmspace.ntype.ident Continue
+					type=fscope.nmspace.ntype
+					Exit
+				Next
+			Endif
 			If Not type Return ""
 			
 			Local ntype:=TCast<NamespaceType>( type )
