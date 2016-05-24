@@ -48,6 +48,8 @@ typedef struct SDL_EventWatcher {
 
 static SDL_EventWatcher *SDL_event_watchers = NULL;
 
+static SDL_sem *wait_sem;
+
 typedef struct {
     Uint32 bits[8];
 } SDL_DisabledEventBlock;
@@ -193,7 +195,7 @@ SDL_AddEvent(SDL_Event * event)
     SDL_EventEntry *entry;
     const int initial_count = SDL_AtomicGet(&SDL_EventQ.count);
     int final_count;
-
+	
     if (initial_count >= SDL_MAX_QUEUED_EVENTS) {
         SDL_SetError("Event queue is full (%d events)", initial_count);
         return 0;
@@ -226,6 +228,8 @@ SDL_AddEvent(SDL_Event * event)
         SDL_EventQ.tail = entry;
         entry->prev = NULL;
         entry->next = NULL;
+        
+        SDL_SemPost( wait_sem );
     }
 
     final_count = SDL_AtomicAdd(&SDL_EventQ.count, 1) + 1;
@@ -269,6 +273,8 @@ SDL_PeepEvents(SDL_Event * events, int numevents, SDL_eventaction action,
 {
     int i, used;
 
+    if( !wait_sem ) wait_sem=SDL_CreateSemaphore( 0 );
+
     /* Don't look after we've quit */
     if (!SDL_AtomicGet(&SDL_EventQ.active)) {
         /* We get a few spurious events at shutdown, so don't warn then */
@@ -284,55 +290,54 @@ SDL_PeepEvents(SDL_Event * events, int numevents, SDL_eventaction action,
             for (i = 0; i < numevents; ++i) {
                 used += SDL_AddEvent(&events[i]);
             }
+            
+//            SDL_SemPost( wait_sem );
+            
         } else {
             SDL_EventEntry *entry, *next;
             SDL_SysWMEntry *wmmsg, *wmmsg_next;
-            SDL_Event tmpevent;
             Uint32 type;
 
-            /* If 'events' is NULL, just see if they exist */
-            if (events == NULL) {
-                action = SDL_PEEKEVENT;
-                numevents = 1;
-                events = &tmpevent;
+            if (action == SDL_GETEVENT) {
+                /* Clean out any used wmmsg data
+                   FIXME: Do we want to retain the data for some period of time?
+                 */
+                for (wmmsg = SDL_EventQ.wmmsg_used; wmmsg; wmmsg = wmmsg_next) {
+                    wmmsg_next = wmmsg->next;
+                    wmmsg->next = SDL_EventQ.wmmsg_free;
+                    SDL_EventQ.wmmsg_free = wmmsg;
+                }
+                SDL_EventQ.wmmsg_used = NULL;
             }
 
-            /* Clean out any used wmmsg data
-               FIXME: Do we want to retain the data for some period of time?
-             */
-            for (wmmsg = SDL_EventQ.wmmsg_used; wmmsg; wmmsg = wmmsg_next) {
-                wmmsg_next = wmmsg->next;
-                wmmsg->next = SDL_EventQ.wmmsg_free;
-                SDL_EventQ.wmmsg_free = wmmsg;
-            }
-            SDL_EventQ.wmmsg_used = NULL;
-
-            for (entry = SDL_EventQ.head; entry && used < numevents; entry = next) {
+            for (entry = SDL_EventQ.head; entry && (!events || used < numevents); entry = next) {
                 next = entry->next;
                 type = entry->event.type;
                 if (minType <= type && type <= maxType) {
-                    events[used] = entry->event;
-                    if (entry->event.type == SDL_SYSWMEVENT) {
-                        /* We need to copy the wmmsg somewhere safe.
-                           For now we'll guarantee it's valid at least until
-                           the next call to SDL_PeepEvents()
-                         */
-                        if (SDL_EventQ.wmmsg_free) {
-                            wmmsg = SDL_EventQ.wmmsg_free;
-                            SDL_EventQ.wmmsg_free = wmmsg->next;
-                        } else {
-                            wmmsg = (SDL_SysWMEntry *)SDL_malloc(sizeof(*wmmsg));
+                    if (events) {
+                        events[used] = entry->event;
+                        if (entry->event.type == SDL_SYSWMEVENT) {
+                            /* We need to copy the wmmsg somewhere safe.
+                               For now we'll guarantee it's valid at least until
+                               the next call to SDL_PeepEvents()
+                             */
+                            if (SDL_EventQ.wmmsg_free) {
+                                wmmsg = SDL_EventQ.wmmsg_free;
+                                SDL_EventQ.wmmsg_free = wmmsg->next;
+                            } else {
+                                wmmsg = (SDL_SysWMEntry *)SDL_malloc(sizeof(*wmmsg));
+                            }
+                            wmmsg->msg = *entry->event.syswm.msg;
+                            wmmsg->next = SDL_EventQ.wmmsg_used;
+                            SDL_EventQ.wmmsg_used = wmmsg;
+                            events[used].syswm.msg = &wmmsg->msg;
                         }
-                        wmmsg->msg = *entry->event.syswm.msg;
-                        wmmsg->next = SDL_EventQ.wmmsg_used;
-                        SDL_EventQ.wmmsg_used = wmmsg;
-                        events[used].syswm.msg = &wmmsg->msg;
+
+                        if (action == SDL_GETEVENT) {
+                            SDL_CutEvent(entry);
+                        }
                     }
                     ++used;
-
-                    if (action == SDL_GETEVENT) {
-                        SDL_CutEvent(entry);
-                    }
                 }
             }
         }
@@ -439,8 +444,6 @@ SDL_WaitEventTimeout(SDL_Event * event, int timeout)
         switch (SDL_PeepEvents(event, 1, SDL_GETEVENT, SDL_FIRSTEVENT, SDL_LASTEVENT)) {
         case -1:
             return 0;
-        case 1:
-            return 1;
         case 0:
             if (timeout == 0) {
                 /* Polling and no events, just return */
@@ -450,8 +453,17 @@ SDL_WaitEventTimeout(SDL_Event * event, int timeout)
                 /* Timeout expired and no events */
                 return 0;
             }
-            SDL_Delay(10);
+            
+//          SDL_SemWait( wait_sem );
+            
+         	SDL_SemWaitTimeout( wait_sem,10 );	//ugly, but ensures pump events gets called every 10ms.
+           	
+//          SDL_Delay(10);
+
             break;
+        default:
+            /* Has events */
+            return 1;
         }
     }
 }

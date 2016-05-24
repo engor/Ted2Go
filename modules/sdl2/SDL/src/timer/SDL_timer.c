@@ -24,7 +24,7 @@
 #include "SDL_timer_c.h"
 #include "SDL_atomic.h"
 #include "SDL_cpuinfo.h"
-#include "SDL_thread.h"
+#include "../thread/SDL_systhread.h"
 
 /* #define DEBUG_TIMERS */
 
@@ -112,6 +112,9 @@ SDL_TimerThread(void *_data)
      *  2. Handle any timers that should dispatch this cycle
      *  3. Wait until next dispatch time or new timer arrives
      */
+     
+    tick=SDL_GetTicks();
+    
     for ( ; ; ) {
         /* Pending and freelist maintenance */
         SDL_AtomicLock(&data->lock);
@@ -145,7 +148,7 @@ SDL_TimerThread(void *_data)
         /* Initial delay if there are no timers */
         delay = SDL_MUTEX_MAXWAIT;
 
-        tick = SDL_GetTicks();
+        //tick = SDL_GetTicks();
 
         /* Process all the pending timers for this tick */
         while (data->timers) {
@@ -154,6 +157,7 @@ SDL_TimerThread(void *_data)
             if ((Sint32)(tick-current->scheduled) < 0) {
                 /* Scheduled for the future, wait a bit */
                 delay = (current->scheduled - tick);
+                delay-=1;
                 break;
             }
 
@@ -185,6 +189,7 @@ SDL_TimerThread(void *_data)
 
         /* Adjust the delay based on processing time */
         now = SDL_GetTicks();
+        
         interval = (now - tick);
         if (interval > delay) {
             delay = 0;
@@ -197,7 +202,11 @@ SDL_TimerThread(void *_data)
            That's okay, it just means we run through the loop a few
            extra times.
          */
-        SDL_SemWaitTimeout(data->sem, delay);
+        if( SDL_SemWaitTimeout(data->sem, delay)==SDL_MUTEX_TIMEDOUT ){
+        	tick=now+delay;
+        }else{
+        	tick=SDL_GetTicks();
+        }
     }
     return 0;
 }
@@ -221,17 +230,9 @@ SDL_TimerInit(void)
         }
 
         SDL_AtomicSet(&data->active, 1);
-        /* !!! FIXME: this is nasty. */
-#if defined(__WIN32__) && !defined(HAVE_LIBC)
-#undef SDL_CreateThread
-#if SDL_DYNAMIC_API
-        data->thread = SDL_CreateThread_REAL(SDL_TimerThread, name, data, NULL, NULL);
-#else
-        data->thread = SDL_CreateThread(SDL_TimerThread, name, data, NULL, NULL);
-#endif
-#else
-        data->thread = SDL_CreateThread(SDL_TimerThread, name, data);
-#endif
+
+        /* Timer threads use a callback into the app, so we can't set a limited stack size here. */
+        data->thread = SDL_CreateThreadInternal(SDL_TimerThread, name, 0, data);
         if (!data->thread) {
             SDL_TimerQuit();
             return -1;

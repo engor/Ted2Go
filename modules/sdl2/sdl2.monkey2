@@ -364,7 +364,7 @@ Function SDL_JoystickOpen:SDL_Joystick Ptr(device_index_:Int)
 Function SDL_JoystickName:char_t Ptr(joystick_:SDL_Joystick Ptr)
 Function SDL_JoystickGetDeviceGUID:SDL_JoystickGUID(device_index_:Int)
 Function SDL_JoystickGetGUID:SDL_JoystickGUID(joystick_:SDL_Joystick Ptr)
-Function SDL_JoystickGetGUIDString:Void(guid_:SDL_JoystickGUID,pszGUID_:Byte Ptr,cbGUID_:Int)
+Function SDL_JoystickGetGUIDString:Void(guid_:SDL_JoystickGUID,pszGUID_:char_t Ptr ,cbGUID_:Int)
 Function SDL_JoystickGetGUIDFromString:SDL_JoystickGUID(pchGUID_:Utf8String)
 Function SDL_JoystickGetAttached:SDL_bool(joystick_:SDL_Joystick Ptr)
 Function SDL_JoystickInstanceID:SDL_JoystickID(joystick_:SDL_Joystick Ptr)
@@ -1102,5 +1102,11 @@ Const AUDIO_U16MSB:Int
 Const AUDIO_S16MSB:Int
 Const AUDIO_U16:Int
 Const AUDIO_S16:Int
+
+'FILE="sdl2/SDL_thread.h"
+
+Alias SDL_threadID:UInt
+
+Function SDL_ThreadID:SDL_threadID()
 
 '${END}
