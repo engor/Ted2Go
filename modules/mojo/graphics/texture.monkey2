@@ -36,6 +36,13 @@ Class Texture
 			flags=TextureFlags.Filter|TextureFlags.Mipmap|TextureFlags.ClampST|TextureFlags.Managed
 		Endif
 		
+#If __TARGET__="emscripten"
+		If flags & TextureFlags.Mipmap
+			Local tw:=Log2( pixmap.Width ),th:=Log2( pixmap.Height )
+			If tw<>Round( tw ) Or th<>Round( th ) flags&=~TextureFlags.Mipmap
+		Endif
+#Endif
+		
 		_rect=New Recti( 0,0,pixmap.Width,pixmap.Height )
 		_format=pixmap.Format
 		_flags=flags

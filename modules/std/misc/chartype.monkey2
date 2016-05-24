@@ -1,5 +1,5 @@
 
-Namespace std.chartype
+Namespace std.stringio
 
 #rem monkeydoc Checks if a character is whitespace.
 

@@ -17,6 +17,8 @@ Namespace mojo.app
 | WindowClose		| Window close clicked event.
 | WindowMoved		| Window moved event.
 | WindowResized		| Window resized event.
+| WindowGainedFocus	| Window gained input focus.
+| WindowLostFocus	| Window lost input focus.
 
 #end
 Enum EventType
@@ -35,6 +37,8 @@ Enum EventType
 	WindowClose,
 	WindowMoved,
 	WindowResized,
+	WindowGainedFocus,
+	WindowLostFocus,
 	
 	Eaten=$80000000
 End
@@ -186,19 +190,19 @@ Class WindowEvent Extends Event
 
 	#rem monkeydoc @hidden
 	#end
-	Method New( type:EventType,view:View,rect:Recti )
-		Super.New( type,view )
-		_rect=rect
+	Method New( type:EventType,window:Window )
+		Super.New( type,window )
+		_window=window
 	End
-	
-	#rem monkeydoc The window rect for [[EventType.WindowMoved]] and [[EventType.WindowResized]] events.
+
+	#rem monkeydoc The window the event was sent to.
 	#end
-	Property Rect:Recti()
-		Return _rect
+	Property Window:Window()
+		Return _window
 	End
 	
 	Private
 	
-	Field _rect:Recti
+	Field _window:Window
 	
 End

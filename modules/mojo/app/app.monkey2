@@ -42,6 +42,8 @@ Class AppInstance
 		App=Self
 	
 		SDL_Init( SDL_INIT_EVERYTHING )
+		
+		_sdlThread=SDL_ThreadID()
 
 #If __TARGET__<>"emscripten"
 
@@ -54,8 +56,6 @@ Class AppInstance
 		SDL_GL_SetAttribute( SDL_GL_SHARE_WITH_CURRENT_CONTEXT,1 )
 		
 #Endif
-		_keyMatrix=SDL_GetKeyboardState( Varptr _numKeys )
-		
 		_defaultFont=Font.Open( DefaultFontName,16 )
 		
 		_defaultMonoFont=Font.Open( DefaultMonoFontName,16 )
@@ -166,13 +166,11 @@ Class AppInstance
 		Return New Vec2i( 1280,960 )
 
 #Else
-	
 		Local dm:SDL_DisplayMode
 		
 		If SDL_GetDesktopDisplayMode( 0,Varptr dm ) Return New Vec2i
 		
 		Return New Vec2i( dm.w,dm.h )
-		
 #Endif
 
 	End
@@ -187,13 +185,21 @@ Class AppInstance
 		Return Window.VisibleWindows()[0]
 	End
 	
-	#rem monkeydoc Gets state of a key.
+	#rem monkeydoc Approximate frames per second rendering rate.
 	#end
-	Method KeyDown:Bool( key:Key )
+	Property FPS:Float()
+
+		Return _fps
+	End
 	
-		Local n:=Int( key )
-		If n>=0 And n<_numKeys Return _keyMatrix[n]
-		Return False
+	#rem monkeydoc Number of milliseconds app has been running.
+	
+	This property uses the high precision system timer if possible.
+	
+	#end
+	Property Millisecs:Int()
+	
+		Return SDL_GetTicks()
 	End
 	
 	#rem monkeydoc Mouse location relative to the active window.
@@ -204,26 +210,6 @@ Class AppInstance
 	Property MouseLocation:Vec2i()
 
 		Return _mouseLocation
-	End
-	
-	#rem monkeydoc X coordinate of mouse location.
-	
-	@see [[MouseLocation]]
-	
-	#end
-	Property MouseX:Int()
-	
-		Return _mouseLocation.x
-	End
-	
-	#rem monkeydoc Y coordinate of mouse location.
-
-	@see [[MouseLocation]]
-	
-	#end
-	Property MouseY:Int()
-	
-		Return _mouseLocation.y
 	End
 	
 	#rem monkeydoc Terminate the app.
@@ -245,7 +231,7 @@ Class AppInstance
 	Method MainLoop()
 	
 		If Not _requestRender 
-		
+
 			SDL_WaitEvent( Null )
 			
 		Endif
@@ -255,6 +241,8 @@ Class AppInstance
 		If Not _requestRender Return
 		
 		_requestRender=False
+		
+		UpdateFPS()
 			
 		For Local window:=Eachin Window.VisibleWindows()
 			window.Render()
@@ -264,7 +252,7 @@ Class AppInstance
 	
 	Function EmscriptenMainLoop()
 	
-		App._requestRender=True
+'		App._requestRender=True
 		
 		App.MainLoop()
 	End
@@ -274,6 +262,7 @@ Class AppInstance
 	Method Run()
 	
 		SDL_AddEventWatch( _EventFilter,Null )
+'		SDL_SetEventFilter( _EventFilter,Null )
 		
 		RequestRender()
 		
@@ -293,6 +282,7 @@ Class AppInstance
 
 	Private
 	
+	Field _sdlThread:SDL_threadID
 	Field _glWindow:SDL_Window Ptr
 	Field _glContext:SDL_GLContext
 
@@ -304,8 +294,9 @@ Class AppInstance
 	Field _hoverView:View
 	Field _mouseView:View
 	
-	Field _numKeys:Int
-	Field _keyMatrix:UByte Ptr
+	Field _fps:Float
+	Field _fpsFrames:Int
+	Field _fpsMillis:Int
 	
 	Field _window:Window
 	Field _key:Key
@@ -320,13 +311,28 @@ Class AppInstance
 	
 	Global _nextCallbackId:Int
 	Global _asyncCallbacks:=New IntMap<Void()>
+	Global _disabledCallbacks:=New IntMap<Bool>
+	
+	Method UpdateFPS()
+	
+		_fpsFrames+=1
+			
+		Local elapsed:=App.Millisecs-_fpsMillis
+		
+		If elapsed>=250
+			_fps=Round( _fpsFrames/(elapsed/1000.0) )
+			_fpsMillis+=elapsed
+			_fpsFrames=0
+		Endif
+
+	End
 	
 	Method UpdateEvents()
 	
 		Local event:SDL_Event
 
 		_polling=True
-			
+		
 		While SDL_PollEvent( Varptr event )
 		
 			DispatchEvent( Varptr event )
@@ -350,7 +356,7 @@ Class AppInstance
 	
 		Local view:=KeyView
 		If view And Not view.ReallyEnabled view=Null
-	
+		
 		Local event:=New KeyEvent( type,view,_key,_scanCode,_modifiers,_keyText )
 		
 		KeyEventFilter( event )
@@ -379,15 +385,24 @@ Class AppInstance
 	
 	Method SendWindowEvent( type:EventType,window:Window )
 	
-		Local shape:Recti
+		Local event:=New WindowEvent( type,window )
 		
+		window.SendWindowEvent( event )
+	End
+	
+	Method ValidateWindowShape( window:Window )
+
 		Local x:Int,y:Int,w:Int,h:Int
 		SDL_GetWindowPosition( window.NativeWindow,Varptr x,Varptr y )
 		SDL_GetWindowSize( window.NativeWindow,Varptr w,Varptr h )
 		
-		Local event:=New WindowEvent( type,window,New Recti( x,y,x+w,y+h ) )
+		Local frame:=window.Frame
 		
-		window.SendWindowEvent( event )
+		window.Frame=New Recti( x,y,x+w,y+h )
+		
+		If x<>frame.X Or y<>frame.Y SendWindowEvent( EventType.WindowMoved,window )
+		
+		If w<>frame.Width Or h<>frame.Height SendWindowEvent( EventType.WindowResized,window )
 	End
 	
 	Method DispatchEvent( event:SDL_Event Ptr )
@@ -526,12 +541,19 @@ Class AppInstance
 			
 			Case SDL_WINDOWEVENT_MOVED
 			
-				SendWindowEvent( EventType.WindowMoved,window )
+'				ValidateWindowShape( window )
 
-'			Case SDL_WINDOWEVENT_RESIZED,
-			Case SDL_WINDOWEVENT_SIZE_CHANGED
+			Case SDL_WINDOWEVENT_RESIZED
 			
-				SendWindowEvent( EventType.WindowResized,window )
+'				ValidateWindowShape( window )
+				
+			Case SDL_WINDOWEVENT_FOCUS_GAINED
+			
+				SendWindowEvent( EventType.WindowGainedFocus,window )
+			
+			Case SDL_WINDOWEVENT_FOCUS_LOST
+			
+				SendWindowEvent( EventType.WindowLostFocus,window )
 				
 			Case SDL_WINDOWEVENT_LEAVE
 			
@@ -550,11 +572,11 @@ Class AppInstance
 			Local id:=code & $3fffffff
 			
 			If code & $40000000
-				Local func:=_asyncCallbacks[id]
-				If code & $80000000 _asyncCallbacks.Remove( id )
-				func()
+				Local func:=_asyncCallbacks[ id ]				'null if removed
+				If code & $80000000 RemoveAsyncCallback( id )
+				If Not _disabledCallbacks[id] func()
 			Else If code & $80000000
-				_asyncCallbacks.Remove( id )
+				RemoveAsyncCallback( id )
 			Endif
 
 		End
@@ -568,8 +590,13 @@ Class AppInstance
 	
 	Method EventFilter:Int( userData:Void Ptr,event:SDL_Event Ptr )
 	
-'		If _polling Return 1
-	
+		#rem
+		If SDL_ThreadID()<>_sdlThread 
+			Print "Yikes! EventFilter running in non-main thread..."
+			Return 1
+		Endif
+		#end
+			
 		Select event[0].type
 		Case SDL_WINDOWEVENT
 
@@ -577,10 +604,16 @@ Class AppInstance
 			Local window:=Window.WindowForID( wevent->windowID )
 			
 			Select wevent->event
+			
+			Case SDL_WINDOWEVENT_MOVED
+			
+				ValidateWindowShape( window )
+				
+				Return 0
 					
 			Case SDL_WINDOWEVENT_RESIZED
 			
-				SendWindowEvent( EventType.WindowResized,window )
+				ValidateWindowShape( window )
 				
 				If _requestRender
 				
@@ -608,5 +641,17 @@ Class AppInstance
 		Return id
 	End
 	
+	Function RemoveAsyncCallback( id:Int )
+		_disabledCallbacks.Remove( id )
+		_asyncCallbacks.Remove( id )
+	End
+	
+	Function EnableAsyncCallback( id:Int )
+		_disabledCallbacks.Remove( id )
+	End
+	
+	Function DisableAsyncCallback( id:Int )
+		If _asyncCallbacks.Contains( id ) _disabledCallbacks[id]=True
+	End
+	
 End
-

@@ -10,9 +10,9 @@ Class Timer="bbTimer"
 
 	#rem monkeydoc Creates a new timer.
 	#end
-	Method New( fps:Int,fired:Void() )
+	Method New( ticksPerSecond:Int,fired:Void() )
 
-	#rem monkeydoc Suspended state.
+	#rem monkeydoc @hidden Suspended state.
 	#end
 	Property Suspended:Bool()="suspended"
 	Setter( suspended:Bool )="setSuspended"

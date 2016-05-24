@@ -5,6 +5,8 @@ Global Keyboard:=New KeyboardDevice
 
 Class KeyboardDevice Extends InputDevice
 
+	#rem monkeydoc @hidden
+	#end
 	Method Reset()
 		Init()
 		For Local i:=0 Until _numKeys

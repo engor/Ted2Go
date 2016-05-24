@@ -25,18 +25,6 @@ End
 
 Class Window Extends View
 
-	#rem monkeydoc @hidden
-	#end
-	Field WindowClose:Void()
-	
-	#rem monkeydoc @hidden
-	#end
-	Field WindowMoved:Void()
-	
-	#rem monkeydoc @hidden
-	#end
-	Field WindowResized:Void()
-	
 	Method New()
 		Init( "Window",New Recti( 0,0,640,480 ),WindowFlags.Center )
 	End
@@ -80,7 +68,10 @@ Class Window Extends View
 #If __TARGET__="emscripten"
 		Local w:Int,h:Int,fs:Int
 		emscripten_get_canvas_size( Varptr w,Varptr h,Varptr fs )
-		If w<>Frame.Width Or h<>Frame.Height Frame=New Recti( 0,0,w,h )
+		If w<>Frame.Width Or h<>Frame.Height
+			Frame=New Recti( 0,0,w,h )
+		Endif
+		
 #Endif
 
 		'ugly...fixme.
@@ -88,10 +79,12 @@ Class Window Extends View
 			_minSize=MinSize
 			_maxSize=MaxSize
 			_frame=Frame
+#If __TARGET__<>"emscripten"
 			SDL_SetWindowMinimumSize( _sdlWindow,_minSize.x,_minSize.y )
 			SDL_SetWindowMinimumSize( _sdlWindow,_maxSize.x,_maxSize.y )
 			SDL_SetWindowPosition( _sdlWindow,_frame.X,_frame.Y )
 			SDL_SetWindowSize( _sdlWindow,_frame.Width,_frame.Height )
+#Endif
 		Endif
 		
 		Measure()
@@ -113,8 +106,6 @@ Class Window Extends View
 		
 		_canvas.Resize( viewport.Size )
 		
-'		_canvas.BeginRender()
-		
 		_canvas.RenderColor=Color.White
 		_canvas.RenderMatrix=New AffineMat3f
 		_canvas.RenderBounds=viewport
@@ -134,8 +125,6 @@ Class Window Extends View
 		Render( _canvas )
 
 		_canvas.Flush()
-		
-'		_canvas.EndRender()
 		
 		SDL_GL_SwapWindow( _sdlWindow )
 	End
@@ -213,15 +202,19 @@ Class Window Extends View
 	
 		Select event.Type
 		Case EventType.WindowClose
-			WindowClose()
+		
+			App.Terminate()
+			
 		Case EventType.WindowMoved
-			Frame=event.Rect
-			WindowMoved()
+		
 		Case EventType.WindowResized
-			Frame=event.Rect
-'			Frame=New Recti( 0,0,event.Rect.Size )
+		
 			App.RequestRender()
-			WindowResized()
+			
+		Case EventType.WindowGainedFocus
+		
+		Case EventType.WindowLostFocus
+		
 		End
 		
 	End
@@ -266,6 +259,14 @@ Class Window Extends View
 		If Not (flags & WindowFlags.Hidden) _visibleWindows.Push( Self )
 		_windowsByID[SDL_GetWindowID( _sdlWindow )]=Self
 		
+		'Create GLContext and canvas
+		
+		_sdlGLContext=SDL_GL_CreateContext( _sdlWindow )
+		
+		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )
+		
+		_canvas=New Canvas( rect.Width,rect.Height )
+		
 		Local tx:Int,ty:Int,tw:Int,th:Int
 		SDL_GetWindowMinimumSize( _sdlWindow,Varptr tw,Varptr th )
 		_minSize=New Vec2i( tw,th )
@@ -281,14 +282,6 @@ Class Window Extends View
 		MaxSize=_maxSize
 		Frame=_frame
 		
-		WindowClose=App.Terminate
-		
-		'Create GLContext and canvas
-		
-		_sdlGLContext=SDL_GL_CreateContext( _sdlWindow )
-		
-		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )
-		
-		_canvas=New Canvas( rect.Width,rect.Height )
+		Update()
 	End
 End

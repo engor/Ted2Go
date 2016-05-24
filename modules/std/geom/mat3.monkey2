@@ -3,7 +3,7 @@ Namespace std.geom
 
 Alias Mat3f:Mat3<Float>
 
-Class Mat3<T>
+Struct Mat3<T>
 
 	Field i:Vec3<T>
 	Field j:Vec3<T>
@@ -11,10 +11,6 @@ Class Mat3<T>
 	
 	Method New()
 		i.x=1;j.y=1;k.z=1
-	End
-	
-	Method New( m:Mat3 )
-		i=m.i;j=m.j;k=m.k
 	End
 	
 	Method New( i:Vec3<T>,j:Vec3<T>,k:Vec3<T> )

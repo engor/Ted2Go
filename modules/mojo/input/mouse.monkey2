@@ -23,6 +23,8 @@ End
 
 Class MouseDevice Extends InputDevice
 
+	#rem monkeydoc @hidden
+	#end
 	Method Reset()
 		Init()
 		For Local i:=0 Until 6

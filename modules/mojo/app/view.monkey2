@@ -220,6 +220,13 @@ Class View
 		Return _bounds
 	End
 	
+	#rem monkeydoc Mouse location relative to the view.
+	#end
+	Property MouseLocation:Vec2i()
+
+		Return TransformPointFromView( App.MouseLocation,Null )
+	End
+	
 	#rem monkeydoc View clip rect.
 	
 	The clip rect represents the part of the content rect NOT obscured by an parent views.

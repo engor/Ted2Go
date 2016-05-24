@@ -7,12 +7,10 @@ Namespace mojo
 
 #Import "app/app"
 #Import "app/event"
-#Import "app/keycodes"
 #Import "app/skin"
 #Import "app/style"
 #Import "app/view"
 #Import "app/window"
-#Import "app/process"
 #Import "app/requesters"
 
 #Import "graphics/canvas"
@@ -27,11 +25,22 @@ Namespace mojo
 #Import "graphics/texture"
 #Import "graphics/vertex"
 
+#Import "input/device"
+#Import "input/keyboard"
+#Import "input/mouse"
+#Import "input/joystick"
+#Import "input/keycodes"
+
+#Import "process/process"
+#Import "timer/timer"
+
 Using emscripten..
 Using std..
 Using sdl2..
 Using gles20..
 Using mojo..
+
+Private
 
 Function Main()
 End

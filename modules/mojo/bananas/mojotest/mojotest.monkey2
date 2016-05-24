@@ -78,7 +78,6 @@ Class MojoTest Extends Window
 		canvas.DrawRect( Width-1,0,1,Height )
 		canvas.DrawRect( 0,Height-1,Width,1 )
 		canvas.DrawRect( 0,0,1,Height-1 )
-	
 
 		canvas.Color=Color.Blue
 		canvas.DrawText( Seconds(),0,0 )

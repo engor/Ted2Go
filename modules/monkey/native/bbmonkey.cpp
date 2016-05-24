@@ -29,9 +29,10 @@ namespace{
 	#endif	
 		}
 		
-		bbAssert( false,err );
+//		bbAssert( false,err );
 		
 		printf( "Caught signal:%s\n",err );
+		exit( 0 );
 		
 #if __APPLE__
 

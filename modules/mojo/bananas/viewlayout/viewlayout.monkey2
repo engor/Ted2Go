@@ -29,45 +29,19 @@ Class MyWindow Extends Window
 		'Set initial layout (this is the default for Windows).
 		'
 		Layout="fill"
-		
 
 		'Window clear color - for "letterbox" and "float" layouts, this is effectively the border color.
 		'
 		ClearColor=Color.Black
 		
-		
 		'Set minimum view size
 		'
 		MinSize=New Vec2i( 200,140 )
-
 		
 		'Set view background color.
 		'
 		Style.BackgroundColor=Color.DarkGrey
 		
-		
-		'One way to detect window resizing (you can also override OnWindowEvent).
-		'
-		'Note: you don't have to use a lambda here, a method or function will also work fine.
-		'
-		WindowResized=Lambda()
-		
-			Print "Window Resized to:"+Frame.Width+","+Frame.Height
-			
-		End
-		
-		
-		'One way to detect window close click (you can also override OnWindowEvent).
-		'
-		'Note: WindowClose is connected to App.Terminate by default, so this doesn't do a lot.
-		'
-		WindowClose=Lambda()
-		
-			Print "WindowClose - outta here!"
-			
-			App.Terminate()
-		End
-	
 	End
 
 	Method OnRender( canvas:Canvas ) Override
@@ -78,13 +52,9 @@ Class MyWindow Extends Window
 		'
 		App.RequestRender()
 		
-		
-		'Get mouse location in 'view' coordinates.
+		'Gets mouse location in 'view' coordinates.
 		'
-		'Note: this is only necessary if Layout is not "fill". If Layout="fill" (the default), you can just use App.MouseLocation directly.
-		'
-		Local mouse:=TransformPointFromView( App.MouseLocation,Null )
-
+		Local mouse:=Mouse.Location
 
 		'Render!
 		'		
@@ -141,6 +111,18 @@ Class MyWindow Extends Window
 	'Note: event.Location property is in 'view space' coordinates.
 	'
 	Method OnMouseEvent( event:MouseEvent ) Override
+	End
+	
+	Method OnWindowEvent( event:WindowEvent ) Override
+		Select event.Type
+		Case EventType.WindowClose
+			Print "Close"
+			App.Terminate()
+		Case EventType.WindowMoved
+			Print "Window moved to:"+Frame.Origin.ToString()
+		Case EventType.WindowResized
+			Print "Window resized to:"+Frame.Size.ToString()
+		End
 	End
 	
 	Method CycleLayout()
