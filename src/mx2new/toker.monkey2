@@ -188,28 +188,39 @@ Class Toker
 			
 			Return _toke
 			
-		Else If IsDigit( ch ) 
-		
+		Else If IsDigit( ch ) Or (ch=CHAR_DOT And _pos<_len And IsDigit( _text[_pos] ))
+
+			_tokeType=TOKE_INTLIT
+			If ch=CHAR_DOT
+				_tokeType=TOKE_FLOATLIT
+				_pos+=1
+			Endif
+			
 			While _pos<_len And IsDigit( _text[_pos] )
 				_pos+=1
 			Wend
-			_tokeType=TOKE_INTLIT
 			
-			If _pos<_len And _text[_pos]=CHAR_DOT
-				_pos+=1
+			'.#
+			If _pos+1<_len And _text[_pos]=CHAR_DOT And IsDigit( _text[_pos+1] ) And _tokeType=TOKE_INTLIT
+				_tokeType=TOKE_FLOATLIT
+				_pos+=2
 				While _pos<_len And IsDigit( _text[_pos] )
 					_pos+=1
 				Wend
-				_tokeType=TOKE_FLOATLIT
 			Endif
 			
-		Else If ch=CHAR_DOT And _pos<_len And IsDigit( _text[_pos] )
-		
-			_pos+=1
-			While _pos<_len And IsDigit( _text[_pos] )
-				_pos+=1
-			Wend
-			_tokeType=TOKE_FLOATLIT
+			'e, E...
+			If _pos+1<_len And (_text[_pos]=69 Or _text[_pos]=101)
+				Local tpos:=_pos+1
+				If _text[tpos]=43 Or _text[tpos]=45 tpos+=1
+				If tpos<_len And IsDigit( _text[tpos] )
+					_tokeType=TOKE_FLOATLIT
+					_pos=tpos+1
+					While _pos<_len And IsDigit( _text[_pos] )
+						_pos+=1
+					Wend
+				Endif
+			Endif
 			
 		Else If ch=CHAR_QUOTE
 		

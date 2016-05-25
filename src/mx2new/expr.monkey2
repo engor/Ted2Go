@@ -151,9 +151,9 @@ Class IdentExpr Extends Expr
 	Method OnSemant:Value( scope:Scope ) Override
 	
 		Local value:=scope.FindValue( ident )
-		If Not value Throw New SemantEx( "Identifier '"+ident+"' not found" )
+		If value Return value
 		
-		Return value
+		Throw New SemantEx( "Identifier '"+ident+"' not found" )
 	End
 	
 	Method OnSemantType:Type( scope:Scope ) Override
@@ -183,14 +183,14 @@ Class MemberExpr Extends Expr
 	
 	Method OnSemant:Value( scope:Scope ) Override
 	
-'		Local value:=expr.Semant( scope )
 		Local value:=expr.SemantRValue( scope )
 		
 		Local tvalue:=value.FindValue( ident )
-		If Not tvalue Throw New SemantEx( "Value of type '"+value.type.Name+"' has no member named '"+ident+"'" )
-'		If Not tvalue Throw New IdentEx( ident )
+		If tvalue Return tvalue
 		
-		Return tvalue
+		Local tv:=Cast<TypeValue>( value )
+		If tv Throw New SemantEx( "Type '"+tv.ttype.Name+"' has no member named '"+ident+"'" )
+		Throw New SemantEx( "Value of type '"+value.type.Name+"' has no member named '"+ident+"'" )
 	End
 	
 	Method OnSemantType:Type( scope:Scope ) Override

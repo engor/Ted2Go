@@ -222,6 +222,8 @@ Class SelfValue Extends Value
 	Method New( ctype:ClassType )
 		Self.type=ctype
 		Self.ctype=ctype
+		
+		If ctype.IsStruct flags|=VALUE_LVALUE|VALUE_ASSIGNABLE
 	End
 	
 	Method ToString:String() Override

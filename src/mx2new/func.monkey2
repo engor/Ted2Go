@@ -285,10 +285,11 @@ Class FuncValue Extends Value
 			If Not instance Throw New SemantEx( "Method '"+ToString()+"' cannot be accessed without an instance" )
 			
 			If Not instance.type.ExtendsType( Cast<ClassScope>( scope ).ctype )
-				Throw New SemantEx( "Method '"+ToString()+"' cannot be accessed from instance of a different class" )
+				Throw New SemantEx( "Method '"+ToString()+"' cannot be accessed from an instance of a different class" )
 			Endif
 			
 			value=New MemberFuncValue( instance,Self )
+
 		Endif
 		
 		Used()

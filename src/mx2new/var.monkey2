@@ -38,6 +38,7 @@ Class VarValue Extends Value
 	Field vdecl:VarDecl
 	Field scope:Scope
 	Field transFile:FileDecl
+	Field cscope:ClassScope
 	
 	Field init:Value
 	
@@ -47,6 +48,7 @@ Class VarValue Extends Value
 		Self.vdecl=vdecl
 		Self.scope=scope
 		Self.transFile=scope.FindFile().fdecl
+		Self.cscope=Cast<ClassScope>( scope )
 		
 		If vdecl.kind="global" Or vdecl.kind="local" Or vdecl.kind="param" flags|=VALUE_LVALUE|VALUE_ASSIGNABLE
 	End
@@ -60,11 +62,16 @@ Class VarValue Extends Value
 		Self.pnode=vdecl
 		Self.type=init.type
 		Self.scope=scope
+		Self.cscope=Cast<ClassScope>( scope )
 		Self.init=init
 		
 		If vdecl.kind="global" Or vdecl.kind="local" Or vdecl.kind="param" flags|=VALUE_LVALUE|VALUE_ASSIGNABLE
 		
 		semanted=Self
+	End
+	
+	Property IsField:Bool()
+		Return vdecl.kind="field"
 	End
 	
 	Method OnSemant:SNode() Override
@@ -76,12 +83,6 @@ Class VarValue Extends Value
 			init=vdecl.init.SemantRValue( scope )
 			type=init.type
 		Endif
-		
-		'struct field?
-'		Local cscope:=Cast<ClassScope>( scope )
-'		If vdecl.kind="field" And cscope And cscope.ctype.cdecl.kind="struct"
-'			If init And init.HasSideEffects Throw New SemantEx( "Struct field initializers cannot have side effects" )
-'		Endif
 		
 		If Not type.IsGeneric And Not vdecl.IsExtern And Not Cast<Block>( scope )
 			If vdecl.kind="global" Or vdecl.kind="const"
@@ -105,11 +106,20 @@ Class VarValue Extends Value
 	Method ToValue:Value( instance:Value ) Override
 	
 		If vdecl.kind="field"
-			Local ctype:=Cast<ClassScope>( scope ).ctype 
-			If instance And instance.type.DistanceToType( ctype )>=0
-				Return New MemberVarValue( instance,Self )
+		
+			If Not instance Throw New SemantEx( "Field '"+vdecl.ident+"' cannot be accessed without an instance" )
+		
+			If Not instance.type.ExtendsType( cscope.ctype )
+				Throw New SemantEx( "Field '"+vdecl.ident+"' cannot be accessed from an instance of a different class" )
 			Endif
-			Throw New SemantEx( "Field '"+ToString()+"' cannot be accessed from here" )
+
+			Return New MemberVarValue( instance,Self )
+			
+'			If instance And instance.type.DistanceToType( cscope.ctype )>=0
+'				Return New MemberVarValue( instance,Self )
+'			Endif
+'			Throw New SemantEx( "Field '"+ToString()+"' cannot be accessed without an instance" )
+
 		Endif
 		
 		Return Self
@@ -131,7 +141,14 @@ Class MemberVarValue Extends Value
 		Self.instance=instance
 		Self.member=member
 		
-		If member.vdecl.kind="field" flags|=VALUE_LVALUE|VALUE_ASSIGNABLE
+		If member.vdecl.kind="field"
+			If member.cscope.ctype.IsStruct
+				If instance.IsLValue flags|=VALUE_LVALUE
+				If instance.IsAssignable flags|=VALUE_ASSIGNABLE
+			Else
+				flags|=VALUE_LVALUE|VALUE_ASSIGNABLE
+			Endif
+		Endif
 	End
 	
 	Method ToString:String() Override

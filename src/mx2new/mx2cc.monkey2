@@ -20,13 +20,7 @@ Using libc
 
 Global StartDir:String
 
-Const TestArgs:="mx2cc makedocs std"
-
-'Const TestArgs:="mx2cc makeapp src/ted2/ted2.monkey2"
-
-'Const TestArgs:="mx2cc makeapp src/mx2new/test.monkey2"
-
-'Const TestArgs:="mx2cc makeapp src/mx2new/test.monkey2"
+Const TestArgs:="mx2cc makedocs"
 
 'Const TestArgs:="mx2cc makeapp src/mx2new/test.monkey2"
 
@@ -185,6 +179,8 @@ Function MakeDocs( args:String[] )
 	opts.verbose=0
 	
 	args=ParseOpts( opts,args )
+	opts.clean=False
+	
 	If Not args args=EnumModules()
 	
 	Local docsMaker:=New HtmlDocsMaker

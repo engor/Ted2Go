@@ -676,7 +676,7 @@ Class ClassScope Extends Scope
 	
 		Local node:=ctype.FindNode( ident )
 		If node Return node
-		
+
 		If outer Return outer.FindNode( ident )
 		
 		Return Null

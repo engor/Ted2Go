@@ -17,6 +17,7 @@ Class PropertyList Extends FuncList
 	
 	Field pdecl:PropertyDecl
 	Field scope:Scope
+	Field cscope:ClassScope
 	
 	Field getFunc:FuncValue
 	Field setFunc:FuncValue
@@ -28,6 +29,7 @@ Class PropertyList Extends FuncList
 		Self.pnode=pdecl
 		Self.pdecl=pdecl
 		Self.scope=scope
+		Self.cscope=Cast<ClassScope>( scope )
 	End
 	
 	Method ToString:String() Override
@@ -51,7 +53,7 @@ Class PropertyList Extends FuncList
 
 		If pdecl.setFunc
 			Try
-				setFunc=New FuncValue( pdecl.setFunc,scope,Null,null )
+				setFunc=New FuncValue( pdecl.setFunc,scope,Null,Null )
 				setFunc.Semant()
 				PushFunc( setFunc )
 			Catch ex:SemantEx
@@ -63,9 +65,16 @@ Class PropertyList Extends FuncList
 	
 	Method ToValue:Value( instance:Value ) Override
 	
-		If instance Return New PropertyValue( Self,instance )
+		If Not instance Throw New SemantEx( "Property '"+pdecl.ident+"' cannot be accessed without an instance" )
 		
-		Return Null
+		If Not instance.type.ExtendsType( cscope.ctype )
+			Throw New SemantEx( "Property '"+pdecl.ident+"' cannot be accessed from an instance of a different class" )
+		Endif
+		
+		Return New PropertyValue( Self,instance )
+	
+		'If instance Return New PropertyValue( Self,instance )
+		'Return Null
 	End
 	
 End
