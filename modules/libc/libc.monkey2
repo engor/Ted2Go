@@ -13,12 +13,12 @@ End
 
 #rem monkeydoc C/C++ 'signed char' type.
 #end
-Struct schar_t="signed char"
+Struct signed_char_t="signed char"
 End
 
 #rem monkeydoc C/C++ 'unsigned char' type
 #end
-Struct uchar_t="unsigned char"
+Struct unsigned_char_t="unsigned char"
 End
 
 #rem monkeydoc C/C++ 'wchar_t' type
