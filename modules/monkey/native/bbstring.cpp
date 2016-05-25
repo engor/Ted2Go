@@ -112,41 +112,50 @@ bbString bbString::fromWString( const void *data,int size ){
 }
 
 bbString bbString::fromUtf8String( const void *data,int size ){
+
 	const char *p=(const char*)data;
 	const char *e=p+size;
+
+	int len=0;
 		
-	bbChar *tmp=(bbChar*)malloc( size*sizeof(bbChar) );
-	bbChar *put=tmp;
-	
 	while( p<e && *p ){
 		int c=*p++;
 		
 		if( c & 0x80 ){
-		
 			if( (c & 0xe0)==0xc0 ){
-			
 				if( p>=e || (p[0] & 0xc0)!=0x80 ) break;
-				c=((c & 0x1f)<<6) | (p[0] & 0x3f);
 				p+=1;
-				
 			}else if( (c & 0xf0)==0xe0 ){
-			
 				if( p+1>=e || (p[0] & 0xc0)!=0x80 || (p[1] & 0xc0)!=0x80 ) break;
-				c=((c & 0x0f)<<12) | ((p[0] & 0x3f)<<6) | (p[1] & 0x3f);
 				p+=2;
-				
 			}else{
-			
 				break;
 			}
 		}
-		*put++=c;
+		len+=1;
 	}
 	
-	bbString str( tmp,put-tmp );
-	free( tmp );
+	p=(const char*)data;
 	
-	return str;
+	Rep *rep=Rep::alloc( len );
+	bbChar *d=rep->data;
+	
+	while( len-- ){
+		int c=*p++;
+		
+		if( c & 0x80 ){
+			if( (c & 0xe0)==0xc0 ){
+				c=((c & 0x1f)<<6) | (p[0] & 0x3f);
+				p+=1;
+			}else if( (c & 0xf0)==0xe0 ){
+				c=((c & 0x0f)<<12) | ((p[0] & 0x3f)<<6) | (p[1] & 0x3f);
+				p+=2;
+			}
+		}
+		*d++=c;
+	}
+	
+	return rep;
 }
 
 bbArray<bbString> *bbString::split( bbString sep )const{
