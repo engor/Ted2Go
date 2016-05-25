@@ -108,6 +108,10 @@ Class AppInstance
 		Local p:=SDL_GetClipboardText()
 		
 		Local str:=String.FromUtf8String( p )
+
+		'fix windows eols		
+		str=str.Replace( "~r~n","~n" )
+		str=str.Replace( "~r","~n" )		
 		
 		SDL_free( p )
 		
