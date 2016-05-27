@@ -282,7 +282,18 @@ Class JsonObject Extends JsonValue
 	End
 	
 	Function Load:JsonObject( path:String )
-		Return Cast<JsonObject>( JsonValue.Load( path ) )
+		Local json:=std.stringio.LoadString( path )
+		If json Return Parse( json )
+		Return Null
+	End
+	
+	Function Parse:JsonObject( json:String )
+		Try
+			Local parser:=New JsonParser( json )
+			Return New JsonObject( parser.ParseObject() )
+		Catch ex:JsonError
+		End
+		Return Null
 	End
 	
 	Private
