@@ -17,8 +17,6 @@ Enum MouseButton
 	Left=1
 	Middle=2
 	Right=3
-	X1=4
-	X2=5
 End
 
 Class MouseDevice Extends InputDevice
@@ -26,9 +24,9 @@ Class MouseDevice Extends InputDevice
 	#rem monkeydoc @hidden
 	#end
 	Method Reset()
-		Init()
-		For Local i:=0 Until 6
-			_hits[i]=True
+		For Local i:=0 Until 4
+			_pressed[i]=True
+			_released[i]=True
 		Next
 	End
 	
@@ -41,24 +39,38 @@ Class MouseDevice Extends InputDevice
 	End
 
 	Property Location:Vec2i()
-		Init()
 		Return _location
 	End
 	
 	Method ButtonDown:Bool( button:MouseButton )
-		Init()
+		DebugAssert( button>=0 And button<4,"Mouse buttton out of range" )
 		Return _buttons[button]
 	End
 
-	Method ButtonHit:Bool( button:MouseButton )
-		Init()
+	Method ButtonPressed:Bool( button:MouseButton )
+		DebugAssert( button>=0 And button<4,"Mouse buttton out of range" )
 		If _buttons[button]
-			If _hits[button] Return False
-			_hits[button]=True
+			If _pressed[button] Return False
+			_pressed[button]=True
 			Return True
 		Endif
-		_hits[button]=False
+		_pressed[button]=False
 		Return False
+	End
+	
+	Method ButtonReleased:Bool( button:MouseButton )
+		DebugAssert( button>=0 And button<4,"Mouse buttton out of range" )
+		If Not _buttons[button]
+			If _released[button] Return False
+			_released[button]=True
+			Return True
+		Endif
+		_released[button]=False
+		Return False
+	End
+	
+	Method ButtonHit:Bool( button:MouseButton )
+		Return ButtonPressed( button )
 	End
 	
 	#rem monkeydoc @hidden
@@ -73,12 +85,22 @@ Class MouseDevice Extends InputDevice
 	'	Return Location
 	'End
 	
+	'***** Internal *****
+
+	Method Init()
+		If _init Return
+		App.Idle+=Poll
+		_init=True
+		Reset()
+	End
+	
 	Private
 
 	Field _init:Bool	
 	Field _location:Vec2i
-	Field _buttons:=New Bool[6]
-	Field _hits:=New Bool[6]
+	Field _buttons:=New Bool[4]
+	Field _pressed:=New Bool[4]
+	Field _released:=New Bool[4]
 	
 	Method New()
 	End
@@ -92,10 +114,4 @@ Class MouseDevice Extends InputDevice
 		App.Idle+=Poll
 	End
 
-	Method Init()
-		If _init Return
-		App.Idle+=Poll
-		_init=True
-	End
-	
 End
