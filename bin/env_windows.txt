@@ -19,7 +19,7 @@ PATH=${MX2_HOME}\devtools\i686-5.3.0-posix-dwarf-rt_v4-rev0\mingw32\bin;${PATH}
 MX2_BUILD_DIR_DESKTOP_DEBUG=desktop_debug_windows
 MX2_BUILD_DIR_DESKTOP_RELEASE=desktop_release_windows
 
-MX2_LD_OPTS_DESKTOP=-m32
+MX2_LD_OPTS_DESKTOP=-m32 -static
 MX2_LD_OPTS_DESKTOP_DEBUG=
 MX2_LD_OPTS_DESKTOP_RELEASE=-s
 

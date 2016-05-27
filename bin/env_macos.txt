@@ -24,12 +24,12 @@ MX2_LD_OPTS_DESKTOP_DEBUG=-O0 '-g
 MX2_LD_OPTS_DESKTOP_RELEASE=-O3
 
 'C compiler options
-MX2_CC_OPTS_DESKTOP=-std=gnu99 -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-undefined-bool-conversion -Wno-int-to-void-pointer-cast -Wno-inconsistent-missing-override -Wno-logical-op-parentheses
+MX2_CC_OPTS_DESKTOP=-std=gnu99 -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-undefined-bool-conversion -Wno-int-to-void-pointer-cast -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-parentheses-equality
 MX2_CC_OPTS_DESKTOP_DEBUG=-O0 '-g
 MX2_CC_OPTS_DESKTOP_RELEASE=-O3 -DNDEBUG
 
 'C++ compiler options
-MX2_CPP_OPTS_DESKTOP=-std=c++11 -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-undefined-bool-conversion -Wno-int-to-void-pointer-cast -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-null-character
+MX2_CPP_OPTS_DESKTOP=-std=c++11 -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-undefined-bool-conversion -Wno-int-to-void-pointer-cast -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-parentheses-equality
 MX2_CPP_OPTS_DESKTOP_DEBUG=-O0 '-g
 MX2_CPP_OPTS_DESKTOP_RELEASE=-O3 -DNDEBUG
 
