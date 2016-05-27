@@ -4,14 +4,16 @@ Namespace spacechimps
 #Import "<std>"
 #Import "<mojo>"
 
+#Import "assets/bang.wav"
+#Import "assets/spaceship.png"
+
 Using std..
 Using mojo..
-
-#Import "assets/spaceship.png"
 
 Class MyWindow Extends Window
 
 	Field timer:Timer
+	Field laser:Sound
 	Field image:Image
 	Field pos:=New Vec2f
 	Field vel:=New Vec2f
@@ -26,6 +28,12 @@ Class MyWindow Extends Window
 		'Black 'coz we're in space!
 		'
 		ClearColor=Color.Black
+
+		'Load laser sound effecy
+		'		
+		laser=Sound.Load( "asset::bang.wav" )
+		
+		If Not laser Print "Couldn't load laser"
 		
 		'Load and setup our image...
 		'
@@ -120,6 +128,15 @@ Class MyWindow Extends Window
 		'
 		pos.x=(pos.x+Width) Mod Width
 		pos.y=(pos.y+Height) Mod Height
+		
+		If Keyboard.KeyPressed( Key.Space )
+			laser.Play()
+'			Print "Fire!"
+		End
+
+		If Keyboard.KeyReleased( Key.Space )
+'			Print "UnFire!"
+		End
 		
 	End
 	
