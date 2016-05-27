@@ -4,6 +4,8 @@ Namespace mojo
 #Import "<emscripten>"
 #Import "<std>"
 #Import "<sdl2>"
+#Import "<gles20>"
+#Import "<sdl2-mixer>"
 
 #Import "app/app"
 #Import "app/event"
@@ -34,6 +36,8 @@ Namespace mojo
 #Import "process/process"
 #Import "timer/timer"
 
+#Import "audio/audio"
+
 Using emscripten..
 Using std..
 Using sdl2..
@@ -44,4 +48,3 @@ Private
 
 Function Main()
 End
-

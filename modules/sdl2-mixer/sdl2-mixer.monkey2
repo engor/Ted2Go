@@ -43,6 +43,8 @@ Function Mix_GetError:CString()
 
 Function Mix_LoadWAV:Mix_Chunk Ptr( file:CString )
 
+Function Mix_LoadWAV_RW:Mix_Chunk Ptr( src:SDL_RWops Ptr,freesrc:Int )
+
 Function Mix_QuickLoad_WAV:Mix_Chunk Ptr( mem:UByte Ptr )
 
 Function Mix_VolumeChunk:Int( chunk:Mix_Chunk Ptr,volume:Int )

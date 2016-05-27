@@ -16,6 +16,8 @@ Extern
 Struct SDL_RWops
 End
 
+Function SDL_RWFromMem:SDL_RWops Ptr( mem:Void Ptr,size:Int )
+
 Struct SDL_Surface
 End
 
