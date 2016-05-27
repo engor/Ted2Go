@@ -293,7 +293,9 @@ Class Translator
 	Field _usesFiles:=New StringMap<FileDecl>
 	Field _usesTypes:=New StringMap<ClassType>
 	
-	Field _refs:=New StringMap<SNode>
+	Field _refs:=New Map<SNode,Bool>
+	
+'	Field _refs:=New StringMap<SNode>
 	Field _refsVars:=New Stack<VarValue>
 	Field _refsFuncs:=New Stack<FuncValue>
 	Field _refsTypes:=New Stack<ClassType>
@@ -371,9 +373,9 @@ Class Translator
 		_incs[fdecl.ident]=fdecl
 	End
 	
-	Method AddRef:Bool( name:String,node:SNode )
-		If _refs.Contains( name ) Return True
-		_refs[name]=node
+	Method AddRef:Bool( node:SNode )
+		If _refs[node] Return True
+		_refs[node]=True
 		Return False
 	End
 	
@@ -386,7 +388,7 @@ Class Translator
 			Refs( vvar.type )
 			Uses( vvar.scope.FindClass() )
 		Case "const","global"
-			If AddRef( VarName( vvar ),vvar ) Return
+			If AddRef( vvar ) Return
 			_refsVars.Push( vvar )
 			Refs( vvar.type )
 		Case "local","param","capture"
@@ -402,7 +404,7 @@ Class Translator
 		If fdecl.IsExtern Uses( func.transFile ) ; Return
 		
 		If fdecl.kind="function" Or func.IsExtension
-			If AddRef( FuncName( func ),func ) Return
+			If AddRef( func ) Return
 			_refsFuncs.Push( func )
 			Refs( func.ftype )
 		Else If fdecl.kind="method"
@@ -419,7 +421,7 @@ Class Translator
 		Local ctype:=TCast<ClassType>( type )
 		If ctype
 			If IsStruct( ctype ) Uses( ctype ) ; Return
-			If AddRef( ClassName( ctype ),ctype ) Return
+			If AddRef( ctype ) Return
 			_refsTypes.Push( ctype )
 			Return
 		Endif

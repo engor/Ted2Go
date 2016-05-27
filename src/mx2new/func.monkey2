@@ -76,7 +76,7 @@ Class FuncValue Extends Value
 		Self.transFile=scope.FindFile().fdecl
 		Self.cscope=Cast<ClassScope>( scope )
 		
-		If fdecl.kind="lambda" captures=New Stack<VarValue>
+		If IsLambda captures=New Stack<VarValue>
 	End
 	
 	Property GenArgsName:String()
@@ -137,6 +137,10 @@ Class FuncValue Extends Value
 		Return (fdecl.kind="method" And types) Or fdecl.IsExtension
 	End
 	
+	Property IsLambda:Bool()
+		Return fdecl.kind="lambda"
+	End
+	
 	Method ToString:String() Override
 	
 		Local args:=Join( types )
@@ -189,9 +193,7 @@ Class FuncValue Extends Value
 		
 		Else If IsMethod
 		
-'			Local cscope:=Cast<ClassScope>( scope )
 			Local ctype:=cscope.ctype
-'			Local cdecl:=ctype.cdecl
 			
 			If fdecl.IsOperator
 				Local op:=fdecl.ident
@@ -251,7 +253,7 @@ Class FuncValue Extends Value
 			If Not t Return Null
 		Endif
 		
-		If fdecl.kind="lambda"
+		If IsLambda
 			used=True
 			semanted=Self
 			SemantStmts()
@@ -275,16 +277,16 @@ Class FuncValue Extends Value
 	Method ToValue:Value( instance:Value ) Override
 	
 		Local value:Value=Self
-	
-		If fdecl.ident="new"
+		
+		If IsCtor
 		
 			If instance Throw New SemantEx( "'New' cannot be directly invoked" )
 			
-		Else If fdecl.kind="method"
+		Else If IsMethod
 		
 			If Not instance Throw New SemantEx( "Method '"+ToString()+"' cannot be accessed without an instance" )
 			
-			If Not instance.type.ExtendsType( Cast<ClassScope>( scope ).ctype )
+			If Not instance.type.ExtendsType( cscope.ctype )
 				Throw New SemantEx( "Method '"+ToString()+"' cannot be accessed from an instance of a different class" )
 			Endif
 			
@@ -340,19 +342,19 @@ Class FuncValue Extends Value
 			End
 		Next
 		
-		If fdecl.kind="method"
+		If IsCtor Or IsMethod
 	
 			If IsExtension
 	
-				selfValue=New VarValue( "capture","self",New LiteralValue( Cast<ClassScope>( scope ).ctype,"" ),scope )
+				selfValue=New VarValue( "capture","self",New LiteralValue( cscope.ctype,"" ),scope )
 				
-			Else If fdecl.kind="method"
+			Else
 			
-				selfValue=New SelfValue( Cast<ClassScope>( scope ).ctype )
+				selfValue=New SelfValue( cscope.ctype )
 				
 			Endif
 			
-		Else If fdecl.kind="lambda"
+		Else If IsLambda
 		
 			selfValue=Cast<Block>( scope ).func.selfValue
 			If selfValue
@@ -419,7 +421,8 @@ Class FuncValue Extends Value
 
 		Else
 		
-			If fdecl.kind="method"
+			If IsCtor Or IsMethod
+			
 '				If fdecl.ident="new"
 '					cscope.ctype.ctors.Push( Self )
 '				Else

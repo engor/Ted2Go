@@ -11,16 +11,13 @@ Using mx2.docs
 #Import "docsmaker.monkey2"
 #Import "htmldocsmaker.monkey2"
 
-Using std
-Using mx2
-Using std.stringio
-Using std.filesystem
-Using lib.c
-Using libc
+Using libc..
+Using std..
+Using mx2..
 
 Global StartDir:String
 
-Const TestArgs:="mx2cc makedocs"
+Const TestArgs:="mx2cc makemods -clean"
 
 'Const TestArgs:="mx2cc makeapp src/mx2new/test.monkey2"
 
@@ -274,6 +271,59 @@ Function ParseOpts:String[]( opts:BuildOpts,args:String[] )
 	Return Null
 End
 
+Function EnumModules( out:StringStack,cur:String,deps:StringMap<StringStack> )
+	If out.Contains( cur ) Return
+	
+	For Local dep:=Eachin deps[cur]
+		EnumModules( out,dep,deps )
+	Next
+	
+	out.Push( cur )
+End
+
+Function EnumModules:String[]()
+
+	Local mods:=New StringMap<StringStack>
+
+	For Local f:=Eachin LoadDir( "modules" )
+	
+		Local dir:="modules/"+f+"/"
+		If GetFileType( dir )<>FileType.Directory Continue
+		
+		Local str:=LoadString( dir+"module.json" )
+		If Not str Continue
+		
+		Local obj:=JsonObject.Parse( str )
+		If Not obj 
+			Print "Error parsing json:"+dir+"module.json"
+			Continue
+		Endif
+		
+		Local name:=obj["module"].ToString()
+		If name<>f Continue
+		
+		Local deps:=New StringStack
+		If name<>"monkey" deps.Push( "monkey" )
+		
+		Local jdeps:=obj["depends"]
+		If jdeps
+			For Local dep:=Eachin jdeps.ToArray()
+				deps.Push( dep.ToString() )
+			Next
+		Endif
+		
+		mods[name]=deps
+	Next
+	
+	Local out:=New StringStack
+	For Local cur:=Eachin mods.Keys
+		EnumModules( out,cur,mods )
+	Next
+	
+	Return out.ToArray()
+End
+
+#rem
 Function EnumModules:String[]()
 
 	Local mods:=New StringStack
@@ -290,6 +340,7 @@ Function EnumModules:String[]()
 	
 	Return mods.ToArray()
 End
+#end
 
 Function LoadEnv:Bool( path:String )
 

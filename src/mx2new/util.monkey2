@@ -85,7 +85,7 @@ Function MakeRelativePath:String( path:String,baseDir:String )
 		Local tdir:=baseDir
 		baseDir=ExtractDir( baseDir )
 		If baseDir=tdir 
-			Print "MakeRelativePath Error! baseDir="+baseDir
+'			Print "MakeRelativePath Error! baseDir="+baseDir
 			Return path
 		Endif
 		relpath="../"+relpath
