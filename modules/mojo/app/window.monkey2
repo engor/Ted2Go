@@ -1,4 +1,4 @@
-
+	
 Namespace mojo.app
 
 #rem monkeydoc Window creation flags.
@@ -64,29 +64,39 @@ Class Window Extends View
 	#end
 	Method Update()
 	
-		'ugly...fixme.
+
 #If __TARGET__="emscripten"
+
+		'ugly...fixme.
 		Local w:Int,h:Int,fs:Int
 		emscripten_get_canvas_size( Varptr w,Varptr h,Varptr fs )
 		If w<>Frame.Width Or h<>Frame.Height
 			Frame=New Recti( 0,0,w,h )
 		Endif
+	
+#Else
+		'ugly...fixme.
+		If MinSize<>_minSize
+			SDL_SetWindowMinimumSize( _sdlWindow,MinSize.x,MinSize.y )
+			_minSize=GetMinSize()
+			MinSize=_minSize
+		Endif
+		
+		If MaxSize<>_maxSize 
+			SDL_SetWindowMaximumSize( _sdlWindow,MaxSize.x,MaxSize.y )
+			_maxSize=GetMaxSize()
+			MaxSize=_maxSize
+		Endif
+		
+		If Frame<>_frame
+			SDL_SetWindowPosition( _sdlWindow,Frame.X,Frame.Y )
+			SDL_SetWindowSize( _sdlWindow,Frame.Width,Frame.Height )
+			_frame=GetFrame()
+			Frame=_frame
+		Endif
 		
 #Endif
 
-		'ugly...fixme.
-		If MinSize<>_minSize Or MaxSize<>_maxSize Or Frame<>_frame
-			_minSize=MinSize
-			_maxSize=MaxSize
-			_frame=Frame
-#If __TARGET__<>"emscripten"
-			SDL_SetWindowMinimumSize( _sdlWindow,_minSize.x,_minSize.y )
-			SDL_SetWindowMinimumSize( _sdlWindow,_maxSize.x,_maxSize.y )
-			SDL_SetWindowPosition( _sdlWindow,_frame.X,_frame.Y )
-			SDL_SetWindowSize( _sdlWindow,_frame.Width,_frame.Height )
-#Endif
-		Endif
-		
 		Measure()
 		
 		UpdateLayout()
@@ -111,7 +121,7 @@ Class Window Extends View
 		_canvas.RenderBounds=viewport
 		
 		_canvas.Viewport=viewport
-		_canvas.Scissor=New Recti( 0,0,16384,16384 )
+		_canvas.Scissor=New Recti( 0,0,1000000,1000000 )'16384,16384 )
 		_canvas.ViewMatrix=New Mat4f
 		_canvas.ModelMatrix=New Mat4f
 
@@ -127,13 +137,6 @@ Class Window Extends View
 		_canvas.Flush()
 		
 		SDL_GL_SwapWindow( _sdlWindow )
-	End
-	
-	#rem monkeydoc @hidden
-	#end
-	Method SendWindowEvent( event:WindowEvent )
-	
-		OnWindowEvent( event )
 	End
 	
 	#rem monkeydoc @hidden
@@ -175,6 +178,19 @@ Class Window Extends View
 	
 	#rem monkeydoc @hidden
 	#end
+	Method SendWindowEvent( event:WindowEvent )
+	
+		Select event.Type
+		Case EventType.WindowMoved,EventType.WindowResized
+			_frame=GetFrame()
+			Frame=_frame
+		End
+		
+		OnWindowEvent( event )
+	End
+	
+	#rem monkeydoc @hidden
+	#end
 	Property KeyView:View()
 	
 		Return _keyView
@@ -185,13 +201,6 @@ Class Window Extends View
 	End
 	
 	Protected
-	
-	Method OnValidateStyle() Override
-	
-		SDL_SetWindowMinimumSize( _sdlWindow,MinSize.x,MinSize.y )
-		SDL_SetWindowMaximumSize( _sdlWindow,MaxSize.x,MaxSize.y )
-	
-	End
 	
 	#rem monkeydoc Window event handler.
 	
@@ -238,6 +247,25 @@ Class Window Extends View
 	Global _visibleWindows:=New Stack<Window>
 	Global _windowsByID:=New Map<UInt,Window>
 	
+	Method GetMinSize:Vec2i()
+		Local w:Int,h:Int
+		SDL_GetWindowMinimumSize( _sdlWindow,Varptr w,Varptr h )
+		Return New Vec2i( w,h )
+	End
+	
+	Method GetMaxSize:Vec2i()
+		Local w:Int,h:Int
+		SDL_GetWindowMaximumSize( _sdlWindow,Varptr w,Varptr h )
+		Return New Vec2i( w,h )
+	End
+	
+	Method GetFrame:Recti()
+		Local x:Int,y:Int,w:Int,h:Int
+		SDL_GetWindowPosition( _sdlWindow,Varptr x,Varptr y )
+		SDL_GetWindowSize( _sdlWindow,Varptr w,Varptr h )
+		Return New Recti( x,y,x+w,y+h )
+	End
+	
 	Method Init( title:String,rect:Recti,flags:WindowFlags )
 	
 		Layout="fill"
@@ -256,31 +284,24 @@ Class Window Extends View
 		Assert( _sdlWindow,"Failed to create SDL_Window" )
 
 		_allWindows.Push( Self )
-		If Not (flags & WindowFlags.Hidden) _visibleWindows.Push( Self )
 		_windowsByID[SDL_GetWindowID( _sdlWindow )]=Self
+		If Not (flags & WindowFlags.Hidden) _visibleWindows.Push( Self )
 		
 		'Create GLContext and canvas
 		
 		_sdlGLContext=SDL_GL_CreateContext( _sdlWindow )
-		
 		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )
 		
-		_canvas=New Canvas( rect.Width,rect.Height )
-		
-		Local tx:Int,ty:Int,tw:Int,th:Int
-		SDL_GetWindowMinimumSize( _sdlWindow,Varptr tw,Varptr th )
-		_minSize=New Vec2i( tw,th )
-
-		SDL_GetWindowMaximumSize( _sdlWindow,Varptr tw,Varptr th )
-		_maxSize=New Vec2i( tw,th )
-		
-		SDL_GetWindowPosition( _sdlWindow,Varptr tx,Varptr ty )
-		SDL_GetWindowSize( _sdlWindow,Varptr tw,Varptr th )
-		_frame=New Recti( tx,ty,tx+tw,ty+th )
-		
+		_minSize=GetMinSize()
 		MinSize=_minSize
+		
+		_maxSize=GetMaxSize()
 		MaxSize=_maxSize
+		
+		_frame=GetFrame()
 		Frame=_frame
+		
+		_canvas=New Canvas( Frame.Width,Frame.Height )
 		
 		Update()
 	End

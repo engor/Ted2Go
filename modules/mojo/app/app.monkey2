@@ -44,6 +44,12 @@ Class AppInstance
 		SDL_Init( SDL_INIT_EVERYTHING )
 		
 		_sdlThread=SDL_ThreadID()
+		
+		Keyboard.Init()
+		
+		Mouse.Init()
+		
+		Audio.Init()
 
 #If __TARGET__<>"emscripten"
 
@@ -255,8 +261,8 @@ Class AppInstance
 	End
 	
 	Function EmscriptenMainLoop()
-	
-'		App._requestRender=True
+
+		App._requestRender=True
 		
 		App.MainLoop()
 	End
@@ -387,26 +393,11 @@ Class AppInstance
 		view.SendMouseEvent( event )
 	End
 	
-	Method SendWindowEvent( type:EventType,window:Window )
+	Method SendWindowEvent( type:EventType )
 	
-		Local event:=New WindowEvent( type,window )
+		Local event:=New WindowEvent( type,_window )
 		
-		window.SendWindowEvent( event )
-	End
-	
-	Method ValidateWindowShape( window:Window )
-
-		Local x:Int,y:Int,w:Int,h:Int
-		SDL_GetWindowPosition( window.NativeWindow,Varptr x,Varptr y )
-		SDL_GetWindowSize( window.NativeWindow,Varptr w,Varptr h )
-		
-		Local frame:=window.Frame
-		
-		window.Frame=New Recti( x,y,x+w,y+h )
-		
-		If x<>frame.X Or y<>frame.Y SendWindowEvent( EventType.WindowMoved,window )
-		
-		If w<>frame.Width Or h<>frame.Height SendWindowEvent( EventType.WindowResized,window )
+		_window.SendWindowEvent( event )
 	End
 	
 	Method DispatchEvent( event:SDL_Event Ptr )
@@ -418,6 +409,8 @@ Class AppInstance
 			Local t:=Cast<SDL_KeyboardEvent Ptr>( event )
 			
 			_window=Window.WindowForID( t[0].windowID )
+			If Not _window Return
+			
 			_key=Cast<Key>( Int( SDL_GetScancodeFromKey( t[0].keysym.sym ) ) )
 			Local tchar:=String.FromChar( t[0].keysym.sym )
 			_modifiers=Cast<Modifier>( t[0].keysym.mod_ )
@@ -430,6 +423,8 @@ Class AppInstance
 			Local t:=Cast<SDL_KeyboardEvent Ptr>( event )
 			
 			_window=Window.WindowForID( t[0].windowID )
+			If Not _window Return
+			
 			_key=Cast<Key>( Int( SDL_GetScancodeFromKey( t[0].keysym.sym ) ) )
 			_modifiers=Cast<Modifier>( t[0].keysym.mod_ )
 			_keyText=String.FromChar( t[0].keysym.sym )
@@ -441,6 +436,8 @@ Class AppInstance
 			Local t:=Cast<SDL_TextInputEvent Ptr>( event )
 
 			_window=Window.WindowForID( t[0].windowID )
+			If Not _window Return
+			
 			_keyText=String.FromChar( t[0].text[0] )
 			
 			SendKeyEvent( EventType.KeyChar )
@@ -450,6 +447,8 @@ Class AppInstance
 			Local mevent:=Cast<SDL_MouseButtonEvent Ptr>( event )
 			
 			_window=Window.WindowForID( mevent->windowID )
+			If Not _window Return
+			
 			_mouseLocation=New Vec2i( mevent->x,mevent->y )
 			_mouseButton=Cast<MouseButton>( mevent->button )
 			
@@ -457,9 +456,9 @@ Class AppInstance
 			
 				Local view:=_window.FindViewAtWindowPoint( _mouseLocation )
 				If view
-#If __HOSTOS__<>"linux"
+'#If __HOSTOS__<>"linux"
 					SDL_CaptureMouse( SDL_TRUE )
-#Endif
+'#Endif
 					_mouseView=view
 				Endif
 			Endif
@@ -471,15 +470,17 @@ Class AppInstance
 			Local mevent:=Cast<SDL_MouseButtonEvent Ptr>( event )
 			
 			_window=Window.WindowForID( mevent->windowID )
+			If Not _window Return
+			
 			_mouseLocation=New Vec2i( mevent->x,mevent->y )
 			_mouseButton=Cast<MouseButton>( mevent->button )
 			
 			If _mouseView
 
 				SendMouseEvent( EventType.MouseUp,_mouseView )
-#If __HOSTOS__<>"linux"				
+'#If __HOSTOS__<>"linux"				
 				SDL_CaptureMouse( SDL_FALSE )
-#Endif
+'#Endif
 				_mouseView=Null
 
 				_mouseButton=Null
@@ -490,6 +491,8 @@ Class AppInstance
 			Local mevent:=Cast<SDL_MouseMotionEvent Ptr>( event )
 			
 			_window=Window.WindowForID( mevent->windowID )
+			If Not _window Return
+			
 			_mouseLocation=New Vec2i( mevent->x,mevent->y )
 			
 			Local view:=_window.FindViewAtWindowPoint( _mouseLocation )
@@ -520,6 +523,8 @@ Class AppInstance
 			Local mevent:=Cast<SDL_MouseWheelEvent Ptr>( event )
 			
 			_window=Window.WindowForID( mevent->windowID )
+			If Not _window Return
+			
 			_mouseWheel=New Vec2i( mevent->x,mevent->y )
 			
 			If _mouseView
@@ -535,29 +540,27 @@ Class AppInstance
 		Case SDL_WINDOWEVENT
 		
 			Local wevent:=Cast<SDL_WindowEvent Ptr>( event )
-			Local window:=Window.WindowForID( wevent->windowID )
+			
+			_window=Window.WindowForID( wevent->windowID )
+			If Not _window Return
 			
 			Select wevent->event
 					
 			Case SDL_WINDOWEVENT_CLOSE
 			
-				SendWindowEvent( EventType.WindowClose,window )
+				SendWindowEvent( EventType.WindowClose )
 			
 			Case SDL_WINDOWEVENT_MOVED
 			
-'				ValidateWindowShape( window )
-
 			Case SDL_WINDOWEVENT_RESIZED
 			
-'				ValidateWindowShape( window )
-				
 			Case SDL_WINDOWEVENT_FOCUS_GAINED
 			
-				SendWindowEvent( EventType.WindowGainedFocus,window )
+				SendWindowEvent( EventType.WindowGainedFocus )
 			
 			Case SDL_WINDOWEVENT_FOCUS_LOST
 			
-				SendWindowEvent( EventType.WindowLostFocus,window )
+				SendWindowEvent( EventType.WindowLostFocus )
 				
 			Case SDL_WINDOWEVENT_LEAVE
 			
@@ -605,20 +608,22 @@ Class AppInstance
 		Case SDL_WINDOWEVENT
 
 			Local wevent:=Cast<SDL_WindowEvent Ptr>( event )
-			Local window:=Window.WindowForID( wevent->windowID )
+			
+			_window=Window.WindowForID( wevent->windowID )
+			If Not _window Return 1
 			
 			Select wevent->event
 			
 			Case SDL_WINDOWEVENT_MOVED
 			
-				ValidateWindowShape( window )
-				
+				SendWindowEvent( EventType.WindowMoved )
+			
 				Return 0
 					
-			Case SDL_WINDOWEVENT_RESIZED
+			Case SDL_WINDOWEVENT_RESIZED',SDL_WINDOWEVENT_SIZE_CHANGED
+
+				SendWindowEvent( EventType.WindowResized )
 			
-				ValidateWindowShape( window )
-				
 				If _requestRender
 				
 					_requestRender=False
