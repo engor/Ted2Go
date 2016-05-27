@@ -1,0 +1,5 @@
+{
+	"module":"sdl2",
+	"version":"1.0.0",
+	"depends":["libc","gles20"]
+}

@@ -1,0 +1,5 @@
+{
+	"module":"std",
+	"version":"1.0.0",
+	"depends":["libc","stb-image","miniz"]
+}

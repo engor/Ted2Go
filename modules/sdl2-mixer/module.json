@@ -1,0 +1,5 @@
+{
+	"module":"sdl2-mixer",
+	"version":"1.0.0",
+	"depends":["sdl2"]
+}

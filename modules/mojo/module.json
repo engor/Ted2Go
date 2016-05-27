@@ -1,0 +1,5 @@
+{
+	"module":"mojo",
+	"version":"1.0.0",
+	"depends":["emscripten","std","sdl2","sdl2-mixer","gles20"]
+}
