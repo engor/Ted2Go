@@ -116,12 +116,13 @@ Class MyWindow Extends Window
 	Method OnWindowEvent( event:WindowEvent ) Override
 		Select event.Type
 		Case EventType.WindowClose
-			Print "Close"
+			Print "Window close"
 			App.Terminate()
 		Case EventType.WindowMoved
 			Print "Window moved to:"+Frame.Origin.ToString()
 		Case EventType.WindowResized
 			Print "Window resized to:"+Frame.Size.ToString()
+			App.RequestRender()	'note: we do this to trigger a render when window is being 'modally resized'.
 		End
 	End
 	
