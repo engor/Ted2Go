@@ -586,7 +586,8 @@ Class List<T> Implements IContainer<T>
 	#end
 	Method FindNode:Node( value:T )
 		Local node:=_head._succ
-		While node<>_head And node._value<>value
+		While node<>_head
+			If node._value=value Return node
 			node=node._succ
 		Wend
 		Return Null
@@ -601,7 +602,8 @@ Class List<T> Implements IContainer<T>
 	#end
 	Method FindLastNode:Node( value:T )
 		Local node:=_head._pred
-		While node<>_head And node._value<>value
+		While node<>_head
+			If node._value=value Return node
 			node=node._pred
 		Wend
 		Return Null
