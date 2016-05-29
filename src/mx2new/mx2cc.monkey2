@@ -17,7 +17,9 @@ Using mx2..
 
 Global StartDir:String
 
-Const TestArgs:="mx2cc makemods -clean"
+'Const TestArgs:="mx2cc makemods -clean"
+
+Const TestArgs:="mx2cc makedocs monkey std mojo"
 
 'Const TestArgs:="mx2cc makeapp src/mx2new/test.monkey2"
 
@@ -110,6 +112,8 @@ Function MakeApp( args:String[] )
 	Local builder:=New Builder( opts )
 	
 	builder.Parse()
+	If builder.errors.Length Return
+	
 	builder.Semant()
 	If builder.errors.Length Return
 	
