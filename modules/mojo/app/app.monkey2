@@ -310,9 +310,9 @@ Class AppInstance
 	
 	Field _window:Window
 	Field _key:Key
-	Field _scanCode:ScanCode
+	Field _rawKey:Key
+	Field _keyChar:String
 	Field _modifiers:Modifier
-	Field _keyText:String
 	Field _mouseButton:MouseButton
 	Field _mouseLocation:Vec2i
 	Field _mouseWheel:Vec2i
@@ -367,7 +367,7 @@ Class AppInstance
 		Local view:=KeyView
 		If view And Not view.ReallyEnabled view=Null
 		
-		Local event:=New KeyEvent( type,view,_key,_scanCode,_modifiers,_keyText )
+		Local event:=New KeyEvent( type,view,_key,_rawKey,_modifiers,_keyChar )
 		
 		KeyEventFilter( event )
 		
@@ -406,39 +406,48 @@ Class AppInstance
 		
 		Case SDL_KEYDOWN
 		
-			Local t:=Cast<SDL_KeyboardEvent Ptr>( event )
+			Local kevent:=Cast<SDL_KeyboardEvent Ptr>( event )
 			
-			_window=Window.WindowForID( t[0].windowID )
+			_window=Window.WindowForID( kevent->windowID )
 			If Not _window Return
 			
-			_key=Cast<Key>( Int( SDL_GetScancodeFromKey( t[0].keysym.sym ) ) )
-			Local tchar:=String.FromChar( t[0].keysym.sym )
-			_modifiers=Cast<Modifier>( t[0].keysym.mod_ )
-			_keyText=String.FromChar( t[0].keysym.sym )
+			_key=Keyboard.KeyCodeToKey( Int( kevent->keysym.sym ) )
+			_rawKey=Keyboard.ScanCodeToRawKey( Int( kevent->keysym.scancode ) )
+'			_modifiers=Keyboard.Modifiers
+			_keyChar=Keyboard.KeyName( _key )
 			
-			SendKeyEvent( EventType.KeyDown )
+			If kevent->repeat_
+				SendKeyEvent( EventType.KeyRepeat )
+			Else
+				SendKeyEvent( EventType.KeyDown )
+			Endif
+
+			_modifiers=Keyboard.Modifiers
 			
 		Case SDL_KEYUP
 
-			Local t:=Cast<SDL_KeyboardEvent Ptr>( event )
+			Local kevent:=Cast<SDL_KeyboardEvent Ptr>( event )
 			
-			_window=Window.WindowForID( t[0].windowID )
+			_window=Window.WindowForID( kevent->windowID )
 			If Not _window Return
 			
-			_key=Cast<Key>( Int( SDL_GetScancodeFromKey( t[0].keysym.sym ) ) )
-			_modifiers=Cast<Modifier>( t[0].keysym.mod_ )
-			_keyText=String.FromChar( t[0].keysym.sym )
+			_key=Keyboard.KeyCodeToKey( Int( kevent->keysym.sym ) )
+			_rawKey=Keyboard.ScanCodeToRawKey( Int( kevent->keysym.scancode ) )
+'			_modifiers=Keyboard.Modifiers
+			_keyChar=Keyboard.KeyName( _key )
 			
 			SendKeyEvent( EventType.KeyUp )
 
+			_modifiers=Keyboard.Modifiers
+
 		Case SDL_TEXTINPUT
 		
-			Local t:=Cast<SDL_TextInputEvent Ptr>( event )
+			Local tevent:=Cast<SDL_TextInputEvent Ptr>( event )
 
-			_window=Window.WindowForID( t[0].windowID )
+			_window=Window.WindowForID( tevent->windowID )
 			If Not _window Return
 			
-			_keyText=String.FromChar( t[0].text[0] )
+			_keyChar=String.FromChar( tevent->text[0] )
 			
 			SendKeyEvent( EventType.KeyChar )
 		

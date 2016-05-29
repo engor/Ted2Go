@@ -6,6 +6,7 @@ Namespace mojo.app
 | EventType			| Description
 |:------------------|:-----------
 | KeyDown			| Key down event.
+| KeyRepeat			| Key repeat event.
 | KeyUp				| Key up event.
 | KeyChar			| Key char event.
 | MouseDown			| Mouse button down event.
@@ -24,6 +25,7 @@ Namespace mojo.app
 Enum EventType
 
 	KeyDown,
+	KeyRepeat,
 	KeyUp,
 	KeyChar,
 	
@@ -96,10 +98,10 @@ Class KeyEvent Extends Event
 
 	#rem monkeydoc @hidden
 	#end
-	Method New( type:EventType,view:View,key:Key,scanCode:ScanCode,modifiers:Modifier,text:String )
+	Method New( type:EventType,view:View,key:Key,rawKey:Key,modifiers:Modifier,text:String )
 		Super.New( type,view )
 		_key=key
-		_scanCode=ScanCode
+		_rawKey=rawKey
 		_modifiers=modifiers
 		_text=text
 	End
@@ -110,10 +112,10 @@ Class KeyEvent Extends Event
 		Return _key
 	End
 	
-	#rem monkeydoc The keyboard scan code of the key.
+	#rem monkeydoc The raw key involved in the event.
 	#end
-	Property ScanCode:ScanCode()
-		Return _scanCode
+	Property RawKey:Key()
+		Return _rawKey
 	End
 	
 	#rem monkeydoc The modifiers at the time of the event.
@@ -131,7 +133,7 @@ Class KeyEvent Extends Event
 	Private
 	
 	Field _key:Key
-	Field _scanCode:ScanCode
+	Field _rawKey:Key
 	Field _modifiers:Modifier
 	Field _text:String
 	

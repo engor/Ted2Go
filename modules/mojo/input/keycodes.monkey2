@@ -1,9 +1,16 @@
 
 Namespace mojo.input
 
-'These are actually SDL 'scan codes', ie: what's written on US keyboard keys...
-'
 #rem monkeydoc Key codes.
+
+By default, key codes refer to 'virtual' keys. For example, `KEY_W` refers to the key with 'W' printed on it. However, this key may be not
+be in the same physical location on all users' keyboards, due to OS language and keyboard settings.
+
+To deal with this, mojo also provides support for 'raw' keys. A raw key code is simply a virtual key code 'or'ed with the special key code
+`Key.Raw`.
+
+A raw key represents the physical location of a key on US keyboards. For example, `Key.Q|Key.Raw` indicates the key at the top left of the
+'qwerty' (or 'azerty' etc) keys regardless of the current OS settings.
 
 | Key
 |:---
@@ -95,38 +102,54 @@ Namespace mojo.input
 | RightGui
 
 #end
+
 Enum Key
 
 	None=0
 
-	A=4,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z
+	Backspace=8,Tab
+	Enter=13
+	Escape=27
+	Space=32
+	Comma=44,Minus,Period,Slash
+	Key0=48,Key1,Key2,Key3,Key4,Key5,Key6,Key7,Key8,Key9
+	Semicolon=59,
+	LeftBracket=91,Backslash,RightBracket
+	Backquote=96
+	A=97,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z
+	KeyDelete=127
 	
-	Key1=30,Key2,Key3,Key4,Key5,Key6,Key7,Key8,Key9,Key0
+	CapsLock=$80,F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12
+	PrintScreen,ScrollLock,Pause,Insert,Home,PageUp,nop,KeyEnd,PageDown
+	Right,Left,Down,Up
+	KeypadNumLock,KeypadDivide,KeypadMultiply,KeypadMinus,KeypadPlus,KeypadEnter
+	Keypad1,Keypad2,Keypad3,Keypad4,Keypad5,Keypad6,Keypad7,Keypad8,Keypad9,Keypad0
+	KeypadPeriod
 	
-	Enter=40,Escape,Backspace,Tab,Space
+	LeftControl=$e0,LeftShift,LeftAlt,LeftGui,RightControl,RightShift,RightAlt,RightGui
 	
-	Minus=45,Equals,LeftBracket,RightBracket,Blackslash
+	Raw=$10000
 	
-	Semicolon=51,Apostrophe,Grave,Comma,Period,Slash
-	
-	CapsLock=57
-	
-	F1=58,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12
-	
-	PrintScreen=70,ScrollLock,Pause,Insert
-	
-	Home=74,PageUp,KeyDelete,KeyEnd,PageDown,Right,Left,Down,Up
-
-	LeftControl=224,LeftShift,LeftAlt,LeftGui
-	
-	RightControl=228,RightShift,RightAlt,RightGui
-
 End
 
-#rem monkeydoc @hidden
-#end
+#rem gone?
 Enum ScanCode
+
+	None=0
+	A=4,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z
+	Key1=30,Key2,Key3,Key4,Key5,Key6,Key7,Key8,Key9,Key0
+	Enter=40,Escape,Backspace,Tab,Space
+	Minus=45,Equals,LeftBracket,RightBracket,Blackslash
+	Semicolon=51,Apostrophe,Grave,Comma,Period,Slash
+	CapsLock=57
+	F1=58,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12
+	PrintScreen=70,ScrollLock,Pause,Insert
+	Home=74,PageUp,KeyDelete,KeyEnd,PageDown,Right,Left,Down,Up
+	LeftControl=224,LeftShift,LeftAlt,LeftGui
+	RightControl=228,RightShift,RightAlt,RightGui
+	
 End
+#end
 
 #rem monkeydoc Modifier masks.
 
@@ -167,4 +190,3 @@ Enum Modifier
 	Alt=			LeftAlt|RightAlt
 	Gui=			LeftGui|RightGui
 End
-

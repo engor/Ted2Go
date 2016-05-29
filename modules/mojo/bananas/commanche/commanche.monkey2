@@ -73,30 +73,30 @@ Class MyWindow Extends Window
 	End Method
 	'-----------------------------------------------------------------------------------------------------------
 	Method UpdateCamera()
-		If Keyboard.KeyDown(Key.A)
+		If Keyboard.KeyDown(Key.A|Key.Raw)
 			Camera.angle+= 2* .0174532925
 		Endif
-		If Keyboard.KeyDown(Key.S)
+		If Keyboard.KeyDown(Key.S|Key.Raw)
 			Camera.x+=4 * Sin(Camera.angle)
 			Camera.y+=4 * Cos(Camera.angle)
 		Endif	
-		If Keyboard.KeyDown(Key.D)
+		If Keyboard.KeyDown(Key.D|Key.Raw)
 			Camera.angle-= 2* .0174532925
 		Endif	
-		If Keyboard.KeyDown(Key.W)
+		If Keyboard.KeyDown(Key.W|Key.Raw)
 			Camera.x-=4 * Sin(Camera.angle)
 			Camera.y-=4 * Cos(Camera.angle)
 		Endif	
-		If Keyboard.KeyDown(Key.R)
+		If Keyboard.KeyDown(Key.R|Key.Raw)
 			Camera.height+=2
 		Endif
-		If Keyboard.KeyDown(Key.F)
+		If Keyboard.KeyDown(Key.F|Key.Raw)
 			Camera.height-=2
 		Endif	
-		If Keyboard.KeyDown(Key.Q)
+		If Keyboard.KeyDown(Key.Q|Key.Raw)
 			Camera.v+=2
 		Endif
-		If Keyboard.KeyDown(Key.E)
+		If Keyboard.KeyDown(Key.E|Key.Raw)
 			Camera.v-=2
 		Endif
 	End Method
@@ -140,10 +140,28 @@ Class MyWindow Extends Window
 		Next
 	End Method
 	'-----------------------------------------------------------------------------------------------------------
+	Method OnKeyEvent( event:KeyEvent ) Override
+	
+		Select event.Type
+		Case EventType.KeyDown,EventType.KeyUp
+			Print Keyboard.KeyName( event.Key )
+			Print Int( event.Modifiers )
+			Print Int( Keyboard.Modifiers )
+		End
+		
+	End
 End
 '-----------------------------------------------------------------------------------------------------------
 Function Main()
+
 	New AppInstance
+	
+	Print "W->"+Keyboard.KeyName( Key.W | Key.Raw )
+	Print "A->"+Keyboard.KeyName( Key.A | Key.Raw )
+	Print "S->"+Keyboard.KeyName( Key.S | Key.Raw )
+	Print "D->"+Keyboard.KeyName( Key.D | Key.Raw )
+	
 	New MyWindow("Commanche",WIDTH*2,HEIGHT*2)
+
 	App.Run()
 End
