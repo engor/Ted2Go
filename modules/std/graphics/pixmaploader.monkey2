@@ -64,7 +64,12 @@ Function LoadPixmap:Pixmap( path:String,format:PixelFormat )
 		End
 	End
 	
-	Return New Pixmap( x,y,format,data,x*PixelFormatDepth( format ),Lambda( data:UByte Ptr )
+	Local pixmap:=New Pixmap( x,y,format,data,x*PixelFormatDepth( format ) )
+	
+	pixmap.Discarded+=Lambda()
 		stbi_image_free( data )
-	End )
+	End
+	
+	Return pixmap
+
 End

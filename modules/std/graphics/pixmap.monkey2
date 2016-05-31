@@ -8,6 +8,10 @@ A pixmap contains a block of memory used to store a rectangular array of pixels.
 #end
 Class Pixmap
 
+	#rem monkeydoc @hidden
+	#end
+	Field Discarded:Void()
+
 	#rem monkeydoc Creates a new pixmap.
 
 	@param width The width of the pixmap in pixels.
@@ -19,8 +23,6 @@ Class Pixmap
 	@param data A pointer to the pixmap data.
 	
 	@param pitch The pitch of the data.
-	
-	@param onDiscard A function to free the data when pixmap is discarded.
 	
 	#end
 	Method New( width:Int,height:Int,format:PixelFormat=PixelFormat.RGBA32 )
@@ -35,12 +37,12 @@ Class Pixmap
 		_depth=depth
 		_data=data
 		_pitch=pitch
-		_onDiscard=Lambda( data:UByte Ptr )
+		Discarded=Lambda()
 			libc.free( data )
 		End
 	End
 	
-	Method New( width:Int,height:Int,format:PixelFormat,data:UByte Ptr,pitch:Int,onDiscard:Void( data:UByte Ptr ) )
+	Method New( width:Int,height:Int,format:PixelFormat,data:UByte Ptr,pitch:Int )
 	
 		Local depth:=PixelFormatDepth( format )
 		
@@ -50,7 +52,6 @@ Class Pixmap
 		_depth=depth
 		_data=data
 		_pitch=pitch
-		_onDiscard=onDiscard
 	End
 
 	#rem monkeydoc Releases the memory used by a pixmap.
@@ -64,13 +65,12 @@ Class Pixmap
 	#end
 	Method Discard()
 		If Not _data Return
-		_onDiscard( _data )
 		_width=0
 		_height=0
 		_pitch=0
 		_depth=0
 		_data=Null
-		_onDiscard=Null
+		Discarded()
 	End
 	
 	#rem monkeydoc The pixmap width.
@@ -397,7 +397,7 @@ Class Pixmap
 	Method Window:Pixmap( x:Int,y:Int,width:Int,height:Int )
 		DebugAssert( x>=0 And y>=0 And width>=0 And height>=0 And x+width<=_width And y+height<=_height )
 		
-		Return New Pixmap( width,height,_format,PixelPtr( x,y ),_pitch,Null )
+		Return New Pixmap( width,height,_format,PixelPtr( x,y ),_pitch )
 	End
 	
 	#rem monkeydoc Loads a pixmap from a file.
@@ -412,7 +412,6 @@ Class Pixmap
 	Function Load:Pixmap( path:String,format:PixelFormat=PixelFormat.Unknown )
 	
 		Return LoadPixmap( path,format )
-
 	End
 	
 	Private
@@ -423,6 +422,5 @@ Class Pixmap
 	Field _depth:Int
 	Field _data:UByte Ptr
 	Field _pitch:Int
-	Field _onDiscard:Void( data:UByte Ptr )
 
 End
