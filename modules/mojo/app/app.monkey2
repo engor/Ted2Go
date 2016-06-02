@@ -4,8 +4,19 @@ Namespace mojo.app
 #Import "assets/Roboto-Regular.ttf@/mojo"
 #Import "assets/RobotoMono-Regular.ttf@/mojo"
 
+#rem monkeydoc The global AppInstance instance.
+#end
 Global App:AppInstance
 
+#rem monkeydoc The AppInstance class.
+
+The AppInstance class is mainly reponsible for running the app 'event loop', but also provides several utility functions for managing
+the application.
+
+A global instance of the AppInstance class is stored in the [[App]] global variable, so you can use any member of the AppInstance simply
+by prefixing it with 'App.', eg: App.MilliSecs
+
+#end
 Class AppInstance
 	
 	#rem monkeydoc Idle signal.
@@ -53,7 +64,7 @@ Class AppInstance
 
 #If __TARGET__<>"emscripten"
 
-		_glWindow=SDL_CreateWindow( "",0,0,0,0,SDL_WINDOW_HIDDEN|SDL_WINDOW_OPENGL )
+		_glWindow=SDL_CreateWindow( "<hidden>",0,0,0,0,SDL_WINDOW_HIDDEN|SDL_WINDOW_OPENGL )
 
 		_glContext=SDL_GL_CreateContext( _glWindow )
 
@@ -222,6 +233,19 @@ Class AppInstance
 		Return _mouseLocation
 	End
 	
+	#rem monkeydoc @hidden
+	#end
+	Method BeginModal( view:View )
+		_modalStack.Push( _modalView )
+		_modalView=view
+	End
+	
+	#rem monkeydoc @hidden
+	#end
+	Method EndModal()
+		_modalView=_modalStack.Pop()
+	End
+	
 	#rem monkeydoc Terminate the app.
 	#end
 	Method Terminate()
@@ -317,6 +341,9 @@ Class AppInstance
 	Field _mouseLocation:Vec2i
 	Field _mouseWheel:Vec2i
 	
+	Field _modalView:View
+	Field _modalStack:=New Stack<View>
+	
 	Field _polling:Bool
 	
 	Global _nextCallbackId:Int
@@ -373,6 +400,8 @@ Class AppInstance
 		
 		If event.Eaten Return
 		
+		If _modalView And Not view.IsChildOf( _modalView ) Return
+		
 		If view 
 			view.SendKeyEvent( event )
 		Else If ActiveWindow
@@ -389,6 +418,8 @@ Class AppInstance
 		MouseEventFilter( event )
 		
 		If event.Eaten Return
+		
+		If _modalView And Not view.IsChildOf( _modalView ) Return
 		
 		view.SendMouseEvent( event )
 	End
