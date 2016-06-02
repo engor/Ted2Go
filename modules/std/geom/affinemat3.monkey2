@@ -74,5 +74,18 @@ Struct AffineMat3<T>
 	Method Scale:AffineMat3( sx:T,sy:T )
 		Return Transform( sx,0,0,sy,0,0 )
 	End
+
+	Function Ortho:AffineMat3( left:T,right:T,bottom:T,top:T )
+
+		Local w:=right-left,h:=top-bottom
+
+		Local r:AffineMat3
+		r.i.x=2/w
+		r.j.y=2/h
+		r.t.x=-(right+left)/w
+		r.t.y=-(top+bottom)/h
+		Return r
+	End
+	
 	
 End
