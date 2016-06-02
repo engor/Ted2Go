@@ -3,7 +3,7 @@ Namespace mx2.docs
 
 Class DocsMaker
 
-	Protected
+Protected
 	
 	Field _module:Module
 	
@@ -212,8 +212,6 @@ Class DocsMaker
 		Local url:=module+":"+page
 		
 		Return "<a href=~qjavascript:void('"+url+"')~q onclick=~qdocsLinkClicked('"+url+"')~q>"+text+"</a>"
-		
-'		Return "<a href='javascript:void(0)' onclick=~qdocsLinkClicked('"+module+":"+page+"')~q>"+text+"</a>"
 	End
 	
 	Method MakeLink:String( text:String,decl:Decl,scope:Scope )
@@ -261,7 +259,11 @@ Class DocsMaker
 
 			Local type:Type
 			If scope
-				type=scope.FindType( id )
+				Try
+					type=scope.FindType( id )
+				Catch ex:SemantEx
+					Print "Exception!"
+				End
 			Else
 				For Local fscope:=Eachin _module.fileScopes
 					If id<>fscope.nmspace.ntype.ident Continue
@@ -269,6 +271,7 @@ Class DocsMaker
 					Exit
 				Next
 			Endif
+
 			If Not type Return ""
 			
 			Local ntype:=TCast<NamespaceType>( type )
@@ -357,6 +360,9 @@ Class DocsMaker
 	Method SavePage( docs:String,page:String )
 		page=page.Replace( ".","-" )
 		docs=_pageTemplate.Replace( "${CONTENT}",docs )
+		
+'		Print "Saving page:"+_pagesDir+page+".html"
+		
 		stringio.SaveString( docs,_pagesDir+page+".html" )
 	End
 	
@@ -647,7 +653,7 @@ Class DocsMaker
 		
 		If DocsHidden( decl ) Return ""
 		
-		_scope=ctype.scope.outer
+		_scope=ctype.scope	'.outer
 		
 		EmitHeader( decl,ctype.scope.outer )
 		

@@ -14,7 +14,7 @@ Class HtmlDocsMaker Extends DocsMaker
 		
 		_pagesDir=_module.baseDir+PAGES_DIR
 		_pageTemplate=stringio.LoadString( "docs/modules_page_template.html" )
-
+		
 		DeleteDir( _pagesDir,True )
 		CreateDir( _pagesDir,True )
 		
@@ -40,7 +40,7 @@ Class HtmlDocsMaker Extends DocsMaker
 		Next
 
 		Local page:=""
-		Local md:=stringio.LoadString( _module.baseDir+"/docs/"+_module.name+".md" )
+		Local md:=stringio.LoadString( _module.baseDir+"/docs/module.md" )
 		If md
 			_scope=Null
 			page="module"
@@ -49,7 +49,6 @@ Class HtmlDocsMaker Extends DocsMaker
 			SavePage( html,page )
 		Endif
 		
-'		BeginNode( "<"+_module.name+">",page )
 		BeginNode( _module.name,page )
 		
 		For Local nmspace:=Eachin nmspaces.Values
