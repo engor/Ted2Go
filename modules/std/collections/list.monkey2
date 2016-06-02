@@ -5,7 +5,12 @@ Alias IntList:List<Int>
 Alias FloatList:List<Float>
 Alias StringList:List<String>
 
-#rem monkeydoc The List class.
+#rem monkeydoc The list class provides support for doubly linked lists.
+
+Lists implements the [[IContainer]] interface so can be used with [[Eachin]] loops.
+
+Note that you should NOT modify a list while iterating through it with an eachin loop. Doing so while cause a 'concurrent list
+modification' runtime error in debug mode. Please see [[IContainer]] for more information.
 
 #end
 Class List<T> Implements IContainer<T>
