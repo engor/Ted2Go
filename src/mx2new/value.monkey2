@@ -68,9 +68,14 @@ Class Value Extends SNode
 	
 	Method Assign:Stmt( pnode:PNode,op:String,value:Value,block:Block ) Virtual
 		If Not IsAssignable SemantError( "Value.Assign()" )
-		ValidateAssignOp( op,type )
-		value=value.UpCast( type )
-		Return New AssignStmt( pnode,op,Self,value )
+		
+		Local rtype:=BalanceAssignTypes( op,type,value.type )
+		Return New AssignStmt( pnode,op,Self,value.UpCast( rtype ) )
+		
+'		ValidateAssignOp( op,type )
+'		value=value.UpCast( type )
+'		Return New AssignStmt( pnode,op,Self,value )
+
 	End
 	
 	Method CheckAccess( tscope:Scope ) Virtual
@@ -114,6 +119,7 @@ Class Value Extends SNode
 		
 	End
 	
+	#rem
 	Function IsValidAssignOp:Bool( op:String,type:Type )
 
 		If op="=" Return True
@@ -132,6 +138,8 @@ Class Value Extends SNode
 		
 		If TCast<EnumType>( type ) Return op="&=" Or op="|=" Or op="~="
 		
+		If TCast<PointerType>( type ) Return op="+=" Or op="-="
+		
 		If TCast<FuncType>( type ) Return op="+=" Or op="-="
 		
 		Return False
@@ -140,6 +148,7 @@ Class Value Extends SNode
 	Function ValidateAssignOp( op:String,type:Type )
 		If Not IsValidAssignOp( op,type ) Throw New SemantEx( "Assignment operator '"+op+"' cannot be used with type '"+type.ToString()+"'" )
 	End
+	#end
 	
 End
 

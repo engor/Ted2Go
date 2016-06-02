@@ -25,6 +25,7 @@ Namespace mx2
 #Import "alias.monkey2"
 #Import "namespace.monkey2"
 #Import "overload.monkey2"
+#Import "balance.monkey2"
 #Import "module.monkey2"
 
 #Import "translator.monkey2"
@@ -47,4 +48,4 @@ Using lib.c
 ' 3) edit .sh and .bat files to use new version (common.sh, updatemx2cc.bat, rebuildmx2cc.bat)
 ' 4) ./rebuildall
 '
-Const MX2CC_VERSION:="008"
+Const MX2CC_VERSION:="009"

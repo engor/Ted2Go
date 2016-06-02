@@ -593,10 +593,15 @@ Class OpIndexValue Extends Value
 				args[0]=rvalue
 				rvalue=node.Invoke( args )
 			Else
-				ValidateAssignOp( op,value.type )
-				Local rtype:=value.type
-				If op2="shl" Or op2="shr" rtype=Type.IntType
+
+				Local rtype:=BalanceAssignTypes( op,value.type,rvalue.type )
 				rvalue=New BinaryopValue( value.type,op2,value,rvalue.UpCast( rtype ) )
+				
+'				ValidateAssignOp( op,value.type )
+'				Local rtype:=value.type
+'				If op2="shl" Or op2="shr" rtype=Type.IntType
+'				rvalue=New BinaryopValue( value.type,op2,value,rvalue.UpCast( rtype ) )
+
 			Endif
 		
 		Endif

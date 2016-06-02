@@ -17,9 +17,9 @@ Using mx2..
 
 Global StartDir:String
 
-'Const TestArgs:="mx2cc makemods -clean"
+'Const TestArgs:="mx2cc makemods"
 
-Const TestArgs:="mx2cc makedocs monkey std mojo"
+Const TestArgs:="mx2cc makedocs std"
 
 'Const TestArgs:="mx2cc makeapp src/mx2new/test.monkey2"
 
@@ -140,6 +140,7 @@ Function MakeMods( args:String[] )
 	opts.verbose=0
 	
 	args=ParseOpts( opts,args )
+
 	If Not args args=EnumModules()
 	
 	For Local modid:=Eachin args
@@ -156,6 +157,8 @@ Function MakeMods( args:String[] )
 		Local builder:=New Builder( opts )
 		
 		builder.Parse()
+		If builder.errors.Length Continue
+
 		builder.Semant()
 		If builder.errors.Length Continue
 		
@@ -202,7 +205,10 @@ Function MakeDocs( args:String[] )
 		Local builder:=New Builder( opts )
 
 		builder.Parse()
+		If builder.errors.Length Continue
+		
 		builder.Semant()
+		If builder.errors.Length Continue
 		
 		Local tree:=docsMaker.MakeDocs( builder.modules.Top )
 		

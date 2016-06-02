@@ -538,10 +538,10 @@ Class FuncType Extends Type
 	End
 	
 	Method DistanceToType:Int( type:Type ) Override
-	
+
 		If Equals( type ) Return 0
 		
-		If type.Dealias Return MAX_DISTANCE
+'		If type.Dealias Return MAX_DISTANCE
 		
 		Return -1
 	End
