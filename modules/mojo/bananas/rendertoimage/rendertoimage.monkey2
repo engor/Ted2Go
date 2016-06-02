@@ -44,6 +44,8 @@ Class MyWindow Extends mojo.app.Window
 		icanvas.Flush()
 		
 		canvas.DrawImage( image,App.MouseLocation.x,App.MouseLocation.y )
+		
+		canvas.DrawText( "Here!",0,0 )
 	End
 	
 End

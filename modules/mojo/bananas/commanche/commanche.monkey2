@@ -61,8 +61,6 @@ Class MyWindow Extends Window
 		Print "in Loadmap"	
 		Dmap = Pixmap.Load("asset::D1.png",PixelFormat.RGBA32)
 		Cmap = Pixmap.Load("asset::C1W.png",PixelFormat.RGBA32)
-		'Dmap = Dmap.Convert(PixelFormat.RGBA32)'crash
-		'Cmap = Cmap.Convert(PixelFormat.RGBA32)
 		
 		If Not Dmap Then Print "no Dmap!"
 		If Not Cmap Then Print "no Cmap!"
@@ -139,17 +137,6 @@ Class MyWindow Extends Window
 			Endif
 		Next
 	End Method
-	'-----------------------------------------------------------------------------------------------------------
-	Method OnKeyEvent( event:KeyEvent ) Override
-	
-		Select event.Type
-		Case EventType.KeyDown,EventType.KeyUp
-			Print Keyboard.KeyName( event.Key )
-			Print Int( event.Modifiers )
-			Print Int( Keyboard.Modifiers )
-		End
-		
-	End
 End
 '-----------------------------------------------------------------------------------------------------------
 Function Main()

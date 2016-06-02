@@ -51,7 +51,7 @@ Class MyWindow Extends Window
 		'Without it, OnRender will only be called when necessary, eg: when window is resized.
 		'
 		App.RequestRender()
-		
+
 		'Gets mouse location in 'view' coordinates.
 		'
 		Local mouse:=Mouse.Location

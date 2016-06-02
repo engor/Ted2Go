@@ -5,7 +5,7 @@ Namespace spacechimps
 #Import "<mojo>"
 
 #Import "assets/bang.wav"
-#Import "assets/spaceship.png"
+#Import "assets/spaceship_32.png"
 
 Using std..
 Using mojo..
@@ -18,6 +18,7 @@ Class MyWindow Extends Window
 	Field pos:=New Vec2f
 	Field vel:=New Vec2f
 	Field rot:Float
+	Field filter:Bool=True
 
 	Method New( title:String,width:Int,height:Int )
 	
@@ -25,9 +26,13 @@ Class MyWindow Extends Window
 		'
 		Super.New( title,width,height,WindowFlags.Resizable )
 		
+		Layout="letterbox-int"
+		
 		'Black 'coz we're in space!
 		'
-		ClearColor=Color.Black
+		ClearColor=New Color( .03,.03,.03 )
+		
+		Style.BackgroundColor=Color.Black
 
 		'Load laser sound effecy
 		'		
@@ -39,13 +44,13 @@ Class MyWindow Extends Window
 		'
 		'Note: Scaling image here is faster than scaling in DrawImage.
 		'
-		image=Image.Load( "asset::spaceship.png" )
+		image=Image.Load( "asset::spaceship_32.png" )
 		image.Handle=New Vec2f( .5,.5 )
-		image.Scale=New Vec2f( .125,.125 )
+'		image.Scale=New Vec2f( .125,.125 )
 		
 		'Set initial image pos
 		'
-		pos=New Vec2f( width/2,height/2 )
+		pos=New Vec2f( 160,120 )
 		
 		'Start update timer
 		'
@@ -72,6 +77,8 @@ Class MyWindow Extends Window
 					timer=New Timer( 60,OnUpdate )
 				Endif
 '#Endif
+			Case Key.F
+				filter=Not filter
 			End
 		End
 	End
@@ -141,14 +148,18 @@ Class MyWindow Extends Window
 	End
 	
 	Field ms:=0
-	
+
 	Method OnRender( canvas:Canvas ) Override
-	
+
 		Local e:=App.Millisecs-ms	'ideally, e should be 16,17,17,16,17,17 ie: 16.6666...
 '		If e<>16 And e<>17 Print "elapsed="+e	'show glitches
 		ms+=e
 		
 		If Not timer OnUpdate()
+		
+		'Turn off texture filtering for a 'pixel art' look
+		'
+		canvas.FilteringEnabled=filter
 		
 		'Title text
 		'	
@@ -160,20 +171,29 @@ Class MyWindow Extends Window
 '#Endif
 		canvas.DrawText( "Timer sync="+(timer ? "true" Else "false")+" ('T' to toggle)",Width/2,56,.5,0 )
 		canvas.Color=Color.White
+		canvas.DrawText( "Filtering="+(filter ? "true" Else "false")+" ('F' to toggle",Width/2,72,.5,0 )
 		
 		'Draw image
 		'
-		Local r:=rot-Pi/2
-		canvas.DrawImage( image,pos,r )
+		Local x:=pos.x,y:=pos.y,r:=rot-Pi/2
+		If Not filter x=Floor( x ) ; y=Floor( y )
+		
+		canvas.DrawImage( image,x,y,r )
 
 		'Draw wrap around(s)
 		'
-		If pos.x-image.Radius<0 canvas.DrawImage( image,pos.x+Width,pos.y,r )
-		If pos.x+image.Radius>Width canvas.DrawImage( image,pos.x-Width,pos.y,r )
+		If x-image.Radius<0 canvas.DrawImage( image,x+Width,y,r )
+		If x+image.Radius>Width canvas.DrawImage( image,x-Width,y,r )
 		
-		If pos.y-image.Radius<0 canvas.DrawImage( image,pos.x,pos.y+Height,r )
-		If pos.y+image.Radius>Height canvas.DrawImage( image,pos.x,pos.y-Height,r )
+		If y-image.Radius<0 canvas.DrawImage( image,x,y+Height,r )
+		If y+image.Radius>Height canvas.DrawImage( image,x,y-Height,r )
 
+	End
+	
+	Method OnMeasure:Vec2i() Override
+	
+		Return New Vec2i( 320,240 )
+		
 	End
 	
 End

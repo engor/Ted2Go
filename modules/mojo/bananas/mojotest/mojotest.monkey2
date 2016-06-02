@@ -19,7 +19,7 @@ Class MojoTest Extends Window
 	Method New()
 		
 		ClearColor=New Color( 0,0,.5 )
-	
+
 		image=Image.Load( "asset::RedbrushAlpha.png" )
 		image.Handle=New Vec2f( .5,.5 )
 	End
@@ -55,7 +55,7 @@ Class MojoTest Extends Window
 		canvas.Alpha=1
 		
 		canvas.Color=New Color( 0,.5,1 )
-'		canvas.DrawOval( 64,64,640-128,480-128 )	'TODO!
+		canvas.DrawOval( 64,64,640-128,480-128 )
 
 		canvas.Color=New Color( 1,0,.5 )
 		canvas.DrawLine( 32,32,640-32,480-32 )
@@ -65,9 +65,9 @@ Class MojoTest Extends Window
 		canvas.DrawImage( image,320,240 )
 
 		canvas.Color=New Color( 1,0,.5 )
-'		canvas.DrawPoly( New Float[]( 140.0,232.0, 320.0,224.0, 500.0,232.0, 500.0,248.0, 320.0,256.0, 140.0,248.0 ) )	'TODO!
-				
-		canvas.Color=New Color( 1,.5,0 )'Color.Red
+		canvas.DrawPoly( New Float[]( 140.0,232.0, 320.0,224.0, 500.0,232.0, 500.0,248.0, 320.0,256.0, 140.0,248.0 ) )
+						
+		canvas.Color=New Color( 1,.5,0 )
 		canvas.DrawText( "The Quick Brown Fox Jumps Over The Lazy Dog",320,240,.5,.5 )
 		
 		canvas.PopMatrix()
@@ -80,7 +80,6 @@ Class MojoTest Extends Window
 		canvas.DrawRect( 0,0,1,Height-1 )
 
 		canvas.Color=Color.Blue
-		canvas.DrawText( Seconds(),0,0 )
 	
 	End
 

@@ -1,3 +1,4 @@
+
 Namespace asteroids
 
 #Import "<std>"
