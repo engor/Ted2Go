@@ -1,5 +1,5 @@
 
-Namespace lib.litehtml
+Namespace litehtml
 
 #Import "litehtml/src/background.cpp"
 #Import "litehtml/src/box.cpp"
