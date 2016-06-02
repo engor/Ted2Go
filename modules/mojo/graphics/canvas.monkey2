@@ -1,7 +1,7 @@
 
 Namespace mojo.graphics
 
-#Import "assets/shaderenv_ambient.glsl@/mojo"
+#Import "assets/shader_env.glsl@/mojo"
 #Import "assets/RobotoMono-Regular.ttf@/mojo"
 
 #rem monkeydoc @hidden
@@ -14,19 +14,45 @@ Class DrawOp
 End
 
 #rem monkeydoc The Canvas class.
+
+Canvas objects are used to perform rendering to either a mojo [[app.View]] or an 'off screen' [[mojo.graphics.Image]].
+
+To draw to a canvas, use one of the 'Draw' methods. Drawing is affected by a number of draw states, including:
+
+* [[Color]] - the current drawing color. This is combined with the current alpha to produce the final rendering color and alpha values.
+
+* [[Alpha]] - the current drawing alpha level.
+
+* [[Matrix]] - the current 2d drawing matrix. All drawing coordinates are multiplied by this matrix before rendering.
+
+* [[BlendMode]] - the blending mode for drawing, eg: opaque, alpha, additive, multiply.
+
+* [[Viewport]] - the current viewport. All drawing coordinates are relative to the top-left of the viewport.
+
+* [[Scissor]] - the current scissor rect. All rendering is clipped to the union of the viewport and the scissor rect.
+
+* [[Font]] - The current font to use when drawing text with [[DrawText]].
+
+Drawing does not occur immediately. Drawing commands are 'buffered' to reduce the overhead of sending lots of draw calls to the lower level graphics API. You
+can force all drawing commands in the buffer to actually render using [[Flush]].
+
 #end
 Class Canvas
 
 	Method New( image:Image )
 	
 		Init( image.Texture,image.Texture.Rect.Size,image.Rect )
+		
+		BeginRender( New Recti( 0,0,image.Rect.Size ),New AffineMat3f )
 	End
 	
 	#rem monkeydoc @hidden
 	#end
 	Method New( texture:Texture )
 	
-		Init( texture,texture.Rect.Size,New Recti( 0,0,texture.Rect.Size ) )
+		Init( texture,texture.Rect.Size,texture.Rect )
+		
+		BeginRender( texture.Rect,New AffineMat3f )
 	End
 
 	#rem monkeydoc @hidden
@@ -36,6 +62,13 @@ Class Canvas
 		Init( Null,New Vec2i( width,height ),New Recti( 0,0,width,height ) )
 	End
 	
+	#rem monkeydoc The current viewport.
+	
+	The viewport describes the rect rendering actually occurs in.
+	
+	All rendering is relative to the top-left of the viewport, and clipped to the intersection of the current viewport and scissor rect.
+		
+	#end
 	Property Viewport:Recti()
 	
 		Return _viewport
@@ -46,9 +79,16 @@ Class Canvas
 		
 		_viewport=viewport
 		
-		_dirty|=Dirty.Scissor|Dirty.EnvParams
+		_dirty|=Dirty.EnvParams|Dirty.Scissor
 	End
+
+	#rem monkeydoc The current scissor rect.
 	
+	The scissor rect is rect within the viewport that can be used for additional clipping.
+	
+	Scissor rect coorindates are relative to the viewport.
+	
+	#end
 	Property Scissor:Recti()
 	
 		Return _scissor
@@ -122,34 +162,15 @@ Class Canvas
 		_dirty|=Dirty.EnvParams
 	End
 	
-	#rem monkeydoc @hidden
-	#end	
-	Property RenderMatrix:AffineMat3f()
+	Property FilteringEnabled:Bool()
 	
-		Return _renderMatrix
-		
-	Setter( renderMatrix:AffineMat3f )
+		Return _filter
+	
+	Setter( filteringEnabled:Bool )
 	
 		Flush()
 		
-		_renderMatrix=renderMatrix
-		
-		_dirty|=Dirty.Scissor|Dirty.EnvParams
-	End
-	
-	#rem monkeydoc @hidden
-	#end	
-	Property RenderBounds:Recti()
-	
-		Return _renderBounds
-		
-	Setter( renderBounds:Recti )
-	
-		Flush()
-		
-		_renderBounds=renderBounds
-				
-		_dirty|=Dirty.Scissor
+		_filter=filteringEnabled
 	End
 	
 	#rem monkeydoc @hidden
@@ -159,30 +180,45 @@ Class Canvas
 		Flush()
 		
 		_targetSize=size
-		
 		_targetRect=New Recti( 0,0,size )
 		
 		_dirty|=Dirty.Target
 	End
 	
+	#rem monkeydoc Clears the viewport.
+	
+	Clears the viewport to `color`.
+	
+	#end
 	Method Clear( color:Color )
 
 		Flush()
+		
+		Validate()
 		
 		_device.Clear( color )
 	End
 	
 	#rem monkeydoc @hidden
 	#end	
-	Method BeginRender()
+	Method BeginRender( bounds:Recti,matrix:AffineMat3f )
 	
-		DebugAssert( Not _rendering )
+		Flush()
 		
-		_rendering=True
-	
 		_device.ShaderEnv=_ambientEnv
 		
-		_dirty=Dirty.All
+		_renderMatrixStack.Push( _renderMatrix )
+		_renderBoundsStack.Push( _renderBounds )
+		
+		_renderMatrix*=matrix
+		_renderBounds&=TransformRecti( bounds,_renderMatrix )
+
+		_dirty|=Dirty.EnvParams|Dirty.Scissor
+		
+		Viewport=bounds
+		Scissor=New Recti( 0,0,bounds.Size )
+		FilteringEnabled=True
+		ClearMatrix()
 	End
 	
 	#rem monkeydoc @hidden
@@ -191,13 +227,20 @@ Class Canvas
 	
 		Flush()
 		
-		_rendering=False
+		_renderBounds=_renderBoundsStack.Pop()
+		_renderMatrix=_renderMatrixStack.Pop()
 	End
 	
+		
+	#rem monkeydoc Flushes drawing commands.
+	
+	Flushes any outstanding drawint commands in the draw buffer.
+	
+	#end
 	Method Flush()
 	
-		If Not _rendering Return
-		
+'		_dirty|=Dirty.Target
+	
 		Validate()
 		
 		RenderDrawOps()
@@ -206,7 +249,12 @@ Class Canvas
 	End
 	
 	'***** DrawList *****
+
+	#rem monkeydoc The current font for use with DrawText
 	
+	You can set the font to null to use the default mojo font.
+	
+	#end	
 	Property Font:Font()
 	
 		Return _font
@@ -217,7 +265,13 @@ Class Canvas
 	
 		_font=font
 	End
+
+	#rem monkeydoc The current drawing alpha level.
 	
+	Note that both [[Alpha]] and the alpha component of [[Color]] contribute to the alpha level used for drawing. This allows you to
+	use [[Alpha]] as a 'master' alpha level.
+
+	#end	
 	Property Alpha:Float()
 	
 		Return _alpha
@@ -230,6 +284,12 @@ Class Canvas
 		_pmcolor=UInt(a) Shl 24 | UInt(_color.b*a) Shl 16 | UInt(_color.g*a) Shl 8 | UInt(_color.r*a)
 	End
 	
+	#rem monkeydoc The current drawing color.
+	
+	Note that both [[Alpha]] and the alpha component of [[Color]] contribute to the alpha level used for drawing. This allows you to
+	use [[Alpha]] as a 'master' alpha level.
+
+	#end
 	Property Color:Color()
 	
 		Return _color
@@ -242,6 +302,11 @@ Class Canvas
 		_pmcolor=UInt(a) Shl 24 | UInt(_color.b*a) Shl 16 | UInt(_color.g*a) Shl 8 | UInt(_color.r*a)
 	End
 	
+	#rem monkeydoc The current drawing 2d matrix.
+	
+	All coordinates in draw methods are multiplied by this matrix for rendering.
+	
+	#end
 	Property Matrix:AffineMat3f()
 	
 		Return _matrix
@@ -250,7 +315,10 @@ Class Canvas
 	
 		_matrix=matrix
 	End
+
+	#rem monkeydoc The current blendmode.
 	
+	#end	
 	Property BlendMode:BlendMode()
 	
 		Return _blendMode
@@ -259,61 +327,34 @@ Class Canvas
 	
 		_blendMode=blendMode
 	End
-	
-	#rem monkeydoc @hidden
-	#end
-	Property PointMaterial:Material()
-	
-		Return _pointMaterial
-	
-	Setter( pointMaterial:Material )
-	
-		_pointMaterial=pointMaterial
-	End
-	
-	#rem monkeydoc @hidden
-	#end
-	Property LineMaterial:Material()
-	
-		Return _lineMaterial
-		
-	Setter( lineMaterial:Material )
-	
-		_lineMaterial=lineMaterial
-	End
-	
-	#rem monkeydoc @hidden
-	#end
-	Property TriangleMaterial:Material()
-	
-		Return _triangleMaterial
-	
-	Setter( triangleMaterial:Material )
-	
-		_triangleMaterial=triangleMaterial
-	End
-	
-	#rem monkeydoc @hidden
-	#end
-	Property QuadMaterial:Material()
 
-		Return _quadMaterial
-
-	Setter( quadMaterial:Material )
-
-		_quadMaterial=quadMaterial
+	#rem monkeydoc @hidden The materials used to render primitives.
+	#end	
+	Property PrimitiveMaterials:Material[]()
+	
+		Return _materials
 	End
 	
+	#rem monkeydoc Pushes the drawing matrix onto the internal matrix stack.
+	
+	#end
 	Method PushMatrix()
 	
 		_matrixStack.Push( Matrix )
 	End
 	
+	#rem monkeydoc Pops the drawing matrix off the internal matrix stack.
+	
+	#end
 	Method PopMatrix()
 	
 		Matrix=_matrixStack.Pop()
 	End
 	
+	
+	#rem monkeydoc Clears the internal matrix stack and sets matrix to the identitity matrix.
+	
+	#end
 	Method ClearMatrix()
 	
 		_matrixStack.Clear()
@@ -321,73 +362,134 @@ Class Canvas
 		Matrix=New AffineMat3f
 	End
 	
+	#rem monkeydoc Translates the drawing matrix.
+	
+	Translates the drawing matrix. This has the effect of offsetting all drawing coordinates by `tx` and `ty`.
+	
+	#end
 	Method Translate( tx:Float,ty:Float )
 	
 		Matrix=Matrix.Translate( tx,ty )
 	End
 	
+	#rem monkeydoc Rotates the drawing matrix.
+	
+	Rotates the drawing matrix. This has the effect of rotating all drawing coordinates by the angle `rz'.
+	
+	@param rz Rotation angle in radians.
+	
+	#end
 	Method Rotate( rz:Float )
 	
 		Matrix=Matrix.Rotate( rz )
 	End
 	
+	#rem monkeydoc Scales the drawing matrix.
+	
+	Scales the draw matrix. This has the effect of scaling all drawing coordinates by `sx` and `sy`.
+	
+	@param sx X scale factor.
+	
+	@param sy Y scale factor.
+	
+	#end
 	Method Scale( sx:Float,sy:Float )
 	
 		Matrix=Matrix.Scale( sx,sy )
 	End
 	
-	Method DrawPoint( v0:Vec2f )
-		AddDrawOp( _pointMaterial,1,1 )
-		AddVertex( v0.x+.5,v0.y+.5,0,0 )
+	#rem monkeydoc Draws a point.
+	
+	Draws a point in the current [[Color]] using the current [[BlendMode]].
+	
+	The point coordinates are also transform by the current [[Matrix]].
+	
+	The 
+	
+	@param v Point coordinates.
+	
+	@param x Point x coordinate.
+	
+	@param y Point y coordinate.
+	
+	#end
+	Method DrawPoint( v:Vec2f )
+		AddDrawOp( _materials[1],1,1 )
+		AddVertex( v.x+.5,v.y+.5,0,0 )
 	End
 	
-	Method DrawPoint( x0:Float,y0:Float )
-		AddDrawOp( _pointMaterial,1,1 )
-		AddVertex( x0+.5,y0+.5,0,0 )
+	Method DrawPoint( x:Float,y:Float )
+		AddDrawOp( _materials[1],1,1 )
+		AddVertex( x+.5,y+.5,0,0 )
 	End
+
+	#rem monkeydoc Draws a line.
+
+	Draws a line in the current [[Color]] using the current [[BlendMode]].
 	
+	The line coordinates are transform by the current [[Matrix]] and clipped to the current [[Viewport]] and [[Scissor]].
+	
+	@param v0 First endpoint of the line.
+	
+	@param v1 Second endpoint of the line.
+	
+	@param x0 X coordinate of first endpoint of the line.
+	
+	@param y0 Y coordinate of first endpoint of the line.
+	
+	@param x1 X coordinate of first endpoint of the line.
+	
+	@param y1 Y coordinate of first endpoint of the line.
+	
+	#end
 	Method DrawLine( v0:Vec2f,v1:Vec2f )
-		AddDrawOp( _lineMaterial,2,1 )
+		AddDrawOp( _materials[2],2,1 )
 		AddVertex( v0.x+.5,v0.y+.5,0,0 )
 		AddVertex( v1.x+.5,v1.y+.5,1,1 )
 	End
 	
 	Method DrawLine( x0:Float,y0:Float,x1:Float,y1:Float )
-		AddDrawOp( _lineMaterial,2,1 )
+		AddDrawOp( _materials[2],2,1 )
 		AddVertex( x0+.5,y0+.5,0,0 )
 		AddVertex( x1+.5,y1+.5,1,1 )
 	End
 	
+	#rem monkeydoc Draws a triangle.
+	#end
 	Method DrawTriangle( v0:Vec2f,v1:Vec2f,v2:Vec2f )
-		AddDrawOp( _triangleMaterial,3,1 )
+		AddDrawOp( _materials[3],3,1 )
 		AddVertex( v0.x,v0.y,.5,0 )
 		AddVertex( v1.x,v1.y,1,1 )
 		AddVertex( v2.x,v2.y,0,1 )
 	End
 	
 	Method DrawTriangle( x0:Float,y0:Float,x1:Float,y1:Float,x2:Float,y2:Float )
-		AddDrawOp( _triangleMaterial,3,1 )
+		AddDrawOp( _materials[3],3,1 )
 		AddVertex( x0,y0,0,0 )
 		AddVertex( x1,y1,1,0 )
 		AddVertex( x2,y2,1,1 )
 	End
 	
+	#rem monkeydoc Draws a quad.
+	#end
 	Method DrawQuad( x0:Float,y0:Float,x1:Float,y1:Float,x2:Float,y2:Float,x3:Float,y3:Float )
-		AddDrawOp( _quadMaterial,4,1 )
+		AddDrawOp( _materials[4],4,1 )
 		AddVertex( x0,y0,0,0 )
 		AddVertex( x1,y1,1,0 )
 		AddVertex( x2,y2,1,1 )
 		AddVertex( x3,y3,0,1 )
 	End
 	
+	#rem monkeydoc Draws a rectangle.
+	#end
 	Method DrawRect( rect:Rectf )
-		AddDrawOp( _quadMaterial,4,1 )
+		AddDrawOp( _materials[4],4,1 )
 		AddVertex( rect.min.x,rect.min.y,0,0 )
 		AddVertex( rect.max.x,rect.min.y,1,0 )
 		AddVertex( rect.max.x,rect.max.y,1,1 )
 		AddVertex( rect.min.x,rect.max.y,0,1 )
 	End
-	
+
 	Method DrawRect( x:Float,y:Float,width:Float,height:Float )
 		DrawRect( New Rectf( x,y,x+width,y+height ) )
 	End
@@ -418,9 +520,92 @@ Class Canvas
 	End
 	
 	Method DrawRect( x:Float,y:Float,width:Float,height:Float,srcImage:Image,srcX:Int,srcY:Int,srcWidth:Int,srcHeight:Int )
+
 		DrawRect( New Rectf( x,y,x+width,y+height ),srcImage,New Recti( srcX,srcY,srcX+srcWidth,srcY+srcHeight ) )
 	End
 	
+	Method DrawOval( x:Float,y:Float,width:Float,height:Float )
+		Local xr:=width/2.0,yr:=height/2.0
+		
+		Local dx_x:=xr*_matrix.i.x
+		Local dx_y:=xr*_matrix.i.y
+		Local dy_x:=yr*_matrix.j.x
+		Local dy_y:=yr*_matrix.j.y
+		Local dx:=Sqrt( dx_x*dx_x+dx_y*dx_y )
+		Local dy:=Sqrt( dy_x*dy_x+dy_y*dy_y )
+
+		Local n:=Max( Int( dx+dy ),12 ) & ~3
+		
+		Local x0:=x+xr,y0:=y+yr
+		
+		AddDrawOp( _materials[5],n,1 )
+		
+		For Local i:=0 Until n
+			Local th:=i*Pi*2/n
+			Local px:=x0+Cos( th ) * xr
+			Local py:=y0+Sin( th ) * yr
+			AddVertex( px,py,0,0 )
+		Next
+	End
+	
+	Method DrawPoly( vertices:Float[] )
+		DebugAssert( vertices.Length>=6 And vertices.Length&1=0 )
+		
+		Local n:=vertices.Length/2
+		
+		AddDrawOp( _materials[5],n,1 )
+		
+		For Local i:=0 Until n*2 Step 2
+			AddVertex( vertices[i],vertices[i+1],0,0 )
+		Next
+	End
+	
+	#rem monkeydoc @hidden
+	#end
+	Method DrawPrimitives( order:Int,count:Int,vertices:Float Ptr,verticesPitch:Int,texCoords:Float Ptr,texCoordsPitch:Int,indices:Int Ptr )
+		DebugAssert( order>0,"Illegal primtive type" )
+			
+		If Not texCoords
+			Global _texCoords:=New Stack<Float>
+			If _texCoords.Length<>order*2
+				_texCoords.Resize( order*2 )
+				For Local i:=0 Until order*2 Step 2
+					_texCoords[i]=0
+					_texCoords[i=1]=0
+				Next
+			Endif
+			texCoords=_texCoords.Data.Data
+			texCoordsPitch=8
+		Endif
+		
+		AddDrawOp( _materials[ Min( order,5 ) ],order,count )
+		
+		If indices
+		
+			For Local i:=0 Until count
+				For Local j:=0 Until order
+					Local k:=indices[j]
+					Local vp:=Cast<Float Ptr>( Cast<UByte Ptr>( vertices )+k*verticesPitch )
+					Local tp:=Cast<Float Ptr>( Cast<UByte Ptr>( texCoords )+k*texCoordsPitch )
+					AddVertex( vp[0],vp[1],tp[0],tp[1] )
+				Next
+				indices=indices+order
+			Next
+		
+		Else
+		
+			For Local i:=0 Until count
+				For Local j:=0 Until order
+					AddVertex( vertices[0],vertices[1],texCoords[0],texCoords[1] )
+					vertices=Cast<Float Ptr>( Cast<UByte Ptr>( vertices )+verticesPitch )
+					texCoords=Cast<Float Ptr>( Cast<UByte Ptr>( texCoords )+texCoordsPitch )
+				Next
+			Next
+		End
+	End
+
+	#rem monkeydoc Draws an image.
+	#end	
 	Method DrawImage( image:Image,tx:Float,ty:Float )
 		Local vs:=image.Vertices
 		Local tc:=image.TexCoords
@@ -447,7 +632,6 @@ Class Canvas
 		DrawImage( image,trans.x,trans.y,rz )
 	End
 
-	
 	Method DrawImage( image:Image,tx:Float,ty:Float,rz:Float,sx:Float,sy:Float )
 		Local matrix:=_matrix
 		Translate( tx,ty )
@@ -461,11 +645,13 @@ Class Canvas
 		DrawImage( image,trans.x,trans.y,rz,scale.x,scale.y )
 	End
 	
+	#rem monkeydoc Draw text.
+	#end
 	Method DrawText( text:String,tx:Float,ty:Float,handleX:Float=0,handleY:Float=0 )
 	
 		tx-=_font.TextWidth( text ) * handleX
 		ty-=_font.Height * handleY
-	
+		
 		Local image:=_font.Image
 		Local sx:=image.Rect.min.x,sy:=image.Rect.min.y
 		Local tw:=image.Texture.Width,th:=image.Texture.Height
@@ -484,8 +670,9 @@ Class Canvas
 			Local x0:=tx+g.offset.x,x1:=x0+g.rect.Width
 			Local y0:=ty+g.offset.y,y1:=y0+g.rect.Height
 			
-			'Integerize font coods!
-			x0=Round( x0 );y0=Round( y0 );x1=Round( x1 );y1=Round( y1 )
+			'Integerize font coods - could do this in shader?
+			x0=Round( x0 );y0=Round( y0 )
+			x1=Round( x1 );y1=Round( y1 )
 			
 			AddVertex( x0,y0,s0,t0 )
 			AddVertex( x1,y0,s1,t0 )
@@ -496,7 +683,25 @@ Class Canvas
 		Next
 	End
 	
+	#rem
+	Method AddLight( tx:Float,ty:Float,radius:Radius )
+		Local x:=_matrix.i.x * tx + _matrix.j.x * ty + _matrix.t.x
+		Local y:=_matrix.i.y * tx + _matrix.j.y * ty + _matrix.t.y
+		Local inst:=New LightInst
+		inst.position=New Vec2f( x,y )
+		inst.radius=radius
+		inst.color=_color
+		'_lights.Push( inst )
+	End
+	#end
+	
 	Private
+	
+	Struct LightInst
+		Field position:Vec2f
+		Field radius:Float
+		Field color:Color
+	End
 	
 	Enum Dirty
 		Target=1
@@ -510,7 +715,6 @@ Class Canvas
 	Global _defaultFont:Font
 
 	Field _dirty:Dirty
-	Field _rendering:Bool
 	Field _target:Texture
 	Field _targetSize:Vec2i
 	Field _targetRect:Recti
@@ -522,10 +726,14 @@ Class Canvas
 	Field _viewMatrix:Mat4f
 	Field _modelMatrix:Mat4f
 	Field _ambientLight:Color
+	Field _filter:Bool=True
+
 	Field _renderColor:Color
-	
 	Field _renderMatrix:AffineMat3f
+	Field _renderMatrixStack:=New Stack<AffineMat3f>
+
 	Field _renderBounds:Recti
+	Field _renderBoundsStack:=New Stack<Recti>
 	
 	Field _font:Font
 	Field _alpha:Float
@@ -542,15 +750,14 @@ Class Canvas
 	Field _vertexData:Vertex2f[]
 	Field _vertex:Int
 	
-	Field _pointMaterial:Material
-	Field _lineMaterial:Material
-	Field _triangleMaterial:Material
-	Field _quadMaterial:Material
+	Field _materials:=New Material[6]
 	
 	Method Init( target:Texture,size:Vec2i,viewport:Recti )
 	
 		If Not _device
-			_ambientEnv=New ShaderEnv( stringio.LoadString( "asset::mojo/shaderenv_ambient.glsl" ) )
+			Local env:=stringio.LoadString( "asset::mojo/shader_env.glsl" )
+			_ambientEnv=New ShaderEnv( "#define RENDERPASS_AMBIENT~n"+env )
+'			_ambientEnv=New ShaderEnv( "#define RENDERPASS_NORMAL~n"+env )
 			_defaultFont=Font.Load( "asset::mojo/RobotoMono-Regular.ttf",16 )
 			_nullShader=Shader.GetShader( "null" )
 		Endif
@@ -561,28 +768,28 @@ Class Canvas
 		
 		_envParams=New ParamBuffer
 		_device=New GraphicsDevice
-		_rendering=False
 		
 		_viewport=New Recti( 0,0,_targetRect.Width,_targetRect.Height )
-		_scissor=New Recti( 0,0,16384,16384 )
+		_scissor=_viewport
 		_viewMatrix=New Mat4f
 		_modelMatrix=New Mat4f
 		_ambientLight=Color.Black
+		_filter=True
+		
 		_renderColor=Color.White
 		_renderMatrix=New AffineMat3f
-		_renderBounds=New Recti( 0,0,_targetRect.Width,_targetRect.Height )
+		_renderBounds=New Recti( 0,0,$40000000,$40000000 )
+		
+		_dirty=Dirty.All
 		
 		Font=Null
 		Alpha=1
 		Color=Color.White
 		Matrix=New AffineMat3f
 		BlendMode=BlendMode.Alpha
-		PointMaterial=New Material( _nullShader )
-		LineMaterial=New Material( _nullShader )
-		TriangleMaterial=New Material( _nullShader )
-		QuadMaterial=New Material( _nullShader )
-		
-		BeginRender()
+		For Local i:=0 Until _materials.Length
+			_materials[i]=New Material( _nullShader )
+		Next
 	End
 	
 	Method Validate()
@@ -610,23 +817,6 @@ Class Canvas
 			
 		Endif
 		
-		If _dirty & Dirty.Scissor
-		
-'			Local viewport:=TransformRecti( _viewport & _scissor,_renderMatrix )
-			Local viewport:=TransformRecti( _viewport & (_scissor+_viewport.Origin),_renderMatrix )
-			
-			Local scissor:=(viewport & _renderBounds)+_targetRect.Origin
-			
-			If Not _target
-				Local h:=scissor.Height
-				scissor.min.y=_targetSize.y-scissor.max.y
-				scissor.max.y=scissor.min.y+h
-			Endif
-			
-			_device.Scissor=scissor
-		
-		Endif
-		
 		If _dirty & Dirty.EnvParams
 		
 			Local renderMatrix:=_renderMatrix.Translate( New Vec2f( _viewport.X,_viewport.Y ) )
@@ -638,6 +828,22 @@ Class Canvas
 			_envParams.SetColor( "mx2_RenderColor",_renderColor )
 
 			_device.EnvParams=_envParams
+
+		Endif
+		
+		If _dirty & Dirty.Scissor
+		
+			Local scissor:=TransformRecti( _viewport & (_scissor+_viewport.Origin),_renderMatrix )
+			
+			scissor=(scissor & _renderBounds)+_targetRect.Origin
+			
+			If Not _target
+				Local h:=scissor.Height
+				scissor.min.y=_targetSize.y-scissor.max.y
+				scissor.max.y=scissor.min.y+h
+			Endif
+
+			_device.Scissor=scissor
 		Endif
 		
 		_dirty=Null
@@ -646,6 +852,8 @@ Class Canvas
 	Method RenderDrawOps()
 	
 		Local p:=_vertexData.Data
+		
+		_device.FilteringEnabled=_filter
 	
 		For Local op:=Eachin _ops
 			_device.BlendMode=op.blendMode

@@ -1,25 +1,20 @@
 
 // ***** alpha surface shader *****
 
-varying vec4 Color;
-
 //@vertex
 
 void transform( out vec4 viewpos ){
 
 	viewpos=mx2_ModelViewMatrix * mx2_VertexPosition;
-	
-	Color=mx2_VertexColor * mx2_RenderColor;
+
+	gl_PointSize=1.0;
 }
 
 //@fragment
 
-void ambientPass( out vec4 ambient ){
+void lighting( out vec4 diffuse,out vec4 specular,out vec4 emissive,out vec3 normal,out float alpha ){
 
-	ambient=Color;
+	emissive=vec4( 1.0 );
+	
+	alpha=1.0;
 }
-
-void lightingPass( out vec4 diffuse,out vec4 specular,out vec3 normal ){
-
-}
-

@@ -84,9 +84,9 @@ Class Font
 	End
 
 	'Make this ALWAYS work!	
-	Function Load:Font( path:String,height:Float )
+	Function Load:Font( path:String,height:Float,textureFlags:TextureFlags=TextureFlags.DefaultFlags )
 	
-		Local font:=fontloader.LoadFont( path,height )
+		Local font:=fontloader.LoadFont( path,height,textureFlags )
 		
 		Return font
 	End

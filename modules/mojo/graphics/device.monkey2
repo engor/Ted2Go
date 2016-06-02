@@ -119,6 +119,19 @@ Class GraphicsDevice
 		_dirty|=Dirty.Params
 	End
 	
+	Property FilteringEnabled:Bool()
+	
+		Return _filter
+	
+	Setter( filteringEnabled:Bool )
+	
+		If filteringEnabled=_filter Return
+		
+		_filter=filteringEnabled
+
+		_dirty|=Dirty.Params
+	End
+	
 	Method Clear( color:Color )
 	
 		Validate()
@@ -130,7 +143,7 @@ Class GraphicsDevice
 			glDisable( GL_SCISSOR_TEST )
 		Endif
 		
-		glClearColor( color.r,color.g,color.b,color.a )
+		glClearColor( color.r,color.g,color.b,color.a )
 
 		glClear( GL_COLOR_BUFFER_BIT )
 		
@@ -180,6 +193,10 @@ Class GraphicsDevice
 				Next
 			Endif
 			glDrawElements( GL_TRIANGLES,n,GL_UNSIGNED_SHORT,_qindices.Data )
+		Default
+			For Local i:=0 Until count
+				glDrawArrays( GL_TRIANGLE_FAN,i*order,order )
+			Next
 		End
 		
 	End
@@ -207,6 +224,7 @@ Class GraphicsDevice
 	Field _envParams:ParamBuffer
 	Field _shader:Shader
 	Field _params:ParamBuffer
+	Field _filter:Bool=True
 	
 	Field _rscissor:Recti
 
@@ -287,7 +305,7 @@ Class GraphicsDevice
 			Endif
 			
 			If _dirty & Dirty.Params
-				_shader.BindParams( _params )
+				_shader.BindParams( _params,_filter )
 			End
 			
 		Endif

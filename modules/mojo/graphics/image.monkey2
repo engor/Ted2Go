@@ -5,18 +5,30 @@ Namespace mojo.graphics
 #end
 Class Image
 
-	Method New( pixmap:Pixmap,shader:Shader=Null )
+	#rem monkeydoc @hidden
+	#end
+	Field OnDiscarded:Void()
+
+	Method New( pixmap:Pixmap,textureFlags:TextureFlags=TextureFlags.DefaultFlags,shader:Shader=Null )
 	
-		Local texture:=New Texture( pixmap )
+		Local texture:=New Texture( pixmap,textureFlags )
 		
 		Init( Null,texture,texture.Rect,shader )
+		
+		OnDiscarded+=Lambda()
+			texture.Discard()
+		End
 	End
 	
-	Method New( width:Int,height:Int,shader:Shader=Null )
+	Method New( width:Int,height:Int,textureFormat:PixelFormat=PixelFormat.RGBA32,textureFlags:TextureFlags=TextureFlags.DefaultFlags,shader:Shader=Null )
 	
-		Local texture:=New Texture( width,height )
+		Local texture:=New Texture( width,height,textureFormat,textureFlags )
 		
 		Init( Null,texture,texture.Rect,shader )
+
+		OnDiscarded+=Lambda()
+			texture.Discard()
+		End
 	End
 	
 	Method New( image:Image,rect:Recti )
@@ -113,26 +125,53 @@ Class Image
 		Return _texCoords
 	End
 	
-	Function Load:Image( path:String,shader:Shader=Null )
+	#rem monkeydoc Release the image and any resource it uses.
+	#end
+	Method Discard()
+		If _discarded Return
+		_discarded=True
+		OnDiscarded()
+	End
 	
-		Local texture:=mojo.graphics.Texture.Load( path )
-		If Not texture Return Null
+	Function Load:Image( path:String,textureFlags:TextureFlags=TextureFlags.DefaultFlags,shader:Shader=Null )
+	
+		Local diffuse:=mojo.graphics.Texture.Load( path,textureFlags )
+		If Not diffuse Return Null
 		
 		Local file:=StripExt( path )
 		Local ext:=ExtractExt( path )
 		
-		Local specular:=mojo.graphics.Texture.Load( file+"_SPECULAR"+ext )
-		Local normal:=mojo.graphics.Texture.Load( file+"_NORMALS"+ext )
+		Local specular:=mojo.graphics.Texture.Load( file+"_SPECULAR"+ext,textureFlags )
+		Local normal:=mojo.graphics.Texture.Load( file+"_NORMALS"+ext,textureFlags )
 		
-		If Not shader shader=Shader.GetShader( "sprite" )
+		If specular Or normal
+			If Not specular specular=mojo.graphics.Texture.ColorTexture( Color.Black )
+			If Not normal normal=mojo.graphics.Texture.ColorTexture( New Color( .5,.5,.5 ) )
+		Endif
+		
+		If Not shader
+			If specular Or normal
+				shader=Shader.GetShader( "phong" )
+			Else
+				shader=Shader.GetShader( "sprite" )
+			Endif
+		Endif
 		
 		Local material:=New Material( shader )
 		
-		material.SetTexture( "u_Texture0",texture )
-		If specular material.SetTexture( "u_Texture1",specular )
-		If normal material.SetTexture( "u_Texture2",normal )
+		If diffuse material.SetTexture( "DiffuseTexture",diffuse )
+		If specular material.SetTexture( "SpecularTexture",specular )
+		If normal material.SetTexture( "NormalTexture",normal )
 		
-		Return New Image( material,texture,texture.Rect )
+		Local image:=New Image( material,diffuse,diffuse.Rect )
+		
+		image.OnDiscarded+=Lambda()
+			If diffuse diffuse.Discard()
+			If specular specular.Discard()
+			If normal normal.Discard()
+		End
+		
+		Return image
 	End
 	
 	Private
@@ -140,7 +179,7 @@ Class Image
 	Field _material:Material
 	Field _texture:Texture
 	Field _rect:Recti
-	
+	Field _discarded:Bool
 	Field _handle:=New Vec2f( 0,0 )
 	Field _scale:=New Vec2f( 1,1 )
 	Field _vertices:Rectf
@@ -152,7 +191,7 @@ Class Image
 		If Not material
 			If Not shader shader=Shader.GetShader( "sprite" )
 			material=New Material( shader )
-			material.SetTexture( "u_Texture0",texture )
+			material.SetTexture( "DiffuseTexture",texture )
 		Endif
 		
 		_material=material

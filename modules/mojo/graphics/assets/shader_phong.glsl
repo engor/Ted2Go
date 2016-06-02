@@ -1,33 +1,30 @@
 
 // ***** phong surface shader *****
 
-varying vec2 texCoord0;
+varying vec2 TexCoord0;
 
 //@vertex
 
 void transform( out vec4 viewpos ){
 
-	viewpos=mx2_ModelViewMatrix * mx2_Vertex;
-
-	texCoord0=mx2_TexCoord0;
+	viewpos=mx2_ModelViewMatrix * mx2_VertexPosition;
+	
+	TexCoord0=mx2_VertexTexCoord0;
 }
 
 //@fragment
 
-uniform sampler2D ColorTexture;			//default=white
-uniform sampler2D SpecularTexture;		//default=white
-uniform sampler2D NormalTexture;		//default=smooth
+uniform sampler2D DiffuseTexture;
+uniform sampler2D SpecularTexture;
+uniform sampler2D NormalTexture;
 
-void ambientPass( out vec4 ambient ){
+void lighting( out vec4 diffuse,out vec4 specular,out vec4 emissive,out vec3 normal,out float alpha ){
 
-	diffuse=texture2D( ColorTexture,texCoord0 ) * mx2_Color * mx2_AmbientLight;
-}
-
-void lightingPass( out vec4 diffuse,out vec4 specular,out vec4 normal ){
-
-	diffuse=texture2D( ColorTexture,texCoord0 ) * mx2_Color;
+	diffuse=texture2D( DiffuseTexture,TexCoord0 );
 	
-	specular=texture2D( SpecularTexture,texCoord0 );
+	specular=texture2D( SpecularTexture,TexCoord0 );
 	
-	normal=normalize( mat3( mx2_ModelViewMatrix ) * texture2D( NormalTexture,texCoord0 ).xyz );
+	normal=normalize( mat3( mx2_ModelViewMatrix ) * texture2D( NormalTexture,TexCoord0 ).xyz );
+	
+	alpha=diffuse.a;
 }

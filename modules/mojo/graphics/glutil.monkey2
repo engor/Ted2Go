@@ -74,11 +74,10 @@ Function glCompile:Int( type:Int,source:String )
 	glGetShaderiv( shader,GL_COMPILE_STATUS,Varptr tmpi )
 	If Not tmpi
 		Print "Failed to compile fragment shader:"+glGetShaderInfoLogEx( shader )
-		Print source
-'		Local lines:=source.Split( "~n" )
-'		For Local i:=0 Until lines.Length
-'			Print (i+1)+":~t"+lines[i]
-'		Next
+		Local lines:=source.Split( "~n" )
+		For Local i:=0 Until lines.Length
+			Print (i+1)+":~t"+lines[i]
+		Next
 		Assert( False,"Compile fragment shader failed" )
 	Endif
 	Return shader

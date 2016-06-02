@@ -13,7 +13,7 @@ Public
 
 #rem monkeydoc @hidden
 #end
-Function LoadFont:Font( path:String,fheight:Float )
+Function LoadFont:Font( path:String,fheight:Float,textureFlags:TextureFlags )
 
 	If Not FreeType And FT_Init_FreeType( Varptr FreeType ) Return Null
 	
@@ -80,7 +80,7 @@ Function LoadFont:Font( path:String,fheight:Float )
 			x=0
 		Endif
 		
-		Local tmp:=New Pixmap( gw,gh,PixelFormat.A8,slot->bitmap.buffer,slot->bitmap.pitch,Null )
+		Local tmp:=New Pixmap( gw,gh,PixelFormat.A8,slot->bitmap.buffer,slot->bitmap.pitch )
 		
 		pixmap.Paste( tmp,x,y )
 		
@@ -94,7 +94,7 @@ Function LoadFont:Font( path:String,fheight:Float )
 	
 	data.Discard()
 	
-	Local image:=New Image( pixmap,Shader.GetShader( "font" ) )
+	Local image:=New Image( pixmap,textureFlags,Shader.GetShader( "font" ) )
 	
 	Local font:=New Font( image,height,firstChar,glyphs )
 	

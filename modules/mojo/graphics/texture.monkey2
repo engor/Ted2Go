@@ -7,9 +7,9 @@ Namespace mojo.graphics
 |:--------------|:-----------
 | Filter		| Filter texture.
 | Mipmap		| Mipmap texture.
-| ClampS		| Clamp texture S coordinate.
-| ClampT		| Clamp texture T coordinate.
-| Clamp			| Clamp texture coordinates.
+| WrapS			| Wrap texture S coordinate.
+| WrapT			| Wrap texture T coordinate.
+| WrapST		| Wrap texture coordinates.
 | Managed		| Managed by mojo.
 | RenderTarget	| Texture can be used as a render target.
 | DefaultFlags	| Use default flags.
@@ -19,24 +19,31 @@ Enum TextureFlags
 
 	Filter=			$0001
 	Mipmap=			$0002
-	ClampS=			$0004
-	ClampT=			$0008
+	WrapS=			$0004
+	WrapT=			$0008
 	Managed=		$0010
 	RenderTarget=	$0020
-	ClampST=		ClampS|ClampT
+	
+	WrapST=			WrapS|WrapT
 
 	DefaultFlags=	$ffff
 End
 
 Class Texture
 
+	#rem monkeydoc @hidden
+	#end
+	Field OnDiscarded:Void()
+
 	Method New( pixmap:Pixmap,flags:TextureFlags=TextureFlags.DefaultFlags )
 
 		If flags=TextureFlags.DefaultFlags 
-			flags=TextureFlags.Filter|TextureFlags.Mipmap|TextureFlags.ClampST|TextureFlags.Managed
+			flags=TextureFlags.Filter|TextureFlags.Mipmap
 		Endif
 		
-#If __TARGET__="emscripten"
+		flags|=TextureFlags.Managed
+		
+#If __TARGET__<>"desktop"
 		If flags & TextureFlags.Mipmap
 			Local tw:=Log2( pixmap.Width ),th:=Log2( pixmap.Height )
 			If tw<>Round( tw ) Or th<>Round( th ) flags&=~TextureFlags.Mipmap
@@ -46,16 +53,13 @@ Class Texture
 		_rect=New Recti( 0,0,pixmap.Width,pixmap.Height )
 		_format=pixmap.Format
 		_flags=flags
-		
-		If _flags & TextureFlags.Managed
-			_managed=pixmap
-		Endif
+		_managed=pixmap
 	End
 	
 	Method New( width:Int,height:Int,format:PixelFormat=PixelFormat.RGBA32,flags:TextureFlags=TextureFlags.DefaultFlags )
 	
 		If flags=TextureFlags.DefaultFlags 
-			flags=TextureFlags.Filter|TextureFlags.ClampST|TextureFlags.RenderTarget
+			flags=TextureFlags.Filter|TextureFlags.RenderTarget
 		Endif
 
 		_rect=New Recti( 0,0,width,height )
@@ -63,8 +67,11 @@ Class Texture
 		_flags=flags
 		
 		If _flags & TextureFlags.Managed
-			_managed=New Pixmap( Width,Height,_format )
+			_managed=New Pixmap( width,height,format )
 			_managed.Clear( Color.Magenta )
+			OnDiscarded+=Lambda()
+				_managed.Discard()
+			End
 		Endif
 	End
 	
@@ -86,6 +93,14 @@ Class Texture
 	
 	Property Flags:TextureFlags()
 		Return _flags
+	End
+	
+	Method Discard()
+		If _discarded Return
+		If _texSeq=glGraphicsSeq glDeleteTextures( 1,Varptr _glTexture )
+		If _fbSeq=glGraphicsSeq glDeleteFramebuffers( 1,Varptr _glFramebuffer )
+		_discarded=True
+		OnDiscarded()
 	End
 	
 	Method PastePixmap( pixmap:Pixmap,x:Int,y:Int )
@@ -123,7 +138,13 @@ Class Texture
 		
 		pixmap.PremultiplyAlpha()
 		
-		Return New Texture( pixmap,flags )
+		Local texture:=New Texture( pixmap,flags )
+		
+		texture.OnDiscarded+=Lambda()
+			pixmap.Discard()
+		End
+		
+		Return texture
 	End
 
 	Function ColorTexture:Texture( color:Color )
@@ -140,6 +161,7 @@ Class Texture
 	#rem monkeydoc @hidden
 	#end	
 	Property GLTexture:GLuint()
+		DebugAssert( Not _discarded,"texture has been discarded" )
 	
 		If _texSeq=glGraphicsSeq And Not _texDirty Return _glTexture
 		
@@ -169,9 +191,18 @@ Class Texture
 			Else
 				glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST )
 			Endif
-	
-			If _flags & TextureFlags.ClampS glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE )
-			If _flags & TextureFlags.ClampT glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE )
+			
+			If _flags & TextureFlags.WrapS
+				glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT )
+			Else
+				glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE )
+			Endif
+			
+			If _flags & TextureFlags.WrapT
+				glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT )
+			Else
+				glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE )
+			Endif
 		
 			glTexImage2D( GL_TEXTURE_2D,0,glFormat( _format ),Width,Height,0,glFormat( _format ),GL_UNSIGNED_BYTE,Null )
 			
@@ -205,6 +236,7 @@ Class Texture
 	#rem monkeydoc @hidden
 	#end	
 	Property GLFramebuffer:GLuint()
+		DebugAssert( Not _discarded,"texture has been discarded" )
 	
 		If _fbSeq=glGraphicsSeq Return _glFramebuffer
 		
@@ -230,6 +262,7 @@ Class Texture
 	Field _format:PixelFormat
 	Field _flags:TextureFlags
 	Field _managed:Pixmap
+	Field _discarded:Bool
 	
 	Field _texSeq:Int
 	Field _texDirty:Bool

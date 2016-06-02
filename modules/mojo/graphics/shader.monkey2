@@ -2,12 +2,13 @@
 Namespace mojo.graphics
 
 #Import "assets/shader_sprite.glsl@/mojo"
+#Import "assets/shader_phong.glsl@/mojo"
 #Import "assets/shader_font.glsl@/mojo"
 #Import "assets/shader_null.glsl@/mojo"
 
 Private
 
-Function BindUniforms( uniforms:Uniform[],params:ParamBuffer )
+Function BindUniforms( uniforms:Uniform[],params:ParamBuffer,filter:Bool )
 
 	For Local u:=Eachin uniforms
 	
@@ -25,6 +26,11 @@ Function BindUniforms( uniforms:Uniform[],params:ParamBuffer )
 			DebugAssert( tex,"Can't bind shader texture uniform '"+u.name+"' - no texture!" )
 			glActiveTexture( GL_TEXTURE0+u.texunit )
 			glBindTexture( GL_TEXTURE_2D,tex.GLTexture )
+			If (tex.Flags & TextureFlags.Filter) And filter
+				glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR )
+			Else
+				glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST )
+			Endif
 			glUniform1i( u.location,u.texunit )
 		Default
 			Assert( False,"Unsupported uniform type for param:"+u.name )
@@ -296,14 +302,14 @@ Class Shader
 	#end
 	Method BindEnvParams( params:ParamBuffer )
 	
-		BindUniforms( _bound._envUniforms,params )
+		BindUniforms( _bound._envUniforms,params,True )
 	End
 	
 	#rem monkeydoc @hidden
 	#end
-	Method BindParams( params:ParamBuffer )
+	Method BindParams( params:ParamBuffer,filter:Bool )
 	
-		BindUniforms( _bound._uniforms,params )
+		BindUniforms( _bound._uniforms,params,filter )
 	End
 	
 	#rem monkeydoc @hidden
@@ -313,6 +319,7 @@ Class Shader
 		If Not _shaders
 			_shaders=New StringMap<Shader>
 			_shaders["sprite"]=New Shader( stringio.LoadString( "asset::mojo/shader_sprite.glsl" ) )
+			_shaders["phong"]=New Shader( stringio.LoadString( "asset::mojo/shader_phong.glsl" ) )
 			_shaders["font"]=New Shader( stringio.LoadString( "asset::mojo/shader_font.glsl" ) )
 			_shaders["null"]=New Shader( stringio.LoadString( "asset::mojo/shader_null.glsl" ) )
 		Endif
