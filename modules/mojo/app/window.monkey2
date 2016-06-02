@@ -37,8 +37,18 @@ Class Window Extends View
 		Init( title,rect,flags )
 	End
 	
-	#rem monkeydoc Window clear color
+	#rem monkeydoc Window title.
+	#end
+	Property Title:String()
 	
+		Return String.FromUtf8String( SDL_GetWindowTitle( _sdlWindow ) )
+	
+	Setter( title:String )
+	
+		SDL_SetWindowTitle( _sdlWindow,title )
+	End
+	
+	#rem monkeydoc Window clear color.
 	#end
 	Property ClearColor:Color()
 
@@ -49,7 +59,7 @@ Class Window Extends View
 		_clearColor=clearColor
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc Window swap interval
 	#end
 	Property SwapInterval:Int()
 	
@@ -63,7 +73,6 @@ Class Window Extends View
 	#rem monkeydoc @hidden
 	#end
 	Method Update()
-	
 
 #If __TARGET__="emscripten"
 
@@ -108,33 +117,19 @@ Class Window Extends View
 	
 		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )
 
-'		Causes a warning in SDL2 on windows...
-'		
 		SDL_GL_SetSwapInterval( _swapInterval )
 		
-		Local viewport:=New Recti( 0,0,Frame.Size )
+		Local bounds:=New Recti( 0,0,Frame.Size )
 		
-		_canvas.Resize( viewport.Size )
+		_canvas.Resize( bounds.Size )
 		
-		_canvas.RenderColor=Color.White
-		_canvas.RenderMatrix=New AffineMat3f
-		_canvas.RenderBounds=viewport
-		
-		_canvas.Viewport=viewport
-		_canvas.Scissor=New Recti( 0,0,1000000,1000000 )'16384,16384 )
-		_canvas.ViewMatrix=New Mat4f
-		_canvas.ModelMatrix=New Mat4f
-
-		_canvas.BlendMode=BlendMode.Alpha
-		_canvas.Color=Color.White
-		_canvas.Font=Null
-		_canvas.Matrix=New AffineMat3f
+		_canvas.BeginRender( bounds,New AffineMat3f )
 		
 		_canvas.Clear( _clearColor )
 		
 		Render( _canvas )
-
-		_canvas.Flush()
+		
+		_canvas.EndRender()
 		
 		SDL_GL_SwapWindow( _sdlWindow )
 	End
@@ -287,11 +282,6 @@ Class Window Extends View
 		_windowsByID[SDL_GetWindowID( _sdlWindow )]=Self
 		If Not (flags & WindowFlags.Hidden) _visibleWindows.Push( Self )
 		
-		'Create GLContext and canvas
-		
-		_sdlGLContext=SDL_GL_CreateContext( _sdlWindow )
-		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )
-		
 		_minSize=GetMinSize()
 		MinSize=_minSize
 		
@@ -301,7 +291,12 @@ Class Window Extends View
 		_frame=GetFrame()
 		Frame=_frame
 		
-		_canvas=New Canvas( Frame.Width,Frame.Height )
+		'Create GLContext and canvas
+		
+		_sdlGLContext=SDL_GL_CreateContext( _sdlWindow )
+		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )
+		
+		_canvas=New Canvas( _frame.Width,_frame.Height )
 		
 		Update()
 	End

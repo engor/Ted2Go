@@ -562,16 +562,30 @@ Class View
 		
 			_matrix=_matrix.Translate( (_frame.Width-_bounds.Width)*_gravity.x,(_frame.Height-_bounds.Height)*_gravity.y )
 			
+			_matrix.t.x=Round( _matrix.t.x )
+			_matrix.t.y=Round( _matrix.t.y )
+			
 		Case "stretch"
 		
 			Local sx:=Float(_frame.Width)/_bounds.Width
 			Local sy:=Float(_frame.Height)/_bounds.Height
+			_matrix=_matrix.Scale( sx,sy )
+
+		Case "stretch-int"
+		
+			Local sx:=Float(_frame.Width)/_bounds.Width
+			Local sy:=Float(_frame.Height)/_bounds.Height
+
+			If sx>1 sx=Floor( sx )
+			If sy>1 sy=Floor( sy )
+			
 			_matrix=_matrix.Scale( sx,sy )
 			
 		Case "scale","letterbox"
 		
 			Local sx:=Float(_frame.Width)/_bounds.Width
 			Local sy:=Float(_frame.Height)/_bounds.Height
+			
 			If sx<sy
 				_matrix=_matrix.Translate( 0,(_frame.Height-_bounds.Height*sx)*_gravity.y )
 				_matrix=_matrix.Scale( sx,sx )
@@ -580,14 +594,26 @@ Class View
 				_matrix=_matrix.Scale( sy,sy )
 			Endif
 			
+		Case "scale-int","letterbox-int"
+		
+			Local sx:=Float(_frame.Width)/_bounds.Width
+			Local sy:=Float(_frame.Height)/_bounds.Height
+			
+			If sx>1 sx=Floor( sx )
+			If sy>1 sy=Floor( sy )
+			
+			Local sc:=Min( sx,sy )
+			_matrix=_matrix.Translate( (_frame.Width-_bounds.Width*sc)*_gravity.x,(_frame.Height-_bounds.Height*sc)*_gravity.y )
+			_matrix=_matrix.Scale( sc,sc )
+			
 		End
 
 		_matrix=_matrix.Translate( -_bounds.min.x,-_bounds.min.y )
 		
 		If _parent _rmatrix=_parent._rmatrix * _matrix Else _rmatrix=_matrix
 		
-		_rmatrix.t.x=Round( _rmatrix.t.x )
-		_rmatrix.t.y=Round( _rmatrix.t.y )
+'		_rmatrix.t.x=Round( _rmatrix.t.x )
+'		_rmatrix.t.y=Round( _rmatrix.t.y )
 		
 		_rclip=TransformRecti( _rect,_rmatrix )
 		_rbounds=TransformRecti( _bounds,_rmatrix )
@@ -610,33 +636,23 @@ Class View
 	#rem monkeydoc @hidden
 	#end
 	Method Render( canvas:Canvas )
-		
+
 		If Not _visible Return
 		
-		Local rmatrix:=canvas.RenderMatrix
-		Local rbounds:=canvas.RenderBounds
-		Local viewport:=canvas.Viewport
-
-		canvas.RenderMatrix=_rmatrix
-		canvas.RenderBounds=_rbounds
-		canvas.Viewport=_bounds
+		canvas.BeginRender( _bounds,_matrix )
 		
 		_rstyle.Render( canvas,New Recti( 0,0,_bounds.Size ) )
 		
-		canvas.RenderMatrix=_rmatrix
-		canvas.RenderBounds=_rclip
 		canvas.Viewport=_rect
 		
 		OnRender( canvas )
-		canvas.ClearMatrix()
-		
+
 		For Local view:=Eachin _children
 			view.Render( canvas )
 		Next
-
-		canvas.RenderMatrix=rmatrix
-		canvas.RenderBounds=rbounds
-		canvas.Viewport=viewport
+		
+		canvas.EndRender()
+		
 	End
 	
 	Protected
