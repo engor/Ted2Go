@@ -104,6 +104,13 @@ namespace bbDB{
 		}
 	}
 	
+	void error( bbString msg ){
+		
+		printf( "\n%s\n",msg.c_str() );
+		stopped();
+
+	}
+	
 	bbArray<bbString> *stack(){
 	
 		int n=0;

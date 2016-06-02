@@ -374,6 +374,7 @@ Class @Throwable="bbThrowable"
 
 End
 
+#rem
 #rem monkeydoc Base class of all exception objects.
 #end
 Class @Exception Extends Throwable="bbException"
@@ -387,6 +388,7 @@ Class @Exception Extends Throwable="bbException"
 	Property DebugStack:String[]()="debugStack"
 	
 End
+#end
 
 #rem monkeydoc @hidden
 #end

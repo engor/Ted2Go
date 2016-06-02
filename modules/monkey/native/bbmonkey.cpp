@@ -28,11 +28,13 @@ namespace{
 		case SIGBUS:err="Bus error";
 	#endif	
 		}
-		
-		bbAssert( false,err );
-		
-		printf( "Caught signal:%s\n",err );
+				
+#ifndef NDEBUG
+		bbDB::error( err );
 		exit( 0 );
+#endif
+		printf( "Caught signal:%s\n",err );
+		exit( -1 );
 		
 #if __APPLE__
 
@@ -108,7 +110,8 @@ int main( int argc,char **argv ){
 		}
 		
 		bbMain();
-		
+	
+/*		
 	}catch( bbException *ex ){
 	
 		printf( "\n***** Uncaught Monkey 2 Exception: %s *****\n\n",ex->message().c_str() );
@@ -116,6 +119,7 @@ int main( int argc,char **argv ){
 		for( int i=0;i<ex->debugStack()->length();++i ){
 			printf( "%s\n",ex->debugStack()->at( i ).c_str() );
 		}
+*/
 
 	}catch( bbThrowable *t ){
 	

@@ -7,7 +7,6 @@
 #include "bbmemory.h"
 #include "bbstring.h"
 #include "bbdebug.h"
-#include "bbassert.h"
 #include "bbgc.h"
 #include "bbarray.h"
 #include "bbfunction.h"

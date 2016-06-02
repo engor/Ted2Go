@@ -36,6 +36,7 @@ struct bbObject : public bbGCNode{
 struct bbThrowable : public bbObject{
 };
 
+/*
 struct bbException : public bbThrowable{
 
 	bbException();
@@ -56,6 +57,7 @@ struct bbException : public bbThrowable{
 	
 	bbString _message;
 };
+*/
 
 struct bbInterface{
 

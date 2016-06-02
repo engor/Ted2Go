@@ -7,6 +7,10 @@ Extern
 #end
 Function DebugStop()="bbDB::stop"
 
+#rem monkeydoc @hidden
+#end
+Function RuntimeError( message:String )="bbDB::error"
+
 #rem monkeydoc Generates a runtime error if a boolean expression is false.
 
 @param condition The boolean condition to check.

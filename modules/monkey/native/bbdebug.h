@@ -3,6 +3,7 @@
 #define BB_DEBUG_H
 
 #include "bbstring.h"
+#include "bbobject.h"
 
 struct bbDBFiber;
 struct bbDBFrame;
@@ -100,7 +101,11 @@ namespace bbDB{
 	
 	void stopped();
 	
+	void error( bbString err );
+	
 	bbArray<bbString> *stack();
+	
+	void emitStack();
 }
 
 struct bbDBFrame{
@@ -162,6 +167,26 @@ template<class T> void bbDBLocal ( const char *name,T *var ){
 	bbDB::currentContext->locals->type=&bbDBVarType_t<T>::info;
 	bbDB::currentContext->locals->var=var;
 	++bbDB::currentContext->locals;
+}
+
+inline void bbAssert( bool cond ){
+	if( !cond ) bbDB::error( "Assert failed" );
+}
+
+inline void bbAssert( bool cond,bbString msg ){
+	if( !cond ) bbDB::error( msg );
+}
+
+inline void bbDebugAssert( bool cond ){
+#ifndef NDEBUG
+	if( !cond ) bbDB::error( "DebugAssert failed" );
+#endif
+}
+
+inline void bbDebugAssert( bool cond,bbString msg ){
+#ifndef NDEBUG
+	if( !cond ) bbDB::error( msg );
+#endif
 }
 
 #endif

@@ -14,6 +14,5 @@ Namespace monkey
 #Import "native/bbmonkey.cpp"
 #Import "native/bbgc.cpp"
 #Import "native/bbobject.cpp"
-#Import "native/bbinit.cpp"
 #Import "native/bbdebug.cpp"
-#Import "native/bbassert.cpp"
+#Import "native/bbinit.cpp"
