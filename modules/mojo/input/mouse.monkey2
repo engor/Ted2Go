@@ -1,7 +1,9 @@
 
 Namespace mojo.input
 
-Global Mouse:=New MouseDevice
+#rem monkeydoc Application mouse device instance.
+#end
+Const Mouse:=New MouseDevice
 
 #rem monkeydoc Mouse buttons.
 
@@ -19,6 +21,13 @@ Enum MouseButton
 	Right=3
 End
 
+#rem monkeydoc The MouseDevice singleton class.
+
+To access the mouse device, use the [[Mouse]] constant.
+
+The mouse device should only used after a new [[app.AppInstance]] is created.
+
+#end
 Class MouseDevice Extends InputDevice
 
 	#rem monkeydoc @hidden
