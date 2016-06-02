@@ -364,32 +364,32 @@ h6{
 
 h1{
 	font-size: 36px;
-	margin: 28px 0;
+	margin: 38px 0 28px;
 }
 
 h2{
 	font-size: 32px;
-	margin: 24px 0;
+	margin: 34px 0 24px;
 }
 
 h3{
 	font-size: 28px;
-	margin: 22px 0;
+	margin: 32px 0 22px;
 }
 
 h4{
 	font-size: 24px;
-	margin: 20px 0;
+	margin: 30px 0 20px;
 }
 
 h5{
 	font-size: 20px;
-	margin: 18px 0;
+	margin: 28px 0 18px;
 }
 
 h6{
 	font-size: 16px;
-	margin: 16px 0;
+	margin: 26px 0 16px;
 }
 
 /* ***** wordpress css ***** */
