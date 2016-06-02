@@ -1,5 +1,5 @@
 
-Namespace mojo.app
+Namespace mojo.requesters
 
 #If __TARGET__="desktop"
 
