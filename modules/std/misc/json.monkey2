@@ -3,7 +3,7 @@ Namespace std.json
 
 #rem monkeydoc JsonError class.
 #end
-Class JsonError Extends Exception
+Class JsonError Extends Throwable
 End
 
 #rem monkeydoc JsonValue class.
