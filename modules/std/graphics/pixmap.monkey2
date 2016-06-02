@@ -10,7 +10,7 @@ Class Pixmap
 
 	#rem monkeydoc @hidden
 	#end
-	Field Discarded:Void()
+	Field OnDiscarded:Void()
 
 	#rem monkeydoc Creates a new pixmap.
 
@@ -37,7 +37,7 @@ Class Pixmap
 		_depth=depth
 		_data=data
 		_pitch=pitch
-		Discarded=Lambda()
+		OnDiscarded=Lambda()
 			libc.free( data )
 		End
 	End
@@ -70,7 +70,7 @@ Class Pixmap
 		_pitch=0
 		_depth=0
 		_data=Null
-		Discarded()
+		OnDiscarded()
 	End
 	
 	#rem monkeydoc The pixmap width.
