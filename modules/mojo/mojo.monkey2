@@ -13,7 +13,6 @@ Namespace mojo
 #Import "app/style"
 #Import "app/view"
 #Import "app/window"
-#Import "app/requesters"
 
 #Import "graphics/canvas"
 #Import "graphics/device"
@@ -33,9 +32,9 @@ Namespace mojo
 #Import "input/joystick"
 #Import "input/keycodes"
 
+#Import "requesters/requesters"
 #Import "process/process"
 #Import "timer/timer"
-
 #Import "audio/audio"
 
 Using emscripten..
