@@ -1,41 +1,13 @@
 
-Namespace test
-
-#Import "<std.monkey2>"
-
-Using std..
-
-Enum Mode
-	Opaque
-	Alpha
-End
-
-Struct Line
-
-	Field state:Int
-	
-	Property Mode:Mode()
-		Return _mode
-	End
-	
-	Method update( line:Line )
-		Self=line
-	End
-	
-	Field _mode:=test.Mode.Opaque
-
-End
-
 Function Main()
 
-	Local t:=1.5e-2
+	Local p:Void()
 	
-	Print t
-
-	Local lines:=New Stack<Line>
+	p=Lambda()
+	End
 	
-	lines.Push( New Line )
+	Local i:Int Ptr
+	i+=1
 	
-'	lines[0].state=10
-
 End
+

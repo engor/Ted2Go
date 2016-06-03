@@ -1,22 +1,35 @@
 
-Namespace test
+#Import "<std>"
+#Import "<mojo>"
 
-Struct Vec3f
+Using std..
+Using mojo..
 
-	Field x:Float
-	Field y:Float
-	Field z:Float
-
-End
-
-Class D
-
-	Field x:Int
+Class MyWindow Extends Window
+	Field t:Test
 	
-	Method New()
+	Method New(title:String, width:Int, height:Int)
+		Super.New(title, width, height, WindowFlags.Resizable)
+		ClearColor = Color.Black
+		SwapInterval=1
+		t = New Test()		
+	End
+	
+	Method OnRender( canvas:Canvas ) Override
+		App.RequestRender()
+		canvas.DrawText( "Hello World!",Width/2,Height/2,.5,.5 )
+		Local x:=t.Hop()
 	End
 End
 
-Function Test2()
+Class Test
+	Method Hop()
+		Print "Hop"
+	End
 End
 
+Function Main()
+	New AppInstance
+	New MyWindow("Hello World", 640, 480)
+	App.Run()
+End
