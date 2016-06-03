@@ -5,28 +5,19 @@ Namespace mojo.graphics
 
 | TextureFlags	| Description
 |:--------------|:-----------
-| Filter		| Filter texture.
-| Mipmap		| Mipmap texture.
-| WrapS			| Wrap texture S coordinate.
-| WrapT			| Wrap texture T coordinate.
-| WrapST		| Wrap texture coordinates.
-| Managed		| Managed by mojo.
-| RenderTarget	| Texture can be used as a render target.
-| DefaultFlags	| Use default flags.
+| Filter		| Enable filtering. When the texture is magnified, texel colors are interpolated giving a smooth/blurred result.
+| Mipmap		| Enable mipmapping. When the texture is minified, automcatically generated 'mipmaps' are used.
+| Dynamic		| Texture is frequently updated.
 
 #end
 Enum TextureFlags
 
 	Filter=			$0001
 	Mipmap=			$0002
-	WrapS=			$0004
+	WrapS=			$0004			'wrap works, but hidden for now...
 	WrapT=			$0008
-	Managed=		$0010
-	RenderTarget=	$0020
-	
 	WrapST=			WrapS|WrapT
-
-	DefaultFlags=	$ffff
+	Dynamic=		$1000
 End
 
 Class Texture
@@ -35,13 +26,7 @@ Class Texture
 	#end
 	Field OnDiscarded:Void()
 
-	Method New( pixmap:Pixmap,flags:TextureFlags=TextureFlags.DefaultFlags )
-
-		If flags=TextureFlags.DefaultFlags 
-			flags=TextureFlags.Filter|TextureFlags.Mipmap
-		Endif
-		
-		flags|=TextureFlags.Managed
+	Method New( pixmap:Pixmap,flags:TextureFlags=TextureFlags.Filter|TextureFlags.Mipmap )
 		
 #If __TARGET__<>"desktop"
 		If flags & TextureFlags.Mipmap
@@ -49,28 +34,30 @@ Class Texture
 			If tw<>Round( tw ) Or th<>Round( th ) flags&=~TextureFlags.Mipmap
 		Endif
 #Endif
+
+		If flags & TextureFlags.Dynamic
+			PastePixmap( pixmap,0,0 )
+		Else
+			_rect=New Recti( 0,0,pixmap.Width,pixmap.Height )
+			_format=pixmap.Format
+			_flags=flags
+			_managed=pixmap
+		Endif
 		
-		_rect=New Recti( 0,0,pixmap.Width,pixmap.Height )
-		_format=pixmap.Format
-		_flags=flags
-		_managed=pixmap
 	End
 	
-	Method New( width:Int,height:Int,format:PixelFormat=PixelFormat.RGBA32,flags:TextureFlags=TextureFlags.DefaultFlags )
+	Method New( width:Int,height:Int,format:PixelFormat=PixelFormat.RGBA32,flags:TextureFlags=TextureFlags.Filter|TextureFlags.Mipmap )
 	
-		If flags=TextureFlags.DefaultFlags 
-			flags=TextureFlags.Filter|TextureFlags.RenderTarget
-		Endif
-
 		_rect=New Recti( 0,0,width,height )
 		_format=format
 		_flags=flags
 		
-		If _flags & TextureFlags.Managed
+		If Not (_flags & TextureFlags.Dynamic)
 			_managed=New Pixmap( width,height,format )
 			_managed.Clear( Color.Magenta )
 			OnDiscarded+=Lambda()
 				_managed.Discard()
+				_managed=Null
 			End
 		Endif
 	End
@@ -109,6 +96,8 @@ Class Texture
 
 			_managed.Paste( pixmap,x,y )
 			
+			_texDirty=True
+			
 		Else
 		
 			glPushTexture2d( GLTexture )
@@ -124,14 +113,14 @@ Class Texture
 			Endif
 			
 			glPopTexture2d()
+			
+			_mipsDirty=True
 		
 		Endif
-		
-		_texDirty=True
 	
 	End
 	
-	Function Load:Texture( path:String,flags:TextureFlags=TextureFlags.DefaultFlags )
+	Function Load:Texture( path:String,flags:TextureFlags=TextureFlags.Filter|TextureFlags.Mipmap )
 	
 		Local pixmap:=Pixmap.Load( path )
 		If Not pixmap Return Null
@@ -152,7 +141,7 @@ Class Texture
 		If Not texture
 			Local pixmap:=New Pixmap( 1,1 )
 			pixmap.Clear( color )
-			texture=New Texture( pixmap )
+			texture=New Texture( pixmap,Null )
 			_colorTextures[color]=texture
 		Endif
 		Return texture
@@ -163,17 +152,15 @@ Class Texture
 	Property GLTexture:GLuint()
 		DebugAssert( Not _discarded,"texture has been discarded" )
 	
-		If _texSeq=glGraphicsSeq And Not _texDirty Return _glTexture
+		If _texSeq=glGraphicsSeq And Not _texDirty And Not _mipsDirty Return _glTexture
 		
 		If _texSeq=glGraphicsSeq
 		
 			glPushTexture2d( _glTexture )
 		
 		Else
-			_texSeq=glGraphicsSeq
-		
 			glGenTextures( 1,Varptr _glTexture )
-			
+
 			glPushTexture2d( _glTexture )
 		
 			If _flags & TextureFlags.Filter
@@ -203,33 +190,51 @@ Class Texture
 			Else
 				glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE )
 			Endif
-		
+			
 			glTexImage2D( GL_TEXTURE_2D,0,glFormat( _format ),Width,Height,0,glFormat( _format ),GL_UNSIGNED_BYTE,Null )
 			
+			_texSeq=glGraphicsSeq
+			_texDirty=True
 		Endif
 		
-		If _managed
+		If _texDirty
 		
-			glPixelStorei( GL_UNPACK_ALIGNMENT,1 )
+			If _managed
 		
-			If _managed.Pitch=_managed.Width*_managed.Depth
-				glTexSubImage2D( GL_TEXTURE_2D,0,0,0,_managed.Width,_managed.Height,glFormat( _format ),GL_UNSIGNED_BYTE,_managed.Data )
+				glPixelStorei( GL_UNPACK_ALIGNMENT,1 )
+			
+				If _managed.Pitch=_managed.Width*_managed.Depth
+					glTexSubImage2D( GL_TEXTURE_2D,0,0,0,_managed.Width,_managed.Height,glFormat( _format ),GL_UNSIGNED_BYTE,_managed.Data )
+				Else
+					For Local iy:=0 Until Height
+						glTexSubImage2D( GL_TEXTURE_2D,0,0,iy,Width,1,glFormat( _format ),GL_UNSIGNED_BYTE,_managed.PixelPtr( 0,iy ) )
+					Next
+				Endif
+				
+				glFlush()	'macos nvidia bug!
+				
 			Else
+			
+				Local tmp:=New Pixmap( Width,1,Format )
+				tmp.Clear( Color.Red )
 				For Local iy:=0 Until Height
-					glTexSubImage2D( GL_TEXTURE_2D,0,0,iy,Width,1,glFormat( _format ),GL_UNSIGNED_BYTE,_managed.PixelPtr( 0,iy ) )
+					glTexSubImage2D( GL_TEXTURE_2D,0,0,iy,Width,1,glFormat( _format ),GL_UNSIGNED_BYTE,tmp.Data )
 				Next
+				tmp.Discard()
+			
 			Endif
 			
-			glFlush()	'macos nvidia bug!
-		
-			If _flags & TextureFlags.Mipmap glGenerateMipmap( GL_TEXTURE_2D )
-			
+			_texDirty=False
+			_mipsDirty=True
 		Endif
+		
+		If _mipsDirty
+			If _flags & TextureFlags.Mipmap glGenerateMipmap( GL_TEXTURE_2D )
+			_mipsDirty=False
+		End
 			
 		glPopTexture2d()
 		
-		_texDirty=False
-	
 		Return _glTexture
 	End
 	
@@ -256,6 +261,21 @@ Class Texture
 		Return _glFramebuffer
 	End
 	
+	'***** INTERNAL *****
+	
+	#rem monkeydoc @hidden
+	#end
+	Method Modified( device:GraphicsDevice )
+	
+		If _managed
+			Local r:=device.Viewport & device.Scissor
+			glPixelStorei( GL_PACK_ALIGNMENT,1 )
+			glReadPixels( r.X,r.Y,r.Width,r.Height,GL_RGBA,GL_UNSIGNED_BYTE,_managed.PixelPtr( r.X,r.Y ) )
+		Endif
+		
+		_mipsDirty=True
+	End
+	
 	Private
 	
 	Field _rect:Recti
@@ -266,6 +286,7 @@ Class Texture
 	
 	Field _texSeq:Int
 	Field _texDirty:Bool
+	Field _mipsDirty:Bool
 	Field _glTexture:GLuint
 	
 	Field _fbSeq:Int

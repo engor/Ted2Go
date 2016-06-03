@@ -162,15 +162,20 @@ Class Canvas
 		_dirty|=Dirty.EnvParams
 	End
 	
-	Property FilteringEnabled:Bool()
+	#rem monkeydoc Texture filtering control.
+	
+	Set this to false to render cool 'pixel art' style graphics.
+	
+	#end
+	Property TextureFilteringEnabled:Bool()
 	
 		Return _filter
 	
-	Setter( filteringEnabled:Bool )
+	Setter( enabled:Bool )
 	
 		Flush()
 		
-		_filter=filteringEnabled
+		_filter=enabled
 	End
 	
 	#rem monkeydoc @hidden
@@ -217,7 +222,7 @@ Class Canvas
 		
 		Viewport=bounds
 		Scissor=New Recti( 0,0,bounds.Size )
-		FilteringEnabled=True
+		TextureFilteringEnabled=True
 		ClearMatrix()
 	End
 	
@@ -524,6 +529,8 @@ Class Canvas
 		DrawRect( New Rectf( x,y,x+width,y+height ),srcImage,New Recti( srcX,srcY,srcX+srcWidth,srcY+srcHeight ) )
 	End
 	
+	#rem monkeydoc Draws an oval.
+	#end
 	Method DrawOval( x:Float,y:Float,width:Float,height:Float )
 		Local xr:=width/2.0,yr:=height/2.0
 		
@@ -548,6 +555,20 @@ Class Canvas
 		Next
 	End
 	
+	#rem monkeydoc Draws an ellipse.
+	#end
+	Method DrawEllipse( x:Float,y:Float,xRadius:Float,yRadius:Float )
+		DrawOval( x-xRadius,y-yRadius,xRadius*2,yRadius*2 )
+	End
+	
+	#rem monkeydoc Draws a circle.
+	#end
+	Method DrawCircle( x:Float,y:Float,radius:Float )
+		DrawOval( x-radius,y-radius,radius*2,radius*2 )
+	End
+	
+	#rem monkeydoc Draws a polygon.
+	#end
 	Method DrawPoly( vertices:Float[] )
 		DebugAssert( vertices.Length>=6 And vertices.Length&1=0 )
 		
@@ -560,7 +581,22 @@ Class Canvas
 		Next
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc Draws a sequence of primtives.
+	
+	@param order The type of primitive: 1=points, 2=lines, 3=triangles, 4=quads, >4=n-gons.
+	
+	@param count The number of primitives to draw.
+	
+	@param vertices Pointer to the first vertex x,y pair.
+	
+	@param verticesPitch Number of bytes from one vertex x,y pair to the next - set to 8 for 'tightly packed' vertices.
+	
+	@param texCoords Pointer to the first texCoord s,t pair. This can be null.
+	
+	@param texCoordsPitch Number of bytes from one texCoord s,y to the next.
+	
+	@param indices Pointer to sequence of integer indices for indexed drawing. This can by null for non-indexed drawing.
+	
 	#end
 	Method DrawPrimitives( order:Int,count:Int,vertices:Float Ptr,verticesPitch:Int,texCoords:Float Ptr,texCoordsPitch:Int,indices:Int Ptr )
 		DebugAssert( order>0,"Illegal primtive type" )
@@ -645,7 +681,7 @@ Class Canvas
 		DrawImage( image,trans.x,trans.y,rz,scale.x,scale.y )
 	End
 	
-	#rem monkeydoc Draw text.
+	#rem monkeydoc Draws a string.
 	#end
 	Method DrawText( text:String,tx:Float,ty:Float,handleX:Float=0,handleY:Float=0 )
 	

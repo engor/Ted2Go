@@ -37,6 +37,8 @@ Class GraphicsDevice
 	
 	Setter( renderTarget:Texture )
 	
+		FlushTarget()
+		
 		_target=renderTarget
 		
 		_dirty|=Dirty.Target
@@ -48,6 +50,8 @@ Class GraphicsDevice
 	
 	Setter( viewport:Recti )
 	
+		FlushTarget()
+	
 		_viewport=viewport
 		
 		_dirty|=Dirty.Viewport|Dirty.Scissor
@@ -58,6 +62,8 @@ Class GraphicsDevice
 		Return _scissor
 	
 	Setter( scissor:Recti )
+	
+		FlushTarget()
 	
 		_scissor=scissor
 		
@@ -153,6 +159,8 @@ Class GraphicsDevice
 		Else
 			glDisable( GL_SCISSOR_TEST )
 		Endif
+		
+		_modified=True
 	End
 	
 	Method Render( vertices:Vertex2f Ptr,order:Int,count:Int )
@@ -199,6 +207,7 @@ Class GraphicsDevice
 			Next
 		End
 		
+		_modified=True
 	End
 
 	Private
@@ -215,6 +224,7 @@ Class GraphicsDevice
 	End
 	
 	Field _dirty:Dirty=Dirty.All
+	Field _modified:Bool
 	Field _target:Texture
 	Field _windowRect:Recti
 	Field _viewport:Recti
@@ -241,6 +251,12 @@ Class GraphicsDevice
 		glGetIntegerv( GL_FRAMEBUFFER_BINDING,Varptr _defaultFbo )
 	End
 	
+	Method FlushTarget()
+		If Not _modified Return
+		If _target _target.Modified( Self )
+		_modified=False
+	End
+	
 	Method Validate()
 	
 		If _seq<>glGraphicsSeq
@@ -248,10 +264,11 @@ Class GraphicsDevice
 			_current=Null
 			InitGLState()
 		Endif
-	
+		
 		If _current=Self 
 			If Not _dirty Return
 		Else
+			If _current _current.FlushTarget()
 			_current=Self
 			_dirty=Dirty.All
 		Endif

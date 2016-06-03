@@ -84,9 +84,11 @@ Class Font
 	End
 
 	'Make this ALWAYS work!	
-	Function Load:Font( path:String,height:Float,textureFlags:TextureFlags=TextureFlags.DefaultFlags )
+	Function Load:Font( path:String,height:Float,textureFlags:TextureFlags=TextureFlags.Filter|TextureFlags.Mipmap,shader:Shader=Null )
 	
-		Local font:=fontloader.LoadFont( path,height,textureFlags )
+		If Not shader shader=Shader.GetShader( "font" )
+		
+		Local font:=fontloader.LoadFont( path,height,textureFlags,shader )
 		
 		Return font
 	End

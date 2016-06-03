@@ -9,7 +9,7 @@ Class Image
 	#end
 	Field OnDiscarded:Void()
 
-	Method New( pixmap:Pixmap,textureFlags:TextureFlags=TextureFlags.DefaultFlags,shader:Shader=Null )
+	Method New( pixmap:Pixmap,textureFlags:TextureFlags=TextureFlags.Filter|TextureFlags.Mipmap,shader:Shader=Null )
 	
 		Local texture:=New Texture( pixmap,textureFlags )
 		
@@ -20,8 +20,10 @@ Class Image
 		End
 	End
 	
-	Method New( width:Int,height:Int,textureFormat:PixelFormat=PixelFormat.RGBA32,textureFlags:TextureFlags=TextureFlags.DefaultFlags,shader:Shader=Null )
+	Method New( width:Int,height:Int,textureFlags:TextureFlags=TextureFlags.Filter|TextureFlags.Mipmap,shader:Shader=Null )
 	
+		Local textureFormat:PixelFormat=PixelFormat.RGBA32
+		
 		Local texture:=New Texture( width,height,textureFormat,textureFlags )
 		
 		Init( Null,texture,texture.Rect,shader )
@@ -133,7 +135,7 @@ Class Image
 		OnDiscarded()
 	End
 	
-	Function Load:Image( path:String,textureFlags:TextureFlags=TextureFlags.DefaultFlags,shader:Shader=Null )
+	Function Load:Image( path:String,textureFlags:TextureFlags=TextureFlags.Filter|TextureFlags.Mipmap,shader:Shader=Null )
 	
 		Local diffuse:=mojo.graphics.Texture.Load( path,textureFlags )
 		If Not diffuse Return Null
