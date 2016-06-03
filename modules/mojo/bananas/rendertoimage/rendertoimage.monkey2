@@ -17,17 +17,17 @@ Class MyWindow Extends mojo.app.Window
 
 	Method New()
 	
-		image=New Image( 256,256 )
+		image=New Image( 256,256,TextureFlags.Mipmap|TextureFlags.Dynamic )
 		
 		image.Handle=New Vec2f( .5,.5 )
 		
 		icanvas=New Canvas( image )
+		
+'		RenderImage()
 	End
 	
-	Method OnRender( canvas:Canvas ) Override
-	
-		App.RequestRender()
-	
+	Method RenderImage()
+
 		'render to image...
 		For Local x:=0 Until 16
 			For Local y:=0 Until 16
@@ -42,10 +42,31 @@ Class MyWindow Extends mojo.app.Window
 		icanvas.Color=Color.White
 		icanvas.DrawText( "This way up!",icanvas.Viewport.Width/2,0,.5,0 )
 		icanvas.Flush()
+
+	End
+	
+	Method OnRender( canvas:Canvas ) Override
+	
+		App.RequestRender()
 		
-		canvas.DrawImage( image,App.MouseLocation.x,App.MouseLocation.y )
+		RenderImage()
+				
+'		canvas.DrawImage( image,App.MouseLocation.x,App.MouseLocation.y,0,1,1 )
+		canvas.DrawImage( image,App.MouseLocation.x,App.MouseLocation.y,0,.5,.5 )
 		
 		canvas.DrawText( "Here!",0,0 )
+	End
+	
+	Method OnKeyEvent( event:KeyEvent ) Override
+	
+		Select event.Type
+		Case EventType.KeyDown
+			Select event.Key
+			Case Key.Space
+				Print "Invalidating graphics!"
+				mojo.graphics.glutil.glGraphicsSeq+=1
+			End
+		End
 	End
 	
 End

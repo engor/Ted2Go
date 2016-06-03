@@ -10,6 +10,9 @@ Namespace spacechimps
 Using std..
 Using mojo..
 
+Const VirtualWidth:=320
+Const VirtualHeight:=240
+
 Class MyWindow Extends Window
 
 	Field timer:Timer
@@ -50,7 +53,7 @@ Class MyWindow Extends Window
 		
 		'Set initial image pos
 		'
-		pos=New Vec2f( 160,120 )
+		pos=New Vec2f( VirtualWidth/2,VirtualHeight/2 )
 		
 		'Start update timer
 		'
@@ -159,24 +162,19 @@ Class MyWindow Extends Window
 		
 		'Turn off texture filtering for a 'pixel art' look
 		'
-		canvas.FilteringEnabled=filter
-		
-		'Title text
-		'	
-		canvas.DrawText( "FPS="+App.FPS,Width/2,8,.5,0 )
-		canvas.DrawText( "Arrow keys to fly",Width/2,24,.5,0 )
-		canvas.DrawText( "Swap interval="+SwapInterval +" ('S' to toggle)",Width/2,40,.5,0 )
-'#If __TARGET__="emscripten"
-'		canvas.Color=Color.Grey
-'#Endif
-		canvas.DrawText( "Timer sync="+(timer ? "true" Else "false")+" ('T' to toggle)",Width/2,56,.5,0 )
-		canvas.Color=Color.White
-		canvas.DrawText( "Filtering="+(filter ? "true" Else "false")+" ('F' to toggle",Width/2,72,.5,0 )
+		canvas.TextureFilteringEnabled=filter
+
+		canvas.DrawText( "FPS="+App.FPS,Width/2,0,.5,0 )
+		canvas.DrawText( "Arrow keys to fly",Width/2,16,.5,0 )
+		canvas.DrawText( "Swap interval="+SwapInterval +" ('S' to toggle)",Width/2,32,.5,0 )
+		canvas.DrawText( "Timer sync="+(timer ? "true" Else "false")+" ('T' to toggle)",Width/2,48,.5,0 )
+		canvas.DrawText( "Filtering="+(filter ? "true" Else "false")+" ('F' to toggle)",Width/2,64,.5,0 )
 		
 		'Draw image
 		'
 		Local x:=pos.x,y:=pos.y,r:=rot-Pi/2
-		If Not filter x=Floor( x ) ; y=Floor( y )
+		
+'		If Not filter x=Round( x ) ; y=Round( y )
 		
 		canvas.DrawImage( image,x,y,r )
 
@@ -187,12 +185,11 @@ Class MyWindow Extends Window
 		
 		If y-image.Radius<0 canvas.DrawImage( image,x,y+Height,r )
 		If y+image.Radius>Height canvas.DrawImage( image,x,y-Height,r )
-
 	End
 	
 	Method OnMeasure:Vec2i() Override
 	
-		Return New Vec2i( 320,240 )
+		Return New Vec2i( VirtualWidth,VirtualHeight )
 		
 	End
 	
