@@ -595,12 +595,18 @@ Class ForStmtExpr Extends StmtExpr
 			Endif
 			
 		Else
-		
+
 			'iter=container.All()
-			Local iter:=init.FindValue( "GetIterator" )
-			If Not iter iter=init.FindValue( "All" )
-			If Not iter Throw New SemantEx( "Container of type '"+init.type.ToString()+"' has no 'GetIterator' method" )
-			iter=iter.Invoke( Null ).RemoveSideEffects( iblock )
+			Local iter:=init.FindValue( "All" )
+			If Not iter
+				iter=init.FindValue( "GetIterator" )
+				If Not iter
+					iter=init.RemoveSideEffects( iblock )
+					'Throw New SemantEx( "Container of type '"+init.type.ToString()+"' has no 'GetIterator' method" )
+				Endif
+			Else
+				iter=iter.Invoke( Null ).RemoveSideEffects( iblock )
+			Endif
 			
 			'iter.AtEnd
 			Local atEnd:=iter.FindValue( "AtEnd" )
@@ -626,20 +632,6 @@ Class ForStmtExpr Extends StmtExpr
 			bump=bump.Invoke( Null )
 			incr=New EvalStmt( Null,bump )
 			
-			#rem
-			'iterator.HasNext
-			Local hasNext:=iter.FindValue( "HasNext" )
-			If Not hasNext Throw New SemantEx( "Iterator has no 'HasNext' property or field" )
-			hasNext=hasNext.UpCast( Type.BoolType )
-			cond=hasNext
-		
-			'iterator.GetNext()
-			Local getNext:=iter.FindValue( "GetNext" )
-			If Not getNext Throw New SemantEx( "Iterator has no 'GetNext' method" )
-			getNext=getNext.Invoke( Null )
-			curr=getNext
-			#end
-
 		Endif
 		
 		If varIdent
@@ -664,9 +656,6 @@ Class ForStmtExpr Extends StmtExpr
 		block=New Block( iblock )
 		block.loop=True
 
-		Local cond:Value
-		Local incr:Stmt
-
 		Local iter:Value
 		Local init:=Self.init.SemantRValue( iblock )
 		
@@ -679,22 +668,50 @@ Class ForStmtExpr Extends StmtExpr
 			iblock.Emit( iter.Assign( Null,"=",init,iblock ) )
 		Endif
 		
+		Local term:=Self.cond.SemantRValue( iblock )
+		Local termExpr:=New ValueExpr( term,srcpos,endpos )
 		Local iterExpr:=New ValueExpr( iter,srcpos,endpos )
+		Local cond:Value
+		Local incr:Value
 		
-		Local op:="<"
-		If kind="to" op="<="
+		Local opx:="<",opy:=">"
+		If kind="to" opx="<=" ; opy=">="
+			
+		If Self.incr
 		
-		Local condExpr:=New BinaryopExpr( op,iterExpr,Self.cond,srcpos,endpos )
-		cond=condExpr.SemantRValue( iblock ).RemoveSideEffects( iblock )
+			'step value? Yuck...use 'C' for loop!
+			'
+			incr=Self.incr.SemantRValue( iblock ).RemoveSideEffects( iblock )
+'			incr=iblock.AllocLocal( Self.incr.SemantRValue( iblock ) )
+
+			Local incrExpr:=New ValueExpr( incr,srcpos,endpos )
+			Local zero:=New LiteralExpr( "0",TOKE_INTLIT,Null,srcpos,endpos )
+			
+			Local cmp1:=New BinaryopExpr( ">",incrExpr,zero,srcpos,endpos ).SemantRValue( iblock )
+			Local cmp2:=New BinaryopExpr( opx,iterExpr,termExpr,srcpos,endpos ).SemantRValue( iblock )
+			
+			Local cmp3:=New BinaryopExpr( "<",incrExpr,zero,srcpos,endpos ).SemantRValue( iblock )
+			Local cmp4:=New BinaryopExpr( opy,iterExpr,termExpr,srcpos,endpos ).SemantRValue( iblock )
+			
+			Local cmp5:=New BinaryopValue( Type.BoolType,"and",cmp1,cmp2 )
+			Local cmp6:=New BinaryopValue( Type.BoolType,"and",cmp3,cmp4 )
+			
+			cond=New BinaryopValue( Type.BoolType,"or",cmp5,cmp6 )
+			
+		Else
 		
-		Local stepExpr:=Self.incr
-		If Not stepExpr stepExpr=New LiteralExpr( "1",TOKE_INTLIT,Null,srcpos,endpos )
-		Local incrExpr:=New AssignStmtExpr( "+=",iterExpr,stepExpr,srcpos,endpos )
-		incr=incrExpr.Semant( iblock )
+			incr=New LiteralValue( Type.IntType,"1" )
+			
+			cond=New BinaryopExpr( opx,iterExpr,termExpr,srcpos,endpos ).SemantRValue( iblock )
+			
+		Endif
+		
+		Local incrStmt:=iter.Assign( Self,"+=",incr,iblock )
 		
 		block.Semant( stmts )
 		
-		Return New ForStmt( Self,iblock,cond,incr,block )
+		Return New ForStmt( Self,iblock,cond,incrStmt,block )
+
 	End
 	
 End
@@ -770,7 +787,7 @@ Class ThrowStmtExpr Extends StmtExpr
 			Local value:=expr.SemantRValue( block )
 			Local ctype:=TCast<ClassType>( value.type )
 			
-			If Not ctype 'Or Not ctype.ExtendsType( Type.ThrowableClass )
+			If Not ctype Or Not ctype.ExtendsType( Type.ThrowableClass )
 				Throw New SemantEx( "Thrown value type must extend 'Throwable'" )
 			Endif
 			
