@@ -127,7 +127,7 @@ Class List<T> Implements IContainer<T>
 		End
 		
 		Method AssertCurrent()
-			DebugAssert( Valid,"Invalid list iterator" )
+			DebugAssert( Not AtEnd,"Invalid list iterator" )
 		End
 		
 		Public
@@ -145,12 +145,6 @@ Class List<T> Implements IContainer<T>
 		Property AtEnd:Bool()
 			AssertSeq()
 			Return _node=_list._head
-		End
-		
-		#rem monkeydoc @hidden
-		#end
-		Property Valid:Bool()
-			Return Not AtEnd
 		End
 		
 		#rem monkeydoc The value contained in the node pointed to by the iterator.
@@ -180,7 +174,7 @@ Class List<T> Implements IContainer<T>
 		
 		#end
 		Method Erase()
-			AssertSeq()
+			AssertCurrent()
 			_node=_node._succ
 			_node._pred.Remove()
 			_list._seq+=1
@@ -195,6 +189,88 @@ Class List<T> Implements IContainer<T>
 		Method Insert( value:T )
 			AssertSeq()
 			_node=New Node( value,_node )
+			_list._seq+=1
+			_seq=_list._seq
+		End
+	End
+	
+	#rem monkeydoc The List.BackwardsIterator struct.
+	#end
+	Struct BackwardsIterator
+	
+		Private
+	
+		Field _list:List
+		Field _node:Node
+		Field _seq:Int
+		
+		Method AssertSeq()
+			DebugAssert( _seq=_list._seq,"Concurrent list modification" )
+		End
+		
+		Method AssertCurrent()
+			DebugAssert( Not AtEnd,"Invalid list iterator" )
+		End
+		
+		Public
+		
+		#rem monkeydoc Creates a new iterator.
+		#end
+		Method New( list:List,node:Node )
+			_list=list
+			_node=node
+			_seq=list._seq
+		End
+
+		#rem monkeydoc Checks whether the iterator has reached the end of the list.
+		#end
+		Property AtEnd:Bool()
+			AssertSeq()
+			Return _node=_list._head
+		End
+		
+		#rem monkeydoc The value contained in the node pointed to by the iterator.
+		#end
+		Property Current:T()
+			AssertCurrent()
+			Return _node._value
+			
+		Setter( current:T )
+			AssertCurrent()
+			_node._value=current
+		End
+		
+		#rem monkeydoc Bumps the iterator so it points to the next node in the list.
+		#end
+		Method Bump()
+			AssertCurrent()
+			_node=_node._pred
+		End
+		
+		#rem monkeydoc Safely erases the node referenced by the iterator.
+		
+		After calling this method, the iterator will point to the node after the removed node.
+		
+		Therefore, if you are manually iterating through a list you should not call [[Bump]] after calling this method or you
+		will end up skipping a node.
+		
+		#end
+		Method Erase()
+			AssertCurrent()
+			_node=_node._pred
+			_node._succ.Remove()
+			_list._seq+=1
+			_seq=_list._seq
+		End
+		
+		#rem monkeydoc Safely insert a value before the iterator.
+
+		After calling this method, the iterator will point to the newly added node.
+		
+		#end
+		Method Insert( value:T )
+			AssertSeq()
+			_node=New Node( value,_node._succ )
 			_list._seq+=1
 			_seq=_list._seq
 		End
@@ -240,7 +316,7 @@ Class List<T> Implements IContainer<T>
 		AddAll( values )
 	End
 	
-	#rem monkeydoc Gets an iterator for all nodes in the list.
+	#rem monkeydoc Gets an iterator for visiting list values.
 	
 	Returns an iterator suitable for use with [[Eachin]], or for manual iteration.
 	
@@ -249,6 +325,17 @@ Class List<T> Implements IContainer<T>
 	#end
 	Method All:Iterator()
 		Return New Iterator( Self,_head._succ )
+	End
+
+	#rem monkeydoc Gets an iterator for visiting list values in reverse order.
+	
+	Returns an iterator suitable for use with [[Eachin]], or for manual iteration.
+	
+	@return A backwards list iterator.
+	
+	#end	
+	Method Backwards:BackwardsIterator()
+		Return New BackwardsIterator( Self,_head._pred )
 	End
 	
 	#rem monkeydoc Checks whether the list is empty.

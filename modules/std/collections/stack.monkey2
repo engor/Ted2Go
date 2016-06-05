@@ -11,7 +11,7 @@ Alias StringStack:Stack<String>
 #end
 Class Stack<T> Implements IContainer<T>
 
-	#rem monkeydoc The Stack.Iterator class
+	#rem monkeydoc The Stack.Iterator struct.
 	#end
 	Struct Iterator 'Implements IIterator<T>
 	
@@ -26,30 +26,22 @@ Class Stack<T> Implements IContainer<T>
 		End
 		
 		Method AssertCurrent()
-			DebugAssert( Valid,"Invalid list iterator" )
+			DebugAssert( Not AtEnd,"Invalid list iterator" )
 		End
 		
-		Public
-		
-		#rem monkeydoc Creates a new iterator.
-		#end
 		Method New( stack:Stack,index:Int )
 			_stack=stack
 			_index=index
 			_seq=stack._seq
 		End
 		
+		Public
+		
 		#rem monkeydoc Checks if the iterator has reached the end of the stack.
 		#end
 		Property AtEnd:Bool()
 			AssertSeq()
 			Return _index=_stack._length
-		End
-		
-		#rem monkeydoc @hidden
-		#end
-		Property Valid:Bool()
-			Return Not AtEnd
 		End
 		
 		#rem monkeydoc The value currently pointed to by the iterator.
@@ -90,6 +82,84 @@ Class Stack<T> Implements IContainer<T>
 		#end
 		Method Insert( value:T )
 			AssertSeq()
+			_stack.Insert( _index,value )
+			_seq=_stack._seq
+		End
+	End
+	
+	#rem monkeydoc The Stack.BackwardsIterator struct.
+	#end
+	Struct BackwardsIterator 'Implements IIterator<T>
+	
+		Private
+
+		Field _stack:Stack
+		Field _index:Int
+		Field _seq:Int
+		
+		Method AssertSeq()
+			DebugAssert( _seq=_stack._seq,"Concurrent list modification" )
+		End
+		
+		Method AssertCurrent()
+			DebugAssert( Not AtEnd,"Invalid list iterator" )
+		End
+		
+		Method New( stack:Stack,index:Int )
+			_stack=stack
+			_index=index
+			_seq=stack._seq
+		End
+		
+		Public
+		
+		#rem monkeydoc Checks if the iterator has reached the end of the stack.
+		#end
+		Property AtEnd:Bool()
+			AssertSeq()
+			Return _index=-1
+		End
+		
+		#rem monkeydoc The value currently pointed to by the iterator.
+		#end
+		Property Current:T()
+			AssertCurrent()
+			Return _stack._data[_index]
+		Setter( current:T )
+			AssertCurrent()
+			_stack._data[_index]=current
+		End
+		
+		#rem monkeydoc Bumps the iterator so it points to the next value in the stack.
+		#end
+		Method Bump()
+			AssertCurrent()
+			_index-=1
+		End
+		
+		#rem monkeydoc Safely erases the value pointed to by the iterator.
+		
+		After calling this method, the iterator will point to the value after the removed value.
+		
+		Therefore, if you are manually iterating through a stack you should not call [[Bump]] after calling this method or you
+		will end up skipping a value.
+		
+		#end
+		Method Erase()
+			AssertCurrent()
+			_index-=1
+			_stack.Erase( _index+1 )
+			_seq=_stack._seq
+		End
+		
+		#rem monkeydoc Safely inserts a value before the value pointed to by the iterator.
+
+		After calling this method, the iterator will point to the newly added value.
+		
+		#end
+		Method Insert( value:T )
+			AssertSeq()
+			_index+=1
 			_stack.Insert( _index,value )
 			_seq=_stack._seq
 		End
@@ -152,7 +222,7 @@ Class Stack<T> Implements IContainer<T>
 		Return _length=0
 	End
 
-	#rem monkeydoc Gets an iterator to all values in the stack.
+	#rem monkeydoc Gets an iterator for visiting stack values.
 	
 	Returns an iterator suitable for use with [[Eachin]], or for manual iteration.
 	
@@ -161,6 +231,17 @@ Class Stack<T> Implements IContainer<T>
 	#end
 	Method All:Iterator()
 		Return New Iterator( Self,0 )
+	End
+	
+	#rem monkeydoc Gets an iterator for visiting stack values in reverse order.
+	
+	Returns an iterator suitable for use with [[Eachin]], or for manual iteration.
+
+	@return A backwards stack iterator.
+		
+	#end	
+	Method Backwards:BackwardsIterator()
+		Return New BackwardsIterator( Self,_length-1 )
 	End
 
 	#rem monkeydoc Converts the stack to an array.
