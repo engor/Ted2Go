@@ -39,6 +39,16 @@ Class MouseDevice Extends InputDevice
 		Next
 	End
 	
+	Property PointerVisible:Bool()
+	
+		Return SDL_ShowCursor( -1 )=SDL_ENABLE
+		
+	Setter( pointerVisible:Bool )
+	
+		SDL_ShowCursor( pointerVisible ? SDL_ENABLE Else SDL_DISABLE )
+	
+	End
+	
 	Property X:Int()
 		Return Location.x
 	End
