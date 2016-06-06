@@ -57,7 +57,7 @@ Class Sprite Extends GameGraphics
 			Return
 		End
 		
-		'Override _time with any time value above 0
+		'Override _time with any time value above -1
 		If time < 0
 			_time = Millisecs() - _startTime
 		Else

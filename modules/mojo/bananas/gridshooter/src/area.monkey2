@@ -1,5 +1,5 @@
 
-Struct Area<T>
+Class Area<T>
 
 	Private
 	
@@ -85,7 +85,7 @@ Struct Area<T>
 	Method New( x:T, y:T, _width:T, _height:T )
 		X = x
 		Y = y
-		SetSize( _width, _height )
+		Size( _width, _height )
 		_rect = New Rect<T>
 	End
 	
@@ -94,7 +94,7 @@ Struct Area<T>
 		Y = y
 	End
 
-	Method SetSize(_width:T, _height:T )
+	Method Size(_width:T, _height:T )
 		Self._width = _width
 		Self._height = _height
 		_pivotX = ( _width * _handle.x )
@@ -152,8 +152,7 @@ Struct Area<T>
 	End
 	
 	Method ToString:String()
-'   		Return "Area("+_vec.X+","+_vec.Y+","+_width+","+_height+")"
-		Return "("+Int(_x0)+","+Int(_y0)+","+Int(_x1)+","+Int(_y1)+")"
+		Return "Area("+_vec.X+","+_vec.Y+"; "+_width+"x"+_height+")"
 	End
 	
 

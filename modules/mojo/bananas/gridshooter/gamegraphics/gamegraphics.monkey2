@@ -13,9 +13,8 @@ Class GameGraphics Abstract
 		
 	Protected
 	Field _handle:= New Vec2f
-
 	
-	'************************************* Instance Properties *************************************
+	'************************************* Public Properties *************************************
 	
 	Public
 	
@@ -29,14 +28,20 @@ Class GameGraphics Abstract
 		Next
 	End
 
-	
-	'************************************* Instance Methods *************************************
+	Property Width:Double()
+		Return images[0].Width
+	End
 
+	Property Height:Double()
+		Return images[0].Height
+	End
+	
+	'************************************* Public Methods *************************************
 	
 	'Loads an array of Images from a sprite sheet
 	Method LoadFrames:Image[] ( path:String, numFrames:Int, cellWidth:Int, cellHeight:Int, filter:Bool = True, padded:Bool = False )
 	
-		Local flags:TextureFlags=Null
+		Local flags :TextureFlags = Null
 		If filter Then flags |= TextureFlags.Filter
 		
 		Local atlasTextture := Texture.Load( path, flags )
@@ -56,7 +61,6 @@ Class GameGraphics Abstract
 				Local x0 := i * cellWidth + x
 				Local y0 := 0
 				imgs[i] = New Image( atlasImg, New Recti( x0, y0, x0 + cellWidth, cellHeight ) )
-'   				imgs[i].Handle = New Vec2f( .5,.5 )
 			Next
 		Else
 			Local x:= 0
@@ -74,7 +78,6 @@ Class GameGraphics Abstract
 				Local fx := i Mod columns * cellWidth
 				Local fy := i / columns * cellHeight
 				imgs[i] = New Image( atlasImg, New Recti( fx + x, fy + y, fx + cellWidth, fy + cellHeight ) )
-'   				imgs[i].Handle = New Vec2f( .5,.5 )
 			Next
 		Endif
 		atlasImg = Null
@@ -94,9 +97,8 @@ Class GameGraphics Abstract
 	
 	
 	'************************************* Class Functions *************************************
-	
 
-	Method DrawRectOutline:Void(canvas:Canvas, left:Int, top:Int, width:Int, height:Int )
+	Function DrawRectOutline:Void(canvas:Canvas, left:Int, top:Int, width:Int, height:Int )
 		canvas.DrawLine( left, top, left+width, top )
 		canvas.DrawLine( left, top, left ,top+height )
 		canvas.DrawLine( left, top+height, left+width, top+height )
