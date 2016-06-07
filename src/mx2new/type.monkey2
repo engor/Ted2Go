@@ -106,23 +106,24 @@ Class Type Extends SNode
 		Return type=Self
 	End
 	
-	Method ExtendsType:Bool( type:Type ) Virtual
-		Return Equals( type )
-	End
-	
 	Method DistanceToType:Int( type:Type ) Virtual
 		If Equals( type ) Return 0
 		Return -1
 	End
 	
+	Method ExtendsType:Bool( type:Type ) Virtual
+		Return Equals( type )
+	End
+	
+	Method CanCastToType:Bool( type:Type ) Virtual
+		Return Equals( type )
+	End
+
 	Method InferType:Type( type:Type,args:Type[] ) Virtual
 		If Equals( type ) Return type	
 		Return Null
 	End
 	
-	Method CanCastToType:Bool( type:Type ) Virtual
-		Return DistanceToType( type )>=0 Or type.CanCastToType( Self )
-	End
 End
 
 Class ProxyType Extends Type
@@ -167,12 +168,12 @@ Class ProxyType Extends Type
 		Return _alias.Equals( type )
 	End
 	
-	Method ExtendsType:Bool( type:Type ) Override
-		Return _alias.ExtendsType( type )
-	End
-	
 	Method DistanceToType:Int( type:Type ) Override
 		Return _alias.DistanceToType( type )
+	End
+	
+	Method ExtendsType:Bool( type:Type ) Override
+		Return _alias.ExtendsType( type )
 	End
 	
 	Method InferType:Type( type:Type,args:Type[] ) Override
@@ -244,21 +245,11 @@ Class PrimType Extends Type
 		Return type=Self 
 	End
 	
-	Method ExtendsType:Bool( type:Type ) Override
-	
-		Return type=Self Or ctype.DistanceToType( type )>=0
-	End
-	
 	Method DistanceToType:Int( type:Type ) Override
 	
 		If type=Self Return 0
-
-		Local ptype:=TCast<PrimType>( type )
-		If ptype
-			If ptype=BoolType Return MAX_DISTANCE
-			If IsNumeric And (ptype=StringType Or ptype.IsNumeric) Return MAX_DISTANCE
-			If Self=BoolType And ptype.IsNumeric Return MAX_DISTANCE
-		Endif
+		
+		If TCast<PrimType>( type ) Return MAX_DISTANCE
 		
 		Select type
 		Case CStringClass,WStringClass,Utf8StringClass
@@ -266,6 +257,25 @@ Class PrimType Extends Type
 		End
 		
 		Return -1
+	End
+	
+	Method ExtendsType:Bool( type:Type ) Override
+	
+		Return type=Self Or ctype.DistanceToType( type )>=0
+	End
+	
+	Method CanCastToType:Bool( type:Type ) Override
+		
+		'prim->prim
+		If TCast<PrimType>( type ) Return True
+		
+		'integral->enum
+		If IsIntegral And TCast<EnumType>( type ) Return True
+		
+		'integral->pointer
+		If IsIntegral And TCast<PointerType>( type ) Return True
+		
+		Return False
 	End
 	
 	Property IsNumeric:Bool()

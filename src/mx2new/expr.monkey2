@@ -486,6 +486,7 @@ Class CastExpr Extends Expr
 		
 		Local value:=Self.expr.Semant( scope )
 		
+		'Cast operator?		
 		Local castOp:=value.FindValue( "cast" )
 		If castOp value=castOp.Invoke( Null )
 

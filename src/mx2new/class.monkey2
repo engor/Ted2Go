@@ -452,13 +452,6 @@ Class ClassType Extends Type
 		Return inst
 	End
 	
-	Method ExtendsType:Bool( type:Type ) Override
-	
-		Local t:=DistanceToType( type )
-		
-		Return t>=0 And t<MAX_DISTANCE
-	End
-	
 	Method DistanceToType:Int( type:Type ) Override
 	
 		If type=Self Return 0
@@ -496,6 +489,30 @@ Class ClassType Extends Type
 		Wend
 		
 		Return -1
+	End
+
+	Method ExtendsType:Bool( type:Type ) Override
+	
+		Local t:=DistanceToType( type )
+		
+		Return t>=0 And t<MAX_DISTANCE
+	End
+	
+	Method CanCastToType:Bool( type:Type ) Override
+	
+		Local ctype:=TCast<ClassType>( type )
+		If Not ctype Return False
+		
+		Select cdecl.kind
+		Case "class"
+			If ctype.cdecl.kind="class" Return ctype.ExtendsType( Self )
+			If ctype.cdecl.kind="interface" Return True
+		Case "interface"
+			If ctype.cdecl.kind="class" Return True
+			If ctype.cdecl.kind="interface" Return True
+		End
+		
+		Return False
 	End
 	
 	Method InferType:Type( type:Type,infered:Type[] ) Override
