@@ -8,6 +8,8 @@
 #include <signal.h>
 #endif
 
+typedef void(*dbEmit_t)(void*);
+
 namespace bbDB{
 
 	int nextSeq;
@@ -65,15 +67,23 @@ namespace bbDB{
 		}
 	}
 	
-	void emitObject( bbObject *p ){
-		if( p ) p->dbEmit();
-		printf( "\n" );
-		fflush( stdout );
-	}
-	
 	void stop(){
 
 		currentContext->stopped=0;
+	}
+	
+	void emit( const char *e ){
+	
+		if( const char *p=strchr( e,':' ) ){
+			dbEmit_t dbEmit=(dbEmit_t)( strtol( p+1,0,16 ) );
+			dbEmit( (void*)strtol( e,0,16 ) );
+		}else{
+			bbGCNode *node=(bbGCNode*)strtol( e,0,16 );
+			node->dbEmit();
+		}
+		
+		puts( "" );
+		fflush( stdout );
 	}
 	
 	void stopped(){
@@ -96,7 +106,7 @@ namespace bbDB{
 			case 'e':currentContext->stopped=1;return;
 			case 'l':currentContext->stopped=-1;return;
 			case 'r':currentContext->stopped=-0x10000000;return;
-			case '@':emitObject( (bbObject*)strtol( e+1,0,16 ) );continue;
+			case '@':emit( e+1 );continue;
 			case 'q':exit( 0 );return;
 			}
 			printf( "Unrecognized debug cmd: %s\n",buf );fflush( stdout );
@@ -137,4 +147,17 @@ void bbDBContext::init(){
 
 bbDBContext::~bbDBContext(){
 	delete[] localsBuf;
+}
+
+bbString bbDBValue( bbString *p ){
+	bbString t=*p,dd="";
+	if( t.length()>100 ){
+		t=t.slice( 0,100 );
+		dd="...";
+	}
+	t=t.replace( "\"","~q" );
+	t=t.replace( "\n","~n" );
+	t=t.replace( "\r","~r" );
+	t=t.replace( "\t","~t" );
+	return BB_T("\"")+t+"\""+dd;
 }

@@ -169,6 +169,16 @@ template<class T,int D> class bbArray : public bbGCNode{
 	operator bool()const{
 		return length();
 	}
+	
+	void dbEmit(){
+		int n=length();
+		if( n>100 ) n=100;
+		bbString t=bbDBType<T>();
+		for( int i=0;i<n;++i ){
+			bbString e=BB_T("[")+bbString( i )+"]:"+t+"="+bbDBValue( &at(i) );
+			puts( e.c_str() );
+		}
+	}
 };
 
 template<class T,int N> bbString bbDBType( bbArray<T,N> **p ){
@@ -176,7 +186,9 @@ template<class T,int N> bbString bbDBType( bbArray<T,N> **p ){
 }
 
 template<class T,int N> bbString bbDBValue( bbArray<T,N> **p ){
-	return "array?????";
+	char buf[64];
+	sprintf( buf,"@%p",*p );
+	return buf;
 }
 
 #endif

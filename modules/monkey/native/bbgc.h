@@ -74,6 +74,9 @@ struct bbGCNode{
 	virtual void gcMark(){
 	}
 	
+	virtual void dbEmit(){
+	}
+	
 	virtual const char *typeName(){
 		return "bbGCNode";
 	}

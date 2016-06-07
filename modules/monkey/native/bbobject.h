@@ -19,9 +19,6 @@ struct bbObject : public bbGCNode{
 		return "monkey.Object";
 	}
 	
-	virtual void dbEmit(){
-	}
-
 	void *operator new( size_t size ){
 		return bbGC::alloc( size );
 	}
@@ -86,9 +83,9 @@ inline bbString bbDBInterfaceValue( bbInterface *p ){
 	return bbDBObjectValue( dynamic_cast<bbObject*>( p ) );
 }
 
-inline bbString bbDBStructValue( void *p ){
+template<class T> bbString bbDBStructValue( T *p ){
 	char buf[64];
-	sprintf( buf,"&%p",p );
+	sprintf( buf,"@%p:%p",p,&T::dbEmit );
 	return buf;
 }
 

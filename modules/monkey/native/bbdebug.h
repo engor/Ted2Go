@@ -10,41 +10,33 @@ struct bbDBFrame;
 struct bbDBVarType;
 struct bbDBVar;
 
-inline bbString bbDBType( void *p ){
-	return "Void";
-}
+inline bbString bbDBType( const void *p ){ return "Void"; }
+inline bbString bbDBType( bbByte *p ){ return "Byte"; }
+inline bbString bbDBType( bbUByte *p ){ return "UByte"; }
+inline bbString bbDBType( bbShort *p ){ return "Short"; }
+inline bbString bbDBType( bbUShort *p ){ return "UShort"; }
+inline bbString bbDBType( bbInt *p ){ return "Int"; }
+inline bbString bbDBType( bbUInt *p ){ return "UInt"; }
+inline bbString bbDBType( bbLong *p ){ return "Long"; }
+inline bbString bbDBType( bbULong *p ){ return "ULong"; }
+inline bbString bbDBType( bbFloat *p ){ return "Float"; }
+inline bbString bbDBType( bbDouble *p ){ return "Double"; }
+inline bbString bbDBType( bbString *p ){ return "String"; }
 
-inline bbString bbDBValue( void *p ){
-	return "?????";
-}
+inline bbString bbDBValue( void *p ){ return "?????"; }
+inline bbString bbDBValue( bbByte *p ){ return *p; }
+inline bbString bbDBValue( bbUByte *p ){ return *p; }
+inline bbString bbDBValue( bbShort *p ){ return *p; }
+inline bbString bbDBValue( bbUShort *p ){ return *p; }
+inline bbString bbDBValue( bbInt *p ){ return *p; }
+inline bbString bbDBValue( bbUInt *p ){ return *p; }
+inline bbString bbDBValue( bbLong *p ){ return *p; }
+inline bbString bbDBValue( bbULong *p ){ return *p; }
+inline bbString bbDBValue( bbFloat *p ){ return *p; }
+inline bbString bbDBValue( bbDouble *p ){ return *p; }
+bbString bbDBValue( bbString *p );
 
-inline bbString bbDBType( bbInt *p ){
-	return "Int";
-}
-
-inline bbString bbDBValue( bbInt *p ){
-	return bbString( *p );
-}
-
-inline bbString bbDBType( bbFloat *p ){
-	return "Float";
-}
-
-inline bbString bbDBValue( bbFloat *p ){
-	return bbString( *p );
-}
-
-inline bbString bbDBType( bbString *p ){
-	return "String";
-}
-
-inline bbString bbDBValue( bbString *p ){
-	return BB_T("\"")+(*p)+"\"";
-}
-
-template<class T> bbString bbDBType( T **p ){
-	return bbDBType( (void*)0 )+" Ptr";
-}
+template<class T> bbString bbDBType( T **p ){ return bbDBType( (T*)0 )+" Ptr"; }
 
 template<class T> bbString bbDBType(){
 	return bbDBType( (T*)0 );

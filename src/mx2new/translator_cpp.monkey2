@@ -359,15 +359,6 @@ Class Translator_CPP Extends Translator
 				Emit( proto+"{};" )
 			Endif
 			
-			#rem
-			If Cast<LiteralValue>( vvar.init ) And cdecl.kind="class"
-				Emit( VarProto( vvar )+"="+Trans( vvar.init )+";" )
-			Else
-				Emit( VarProto( vvar )+"{};" )
-				If vvar.init needsInit=True
-			Endif
-			#end
-
 		Next
 
 		If needsInit
@@ -381,10 +372,17 @@ Class Translator_CPP Extends Translator
 				EmitBr()
 				Emit( "void gcMark();" )
 			Endif
-			
-			If debug
+		
+		Endif
+		
+		If debug
+		
+			If cdecl.kind="class"
 				Emit( "void dbEmit();" )
+			Else If cdecl.kind="struct"
+				Emit( "static void dbEmit("+cname+"*);" )
 			Endif
+
 		Endif
 
 		'Emit ctor methods
@@ -440,25 +438,6 @@ Class Translator_CPP Extends Translator
 			Endif
 		Endif
 
-		#rem		
-		'Emit default ctor
-		'		
-		If Not hasDefaultCtor
-			EmitBr()
-			Emit( cname+"(){" )
-			If needsInit Emit( "init();" )
-			Emit( "}" )
-		Endif
-		#end
-		
-		#rem
-		If IsStruct( ctype )
-			EmitBr()
-			Emit( cname+"(bbNullCtor_t){" )
-			Emit( "}" )
-		Endif
-		#end
-		
 		Emit( "};" )
 		
 		If debug
@@ -555,27 +534,34 @@ Class Translator_CPP Extends Translator
 			
 			Endif
 			
-			If debug
+		Endif
+		
+		If debug And cdecl.kind="class"
+			EmitBr()
 			
-				EmitBr()
-				Emit( "void "+cname+"::dbEmit(){" )
+			Emit( "void "+cname+"::dbEmit(){" )
 
-				If ctype.superType And ctype.superType<>Type.ObjectClass
-					Emit( ClassName( ctype.superType )+"::dbEmit();" )
-				End
-				
-				For Local node:=Eachin ctype.fields
-					Local vvar:=Cast<VarValue>( node )
-					If Not vvar Continue
-					
-					'Uses( vvar.type )
-					Emit( "bbDBEmit(~q"+vvar.vdecl.ident+"~q,&"+VarName( vvar )+");" )
-				Next
-				
-				Emit( "}" )
+			If ctype.superType And ctype.superType<>Type.ObjectClass
+				Emit( ClassName( ctype.superType )+"::dbEmit();" )
+			End
 			
-			Endif
+			For Local vvar:=Eachin ctype.fields
+				Emit( "bbDBEmit(~q"+vvar.vdecl.ident+"~q,&"+VarName( vvar )+");" )
+			Next
 			
+			Emit( "}" )
+		Endif
+		
+		If debug And cdecl.kind="struct"
+			EmitBr()
+			
+			Emit( "void "+cname+"::dbEmit("+cname+"*p){" )
+			
+			For Local vvar:=Eachin ctype.fields
+				Emit( "bbDBEmit(~q"+vvar.vdecl.ident+"~q,&p->"+VarName( vvar )+");" )
+			Next
+			
+			Emit( "}" )
 		Endif
 	
 		'Emit ctor methods
@@ -613,13 +599,33 @@ Class Translator_CPP Extends Translator
 			Emit( "bbString bbDBValue("+tname+"*p){" )
 			Select cdecl.kind
 			Case "class"
+			
 				Emit( "return bbDBObjectValue(*p);" )
+				
 			Case "interface"
+			
 				Emit( "return bbDBInterfaceValue(*p);" )
+				
 			Case "struct"
+			
 				Emit( "return bbDBStructValue(p);" )
 			End
+			
+				#rem				
+			
+				Emit( "bbString t=~q{~q;" )
+				
+				For Local vvar:=Eachin ctype.fields
+					Local v:="&p->"+VarName( vvar )
+					Emit( "t+=BB_T(~q"+vvar.vdecl.ident+"~q)+~q:~q+bbDBType("+v+")+~q=~q+bbDBValue("+v+")+~q;~q;" )
+				Next
+				
+				Emit( "return t+~q}~q;" )
+				
+				#end
+				
 			Emit( "}" )
+				
 		Endif
 
 		'Emit static struct methods
