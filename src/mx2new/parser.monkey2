@@ -122,6 +122,7 @@ Class Parser
 					If Not fileScope Or decls.Length Or _usings.Length Error( "'Namespace' must appear at the start of the file" )
 					If _fdecl.nmspace Error( "Duplicate namespace declaration" )
 					Bump()					
+					_fdecl.docs=Docs()
 					_fdecl.nmspace=ParseNamespaceIdent()
 					ParseEol()
 				Case "using"

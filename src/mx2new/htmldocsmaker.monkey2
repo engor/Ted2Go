@@ -3,14 +3,63 @@ Namespace mx2.docs
 
 Const PAGES_DIR:="docs/__PAGES__/"
 
+Class JsonBuffer
+
+	Method Emit( json:String )
+	
+		If json.StartsWith( "}" ) Or json.StartsWith( "]" )
+
+			_indent=_indent.Slice( 0,-2 )
+			_sep=False
+			
+			If _blks.Pop()=_buf.Length
+				_buf.Resize( _buf.Length-1 )
+				If _buf.Length
+					Local t:=_buf.Top
+					If Not (t.EndsWith( "{" ) Or t.EndsWith( "[" )) _sep=True
+				Endif
+				Return
+			Endif
+
+		Endif
+	
+		If _sep json=","+json
+		_buf.Push( _indent+json )
+	
+		If json.EndsWith( "{" ) Or json.EndsWith( "[" ) 
+
+			_blks.Push( _buf.Length )
+
+			_indent+="  "
+			_sep=False
+
+			Return
+		Endif
+
+		_sep=True
+	
+	End
+	
+	Method Flush:String()
+		Local json:=_buf.Join( "~n" )
+		_buf.Clear()
+		Return json
+	End
+	
+	Private
+
+	Field _buf:=New StringStack
+	Field _blks:=New IntStack
+	Field _indent:String
+	Field _sep:Bool
+
+End
+
 Class HtmlDocsMaker Extends DocsMaker
 
 	Method MakeDocs:String( module:Module )
 	
 		_module=module
-		_buf.Clear()
-		_indent=""
-		_sep=False
 		
 		_pagesDir=_module.baseDir+PAGES_DIR
 		_pageTemplate=stringio.LoadString( "docs/modules_page_template.html" )
@@ -20,7 +69,7 @@ Class HtmlDocsMaker Extends DocsMaker
 		
 		EmitModule()
 		
-		Local tree:=_buf.Join( "~n" )
+		Local tree:=_js.Flush()
 		
 		stringio.SaveString( tree,_pagesDir+"index.js" )
 
@@ -31,15 +80,21 @@ Class HtmlDocsMaker Extends DocsMaker
 	
 		Local nmspaces:=New StringMap<NamespaceScope>
 		
+		Local nmspaceDocs:=New StringMap<String>
+		
 		For Local fscope:=Eachin _module.fileScopes
 		
 			Local nmspace:=Cast<NamespaceScope>( fscope.outer )
 			If Not nmspace Continue
 			
-			nmspaces[nmspace.ntype.ident]=nmspace
+			nmspaces[nmspace.Name]=nmspace
+			
+			nmspaceDocs[nmspace.Name]+=fscope.fdecl.docs
 		Next
 
 		Local page:=""
+		
+		#rem
 		Local md:=stringio.LoadString( _module.baseDir+"/docs/module.md" )
 		If md
 			_scope=Null
@@ -48,12 +103,13 @@ Class HtmlDocsMaker Extends DocsMaker
 			Local html:=Flush()
 			SavePage( html,page )
 		Endif
+		#end
 		
 		BeginNode( _module.name,page )
 		
 		For Local nmspace:=Eachin nmspaces.Values
 		
-			EmitNamespace( nmspace )
+			EmitNamespace( nmspace,nmspaceDocs[nmspace.Name] )
 			
 		Next
 		
@@ -62,55 +118,28 @@ Class HtmlDocsMaker Extends DocsMaker
 	
 	Private
 	
-	Field _buf:=New StringStack
-	Field _indent:String
-	Field _sep:Bool
-	
-	Field _posStack:=New IntStack
-	
-	Method EmitTree( str:String )
-	
-		If str.StartsWith( "}" ) Or str.StartsWith( "]" )
-		
-			_indent=_indent.Slice( 0,-2 )
-			_sep=False
-			
-		Endif
-	
-		If _sep str=","+str
-		_sep=True
-		
-		_buf.Push( _indent+str )
-	
-		If str.EndsWith( "{" ) Or str.EndsWith( "[" ) 
-			_indent+="  "
-			_sep=False
-		Endif
-	
-	End
+	Field _js:=New JsonBuffer
+
+	Field _namespaceDocs:=New StringMap<String>
 	
 	Method BeginNode( name:String,page:String="" )
 	
-		If page page=",page:'"+_module.name+":"+page+"'"
-		_posStack.Push( _sep )
-		_posStack.Push( _buf.Length )
-		EmitTree( "{ name:'"+name+"'"+page+",children:[" )
+		If page page=",data:{page:'"+_module.name+":"+page+"'}"
+		
+		_js.Emit( "{ text:'"+name+"'"+page+",children:[" )
 
 	End
 	
-	Method EndNode( force:Bool=False )
-		EmitTree( "] }" )
-		Local pos:=_posStack.Pop()
-		Local sep:=_posStack.Pop()
-		If force Or _buf.Length-pos>2 Return
-		_buf.Resize( pos )
-		_sep=sep
+	Method EndNode()
+
+		_js.Emit( "] }" )
 	End
 	
 	Method EmitLeaf( name:String,page:String="" )
 	
-		If page page=",page:'"+_module.name+":"+page+"'"
-		EmitTree( "{ name:'"+name+"'"+page+",children:[] }" )
+		If page page=",data:{page:'"+_module.name+":"+page+"'}"
+		
+		_js.Emit( "{ text:'"+name+"'"+page+",children:[] }" )
 		
 	End
 	
@@ -120,13 +149,13 @@ Class HtmlDocsMaker Extends DocsMaker
 
 	End
 	
-	Method EmitNode( decl:Decl,scope:Scope,page:String="",force:Bool=False )
+	Method EmitNode( decl:Decl,scope:Scope,page:String="" )
 	
-		EmitNode( decl.ident,scope,page,force )
+		EmitNode( decl.ident,scope,page )
 
 	End
 	
-	Method EmitNode( name:String,scope:Scope,page:String="",force:Bool=False )
+	Method EmitNode( name:String,scope:Scope,page:String="" )
 	
 		BeginNode( name,page )
 	
@@ -182,28 +211,31 @@ Class HtmlDocsMaker Extends DocsMaker
 		EmitFuncs( scope,"function" )
 		EndNode()
 		
-		EndNode( force )
+		EndNode()
 		
 	End
 	
-	Method EmitNamespaces( scope:Scope )
-	
-		For Local node:=Eachin scope.nodes
-		
-			Local ntype:=Cast<NamespaceType>( node.Value )
-			If Not ntype Continue
-			
-			EmitNode( ntype.Name,ntype.scope )
-			
-		Next
-	End
-	
-	Method EmitNamespace( nmspace:NamespaceScope )
+	Method EmitNamespace( nmspace:NamespaceScope,docs:String )
 
-		Local docs:=MakeNamespaceDocs( nmspace )
-		If Not docs Return
+		_linkScope=nmspace
+	
+		_md.Emit( "_Module: &lt;"+_module.name+"&gt;_  " )
+		_md.Emit( "_Namespace: "+nmspace.Name+"_" )
 		
-		Local page:=NamespacePage( nmspace )
+		EmitMembers( "alias",nmspace,True )
+		EmitMembers( "enum",nmspace,True )
+		EmitMembers( "struct",nmspace,True )
+		EmitMembers( "class",nmspace,True )
+		EmitMembers( "interface",nmspace,True )
+		EmitMembers( "const",nmspace,True )
+		EmitMembers( "global",nmspace,True )
+		EmitMembers( "function",nmspace,True )
+		
+		_md.Emit( docs )
+
+		docs=_md.Flush()
+		
+		Local page:=NamespacePath( nmspace )
 		SavePage( docs,page )
 		
 		EmitNode( nmspace.ntype.Name,nmspace,page )
@@ -214,13 +246,16 @@ Class HtmlDocsMaker Extends DocsMaker
 		For Local node:=Eachin scope.nodes
 	
 			Local vvar:=Cast<VarValue>( node.Value )
-			If Not vvar Or vvar.transFile.module<>_module Or vvar.vdecl.kind<>kind Continue
+			If Not vvar Or vvar.vdecl.kind<>kind Or DocsHidden( vvar.vdecl ) Continue
+			
+			If vvar.transFile.module<>_module Continue
 			
 			Local docs:=MakeVarDocs( vvar )
-			If Not docs Continue
-			
-			Local page:=DeclPage( vvar.vdecl,vvar.scope )
+
+			Local page:=DeclPath( vvar.vdecl,vvar.scope )
 			SavePage( docs,page )
+			
+			Print "save page:"+page
 			
 			EmitLeaf( vvar.vdecl,page )
 			
@@ -233,12 +268,11 @@ Class HtmlDocsMaker Extends DocsMaker
 		For Local node:=Eachin scope.nodes
 		
 			Local atype:=Cast<AliasType>( node.Value )
-			If Not atype Or atype.adecl.kind<>kind Continue
-			
+			If Not atype Or atype.adecl.kind<>kind Or DocsHidden( atype.adecl ) Continue
+
 			Local docs:=MakeAliasDocs( atype )
-			If Not docs Continue
-			
-			Local page:=DeclPage( atype.adecl,atype.scope )
+
+			Local page:=DeclPath( atype.adecl,atype.scope )
 			SavePage( docs,page )
 			
 			EmitLeaf( atype.adecl,page )
@@ -252,12 +286,11 @@ Class HtmlDocsMaker Extends DocsMaker
 		For Local node:=Eachin scope.nodes
 	
 			Local etype:=Cast<EnumType>( node.Value )
-			If Not etype Or etype.edecl.kind<>kind Continue
+			If Not etype Or etype.edecl.kind<>kind Or DocsHidden( etype.edecl ) Continue
 			
 			Local docs:=MakeEnumDocs( etype )
-			If Not docs Continue
-			
-			Local page:=DeclPage( etype.edecl,etype.scope.outer )
+
+			Local page:=DeclPath( etype.edecl,etype.scope.outer )
 			SavePage( docs,page )
 			
 			EmitLeaf( etype.edecl,page )
@@ -271,15 +304,16 @@ Class HtmlDocsMaker Extends DocsMaker
 		For Local node:=Eachin scope.nodes
 	
 			Local ctype:=Cast<ClassType>( node.Value )
-			If Not ctype Or ctype.transFile.module<>_module Or ctype.cdecl.kind<>kind Continue
+			If Not ctype Or ctype.cdecl.kind<>kind Or DocsHidden( ctype.cdecl ) Continue
+			
+			If ctype.transFile.module<>_module Continue
 			
 			Local docs:=MakeClassDocs( ctype )
-			If Not docs Continue
 
-			Local page:=DeclPage( ctype.cdecl,ctype.scope.outer )
+			Local page:=DeclPath( ctype.cdecl,ctype.scope.outer )
 			SavePage( docs,page )
 			
-			EmitNode( ctype.cdecl,ctype.scope,page,True )
+			EmitNode( ctype.cdecl,ctype.scope,page )
 		Next
 	
 	End
@@ -289,12 +323,11 @@ Class HtmlDocsMaker Extends DocsMaker
 		For Local node:=Eachin scope.nodes
 		
 			Local plist:=Cast<PropertyList>( node.Value )
-			If Not plist Or plist.pdecl.kind<>kind Continue
+			If Not plist Or plist.pdecl.kind<>kind Or DocsHidden( plist.pdecl ) Continue
 			
 			Local docs:=MakePropertyDocs( plist )
-			If Not docs Continue
 			
-			Local page:=DeclPage( plist.pdecl,plist.scope )
+			Local page:=DeclPath( plist.pdecl,plist.scope )
 			SavePage( docs,page )
 			
 			EmitLeaf( plist.pdecl,page )
@@ -313,7 +346,7 @@ Class HtmlDocsMaker Extends DocsMaker
 			Local docs:=MakeFuncDocs( flist,kind )
 			If Not docs Continue
 			
-			Local page:=DeclPage( flist.funcs[0].fdecl,flist.funcs[0].scope )
+			Local page:=DeclPath( flist.funcs[0].fdecl,flist.funcs[0].scope )
 			SavePage( docs,page )
 			
 			EmitLeaf( flist.funcs[0].fdecl,page )

@@ -8,6 +8,7 @@ Using mx2.docs
 
 #Import "mx2.monkey2"
 
+#Import "makedocs.monkey2"
 #Import "docsmaker.monkey2"
 #Import "htmldocsmaker.monkey2"
 
@@ -22,6 +23,8 @@ Global StartDir:String
 Const TestArgs:="mx2cc makedocs std"
 
 'Const TestArgs:="mx2cc makeapp src/mx2new/test.monkey2"
+
+'Const TestArgs:="mx2cc makeapp src/ted2/ted2.monkey2"
 
 'Const TestArgs:="mx2cc makemods -clean -config=release monkey libc miniz stb-image hoedown std"
 
@@ -87,11 +90,12 @@ Function MakeApp( args:String[] )
 
 	Local opts:=New BuildOpts
 	opts.productType="app"
+	opts.appType="console"
 	opts.target="desktop"
 	opts.config="debug"
 	opts.clean=False
 	opts.fast=True
-	opts.run=True
+	opts.run=true
 	opts.verbose=0
 	
 	args=ParseOpts( opts,args )
@@ -217,10 +221,12 @@ Function MakeDocs( args:String[] )
 
 	Next
 	
+'	stringio.SaveString( "mx2_api_tree="+mx2_api+";","docs/api-tree.js" )
+	
 	Local index:=stringio.LoadString( "docs/modules_template.html" )
 	index=index.Replace( "${MX2_API}",mx2_api )
 	stringio.SaveString( index,"docs/modules.html" )
-
+	
 End
 
 Function ParseOpts:String[]( opts:BuildOpts,args:String[] )
@@ -251,26 +257,33 @@ Function ParseOpts:String[]( opts:BuildOpts,args:String[] )
 		Local opt:=arg.Slice( 0,j ),val:=arg.Slice( j+1 ).ToLower()
 		
 		Select opt
+		Case "-apptype"
+			Select val
+			Case "gui","console"
+				opts.appType=val
+			Default
+				Fail( "Invalid value for 'apptype' option: '"+val+"' - must be 'gui' or 'console'" )
+			End
 		Case "-target"
 			Select val
 			Case "desktop","emscripten"
 				opts.target=val
 			Default
-				Fail( "Invalid value for 'target' option: '"+val+"'" )
+				Fail( "Invalid value for 'target' option: '"+val+"' - must be 'desktop' or 'emscripten'" )
 			End
 		Case "-config"
 			Select val
 			Case "debug","release"
 				opts.config=val
 			Default
-				Fail( "Invalid value for 'config' option: '"+val+"'" )
+				Fail( "Invalid value for 'config' option: '"+val+"' - must be 'debug' or 'release'" )
 			End
 		Case "-verbose"
 			Select val
 			Case "0","1","2","-1"
 				opts.verbose=Int( val )
 			Default
-				Fail( "Invalid value for 'verbose' option: '"+val+"'" )
+				Fail( "Invalid value for 'verbose' option: '"+val+"' - must be '0', '1', '2' or '-1'" )
 			End
 		Default
 			Fail( "Invalid option: '"+opt+"'" )
@@ -332,25 +345,6 @@ Function EnumModules:String[]()
 	
 	Return out.ToArray()
 End
-
-#rem
-Function EnumModules:String[]()
-
-	Local mods:=New StringStack
-	
-	For Local line:=Eachin stringio.LoadString( "modules/modules.txt" ).Split( "~n" )
-	
-		Local i:=line.Find( "'" )
-		If i<>-1 line=line.Slice( 0,i )
-		
-		line=line.Trim()
-		If line mods.Push( line )
-		
-	Next
-	
-	Return mods.ToArray()
-End
-#end
 
 Function LoadEnv:Bool( path:String )
 

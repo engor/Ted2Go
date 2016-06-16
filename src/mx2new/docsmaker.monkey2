@@ -1,77 +1,22 @@
 
 Namespace mx2.docs
 
-Class DocsMaker
+Class MarkdownBuffer
 
-Protected
-	
-	Field _module:Module
-	
-	Field _scope:Scope
+	Alias LinkResolver:String( link:String )
 
-	Field _pagesDir:String			'module/docs
-	Field _pageTemplate:String
-	
-	Field _buf:=New StringStack
-	Field _params:=New StringStack
-	Field _return:String
-	
-	Function JsonEscape:String( str:String )
-		str=str.Replace( "\","\\" )
-		str=str.Replace( "~q","\~q" )
-		str=str.Replace( "~n","\n" )
-		str=str.Replace( "~r","\r" )
-		str=str.Replace( "~t","\t" )
-		Return "~q"+str+"~q"
+	Method New( linkResolver:LinkResolver=Null )
+		_linkResolver=linkResolver
 	End
+
+	Method Emit( markdown:String )
 	
-	Function FindSpc:Int( str:String )
-	
-		For Local i:=0 Until str.Length
-			If str[i]<=32 Return i
-		Next
-		
-		Return str.Length
-	End
-	
-	Function FindChar:Int( str:String )
-	
-		For Local i:=0 Until str.Length
-			If str[i]>32 Return i
-		Next
-		
-		Return -1
-	End
-	
-	Method EmitBr()
-		_buf.Push( "" )
-	End
-	
-	Method ReplaceLinks:String( line:String )
-		Repeat
-			Local i0:=line.Find( "[[" )
-			If i0=-1 Return line
-			Local i1:=line.Find( "]]",i0+2 )
-			If i1=-1 Return line
-			Local path:=line.Slice( i0+2,i1 )
-			Local link:=ResolveLink( path,_scope )
-			If Not link
-				Print "Makedocs error: Can't resolve link '"+path+"'"
-				link=path
-			Endif
-			line=line.Slice( 0,i0 )+link+line.Slice( i1+2 )
-		Forever
-		Return line
-	End
-	
-	Method Emit( docs:String )
-	
-		If Not docs.Contains( "~n" )
-			_buf.Push( ReplaceLinks( docs ) )
+		If Not markdown.Contains( "~n" )
+			_buf.Push( ReplaceLinks( markdown ) )
 			Return
 		Endif
 		
-		Local lines:=docs.Split( "~n" )
+		Local lines:=markdown.Split( "~n" )
 		
 		For Local i:=0 Until lines.Length
 		
@@ -115,11 +60,13 @@ Protected
 					_buf.Push( "```" )
 					
 				Case "see"
-					'TODO
+				
 					Continue
 				
 				Default
-					Print "Makedocs: unrecognized '"+lines[i]+"'"
+				
+					Print "MarkdownBuffer: unrecognized '"+lines[i]+"'"
+					
 				End
 
 				Continue
@@ -128,34 +75,37 @@ Protected
 			_buf.Push( ReplaceLinks( line ) )
 			
 		Next
+	
 	End
 	
-	Method FlushParams()
-
-		If Not _params.Length Return
-		
-		EmitBr()
-		Emit( "| Parameters |    |" )
-		Emit( "|:-----------|:---|" )
-		
-		For Local p:=Eachin _params
-		
-			Local i:=FindSpc( p )
-			Local id:=p.Slice( 0,i )
-			p=p.Slice( i ).Trim()
-			
-			If Not id Or Not p Continue
-			
-			Emit( "| `"+id+"` | "+p+" |" )
-		Next
-		
-		_params.Clear()
+	Method EmitBr()
+	
+		_buf.Push( "" )
 	End
 	
 	Method Flush:String()
-	
-		FlushParams()
-	
+
+		If _params.Length	
+		
+			EmitBr()
+			Emit( "| Parameters |    |" )
+			Emit( "|:-----------|:---|" )
+			
+			For Local p:=Eachin _params
+			
+				Local i:=FindSpc( p )
+				Local id:=p.Slice( 0,i )
+				p=p.Slice( i ).Trim()
+				
+				If Not id Or Not p Continue
+				
+				Emit( "| `"+id+"` | "+p+" |" )
+			Next
+			
+			_params.Clear()
+			
+		Endif
+		
 		Local markdown:=_buf.Join( "~n" ).Trim()+"~n"
 		
 		_buf.Clear()
@@ -165,16 +115,91 @@ Protected
 		Return docs
 	End
 	
+	Private
+	
+	Field _linkResolver:LinkResolver
+	Field _buf:=New StringStack
+	Field _params:=New StringStack
+	Field _return:String
+	
+	Method FindSpc:Int( str:String )
+		For Local i:=0 Until str.Length
+			If str[i]<=32 Return i
+		Next
+		Return str.Length
+	End
+
+	Method FindChar:Int( str:String )
+		For Local i:=0 Until str.Length
+			If str[i]>32 Return i
+		Next
+		Return -1
+	End
+	
+	Method ReplaceLinks:String( line:String )
+	
+		Repeat
+			Local i0:=line.Find( "[[" )
+			If i0=-1 Return line
+			
+			Local i1:=line.Find( "]]",i0+2 )
+			If i1=-1 Return line
+			
+			Local path:=line.Slice( i0+2,i1 )
+			Local link:=path
+			
+			If _linkResolver<>Null
+				link=_linkResolver( path )
+				If Not link
+					Print "Makedocs error: Can't resolve link '"+path+"'"
+					link=path
+				Endif
+			Endif
+			
+			line=line.Slice( 0,i0 )+link+line.Slice( i1+2 )
+		Forever
+		
+		Return line
+	End
+
+End
+
+Class DocsMaker
+
+	Protected
+	
+	Field _module:Module
+	
+	Field _linkScope:Scope
+
+	Field _pagesDir:String			'module/docs
+	
+	Field _pageTemplate:String
+	
+	Field _md:MarkdownBuffer
+	
+	Method New()
+	
+		_md=New MarkdownBuffer( Lambda:String( link:String )
+			Return ResolveLink( link,_linkScope )
+		End )
+		
+	End
+	
 	Method Esc:String( id:String )
 		id=id.Replace( "_","\_" )
+		id=id.Replace( "<","\<" )
+		id=id.Replace( ">","\>" )
 		Return id
 	End	
 	
-	Method DeclSlug:String( decl:Decl,scope:Scope )
+	Method DeclPath:String( decl:Decl,scope:Scope )
+	
 		Local ident:=decl.ident.Replace( "@","" )
 		If Not IsIdent( ident[0] ) ident=OpSym( ident )
 		
 		Local slug:=scope.Name+"."+ident
+		
 		Repeat
 			Local i:=slug.Find( "<" )
 			If i=-1 Exit
@@ -182,72 +207,76 @@ Protected
 			If i2=-1 Exit
 			slug=slug.Slice( 0,i )+slug.Slice( i2+1 )
 		Forever
-		'slug=slug.Replace( ".","-" )
+		
+		Return slug
+	End
+	
+	Method NamespacePath:String( nmspace:NamespaceScope )
+	
+		Return nmspace.Name
+	End
+	
+	Method DeclSlug:String( decl:Decl,scope:Scope )
+
+		Local module:=scope.FindFile().fdecl.module.name
+
+		Local slug:=module+":"+DeclPath( decl,scope ).Replace( ".","-" )
+		
 		Return slug
 	End
 	
 	Method NamespaceSlug:String( nmspace:NamespaceScope )
-		Local slug:=nmspace.Name
-		'slug=slug.Replace( ".","-" )
-		Return slug
-	End
 	
-	Method DeclPage:String( decl:Decl,scope:Scope )
-	
-		Return DeclSlug( decl,scope )
-	End
-	
-	Method NamespacePage:String( nmspace:NamespaceScope )
-	
-		Return NamespaceSlug( nmspace )
-	End
-	
-	Method MakeLink:String( text:String,url:String )
-
-		Return "<a href='"+url+"'>"+text+"</a>"
-	End
-	
-	Method MakeLink:String( text:String,module:String,page:String )
-	
-		Local url:=module+":"+page
+		Local slug:=_module.name+":"+NamespacePath( nmspace ).Replace( ".","-" )
 		
-		Return "<a href=~qjavascript:void('"+url+"')~q onclick=~qdocsLinkClicked('"+url+"')~q>"+text+"</a>"
+		Return slug
 	End
 	
 	Method MakeLink:String( text:String,decl:Decl,scope:Scope )
 	
-		Local module:=scope.FindFile().fdecl.module.name
-		Local page:=DeclPage( decl,scope )
+		Local slug:=DeclSlug( decl,scope )
 		
-		Return MakeLink( text,module,page )
+		Return "<a href=~qjavascript:void('"+slug+"')~q onclick=~qdocsLinkClicked('"+slug+"')~q>"+text+"</a>"
 	End
 	
+	Method MakeLink:String( text:String,nmspace:NamespaceScope )
+	
+		Local slug:=NamespaceSlug( nmspace )
+		
+		Return "<a href=~qjavascript:void('"+slug+"')~q onclick=~qdocsLinkClicked('"+slug+"')~q>"+text+"</a>"
+	End
+
 	Method ResolveLink:String( path:String,scope:Scope )
 	
 		Local i0:=0
 		
+		Local tpath:=""
+		
 		Repeat
 		
 			Local i1:=path.Find( ".",i0 )
-			If i1=-1	'find 'leaf'
+			If i1=-1
 			
 				Local id:=path.Slice( i0 )
-'				Print "Finding node "+id+" in "+scope.Name
 
 				Local node:=scope.FindNode( id )
-				If Not node Return ""
+				If Not node
+					Return path
+				Endif
+				
+				tpath+=id
 				
 				Local vvar:=Cast<VarValue>( node )
-				If vvar Return MakeLink( id,vvar.vdecl,vvar.scope )
+				If vvar Return MakeLink( tpath,vvar.vdecl,vvar.scope )
 				
 				Local flist:=Cast<FuncList>( node )
-				If flist Return MakeLink( id,flist.funcs[0].fdecl,flist.funcs[0].scope )
+				If flist Return MakeLink( tpath,flist.funcs[0].fdecl,flist.funcs[0].scope )
 				
 				Local etype:=TCast<EnumType>( node )
-				If etype Return MakeLink( id,etype.edecl,etype.scope.outer )
+				If etype Return MakeLink( tpath,etype.edecl,etype.scope.outer )
 				
 				Local ctype:=TCast<ClassType>( node )
-				If ctype Return MakeLink( id,ctype.cdecl,ctype.scope.outer )
+				If ctype Return MakeLink( tpath,ctype.cdecl,ctype.scope.outer )
 				
 				Return ""
 			Endif
@@ -255,8 +284,6 @@ Protected
 			Local id:=path.Slice( i0,i1 )
 			i0=i1+1
 			
-'			Print "Finding type "+id+" in "+scope.Name
-
 			Local type:Type
 			If scope
 				Try
@@ -264,7 +291,7 @@ Protected
 				Catch ex:SemantEx
 					Print "Exception!"
 				End
-			Else
+			Else If Not tpath
 				For Local fscope:=Eachin _module.fileScopes
 					If id<>fscope.nmspace.ntype.ident Continue
 					type=fscope.nmspace.ntype
@@ -272,7 +299,11 @@ Protected
 				Next
 			Endif
 
-			If Not type Return ""
+			If Not type 
+				Return path
+			Endif
+			
+			tpath+=id+"."
 			
 			Local ntype:=TCast<NamespaceType>( type )
 			If ntype
@@ -283,7 +314,7 @@ Protected
 			Local etype:=TCast<EnumType>( type )
 			If etype
 				'stop at enum!
-				Return MakeLink( id+"."+path.Slice( i0 ),etype.edecl,etype.scope.outer )
+				Return MakeLink( tpath+"."+path.Slice( i0 ),etype.edecl,etype.scope.outer )
 			Endif
 			
 			Local ctype:=TCast<ClassType>( type )
@@ -353,7 +384,8 @@ Protected
 	Method DeclDesc:String( decl:Decl )
 		Local desc:=decl.docs
 		Local i:=desc.Find( "~n" )
-		If i<>-1 Return desc.Slice( 0,i )
+		If i<>-1 desc=desc.Slice( 0,i )
+'		desc=Esc( desc )
 		Return desc
 	End
 	
@@ -450,13 +482,13 @@ Protected
 	
 	Method EmitHeader( decl:Decl,scope:Scope )
 		Local fscope:=scope.FindFile()
-		Local module:=fscope.fdecl.module.name
-		Local nmspace:=fscope.nmspace.Name
-		Emit( "_Module: &lt;"+module+"&gt;_  " )
-		Emit( "_Namespace:_ <em>"+MakeLink( nmspace,module,NamespacePage( fscope.nmspace ) )+"</em>" )
-		EmitBr()
-		Emit( "#### "+DeclName( decl,scope ) )
-		EmitBr()
+		Local nmspace:=fscope.nmspace
+		Local module:=fscope.fdecl.module
+		_md.Emit( "_Module: &lt;"+module.name+"&gt;_  " )
+		_md.Emit( "_Namespace:_ _"+MakeLink( NamespacePath( nmspace ),nmspace )+"_" )
+		_md.EmitBr()
+		_md.Emit( "#### "+DeclName( decl,scope ) )
+		_md.EmitBr()
 	End
 	
 	Method DocsHidden:Bool( decl:Decl )
@@ -478,12 +510,12 @@ Protected
 				
 				If init
 					init=False
-					EmitBr()
-					Emit( "| Aliases | &nbsp; |" )
-					Emit( "|:---|:---" )
+					_md.EmitBr()
+					_md.Emit( "| Aliases | &nbsp; |" )
+					_md.Emit( "|:---|:---" )
 				Endif
 				
-				Emit( "| "+DeclIdent( decl,atype.scope )+" | "+DeclDesc( decl )+" |" )
+				_md.Emit( "| "+DeclIdent( decl,atype.scope )+" | "+DeclDesc( decl )+" |" )
 				Continue
 			Endif
 				
@@ -498,12 +530,12 @@ Protected
 				If init
 					init=False
 					Local kinds:=kind.Capitalize() + (kind="class" ? "es" Else "s")
-					EmitBr()
-					Emit( "| "+kinds+" | |" )
-					Emit( "|:---|:---|" )
+					_md.EmitBr()
+					_md.Emit( "| "+kinds+" | |" )
+					_md.Emit( "|:---|:---|" )
 				Endif
 				
-				Emit( "| "+DeclIdent( decl,ctype.scope.outer )+" | "+DeclDesc( decl )+" |" )
+				_md.Emit( "| "+DeclIdent( decl,ctype.scope.outer )+" | "+DeclDesc( decl )+" |" )
 				Continue
 			Endif
 			
@@ -516,12 +548,12 @@ Protected
 				
 				If init
 					init=False
-					EmitBr()
-					Emit( "| Enums | |" )
-					Emit( "|:---|:---|" )
+					_md.EmitBr()
+					_md.Emit( "| Enums | |" )
+					_md.Emit( "|:---|:---|" )
 				Endif
 
-				Emit( "| "+DeclIdent( decl,etype.scope.outer )+" | "+DeclDesc( decl )+" |" )
+				_md.Emit( "| "+DeclIdent( decl,etype.scope.outer )+" | "+DeclDesc( decl )+" |" )
 				Continue
 			Endif
 
@@ -534,12 +566,12 @@ Protected
 
 				If init
 					init=False
-					EmitBr()
-					Emit( "| "+kind.Capitalize()+"s | |" )
-					Emit( "|:---|:---|" )
+					_md.EmitBr()
+					_md.Emit( "| "+kind.Capitalize()+"s | |" )
+					_md.Emit( "|:---|:---|" )
 				Endif
 
-				Emit( "| "+DeclIdent( decl,vvar.scope )+" | "+DeclDesc( decl )+" |" )
+				_md.Emit( "| "+DeclIdent( decl,vvar.scope )+" | "+DeclDesc( decl )+" |" )
 				Continue
 			Endif
 			
@@ -552,12 +584,12 @@ Protected
 				
 				If init
 					init=False
-					EmitBr()
-					Emit( "| Properties | |" )
-					Emit( "|:---|:---|" )
+					_md.EmitBr()
+					_md.Emit( "| Properties | |" )
+					_md.Emit( "|:---|:---|" )
 				Endif
 
-				Emit( "| "+DeclIdent( decl,plist.scope )+" | "+DeclDesc( decl )+" |" )
+				_md.Emit( "| "+DeclIdent( decl,plist.scope )+" | "+DeclDesc( decl )+" |" )
 				Continue
 			Endif
 		
@@ -580,12 +612,12 @@ Protected
 					
 					If init
 						init=False
-						EmitBr()
-						Emit( "| "+kind.Capitalize()+"s | |" )
-						Emit( "|:---|:---|" )
+						_md.EmitBr()
+						_md.Emit( "| "+kind.Capitalize()+"s | |" )
+						_md.Emit( "|:---|:---|" )
 					Endif
 					
-					Emit( "| "+DeclIdent( decl,func.scope )+" | "+DeclDesc( decl )+" |" )
+					_md.Emit( "| "+DeclIdent( decl,func.scope )+" | "+DeclDesc( decl )+" |" )
 					Exit
 					
 				Next
@@ -596,12 +628,13 @@ Protected
 
 	End
 	
+	#rem
 	Method MakeNamespaceDocs:String( nmspace:NamespaceScope )
 	
-		_scope=nmspace
+		_linkScope=nmspace
 	
-		Emit( "_Module: &lt;"+_module.name+"&gt;_  " )
-		Emit( "_Namespace: "+nmspace.Name+"_" )
+		_md.Emit( "_Module: &lt;"+_module.name+"&gt;_  " )
+		_md.Emit( "_Namespace: "+nmspace.Name+"_" )
 		
 		EmitMembers( "alias",nmspace,True )
 		EmitMembers( "enum",nmspace,True )
@@ -612,23 +645,26 @@ Protected
 		EmitMembers( "global",nmspace,True )
 		EmitMembers( "function",nmspace,True )
 		
-		Return Flush()
+		_md.Emit( _namespaceDocs[nmspace.ntype.ident] )
+		
+		Return _md.Flush()
 	End
+	#end
 	
 	Method MakeAliasDocs:String( atype:AliasType )
 		Local decl:=atype.adecl
 		
 		If DocsHidden( decl ) Return ""
 		
-		_scope=atype.scope
+		_linkScope=atype.scope
 		
 		EmitHeader( decl,atype.scope )
 		
-		Emit( "##### Alias "+DeclIdent( decl,True )+" : "+TypeName( atype._alias,atype.scope ) )
+		_md.Emit( "##### Alias "+DeclIdent( decl,True )+" : "+TypeName( atype._alias,atype.scope ) )
 		
-		Emit( decl.docs )
+		_md.Emit( decl.docs )
 		
-		Return Flush()
+		Return _md.Flush()
 	End
 	
 	Method MakeEnumDocs:String( etype:EnumType )
@@ -636,15 +672,15 @@ Protected
 		
 		If DocsHidden( decl ) Return ""
 		
-		_scope=etype.scope.outer
+		_linkScope=etype.scope.outer
 
 		EmitHeader( decl,etype.scope.outer )
 		
-		Emit( "##### Enum "+DeclIdent( decl ) )
+		_md.Emit( "##### Enum "+DeclIdent( decl ) )
 		
-		Emit( decl.docs )
+		_md.Emit( decl.docs )
 		
-		Return Flush()
+		Return _md.Flush()
 	End
 	
 	Method MakeClassDocs:String( ctype:ClassType )
@@ -653,7 +689,7 @@ Protected
 		
 		If DocsHidden( decl ) Return ""
 		
-		_scope=ctype.scope	'.outer
+		_linkScope=ctype.scope	'.outer
 		
 		EmitHeader( decl,ctype.scope.outer )
 		
@@ -689,9 +725,9 @@ Protected
 			mods+=" Final"
 		Endif
 		
-		Emit( "##### "+decl.kind.Capitalize()+" "+DeclIdent( decl,True )+xtends+implments+mods )
+		_md.Emit( "##### "+decl.kind.Capitalize()+" "+DeclIdent( decl,True )+xtends+implments+mods )
 		
-		Emit( decl.docs )
+		_md.Emit( decl.docs )
 		
 		For Local inh:=0 Until 1
 			EmitMembers( "alias",ctype.scope,inh )
@@ -709,7 +745,7 @@ Protected
 			EmitMembers( "function",ctype.scope,inh )
 		End
 		
-		Return Flush()
+		Return _md.Flush()
 	End
 	
 	Method MakeVarDocs:String( vvar:VarValue )
@@ -718,15 +754,15 @@ Protected
 		
 		If DocsHidden( decl ) Return ""
 		
-		_scope=vvar.scope
+		_linkScope=vvar.scope
 		
 		EmitHeader( decl,vvar.scope )
 		
-		Emit( "##### "+decl.kind.Capitalize()+" "+DeclIdent( decl )+" : "+TypeName( vvar.type,vvar.scope ) )
+		_md.Emit( "##### "+decl.kind.Capitalize()+" "+DeclIdent( decl )+" : "+TypeName( vvar.type,vvar.scope ) )
 		
-		Emit( decl.docs )
+		_md.Emit( decl.docs )
 		
-		Return Flush()
+		Return _md.Flush()
 	End
 		
 	Method MakePropertyDocs:String( plist:PropertyList )
@@ -742,15 +778,15 @@ Protected
 		
 '		Local fdecl:=func.fdecl
 
-		_scope=func.scope
+		_linkScope=func.scope
 		
 		EmitHeader( decl,func.scope )
 		
-		Emit( "##### Property "+DeclIdent( decl )+" : "+TypeName( type,func.scope ) )
+		_md.Emit( "##### Property "+DeclIdent( decl )+" : "+TypeName( type,func.scope ) )
 		
-		Emit( decl.docs )
+		_md.Emit( decl.docs )
 		
-		Return Flush()
+		Return _md.Flush()
 	End
 	
 	Method MakeFuncDocs:String( flist:FuncList,kind:String )
@@ -772,7 +808,7 @@ Protected
 				Continue
 			Endif
 			
-			_scope=func.scope
+			_linkScope=func.scope
 			
 			If Not docs
 				docs=New StringStack
@@ -796,17 +832,20 @@ Protected
 			Next
 			params=params.Slice( 3 )
 			
-			Emit( "##### "+tkind+DeclIdent( decl,True )+" : "+TypeName( func.ftype.retType,func.scope )+" ( "+params+" ) " )
+			_md.Emit( "##### "+tkind+DeclIdent( decl,True )+" : "+TypeName( func.ftype.retType,func.scope )+" ( "+params+" ) " )
 
 		Next
 		
-		If Not docs Return ""
+		If Not docs 
+			_md.Flush()
+			Return ""
+		Endif
 		
 		For Local doc:=Eachin docs
-			Emit( doc )
+			_md.Emit( doc )
 		Next
 		
-		Return Flush()
+		Return _md.Flush()
 	End
 	
 End
