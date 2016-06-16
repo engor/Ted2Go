@@ -178,8 +178,9 @@ struct bbProcess::Rep{
 	HANDLE in;
 	HANDLE out;
 	HANDLE err;
+	HANDLE breakEvent;
 	
-	Rep( HANDLE proc,HANDLE in,HANDLE out,HANDLE err ):proc( proc ),in( in ),out( out ),err( err ),exit( -1 ),refs( 1 ){
+	Rep( HANDLE proc,HANDLE in,HANDLE out,HANDLE err,HANDLE breakEvent ):proc( proc ),in( in ),out( out ),err( err ),breakEvent( breakEvent ),exit( -1 ),refs( 1 ){
 	}
 	
 	void close(){
@@ -238,18 +239,19 @@ bbBool bbProcess::start( bbString cmd ){
 	CreatePipe( &in[0],&in[1],&sa,0 );
 	CreatePipe( &out[0],&out[1],&sa,0 );
 	CreatePipe( &err[0],&err[1],&sa,0 );
+	HANDLE breakEvent=CreateEvent( &sa,0,0,"MX2_BREAK_EVENT" );
 
 	STARTUPINFOA si={sizeof(si)};
-	si.dwFlags=STARTF_USESTDHANDLES;//|STARTF_USESHOWWINDOW;
+	si.dwFlags=STARTF_USESTDHANDLES;
 	si.hStdInput=in[0];
 	si.hStdOutput=out[1];
 	si.hStdError=err[1];
-//	si.wShowWindow=SW_HIDE;
 
 	PROCESS_INFORMATION pi={0};
     
 	DWORD flags=CREATE_NEW_PROCESS_GROUP;
-    
+	if( !GetStdHandle( STD_OUTPUT_HANDLE ) ) flags|=CREATE_NO_WINDOW;
+	
 	int res=CreateProcessA( 0,(LPSTR)cmd.c_str(),0,0,TRUE,flags,0,0,&si,&pi );
 
 	CloseHandle( in[0] );
@@ -265,7 +267,7 @@ bbBool bbProcess::start( bbString cmd ){
 
 	CloseHandle( pi.hThread );
 	
-	Rep *rep=new Rep( pi.hProcess,in[1],out[0],err[0] );
+	Rep *rep=new Rep( pi.hProcess,in[1],out[0],err[0],breakEvent );
     
 #else
   
@@ -329,6 +331,8 @@ bbBool bbProcess::start( bbString cmd ){
 	    	WaitForSingleObject( rep->proc,INFINITE );
 	    	
 	    	GetExitCodeProcess( rep->proc,(DWORD*)&rep->exit );
+	    	
+	    	CloseHandle( rep->breakEvent );
 	    		
 	    	CloseHandle( rep->proc );
 	    	
@@ -453,7 +457,7 @@ void bbProcess::sendBreak(){
 	if( !_rep ) return;
 	
 #if _WIN32
-	GenerateConsoleCtrlEvent( CTRL_BREAK_EVENT,GetProcessId( _rep->proc ) );
+	SetEvent( _rep->breakEvent );
 #else
 	killpg( _rep->proc,SIGTSTP );
 #endif
