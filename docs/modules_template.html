@@ -4,22 +4,28 @@
 
 <head>
 
-<title>Monkey2 Modules Reference</title>
+	<meta charset="utf-8">
 
-<link rel="stylesheet" href="style.css">
+	<title>Monkey2 Modules Reference</title>
 
-<link rel="stylesheet" href="js-treeview/treeview.css" />
+	<link rel="stylesheet" href="style.css">
+	
+	<link rel="stylesheet" href="jstree/dist/themes/default/style.min.css" />
 
-<script type="text/javascript">
+	<script src="jstree/dist/libs/jquery-1.9.1.min.js"></script>
 
-function docsNodeClicked( page ){
+	<script src="jstree/dist/jstree.min.js"></script>
 
-	var url='../modules/'+page.replace( ':','/docs/__PAGES__/' ).replace( /\./g,'-' )+'.html';
+	<script>
 
-	document.getElementById( 'docs' ).src=url;
-}
+		function openDocs( page ){
 
-</script>
+			var url='../modules/'+page.replace( ':','/docs/__PAGES__/' ).replace( /\./g,'-' )+'.html';
+
+			document.getElementById( 'docs' ).src=url;
+		}
+
+	</script>
 
 </head>
 
@@ -30,6 +36,7 @@ function docsNodeClicked( page ){
 <!-- CONTENT -->
 
 <div class="modules_nav_wrapper">
+<form role="search"><input type="text" id="search" placeholder="API search" style="width:100%;" /></form>
 <div id="tree" class="modules_nav_tree"></div>
 </div>
 
@@ -37,36 +44,56 @@ function docsNodeClicked( page ){
 <iframe id="docs" class="modules_docs_iframe"></iframe>
 </div>
 
-<script type='text/javascript' src='js-treeview/treeview.js'></script>
+<script src="jstree/dist/libs/jquery-1.9.1.min.js"></script>
 
-<script type='text/javascript'>
+<script src="jstree/dist/jstree.min.js"></script>
 
-	var tree = [ ${MX2_API} ];
+<script>
 
-	var t=new TreeView( tree,'tree' );
-	
-	t.on( 'select',function( args ){
-	
-		var data=args.data;
-		if( !data ) return;
+$( function(){
+
+	$('#tree').jstree( {
+
+		'core':{
+			'multiple' : false,
+			'animation' : false,
+			'themes':{
+				'dots' : false,
+				'icons' : false,
+				'stripes' : false
+			},
+			'data':[ ${MX2_API} ]
+		},
+		'plugins':[ 'search' ]
+ 	});
+ 	
+	$('#tree').on( 'changed.jstree',function( e,data ){
+
+		var node=data.instance.get_node( data.selected[0] );
+		if( !node || !node.data ) return;
 		
-		var page=data['page'];
+		var page=node.data.page;
 		if( !page ) return;
 		
-		docsNodeClicked( page );
+		console.log( page );
+		
+		openDocs( page );
 	} );
+	
+	var to=false;
 
-	t.on( 'expand',function( args ){
-	
-		var data=JSON.parse( args.target.getAttribute( 'data-item' ) );
-		if( !data ) return;
-		
-		var page=data['page'];
-		if( !page ) return;
-		
-		docsNodeClicked( page );
-	} );
-	
+	$('#search').keyup( function(){
+
+		if( to ) { clearTimeout( to ); }
+
+		to = setTimeout( function(){
+			var v = $('#search').val();
+			$('#tree').jstree( true ).search( v );
+		},250 );
+
+	});
+
+} );	
 	
 </script>
 
