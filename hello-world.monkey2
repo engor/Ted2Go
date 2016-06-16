@@ -27,6 +27,8 @@ End
 
 Function Main()
 
+	Print "Hello World!"
+
 	New AppInstance
 	
 	New MyWindow
