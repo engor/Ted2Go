@@ -1,4 +1,17 @@
 
+#rem monkeydoc
+
+JSON (JavaScript Object Notation) is a lightweight data-interchange format.
+
+\## Reading JSON data
+
+Use the [[JsonObject.Load]] function to load JSON data from a file, or [[JsonObject.Parse]] to parse JSON data from a string.
+
+\## Writing JSON data
+
+To save a JSON object, use the [[JsonObject.Save]] function.
+
+#end
 Namespace std.json
 
 #rem monkeydoc JsonError class.

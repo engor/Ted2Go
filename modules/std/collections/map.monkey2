@@ -1,13 +1,28 @@
 
 Namespace std.collections
 
+#rem monkeydoc Convenience type alias for Map\<Int,V\>.
+#end
 Alias IntMap<V>:Map<Int,V>
 
+#rem monkeydoc Convenience type alias for Map\<Float,V\>.
+#end
 Alias FloatMap<V>:Map<Float,V>
 
+#rem monkeydoc Convenience type alias for Map\<String,V\>.
+#end
 Alias StringMap<V>:Map<String,V>
 
-#rem monkeydoc The Map class.
+#rem monkeydoc The Map class provides support for associative maps.
+
+A map is a container style object that provides a mechanism for associating 'key' objects with 'value' objects.
+This is done using an internal node object that contains a reference to both a key and a value, along with information about the node'
+s location within the map.
+
+Each key in a map occurs exactly once - a map cannot contain multiple equivalent keys.
+
+Maps can handle inserting, removing and finding keys in 'O(log2)' time. That is, the time needed to insert, remove or find a key is proportional to log2 of the number of items in the map.
+
 #end
 Class Map<K,V>
 

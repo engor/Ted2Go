@@ -1,8 +1,12 @@
 
 Namespace std.geom
 
+#rem monkeydoc @hidden
+#end
 Alias Vec3f:Vec3<Float>
 
+#rem monkeydoc @hidden
+#end
 Struct Vec3<T>
 
 	Field x:T

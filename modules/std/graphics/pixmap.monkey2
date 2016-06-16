@@ -1,7 +1,7 @@
 
 Namespace std.graphics
 
-#rem monkeydoc Pixmap class.
+#rem monkeydoc Pixmaps allow you to store and manipulate rectangular blocks of pixel data.
 
 A pixmap contains a block of memory used to store a rectangular array of pixels.
 

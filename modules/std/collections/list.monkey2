@@ -1,11 +1,25 @@
 
 Namespace std.collections
 
+#rem monkeydoc Convenience type alias for List\<Int\>.
+#end
 Alias IntList:List<Int>
+
+#rem monkeydoc Convenience type alias for List\<Float\>.
+#end
 Alias FloatList:List<Float>
+
+#rem monkeydoc Convenience type alias for List\<String\>.
+#end
 Alias StringList:List<String>
 
-#rem monkeydoc The list class provides support for doubly linked lists.
+#rem monkeydoc The List class provides support for linked lists.
+
+A linked list is a container style data structure that provides efficient support for the addition, removal and sequential traversal of objects.
+
+A linked list works by connecting elements together with 'next' and 'previous' references, making it very efficient to get from one element to the next, but not so efficient for accessing arbitrary elements.
+
+This connection between elements is achieved using separate Node objects (there is one per element) which contain references to the next and previous nodes in the list, as well as the actual object managed by the node.
 
 Lists implements the [[IContainer]] interface so can be used with [[Eachin]] loops.
 

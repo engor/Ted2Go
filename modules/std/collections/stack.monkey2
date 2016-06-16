@@ -1,13 +1,30 @@
 
 Namespace std.collections
 
+#rem monkeydoc Convenience type alias for Stack\<Int\>.
+#end
 Alias IntStack:Stack<Int>
 
+#rem monkeydoc Convenience type alias for Stack\<Float\>.
+#end
 Alias FloatStack:Stack<Float>
 
+#rem monkeydoc Convenience type alias for Stack\<String\>.
+#end
 Alias StringStack:Stack<String>
 
-#rem monkeydoc The Stack class.
+#rem monkeydoc The Stack class provides suport for dynamic arrays.
+
+A stack is an 'array like' container that grows dynamically as necessary.
+
+It is very cheap to add values to the end of a stack, but insertion or removal of values requires higher indexed values to be 
+'shifted down'.
+
+Stacks implement the [[IContainer]] interface so can be used with [[Eachin]] loops.
+
+Note that you should NOT modify a stack while iterating through it with an eachin loop. Doing so while cause a 'concurrent stack
+modification' runtime error in debug mode. Please see [[IContainer]] for more information.
+
 #end
 Class Stack<T> Implements IContainer<T>
 

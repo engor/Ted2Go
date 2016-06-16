@@ -3,7 +3,7 @@ Namespace std.collections
 
 #rem monkeydoc The IContainer interface is a 'dummy' interface that container classes should implement for compatibility with [[Eachin]] loops.
 
-IContainer does not actually declare any members, but a class that implements IContainer should implement the follow method:
+IContainer does not actually declare any members, but a class that implements IContainer should implement the follow methods:
 
 `Method All:IteratorType()` - Gets an iterator to all values in the container.
 

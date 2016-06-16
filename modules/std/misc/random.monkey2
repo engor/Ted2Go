@@ -45,35 +45,27 @@ Function RndULong:ULong()
 	Return s1+s0
 End
 
-#rem monkeydoc Generates a random double value greater than or equal to 0 and less than 1.
+#rem monkeydoc Generates a random double value.
 
-@return A random double value in the range 0 (inclusive) to 1 (exclusive).
+When used with no parameters, returns a random double value in the range 0 (inclusive) to 1 (exclusive).
+
+When used with one parameter, returns a random double value in the range 0 (inclusive) to `max` (exclusive).
+
+When used with two parameters, returns a random double value in the range `min` (inclusive) to `max` (exclusive).
+
+@param min Minimum value to return.
+
+@param max Maximum value to return.
 
 #end
 Function Rnd:Double()
 	Return Double( RndULong() & ULong( $1fffffffffffff ) ) / Double( $20000000000000 )
 End
 
-#rem monkeydoc Generates a random double value greater than or equal to 0 and less than a given value.
-
-@param max Maximum value to return.
-
-@return A random double value in the range 0 (inclusive) to `max` (exclusive).
-
-#end
 Function Rnd:Double( max:Double )
 	Return Rnd()*max
 End
 
-#rem monkeydoc Generates a random double value within a given range.
-
-@param min Minimum value to return.
-
-@param max Maximum value to return.
-
-@return A random double value in the range `min` (inclusive) to `max` (exclusive).
-
-#end
 Function Rnd:Double( min:Double,max:Double )
 	Return Rnd(max-min)+min
 End

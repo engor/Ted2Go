@@ -1,7 +1,7 @@
 
 Namespace std.graphics
 
-#rem monkeydoc PixelFormat enumeration.
+#rem monkeydoc Pixel formats supported by pixmaps.
 
 | PixelFormat	| Description
 |:--------------|:-----------
@@ -19,6 +19,8 @@ Enum PixelFormat
 
 End
 
+#rem monkeydoc Gets the number of bytes per pixel for a particular pixel format.
+#end
 Function PixelFormatDepth:Int( format:PixelFormat )
 
 	Select format
@@ -27,9 +29,7 @@ Function PixelFormatDepth:Int( format:PixelFormat )
 	Case PixelFormat.IA16 Return 2
 	Case PixelFormat.RGB24 Return 3
 	Case PixelFormat.RGBA32 Return 4
-	Default Assert( False )
 	End
 	
 	Return 0
-	
 End
