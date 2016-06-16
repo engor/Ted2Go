@@ -62,7 +62,20 @@ $( function(){
 				'icons' : false,
 				'stripes' : false
 			},
-			'data':[ ${MX2_API} ]
+			'data':[ 
+				{
+					'text' : 'Manual',
+					'children' : []
+				},
+				{
+					'text' : 'Modules',
+					'children' : [ ${MX2_API} ]
+				},
+				{
+					'text' : 'Language',
+					'children' : []
+				}
+			]
 		},
 		'plugins':[ 'search' ]
  	});
