@@ -35,6 +35,8 @@ namespace test{
 			static inline void F(){}
 		};
 	};
+	
+	inline void C_M2( C *c,int x,int y ){}
 
 }
 

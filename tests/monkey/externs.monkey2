@@ -34,6 +34,8 @@ Class C Extends Void="test::C"
 	
 	Method M()
 	
+	Method M2( x:Int,y:Int ) Extension="test::C_M2"
+	
 	Function F()
 End
 
@@ -50,6 +52,8 @@ Function Main()
 	c.M()
 	C.F()
 	C.D.F()
+	
+	c.M2( 10,20 )
 	
 	Local v1:=E.V1
 	Local v2:=E.V2
