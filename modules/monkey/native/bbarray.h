@@ -84,7 +84,7 @@ template<class T,int D> class bbArray : public bbGCNode{
 	}
 	
 	int size( int q )const{
-		bbDebugAssert( q<D );
+		bbDebugAssert( q<D,"Array dimension out of range" );
 		return this ? (q ? _sizes[q]/_sizes[q-1] : _sizes[0]) : 0;
 	}
 	
@@ -139,7 +139,7 @@ template<class T,int D> class bbArray : public bbGCNode{
 	}
 	
 	//fast 1D version	
-	T &at( int index )const{
+	T &at( int index ){
 		bbDebugAssert( index>=0 && index<length(),"Array index out of range" );
 		return data()[index];
 	}
@@ -147,7 +147,7 @@ template<class T,int D> class bbArray : public bbGCNode{
 	//slower N-D version
 	template<class...Args> T &at( Args...args ){
 	
-		int indices[]{args...};
+		const int indices[]{args...};
 		
 		int index=indices[0];
 		bbDebugAssert( index>=0,"Array index out of range" );

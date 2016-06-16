@@ -161,24 +161,12 @@ template<class T> void bbDBLocal ( const char *name,T *var ){
 	++bbDB::currentContext->locals;
 }
 
-inline void bbAssert( bool cond ){
-	if( !cond ) bbDB::error( "Assert failed" );
-}
+#define bbAssert( COND,MSG ) (void)((COND) || (bbDB::error(MSG),0))
 
-inline void bbAssert( bool cond,bbString msg ){
-	if( !cond ) bbDB::error( msg );
-}
-
-inline void bbDebugAssert( bool cond ){
-#ifndef NDEBUG
-	if( !cond ) bbDB::error( "DebugAssert failed" );
+#ifdef NDEBUG
+#define bbDebugAssert( COND,MSG )
+#else
+#define bbDebugAssert( COND,MSG ) (void)((COND) || (bbDB::error(MSG),0))
 #endif
-}
-
-inline void bbDebugAssert( bool cond,bbString msg ){
-#ifndef NDEBUG
-	if( !cond ) bbDB::error( msg );
-#endif
-}
 
 #endif

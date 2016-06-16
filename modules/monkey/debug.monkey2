@@ -18,9 +18,7 @@ Function RuntimeError( message:String )="bbDB::error"
 @param message Runtime error message to generate.
 
 #end
-Function Assert( condition:Bool )="bbAssert"
-
-Function Assert( condition:Bool,message:String )="bbAssert"
+Function Assert( condition:Bool,message:String="Assert failed" )="bbAssert"
 
 #rem monkeydoc Generates a runtime error if a boolean expression is false (Debug builds only).
 
@@ -32,9 +30,7 @@ any critical code.
 @param message Runtime error message to generate.
 
 #end
-Function DebugAssert( condition:Bool )="bbDebugAssert"
-
-Function DebugAssert( condition:Bool,message:String )="bbDebugAssert"
+Function DebugAssert( condition:Bool,message:String="Debug assert failed" )="bbDebugAssert"
 
 #rem monkeydoc Gets the current stack state (Debug builds only).
 
