@@ -8,11 +8,10 @@
 
 /desktop.ini
 
-/bananas
-
 /bin/*.dll
 /bin/assets
 /bin/ted2.state.json
+/bin/ted2_*
 
 /devtools/*
 !/devtools/.gitignore
@@ -26,7 +25,15 @@ __PAGES__/
 !/tmp/.gitignore
 
 /src/ted2
-/src/mojox/
+/src/mojox
+/src/launcher
+/src/mx2doc
+/src/createrelease
 
-/src/*.save
-debug_test.monkey2
+/scripts/*.save
+/debug_test.monkey2
+
+/modules/timelinefx
+
+/tests/*
+
