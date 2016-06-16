@@ -8,7 +8,6 @@ Using mx2.docs
 
 #Import "mx2.monkey2"
 
-#Import "makedocs.monkey2"
 #Import "docsmaker.monkey2"
 #Import "htmldocsmaker.monkey2"
 
