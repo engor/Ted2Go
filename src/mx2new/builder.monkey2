@@ -7,6 +7,8 @@ Class BuildOpts
 	
 	Field productType:String
 	
+	Field appType:String
+	
 	Field target:String
 	
 	Field config:String
@@ -549,40 +551,52 @@ Class Builder
 			
 		Else If HostOS="windows"
 		
+			If opts.appType="gui" cmd+=" -mwindows"
+		
 			outputFile=module.outputDir+module.name+".exe"
 			assetsDir=module.outputDir+"assets/"
 			dllsDir=ExtractDir( outputFile )
 			
 		Else If HostOS="macos"
 		
-			Local productName:=module.name
-
-			Local outputDir:=module.outputDir+module.name+".app/"
+			If opts.appType="gui"
 			
-			outputFile=outputDir+"Contents/MacOS/"+module.name
-			assetsDir=outputDir+"Contents/Resources/"
-			dllsDir=ExtractDir( outputFile )
+				Local productName:=module.name
+	
+				Local outputDir:=module.outputDir+module.name+".app/"
+				
+				outputFile=outputDir+"Contents/MacOS/"+module.name
+				assetsDir=outputDir+"Contents/Resources/"
+				dllsDir=ExtractDir( outputFile )
+				
+				CreateDir( outputDir )
+				CreateDir( outputDir+"Contents" )
+				CreateDir( outputDir+"Contents/MacOS" )
+				CreateDir( outputDir+"Contents/Resources" )
+				
+				Local plist:=""
+				plist+="<?xml version=~q1.0~q encoding=~qUTF-8~q?>~n"
+				plist+="<!DOCTYPE plist PUBLIC ~q-//Apple Computer//DTD PLIST 1.0//EN~q ~qhttp://www.apple.com/DTDs/PropertyList-1.0.dtd~q>~n"
+				plist+="<plist version=~q1.0~q>~n"
+				plist+="<dict>~n"
+				plist+="~t<key>CFBundleExecutable</key>~n"
+				plist+="~t<string>"+productName+"</string>~n"
+				plist+="~t<key>CFBundleIconFile</key>~n"
+				plist+="~t<string>"+productName+"</string>~n"
+				plist+="~t<key>CFBundlePackageType</key>~n"
+				plist+="~t<string>APPL</string>~n"
+				plist+="</dict>~n"
+				plist+="</plist>~n"
+				
+				SaveString( plist,outputDir+"Contents/Info.plist" )
+				
+			Else
 			
-			CreateDir( outputDir )
-			CreateDir( outputDir+"Contents" )
-			CreateDir( outputDir+"Contents/MacOS" )
-			CreateDir( outputDir+"Contents/Resources" )
+				outputFile=module.outputDir+module.name
+				assetsDir=module.outputDir+"assets/"
+				dllsDir=ExtractDir( outputFile )
 			
-			Local plist:=""
-			plist+="<?xml version=~q1.0~q encoding=~qUTF-8~q?>~n"
-			plist+="<!DOCTYPE plist PUBLIC ~q-//Apple Computer//DTD PLIST 1.0//EN~q ~qhttp://www.apple.com/DTDs/PropertyList-1.0.dtd~q>~n"
-			plist+="<plist version=~q1.0~q>~n"
-			plist+="<dict>~n"
-			plist+="~t<key>CFBundleExecutable</key>~n"
-			plist+="~t<string>"+productName+"</string>~n"
-			plist+="~t<key>CFBundleIconFile</key>~n"
-			plist+="~t<string>"+productName+"</string>~n"
-			plist+="~t<key>CFBundlePackageType</key>~n"
-			plist+="~t<string>APPL</string>~n"
-			plist+="</dict>~n"
-			plist+="</plist>~n"
-			
-			SaveString( plist,outputDir+"Contents/Info.plist" )
+			Endif
 			
 		Else	'linux!
 		
@@ -1054,6 +1068,8 @@ Class Builder
 	End
 	
 	Method Exec:Bool( cmd:String )
+	
+		CreateDir( "tmp" )
 
 		Local errs:=""
 		For Local i:=1 Until 10
