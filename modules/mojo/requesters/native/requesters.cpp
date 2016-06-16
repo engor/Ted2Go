@@ -173,17 +173,19 @@ bbString bbRequesters::RequestDir( bbString title,bbString dir ){
 	bbString str;
 	
 	if( ITEMIDLIST *idlist=SHBrowseForFolderW( &bi ) ){
+	
 		SHGetPathFromIDListW( idlist,buf );
 		str=bbString( buf );
+		
 		//SHFree( idlist );	//?!?
+		
+		str=str.replace( "\\","/" );
+		if( !str.endsWith( "/" ) ) str+="/";
 	}
 	
 	endPanel();
 	
 	free( (void*)bi.lpszTitle );
-
-	str=str.replace( "\\","/" );
-	if( !str.endsWith( "/" ) ) str+="/";
 
 	return str;
 }
@@ -195,6 +197,24 @@ bbString bbRequesters::RequestDir( bbString title,bbString dir ){
 bbString bbRequesters::RequestFile( bbString title,bbString exts,bbBool save,bbString path ){
 
 	bbString cmd=BB_T("zenity --title=\"")+title+BB_T("\" --file-selection");
+
+	FILE *f=popen( cmd.c_str(),"r" );
+	if( !f ) return "";
+	
+	char buf[PATH_MAX];
+	int n=fread( buf,1,PATH_MAX,f );
+	pclose( f );
+	
+	if( n<0 || n>PATH_MAX ) return "";
+	
+	while( n && buf[n-1]<=32 ) --n;
+	
+	return bbString::fromCString( buf,n );
+}
+
+bbString bbRequesters::RequestDir( bbString title,bbString dir ){
+
+	bbString cmd=BB_T("zenity --title=\"")+title+BB_T("\" --file-selection --directory");
 
 	FILE *f=popen( cmd.c_str(),"r" );
 	if( !f ) return "";
