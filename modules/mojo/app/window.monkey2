@@ -70,6 +70,28 @@ Class Window Extends View
 		_swapInterval=swapInterval
 	End
 	
+	Property Fullscreen:Bool()
+	
+		Return _fullscreen
+	
+	Setter( fullscreen:Bool )
+	
+		If fullscreen=_fullscreen Return
+	
+		_fullscreen=fullscreen
+
+		If _fullscreen
+			Local mode:SDL_DisplayMode
+			mode.w=Width
+			mode.h=Height
+			SDL_SetWindowDisplayMode( _sdlWindow,Varptr mode )
+			SDL_SetWindowFullscreen( _sdlWindow,SDL_WINDOW_FULLSCREEN )
+		Else
+			SDL_SetWindowFullscreen( _sdlWindow,0 )
+		Endif
+	
+	End
+	
 	#rem monkeydoc @hidden
 	#end
 	Method Update()
@@ -225,6 +247,8 @@ Class Window Extends View
 	
 	Private
 	
+	Field _flags:WindowFlags
+	Field _fullscreen:Bool
 	Field _sdlWindow:SDL_Window Ptr
 	Field _sdlGLContext:SDL_GLContext
 	Field _swapInterval:Int=1
@@ -273,7 +297,9 @@ Class Window Extends View
 		If flags & WindowFlags.Hidden sdlFlags|=SDL_WINDOW_HIDDEN
 		If flags & WindowFlags.Resizable sdlFlags|=SDL_WINDOW_RESIZABLE
 		If flags & WindowFlags.Borderless sdlFlags|=SDL_WINDOW_BORDERLESS
-		If flags & WindowFlags.Fullscreen sdlFlags|=SDL_WINDOW_FULLSCREEN
+		If flags & WindowFlags.Fullscreen _fullscreen=True ; sdlFlags|=SDL_WINDOW_FULLSCREEN
+		
+		_flags=flags
 	
 		_sdlWindow=SDL_CreateWindow( title,x,y,rect.Width,rect.Height,sdlFlags )
 		Assert( _sdlWindow,"Failed to create SDL_Window" )

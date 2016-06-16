@@ -8,6 +8,14 @@ Namespace mojo.app
 #end
 Global App:AppInstance
 
+#rem monkeydoc @hidden
+#end
+Struct DisplayMode
+	Field width:Int
+	Field height:Int
+	Field hertz:Int
+End
+
 #rem monkeydoc The AppInstance class.
 
 The AppInstance class is mainly reponsible for running the app 'event loop', but also provides several utility functions for managing
@@ -177,7 +185,7 @@ Class AppInstance
 	
 		Return _hoverView
 	End
-
+	
 	#rem monkeydoc The desktop size
 	#end	
 	Property DesktopSize:Vec2i()
@@ -231,6 +239,23 @@ Class AppInstance
 	Property MouseLocation:Vec2i()
 
 		Return _mouseLocation
+	End
+	
+	#rem monkeydoc @hidden
+	#end
+	Method GetDisplayModes:DisplayMode[]()
+	
+		Local n:=SDL_GetNumDisplayModes( 0 )
+		Local modes:=New DisplayMode[n]
+		For Local i:=0 Until n
+			Local mode:SDL_DisplayMode
+			SDL_GetDisplayMode( 0,i,Varptr mode )
+			modes[i].width=mode.w
+			modes[i].height=mode.h
+			modes[i].hertz=mode.refresh_rate
+		Next
+
+		Return modes
 	End
 	
 	#rem monkeydoc @hidden
@@ -296,7 +321,6 @@ Class AppInstance
 	Method Run()
 	
 		SDL_AddEventWatch( _EventFilter,Null )
-'		SDL_SetEventFilter( _EventFilter,Null )
 		
 		RequestRender()
 		
