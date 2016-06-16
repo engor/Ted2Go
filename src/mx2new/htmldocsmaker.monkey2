@@ -24,6 +24,7 @@ Class JsonBuffer
 		Endif
 	
 		If _sep json=","+json
+
 		_buf.Push( _indent+json )
 	
 		If json.EndsWith( "{" ) Or json.EndsWith( "[" ) 
@@ -43,6 +44,9 @@ Class JsonBuffer
 	Method Flush:String()
 		Local json:=_buf.Join( "~n" )
 		_buf.Clear()
+		_blks.Clear()
+		_indent=""
+		_sep=False
 		Return json
 	End
 	
@@ -93,17 +97,6 @@ Class HtmlDocsMaker Extends DocsMaker
 		Next
 
 		Local page:=""
-		
-		#rem
-		Local md:=stringio.LoadString( _module.baseDir+"/docs/module.md" )
-		If md
-			_scope=Null
-			page="module"
-			Emit( md )
-			Local html:=Flush()
-			SavePage( html,page )
-		Endif
-		#end
 		
 		BeginNode( _module.name,page )
 		
@@ -254,8 +247,6 @@ Class HtmlDocsMaker Extends DocsMaker
 
 			Local page:=DeclPath( vvar.vdecl,vvar.scope )
 			SavePage( docs,page )
-			
-			Print "save page:"+page
 			
 			EmitLeaf( vvar.vdecl,page )
 			

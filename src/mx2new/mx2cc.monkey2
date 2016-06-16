@@ -19,7 +19,7 @@ Global StartDir:String
 
 'Const TestArgs:="mx2cc makemods"
 
-Const TestArgs:="mx2cc makedocs std"
+Const TestArgs:="mx2cc makedocs monkey std mojo"
 
 'Const TestArgs:="mx2cc makeapp src/mx2new/test.monkey2"
 
