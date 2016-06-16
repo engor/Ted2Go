@@ -184,7 +184,7 @@ namespace bbGC{
 			freeList.pred->succ=unmarkedList->succ;
 			freeList.pred=unmarkedList->pred;
 			
-			//clear unmarkedmpor
+			//clear unmarked
 			unmarkedList->succ=unmarkedList->pred=unmarkedList;
 		}
 		
