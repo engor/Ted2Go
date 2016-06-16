@@ -4,6 +4,7 @@
 
 #if _WIN32
 #include <windows.h>
+#include <thread>
 #else
 #include <signal.h>
 #endif
@@ -16,31 +17,57 @@ namespace bbDB{
 	
 	bbDBContext *currentContext;
 	
-#if _WIN32
-	BOOL WINAPI stopHandler( DWORD dwCtrlType ){
-		if( dwCtrlType==CTRL_BREAK_EVENT ){
-//			printf( "CTRL_BREAK_EVENT\n" );fflush( stdout );
-			currentContext->stopped=0;
-			return TRUE;
-		}
-		return FALSE;
-	}
-#else
-	void sighandler( int sig ){
-//		printf( "SIGTSTP\n" );fflush( stdout );
-		currentContext->stopped=0;
+#if !_WIN32
+	void breakHandler( int sig ){
+		currentContext->stopped=0x10000000;
 	}
 #endif
+
+	void sighandler( int sig  ){
+	
+		const char *err="Unknown signal";
+		switch( sig ){
+		case SIGSEGV:err="Memory access violation";break;
+		case SIGILL:err="Illegal instruction";
+		case SIGFPE:err="Floating point exception";
+	#if !_WIN32
+		case SIGBUS:err="Bus error";
+	#endif	
+		}
+				
+#ifndef NDEBUG
+		error( err );
+		exit( 0 );
+#endif
+		printf( "Caught signal:%s\n",err );
+		exit( -1 );
+	}
 	
 	void init(){
 	
 		currentContext=new bbDBContext;
 		currentContext->init();
 		
+		signal( SIGSEGV,sighandler );
+		signal( SIGILL,sighandler );
+		signal( SIGFPE,sighandler );
+
 #if _WIN32
-		SetConsoleCtrlHandler( stopHandler,TRUE );
+
+		if( HANDLE breakEvent=OpenEvent( EVENT_ALL_ACCESS,false,"MX2_BREAK_EVENT" ) ){
+//			printf( "Found BREAK_EVENT!\n" );fflush( stdout );
+		    std::thread( [=](){
+		    	for( ;; ){
+		    		WaitForSingleObject( breakEvent,INFINITE );
+//	    			printf( "Break event!\n" );fflush( stdout );
+		    		currentContext->stopped=0x10000000;
+		    	}
+		    } ).detach();
+		}
+	
 #else		
-		signal( SIGTSTP,sighandler );
+		signal( SIGBUS,sighandler );
+		signal( SIGTSTP,breakHandler );
 #endif
 	}
 	
@@ -57,7 +84,7 @@ namespace bbDB{
 		
 		for( bbDBFrame *f=currentContext->frames;f;f=f->succ ){
 
-			printf( ">%s;%s;%i;%i\n",f->decl,f->srcFile,f->srcPos,f->seq );
+			printf( ">%s;%s;%i;%i\n",f->decl,f->srcFile,f->srcPos>>12,f->seq );
 			
 			for( bbDBVar *v=f->locals;v!=ev;++v ){
 				emitVar( v );
