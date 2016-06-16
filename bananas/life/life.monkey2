@@ -49,8 +49,6 @@ Class LifeApp Extends Window
 
 	Method New(width:Int, height:Int)
 
-		'*** Resizing above certain values causes a crash, so disabled for now.
-		'Super.New("Conway's Game of Life", width, height, WindowFlags.Resizable)		
 		Super.New("Conway's Game of Life", width, height)
 		
 		ClearColor = Color.Black

@@ -38,7 +38,7 @@ Class MyWindow Extends Window
 	Method New(title : String  , width : Int , height : Int  , flags : WindowFlags =Null)
 		Super.New(title,width,height,flags)
 		Camera = New tCamera
-		Print "Loading map"
+'		Print "Loading map"
 		LoadMap()
 		ClearColor=Color.Black
 		SwapInterval=0
@@ -58,16 +58,16 @@ Class MyWindow Extends Window
 	End
 	'-----------------------------------------------------------------------------------------------------------
 	Method LoadMap:Void()
-		Print "in Loadmap"	
+'		Print "in Loadmap"	
 		Dmap = Pixmap.Load("asset::D1.png",PixelFormat.RGBA32)
 		Cmap = Pixmap.Load("asset::C1W.png",PixelFormat.RGBA32)
 		
 		If Not Dmap Then Print "no Dmap!"
 		If Not Cmap Then Print "no Cmap!"
-		Print "dmap=" + Dmap.Width + " " + Dmap.Height
+'		Print "dmap=" + Dmap.Width + " " + Dmap.Height
 		PmapDest = New Pixmap(WIDTH, HEIGHT,PixelFormat.RGBA32)
 		image=New Image( WIDTH,HEIGHT )
-		Print PmapDest.Width + "##" 
+'		Print PmapDest.Width + "##" 
 	End Method
 	'-----------------------------------------------------------------------------------------------------------
 	Method UpdateCamera()
@@ -142,7 +142,8 @@ End
 Function Main()
 
 	New AppInstance
-	
+
+	'Show raw key mappings...	
 	Print "W->"+Keyboard.KeyName( Key.W | Key.Raw )
 	Print "A->"+Keyboard.KeyName( Key.A | Key.Raw )
 	Print "S->"+Keyboard.KeyName( Key.S | Key.Raw )
