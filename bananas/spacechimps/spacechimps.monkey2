@@ -10,8 +10,8 @@ Namespace spacechimps
 Using std..
 Using mojo..
 
-Const VirtualWidth:=1280'320
-Const VirtualHeight:=720'240
+Const VirtualWidth:=512
+Const VirtualHeight:=256
 
 Class MyWindow Extends Window
 
@@ -68,11 +68,6 @@ Class MyWindow Extends Window
 		Select event.Type
 		Case EventType.KeyDown
 			Select event.Key
-			Case Key.Enter
-
-				If event.Modifiers & Modifier.Alt			
-					Fullscreen=Not Fullscreen
-				Endif
 
 			Case Key.S
 			
