@@ -159,6 +159,7 @@ Class Texture
 			glPushTexture2d( _glTexture )
 		
 		Else
+		
 			glGenTextures( 1,Varptr _glTexture )
 
 			glPushTexture2d( _glTexture )
@@ -229,6 +230,7 @@ Class Texture
 		Endif
 		
 		If _mipsDirty
+		
 			If _flags & TextureFlags.Mipmap glGenerateMipmap( GL_TEXTURE_2D )
 			_mipsDirty=False
 		End
@@ -273,7 +275,7 @@ Class Texture
 			glReadPixels( r.X,r.Y,r.Width,r.Height,GL_RGBA,GL_UNSIGNED_BYTE,_managed.PixelPtr( r.X,r.Y ) )
 		Endif
 		
-		_mipsDirty=True
+		If _flags & TextureFlags.Mipmap _mipsDirty=True
 	End
 	
 	Private

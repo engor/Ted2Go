@@ -460,7 +460,7 @@ Class Canvas
 	End
 	
 	#rem monkeydoc Draws a triangle.
-	#end
+	#End
 	Method DrawTriangle( v0:Vec2f,v1:Vec2f,v2:Vec2f )
 		AddDrawOp( _materials[3],3,1 )
 		AddVertex( v0.x,v0.y,.5,0 )
