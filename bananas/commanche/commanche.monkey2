@@ -66,7 +66,7 @@ Class MyWindow Extends Window
 		If Not Cmap Then Print "no Cmap!"
 '		Print "dmap=" + Dmap.Width + " " + Dmap.Height
 		PmapDest = New Pixmap(WIDTH, HEIGHT,PixelFormat.RGBA32)
-		image=New Image( WIDTH,HEIGHT )
+		image=New Image( WIDTH,HEIGHT,TextureFlags.Dynamic )
 '		Print PmapDest.Width + "##" 
 	End Method
 	'-----------------------------------------------------------------------------------------------------------
