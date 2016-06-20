@@ -79,12 +79,21 @@ Class Expr Extends PNode
 		Return Null
 	End
 	
-	Method SemantType:Type( scope:Scope )
+	Method SemantType:Type( scope:Scope,generic:Bool=False )
 
 		Try
 			semanting.Push( Self )
 
 			Local type:=OnSemantType( scope )
+			
+			Local ctype:=TCast<ClassType>( type )
+			If ctype
+				If generic
+'					If Not ctype.types Or ctype.instanceOf Throw New SemantEx( "Type '"+ctype.ToString()+"' is not generic" )
+				Else
+					If ctype.types And Not ctype.instanceOf Throw New SemantEx( "Type '"+ctype.ToString()+"' is generic" )
+				Endif
+			Endif
 			
 			semanting.Pop()
 			Return type
@@ -266,7 +275,7 @@ Class GenericExpr Extends Expr
 	
 		Local types:=SemantTypes( Self.types,scope )
 		
-		Local type:=Self.expr.SemantType( scope )
+		Local type:=Self.expr.SemantType( scope,True )
 		
 		Return type.GenInstance( types )
 	End

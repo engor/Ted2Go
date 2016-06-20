@@ -149,6 +149,8 @@ Class EvalStmtExpr Extends StmtExpr
 	
 		Local value:=expr.SemantRValue( block )
 		
+		If Not value.HasSideEffects Throw New SemantEx( "Statement has no effect" )
+		
 		Return New EvalStmt( Self,value )
 	End
 

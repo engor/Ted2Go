@@ -88,11 +88,13 @@ Class VarValue Extends Value
 		Endif
 		
 		If Not type.IsGeneric And Not vdecl.IsExtern And Not Cast<Block>( scope )
+		
 			If vdecl.kind="global" Or vdecl.kind="const"
 				transFile.globals.Push( Self )
 			Else
 				scope.transMembers.Push( Self )
 			Endif
+			
 		Endif
 	
 		Return Self
@@ -118,11 +120,6 @@ Class VarValue Extends Value
 
 			Return New MemberVarValue( instance,Self )
 			
-'			If instance And instance.type.DistanceToType( cscope.ctype )>=0
-'				Return New MemberVarValue( instance,Self )
-'			Endif
-'			Throw New SemantEx( "Field '"+ToString()+"' cannot be accessed without an instance" )
-
 		Endif
 		
 		Return Self

@@ -33,29 +33,6 @@ struct bbObject : public bbGCNode{
 struct bbThrowable : public bbObject{
 };
 
-/*
-struct bbException : public bbThrowable{
-
-	bbException();
-	
-	bbException( bbString message );
-	
-	bbString message()const{
-		return _message;
-	}
-	
-	bbArray<bbString> *debugStack()const{
-		return _debugStack;
-	}
-	
-	private:
-	
-	bbGCVar<bbArray<bbString>> _debugStack;
-	
-	bbString _message;
-};
-*/
-
 struct bbInterface{
 
 	virtual ~bbInterface(){
@@ -71,6 +48,10 @@ template<class T,class...A> T *bbGCNew( A...a ){
 	T *p=new T( a... );
 	bbGC::endCtor( p );
 	return p;
+}
+
+inline bbDBAssertSelf( void *p ){
+	bbDebugAssert( p,"'Self' is null" );
 }
 
 inline bbString bbDBObjectValue( bbObject *p ){

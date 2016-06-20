@@ -712,6 +712,18 @@ Class Translator_CPP Extends Translator
 			
 		Endif
 		
+		If debug And func.IsMethod
+		
+			If Not func.IsVirtual And Not func.IsExtension
+				'			
+				'Can't do this yet as it breaks mx2cc!
+				'
+				'Emit( "bbDBAssertSelf(this);" )
+				'
+			Endif
+			
+		Endif
+		
 		EmitBlock( func )
 		
 		Emit( "}" )
@@ -810,6 +822,19 @@ Class Translator_CPP Extends Translator
 		If debug 
 		
 			Emit( "bbDBFrame db_f{~q"+func.Name+":"+func.ftype.retType.Name+"("+func.ParamNames+")~q,~q"+func.pnode.srcfile.path+"~q};" )
+			
+			If func.IsMethod
+				
+				Select func.cscope.ctype.cdecl.kind
+				Case "struct"
+					Emit( ClassName( func.cscope.ctype )+"*self=&"+Trans(func.selfValue)+";" )
+					Emit( "bbDBLocal(~qSelf~q,self);" )
+				Case "class"
+					Emit( ClassName( func.cscope.ctype )+"*self="+Trans(func.selfValue)+";" )
+					Emit( "bbDBLocal(~qSelf~q,&self);" )
+				End
+				
+			Endif
 			
 			For Local vvar:=Eachin func.params
 				Emit( "bbDBLocal(~q"+vvar.vdecl.ident+"~q,&"+Trans( vvar )+");" )

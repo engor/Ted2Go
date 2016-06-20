@@ -3,7 +3,6 @@
 #define BB_DEBUG_H
 
 #include "bbstring.h"
-#include "bbobject.h"
 
 struct bbDBFiber;
 struct bbDBFrame;

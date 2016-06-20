@@ -129,6 +129,10 @@ Class FuncValue Extends Value
 		Return fdecl.kind="method" And fdecl.ident<>"new"
 	End
 	
+	Property IsVirtual:Bool()
+		Return IsMethod And (cscope.ctype.IsVirtual Or fdecl.IsVirtual Or fdecl.IsOverride)
+	End
+	
 	Property IsFunction:Bool()
 		Return fdecl.kind="function"
 	End

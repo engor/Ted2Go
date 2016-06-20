@@ -444,7 +444,7 @@ Class ClassType Extends Type
 			If TypesEqual( inst.types,types ) Return inst
 		Next
 		
-		Local inst:=New ClassType( cdecl,scope.outer,types,self )
+		Local inst:=New ClassType( cdecl,scope.outer,types,Self )
 		instances.Push( inst )
 		
 		inst.Semant()
@@ -646,21 +646,13 @@ Class ClassScope Extends Scope
 
 	Field ctype:ClassType
 	
-	Field genTypes:=New StringMap<Type>
+	Field itype:Type
 	
 	Method New( ctype:ClassType,outer:Scope )
 		Super.New( outer )
 
 		Self.ctype=ctype
 		
-		'so code can access 'List' instead of 'List<T>'
-		genTypes[ctype.cdecl.ident]=ctype
-
-		'so code can access gen args
-		Local genArgs:=ctype.cdecl.genArgs
-		For Local i:=0 Until genArgs.Length
-			genTypes[genArgs[i]]=ctype.types[i]
-		Next
 	End
 	
 	Property Name:String() Override
@@ -706,10 +698,22 @@ Class ClassScope Extends Scope
 	
 	Method FindType:Type( ident:String ) Override
 	
-		Local type:=genTypes[ident]
-		If type Return type
-	
-		type=ctype.FindType( ident )
+		If ident=ctype.cdecl.ident
+			If Not itype
+				If ctype.types And Not ctype.instanceOf
+					itype=ctype.GenInstance( ctype.types )
+				Else 
+					itype=ctype
+				Endif
+			Endif
+			Return itype
+		Endif
+		
+		For Local i:=0 Until ctype.cdecl.genArgs.Length
+			If ident=ctype.cdecl.genArgs[i] Return ctype.types[i]
+		Next
+		
+		Local type:=ctype.FindType( ident )
 		If type Return type
 		
 		If outer Return outer.FindType( ident )
