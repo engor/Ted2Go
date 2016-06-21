@@ -6,6 +6,7 @@ Namespace sdl2
 #Import "<libX11.a>"
 #Import "<libXext.a>"
 #Import "<libXi.a>"
+#Import "<libpulse.a>"
 
 'source files
 #Import "SDL/src/atomic/SDL_atomic.c"
@@ -14,8 +15,8 @@ Namespace sdl2
 #Import "SDL/src/audio/disk/SDL_diskaudio.c"
 
 #Import "SDL/src/audio/dummy/SDL_dummyaudio.c"
-
-#Import "SDL/src/audio/dsp/SDL_dspaudio.c"
+#Import "SDL/src/audio/pulseaudio/SDL_pulseaudio.c"
+'#Import "SDL/src/audio/dsp/SDL_dspaudio.c"
 
 #Import "SDL/src/audio/SDL_audio.c"
 #Import "SDL/src/audio/SDL_audiocvt.c"
