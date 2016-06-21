@@ -50,7 +50,7 @@ template<class T,class...A> T *bbGCNew( A...a ){
 	return p;
 }
 
-inline bbDBAssertSelf( void *p ){
+inline void bbDBAssertSelf( void *p ){
 	bbDebugAssert( p,"'Self' is null" );
 }
 
