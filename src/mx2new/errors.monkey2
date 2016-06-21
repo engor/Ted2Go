@@ -127,3 +127,8 @@ Function SemantError( func:String )
 	Print "~n".Join( GetDebugStack() )
 	Throw New SemantEx( func+" Internal Error" )
 End
+
+Function TransError( func:String )
+	Print "~n".Join( GetDebugStack() )
+	Throw New SemantEx( func+" Internal Error" )
+End

@@ -120,8 +120,25 @@ Class Translator_CPP Extends Translator
 	
 	'***** Decls *****
 	
+	Method GCVarTypeName:String( type:Type )
+	
+		Local ctype:=TCast<ClassType>( type )
+		If ctype And Not ctype.IsVoid And (ctype.cdecl.kind="class" Or ctype.cdecl.kind="interface") Return ClassName( ctype )
+		
+		Local atype:=TCast<ArrayType>( type )
+		If atype Return ArrayName( atype )
+		
+		Return ""
+	End
+	
 	Method ElementType:String( type:Type )
-
+	
+		Local name:=GCVarTypeName( type )
+		If Not name Return TransType( type )
+		
+		Return "bbGCVar<"+name+">"
+	
+		#rem
 		Local ctype:=TCast<ClassType>( type )
 		If ctype And (ctype.cdecl.kind="class" Or ctype.cdecl.kind="interface")
 			Return "bbGCVar<"+ClassName( ctype )+">"
@@ -133,10 +150,28 @@ Class Translator_CPP Extends Translator
 		Endif
 		
 		Return TransType( type )
+		#end
 	End
 	
 	Method VarType:String( vvar:VarValue )
 	
+		Local type:=vvar.type
+	
+		Local name:=GCVarTypeName( type )
+		If Not name Return TransType( type )
+		
+		Select vvar.vdecl.kind
+		Case "local"
+			Return name+"*"
+		Case "field"
+			Return "bbGCVar<"+name+">"
+		Case "global","const"
+			Return "bbGCRootVar<"+name+">"
+		End
+		
+		TransError( "Translator.VarType (2)" )
+		Return ""
+#rem	
 		Local type:=vvar.type
 	
 		Local gc:=""
@@ -160,6 +195,8 @@ Class Translator_CPP Extends Translator
 		Endif
 		
 		Return TransType( type )
+#end
+
 	End
 
 	Method VarProto:String( vvar:VarValue ) Override
