@@ -3,7 +3,6 @@ Namespace mx2
 
 'Really only for c++ translator right now, but splits out some grunt work from main translator!
 
-
 'Does type need bbGCMark()ing?
 '
 Function IsGCType:Bool( type:Type )
@@ -26,35 +25,8 @@ Function IsGCType:Bool( type:Type )
 		Return False
 	Endif
 	
-'	 Return HasGCMembers( ctype.scope )
-	
 	Return False
 End
-
-#rem
-Function IsGCVarType:Bool( type:Type )
-
-	Local ctype:=TCast<ClassType>( type )
-	If ctype Return ctype.cdecl.kind="class" Or ctype.cdecl.kind="interface"
-	
-	Local atype:=TCast<ArrayType>( type )
-	Return atype<>Null
-End
-#end
-
-#rem
-Function HasGCMembers:Bool( scope:Scope )
-
-	For Local node:=Eachin scope.transMembers
-	
-		Local varv:=Cast<VarValue>( node )
-		If varv And IsGCType( varv.type ) Return True
-	
-	Next
-	
-	Return False
-End
-#end
 
 'Visitor that looks for gc params on LHS of an assignment.
 '
