@@ -150,7 +150,7 @@ Class Translator_CPP Extends Translator
 		End
 
 		Local ctype:=TCast<ClassType>( type )
-		If ctype And (ctype.cdecl.kind="class" Or ctype.cdecl.kind="interface")
+		If ctype And Not ctype.IsVoid And (ctype.cdecl.kind="class" Or ctype.cdecl.kind="interface")
 			Return gc+ClassName( ctype )+">"
 		Endif
 		
