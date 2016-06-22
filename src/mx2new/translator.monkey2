@@ -28,6 +28,18 @@ Function IsGCType:Bool( type:Type )
 	Return False
 End
 
+
+Function IsGCPtrType:Bool( type:Type )
+
+	Local ctype:=TCast<ClassType>( type )
+	If ctype Return Not ctype.IsVoid And Not ctype.IsStruct
+	
+	Local atype:=TCast<ArrayType>( type )
+	If atype Return True
+	
+	Return False
+End
+
 'Visitor that looks for gc params on LHS of an assignment.
 '
 Class AssignedGCParamsVisitor Extends StmtVisitor
@@ -196,12 +208,22 @@ Class Translator
 
 			For Local vvar:=Eachin _gcframe.vars.Values
 				Uses( vvar.type )
-				Emit( "bbGCMark("+VarName( vvar )+");" )
+				If IsGCPtrType( vvar.type )
+					Emit( "bbGCMarkPtr("+VarName( vvar )+");" )
+				Else
+					Emit( "bbGCMark("+VarName( vvar )+");" )
+				Endif
+'				Emit( "bbGCMark("+VarName( vvar )+");" )
 			Next
 			
 			For Local tmp:=Eachin _gcframe.tmps
 				Uses( tmp.type )
-				Emit( "bbGCMark("+tmp.ident+");" )
+				If IsGCPtrType( tmp.type )
+					Emit( "bbGCMarkPtr("+tmp.ident+");" )
+				Else
+					Emit( "bbGCMark("+tmp.ident+");" )
+				Endif
+'				Emit( "bbGCMark("+tmp.ident+");" )
 			Next
 			
 			Emit( "}" )

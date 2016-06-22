@@ -367,9 +367,7 @@ Class Translator_CPP Extends Translator
 		Local needsMark:=False
 
 		EmitBr()		
-		For Local node:=Eachin ctype.fields
-			Local vvar:=Cast<VarValue>( node )
-			If Not vvar Continue
+		For Local vvar:=Eachin ctype.fields
 
 			#rem			
 			If cdecl.kind="struct"
@@ -515,9 +513,7 @@ Class Translator_CPP Extends Translator
 		Local needsMark:=False
 
 		EmitBr()		
-		For Local node:=Eachin ctype.fields
-			Local vvar:=Cast<VarValue>( node )
-			If Not vvar Continue
+		For Local vvar:=Eachin ctype.fields
 			
 			If IsGCType( vvar.type ) needsMark=True
 			
@@ -535,9 +531,8 @@ Class Translator_CPP Extends Translator
 			
 			BeginGCFrame()
 			
-			For Local node:=Eachin ctype.fields
-				Local vvar:=Cast<VarValue>( node )
-				If Not vvar Or Not vvar.init Or Not vvar.init.HasSideEffects Continue
+			For Local vvar:=Eachin ctype.fields
+				If Not vvar.init Or Not vvar.init.HasSideEffects Continue
 
 				Emit( Trans( vvar )+"="+Trans( vvar.init )+";" )
 			Next
@@ -559,9 +554,8 @@ Class Translator_CPP Extends Translator
 					Emit( ClassName( ctype.superType )+"::gcMark();" )
 				End
 			
-				For Local node:=Eachin ctype.fields
-					Local vvar:=Cast<VarValue>( node )
-					If Not vvar Or Not IsGCType( vvar.type ) Continue
+				For Local vvar:=Eachin ctype.fields
+					If Not IsGCType( vvar.type ) Continue
 					
 					Uses( vvar.type )
 					Emit( "bbGCMark("+VarName( vvar )+");" )
@@ -647,19 +641,6 @@ Class Translator_CPP Extends Translator
 			
 				Emit( "return bbDBStructValue(p);" )
 			End
-			
-				#rem				
-			
-				Emit( "bbString t=~q{~q;" )
-				
-				For Local vvar:=Eachin ctype.fields
-					Local v:="&p->"+VarName( vvar )
-					Emit( "t+=BB_T(~q"+vvar.vdecl.ident+"~q)+~q:~q+bbDBType("+v+")+~q=~q+bbDBValue("+v+")+~q;~q;" )
-				Next
-				
-				Emit( "return t+~q}~q;" )
-				
-				#end
 				
 			Emit( "}" )
 				
@@ -672,9 +653,7 @@ Class Translator_CPP Extends Translator
 			If Not hasCmp
 				EmitBr()
 				Emit( "int bbCompare(const "+cname+"&x,const "+cname+"&y){" )
-				For Local node:=Eachin ctype.fields
-					Local vvar:=Cast<VarValue>( node )
-					If Not vvar Continue
+				For Local vvar:=Eachin ctype.fields
 					Local vname:=VarName( vvar )
 					Emit( "if(int t=bbCompare(x."+vname+",y."+vname+")) return t;" )
 				Next
@@ -691,9 +670,8 @@ Class Translator_CPP Extends Translator
 					Emit( "bbGCMark(("+ClassName( ctype.superType )+"&)t);" )
 				Endif
 	
-				For Local node:=Eachin ctype.fields
-					Local vvar:=Cast<VarValue>( node )
-					If Not vvar Or Not IsGCType( vvar.type ) Continue
+				For Local vvar:=Eachin ctype.fields
+					If Not IsGCType( vvar.type ) Continue
 					
 					Uses( vvar.type )
 					Emit( "bbGCMark(t."+VarName( vvar )+");" )
@@ -808,8 +786,11 @@ Class Translator_CPP Extends Translator
 
 		Emit( "void gcMark(){" )
 		For Local vvar:=Eachin func.captures
-			If IsGCType( vvar.type ) 
-				Uses( vvar.type )
+			If Not IsGCType( vvar.type ) Continue
+			Uses( vvar.type )
+			If IsGCPtrType( vvar.type )
+				Emit( "bbGCMarkPtr("+VarName( vvar )+");" )
+			Else
 				Emit( "bbGCMark("+VarName( vvar )+");" )
 			Endif
 		Next
