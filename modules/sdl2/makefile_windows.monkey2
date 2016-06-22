@@ -21,16 +21,15 @@ Namespace sdl2
 #import "SDL/src/audio/disk/SDL_diskaudio.c"
 
 #import "SDL/src/audio/dummy/SDL_dummyaudio.c"
-
 #Import "SDL/src/audio/directsound/SDL_directsound.c"
-'#Import "SDL/src/audio/xaudio2/SDL_xaudio2.c"	'xaudio2.h is missing from MINGW!
+'#Import "SDL/src/audio/xaudio2/SDL_xaudio2.c"	'xaudio2.h is missing from MINGW?
 '#import "SDL/src/audio/winmm/SDL_winmm.c"
 
-#import "SDL/src/audio/SDL_audio.c"
-#import "SDL/src/audio/SDL_audiocvt.c"
-#import "SDL/src/audio/SDL_audiodev.c"
-#import "SDL/src/audio/SDL_audiotypecvt.c"
-#import "SDL/src/audio/SDL_mixer.c"
+#Import "SDL/src/audio/SDL_audio.c"
+#Import "SDL/src/audio/SDL_audiocvt.c"
+#Import "SDL/src/audio/SDL_audiodev.c"
+#Import "SDL/src/audio/SDL_audiotypecvt.c"
+#Import "SDL/src/audio/SDL_mixer.c"
 #import "SDL/src/audio/SDL_wave.c"
 
 #import "SDL/src/core/windows/SDL_windows.c"
@@ -72,45 +71,41 @@ Namespace sdl2
 
 #import "SDL/src/power/windows/SDL_syspower.c"
 
-#import "SDL/src/power/SDL_power.c"
+#Import "SDL/src/power/SDL_power.c"
 
-#Import "SDL/src/render/opengl/SDL_render_gl.c"
-#Import "SDL/src/render/opengl/SDL_shaders_gl.c"
-
+'GLES20 renderer...not used by mojo, but there if ya want it.
 #Import "SDL/src/render/opengles2/SDL_render_gles2.c"
 #Import "SDL/src/render/opengles2/SDL_shaders_gles2.c"
 
-#Import "SDL/src/render/direct3d/SDL_render_d3d.c"
-#Import "SDL/src/render/direct3d11/SDL_render_d3d11.c"
+'Have to include SW renderer...?
+#Import "SDL/src/render/software/SDL_blendfillrect.c"
+#Import "SDL/src/render/software/SDL_blendline.c"
+#Import "SDL/src/render/software/SDL_blendpoint.c"
+#Import "SDL/src/render/software/SDL_drawline.c"
+#Import "SDL/src/render/software/SDL_drawpoint.c"
+#Import "SDL/src/render/software/SDL_render_sw.c"
+#Import "SDL/src/render/software/SDL_rotate.c"
 
-#import "SDL/src/render/software/SDL_blendfillrect.c"
-#import "SDL/src/render/software/SDL_blendline.c"
-#import "SDL/src/render/software/SDL_blendpoint.c"
-#import "SDL/src/render/software/SDL_drawline.c"
-#import "SDL/src/render/software/SDL_drawpoint.c"
-#import "SDL/src/render/software/SDL_render_sw.c"
-#import "SDL/src/render/software/SDL_rotate.c"
-
-#import "SDL/src/render/SDL_d3dmath.c"
-#import "SDL/src/render/SDL_render.c"
-#import "SDL/src/render/SDL_yuv_mmx.c"
-#import "SDL/src/render/SDL_yuv_sw.c"
+#Import "SDL/src/render/SDL_d3dmath.c"
+#Import "SDL/src/render/SDL_render.c"
+#Import "SDL/src/render/SDL_yuv_mmx.c"
+#Import "SDL/src/render/SDL_yuv_sw.c"
 
 #Import "SDL/src/stdlib/SDL_getenv.c"
-#import "SDL/src/stdlib/SDL_iconv.c"
-#import "SDL/src/stdlib/SDL_malloc.c"
-#import "SDL/src/stdlib/SDL_qsort.c"
+#Import "SDL/src/stdlib/SDL_iconv.c"
+#Import "SDL/src/stdlib/SDL_malloc.c"
+#Import "SDL/src/stdlib/SDL_qsort.c"
 #Import "SDL/src/stdlib/SDL_stdlib.c"
-#import "SDL/src/stdlib/SDL_string.c"
+#Import "SDL/src/stdlib/SDL_string.c"
 
-#import "SDL/src/thread/generic/SDL_syscond.c"
+#Import "SDL/src/thread/generic/SDL_syscond.c"
 
-#import "SDL/src/thread/windows/SDL_sysmutex.c"
-#import "SDL/src/thread/windows/SDL_syssem.c"
-#import "SDL/src/thread/windows/SDL_systhread.c"
-#import "SDL/src/thread/windows/SDL_systls.c"
+#Import "SDL/src/thread/windows/SDL_sysmutex.c"
+#Import "SDL/src/thread/windows/SDL_syssem.c"
+#Import "SDL/src/thread/windows/SDL_systhread.c"
+#Import "SDL/src/thread/windows/SDL_systls.c"
 
-#import "SDL/src/thread/SDL_thread.c"
+#Import "SDL/src/thread/SDL_thread.c"
 
 #import "SDL/src/timer/windows/SDL_systimer.c"
 
@@ -149,7 +144,7 @@ Namespace sdl2
 #import "SDL/src/video/SDL_rect.c"
 #import "SDL/src/video/SDL_RLEaccel.c"
 #import "SDL/src/video/SDL_shape.c"
-#import "SDL/src/video/SDL_stretch.c"
+#Import "SDL/src/video/SDL_stretch.c"
 #import "SDL/src/video/SDL_surface.c"
 #import "SDL/src/video/SDL_video.c"
 
@@ -160,20 +155,20 @@ Namespace sdl2
 #Import "SDL/src/SDL.c"
 
 'Really?!?...
-#import "SDL/src/libm/e_atan2.c"
-#import "SDL/src/libm/e_log.c"
-#import "SDL/src/libm/e_pow.c"
-#import "SDL/src/libm/e_rem_pio2.c"
-#import "SDL/src/libm/e_sqrt.c"
-#import "SDL/src/libm/k_cos.c"
-#import "SDL/src/libm/k_rem_pio2.c"
-#import "SDL/src/libm/k_sin.c"
-#import "SDL/src/libm/k_tan.c"
-#import "SDL/src/libm/s_atan.c"
-#import "SDL/src/libm/s_copysign.c"
-#import "SDL/src/libm/s_cos.c"
-#import "SDL/src/libm/s_fabs.c"
-#import "SDL/src/libm/s_floor.c"
-#import "SDL/src/libm/s_scalbn.c"
-#import "SDL/src/libm/s_sin.c"
-#import "SDL/src/libm/s_tan.c"
+#Import "SDL/src/libm/e_atan2.c"
+#Import "SDL/src/libm/e_log.c"
+#Import "SDL/src/libm/e_pow.c"
+#Import "SDL/src/libm/e_rem_pio2.c"
+#Import "SDL/src/libm/e_sqrt.c"
+#Import "SDL/src/libm/k_cos.c"
+#Import "SDL/src/libm/k_rem_pio2.c"
+#Import "SDL/src/libm/k_sin.c"
+#Import "SDL/src/libm/k_tan.c"
+#Import "SDL/src/libm/s_atan.c"
+#Import "SDL/src/libm/s_copysign.c"
+#Import "SDL/src/libm/s_cos.c"
+#Import "SDL/src/libm/s_fabs.c"
+#Import "SDL/src/libm/s_floor.c"
+#Import "SDL/src/libm/s_scalbn.c"
+#Import "SDL/src/libm/s_sin.c"
+#Import "SDL/src/libm/s_tan.c"

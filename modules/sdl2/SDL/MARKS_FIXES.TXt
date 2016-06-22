@@ -5,3 +5,5 @@
 
 * SDL_timer.c - fixed 'slippage' bug.
 
+* SDL_dynapi_procs.h - commented out references to direct3d.
+

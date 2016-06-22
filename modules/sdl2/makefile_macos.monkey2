@@ -12,16 +12,12 @@ Namespace sdl2
 #Import "<IOKit.framework>"
 #Import "<ForceFeedback.framework>"
 
-'source files
 #Import "SDL/src/atomic/SDL_atomic.c"
 #Import "SDL/src/atomic/SDL_spinlock.c"
 
 #Import "SDL/src/audio/disk/SDL_diskaudio.c"
-
 #Import "SDL/src/audio/dummy/SDL_dummyaudio.c"
-
 #Import "SDL/src/audio/coreaudio/SDL_coreaudio.c"
-
 #Import "SDL/src/audio/SDL_audio.c"
 #Import "SDL/src/audio/SDL_audiocvt.c"
 #Import "SDL/src/audio/SDL_audiodev.c"
@@ -44,24 +40,19 @@ Namespace sdl2
 #Import "SDL/src/events/SDL_windowevents.c"
 
 #Import "SDL/src/filesystem/cocoa/SDL_sysfilesystem.m"
-
 #Import "SDL/src/file/cocoa/SDL_rwopsbundlesupport.m"
-
 #Import "SDL/src/file/SDL_rwops.c"
 
 #Import "SDL/src/haptic/darwin/SDL_syshaptic.c"
-
 #Import "SDL/src/haptic/SDL_haptic.c"
 
 #Import "SDL/src/joystick/darwin/SDL_sysjoystick.c"
-
 #Import "SDL/src/joystick/SDL_joystick.c"
 #Import "SDL/src/joystick/SDL_gamecontroller.c"
 
 #Import "SDL/src/loadso/dlopen/SDL_sysloadso.c"
 
 #Import "SDL/src/power/macosx/SDL_syspower.c"
-
 #Import "SDL/src/power/SDL_power.c"
 
 #Import "SDL/src/render/opengl/SDL_render_gl.c"
@@ -95,7 +86,6 @@ Namespace sdl2
 #Import "SDL/src/thread/SDL_thread.c"
 
 #Import "SDL/src/timer/unix/SDL_systimer.c"
-
 #Import "SDL/src/timer/SDL_timer.c"
 
 #Import "SDL/src/video/cocoa/SDL_cocoaclipboard.m"
@@ -109,28 +99,9 @@ Namespace sdl2
 #Import "SDL/src/video/cocoa/SDL_cocoashape.m"
 #Import "SDL/src/video/cocoa/SDL_cocoavideo.m"
 #Import "SDL/src/video/cocoa/SDL_cocoawindow.m"
-
 #Import "SDL/src/video/dummy/SDL_nullevents.c"
 #Import "SDL/src/video/dummy/SDL_nullframebuffer.c"
 #Import "SDL/src/video/dummy/SDL_nullvideo.c"
-
-#Import "SDL/src/video/x11/imKStoUCS.c"
-#Import "SDL/src/video/x11/SDL_x11clipboard.c"
-#Import "SDL/src/video/x11/SDL_x11dyn.c"
-#Import "SDL/src/video/x11/SDL_x11events.c"
-#Import "SDL/src/video/x11/SDL_x11framebuffer.c"
-#Import "SDL/src/video/x11/SDL_x11keyboard.c"
-#Import "SDL/src/video/x11/SDL_x11messagebox.c"
-#Import "SDL/src/video/x11/SDL_x11modes.c"
-#Import "SDL/src/video/x11/SDL_x11mouse.c"
-#Import "SDL/src/video/x11/SDL_x11opengl.c"
-#Import "SDL/src/video/x11/SDL_x11opengles.c"
-#Import "SDL/src/video/x11/SDL_x11shape.c"
-#Import "SDL/src/video/x11/SDL_x11touch.c"
-#Import "SDL/src/video/x11/SDL_x11video.c"
-#Import "SDL/src/video/x11/SDL_x11window.c"
-#Import "SDL/src/video/x11/SDL_x11xinput2.c"
-
 #Import "SDL/src/video/SDL_blit.c"
 #Import "SDL/src/video/SDL_blit_0.c"
 #Import "SDL/src/video/SDL_blit_1.c"
