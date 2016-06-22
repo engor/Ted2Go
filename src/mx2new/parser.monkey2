@@ -687,9 +687,11 @@ Class Parser
 			
 			cond=ParseExpr()
 			
+			CParse( "then" )
+			
 			block=CParseEol()
 			
-			If Not block CParse( "then" )
+'			If Not block CParse( "then" )
 			
 		Catch ex:ParseEx
 		
