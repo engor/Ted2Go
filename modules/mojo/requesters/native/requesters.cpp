@@ -190,6 +190,11 @@ bbString bbRequesters::RequestDir( bbString title,bbString dir ){
 	return str;
 }
 
+void bbRequesters::OpenUrl( bbString url ){
+
+	ShellExecute( HWND_DESKTOP,"open",url.c_str(),0,0,SW_SHOWNORMAL );
+}
+
 #elif __linux
 
 #include <limits.h>
@@ -228,6 +233,11 @@ bbString bbRequesters::RequestDir( bbString title,bbString dir ){
 	while( n && buf[n-1]<=32 ) --n;
 	
 	return bbString::fromCString( buf,n );
+}
+
+void bbRequesters::OpenUrl( bbString url ){
+
+	system( ( bbString( "xdg-open \"" )+url+"\"" ).c_str() );
 }
 
 #endif

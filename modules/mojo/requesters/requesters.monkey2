@@ -30,6 +30,8 @@ Function RequestFile:String( title:String,filter:String="",save:Bool=False,file:
 
 Function RequestDir:String( title:String,dir:String="" )="bbRequesters::RequestDir"
 
+Function OpenUrl( url:String )="bbRequesters::OpenUrl"
+
 #Else
 
 Function Notify( title:String,text:String,serious:Bool=False )

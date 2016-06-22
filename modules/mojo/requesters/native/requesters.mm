@@ -201,3 +201,10 @@ bbString bbRequesters::RequestDir( bbString title,bbString dir ){
 	return str;
 }
 
+void bbRequesters::OpenUrl( bbString url ){
+
+	if( CFURLRef cfurl=CFURLCreateWithBytes( 0,url.c_str(),url.Length(),kCFStringEncodingASCII,0 ) ){
+		LSOpenCFURLRef( cfurl,0 );
+		CFRelease( cfurl );
+	}
+}

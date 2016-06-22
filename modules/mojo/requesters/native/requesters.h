@@ -15,6 +15,8 @@ namespace bbRequesters{
 	bbString RequestFile( bbString title,bbString filters,bbBool save,bbString path );
 
 	bbString RequestDir( bbString title,bbString dir );
+	
+	void OpenUrl( bbString url );
 }
 
 #endif
