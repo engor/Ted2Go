@@ -1,184 +1,13 @@
 
 Namespace mx2.docs
 
-Class MarkdownBuffer
-
-	Alias LinkResolver:String( link:String )
-
-	Method New( linkResolver:LinkResolver=Null )
-		_linkResolver=linkResolver
-	End
-
-	Method Emit( markdown:String )
-	
-		If Not markdown.Contains( "~n" )
-			_buf.Push( ReplaceLinks( markdown ) )
-			Return
-		Endif
-		
-		Local lines:=markdown.Split( "~n" )
-		
-		For Local i:=0 Until lines.Length
-		
-			Local line:=lines[i].Trim()
-			
-			If line.StartsWith( "@" )
-
-				Local j:=FindSpc( line )
-				Local id:=line.Slice( 1,j )
-				line=line.Slice( j ).Trim()
-				
-				Select id
-				Case "param"
-				
-					_params.Push( line )
-					
-				Case "return"
-				
-					_return=line
-					
-				Case "example"
-				
-					Local indent:=FindChar( lines[i] )
-					i+=1
-					
-					_buf.Push( "```" )
-					
-					Local buf:=New StringStack
-					
-					While i<lines.Length
-						Local line:=lines[i]
-						If line.Trim().StartsWith( "@end" ) Exit
-						i+=1
-						line=line.Slice( indent )
-						If line.StartsWith( "\#" ) line=line.Slice( 1 )
-						buf.Push( line )
-					Wend
-					
-					_buf.Push( buf.Join( "~n" ).Trim() )
-					
-					_buf.Push( "```" )
-					
-				Case "see"
-				
-					Continue
-				
-				Default
-				
-					Print "MarkdownBuffer: unrecognized '"+lines[i]+"'"
-					
-				End
-
-				Continue
-			Endif
-			
-			_buf.Push( ReplaceLinks( line ) )
-			
-		Next
-	
-	End
-	
-	Method EmitBr()
-	
-		_buf.Push( "" )
-	End
-	
-	Method Flush:String()
-
-		If _params.Length	
-		
-			EmitBr()
-			Emit( "| Parameters |    |" )
-			Emit( "|:-----------|:---|" )
-			
-			For Local p:=Eachin _params
-			
-				Local i:=FindSpc( p )
-				Local id:=p.Slice( 0,i )
-				p=p.Slice( i ).Trim()
-				
-				If Not id Or Not p Continue
-				
-				Emit( "| `"+id+"` | "+p+" |" )
-			Next
-			
-			_params.Clear()
-			
-		Endif
-		
-		Local markdown:=_buf.Join( "~n" ).Trim()+"~n"
-		
-		_buf.Clear()
-		
-		Local docs:=hoedown.MarkdownToHtml( markdown )
-		
-		Return docs
-	End
-	
-	Private
-	
-	Field _linkResolver:LinkResolver
-	Field _buf:=New StringStack
-	Field _params:=New StringStack
-	Field _return:String
-	
-	Method FindSpc:Int( str:String )
-		For Local i:=0 Until str.Length
-			If str[i]<=32 Return i
-		Next
-		Return str.Length
-	End
-
-	Method FindChar:Int( str:String )
-		For Local i:=0 Until str.Length
-			If str[i]>32 Return i
-		Next
-		Return -1
-	End
-	
-	Method ReplaceLinks:String( line:String )
-	
-		Repeat
-			Local i0:=line.Find( "[[" )
-			If i0=-1 Return line
-			
-			Local i1:=line.Find( "]]",i0+2 )
-			If i1=-1 Return line
-			
-			Local path:=line.Slice( i0+2,i1 )
-			Local link:=path
-			
-			If _linkResolver<>Null
-				link=_linkResolver( path )
-				If Not link
-					Print "Makedocs error: Can't resolve link '"+path+"'"
-					link=path
-				Endif
-			Endif
-			
-			line=line.Slice( 0,i0 )+link+line.Slice( i1+2 )
-		Forever
-		
-		Return line
-	End
-
-End
+Const PAGES_DIR:="docs/__PAGES__/"
 
 Class DocsMaker
 
-	Protected
-	
-	Field _module:Module
-	
-	Field _linkScope:Scope
-
-	Field _pagesDir:String			'module/docs
-	
-	Field _pageTemplate:String
-	
-	Field _md:MarkdownBuffer
-	
 	Method New()
+	
+		_nav=New JsonBuffer
 	
 		_md=New MarkdownBuffer( Lambda:String( link:String )
 			Return ResolveLink( link,_linkScope )
@@ -186,7 +15,69 @@ Class DocsMaker
 		
 	End
 	
+	Method MakeDocs:String( module:Module )
+	
+		_module=module
+		
+		_pagesDir=_module.baseDir+PAGES_DIR
+		_pageTemplate=stringio.LoadString( "docs/modules_page_template.html" )
+		
+		DeleteDir( _pagesDir,True )
+		CreateDir( _pagesDir,True )
+
+		Local nmspaces:=New StringMap<NamespaceScope>
+		
+		Local nmspaceDocs:=New StringMap<String>
+		
+		For Local fscope:=Eachin _module.fileScopes
+		
+			Local nmspace:=Cast<NamespaceScope>( fscope.outer )
+			If Not nmspace Continue
+			
+			nmspaces[nmspace.Name]=nmspace
+			nmspaceDocs[nmspace.Name]+=fscope.fdecl.docs
+		Next
+		
+		Local page:=""
+		Local mdocs:=_module.baseDir+"docs/module.md"
+		If GetFileType( mdocs )=FileType.File
+			Local md:=stringio.LoadString( mdocs )
+			_linkScope=Null
+			_md.Emit( md )
+			page=_module.name+"-default"
+			SavePage( _md.Flush(),page )
+		Endif
+
+		BeginNode( _module.name,page )
+		
+		For Local nmspace:=Eachin nmspaces.Values
+			EmitNamespace( nmspace,nmspaceDocs[nmspace.Name] )
+		Next
+		
+		EndNode()
+		
+		Local tree:=_nav.Flush()
+		
+		stringio.SaveString( tree,_pagesDir+"index.js" )
+
+		Return tree
+	End
+	
+	Private
+	
+	Field _nav:JsonBuffer
+	
+	Field _md:MarkdownBuffer
+
+	Field _module:Module
+	
+	Field _pagesDir:String			'module/docs
+	Field _pageTemplate:String
+	
+	Field _linkScope:Scope
+
 	Method Esc:String( id:String )
+		id=id.Replace( "|","\|" )
 		id=id.Replace( "_","\_" )
 		id=id.Replace( "<","\<" )
 		id=id.Replace( ">","\>" )
@@ -628,9 +519,101 @@ Class DocsMaker
 
 	End
 	
-	#rem
-	Method MakeNamespaceDocs:String( nmspace:NamespaceScope )
+	Method BeginNode( name:String,page:String="" )
 	
+		If page page=",data:{page:'"+_module.name+":"+page+"'}"
+		
+		_nav.Emit( "{ text:'"+name+"'"+page+",children:[" )
+
+	End
+	
+	Method EndNode()
+
+		_nav.Emit( "] }" )
+	End
+	
+	Method EmitLeaf( name:String,page:String="" )
+	
+		If page page=",data:{page:'"+_module.name+":"+page+"'}"
+		
+		_nav.Emit( "{ text:'"+name+"'"+page+",children:[] }" )
+		
+	End
+	
+	Method EmitLeaf( decl:Decl,page:String="" )
+
+		EmitLeaf( decl.ident,page )
+
+	End
+	
+	Method EmitNode( decl:Decl,scope:Scope,page:String="" )
+	
+		EmitNode( decl.ident,scope,page )
+
+	End
+	
+	Method EmitNode( name:String,scope:Scope,page:String="" )
+	
+		BeginNode( name,page )
+	
+		BeginNode( "Aliases" )
+		EmitAliases( scope,"alias" )
+		EndNode()
+		
+		BeginNode( "Enums" )
+		EmitEnums( scope,"enum" )
+		EndNode()
+		
+		BeginNode( "Structs" )
+		EmitClasses( scope,"struct" )
+		EndNode()		
+		
+		BeginNode( "Classes" )
+		EmitClasses( scope,"class" )
+		EndNode()
+		
+		BeginNode( "Interfaces" )
+		EmitClasses( scope,"interface" )
+		EndNode()
+		
+		BeginNode( "Constants" )
+		EmitVars( scope,"const" )
+		EndNode()
+
+		BeginNode( "Globals" )
+		EmitVars( scope,"global" )
+		EndNode()
+		
+		BeginNode( "Fields" )
+		EmitVars( scope,"field" )
+		EndNode()
+
+		BeginNode( "Contructors" )		
+		EmitFuncs( scope,"constructor" )
+		EndNode()
+		
+		BeginNode( "Properties" )
+		EmitProperties( scope,"property" )
+		EndNode()
+
+		BeginNode( "Operators" )		
+		EmitFuncs( scope,"operator" )
+		EndNode()
+		
+		BeginNode( "Methods" )
+		EmitFuncs( scope,"method" )
+		EndNode()
+
+		BeginNode( "Functions" )
+		EmitFuncs( scope,"function" )
+		EndNode()
+		
+		EndNode()
+		
+	End
+	
+	Method EmitNamespace( nmspace:NamespaceScope,docs:String )
+
 		_linkScope=nmspace
 	
 		_md.Emit( "_Module: &lt;"+_module.name+"&gt;_  " )
@@ -645,207 +628,284 @@ Class DocsMaker
 		EmitMembers( "global",nmspace,True )
 		EmitMembers( "function",nmspace,True )
 		
-		_md.Emit( _namespaceDocs[nmspace.ntype.ident] )
-		
-		Return _md.Flush()
-	End
-	#end
-	
-	Method MakeAliasDocs:String( atype:AliasType )
-		Local decl:=atype.adecl
-		
-		If DocsHidden( decl ) Return ""
-		
-		_linkScope=atype.scope
-		
-		EmitHeader( decl,atype.scope )
-		
-		_md.Emit( "##### Alias "+DeclIdent( decl,True )+" : "+TypeName( atype._alias,atype.scope ) )
-		
-		_md.Emit( decl.docs )
-		
-		Return _md.Flush()
-	End
-	
-	Method MakeEnumDocs:String( etype:EnumType )
-		Local decl:=etype.edecl
-		
-		If DocsHidden( decl ) Return ""
-		
-		_linkScope=etype.scope.outer
+		_md.Emit( docs )
 
-		EmitHeader( decl,etype.scope.outer )
+		docs=_md.Flush()
 		
-		_md.Emit( "##### Enum "+DeclIdent( decl ) )
+		Local page:=NamespacePath( nmspace )
+		SavePage( docs,page )
 		
-		_md.Emit( decl.docs )
-		
-		Return _md.Flush()
+		EmitNode( nmspace.ntype.Name,nmspace,page )
 	End
 	
-	Method MakeClassDocs:String( ctype:ClassType )
+	Method EmitVars( scope:Scope,kind:String )
 	
-		Local decl:=ctype.cdecl
-		
-		If DocsHidden( decl ) Return ""
-		
-		_linkScope=ctype.scope	'.outer
-		
-		EmitHeader( decl,ctype.scope.outer )
-		
-		Local xtends:=""
-		If ctype.superType
-			If ctype.superType<>Type.ObjectClass
-				xtends=" Extends "+TypeName( ctype.superType,ctype.scope.outer )
-			Endif
-		Else If ctype.isvoid
-			xtends=" Extends Void"
-		Endif
-		
-		Local implments:=""
-		If decl.ifaceTypes
-			Local ifaces:=""
-			For Local iface:=Eachin ctype.ifaceTypes
-				ifaces+=","+TypeName( iface,ctype.scope.outer )
-			Next
-			ifaces=ifaces.Slice( 1 )
-			If decl.kind="interface"
-				xtends=" Extends "+ifaces
-			Else
-				implments=" Implements "+ifaces
-			Endif
-		Endif
-		
-		Local mods:=""
-		If decl.IsVirtual
-			mods+=" Virtual"
-		Else If decl.IsAbstract
-			mods+=" Abstract"
-		Else If decl.IsFinal
-			mods+=" Final"
-		Endif
-		
-		_md.Emit( "##### "+decl.kind.Capitalize()+" "+DeclIdent( decl,True )+xtends+implments+mods )
-		
-		_md.Emit( decl.docs )
-		
-		For Local inh:=0 Until 1
-			EmitMembers( "alias",ctype.scope,inh )
-			EmitMembers( "enum",ctype.scope,inh )
-			EmitMembers( "struct",ctype.scope,inh )
-			EmitMembers( "class",ctype.scope,inh )
-			EmitMembers( "interface",ctype.scope,inh )
-			EmitMembers( "const",ctype.scope,inh )
-			EmitMembers( "global",ctype.scope,inh )
-			EmitMembers( "field",ctype.scope,inh )
-			EmitMembers( "property",ctype.scope,inh )
-			EmitMembers( "constructor",ctype.scope,inh )
-			EmitMembers( "operator",ctype.scope,inh )
-			EmitMembers( "method",ctype.scope,inh )
-			EmitMembers( "function",ctype.scope,inh )
-		End
-		
-		Return _md.Flush()
-	End
+		For Local node:=Eachin scope.nodes
 	
-	Method MakeVarDocs:String( vvar:VarValue )
-	
-		Local decl:=vvar.vdecl
-		
-		If DocsHidden( decl ) Return ""
-		
-		_linkScope=vvar.scope
-		
-		EmitHeader( decl,vvar.scope )
-		
-		_md.Emit( "##### "+decl.kind.Capitalize()+" "+DeclIdent( decl )+" : "+TypeName( vvar.type,vvar.scope ) )
-		
-		_md.Emit( decl.docs )
-		
-		Return _md.Flush()
-	End
-		
-	Method MakePropertyDocs:String( plist:PropertyList )
-	
-		Local decl:=plist.pdecl
-		
-		If DocsHidden( decl ) Return ""
-
-		Local func:=plist.getFunc
-		If Not func func=plist.setFunc
-		If Not func Return ""
-		Local type:=func.ftype.argTypes ? func.ftype.argTypes[1] Else func.ftype.retType
-		
-'		Local fdecl:=func.fdecl
-
-		_linkScope=func.scope
-		
-		EmitHeader( decl,func.scope )
-		
-		_md.Emit( "##### Property "+DeclIdent( decl )+" : "+TypeName( type,func.scope ) )
-		
-		_md.Emit( decl.docs )
-		
-		Return _md.Flush()
-	End
-	
-	Method MakeFuncDocs:String( flist:FuncList,kind:String )
-
-		If Cast<PropertyList>( flist ) Return ""
-
-		Local docs:StringStack
-				
-		For Local func:=Eachin flist.funcs
-			Local decl:=func.fdecl
+			Local vvar:=Cast<VarValue>( node.Value )
+			If Not vvar Or vvar.transFile.module<>_module Continue
 			
-			If DocsHidden( decl ) Continue
+			Local decl:=vvar.vdecl
+			If decl.kind<>kind Or DocsHidden( decl ) Continue
+		
+			_linkScope=vvar.scope
+
+			EmitHeader( decl,vvar.scope )
+		
+			_md.Emit( "##### "+decl.kind.Capitalize()+" "+DeclIdent( decl )+" : "+TypeName( vvar.type,vvar.scope ) )
+		
+			_md.Emit( decl.docs )
+		
+			Local docs:=_md.Flush()
+
+			Local page:=DeclPath( vvar.vdecl,vvar.scope )
+			SavePage( docs,page )
 			
-			If kind="constructor"
-				If decl.ident<>"new" Continue
-			Else If kind="operator"
-				If Not decl.IsOperator Continue
-			Else If kind<>decl.kind Or decl.ident="new" Or decl.IsOperator
-				Continue
+'			Print "save page:"+page
+			
+			EmitLeaf( vvar.vdecl,page )
+			
+		Next
+	
+	End
+	
+	Method EmitAliases( scope:Scope,kind:String )
+	
+		For Local node:=Eachin scope.nodes
+		
+			Local atype:=Cast<AliasType>( node.Value )
+			If Not atype Continue
+			
+			Local decl:=atype.adecl
+			If decl.kind<>kind Or DocsHidden( decl ) Continue
+		
+			_linkScope=atype.scope
+		
+			EmitHeader( decl,atype.scope )
+		
+			_md.Emit( "##### Alias "+DeclIdent( decl,True )+" : "+TypeName( atype._alias,atype.scope ) )
+		
+			_md.Emit( decl.docs )
+		
+			Local docs:=_md.Flush()
+
+			Local page:=DeclPath( atype.adecl,atype.scope )
+			SavePage( docs,page )
+			
+			EmitLeaf( atype.adecl,page )
+
+		Next
+	
+	End
+	
+	Method EmitEnums( scope:Scope,kind:String )
+	
+		For Local node:=Eachin scope.nodes
+	
+			Local etype:=Cast<EnumType>( node.Value )
+			If Not etype Continue
+			
+			Local decl:=etype.edecl
+			If decl.kind<>kind Or DocsHidden( decl ) Continue
+			
+			_linkScope=etype.scope.outer
+
+			EmitHeader( decl,etype.scope.outer )
+		
+			_md.Emit( "##### Enum "+DeclIdent( decl ) )
+		
+			_md.Emit( decl.docs )
+		
+			Local docs:=_md.Flush()
+
+			Local page:=DeclPath( etype.edecl,etype.scope.outer )
+			SavePage( docs,page )
+			
+			EmitLeaf( etype.edecl,page )
+			
+		Next
+	
+	End
+	
+	Method EmitClasses( scope:Scope,kind:String )
+	
+		For Local node:=Eachin scope.nodes
+	
+			Local ctype:=Cast<ClassType>( node.Value )
+			If Not ctype Or ctype.transFile.module<>_module Continue
+			
+			Local decl:=ctype.cdecl
+			If decl.kind<>kind Or DocsHidden( decl ) Continue
+			
+			_linkScope=ctype.scope	'.outer
+			
+			EmitHeader( decl,ctype.scope.outer )
+			
+			Local xtends:=""
+			If ctype.superType
+				If ctype.superType<>Type.ObjectClass
+					xtends=" Extends "+TypeName( ctype.superType,ctype.scope.outer )
+				Endif
+			Else If ctype.isvoid
+				xtends=" Extends Void"
 			Endif
+			
+			Local implments:=""
+			If decl.ifaceTypes
+				Local ifaces:=""
+				For Local iface:=Eachin ctype.ifaceTypes
+					ifaces+=","+TypeName( iface,ctype.scope.outer )
+				Next
+				ifaces=ifaces.Slice( 1 )
+				If decl.kind="interface"
+					xtends=" Extends "+ifaces
+				Else
+					implments=" Implements "+ifaces
+				Endif
+			Endif
+			
+			Local mods:=""
+			If decl.IsVirtual
+				mods+=" Virtual"
+			Else If decl.IsAbstract
+				mods+=" Abstract"
+			Else If decl.IsFinal
+				mods+=" Final"
+			Endif
+			
+			_md.Emit( "##### "+decl.kind.Capitalize()+" "+DeclIdent( decl,True )+xtends+implments+mods )
+			
+			_md.Emit( decl.docs )
+			
+			For Local inh:=0 Until 1
+				EmitMembers( "alias",ctype.scope,inh )
+				EmitMembers( "enum",ctype.scope,inh )
+				EmitMembers( "struct",ctype.scope,inh )
+				EmitMembers( "class",ctype.scope,inh )
+				EmitMembers( "interface",ctype.scope,inh )
+				EmitMembers( "const",ctype.scope,inh )
+				EmitMembers( "global",ctype.scope,inh )
+				EmitMembers( "field",ctype.scope,inh )
+				EmitMembers( "property",ctype.scope,inh )
+				EmitMembers( "constructor",ctype.scope,inh )
+				EmitMembers( "operator",ctype.scope,inh )
+				EmitMembers( "method",ctype.scope,inh )
+				EmitMembers( "function",ctype.scope,inh )
+			End
+		
+			Local docs:=_md.Flush()
+
+			Local page:=DeclPath( ctype.cdecl,ctype.scope.outer )
+			SavePage( docs,page )
+			
+			EmitNode( ctype.cdecl,ctype.scope,page )
+		Next
+	
+	End
+	
+	Method EmitProperties( scope:Scope,kind:String )
+	
+		For Local node:=Eachin scope.nodes
+		
+			Local plist:=Cast<PropertyList>( node.Value )
+			If Not plist Continue
+			
+			Local decl:=plist.pdecl
+			If decl.kind<>kind Or DocsHidden( decl ) Continue
+
+			Local func:=plist.getFunc
+			If Not func 
+				func=plist.setFunc
+				If Not func Continue
+			Endif
+
+			Local type:=func.ftype.argTypes ? func.ftype.argTypes[1] Else func.ftype.retType
 			
 			_linkScope=func.scope
 			
-			If Not docs
-				docs=New StringStack
-				EmitHeader( decl,func.scope )
-			Endif
+			EmitHeader( decl,func.scope )
 			
-			docs.Push( decl.docs )
+			_md.Emit( "##### Property "+DeclIdent( decl )+" : "+TypeName( type,func.scope ) )
 			
-			Local tkind:=decl.kind.Capitalize()+" "
-			If decl.IsOperator tkind=""
+			_md.Emit( decl.docs )
 			
-			Local params:=""
-			For Local i:=0 Until func.ftype.argTypes.Length
-				Local ident:=Esc( func.fdecl.type.params[i].ident )
-				Local type:=TypeName( func.ftype.argTypes[i],func.scope )
-				Local init:=""
-				If func.fdecl.type.params[i].init
-					init=" ="+func.fdecl.type.params[i].init.ToString()
-				Endif
-				params+=" , "+ident+" : "+type+init
-			Next
-			params=params.Slice( 3 )
+			Local docs:=_md.Flush()
 			
-			_md.Emit( "##### "+tkind+DeclIdent( decl,True )+" : "+TypeName( func.ftype.retType,func.scope )+" ( "+params+" ) " )
+			Local page:=DeclPath( plist.pdecl,plist.scope )
+			SavePage( docs,page )
+			
+			EmitLeaf( plist.pdecl,page )
 
 		Next
+	
+	End
+	
+	Method EmitFuncs( scope:Scope,kind:String )
+	
+		For Local node:=Eachin scope.nodes
 		
-		If Not docs 
-			_md.Flush()
-			Return ""
-		Endif
+			Local flist:=Cast<FuncList>( node.Value )
+			If Not flist Or Cast<PropertyList>( flist ) Continue
+			
+			Local buf:StringStack
+					
+			For Local func:=Eachin flist.funcs
+				Local decl:=func.fdecl
+				
+				If DocsHidden( decl ) Continue
+				
+				If kind="constructor"
+					If decl.ident<>"new" Continue
+				Else If kind="operator"
+					If Not decl.IsOperator Continue
+				Else If kind<>decl.kind Or decl.ident="new" Or decl.IsOperator
+					Continue
+				Endif
+				
+				_linkScope=func.scope
+				
+				If Not buf
+					buf=New StringStack
+					EmitHeader( decl,func.scope )
+				Endif
+				
+				buf.Push( decl.docs )
+				
+				Local tkind:=decl.kind.Capitalize()+" "
+				If decl.IsOperator tkind=""
+				
+				Local params:=""
+				For Local i:=0 Until func.ftype.argTypes.Length
+					Local ident:=Esc( func.fdecl.type.params[i].ident )
+					Local type:=TypeName( func.ftype.argTypes[i],func.scope )
+					Local init:=""
+					If func.fdecl.type.params[i].init
+						init=" ="+func.fdecl.type.params[i].init.ToString()
+					Endif
+					params+=" , "+ident+" : "+type+init
+				Next
+				params=params.Slice( 3 )
+				
+				_md.Emit( "##### "+tkind+DeclIdent( decl,True )+" : "+TypeName( func.ftype.retType,func.scope )+" ( "+params+" ) " )
+	
+			Next
+			
+			If Not buf Continue
+			
+			For Local doc:=Eachin buf
+				_md.Emit( doc )
+			Next
 		
-		For Local doc:=Eachin docs
-			_md.Emit( doc )
+			Local docs:=_md.Flush()
+			
+			Local page:=DeclPath( flist.funcs[0].fdecl,flist.funcs[0].scope )
+			SavePage( docs,page )
+			
+			EmitLeaf( flist.funcs[0].fdecl,page )
+			
 		Next
-		
-		Return _md.Flush()
+	
 	End
 	
 End
+	

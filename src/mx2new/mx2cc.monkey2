@@ -8,8 +8,9 @@ Using mx2.docs
 
 #Import "mx2.monkey2"
 
-#Import "docsmaker.monkey2"
-#Import "htmldocsmaker.monkey2"
+#Import "docs/docsmaker.monkey2"
+#Import "docs/jsonbuffer.monkey2"
+#Import "docs/markdownbuffer.monkey2"
 
 Using libc..
 Using std..
@@ -17,9 +18,9 @@ Using mx2..
 
 Global StartDir:String
 
-'Const TestArgs:="mx2cc makemods"
+Const TestArgs:="mx2cc makemods"
 
-Const TestArgs:="mx2cc makedocs monkey std mojo"
+'Const TestArgs:="mx2cc makedocs monkey std mojo"
 
 'Const TestArgs:="mx2cc makeapp src/mx2new/test.monkey2"
 
@@ -190,7 +191,7 @@ Function MakeDocs( args:String[] )
 	
 	If Not args args=EnumModules()
 	
-	Local docsMaker:=New HtmlDocsMaker
+	Local docsMaker:=New DocsMaker
 	
 	Local mx2_api:=""
 	
