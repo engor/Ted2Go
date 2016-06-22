@@ -259,35 +259,14 @@ template<class T> struct bbGCRootVar : public bbGCVar<T>,public bbGCRoot{
 	}
 };
 
-inline void bbGCMark( bbBool ){}
-inline void bbGCMark( bbByte ){}
-inline void bbGCMark( bbUByte ){}
-inline void bbGCMark( bbShort ){}
-inline void bbGCMark( bbUShort ){}
-inline void bbGCMark( bbInt ){}
-inline void bbGCMark( bbUInt ){}
-inline void bbGCMark( bbLong ){}
-inline void bbGCMark( bbULong ){}
-inline void bbGCMark( bbFloat ){}
-inline void bbGCMark( bbDouble ){}
-
-template<class T> void bbGCMark( const T &t ){
-}
+template<class T> void bbGCMark( const T &t  ){}
 
 template<class T> void bbGCMark( const bbGCVar<T> &v ){
 	bbGC::enqueue( dynamic_cast<bbGCNode*>( v._ptr ) );
 }
 
-template<class T> void bbGCMark( T *p ){
+template<class T> void bbGCMarkPtr( T *p ){
 	bbGC::enqueue( dynamic_cast<bbGCNode*>( p ) );
-}
-
-template<class T,class C> T bb_object_cast( const bbGCVar<C> &p ){
-	return dynamic_cast<T>( p._ptr );
-}
-
-template<class T,class C> T bb_object_cast( C *p ){
-	return dynamic_cast<T>( p );
 }
 
 #endif

@@ -50,6 +50,14 @@ template<class T,class...A> T *bbGCNew( A...a ){
 	return p;
 }
 
+template<class T,class C> T bb_object_cast( const bbGCVar<C> &p ){
+	return dynamic_cast<T>( p._ptr );
+}
+
+template<class T,class C> T bb_object_cast( C *p ){
+	return dynamic_cast<T>( p );
+}
+
 inline void bbDBAssertSelf( void *p ){
 	bbDebugAssert( p,"'Self' is null" );
 }
