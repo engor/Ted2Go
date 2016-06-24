@@ -249,8 +249,7 @@ bbBool bbProcess::start( bbString cmd ){
 
 	PROCESS_INFORMATION pi={0};
     
-	DWORD flags=CREATE_NEW_PROCESS_GROUP;
-	if( !GetStdHandle( STD_OUTPUT_HANDLE ) ) flags|=CREATE_NO_WINDOW;
+	DWORD flags=CREATE_NEW_PROCESS_GROUP|CREATE_NO_WINDOW;
 	
 	int res=CreateProcessA( 0,(LPSTR)cmd.c_str(),0,0,TRUE,flags,0,0,&si,&pi );
 
