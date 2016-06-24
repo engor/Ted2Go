@@ -24,13 +24,18 @@ int system_( const char *cmd ){
 
 #if _WIN32
 
-	bbString tmp=BB_T( "cmd /S /C\"" )+BB_T( cmd )+BB_T( "\"" );
+	bbString tmp;
+	DWORD flags=0;
+	
+	if( GetStdHandle( STD_OUTPUT_HANDLE ) ){
+		tmp=BB_T( "cmd /S /C\"" )+BB_T( cmd )+BB_T( "\"" );
+	}else{
+		flags=CREATE_NO_WINDOW;
+		tmp=cmd;
+	}
 
 	PROCESS_INFORMATION pi={0};
 	STARTUPINFOA si={sizeof(si)};
-	
-	DWORD flags=0;
-	if( !GetStdHandle( STD_OUTPUT_HANDLE ) ) flags|=CREATE_NO_WINDOW;
 	
 	if( !CreateProcessA( 0,(LPSTR)tmp.c_str(),0,0,1,flags,0,0,&si,&pi ) ) return -1;
 
