@@ -1,12 +1,14 @@
 
 echo off
 
+call common.bat
+
 echo.
 echo ***** Updating ted2 *****
 echo.
 
-..\bin\mx2cc_windows makeapp -apptype=gui -build -config=release -target=desktop ../src/ted2/ted2.monkey2
-xcopy ..\src\ted2\ted2.buildv010\desktop_release_windows ..\bin\ted2_windows /I /S /Y
+%mx2cc% makeapp -apptype=gui -build -config=release -target=desktop ../src/ted2/ted2.monkey2
+xcopy %ted2_new% %ted2% /I /S /Y
 
-..\bin\mx2cc_windows makeapp -apptype=gui -build -config=release -target=desktop ../src/launcher/launcher.monkey2
-copy ..\src\launcher\launcher.buildv010\desktop_release_windows\launcher.exe "..\Monkey2 (Windows).exe"
+%mx2cc% makeapp -apptype=gui -build -config=release -target=desktop ../src/launcher/launcher.monkey2
+copy %launcher_new% %launcher%
