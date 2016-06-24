@@ -58,10 +58,13 @@ Function LoadFont:Font( path:String,fheight:Float,textureFlags:TextureFlags,shad
 	Local x:=0,y:=0,h:=0
 	
 	For Local i:=0 Until numChars
-	
-		If FT_Load_Char( face,firstChar+i,FT_LOAD_RENDER )
+
+		'What to do?!?
+		'	
+'		If FT_Load_Char( face,firstChar+i,FT_LOAD_RENDER )
+'		If FT_Load_Char( face,firstChar+i,FT_LOAD_RENDER|FT_LOAD_TARGET_LIGHT )
 '		If FT_Load_Char( face,firstChar+i,FT_LOAD_RENDER|FT_LOAD_NO_HINTING )
-'		If FT_Load_Char( face,firstChar+i,FT_LOAD_RENDER|FT_LOAD_FORCE_AUTOHINT )
+		If FT_Load_Char( face,firstChar+i,FT_LOAD_RENDER|FT_LOAD_FORCE_AUTOHINT )
 			Continue
 		Endif
 		
