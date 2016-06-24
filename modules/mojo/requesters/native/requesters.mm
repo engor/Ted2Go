@@ -203,7 +203,7 @@ bbString bbRequesters::RequestDir( bbString title,bbString dir ){
 
 void bbRequesters::OpenUrl( bbString url ){
 
-	if( CFURLRef cfurl=CFURLCreateWithBytes( 0,url.c_str(),url.Length(),kCFStringEncodingASCII,0 ) ){
+	if( CFURLRef cfurl=CFURLCreateWithBytes( 0,(const UInt8*)url.c_str(),url.length(),kCFStringEncodingASCII,0 ) ){
 		LSOpenCFURLRef( cfurl,0 );
 		CFRelease( cfurl );
 	}
