@@ -1777,10 +1777,10 @@ Class Parser
 		If Not _fdecl Return _toker.Bump()
 	
 		Local ptoke:=Toke
-		
+
 		Repeat
 		
-			_toker.Bump()
+			If Not _toker.Bump() Exit
 			
 			If _toker.TokeType=TOKE_PREPROC
 			
@@ -1807,7 +1807,7 @@ Class Parser
 			Endif
 			
 			Exit
-		
+			
 		Forever
 		
 		Return _toker.Toke
