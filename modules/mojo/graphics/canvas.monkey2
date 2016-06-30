@@ -23,7 +23,7 @@ To draw to a canvas, use one of the 'Draw' methods. Drawing is affected by a num
 
 * [[Alpha]] - the current drawing alpha level.
 
-* [[Matrix]] - the current 2d drawing matrix. All drawing coordinates are multiplied by this matrix before rendering.
+* [[Matrix]] - the current drawing matrix. All drawing coordinates are multiplied by this matrix before rendering.
 
 * [[BlendMode]] - the blending mode for drawing, eg: opaque, alpha, additive, multiply.
 
@@ -33,12 +33,17 @@ To draw to a canvas, use one of the 'Draw' methods. Drawing is affected by a num
 
 * [[Font]] - The current font to use when drawing text with [[DrawText]].
 
-Drawing does not occur immediately. Drawing commands are 'buffered' to reduce the overhead of sending lots of draw calls to the lower level graphics API. You
-can force all drawing commands in the buffer to actually render using [[Flush]].
+Drawing does not occur immediately. Drawing commands are 'buffered' to reduce the overhead of sending lots of draw calls to the lower level graphics API. You can force all drawing commands in the buffer to actually render using [[Flush]].
+
 
 #end
 Class Canvas
 
+	#rem monkeydoc Creates a new canvas.
+
+	@param image Canvas render target image.
+
+	#end
 	Method New( image:Image )
 	
 		Init( image.Texture,image.Texture.Rect.Size,image.Rect )
@@ -47,7 +52,7 @@ Class Canvas
 	End
 	
 	#rem monkeydoc @hidden
-	#end
+	#End
 	Method New( texture:Texture )
 	
 		Init( texture,texture.Rect.Size,texture.Rect )
@@ -61,12 +66,12 @@ Class Canvas
 	
 		Init( Null,New Vec2i( width,height ),New Recti( 0,0,width,height ) )
 	End
-	
+
 	#rem monkeydoc The current viewport.
 	
-	The viewport describes the rect rendering actually occurs in.
+	The viewport describes the rect within the render target that rendering occurs in.
 	
-	All rendering is relative to the top-left of the viewport, and clipped to the intersection of the current viewport and scissor rect.
+	All rendering is relative to the top-left of the viewport, and is clipped to the intersection of the current viewport and scissor rects.
 		
 	#end
 	Property Viewport:Recti()
@@ -86,7 +91,7 @@ Class Canvas
 	
 	The scissor rect is rect within the viewport that can be used for additional clipping.
 	
-	Scissor rect coorindates are relative to the viewport.
+	Scissor rect coorindates are relative to the current viewport viewport.
 	
 	#end
 	Property Scissor:Recti()
@@ -193,6 +198,8 @@ Class Canvas
 	#rem monkeydoc Clears the viewport.
 	
 	Clears the viewport to `color`.
+
+	@param color Color to clear the viewport to.
 	
 	#end
 	Method Clear( color:Color )
@@ -202,6 +209,26 @@ Class Canvas
 		Validate()
 		
 		_device.Clear( color )
+	End
+	
+	#rem monkeydoc Copies a pixmap from the rendertarget.
+
+	@param rect The rect to copy.
+
+	#end
+	Method CopyPixmap:Pixmap( rect:Recti )
+	
+		Flush()
+		
+		Validate()
+		
+		rect=TransformRecti( rect,_renderMatrix )
+			
+		rect=(rect & _renderBounds)+_targetRect.Origin
+		
+		Local pixmap:=_device.CopyPixmap( rect )
+		
+		Return pixmap
 	End
 	
 	#rem monkeydoc @hidden
@@ -239,12 +266,10 @@ Class Canvas
 		
 	#rem monkeydoc Flushes drawing commands.
 	
-	Flushes any outstanding drawint commands in the draw buffer.
+	Flushes any outstanding drawing commands in the draw buffer.
 	
 	#end
 	Method Flush()
-	
-'		_dirty|=Dirty.Target
 	
 		Validate()
 		
@@ -255,9 +280,9 @@ Class Canvas
 	
 	'***** DrawList *****
 
-	#rem monkeydoc The current font for use with DrawText
+	#rem monkeydoc The current font for use with DrawText.
 	
-	You can set the font to null to use the default mojo font.
+	Set font to null to use the default mojo font.
 	
 	#end	
 	Property Font:Font()
@@ -273,8 +298,7 @@ Class Canvas
 
 	#rem monkeydoc The current drawing alpha level.
 	
-	Note that both [[Alpha]] and the alpha component of [[Color]] contribute to the alpha level used for drawing. This allows you to
-	use [[Alpha]] as a 'master' alpha level.
+	Note that [[Alpha]] and the alpha component of [[Color]] are multiplied together to produce the final alpha value for rendering. This allows you to use [[Alpha]] as a 'master' alpha level.
 
 	#end	
 	Property Alpha:Float()
@@ -291,8 +315,7 @@ Class Canvas
 	
 	#rem monkeydoc The current drawing color.
 	
-	Note that both [[Alpha]] and the alpha component of [[Color]] contribute to the alpha level used for drawing. This allows you to
-	use [[Alpha]] as a 'master' alpha level.
+	Note that [[Alpha]] and the alpha component of [[Color]] are multiplied together to produce the final alpha value for rendering. This allows you to use [[Alpha]] as a 'master' alpha level.
 
 	#end
 	Property Color:Color()
@@ -307,9 +330,9 @@ Class Canvas
 		_pmcolor=UInt(a) Shl 24 | UInt(_color.b*a) Shl 16 | UInt(_color.g*a) Shl 8 | UInt(_color.r*a)
 	End
 	
-	#rem monkeydoc The current drawing 2d matrix.
+	#rem monkeydoc The current drawing matrix.
 	
-	All coordinates in draw methods are multiplied by this matrix for rendering.
+	All coordinates passed to draw methods are multiplied by this matrix for rendering.
 	
 	#end
 	Property Matrix:AffineMat3f()
@@ -321,8 +344,8 @@ Class Canvas
 		_matrix=matrix
 	End
 
-	#rem monkeydoc The current blendmode.
-	
+	#rem monkeydoc The current blend mode.
+
 	#end	
 	Property BlendMode:BlendMode()
 	
@@ -369,7 +392,7 @@ Class Canvas
 	
 	#rem monkeydoc Translates the drawing matrix.
 	
-	Translates the drawing matrix. This has the effect of offsetting all drawing coordinates by `tx` and `ty`.
+	Translates the drawing matrix. This has the effect of translating all drawing coordinates by `tx` and `ty`.
 	
 	#end
 	Method Translate( tx:Float,ty:Float )
@@ -391,7 +414,7 @@ Class Canvas
 	
 	#rem monkeydoc Scales the drawing matrix.
 	
-	Scales the draw matrix. This has the effect of scaling all drawing coordinates by `sx` and `sy`.
+	Scales the drawing matrix. This has the effect of scaling all drawing coordinates by `sx` and `sy`.
 	
 	@param sx X scale factor.
 	
@@ -432,7 +455,7 @@ Class Canvas
 
 	Draws a line in the current [[Color]] using the current [[BlendMode]].
 	
-	The line coordinates are transform by the current [[Matrix]] and clipped to the current [[Viewport]] and [[Scissor]].
+	The line end coordinates are transform by the current [[Matrix]] and clipped to the current [[Viewport]] and [[Scissor]].
 	
 	@param v0 First endpoint of the line.
 	
@@ -460,6 +483,11 @@ Class Canvas
 	End
 	
 	#rem monkeydoc Draws a triangle.
+
+	Draws a triangle in the current [[Color]] using the current [[BlendMode]].
+	
+	The triangle vertex coordinates are also transform by the current [[Matrix]].
+
 	#End
 	Method DrawTriangle( v0:Vec2f,v1:Vec2f,v2:Vec2f )
 		AddDrawOp( _materials[3],3,1 )
@@ -476,6 +504,11 @@ Class Canvas
 	End
 	
 	#rem monkeydoc Draws a quad.
+
+	Draws a quad in the current [[Color]] using the current [[BlendMode]].
+	
+	The quad vertex coordinates are also transform by the current [[Matrix]].
+
 	#end
 	Method DrawQuad( x0:Float,y0:Float,x1:Float,y1:Float,x2:Float,y2:Float,x3:Float,y3:Float )
 		AddDrawOp( _materials[4],4,1 )
@@ -486,6 +519,11 @@ Class Canvas
 	End
 	
 	#rem monkeydoc Draws a rectangle.
+
+	Draws a rectangle in the current [[Color]] using the current [[BlendMode]].
+	
+	The rectangle vertex coordinates are also transform by the current [[Matrix]].
+
 	#end
 	Method DrawRect( rect:Rectf )
 		AddDrawOp( _materials[4],4,1 )
@@ -530,6 +568,19 @@ Class Canvas
 	End
 	
 	#rem monkeydoc Draws an oval.
+
+	Draws an oval in the current [[Color]] using the current [[BlendMode]].
+	
+	The oval vertex coordinates are also transform by the current [[Matrix]].
+
+	@param x Top left x coordinate for the oval.
+
+	@param y Top left y coordinate for the oval.
+
+	@param width Width of the oval.
+
+	@param height Height of the oval.
+
 	#end
 	Method DrawOval( x:Float,y:Float,width:Float,height:Float )
 		Local xr:=width/2.0,yr:=height/2.0
@@ -556,18 +607,45 @@ Class Canvas
 	End
 	
 	#rem monkeydoc Draws an ellipse.
+
+	Draws an ellipse in the current [[Color]] using the current [[BlendMode]].
+	
+	The ellipse is also transformed by the current [[Matrix]].
+
+	@param x Center x coordinate for the ellipse.
+
+	@param y Center y coordinate for the ellipse.
+
+	@param xRadius X axis radius for the ellipse.
+
+	@param yRadius Y axis radius for the ellipse.
+
 	#end
 	Method DrawEllipse( x:Float,y:Float,xRadius:Float,yRadius:Float )
 		DrawOval( x-xRadius,y-yRadius,xRadius*2,yRadius*2 )
 	End
 	
 	#rem monkeydoc Draws a circle.
+
+	Draws a circle in the current [[Color]] using the current [[BlendMode]] and transformed by the current [[Matrix]].
+
+	@param x Center x coordinate for the circle.
+
+	@param y Center y coordinate for the circle.
+
+	@param radius The circle radius.
+
 	#end
 	Method DrawCircle( x:Float,y:Float,radius:Float )
 		DrawOval( x-radius,y-radius,radius*2,radius*2 )
 	End
 	
 	#rem monkeydoc Draws a polygon.
+
+	Draws a polygon using the current [[Color]], [[BlendMode]] and [[Matrix]].
+
+	@param vertices Array of x/y vertex coordinate pairs.
+
 	#end
 	Method DrawPoly( vertices:Float[] )
 		DebugAssert( vertices.Length>=6 And vertices.Length&1=0 )
@@ -582,6 +660,8 @@ Class Canvas
 	End
 	
 	#rem monkeydoc Draws a sequence of primtives.
+
+	Draws a sequence of convex primtives using the current [[Color]], [[BlendMode]] and [[Matrix]].
 	
 	@param order The type of primitive: 1=points, 2=lines, 3=triangles, 4=quads, >4=n-gons.
 	
@@ -641,6 +721,23 @@ Class Canvas
 	End
 
 	#rem monkeydoc Draws an image.
+
+	Draws an image using the current [[Color]], [[BlendMode]] and [[Matrix]].
+
+	@param tx X coordinate to draw image at.
+
+	@param ty Y coordinate to draw image at.
+
+	@param translation X/Y coordinates to draw image at.
+
+	@param rz Rotation angle, in radians, for drawing.
+
+	@param sx X axis scale factor for drawing.
+
+	@param sy Y axis scale factor for drawing.
+
+	@param scale X/Y scale factor for drawing.
+ 
 	#end	
 	Method DrawImage( image:Image,tx:Float,ty:Float )
 		Local vs:=image.Vertices
@@ -652,8 +749,8 @@ Class Canvas
 		AddVertex( vs.min.x+tx,vs.max.y+ty,tc.min.x,tc.max.y )
 	End
 	
-	Method DrawImage( image:Image,trans:Vec2f )
-		DrawImage( image,trans.x,trans.y )
+	Method DrawImage( image:Image,translation:Vec2f )
+		DrawImage( image,translation.x,translation.y )
 	End
 
 	Method DrawImage( image:Image,tx:Float,ty:Float,rz:Float )
@@ -664,8 +761,8 @@ Class Canvas
 		_matrix=matrix
 	End
 
-	Method DrawImage( image:Image,trans:Vec2f,rz:Float )
-		DrawImage( image,trans.x,trans.y,rz )
+	Method DrawImage( image:Image,translation:Vec2f,rz:Float )
+		DrawImage( image,translation.x,translation.y,rz )
 	End
 
 	Method DrawImage( image:Image,tx:Float,ty:Float,rz:Float,sx:Float,sy:Float )
@@ -677,11 +774,24 @@ Class Canvas
 		_matrix=matrix
 	End
 
-	Method DrawImage( image:Image,trans:Vec2f,rz:Float,scale:Vec2f )
-		DrawImage( image,trans.x,trans.y,rz,scale.x,scale.y )
+	Method DrawImage( image:Image,tv:Vec2f,rz:Float,scale:Vec2f )
+		DrawImage( image,tv.x,tv.y,rz,scale.x,scale.y )
 	End
 	
-	#rem monkeydoc Draws a string.
+	#rem monkeydoc Draws text.
+
+	Draws text using the current [[Color]], [[BlendMode]] and [[Matrix]].
+
+	@param text The text to draw.
+
+	@param tx X coordinate to draw text at.
+
+	@param ty Y coordinate to draw text at.
+
+	@param handleX X handle for drawing.
+
+	@param handleY Y handle for drawing.
+
 	#end
 	Method DrawText( text:String,tx:Float,ty:Float,handleX:Float=0,handleY:Float=0 )
 	
@@ -702,14 +812,12 @@ Class Canvas
 			Local t0:=Float(g.rect.min.y+sy)/th
 			Local s1:=Float(g.rect.max.x+sx)/tw
 			Local t1:=Float(g.rect.max.y+sy)/th
+			
+			Local x0:=Round( tx+g.offset.x )
+			Local y0:=Round( ty+g.offset.y )
+			Local x1:=x0+g.rect.Width
+			Local y1:=y0+g.rect.Height
 
-			Local x0:=tx+g.offset.x,x1:=x0+g.rect.Width
-			Local y0:=ty+g.offset.y,y1:=y0+g.rect.Height
-			
-			'Integerize font coods - could do this in shader?
-			x0=Round( x0 );y0=Round( y0 )
-			x1=Round( x1 );y1=Round( y1 )
-			
 			AddVertex( x0,y0,s0,t0 )
 			AddVertex( x1,y0,s1,t0 )
 			AddVertex( x1,y1,s1,t1 )
@@ -746,6 +854,7 @@ Class Canvas
 		All=7
 	End
 	
+	Global _inited:Bool
 	Global _ambientEnv:ShaderEnv
 	Global _nullShader:Shader
 	Global _defaultFont:Font
@@ -790,7 +899,8 @@ Class Canvas
 	
 	Method Init( target:Texture,size:Vec2i,viewport:Recti )
 	
-		If Not _device
+		If Not _inited
+			_inited=True
 			Local env:=stringio.LoadString( "asset::mojo/shader_env.glsl" )
 			_ambientEnv=New ShaderEnv( "#define RENDERPASS_AMBIENT~n"+env )
 '			_ambientEnv=New ShaderEnv( "#define RENDERPASS_NORMAL~n"+env )
