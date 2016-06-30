@@ -73,7 +73,7 @@ Function Main()
 	Print "current="+CurrentDir()
 	Print "desktop="+desktop
 	
-	output=desktop+"monkey2v1.0/"
+	output=desktop+"monkey2-v"+MX2CC_VERSION+"/"
 
 	DeleteDir( output,True )
 	CreateDir( output )

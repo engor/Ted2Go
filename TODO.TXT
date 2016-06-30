@@ -34,6 +34,12 @@ This doesn't include big picture things like new targets, modules etc.
  
 * Ted2
 
+	* Goto Line.
+	
+	* More customization.
+
+	* Restore offline help system.
+
 	* Draggable/closable tabs.
 
 	* Filebrowser context menu.
