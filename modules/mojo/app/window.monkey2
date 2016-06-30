@@ -23,6 +23,8 @@ Enum WindowFlags
 	Center=CenterX|CenterY
 End
 
+#rem monkeydoc The Window class.
+#end
 Class Window Extends View
 
 	Method New()
@@ -37,7 +39,7 @@ Class Window Extends View
 		Init( title,rect,flags )
 	End
 	
-	#rem monkeydoc Window title.
+	#rem monkeydoc The window title text.
 	#end
 	Property Title:String()
 	
@@ -48,7 +50,7 @@ Class Window Extends View
 		SDL_SetWindowTitle( _sdlWindow,title )
 	End
 	
-	#rem monkeydoc Window clear color.
+	#rem monkeydoc The window clear color.
 	#end
 	Property ClearColor:Color()
 
@@ -59,7 +61,7 @@ Class Window Extends View
 		_clearColor=clearColor
 	End
 	
-	#rem monkeydoc Window swap interval
+	#rem monkeydoc The window swap interval.
 	#end
 	Property SwapInterval:Int()
 	
@@ -70,6 +72,8 @@ Class Window Extends View
 		_swapInterval=swapInterval
 	End
 	
+	#rem monkeydoc @hidden.
+	#end
 	Property Fullscreen:Bool()
 	
 		Return _fullscreen
@@ -93,7 +97,7 @@ Class Window Extends View
 	End
 	
 	#rem monkeydoc @hidden
-	#end
+	#End
 	Method Update()
 
 #If __TARGET__="emscripten"
@@ -124,10 +128,10 @@ Class Window Extends View
 			SDL_SetWindowSize( _sdlWindow,Frame.Width,Frame.Height )
 			_frame=GetFrame()
 			Frame=_frame
+			_weirdHack=True
 		Endif
 		
 #Endif
-
 		Measure()
 		
 		UpdateLayout()
@@ -140,6 +144,13 @@ Class Window Extends View
 		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )
 
 		SDL_GL_SetSwapInterval( _swapInterval )
+
+#If __TARGET__="desktop" And __HOSTOS__="windows"
+		If _weirdHack
+			_weirdHack=False
+			SDL_GL_SwapWindow( _sdlWindow )
+		Endif
+#Endif
 		
 		Local bounds:=New Recti( 0,0,Frame.Size )
 		
@@ -201,6 +212,7 @@ Class Window Extends View
 		Case EventType.WindowMoved,EventType.WindowResized
 			_frame=GetFrame()
 			Frame=_frame
+			_weirdHack=true
 		End
 		
 		OnWindowEvent( event )
@@ -261,6 +273,9 @@ Class Window Extends View
 	Field _minSize:Vec2i
 	Field _maxSize:Vec2i
 	Field _frame:Recti
+
+	'Ok, angles glViewport appears To be 'lagging' by one frame, causing weirdness when resizing.
+	Field _weirdHack:Bool
 	
 	Global _allWindows:=New Stack<Window>
 	Global _visibleWindows:=New Stack<Window>
@@ -300,7 +315,7 @@ Class Window Extends View
 		If flags & WindowFlags.Fullscreen _fullscreen=True ; sdlFlags|=SDL_WINDOW_FULLSCREEN
 		
 		_flags=flags
-	
+		
 		_sdlWindow=SDL_CreateWindow( title,x,y,rect.Width,rect.Height,sdlFlags )
 		Assert( _sdlWindow,"Failed to create SDL_Window" )
 
