@@ -1,0 +1,48 @@
+
+Monkey2 TODO list.
+
+This is list of stuff I consider reasonably urgent.
+
+This doesn't include big picture things like new targets, modules etc.
+
+
+* Mx2cc/builder/makedocs
+
+	* Deal with Self.New/Super.New issues.
+
+	* Deal with global/const order-of-initialization issues.
+
+	* Wildcard/filtered asset importing so you can import a dir in one hit.
+
+	* Add support for custom 'manuals' in module docs.
+
+	* System assets folder support.
+
+
+* Modules
+
+	* Add lights/shadows to mojo.graphics.
+
+	* Fix mojo.graphics 'font texture always 512x512' issue.
+
+	* Better audio support - openalsoft?
+
+	* Handle symlinks better in std.filesystem.
+	
+	* Network support - udp/tcp streams/servers and httprequest.
+
+ 
+* Ted2
+
+	* Draggable/closable tabs.
+
+	* Filebrowser context menu.
+	
+	* Hotkeys for scripts.
+
+
+* Misc
+
+	* Add module upload/browser to monkey2.monkey-x.com.
+	
+	* Implement a libclang based 'API convertor' to help with wrapping 3rd party C/C++ libs.
