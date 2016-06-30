@@ -1,0 +1,24 @@
+{
+	"scripts":[
+		{
+			"name":"Make docs",
+			"script":"makedocs"
+		},
+		{
+			"name":"Update modules",
+			"script":"updatemods"
+		},
+		{
+			"name":"Rebuild modules",
+			"script":"rebuildmods"
+		},
+		{
+			"name":"Update mx2cc",
+			"script":"updatemx2cc"
+		},
+		{
+			"name":"Rebuild mx2cc",
+			"script":"rebuildmx2cc"
+		}
+	]
+}
