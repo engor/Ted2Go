@@ -2,6 +2,11 @@
 Namespace mojo.graphics
 
 #rem monkeydoc The Image class.
+
+An image is a rectangular array of pixels that can be drawn using one of the [[Canvas.DrawImage]] methods.
+
+You can load an image from a file using the [[Load]].
+
 #end
 Class Image
 
@@ -9,6 +14,80 @@ Class Image
 	#end
 	Field OnDiscarded:Void()
 
+	#rem monkeydoc Creates a new image.
+	
+	New( pixmap,... ) allows you to create a new image from an existing pixmap.
+	
+	New( width,height,... ) allows you to create a new image that can be rendered to using a canvas. For images that will be frequently updated, use `TextureFlags.Filter|TextureFlags.Dynamic' for the best performance.
+	
+	New( image,rect,... ) allows you to create an image from within an 'atlas' image.
+	
+	@example
+	
+	Namespace myapp
+	
+	#Import "<std>"
+	#Import "<mojo>"
+	
+	Using std..
+	Using mojo..
+	
+	Class MyWindow Extends Window
+	
+		Field image1:Image
+		Field image2:Image
+		Field image3:Image
+			
+		Method New()
+	
+			'Create an image from a pixmap
+			Local pixmap:=New Pixmap( 16,16 )
+			pixmap.Clear( Color.Red )
+			image1=New Image( pixmap )
+			
+			'Create an image and render something to it
+			image2=New Image( 16,16 )
+			Local icanvas:=New Canvas( image2 )
+			icanvas.Color=Color.Yellow
+			icanvas.DrawRect( 0,0,8,8 )
+			icanvas.DrawRect( 8,8,8,8 )
+			icanvas.Color=Color.LightGrey
+			icanvas.DrawRect( 8,0,8,8 )
+			icanvas.DrawRect( 0,8,8,8 )
+			icanvas.Flush() 'Important!
+			
+			'Create a image from an atlas image
+			image3=New Image( image2,New Recti( 4,4,12,12 ) )
+			
+		End
+	
+		Method OnRender( canvas:Canvas ) Override
+		
+			canvas.DrawText( "Image1",0,0 )
+			canvas.DrawImage( image1,0,16 )
+			
+			canvas.DrawText( "Image2",0,40 )
+			canvas.DrawImage( image2,0,56 )
+	
+			canvas.DrawText( "Image3",0,80 )
+			canvas.DrawImage( image3,0,96 )
+			
+		End
+		
+	End
+	
+	Function Main()
+	
+		New AppInstance
+		
+		New MyWindow
+		
+		App.Run()
+	End
+	
+	@end
+	
+	#end
 	Method New( pixmap:Pixmap,textureFlags:TextureFlags=TextureFlags.Filter|TextureFlags.Mipmap,shader:Shader=Null )
 	
 		Local texture:=New Texture( pixmap,textureFlags )
@@ -31,6 +110,7 @@ Class Image
 		OnDiscarded+=Lambda()
 			texture.Discard()
 		End
+
 	End
 	
 	Method New( image:Image,rect:Recti )
@@ -66,21 +146,32 @@ Class Image
 		Return _texture
 	End
 	
+	#rem monkeydoc @hidden The image's rect within its texture.
+	#endif
 	Property Rect:Recti()
 	
 		Return _rect
 	End
 	
+	#rem monkeydoc The width of the image's rect within its texture.
+	#end
 	Property Width:Int()
 	
 		Return _rect.Width
 	End
 	
+	#rem monkeydoc The height of the image's rect within its texture.
+	#end
 	Property Height:Int()
 	
 		Return _rect.Height
 	End
 
+	#rem monkeydoc The image handle.
+	
+	Image handle values are fractional, where 0,0 is the top-left of the image and 1,1 is the bottom-right.
+
+	#end
 	Property Handle:Vec2f()
 	
 		Return _handle
@@ -91,7 +182,14 @@ Class Image
 		
 		UpdateVertices()
 	End
+
+	#rem monkeydoc The image scale.
 	
+	The scale property provides a simple way to 'pre-scale' an image.
+	
+	Scaling an image this way is faster than using one of the 'scale' parameters of [[Canvas.DrawImage]].
+	
+	#end
 	Property Scale:Vec2f()
 	
 		Return _scale
@@ -103,11 +201,25 @@ Class Image
 		UpdateVertices()
 	End
 	
+	#rem monkeydoc The image bounds.
+	
+	The bounds rect represents the actual image vertices used when the image is drawn.
+	
+	Image bounds are affected by [[Scale]] and [[Handle]], and can be used for simple collision detection.
+	
+	#end
 	Property Bounds:Rectf()
 	
 		Return _vertices
 	End
 
+	#rem monkeydoc Image radius.
+	
+	The radius property returns the radius of the [[Bounds]] rect.
+	
+	Image bounds are affected by [[Scale]] and [[Handle]], and can be used for simple collision detection.
+	
+	#end
 	Property Radius:Float()
 	
 		Return _radius
@@ -127,7 +239,7 @@ Class Image
 		Return _texCoords
 	End
 	
-	#rem monkeydoc Release the image and any resource it uses.
+	#rem monkeydoc Releases the image and any resource it uses.
 	#end
 	Method Discard()
 		If _discarded Return
@@ -135,6 +247,8 @@ Class Image
 		OnDiscarded()
 	End
 	
+	#rem monkeydoc Loads an image from a file.
+	#end
 	Function Load:Image( path:String,textureFlags:TextureFlags=TextureFlags.Filter|TextureFlags.Mipmap,shader:Shader=Null )
 	
 		Local diffuse:=mojo.graphics.Texture.Load( path,textureFlags )

@@ -268,6 +268,8 @@ Class ParamBuffer
 	Field _params:=New ShaderParam[32]
 End
 
+#rem monkeydoc @hidden
+#end
 Class Shader
 
 	Method New( sourceCode:String )

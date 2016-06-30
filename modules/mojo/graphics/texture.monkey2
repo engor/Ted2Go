@@ -6,8 +6,8 @@ Namespace mojo.graphics
 | TextureFlags	| Description
 |:--------------|:-----------
 | Filter		| Enable filtering. When the texture is magnified, texel colors are interpolated giving a smooth/blurred result.
-| Mipmap		| Enable mipmapping. When the texture is minified, automcatically generated 'mipmaps' are used.
-| Dynamic		| Texture is frequently updated.
+| Mipmap		| Enable mipmapping. When the texture is minified, automatically pre-generated 'mipmaps' are used to give a smoother result.
+| Dynamic		| Texture is frequently updated. This flag should be set if the texture contents are regularly updated and don't need to be preserved.
 
 #end
 Enum TextureFlags
@@ -20,6 +20,8 @@ Enum TextureFlags
 	Dynamic=		$1000
 End
 
+#rem monkeydoc @hidden
+#end
 Class Texture
 
 	#rem monkeydoc @hidden

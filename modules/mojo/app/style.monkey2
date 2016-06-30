@@ -1,24 +1,32 @@
 
 Namespace mojo.app
 
+#rem monkeydoc The Style class.
+#end
 Class Style
 
 	Method New()
 		Init( "",Null,False )
 	End
 	
-	Method New( name:String )
-		Init( name,Null,False )
-	End
-	
 	Method New( style:Style )
 		Init( "",style,True )
 	End
 	
+	#rem monkeydoc @hidden
+	#end
+	Method New( name:String )
+		Init( name,Null,False )
+	End
+	
+	#rem monkeydoc @hidden
+	#end
 	Method New( name:String,style:Style )
 		Init( name,style,True )
 	End
 	
+	#rem monkeydoc @hidden
+	#end
 	Method AddState:Style( state:String,srcState:String="" )
 	
 		Local style:=New Style
@@ -30,6 +38,8 @@ Class Style
 		Return style
 	End
 	
+	#rem monkeydoc @hidden
+	#end
 	Method GetState:Style( state:String )
 	
 		Local style:=_states[state]
@@ -38,68 +48,92 @@ Class Style
 		Return Self
 	End
 
+	#rem monkeydoc Background color.
+	#end
 	Property BackgroundColor:Color()
 		Return _bgcolor
 	Setter( backgroundColor:Color )
 		_bgcolor=backgroundColor
 	End
 	
+	#rem monkeydoc Padding rect.
+	#end
 	Property Padding:Recti()
 		Return _padding
 	Setter( padding:Recti )
 		_padding=padding
 	End
 	
+	#rem monkeydoc @hidden
+	#end
 	Property Skin:Skin()
 		Return _skin
 	Setter( skin:Skin )
 		_skin=skin
 	End
 	
+	#rem monkeydoc @hidden
+	#end
 	Property SkinColor:Color()
 		Return _skcolor
 	Setter( skinColor:Color )
 		_skcolor=skinColor
 	End
 		
+	#rem monkeydoc Border rect.
+	#end
 	Property Border:Recti()
 		Return _border
 	Setter( border:Recti )
 		_border=border
 	End
 	
+	#rem monkeydoc Border color.
+	#End
 	Property BorderColor:Color()
 		Return _bdcolor
 	Setter( borderColor:Color )
 		_bdcolor=borderColor
 	End
-	
+
+	#rem monkeydoc Margin rect.
+	#end
 	Property Margin:Recti()
 		Return _margin
 	Setter( margin:Recti )
 		_margin=margin
 	End
 	
+	#rem monkeydoc Default canvas color.
+	#end
 	Property DefaultColor:Color()
 		Return _color
 	Setter( color:Color )
 		_color=color
 	End
-	
+
+	#rem monkeydoc Default canvas font.
+	#end	
 	Property DefaultFont:Font()
 		Return _font
 	Setter( font:Font )
 		_font=font
 	End
 	
+	#rem monkeydoc @hidden
+	#end
 	Method SetImage( name:String,image:Image )
 		_images[name]=image
 	End
 	
+	#rem monkeydoc @hidden
+	#end
 	Method GetImage:Image( name:String )
 		Return _images[name]
 	End
 	
+	#rem monkeydoc @hidden
+	#end
 	Property Bounds:Recti()
 		Local bounds:=Padding
 		Local skin:=Skin
@@ -109,6 +143,8 @@ Class Style
 		Return bounds
 	End
 	
+	#rem monkeydoc @hidden
+	#end
 	Method Render( canvas:Canvas,bounds:Recti )
 	
 		canvas.BlendMode=BlendMode.Alpha
@@ -158,6 +194,8 @@ Class Style
 		
 	End
 	
+	#rem monkeydoc @hidden
+	#end
 	Function GetStyle:Style( name:String )
 	
 		Local style:=_styles[name]
@@ -166,12 +204,13 @@ Class Style
 		Local i:=name.Find( ":" )
 		If i<>-1 Return GetStyle( name.Slice( 0,i ) )
 		
+		If Not _defaultStyle _defaultStyle=New Style
 		Return _defaultStyle
 	End
 
 	Private
 	
-	Global _defaultStyle:=New Style
+	Global _defaultStyle:Style
 	Global _styles:=New StringMap<Style>
 	
 	Field _states:=New StringMap<Style>
@@ -181,7 +220,7 @@ Class Style
 	Field _skin:Skin
 	Field _skcolor:Color=Color.White
 	Field _border:Recti
-	Field _bdcolor:Color=Color.Black
+	Field _bdcolor:Color=Color.None
 	Field _margin:Recti
 	Field _color:Color
 	Field _font:Font

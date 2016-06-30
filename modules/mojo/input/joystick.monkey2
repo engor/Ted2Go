@@ -1,7 +1,7 @@
 
 Namespace mojo.input
 
-#rem monkeydoc
+#rem monkeydoc Joystick hat directions.
 
 | JoystickHat value	| 
 |:------------------|
@@ -28,51 +28,76 @@ Enum JoystickHat	'SDL values...
 	LeftDown=Left|Down
 End
 
+#rem monkeydoc The JoystickDevice class.
+#end
 Class JoystickDevice Extends InputDevice
 
+	#rem monkeydoc @hidden
+	#end	
 	Property Name:String()
 		Return _name
 	End
 	
+	#rem monkeydoc @hidden
+	#end	
 	Property GUID:String()
 		Return _guid
 	End
 
+	#rem monkeydoc The number of axes supported by the joystick.
+	#end	
 	Property NumAxes:Int()
 		Return _numAxes
 	End
+
 	
+	#rem monkeydoc The number of balls upported by the joystick.
+	#end	
 	Property NumBalls:Int()
 		Return _numBalls
 	End
 	
+	#rem monkeydoc The number of buttons supported by the joystick.
+	#end	
 	Property NumButtons:Int()
 		Return _numButtons
 	End
 	
+	#rem monkeydoc The number of hats supported by the joystick.
+	#end	
 	Property NumHats:Int()
 		Return _numHats
 	End
 	
+	#rem monkeydoc Gets joystick axis value in the range -1 to 1.
+	#end	
 	Method GetAxis:Float( axis:Int )
 		Return (Float(SDL_JoystickGetAxis( _joystick,axis ))+32768)/32767.5-1
 	End
 	
+	#rem monkeydoc Gets joystick ball value.
+	#end	
 	Method GetBall:Vec2i( ball:Int )
 		Local x:Int,y:Int
 		SDL_JoystickGetBall( _joystick,ball,Varptr x,Varptr y )
 		Return New Vec2i( x,y )
 	End
 
+	#rem monkeydoc Gets joystick hat value.
+	#end	
 	Method GetHat:JoystickHat( hat:Int )
 		Return Cast<JoystickHat>( SDL_JoystickGetHat( _joystick,hat ) )
 	End
 
+	#rem monkeydoc Check up/down state of a button.
+	#end
 	Method ButtonDown:Bool( button:Int )
 		Return SDL_JoystickGetButton( _joystick,button )
 	End
 	
-	Method ButtonHit:Bool( button:Int )
+	#rem monkeydoc Checks is a button has been pressed.
+	#end
+	Method ButtonPressed:Bool( button:Int )
 		If ButtonDown( button )
 			If _hits[button] Return False
 			_hits[button]=True
@@ -82,6 +107,8 @@ Class JoystickDevice Extends InputDevice
 		Return False
 	End
 	
+	#rem monkeydoc Gets the number of joysticks attached.
+	#end
 	Function NumJoysticks:Int()
 		Return Min( SDL_NumJoysticks(),8 )
 	End
@@ -92,6 +119,11 @@ Class JoystickDevice Extends InputDevice
 		SDL_JoystickUpdate()
 	End
 	
+	#rem monkeydoc Opens a joystick device.
+	
+	@param index Joystick index.
+
+	#end
 	Function Open:JoystickDevice( index:Int )
 		Assert( index>=0 And index<8 )
 		Local joystick:=_joysticks[index]

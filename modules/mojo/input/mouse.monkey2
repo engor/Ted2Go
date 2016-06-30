@@ -1,7 +1,7 @@
 
 Namespace mojo.input
 
-#rem monkeydoc Application mouse device instance.
+#rem monkeydoc Global instance of the MouseDevice class.
 #end
 Const Mouse:=New MouseDevice
 
@@ -21,9 +21,9 @@ Enum MouseButton
 	Right=3
 End
 
-#rem monkeydoc The MouseDevice singleton class.
+#rem monkeydoc The MouseDevice class.
 
-To access the mouse device, use the [[Mouse]] constant.
+To access the mouse device, use the global [[Mouse]] constant.
 
 The mouse device should only used after a new [[app.AppInstance]] is created.
 
@@ -39,6 +39,8 @@ Class MouseDevice Extends InputDevice
 		Next
 	End
 	
+	#rem monkeydoc Pointer visiblity state.
+	#end
 	Property PointerVisible:Bool()
 	
 		Return SDL_ShowCursor( -1 )=SDL_ENABLE
@@ -49,23 +51,42 @@ Class MouseDevice Extends InputDevice
 	
 	End
 	
+	#rem monkeydoc X coordinate of the mouse location.
+	#end
 	Property X:Int()
 		Return Location.x
 	End
 	
+	#rem monkeydoc Y coordinate of the mouse location.
+	#end
 	Property Y:Int()
 		Return Location.y
 	End
 
+	#rem monkeydoc The mouse location.
+	#end
 	Property Location:Vec2i()
 		Return _location
 	End
 	
+	#rem monkeydoc Checks the current up/down state of a mouse button.
+	
+	Returns true if `button` is currently held down.
+	
+	@param button Button to checl.
+	#end
 	Method ButtonDown:Bool( button:MouseButton )
 		DebugAssert( button>=0 And button<4,"Mouse buttton out of range" )
 		Return _buttons[button]
 	End
 
+	#rem monkeydoc Checks if a mouse button was pressed.
+	
+	Returns true if `button` was pressed since the last call to ButtonPressed with the same button.
+
+	@param button Button to check.
+	
+	#end
 	Method ButtonPressed:Bool( button:MouseButton )
 		DebugAssert( button>=0 And button<4,"Mouse buttton out of range" )
 		If _buttons[button]
@@ -77,6 +98,13 @@ Class MouseDevice Extends InputDevice
 		Return False
 	End
 	
+	#rem monkeydoc Checks if a mouse button was released.
+	
+	Returns true if `button` was released since the last call to ButtonReleased with the same button.
+	
+	@param button Button to check.
+	
+	#end
 	Method ButtonReleased:Bool( button:MouseButton )
 		DebugAssert( button>=0 And button<4,"Mouse buttton out of range" )
 		If Not _buttons[button]
@@ -88,24 +116,16 @@ Class MouseDevice Extends InputDevice
 		Return False
 	End
 	
+	#rem monkeydoc @hidden
+	#end
 	Method ButtonHit:Bool( button:MouseButton )
 		Return ButtonPressed( button )
 	End
-	
-	#rem monkeydoc @hidden
-	#end	
-	'Method GetButton:Bool( index:Int ) Override
-	'	Return ButtonDown( Cast<MouseButton>( index ) )
-	'End
-	
-	#rem monkeydoc @hidden
-	#end	
-	'Method GetPointer:Vec2i( index:Int ) Override
-	'	Return Location
-	'End
-	
+
 	'***** Internal *****
 
+	#rem monkeydoc @hidden
+	#end
 	Method Init()
 		If _init Return
 		App.Idle+=Poll

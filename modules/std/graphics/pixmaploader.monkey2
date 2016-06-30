@@ -1,12 +1,10 @@
 
 Namespace std.graphics
 
-#Import "<stb-image>"
+Private
 
 Using stb.image
 Using std.stream
-
-Private
 
 Struct stbi_user
 	Field stream:Stream

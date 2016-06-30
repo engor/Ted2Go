@@ -1,6 +1,8 @@
 
 Namespace mojo.graphics
 
+#rem monkeydoc @hidden
+#end
 Class Material
 
 	Method New( shader:Shader )

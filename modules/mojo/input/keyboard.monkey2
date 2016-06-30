@@ -16,12 +16,12 @@ Global bbKeyInfos:bbKeyInfo Ptr
 
 Public
 
-#rem monkeydoc Application keyboard device instance.
+#rem monkeydoc Global instance of the KeyboardDevice class.
 
 #end
 Const Keyboard:=New KeyboardDevice
 
-#rem monkeydoc The KeyboardDevice singleton class.
+#rem monkeydoc The KeyboardDevice class.
 
 All method that take a `key` parameter can also be used with 'raw' keys.
 
@@ -169,7 +169,7 @@ Class KeyboardDevice Extends InputDevice
 	#rem monkeydoc @hidden
 	#end
 	Method KeyCodeToKey:Key( keyCode:Int )
-		If (keyCode & $40000000) keyCode=(keyCode & ~$40000000)-$39+$80
+		If (keyCode & $40000000) keyCode=(keyCode & ~$40000000)+$80
 		Return Cast<Key>( keyCode )
 	End
 	
@@ -204,7 +204,6 @@ Class KeyboardDevice Extends InputDevice
 			_key2scan[key]=SDL_GetScancodeFromKey( Cast<SDL_Keycode>( keyCode ) )
 #Endif
 			_scan2key[_key2scan[key]]=scanCode
-			
 			
 			p=p+1
 		Wend
@@ -242,7 +241,7 @@ Class KeyboardDevice Extends InputDevice
 		Case SDL_KEYDOWN
 		
 			Local kevent:=Cast<SDL_KeyboardEvent Ptr>( event )
-		
+			
 			_matrix[kevent->keysym.scancode]=True
 			
 			Select kevent->keysym.sym

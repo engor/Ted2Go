@@ -1,6 +1,8 @@
 
 Namespace mojo.app
 
+#rem monkeydoc @hidden
+#end
 Class Skin
 
 	Property Image:Image()

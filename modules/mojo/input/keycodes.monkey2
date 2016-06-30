@@ -119,14 +119,14 @@ Enum Key
 	A=97,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z
 	KeyDelete=127
 	
-	CapsLock=128,F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12
+	CapsLock=185,F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12
 	PrintScreen,ScrollLock,Pause,Insert,Home,PageUp,nop,KeyEnd,PageDown
 	Right,Left,Down,Up
 	KeypadNumLock,KeypadDivide,KeypadMultiply,KeypadMinus,KeypadPlus,KeypadEnter
 	Keypad1,Keypad2,Keypad3,Keypad4,Keypad5,Keypad6,Keypad7,Keypad8,Keypad9,Keypad0
 	KeypadPeriod
 	
-	LeftControl=295,LeftShift,LeftAlt,LeftGui,RightControl,RightShift,RightAlt,RightGui
+	LeftControl=185+167,LeftShift,LeftAlt,LeftGui,RightControl,RightShift,RightAlt,RightGui
 	
 	Raw=$10000
 	

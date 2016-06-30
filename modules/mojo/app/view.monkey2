@@ -1,6 +1,8 @@
 
 Namespace mojo.app
 
+#rem monkeydoc The View class.
+#end
 Class View
 
 	Method New()
@@ -8,7 +10,7 @@ Class View
 		_style=New Style
 	End
 
-	#rem monkeydoc View visible flag.
+	#rem monkeydoc @hidden View visible flag.
 	
 	Use [[ReallyVisible]] to test if the view is really visible.
 	
@@ -23,7 +25,7 @@ Class View
 		_visible=visible
 	End
 
-	#rem monkeydoc View visibility state.
+	#rem monkeydoc @hidden View visibility state.
 	
 	True if the view's visibility flag is set AND all its parent visibility flags up to the root window are also set.
 	
@@ -33,7 +35,7 @@ Class View
 		Return _visible And (Not _parent Or _parent.ReallyVisible)
 	End
 	
-	#rem monkeydoc View enabled flag.
+	#rem monkeydoc @hidden View enabled flag.
 	
 	Use [[ReallyEnabled]] to test if the view is really enabled.
 	
@@ -50,7 +52,7 @@ Class View
 		InvalidateStyle()
 	End
 
-	#rem monkeydoc View enabled state.
+	#rem monkeydoc @hidden View enabled state.
 	
 	True if the view's enabled flag is set AND all its parent enabled flags are set AND [[ReallyVisible]] is also true. 
 	

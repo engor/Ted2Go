@@ -45,7 +45,7 @@ Enum EventType
 	Eaten=$80000000
 End
 
-#rem monkeydoc Event class
+#rem monkeydoc The Event class.
 #end
 Class Event Abstract
 
@@ -92,7 +92,7 @@ Class Event Abstract
 	End
 End
 
-#rem monkeydoc The KeyEvent class
+#rem monkeydoc The KeyEvent class.
 #end
 Class KeyEvent Extends Event
 
