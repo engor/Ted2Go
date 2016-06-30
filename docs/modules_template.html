@@ -18,7 +18,7 @@
 
 	<script>
 
-		function openDocs( page ){
+		function openDocsPage( page ){
 
 			var url='../modules/'+page.replace( ':','/docs/__PAGES__/' ).replace( /\./g,'-' )+'.html';
 
@@ -44,13 +44,9 @@
 <iframe id="docs" class="modules_docs_iframe"></iframe>
 </div>
 
-<script src="jstree/dist/libs/jquery-1.9.1.min.js"></script>
-
-<script src="jstree/dist/jstree.min.js"></script>
-
 <script>
 
-$( function(){
+jQuery( function($){
 
 	$('#tree').jstree( {
 
@@ -62,20 +58,7 @@ $( function(){
 				'icons' : false,
 				'stripes' : false
 			},
-			'data':[ 
-				{
-					'text' : 'Manual',
-					'children' : []
-				},
-				{
-					'text' : 'Modules',
-					'children' : [ ${MX2_API} ]
-				},
-				{
-					'text' : 'Language',
-					'children' : []
-				}
-			]
+			'data':[ ${MX2_API} ]
 		},
 		'plugins':[ 'search' ]
  	});
@@ -90,7 +73,7 @@ $( function(){
 		
 		console.log( page );
 		
-		openDocs( page );
+		openDocsPage( page );
 	} );
 	
 	var to=false;
