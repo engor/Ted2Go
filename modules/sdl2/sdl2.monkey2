@@ -1022,7 +1022,7 @@ Const SDL_AUDIO_ALLOW_FREQUENCY_CHANGE:Int
 Const SDL_AUDIO_ALLOW_FORMAT_CHANGE:Int
 Const SDL_AUDIO_ALLOW_CHANNELS_CHANGE:Int
 Const SDL_AUDIO_ALLOW_ANY_CHANGE:Int
-Alias SDL_AudioCallback:Void(Void Ptr,Byte Ptr,Int)
+Alias SDL_AudioCallback:Void(Void Ptr,UByte Ptr,Int)
 Struct SDL_AudioSpec
 	Field freq:Int
 	Field format:SDL_AudioFormat
