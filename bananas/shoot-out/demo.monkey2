@@ -33,40 +33,53 @@
 Using std..
 Using mojo..
 
-Const PlayerHits:=10 ' Number of hits the spaceship can take
+Const VWIDTH:=1024
+Const VHEIGHT:=768
+
+Const PLAYER_HITS:=10 ' Number of hits the spaceship can take
 
 ' Some backing globas
-Global window:PlayniaxGame
+Global font:Font
+Global explosion:=New Image[77] ' Explosion animation
 Global planet:Sprite
 Global player:=New Player[2] ' Players global
-Global explosion:=New Image[77] ' Explosion animation
-Global sprites:=New Stack<Sprite> ' Contains all the sprites displayed on the screen
 Global removeSprites:=New Stack<Sprite> ' Sprites that need to be removed end up here
+Global sprites:=New Stack<Sprite> ' Contains all the sprites displayed on the screen
+Global window:PlayniaxGame
 
 Class PlayniaxGame Extends Window
 
 	' Constructor
-	Method New()
+	Method New( title:String,width:Int,height:Int,flags:WindowFlags=WindowFlags.Resizable )
+
+		Super.New( title,width,height,flags )
+
+		Layout="letterbox"
+
+		font=Font.Load( "asset::mojo/Roboto-Regular.ttf",32 )
 
 		LoadExplosion()
 
 		' Create the background
-		Local bg1:=New Sprite( Image.Load( "asset::bg1.png" ),320,240 )
-		planet=New Sprite( Image.Load( "asset::planet.png" ),320,240 )
+		Local bg1:=New Sprite( Image.Load( "asset::bg1.png" ),VWIDTH*.5,VHEIGHT*.5 )
+		planet=New Sprite( Image.Load( "asset::planet.png" ),VWIDTH*.5,VHEIGHT*.5 )
 
 		' Create the player sprites
-		player[0]=New Player( New Image[]( Image.Load( "asset::p10000.png" ),Image.Load( "asset::p10001.png" ) ),160,240,Key.Left,Key.Right,Key.Up,Key.M ) 
-		player[1]=New Player( New Image[]( Image.Load( "asset::p20000.png" ),Image.Load( "asset::p20001.png" ) ),480,240,Key.Z,Key.X,Key.C,Key.V )
+		player[0]=New Player( New Image[]( Image.Load( "asset::p10000.png" ),Image.Load( "asset::p10001.png" ) ),VWIDTH*.25,VHEIGHT*.5,Key.Left,Key.Right,Key.Up,Key.M ) 
+		player[1]=New Player( New Image[]( Image.Load( "asset::p20000.png" ),Image.Load( "asset::p20001.png" ) ),VWIDTH*.75,VHEIGHT*.5,Key.Z,Key.X,Key.C,Key.V )
 
 		' Create the little Playniax logo in the right corner of the screen
 		Local playniax:=Image.Load( "asset::playniax.png" )
-		Local x:=Width-playniax.Width/2-8
-		Local y:=Height-playniax.Height/2-8
+		Local x:=VWIDTH-playniax.Width/2-8
+		Local y:=VHEIGHT-playniax.Height/2-8
 		New Sprite( playniax,x,y )
 
 	End
 
-
+	Method OnMeasure:Vec2i() Override
+		Return New Vec2i( VWIDTH,VHEIGHT )
+	End
+	
 	Method OnRender( canvas:Canvas ) Override
 
 		' Update game logic
@@ -79,19 +92,19 @@ Class PlayniaxGame Extends Window
 
 		' Reset player 1 if Key 1 is pressed
 		If player[0].enabled=False And Keyboard.KeyHit( Key.Key1 )
-			player[0].position=New Vec2f( 160,240 )
+			player[0].position=New Vec2f( VWIDTH*.25,VHEIGHT*.5 )
 			player[0].rotation=270/360.0*TwoPi
 			player[0].speed=New Vec2f()
-			player[0].hits=PlayerHits
+			player[0].hits=PLAYER_HITS
 			player[0].enabled=True
 		Endif
 
 		' Reset player 2 if Key 2 is pressed
 		If player[1].enabled=False And Keyboard.KeyHit( Key.Key2 )
-			player[1].position=New Vec2f( 480,240 )
+			player[1].position=New Vec2f( VWIDTH*.75,VHEIGHT*.5 )
 			player[1].rotation=270/360.0*TwoPi
 			player[1].speed=New Vec2f()
-			player[1].hits=PlayerHits
+			player[1].hits=PLAYER_HITS
 			player[1].enabled=True
 		Endif
 
@@ -116,6 +129,8 @@ Class PlayniaxGame Extends Window
 	Method DrawHelp( canvas:Canvas )
 
 		canvas.BlendMode=BlendMode.Alpha
+		
+		canvas.Font=font
 
 		If Keyboard.KeyDown( Key.F1 )
 
@@ -123,7 +138,7 @@ Class PlayniaxGame Extends Window
 			canvas.Color=New Color( 0,0,0,.75 )
 			canvas.DrawRect( 0,0,window.Width,window.Height )
 
-			Local x:=window.Width/2-73,y:=window.Height/2-92
+			Local x:=window.Width/2-140,y:=window.Height/2-172
 				
 			canvas.Color=New Color( 1,0,0,1 )
 			canvas.DrawText( "PLAYER 1",x,y ) ; y+=canvas.Font.Height+4
@@ -145,7 +160,7 @@ Class PlayniaxGame Extends Window
 
 			' Display help key
 			canvas.Color=New Color( 1,1,1,1 )
-			canvas.DrawText( "F1 = Help",8,480-8-canvas.Font.Height )
+			canvas.DrawText( "F1 = Help",8,VHEIGHT-8-canvas.Font.Height )
 
 		Endif
 
@@ -154,20 +169,25 @@ Class PlayniaxGame Extends Window
 	' Display progress bar hit counter and points
 	Method DrawScores( canvas:Canvas )
 
-		Const spaceX:=64
+		Const spaceX:=256
 
 		Local score:=""
 
 		canvas.BlendMode=BlendMode.Alpha
 
+		canvas.Font=font
+
 		If player[0].enabled=False score="Press 1 to play" Else score=player[0].score
 
-		DrawProgressBar( canvas,spaceX,8,50,8,player[0].hits,PlayerHits,New Color( .5,0,0,1 ),New Color( 1,0,0,1 ) )
+		DrawProgressBar( canvas,spaceX,8,50,8,player[0].hits,PLAYER_HITS,New Color( .5,0,0,1 ),New Color( 1,0,0,1 ) )
+
+		canvas.Color=New Color( 1,0,0,1 )
 		canvas.DrawText( score,spaceX,8+8+2 )
 
 		If player[1].enabled=False score="Press 2 to play" Else score=player[1].score
 		
-		DrawProgressBar( canvas,window.Width-50-spaceX,8,50,8,player[1].hits,PlayerHits,New Color( 0,0,.5,1 ),New Color( 0,0,1,1 ) )
+		DrawProgressBar( canvas,window.Width-50-spaceX,8,50,8,player[1].hits,PLAYER_HITS,New Color( 0,0,.5,1 ),New Color( 0,0,1,1 ) )
+		canvas.Color=New Color( 0,0,1,1 )
 		canvas.DrawText( score,window.Width-50-spaceX,8+8+2 )
 
 	End
@@ -323,7 +343,7 @@ End
 Class Player Extends Sprite
 
 	Field bullets:=New Stack<Sprite>
-	Field hits:=PlayerHits
+	Field hits:=PLAYER_HITS
 	Field fire:=Key.None
 	Field fireDelay:=0
 	Field left:=Key.None
@@ -505,7 +525,7 @@ Function Main()
 
 	New AppInstance
 	
-	window=New PlayniaxGame
+	window=New PlayniaxGame( "Shoot-out",640,480 )
 	
 	App.Run()
 

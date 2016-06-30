@@ -250,9 +250,8 @@ Class VPaint Extends Window
 				pane.Draw(display)		
 				framecount+=1	
 				
-				ink.r=(framecount&255)/255.0
-				ink.g=(framecount&1023)/1023.0
-				ink.b=(framecount&511)/511.0
+				ink=Color.FromHSV( framecount/100.0,1,1 )
+
 				pane.canvas.Color=ink
 
 			Case AppState.Browse
@@ -284,7 +283,11 @@ Class VPaint Extends Window
 			Case Key.Down
 				radius*=0.8			
 			Case Key.Up
-				radius*=1.2			
+				radius*=1.2
+			Case Key.P
+				Local pixmap:=pane.canvas.CopyPixmap( pane.canvas.Viewport )
+				pixmap.Save( AppDir()+"vpaint_picture.png" )
+				pixmap.Discard()
 			End
 		End
 		RefreshTitle()		
