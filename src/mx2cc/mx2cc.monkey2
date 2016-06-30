@@ -18,9 +18,9 @@ Using mx2..
 
 Global StartDir:String
 
-Const TestArgs:="mx2cc makemods"
+'Const TestArgs:="mx2cc makemods"
 
-'Const TestArgs:="mx2cc makedocs monkey std mojo"
+Const TestArgs:="mx2cc makedocs monkey std mojo"
 
 'Const TestArgs:="mx2cc makeapp src/mx2new/test.monkey2"
 
@@ -32,7 +32,7 @@ Const TestArgs:="mx2cc makemods"
 
 Function Main()
 
-	Print "MX2CC V0."+MX2CC_VERSION
+	Print "mx2cc version "+MX2CC_VERSION
 
 	StartDir=CurrentDir()
 
@@ -222,10 +222,14 @@ Function MakeDocs( args:String[] )
 	Next
 	
 '	stringio.SaveString( "mx2_api_tree="+mx2_api+";","docs/api-tree.js" )
+	Local mods:=stringio.LoadString( "docs/modules_template.html" )
+	mods=mods.Replace( "${MX2_API}",mx2_api )
+	stringio.SaveString( mods,"docs/modules.html" )
 	
-	Local index:=stringio.LoadString( "docs/modules_template.html" )
-	index=index.Replace( "${MX2_API}",mx2_api )
-	stringio.SaveString( index,"docs/modules.html" )
+	Local lang_nav:=docsMaker.MakeLangNav()
+	Local lang:=stringio.LoadString( "docs/language_template.html" )
+	lang=lang.Replace( "${LANG_NAV}",lang_nav )
+	stringio.SaveString( lang,"docs/language.html" )
 	
 End
 

@@ -1,6 +1,27 @@
 
 Namespace mx2.docs
 
+Function Slugify:String( str:String )
+	Local st:=0
+	While st<str.Length And Not IsIdent( str[st] )
+		st+=1
+	Wend
+	Local en:=str.Length
+	While en>st And Not IsIdent( str[en-1] )
+		en-=1
+	Wend
+	Local out:=""
+	For Local i:=st Until en
+		Local chr:=str[i]
+		If IsIdent( chr )
+			out+=String.FromChar( chr ).ToLower()
+			Continue
+		Endif
+		out+="-"
+	Next
+	Return out
+End
+
 Class MarkdownBuffer
 
 	Alias LinkResolver:String( link:String )
@@ -25,6 +46,16 @@ Class MarkdownBuffer
 		For Local i:=0 Until lines.Length
 		
 			Local line:=lines[i].Trim()
+			
+			#rem
+			If line.StartsWith( "#" )
+				Local j:=FindSpc( line )
+				Local id:=line.Slice( j ).Trim()
+				Local slug:=Slugify( id )
+				_buf.Push( "<h"+j+" id='"+slug+"'>"+id+"</h"+j+">" )
+				continue
+			End
+			#End
 			
 			If line.StartsWith( "@" )
 
@@ -134,6 +165,9 @@ Class MarkdownBuffer
 	Field _params:=New StringStack
 	Field _return:String
 	Field _label:String
+	
+	Field _toc:=New JsonBuffer
+	Field _tocNest:Int
 	
 	Method FindSpc:Int( str:String )
 		For Local i:=0 Until str.Length
