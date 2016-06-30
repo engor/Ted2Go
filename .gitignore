@@ -2,10 +2,6 @@
 *.bak
 *.buildv*
 
-/*.txt
-!/README.TXT
-!/LICENSE.TXT
-
 /desktop.ini
 
 /bin/*.dll
@@ -19,21 +15,8 @@
 /docs/modules.html
 __PAGES__/
 
-**/assets/mojo
-
 /tmp/*
 !/tmp/.gitignore
 
-/src/ted2
-/src/mojox
-/src/launcher
-/src/mx2doc
-/src/createrelease
-
-/scripts/*.save
-/debug_test.monkey2
-
-/modules/timelinefx
-
-/tests/*
+**/assets/mojo
 
