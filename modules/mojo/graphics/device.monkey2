@@ -209,6 +209,17 @@ Class GraphicsDevice
 		
 		_modified=True
 	End
+	
+	Method CopyPixmap:Pixmap( rect:Recti )
+	
+		Validate()
+
+		Local pixmap:=New Pixmap( rect.Width,rect.Height,PixelFormat.RGBA32 )
+		
+		glReadPixels( rect.X,rect.Y,rect.Width,rect.Height,GL_RGBA,GL_UNSIGNED_BYTE,pixmap.Data )
+		
+		Return pixmap
+	End
 
 	Private
 	
