@@ -173,6 +173,12 @@ Struct Color
 		Return UInt(a*255) Shl 24 | UInt(r*255) Shl 16 | UInt(g*255) Shl 8 | UInt(b*255)
 	End
 	
+	#rem monkeydoc Converts the color to printable string.
+	#end
+	Method ToString:String()
+		Return "Color("+r+","+g+","+b+","+a+")"
+	End
+	
 	#rem monkeydoc Creates a color from hue, saturation and value.
 	#end
 	Function FromHSV:Color( h:Float,s:Float,v:Float,a:Float=1 )
