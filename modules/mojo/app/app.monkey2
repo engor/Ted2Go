@@ -1,6 +1,7 @@
 
 Namespace mojo.app
 
+#Import "native/async.cpp"
 #Import "assets/Roboto-Regular.ttf@/mojo"
 #Import "assets/RobotoMono-Regular.ttf@/mojo"
 
@@ -71,6 +72,8 @@ Class AppInstance
 		Audio.Init()
 
 #If __TARGET__<>"emscripten"
+
+		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER,1 )
 
 		_glWindow=SDL_CreateWindow( "<hidden>",0,0,0,0,SDL_WINDOW_HIDDEN|SDL_WINDOW_OPENGL )
 
@@ -304,11 +307,14 @@ Class AppInstance
 		UpdateFPS()
 			
 		For Local window:=Eachin Window.VisibleWindows()
+			window.Update()
 			window.Render()
 		Next
 			
 	End
 	
+	#rem monkeydoc @hidden
+	#end
 	Function EmscriptenMainLoop()
 
 		App._requestRender=True
@@ -408,7 +414,7 @@ Class AppInstance
 		idle()
 		
 		For Local window:=Eachin Window.VisibleWindows()
-			window.Update()
+'			window.Update()
 		Next
 
 	End
@@ -618,6 +624,8 @@ Class AppInstance
 			
 			Case SDL_WINDOWEVENT_RESIZED
 			
+			Case SDL_WINDOWEVENT_SIZE_CHANGED
+			
 			Case SDL_WINDOWEVENT_FOCUS_GAINED
 			
 				SendWindowEvent( EventType.WindowGainedFocus )
@@ -684,10 +692,10 @@ Class AppInstance
 			
 				Return 0
 					
-			Case SDL_WINDOWEVENT_RESIZED',SDL_WINDOWEVENT_SIZE_CHANGED
-
-				SendWindowEvent( EventType.WindowResized )
+			Case SDL_WINDOWEVENT_RESIZED
 			
+				SendWindowEvent( EventType.WindowResized )
+				
 				If _requestRender
 				
 					_requestRender=False
@@ -698,7 +706,7 @@ Class AppInstance
 					Next
 					
 				Endif
-
+			
 				Return 0
 
 			End
