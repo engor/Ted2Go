@@ -400,6 +400,16 @@ Class Pixmap
 		Return New Pixmap( width,height,_format,PixelPtr( x,y ),_pitch )
 	End
 	
+	#rem monkeydoc Saves the pixmap to a file.
+	
+	The only save format currently suppoted is PNG.
+	
+	#End
+	Method Save:Bool( path:String )
+	
+		Return SavePixmap( Self,path )
+	End
+	
 	#rem monkeydoc Loads a pixmap from a file.
 	
 	@param path The file path.

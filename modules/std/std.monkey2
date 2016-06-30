@@ -2,6 +2,8 @@
 Namespace std
 
 #Import "<libc.monkey2>"
+#Import "<stb-image>"
+#Import "<stb-image-write>"
 
 #Import "collections/container"
 #Import "collections/stack"
@@ -29,6 +31,7 @@ Namespace std
 #Import "graphics/pixelformat"
 #Import "graphics/pixmap"
 #Import "graphics/pixmaploader"
+#Import "graphics/pixmapsaver"
 #Import "graphics/color"
 
 #Import "misc/random"
