@@ -113,11 +113,17 @@ Function hoedown_document_free( doc:hoedown_document Ptr )
 
 Public
 
-Function MarkdownToHtml:String( markdown:String )
+Function MarkdownToHtml:String( markdown:String,toc:Bool=False )
 
 	Local ob:=hoedown_buffer_new( 4096 )
 	
-	Local r:=hoedown_html_renderer_new( HOEDOWN_HTML_NONE,10 )
+	Local r:hoedown_renderer Ptr
+	
+	If toc
+		r=hoedown_html_toc_renderer_new( 10 )
+	Else
+		r=hoedown_html_renderer_new( HOEDOWN_HTML_NONE,10 )
+	Endif
 	
 	Local doc:=hoedown_document_new( r,HOEDOWN_EXT_TABLES|HOEDOWN_EXT_FENCED_CODE,10 )
 		
