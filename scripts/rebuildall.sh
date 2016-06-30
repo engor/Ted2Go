@@ -1,6 +1,4 @@
 
-source common.sh
-
 ./rebuildmods.sh
-#./rebuildmx2cc.sh
+./rebuildted2.sh
 ./makedocs.sh
