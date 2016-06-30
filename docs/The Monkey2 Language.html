@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="docs_body">
+<div class="docs_content">
+
+<!-- CONTENT -->
+
+<p><div class="toc">
+<ul>
+<li><ul>
+<li><ul>
+<li><a href="#the-monkey2-language">The Monkey2 Language</a><ul>
+<li><a href="#welcome-to-monkey2">Welcome to Monkey2!</a></li>
+</ul>
+</li>
+<li><a href="#modules-and-applications">Modules and Applications</a><ul>
+<li><a href="#creating-modules">Creating modules</a></li>
+<li><a href="#importing-modules">Importing modules</a></li>
+<li><a href="#applications">Applications</a></li>
+</ul>
+</li>
+<li><a href="#namespaces-and-using">Namespaces and Using</a><ul>
+<li><a href="#declaring-namespaces">Declaring namespaces</a></li>
+<li><a href="#accessing-namespaces">Accessing namespaces</a></li>
+<li><a href="#the-using-directive">The Using directive</a></li>
+</ul>
+</li>
+<li><a href="#monkey2-types">Monkey2 types</a><ul>
+<li><a href="#primitive-types">Primitive types</a></li>
+<li><a href="#compound-types">Compound types</a></li>
+<li><a href="#implicit-type-conversions">Implicit type conversions</a></li>
+<li><a href="#explicit-type-conversions">Explicit type conversions</a></li>
+</ul>
+</li>
+<li><a href="#user-defined-types">User defined types</a><ul>
+<li><a href="#classes">Classes</a></li>
+<li><a href="#structs">Structs</a></li>
+<li><a href="#interfaces">Interfaces</a></li>
+<li><a href="#fields">Fields</a></li>
+<li><a href="#methods">Methods</a></li>
+<li><a href="#properties">Properties</a></li>
+</ul>
+</li>
+<li><a href="#variables-and-consts">Variables and Consts</a><ul>
+<li><a href="#local-variables">Local variables</a></li>
+<li><a href="#global-variables">Global variables</a></li>
+<li><a href="#consts">Consts</a></li>
+</ul>
+</li>
+<li><a href="#functions">Functions</a><ul>
+<li><a href="#global-functions">Global functions</a></li>
+<li><a href="#lambda-functions">Lambda functions</a></li>
+<li><a href="#function-values">Function values</a></li>
+</ul>
+</li>
+<li><a href="#expressions">Expressions</a><ul>
+<li><a href="#operators">Operators</a></li>
+<li><a href="#type-balancing">Type balancing</a></li>
+<li><a href="#operator-overloading">Operator overloading</a></li>
+</ul>
+</li>
+<li><a href="#the-build-system">The build system</a><ul>
+<li><a href="#system-imports">System Imports</a></li>
+<li><a href="#local-imports">Local Imports</a></li>
+</ul>
+</li>
+<li><a href="#integration-with-native-code">Integration with native code</a><ul>
+<li><a href="#extern-symbols">Extern symbols</a></li>
+<li><a href="#extern-classes">Extern classes</a></li>
+</ul>
+</li>
+<li><a href="#the-mx2cc-tool">The mx2cc tool</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</p>
+
+
+
+<h3 id="the-monkey2-language">The Monkey2 Language</h3>
+
+
+
+<h4 id="welcome-to-monkey2">Welcome to Monkey2!</h4>
+
+<p>Monkey2 is a new open-source, user-friendly, cross-platform programming language.</p>
+
+
+
+<h3 id="modules-and-applications">Modules and Applications</h3>
+
+
+
+<h4 id="creating-modules">Creating modules</h4>
+
+<p>A module consists of a sub-directory inside the top level ‘/modules/’ directory, that contains a ‘root’ monkey2 file with the same name as the sub-directory and a ‘module.json’ file , eg:</p>
+
+
+
+<pre class="prettyprint"><code>/modules/my-module/
+/modules/my-module/my-module.monkey2
+/modules/my-module/module.json</code></pre>
+
+<p>Module names can contain any valid identifier or the <code>-</code> character. However, the <code>-</code> character cannot be used twice or more in succession, eg:</p>
+
+
+
+<pre class="prettyprint"><code>legal-module-name
+illegal--module--name</code></pre>
+
+<p>Module names live in a ‘flat’ namespace so should be as unique as possible.</p>
+
+<p>The ‘module.json’ file must contain a json object with the following fields:</p>
+
+<ul>
+<li><code>"module"</code> : string - the name of the module. Must be the same as the directory name.</li>
+<li><code>"version"</code> : string - the version of the module. This should be in number ‘dot’ number ‘dot’ number format, eg: <code>"1.0.0"</code>.</li>
+<li><code>"depends"</code> : string array - All modules this module depends on. This will generally include all other modukes #imported by the module, eg: <code>["libc","std"]</code>.</li>
+</ul>
+
+<p>A simple module.json file might look like this:</p>
+
+
+
+<pre class="prettyprint"><code>{
+    "module" : "my-module",
+    "version" : "1.0.0",
+    "depends" : ["libc","std"]
+}</code></pre>
+
+<p>To rebuild a module, use the mx2cc ‘makemods’ option, eg:</p>
+
+<p><code>mx2cc makemods my-module</code></p>
+
+<p>This will cause the root ‘modules/my-module/my-module.monkey2’ file to be built, along with any local files it imports.</p>
+
+<p>You can also rebuild all modules with:</p>
+
+<p><code>mx2cc makemods</code></p>
+
+<p>This will use the “depends” information in the module.json files to determine the correct order to build the modules in.</p>
+
+<p>Modules must not have cyclic dependancies.</p>
+
+<p>Each module may also declare a single Main:Void() function that can be used to initialize the module.</p>
+
+<p>This function is called <em>after</em> global variables (including global Consts) have been initialized but <em>before</em> the application’s Main is called.</p>
+
+<p>Since modules can’t have cyclic dependencies, Mains will always execute in the correct order, eg: if module X imports module Y, then module Y’s Main is guaranteed to be called before module X’s.</p>
+
+
+
+<h4 id="importing-modules">Importing modules</h4>
+
+<p>Once built, a module can be imported into other modules using ‘import’, eg:</p>
+
+<p><code>#Import "&lt;my-module&gt;"</code></p>
+
+
+
+<h4 id="applications">Applications</h4>
+
+<p>An application is really just a special type of module. It doesn’t have to reside in the ‘/modules/’ directory, can’t be imported by other modules and produces executable files instead of archives, but is otherwise dealt with just like a module.</p>
+
+<p>An application must declare a Main:Void() function. Actually, there’s no difference between the Main declared in the app, and Mains declared in modules. Since the app depends on ALL modules, and NO modules depend on the app, the app’s Main just happens to be the last one called.</p>
+
+<hr>
+
+
+
+<h3 id="namespaces-and-using">Namespaces and Using</h3>
+
+<p>All identifiers declared in a monkey2 program file end up inside a ‘namespace’. Namespaces are hierarchical, so in addition to identifiers declared by monkey2 code, namespaces can also contain other namespaces.</p>
+
+
+
+<h4 id="declaring-namespaces">Declaring namespaces</h4>
+
+<p>You control which namespace the identifiers declared in a monkey2 file go with the namespace directive:</p>
+
+<p><code>Namespace</code> <em>namespace-path</em></p>
+
+<p>This directive must appear at the top of the program file, before any actual declarations are made.</p>
+
+<p>A namespace path is a ‘dot’ separated sequence of identifiers, eg:</p>
+
+<p><code>monkey.types</code> <br>
+<code>std.collections</code></p>
+
+<p>The ‘dot’ separator indicates the namespace hierarchy, eg: <code>monkey.types</code> is a ‘child’ or ‘inner’ namespace of <code>monkey</code>.</p>
+
+<p>If no namespace is specified in a program file, the identifiers go into a default namespace. This is not recommended though, as the default namespace has no name - so anything inside the default namespace cannot be ‘seen’ by anything outside.</p>
+
+
+
+<h4 id="accessing-namespaces">Accessing namespaces</h4>
+
+<p>Code can access an identifier in a namespace by prefixing the identifier with the namespace path, eg:</p>
+
+<p><code>Local list:=New std.collections.List&lt;Int&gt;</code></p>
+
+<p>Here, <code>std.collections</code> refers to a namespace, while <code>List</code> is an identifier inside  the <code>std.collections</code> namespace.</p>
+
+<p>Code inside a particular namespace does not have to use a namespace prefix to find identifiers in the same namespace or in any parent namespace, although it can still do so, eg:</p>
+
+
+
+<pre class="prettyprint"><code>Namespace testing
+
+Function Test()
+End
+
+Function Main()
+    Test()              'works fine...
+    testing.Test()    'also works...
+End</code></pre>
+
+
+
+<h4 id="the-using-directive">The Using directive</h4>
+
+<p>To make it easier to deal with long or complex namespace paths, the using directive provides a way to add namespace ‘search paths’ for locating identifiers. The using directive looks like this:</p>
+
+<p><code>Using</code> <em>namespace-path</em></p>
+
+<p>A program can have multiple using directives. Using directives must appear at the top of the program file before any program declarations.</p>
+
+<p>Each using directive adds a namespace to a set of ‘search paths’ that is used to resolve any unknown identifiers in the program code, eg:</p>
+
+
+
+<pre class="prettyprint"><code>#Import "&lt;std&gt;"
+
+Using std.collections
+
+Function Main()
+    Local list:=New List&lt;Int&gt;
+End</code></pre>
+
+<p>Without the using directive, this program would fail to compile because the <code>List</code> identifier cannot be found.</p>
+
+<p>However, the using direct tells the compiler look for <code>List</code> in the <code>std.collections</code> namespace, where it is successfully located.</p>
+
+<p>If you have multiple using directives and an identifier is found in more than one namespace, you will still get a compile error. In this case, you will need to ‘fully qualify’ the identifier by prefixing it with the correct namespace path.</p>
+
+<p>Some modules declare many namespaces, and it can often be difficult to remember where everything is. To deal with this, Monkey2 provides a convenient ‘double dot’ form of Using that will use both a namespace AND all namespaces contained in that namespace. For example:</p>
+
+
+
+<pre class="prettyprint"><code>Using std..</code></pre>
+
+<p>The double dots must appear at the end of the using.</p>
+
+<p>This will use the std namespace, and the std.collections, std.filesystem etc namespaces too. This works recursively, so any namespaces inside std.collections and std.filesystem are also used.</p>
+
+<p>This can of course lead to more ‘duplicate identifier’ clashes but is none-the-less very convenient.</p>
+
+<hr>
+
+
+
+<h3 id="monkey2-types">Monkey2 types</h3>
+
+
+
+<h4 id="primitive-types">Primitive types</h4>
+
+<p>The following primtive types are supported by monkey2:</p>
+
+<table>
+<thead>
+<tr>
+  <th align="left">Type</th>
+  <th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="left"><code>Void</code></td>
+  <td align="left">No type.</td>
+</tr>
+<tr>
+  <td align="left"><code>Bool</code></td>
+  <td align="left">Boolean type.</td>
+</tr>
+<tr>
+  <td align="left"><code>Byte</code></td>
+  <td align="left">8 bit signed integer.</td>
+</tr>
+<tr>
+  <td align="left"><code>UByte</code></td>
+  <td align="left">8 bit unsigned integer.</td>
+</tr>
+<tr>
+  <td align="left"><code>Short</code></td>
+  <td align="left">16 bit signed integer.</td>
+</tr>
+<tr>
+  <td align="left"><code>UShort</code></td>
+  <td align="left">16 bit unsigned integer.</td>
+</tr>
+<tr>
+  <td align="left"><code>Int</code></td>
+  <td align="left">32 bit signed integer.</td>
+</tr>
+<tr>
+  <td align="left"><code>UInt</code></td>
+  <td align="left">32 bit unsigned integer.</td>
+</tr>
+<tr>
+  <td align="left"><code>Long</code></td>
+  <td align="left">64 bit signed integer.</td>
+</tr>
+<tr>
+  <td align="left"><code>ULong</code></td>
+  <td align="left">64 bit signed integer.</td>
+</tr>
+<tr>
+  <td align="left"><code>Float</code></td>
+  <td align="left">32 bit floating point.</td>
+</tr>
+<tr>
+  <td align="left"><code>Double</code></td>
+  <td align="left">64 bit floating point.</td>
+</tr>
+<tr>
+  <td align="left"><code>String</code></td>
+  <td align="left">String of 16 bit characters.</td>
+</tr>
+</tbody></table>
+
+
+
+
+<h4 id="compound-types">Compound types</h4>
+
+<p>The following compound types are supported by monkey2:</p>
+
+<table>
+<thead>
+<tr>
+  <th align="left">Type</th>
+  <th align="left">Description</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="left"><em>Type</em> <code>[]</code></td>
+  <td align="left">Array type</td>
+</tr>
+<tr>
+  <td align="left"><em>Type</em> <code>Ptr</code></td>
+  <td align="left">Pointer type</td>
+</tr>
+<tr>
+  <td align="left"><em>Type</em> <code>(</code> <em>Types</em> <code>)</code></td>
+  <td align="left">Function type</td>
+</tr>
+</tbody></table>
+
+
+
+
+<h4 id="implicit-type-conversions">Implicit type conversions</h4>
+
+<p>These type conversions are performed automatically:</p>
+
+<table>
+<thead>
+<tr>
+  <th align="left">Source type</th>
+  <th align="left">Destination type</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="left">Any numeric type</td>
+  <td align="left"><code>Bool</code></td>
+</tr>
+<tr>
+  <td align="left">String or array type</td>
+  <td align="left"><code>Bool</code></td>
+</tr>
+<tr>
+  <td align="left">Class or interface type</td>
+  <td align="left"><code>Bool</code></td>
+</tr>
+<tr>
+  <td align="left">Any numeric type</td>
+  <td align="left">Any numeric type</td>
+</tr>
+<tr>
+  <td align="left">Any numeric type</td>
+  <td align="left"><code>String</code></td>
+</tr>
+<tr>
+  <td align="left">Any pointer type</td>
+  <td align="left"><code>Void Ptr</code></td>
+</tr>
+<tr>
+  <td align="left">Any enum type</td>
+  <td align="left">Any integral type</td>
+</tr>
+<tr>
+  <td align="left">Class or interface type</td>
+  <td align="left">Base class type or implemented interface type</td>
+</tr>
+</tbody></table>
+
+
+<p>When numeric values are converted to bool, the result will be true if the value is not equal to 0.</p>
+
+<p>When strings and arrays are converted to bool, the result will be true if the length of the string or array is not 0.</p>
+
+<p>When class or interface instances are converted to bool, the result will be true if the instance is not equal to null.</p>
+
+<p>When floating point values are converted to integral values, the fractional part of the floating point value is simply chopped off - no rounding is performed.</p>
+
+
+
+<h4 id="explicit-type-conversions">Explicit type conversions</h4>
+
+<p>The <code>Cast</code> <code>&lt;</code> <em>dest-type</em> <code>&gt;</code> <code>:</code> <em>dest-type</em> <code>(</code> <em>expression</em> <code>)</code> operator must be used for these type conversions:</p>
+
+<table>
+<thead>
+<tr>
+  <th align="left">Source type</th>
+  <th align="left">Destination type</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="left"><code>Bool</code></td>
+  <td align="left">Any numeric type</td>
+</tr>
+<tr>
+  <td align="left"><code>String</code></td>
+  <td align="left">Any numeric type</td>
+</tr>
+<tr>
+  <td align="left">Any pointer type</td>
+  <td align="left">Any pointer type, any integral type</td>
+</tr>
+<tr>
+  <td align="left">Any integral type</td>
+  <td align="left">Any pointer type, any enum type</td>
+</tr>
+<tr>
+  <td align="left">Class type</td>
+  <td align="left">Derived class type, any interface type</td>
+</tr>
+<tr>
+  <td align="left">Interface type</td>
+  <td align="left">Any class type, any interface type</td>
+</tr>
+</tbody></table>
+
+
+<p>When casting bool values to a numeric type, the result will be 1 for true, 0 for false.</p>
+
+<hr>
+
+
+
+<h3 id="user-defined-types">User defined types</h3>
+
+
+
+<h4 id="classes">Classes</h4>
+
+<p>To declare a class:</p>
+
+<p><code>Class</code> <em>Identifier</em> [ <code>Extends</code> <em>SuperClass</em> ] [ <code>Implements</code> <em>Interfaces</em> ] [ <em>Modifiers</em> ]</p>
+
+
+
+<pre class="prettyprint"><code>    ...Class members...</code></pre>
+
+<p><code>End</code></p>
+
+<p><em>SuperClass</em> defaults to <code>Object</code> if omitted.</p>
+
+<p><em>Interfaces</em> is a comma separated list of interface types.</p>
+
+<p><em>Modifiers</em> can be one of:</p>
+
+<ul>
+<li><code>Abstract</code> - class cannot be instantiated with ‘New’, it must be extended.</li>
+<li><code>Final</code> - class cannot be extended.</li>
+</ul>
+
+<p>Classes can contain consts, globals, fields, methods, functions and other user defined types.</p>
+
+
+
+<h4 id="structs">Structs</h4>
+
+<p>To declare a struct:</p>
+
+<p><code>Struct</code> <em>Identifier</em> </p>
+
+
+
+<pre class="prettyprint"><code>    ...Struct members...</code></pre>
+
+<p><code>End</code></p>
+
+<p>A struct can contain consts, globals, fields, methods, functions and other user defined types.</p>
+
+<p>Structs are similar to classes, but differ in several important ways:</p>
+
+<ul>
+<li><p>A struct is a ‘value type’, whereas a class is a ‘reference type’. This means that when you assign a struct to a variable, pass a struct to a function or return a struct from a function, the entire struct is copied in the process.</p></li>
+<li><p>Stucts are statically typed, whereas classes are dynamically typed.</p></li>
+<li><p>Struct methods cannot be virtual.</p></li>
+<li><p>A struct cannot extend anything.</p></li>
+</ul>
+
+
+
+<h4 id="interfaces">Interfaces</h4>
+
+<p>To declare an interface:</p>
+
+<p><code>Interface</code> <em>Identifier</em> [ <code>Extends</code> <em>Interfaces</em> ]</p>
+
+
+
+<pre class="prettyprint"><code>    ...Interface members...</code></pre>
+
+<p><code>End</code></p>
+
+<p><em>Interfaces</em> is a comma separated list of interface types. </p>
+
+<p>An interface can contain consts, globals, fields, methods, functions and other user defined types.</p>
+
+<p>Interface methods are always ‘abstract’ and cannot declared any code.</p>
+
+
+
+<h4 id="fields">Fields</h4>
+
+<p>Fields are variables that live inside the memory allocated for an instance of a class or struct. To declare a field variable:</p>
+
+<p><code>Field</code> <em>identifier</em> <code>:</code> <em>Type</em> [ <code>=</code> <em>Expression</em> ] <br>
+…or… <br>
+<code>Field</code> <em>identifier</em> <code>:=</code> <em>Expression</em></p>
+
+<p>For struct fields, <em>Expression</em> must not contain any code that has side effects.</p>
+
+
+
+<h4 id="methods">Methods</h4>
+
+<p>To declare a method:</p>
+
+<p><code>Method</code> <em>Identifier</em> [ <code>:</code> <em>ReturnType</em> ] <code>(</code> <em>Arguments</em> <code>)</code> [ <em>Modifiers</em> ]</p>
+
+
+
+<pre class="prettyprint"><code>    ...Statements...</code></pre>
+
+<p><code>End</code></p>
+
+<p><em>ReturnType</em> defaults to <code>Void</code> if omitted.</p>
+
+<p><em>Arguments</em> is a comma separated list of parameter declarations.</p>
+
+<p><em>Modifiers</em> can only be used with class methods, and can be one of:</p>
+
+<ul>
+<li><code>Abstract</code> - method is abstract and has no statements block or <code>End</code> terminator. Any class with an abstract method is implicitly abstract.</li>
+<li><code>Virtual</code> - method is virtual and can be dynamically overridden by a subclass method.</li>
+<li><code>Override</code> - method is virtual and overrides a super class or interface method.</li>
+<li><code>Override Final</code> - method is virtual, overrides a super class or interace method and cannot be overridden by subclasses.</li>
+<li><code>Final</code> - method is non-virtual and cannot be overridden by a subclass method.  </li>
+</ul>
+
+<p>Methods are ‘Final’ by default.</p>
+
+
+
+<h4 id="properties">Properties</h4>
+
+<p>To declare a read/write property:</p>
+
+<p><code>Property</code> <em>Identifier</em> <code>:</code> <em>Type</em> <code>()</code> <br>
+…getter code… <br>
+<code>Setter</code> <code>(</code> <em>Identifier <code>:</code> _Type</em> <code>)</code> <br>
+…setter code… <br>
+<code>End</code></p>
+
+<p>To declare a read only property:</p>
+
+<p><code>Property</code> <em>Identifier</em> <code>:</code> <em>Type</em> <code>()</code> <br>
+…getter code… <br>
+<code>End</code></p>
+
+<p>To declare a write only property:</p>
+
+<p><code>property</code> <code>(</code> <em>Identifier <code>:</code> _Type</em> <code>)</code> <br>
+…setter code… <br>
+<code>End</code></p>
+
+<hr>
+
+
+
+<h3 id="variables-and-consts">Variables and Consts</h3>
+
+
+
+<h4 id="local-variables">Local variables</h4>
+
+<p>Local variables live on the stack. To declare a local variable:</p>
+
+<p><code>Local</code> <em>identifier</em> <code>:</code> <em>Type</em> [ <code>=</code> <em>Expression</em> ] <br>
+…or… <br>
+<code>Local</code> <em>identifier</em> <code>:=</code> <em>Expression</em></p>
+
+
+
+<h4 id="global-variables">Global variables</h4>
+
+<p>Global variables live in global memory and exist for the lifetime of the application. To declare a global variable:</p>
+
+<p><code>Global</code> <em>identifier</em> <code>:</code> <em>Type</em> [ <code>=</code> <em>Expression</em> ] <br>
+…or… <br>
+<code>Global</code> <em>identifier</em> <code>:=</code> <em>Expression</em></p>
+
+
+
+<h4 id="consts">Consts</h4>
+
+<p>Consts are stored in the same way as globals, but cannot be modified after they are initialized. To declare a const:</p>
+
+<p><code>Const</code> <em>identifier</em> <code>:</code> <em>Type</em> <code>=</code> <em>Expression</em> <br>
+…or… <br>
+<code>Const</code> <em>identifier</em> <code>:=</code> <em>Expression</em></p>
+
+<hr>
+
+
+
+<h3 id="functions">Functions</h3>
+
+
+
+<h4 id="global-functions">Global functions</h4>
+
+<p>To declare a global function:</p>
+
+<p><code>Function</code> <em>Identifier</em> [ <code>:</code> <em>ReturnType</em> ] <code>(</code> <em>Arguments</em> <code>)</code></p>
+
+
+
+<pre class="prettyprint"><code>    ...Statements...</code></pre>
+
+<p><code>End</code></p>
+
+<p><em>ReturnType</em> defaults to <code>Void</code> if omitted.</p>
+
+<p><em>Arguments</em> is a comma separated list of parameter declarations.</p>
+
+
+
+<h4 id="lambda-functions">Lambda functions</h4>
+
+<p>To declare a lambda function:</p>
+
+<p>…<code>Lambda</code> [ <code>:</code> <em>ReturnType</em> <code>]</code> <code>(</code> <em>Parameters</em> <code>)</code></p>
+
+
+
+<pre class="prettyprint"><code>    ...Statements...</code></pre>
+
+<p><code>End</code>…</p>
+
+<p>Lambda declarations must appear within an expression, and therefore should not start on a new line.</p>
+
+<p>For example:</p>
+
+
+
+<pre class="prettyprint"><code>Local myLambda:=Lambda()
+   Print "My Lambda!"
+End
+
+myLambda()</code></pre>
+
+<p>To pass a lambda to a function:</p>
+
+
+
+<pre class="prettyprint"><code>SomeFunc( Lambda()
+   Print "MyLambda"
+End )</code></pre>
+
+<p>Note the closing <code>)</code> after the <code>End</code> to match the opening <code>(</code> after <code>SomeFunc</code>.</p>
+
+
+
+<h4 id="function-values">Function values</h4>
+
+<p>Monkey2 supports ‘first class’ functions.</p>
+
+<p>This means function ‘values’ can be stored in variables and arrays, passed to other functions and returned from functions.</p>
+
+<hr>
+
+
+
+<h3 id="expressions">Expressions</h3>
+
+
+
+<h4 id="operators">Operators</h4>
+
+<table>
+<thead>
+<tr>
+  <th align="left">Operator</th>
+  <th align="left">Description</th>
+  <th align="center">Precedence</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="left"><code>New</code></td>
+  <td align="left">New object or array</td>
+  <td align="center">1</td>
+</tr>
+<tr>
+  <td align="left"><code>Null</code></td>
+  <td align="left">Null value</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>Self</code></td>
+  <td align="left">Self instance</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>Super</code></td>
+  <td align="left">Super instance</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>True</code></td>
+  <td align="left">Boolean true</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>False</code></td>
+  <td align="left">Boolean false</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>Cast</code></td>
+  <td align="left">Cast operator</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>Lambda</code></td>
+  <td align="left">Lambda function</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><em>identifier</em></td>
+  <td align="left">Identifier</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><em>literal</em></td>
+  <td align="left">Literal value</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"></td>
+  <td align="left"></td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>.</code></td>
+  <td align="left">Postfix member acccess</td>
+  <td align="center">2</td>
+</tr>
+<tr>
+  <td align="left"><code>( )</code></td>
+  <td align="left">Postfix Invoke</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>[ ]</code></td>
+  <td align="left">Postfix Index</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>&lt; &gt;</code></td>
+  <td align="left">Postfix Generic instance</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"></td>
+  <td align="left"></td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>Varptr</code></td>
+  <td align="left">Unary variable address</td>
+  <td align="center">3</td>
+</tr>
+<tr>
+  <td align="left"><code>-</code></td>
+  <td align="left">Unary numeric negate</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>~</code></td>
+  <td align="left">Unary integer complement</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>Not</code></td>
+  <td align="left">Unary boolean invert</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"></td>
+  <td align="left"></td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>*</code></td>
+  <td align="left">Numeric multiplication</td>
+  <td align="center">4</td>
+</tr>
+<tr>
+  <td align="left"><code>/</code></td>
+  <td align="left">Numeric division</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>Mod</code></td>
+  <td align="left">Numeric modulo</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"></td>
+  <td align="left"></td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>+</code></td>
+  <td align="left">Numeric addition</td>
+  <td align="center">5</td>
+</tr>
+<tr>
+  <td align="left"><code>-</code></td>
+  <td align="left">Numeric subtraction</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"></td>
+  <td align="left"></td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>Shl</code></td>
+  <td align="left">Integer shift left</td>
+  <td align="center">6</td>
+</tr>
+<tr>
+  <td align="left"><code>Shr</code></td>
+  <td align="left">Integer shift right</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"></td>
+  <td align="left"></td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>&amp;</code></td>
+  <td align="left">Integer and</td>
+  <td align="center">7</td>
+</tr>
+<tr>
+  <td align="left"><code>~</code></td>
+  <td align="left">Integer xor</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"></td>
+  <td align="left"></td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>|</code></td>
+  <td align="left">Integer or</td>
+  <td align="center">8</td>
+</tr>
+<tr>
+  <td align="left"></td>
+  <td align="left"></td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>&lt;=&gt;</code></td>
+  <td align="left">Compare</td>
+  <td align="center">9</td>
+</tr>
+<tr>
+  <td align="left"></td>
+  <td align="left"></td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>&lt;</code></td>
+  <td align="left">Less than</td>
+  <td align="center">10</td>
+</tr>
+<tr>
+  <td align="left"><code>&gt;</code></td>
+  <td align="left">Greater than</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>&lt;=</code></td>
+  <td align="left">Less than or equal</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>&gt;=</code></td>
+  <td align="left">Greater than or equal</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"></td>
+  <td align="left"></td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>=</code></td>
+  <td align="left">Equal</td>
+  <td align="center">11</td>
+</tr>
+<tr>
+  <td align="left"><code>&lt;&gt;</code></td>
+  <td align="left">Not equal</td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"></td>
+  <td align="left"></td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>And</code></td>
+  <td align="left">Boolean and</td>
+  <td align="center">12</td>
+</tr>
+<tr>
+  <td align="left"></td>
+  <td align="left"></td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>Or</code></td>
+  <td align="left">Boolean or</td>
+  <td align="center">13</td>
+</tr>
+<tr>
+  <td align="left"></td>
+  <td align="left"></td>
+  <td align="center"></td>
+</tr>
+<tr>
+  <td align="left"><code>?</code> <code>Else</code></td>
+  <td align="left">If-then-else</td>
+  <td align="center">14</td>
+</tr>
+</tbody></table>
+
+
+
+
+<h4 id="type-balancing">Type balancing</h4>
+
+<p>When evaluating an operator’s operands, it is sometimes necessary to adjust the type of one or both operands.</p>
+
+<p>When evaluating the operands of arithemetic or comparison operators, the following rules are used:</p>
+
+<ul>
+<li>If either operator String, the other is converted to String.</li>
+<li>Else If either operand is Double, the other is converted to Double.</li>
+<li>Else if either operand is Float, the other is converted to Float.</li>
+<li>Else if either operand is ULong, the other is converted to ULong.</li>
+<li>Else if either operand is Long, the other is converted to Long.</li>
+<li>Else if either operand is UInt, the other is converted to UInt.</li>
+<li>Else if either operand is unsigned, both are converted to UInt.</li>
+<li>Else both operands are converted to Int.</li>
+</ul>
+
+<p>When evaluating the operands of the <code>&amp;</code>, <code>|</code> and <code>^</code> integer operators, both operands must be integral types and are converted as follows:</p>
+
+<ul>
+<li>If either operand is ULong, the other is converted to ULong.</li>
+<li>Else if either operand is Long, the other is converted to Long.</li>
+<li>Else if either operand is UInt, the other is converted to UInt.</li>
+<li>Else if either operand is unsigned, both are converted to UInt.</li>
+<li>Else both operands are converted to Int.</li>
+</ul>
+
+<p>When evaluating the operand of the <code>Shl</code> and <code>Shr</code> integer operators, the left-hand-side must be an integral type, while the right-hand-side ‘shift amount’ operand is converted to Int.</p>
+
+
+
+<h4 id="operator-overloading">Operator overloading</h4>
+
+<p>Operator overloading allows you to customize the behavior of the built-in monkey2 operators for classes and structs.</p>
+
+<p>You overload an operator by writing an ‘operator method’, which is effectively just a special kind of method. Operators must appear inside classes/structs - they cannot currently be ‘global’.</p>
+
+<p>Here is a simple example:</p>
+
+<pre> Struct Vec2
+
+   Field x:Float
+   Field y:Float
+
+   Method New( x:Float,y:Float )
+      Self.x=x
+      Self.y=y
+   End
+
+   Method ToString:String()
+      Return "Vec2("+x+","+y+")"
+   End
+
+   'Overload the addition operator.
+   Operator+:Vec2( rhs:Vec2 )
+      Return New Vec2( x+rhs.x,y+rhs.y )
+   End
+
+End
+</pre>
+
+<p>The ‘Operator+’ declaration here defines an addition operator for Vec2. This is then used whenever a Vec2 appears as the ‘left hand side’ of an addition. For example:</p>
+
+<pre>Function Main()
+   Local v1:=New Vec2( 10.0,20.0 )
+   Local v2:=New Vec2( 30.0,40.0 )
+   Local v3:=v1+v2    'note: calls Operator+ in Vec2.
+   Print v3.ToString()
+End
+</pre>
+
+<p>The following unary operators can be overloaded: <code>+</code> <code>-</code> <code>~</code></p>
+
+<p>The following binary operators can be overloaded: <code>*</code> <code>/</code> <code>Mod</code> <code>+</code> <code>-</code> <code>Shl</code> <code>Shr</code> <code>&amp;</code> <code>|</code> <code>~</code> <code>=</code> <code>&lt;&gt;</code> <code>&lt;</code> <code>&gt;</code> <code>&lt;=</code> <code>&gt;=</code> <code>&lt;=&gt;</code></p>
+
+<p>The following assignment operators can be overloaded: <code>*=</code> <code>/=</code> <code>Mod=</code> <code>+=</code> <code>-=</code> <code>Shl=</code> <code>Shr=</code> <code>&amp;=</code> <code>|=</code> <code>~=</code></p>
+
+<p>Indexing behaviour can also be overloaded using <code>[]</code> and <code>[]=</code></p>
+
+<p>Note that you cannot overload <code>Not</code>, <code>And</code>, <code>Or</code> or plain assignment <code>=</code></p>
+
+<p>Operators can return any type of value, and can take any type of value for their ‘right hand side’ argument(s). However, the precedence of operators cannot be changed.</p>
+
+<p>The <code>[]</code> and <code>[]=</code> operators allow you to define ‘indexing’ like behaviour. The <code>[]</code> operator is used when an object is indexed, and <code>[]=</code> is used when an object is indexed and assigned. Both of these operators can accept any number of parameters of any type. The <code>[]=</code> operator requires an additional parameter that is the value to be assigned. This must appear at the end of the parameter list.</p>
+
+<p>Here is an example of some indexing operators for the Vec2 class above:</p>
+
+<pre>Struct Vec2
+
+   ...as above...
+
+   Operator[]:Float( index:Int )
+      Assert( index=0 Or index=1 )
+      If index=0 Return x Else Return y
+   End
+
+   Operator[]=( index:Int,value:Float )
+      Assert( index=0 Or index=1 )
+      If index=0 Then x=value Else y=value
+   End
+End
+</pre>
+
+<p>With these additions, you can access Vec2 coordinates ‘by index’, eg:</p>
+
+<pre>Function Main()
+    Local v:=New Vec2
+    v[0]=10.0
+    v[1]=20.0
+    Print v[0]
+    Print v[1]
+End
+</pre>
+
+<p>You can also overload assignment operators, for example:</p>
+
+<pre>Struct Vec2
+
+    ...as above...
+
+    Operator+=( v:Vec2 )
+        x+=v.x
+        y+=v.y
+    End
+End
+</pre>
+
+<p>If you have already written an Operator+ (as is the case here) this is not strictly necessary, as monkey2 will generate the code for Operator+= for you. However, you may still want to provide a custom version for Operator+= if your code can do so in a more efficient way.</p>
+
+<hr>
+
+
+
+<h3 id="the-build-system">The build system</h3>
+
+<p>Monkey2 includes  a simple build system that converts monkey2 files to C++, compiles the C++ code, and links the resultant object files.</p>
+
+<p>The build system also allows you to import several types of non-monkey2 files into a project for compilation and/or linking. This is done using a system import directive:</p>
+
+<p><code>#Import</code> <code>"&lt;</code><em>system_file</em><code>&gt;"</code></p>
+
+<p>…or or a local import directive:</p>
+
+<p><code>#Import</code>”<em>local_file</em>“`</p>
+
+<p>Import directives can appear any where in a monkey2 source file, but it’s generally tidiest if they are placed at the top of the file.</p>
+
+
+
+<h4 id="system-imports">System Imports</h4>
+
+<p>System files are files that are generally provided with the compiler toolset, and that the compiler and/or linker are configured to find automatically. Monkey2 recognizes the following system file types:</p>
+
+<table>
+<thead>
+<tr>
+  <th align="left">System file type suffix</th>
+  <th align="left">System file type</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="left">.o, .obj, .a, .lib</td>
+  <td align="left">Static library.</td>
+</tr>
+<tr>
+  <td align="left">.so, .dll, .dylib</td>
+  <td align="left">Dynamic library.</td>
+</tr>
+<tr>
+  <td align="left">.framework</td>
+  <td align="left">MacOS framework.</td>
+</tr>
+<tr>
+  <td align="left">.h, .hh, .hpp</td>
+  <td align="left">C/C++/Objective C header.</td>
+</tr>
+<tr>
+  <td align="left">.monkey2</td>
+  <td align="left">Monkey2 module.</td>
+</tr>
+</tbody></table>
+
+
+<p>Note that system file names are enclosed by <code>&lt;</code> and <code>&gt;</code> characters, while local file names are not.</p>
+
+<p>An example of importing a system library:</p>
+
+<p><code>#Import "&lt;wsock32.a&gt;"</code></p>
+
+<p>If no extension is provided for a system import, Monkey2 will assume you are importing a monkey2 module, eg:</p>
+
+<p><code>#Import "&lt;std&gt;"</code></p>
+
+<p>This will import the monkey2 ‘std’ module. This is effectively the same as:</p>
+
+<p><code>#Import "&lt;std.monkey2&gt;"</code></p>
+
+
+
+<h4 id="local-imports">Local Imports</h4>
+
+<p>Local files are files that are located relative to the monkey2 file that imports them.</p>
+
+<p>Monkey2 recognizes the following local file types:</p>
+
+<table>
+<thead>
+<tr>
+  <th align="left">Local file type suffix</th>
+  <th align="left">Local file type</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="left">.o, .obj</td>
+  <td align="left">Object file.</td>
+</tr>
+<tr>
+  <td align="left">.a, .lib</td>
+  <td align="left">Static library.</td>
+</tr>
+<tr>
+  <td align="left">.so, .dll, .dylib</td>
+  <td align="left">Dynamic library.</td>
+</tr>
+<tr>
+  <td align="left">.framework</td>
+  <td align="left">MacOS framework.</td>
+</tr>
+<tr>
+  <td align="left">.exe</td>
+  <td align="left">Windows executable.</td>
+</tr>
+<tr>
+  <td align="left">.c, .cc, .cxx, .cpp, .m, .mm</td>
+  <td align="left">C/C++/Objective C source code.</td>
+</tr>
+<tr>
+  <td align="left">.h, .hh, .hpp</td>
+  <td align="left">C/C++/Objective C header.</td>
+</tr>
+<tr>
+  <td align="left">.monkey2</td>
+  <td align="left">Monkey2 source code.</td>
+</tr>
+</tbody></table>
+
+
+<p>It is also possible to add local ‘include directories’, ‘library directories’ and ‘framework directories’ with import. This is done using syntax similar to a local import, but replacing the filename with a wildcard.</p>
+
+<p>For example, to add an include directory:</p>
+
+<p><code>#Import "</code><em>include_directory</em><code>/*.h"</code></p>
+
+<p>This will allow you to import any header file inside ‘include_directory’ using…</p>
+
+<p><code>#Import "&lt;</code><em>include_file</em><code>&gt;"</code></p>
+
+<p>…without having to specify the full path of the file.</p>
+
+<p>To add a library directory:</p>
+
+<p><code>#Import "</code><em>staticlib_directory</em><code>/*.a"</code></p>
+
+<p>To add a MacOS framework directory:</p>
+
+<p><code>#Import "</code><em>framework_directory</em><code>"/*.framework"</code></p>
+
+<hr>
+
+
+
+<h3 id="integration-with-native-code">Integration with native code</h3>
+
+<p>In order to allow monkey2 code access to native code, monkey2 provides the ‘extern’ directive.</p>
+
+<p>Extern begins an ‘extern block’ and must appear at file scope. Extern cannot be used inside a class or function. An extern block is ended by a plain ‘public’ or ‘private’ directive.</p>
+
+<p>Declarations that appear inside an extern block describe the monkey2 interface to native code. Therefore, functions and methods that appear inside an extern block cannot have any implementation code, as they are already implemented natively.</p>
+
+<p>Otherwise, declarations inside an extern block are very similar to normal monkey2 declarations, eg:</p>
+
+
+
+<pre class="prettyprint"><code>Extern
+
+Struct S
+   Field x:Int
+   Field y:Int
+
+   Method Update()   'note: no code here - it's already written.
+   Method Render()   'ditto...
+End
+
+Global Counter:Int
+
+Function DoSomething( x:int,y:Int )</code></pre>
+
+
+
+<h4 id="extern-symbols">Extern symbols</h4>
+
+<p>By default, monkey2 will use the name of an extern declaration as its ‘symbol’. That is, when monkey2 code that refers to an extern declaration is compiled, it will use the name of the declaration directly in the generated output code.</p>
+
+<p>You can modify this behaviour by providing an ‘extern symbol’ immediately after the declarations type, eg:</p>
+
+
+
+<pre class="prettyprint"><code>Extern
+
+Global Player:Actor="mylib::Player"
+
+Class Actor="mylib::Actor"
+    Method Update()
+    Method Render()
+    Function Clear()="mylib::Actor::Clear"
+End</code></pre>
+
+
+
+<h4 id="extern-classes">Extern classes</h4>
+
+<p>Extern classes are assumed by default to be <em>real</em> monkey2 classes - that is, they must extend the native bbObject class. </p>
+
+<p>However, you can override this by declaring an extern class that extends <code>Void</code>. Objects of such a class are said to be native objects and differ from normal monkey object in several ways:</p>
+
+<ul>
+<li><p>A native object is not memory managed in any way. It is up to you to ‘delete’ or otherwise destroy it.</p></li>
+<li><p>A native object has no runtime type information, so it cannot be downcast using the <code>Cast&lt;&gt;</code> operator.</p></li>
+</ul>
+
+<hr>
+
+
+
+<h3 id="the-mx2cc-tool">The mx2cc tool</h3>
+
+<p>mx2cc is the command line compiler for monkey2. The actual executable is named differently depending on the OS:</p>
+
+<p>/bin/mx2cc_windows.exe <br>
+/bin/mx2cc_macos <br>
+/bin/mx2cc_linux</p>
+
+<p>The command line options for mx2cc are:</p>
+
+<p><code>mx2cc</code> <em>command</em> <em>options</em> <em>input</em></p>
+
+<p>Valid commands are:</p>
+
+<ul>
+<li><code>makeapp</code> - make an app. <em>input</em> should be a monkey2 file path.</li>
+<li><code>makemods</code> - make a set of modules. <em>input</em> should be a space separated list of module names in dependency order.</li>
+<li><code>makedocs</code> - make the documentation for a set of modules. <em>input</em> should be a space separated list of module names in dependency order.</li>
+</ul>
+
+<p>Valid options are:</p>
+
+<ul>
+<li><code>clean</code> - rebuilds everything from scratch.</li>
+<li><code>verbose</code> - provides more information while building.</li>
+<li><code>target=</code><em>target</em> - set target to <code>desktop</code> (the default) or <code>emscripten</code>.</li>
+<li><code>config=</code><em>config</em> - set config to <code>debug</code> (the default) or <code>release</code>.</li>
+<li><code>apptype</code>=<em>apptype</em> set apptype to <code>gui</code> (the default) or <code>console</code>.</li>
+</ul>
+
+<!-- END -->
+
+</div>
+</body>
+</html>
