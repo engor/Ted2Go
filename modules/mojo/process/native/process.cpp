@@ -1,16 +1,14 @@
 
 #include "process.h"
 
+#include "../../app/native/async.h"
+
 #ifndef EMSCRIPTEN
 
 #include <thread>
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
-
-#include <SDL.h>
-
-bbInt g_mojo_app_AppInstance_AddAsyncCallback(bbFunction<void()> l_func);
 
 struct semaphore{
 
@@ -47,20 +45,6 @@ struct semaphore{
 
 namespace{
 
-	const int INVOKE=0x40000000;
-	const int REMOVE=0x80000000;
-
-	void postEvent( int code ){
-		SDL_UserEvent event;
-		event.type=SDL_USEREVENT;
-		event.code=code;
-		event.data1=0;
-		event.data2=0;
-		if( SDL_PeepEvents( (SDL_Event*)&event,1,SDL_ADDEVENT,SDL_FIRSTEVENT,SDL_LASTEVENT )!=1 ){
-			printf(" SDL_PeepEvents error!\n" );fflush( stdout );
-		}
-	}
-	
 #if _WIN32
 
 	void terminateChildren( DWORD procid,HANDLE snapshot,int exitCode ){
@@ -321,7 +305,7 @@ bbBool bbProcess::start( bbString cmd ){
 	//Create finished thread    
     rep->retain();
 
-    int callback=g_mojo_app_AppInstance_AddAsyncCallback( finished );
+    int callback=bbAddAsyncCallback( finished );
     
     std::thread( [=](){
     
@@ -347,8 +331,8 @@ bbBool bbProcess::start( bbString cmd ){
 			}
 			
 		#endif
-    		
-	    	postEvent( callback|INVOKE|REMOVE );
+		
+			bbInvokeAsyncCallback( callback,true );
     		
     		rep->release();
 
@@ -358,7 +342,7 @@ bbBool bbProcess::start( bbString cmd ){
 	//Create stdoutReady thread
 	rep->retain();
 	
-	int callback2=g_mojo_app_AppInstance_AddAsyncCallback( stdoutReady );
+	int callback2=bbAddAsyncCallback( stdoutReady );
 	
 	std::thread( [=](){
 	
@@ -375,8 +359,8 @@ bbBool bbProcess::start( bbString cmd ){
 			rep->stdoutGet=rep->stdoutBuf;
 			
 			rep->stdoutAvail=n;
-			
-			postEvent( callback2|INVOKE );
+
+			bbInvokeAsyncCallback( callback2,false );			
 			
 			rep->stdoutSema.wait();
 			
@@ -385,7 +369,7 @@ bbBool bbProcess::start( bbString cmd ){
 		
 		rep->stdoutAvail=0;
 		
-		postEvent( callback2|INVOKE|REMOVE );
+		bbInvokeAsyncCallback( callback2,true );
 		
 		rep->release();
 
