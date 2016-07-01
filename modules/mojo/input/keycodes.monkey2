@@ -111,9 +111,11 @@ Enum Key
 	Enter=13
 	Escape=27
 	Space=32
+	Apostrophe=39
 	Comma=44,Minus,Period,Slash
 	Key0=48,Key1,Key2,Key3,Key4,Key5,Key6,Key7,Key8,Key9
-	Semicolon=59,
+	Semicolon=59
+	Equals=61
 	LeftBracket=91,Backslash,RightBracket
 	Backquote=96
 	A=97,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z
@@ -131,25 +133,6 @@ Enum Key
 	Raw=$10000
 	
 End
-
-#rem gone?
-Enum ScanCode
-
-	None=0
-	A=4,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z
-	Key1=30,Key2,Key3,Key4,Key5,Key6,Key7,Key8,Key9,Key0
-	Enter=40,Escape,Backspace,Tab,Space
-	Minus=45,Equals,LeftBracket,RightBracket,Blackslash
-	Semicolon=51,Apostrophe,Grave,Comma,Period,Slash
-	CapsLock=57
-	F1=58,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12
-	PrintScreen=70,ScrollLock,Pause,Insert
-	Home=74,PageUp,KeyDelete,KeyEnd,PageDown,Right,Left,Down,Up
-	LeftControl=224,LeftShift,LeftAlt,LeftGui
-	RightControl=228,RightShift,RightAlt,RightGui
-	
-End
-#end
 
 #rem monkeydoc Modifier masks.
 
