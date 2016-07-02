@@ -174,7 +174,7 @@ Class Mx2TextView Extends TextView
 		
 		If start<text.Length 
 			Local color:=Document.Colors[start]
-			If color<>COLOR_KEYWORD Return'color<>COLOR_IDENT Return
+			If color<>COLOR_KEYWORD And color<>COLOR_IDENT Return
 		Endif
 		
 		Local ident:=text.Slice( start,cursor )
