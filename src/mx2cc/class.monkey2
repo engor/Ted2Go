@@ -457,7 +457,10 @@ Class ClassType Extends Type
 		If type=Self Return 0
 		
 		'cast anything to bool
-		If type=BoolType Return MAX_DISTANCE
+		If type=BoolType 
+			If IsClass Or IsInterface Return MAX_DISTANCE
+			Return -1
+		Endif
 
 		#rem
 		'cast native classes to void ptr		
