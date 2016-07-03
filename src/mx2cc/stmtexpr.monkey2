@@ -257,10 +257,11 @@ Class ReturnStmtExpr Extends StmtExpr
 			Endif
 			
 			block.Emit( New ReturnStmt( Self,value ) )
-			block.reachable=False
 		
 		Catch ex:SemantEx
 		End
+
+		block.reachable=False
 		
 		Return Null
 	End
@@ -281,7 +282,13 @@ Class ContinueStmtExpr Extends StmtExpr
 	
 		If Not block.loop Throw New SemantEx( "'Exit' must appear inside a loop" )
 		
-		Return New ContinueStmt( Self )
+		If Not block.reachable Return Null
+		
+		block.Emit( New ContinueStmt( Self ) )
+		
+		block.reachable=False
+		
+		Return Null
 	End
 
 End
@@ -300,7 +307,13 @@ Class ExitStmtExpr Extends StmtExpr
 	
 		If Not block.loop Throw New SemantEx( "'Exit' must appear inside a loop" )
 		
-		Return New ExitStmt( Self )
+		If Not block.reachable Return Null
+		
+		block.Emit( New ExitStmt( Self ) )
+		
+		block.reachable=False
+		
+		Return Null
 	End
 End
 
@@ -343,14 +356,21 @@ Class IfStmtExpr Extends StmtExpr
 		Local expr:=Self
 		Local head:IfStmt,prev:IfStmt
 		
+		Local reachable:=False
+		
 		While expr
 		
 			Local cond:Value
 			If expr.cond cond=expr.cond.TrySemantRValue( block,Type.BoolType )
 			
 			Local tblock:=New Block( block )
-			
 			tblock.Semant( expr.stmts )
+			
+			If expr.succ Or Not cond
+				If tblock.reachable reachable=True
+			Else
+				reachable=True
+			Endif
 			
 			Local curr:=New IfStmt( expr,cond,tblock )
 			If prev prev.succ=curr Else head=curr
@@ -360,7 +380,13 @@ Class IfStmtExpr Extends StmtExpr
 			
 		Wend
 		
-		Return head
+		If Not block.reachable Return Null
+		
+		block.Emit( head )
+		
+		block.reachable=reachable
+		
+		Return Null
 	End
 	
 End
