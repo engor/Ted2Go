@@ -214,7 +214,7 @@ Struct @String ="bbString"
 	@param bufSize Size of the memory buffer in bytes.
 	
 	#end
-	Method ToCString( buf:Void Ptr )="toCString"
+	Method ToCString( buf:Void Ptr,bufSize:Int )="toCString"
 
 	#rem monkeydoc Converts the string to a WString
 	
