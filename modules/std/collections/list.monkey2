@@ -55,7 +55,7 @@ Class List<T> Implements IContainer<T>
 		
 		This method should not be used while iterating over the list containing `succ`.
 		
-		#endif
+		#end
 		Method New( value:T,succ:Node )
 			_value=value
 			_succ=succ
