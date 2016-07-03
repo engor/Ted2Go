@@ -282,6 +282,7 @@ pre>code{
 a{
 	color: #9b4dca;	/* $color-primary */
 	text-decoration: none;
+	cursor: pointer;
 }
 
 a:hover{
@@ -578,9 +579,14 @@ body.docs_body{
 div.docs_content{
 }
 
-
 /* page styles */
 body.page-modules-reference {
+	overflow: hidden;
+	width:100%;
+	height:100%;
+}
+
+body.page-language-reference {
 	overflow: hidden;
 	width:100%;
 	height:100%;
