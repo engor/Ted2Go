@@ -868,22 +868,6 @@ Class TextView Extends View
 			
 		Next
 		
-#rem		
-		If _flags & TextViewFlags.ShowLineNumbers
-		
-			Local GutterColor:=New Color( .9,.9,.9,1 )
-			
-			canvas.SetColor( GutterColor.r,GutterColor.g,GutterColor.b,GutterColor.a )
-			canvas.DrawRect( ClipRect.X,ClipRect.Y,_gutterw-_charw,ClipRect.Height )
-		
-			canvas.SetColor( Style.DefaultColor.r,Style.DefaultColor.g,Style.DefaultColor.b,Style.DefaultColor.a*.5 )
-
-			For Local i:=firstVisLine Until lastVisLine
-				canvas.DrawText( (i+1),ClipRect.X+_gutterw-_charh,i*_charh,1,0 )
-			Next
-		End
-#end
-		
 	End
 	
 	Method OnKeyEvent( event:KeyEvent ) Override
@@ -935,7 +919,46 @@ Class TextView Extends View
 				
 			Case Key.Tab
 			
-				ReplaceText( "~t" )
+				Local min:=_doc.FindLine( Min( _cursor,_anchor ) )
+				Local max:=_doc.FindLine( Max( _cursor,_anchor ) )
+				
+				If min=max
+				
+					ReplaceText( "~t" )
+					
+				Else
+				
+					'block tab/untab
+					Local lines:=New StringStack
+					
+					For Local i:=min Until max
+						lines.Push( _doc.GetLine( i ) )
+					Next
+					
+					Local go:=True
+					If event.Modifiers & Modifier.Shift
+						For Local i:=0 Until lines.Length
+							If lines[i][0]=9 
+								lines[i]=lines[i].Slice( 1 )+"~n"
+								Continue
+							Endif
+							go=False
+							Exit
+						Next
+					Else
+						For Local i:=0 Until lines.Length
+							lines[i]="~t"+lines[i]+"~n"
+						Next
+					Endif
+					
+					If go
+						SelectText( _doc.StartOfLine( min ),_doc.StartOfLine( max ) )
+						ReplaceText( lines.Join( "" ) )
+						SelectText( _doc.StartOfLine( min ),_doc.StartOfLine( max ) )
+						Return						
+					Endif
+					
+				Endif
 				
 			Case Key.Enter
 			
