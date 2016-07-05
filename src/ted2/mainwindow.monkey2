@@ -500,7 +500,7 @@ Class MainWindowInstance Extends Window
 	
 	Method InitPaths()
 	
-		_tmp="tmp/"
+		_tmp=RealPath( "tmp/" )
 		
 #If __HOSTOS__="macos"
 		_mx2cc="bin/mx2cc_macos"
@@ -1329,13 +1329,16 @@ Class MainWindowInstance Extends Window
 		Next
 		
 		_console.Clear()
+	
+		Local cmd:=script
 
 #If __HOSTOS__="windows"
-		script+=".bat"
+        cmd=script+".bat"
+#Else If __HOSTOS__="macos"
+        cmd="/bin/bash -l "+script+".sh"
 #Else
-		script+=".sh"
-#Endif
-		Local cmd:=script
+        cmd="/bin/bash -l -c "+script+".sh"
+#Endif		
 		
 		Local cd:=CurrentDir()
 		ChangeDir( "scripts" )
