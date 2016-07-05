@@ -37,12 +37,13 @@ Class Texture
 		Endif
 #Endif
 
+		_rect=New Recti( 0,0,pixmap.Width,pixmap.Height )
+		_format=pixmap.Format
+		_flags=flags
+
 		If flags & TextureFlags.Dynamic
 			PastePixmap( pixmap,0,0 )
 		Else
-			_rect=New Recti( 0,0,pixmap.Width,pixmap.Height )
-			_format=pixmap.Format
-			_flags=flags
 			_managed=pixmap
 		Endif
 		
