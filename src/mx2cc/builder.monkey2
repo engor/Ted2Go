@@ -80,6 +80,7 @@ Class Builder
 	Field AR_CMD:="ar"
 	Field CC_CMD:="gcc"
 	Field CXX_CMD:="g++"
+	Field AS_CMD:="as"
 	Field LD_CMD:="g++"
 	
 	Method New( opts:BuildOpts )
@@ -116,6 +117,7 @@ Class Builder
 			CC_CMD="gcc"
 			CXX_CMD="g++"
 			LD_CMD="g++"
+			AS_CMD="as"
 		Case "emscripten"
 			AR_CMD="emar"
 			CC_CMD="emcc"
@@ -451,13 +453,18 @@ Class Builder
 		For Local src:=Eachin SRC_FILES
 		
 			Local obj:=module.cacheDir+MungPath( MakeRelativePath( src,module.cacheDir ) )+".o"
+			
+			Local ext:=ExtractExt( src ).ToLower()
 						
-			Local cmd:=""
-			Select ExtractExt( src )
+			Local cmd:="",scanable:=True
+			Select ext
 			Case ".c",".m"
 				cmd=CC_CMD+" "+CC_OPTS.Join( " " )
 			Case ".cc",".cxx",".cpp",".mm"
 				cmd=CXX_CMD+" "+CPP_OPTS.Join( " " )
+			Case ".asm",".s"
+				cmd=AS_CMD
+				scanable=False
 			End
 			
 			cmd+=" -I~q"+modulesDir+"monkey/native~q"
@@ -470,26 +477,30 @@ Class Builder
 			
 			If opts.fast And objTime>=GetFileTime( src )	'source file up to date?
 			
-				If GetFileType( deps )=FILETYPE_NONE
-				
-					If opts.verbose>0 Print "Scanning "+src
-			
-					Exec( cmd+" -MM ~q"+src+"~q >~q"+deps+"~q" ) 
-					
-				Endif
-				
 				Local uptodate:=True
+			
+				If scanable
+			
+					If GetFileType( deps )=FILETYPE_NONE
+					
+						If opts.verbose>0 Print "Scanning "+src
 				
-				Local srcs:=LoadString( deps ).Split( " \" )
-				
-				For Local i:=1 Until srcs.Length
-				
-					If GetFileTime( srcs[i].Trim() )>objTime
-						uptodate=False
-						Exit
+						Exec( cmd+" -MM ~q"+src+"~q >~q"+deps+"~q" ) 
+						
 					Endif
 					
-				Next
+					Local srcs:=LoadString( deps ).Split( " \" )
+					
+					For Local i:=1 Until srcs.Length
+					
+						If GetFileTime( srcs[i].Trim() )>objTime
+							uptodate=False
+							Exit
+						Endif
+						
+					Next
+				
+				Endif
 				
 				If uptodate
 					maxObjTime=Max( maxObjTime,objTime )
@@ -1024,7 +1035,7 @@ Class Builder
 		
 '			STD_INCLUDES.Push( qpath )
 			
-		Case ".c",".cc",".cxx",".cpp",".m",".mm"
+		Case ".c",".cc",".cxx",".cpp",".m",".mm",".asm",".s"
 		
 			If parsingModule=mainModule SRC_FILES.Push( path )
 		
