@@ -1068,7 +1068,7 @@ Class MainWindowInstance Extends Window
 			Select ext
 			Case ".monkey2"
 			Case ".png",".jpg",".bmp"
-			Case ".h",".hpp",".hxx",".c",".cpp",".cxx",".m",".mm"
+			Case ".h",".hpp",".hxx",".c",".cpp",".cxx",".m",".mm",".s",".asm"
 			Case ".html",".md",".json",".xml"
 			Case ".sh",".bat"
 			Case ".glsl"
@@ -1164,9 +1164,12 @@ Class MainWindowInstance Extends Window
 
 		_openDocs.Remove( doc )
 		
-		doc.Close()
+		App.Idle+=Lambda()
 		
-		If IsTmpPath( doc.Path ) DeleteFile( doc.Path )
+			doc.Close()
+			
+			If IsTmpPath( doc.Path ) DeleteFile( doc.Path )
+		End
 		
 		If doc=_lockedDoc _lockedDoc=Null
 		
