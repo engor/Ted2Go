@@ -147,7 +147,7 @@ Class Image
 	End
 	
 	#rem monkeydoc @hidden The image's rect within its texture.
-	#endif
+	#end
 	Property Rect:Recti()
 	
 		Return _rect
