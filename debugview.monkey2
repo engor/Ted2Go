@@ -339,15 +339,21 @@ Class DebugView Extends DockingView
 						
 						If value.Contains( ":" )
 							scope=True
-						Else If FromHex( value.Slice( 1 ) )
-							label+="="+value
-							scope=True
 						Else
-							label+=" (null)"
-						Endif
-
+							Local p:ULong
+							If value.StartsWith( "@0x" )
+								p=StringToULong( value.Slice( 3 ),16 )
+							Else
+								p=StringToULong( value.Slice( 1 ),16 )
+							Endif
+							If p
+								label+="="+value
+								scope=True
+							Else
+								label+="={null}"
+							Endif
+						endif
 					Endif
-
 				Endif
 			Endif
 			
