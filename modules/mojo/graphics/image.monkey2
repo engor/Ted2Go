@@ -210,7 +210,7 @@ Class Image
 	#end
 	Property Bounds:Rectf()
 	
-		Return _vertices
+		Return _bounds
 	End
 
 	#rem monkeydoc Image radius.
@@ -300,6 +300,7 @@ Class Image
 	Field _scale:=New Vec2f( 1,1 )
 	Field _vertices:Rectf
 	Field _texCoords:Rectf
+	Field _bounds:Rectf
 	Field _radius:Float
 	
 	Method Init( material:Material,texture:Texture,rect:Recti,shader:Shader )
@@ -323,10 +324,14 @@ Class Image
 		_vertices.min.y=Float(_rect.Height)*(0-_handle.y)*_scale.y
 		_vertices.max.x=Float(_rect.Width)*(1-_handle.x)*_scale.x
 		_vertices.max.y=Float(_rect.Height)*(1-_handle.y)*_scale.y
-		_radius=_vertices.min.x*_vertices.min.x+_vertices.min.y*_vertices.min.y
-		_radius=Max( _radius,_vertices.max.x*_vertices.max.x+_vertices.min.y*_vertices.min.y )
-		_radius=Max( _radius,_vertices.max.x*_vertices.max.x+_vertices.max.y*_vertices.max.y )
-		_radius=Max( _radius,_vertices.min.x*_vertices.min.x+_vertices.max.y*_vertices.max.y )
+		_bounds.min.x=Min( _vertices.min.x,_vertices.max.x )
+		_bounds.max.x=Max( _vertices.min.x,_vertices.max.x )
+		_bounds.min.y=Min( _vertices.min.y,_vertices.max.y )
+		_bounds.max.y=Max( _vertices.min.y,_vertices.max.y )
+		_radius=_bounds.min.x*_bounds.min.x+_bounds.min.y*_bounds.min.y
+		_radius=Max( _radius,_bounds.max.x*_bounds.max.x+_bounds.min.y*_bounds.min.y )
+		_radius=Max( _radius,_bounds.max.x*_bounds.max.x+_bounds.max.y*_bounds.max.y )
+		_radius=Max( _radius,_bounds.min.x*_bounds.min.x+_bounds.max.y*_bounds.max.y )
 		_radius=Sqrt( _radius )
 	End
 	
