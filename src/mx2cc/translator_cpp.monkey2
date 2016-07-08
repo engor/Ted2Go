@@ -281,7 +281,7 @@ Class Translator_CPP Extends Translator
 	
 		For Local ctype2:=Eachin _usesTypes.Values
 		
-			If ctype2.transFile<>fdecl Or emitted[ClassName( ctype2 )] Continue
+			If ctype2.cdecl.IsExtern Or ctype2.transFile<>fdecl Or emitted[ClassName( ctype2 )] Continue
 			
 			If insPos<>-1
 				EmitBr()		
