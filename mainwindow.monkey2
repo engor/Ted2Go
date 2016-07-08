@@ -1164,12 +1164,9 @@ Class MainWindowInstance Extends Window
 
 		_openDocs.Remove( doc )
 		
-		App.Idle+=Lambda()
-		
-			doc.Close()
+		doc.Close()
 			
-			If IsTmpPath( doc.Path ) DeleteFile( doc.Path )
-		End
+		If IsTmpPath( doc.Path ) DeleteFile( doc.Path )
 		
 		If doc=_lockedDoc _lockedDoc=Null
 		
