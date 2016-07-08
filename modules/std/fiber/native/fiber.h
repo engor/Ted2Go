@@ -1,25 +1,24 @@
 
-#ifndef BB_STD_FIBER_H
-#define BB_STD_FIBER_H
+#ifndef BB_FIBER_H
+#define BB_FIBER_H
 
 #include <bbmonkey.h>
 
 namespace bbFiber{
 
 	typedef bbFunction<void()> Entry;
+
+	int startFiber( Entry entry );
 	
-	int  StartFiber( Entry entry );
+	int createFiber( Entry entry );
 	
-	int  CreateFiber( Entry entry );
+	void resumeFiber( int fiber );
 	
-	void ResumeFiber( int fiber );
+	void terminateFiber( int fiber );
 	
-	void TerminateFiber( int fiber );
+	void suspendCurrentFiber();
 	
-	void SuspendCurrentFiber();
-	
-	int  GetCurrentFiber();
+	int getCurrentFiber();
 }
 
 #endif
-

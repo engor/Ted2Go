@@ -1,223 +1,198 @@
 
 #include "fiber.h"
+#include "fcontext.h"
 
-#include <thread>
-#include <mutex>
-#include <condition_variable>
+namespace bbFiber{
 
-namespace{
-
-	const int MaxFibers=1024;
-	const int FiberIdMask=MaxFibers-1;
-
-	struct Semaphore{
+	const int MAX_FIBERS=1024;
 	
-		int count;
-		std::mutex mutex;
-		std::condition_variable cond_var;
-		
-		Semaphore( int count=0 ):count( count ){
-		}
-		
-		void wait(){
-			std::unique_lock<std::mutex> lock( mutex );
-			while( !count ) cond_var.wait( lock );
-			--count;
-		}
-		
-		void signal(){
-			std::unique_lock<std::mutex> lock( mutex );
-			++count;
-			cond_var.notify_one();
-		}
-	};
+	const size_t STACK_SIZE=65536;	//woho
+
+	const size_t STACK_BUF_SIZE=65536;
 	
 	struct Fiber{
+	
+		Fiber *succ;
 		int id;
+				
+		unsigned char *stack;
 		bbGCFiber *gcFiber;
 		bbDBContext *dbContext;
-		Semaphore semaphore;
-		Fiber *canceled;
+		
+		Entry entry;
+		fcontext_t fcontext;
+		fcontext_t fcontext2;
 	};
 	
-	struct TerminateEx{
-	};
+	Fiber *fibers;
+	Fiber *freeFibers;
+	Fiber *mainFiber;
+	Fiber *currFiber;
 	
-	Fiber fibers[MaxFibers];
-	bbGCFiber gcFibers[MaxFibers];
-	bbDBContext dbContexts[MaxFibers];
+	unsigned char *stackBuf,*stackEnd;
 	
-	Fiber *currentFiber;
-	
-	int readyStack[256];
-	int *readyStackSp=readyStack;
+	unsigned char *allocStack(){
+		
+		if( stackBuf==stackEnd ){
+			stackBuf=alloc_fcontext_stack( STACK_BUF_SIZE,false );
+			stackEnd=stackBuf+STACK_BUF_SIZE;
+		}
+		
+		unsigned char *p=stackBuf;
+		stackBuf+=STACK_SIZE;
+		
+		return p;
+	}
 	
 	void init(){
-
-		static bool done;
-		if( done ) return;
-		done=true;
-
-		for( int i=1;i<MaxFibers;++i ){
-			fibers[i].id=-i;
+	
+		if( fibers ) return;
+		
+		fibers=new Fiber[MAX_FIBERS];
+		bbGCFiber *gcFibers=new bbGCFiber[MAX_FIBERS];
+		bbDBContext *dbContexts=new bbDBContext[MAX_FIBERS];
+	
+		for( int i=0;i<MAX_FIBERS;++i ){
+			fibers[i].id=i;
+			fibers[i].succ=&fibers[i+1];
+			fibers[i].stack=nullptr;
 			fibers[i].gcFiber=&gcFibers[i];
 			fibers[i].dbContext=&dbContexts[i];
+			fibers[i].fcontext=nullptr;
+			fibers[i].fcontext2=nullptr;
 		}
+		fibers[MAX_FIBERS-1].succ=nullptr;
+		freeFibers=&fibers[1];
 		
-		fibers[0].id=0;
-		fibers[0].gcFiber=bbGC::currentFiber;
-		fibers[0].dbContext=bbDB::currentContext;
+		mainFiber=&fibers[0];
+		mainFiber->gcFiber=bbGC::currentFiber;
+		mainFiber->dbContext=bbDB::currentContext;
 		
-		currentFiber=&fibers[0];
+		currFiber=mainFiber;
 	}
 	
-	//not too sexy yet..
+	Fiber *getFiber( int id ){
+	
+		if( !fibers ) return nullptr;
+		
+		Fiber *fiber=&fibers[id & (MAX_FIBERS-1)];
+		
+		if( fiber->id==id ) return fiber;
+		
+		return nullptr;
+	}
+	
 	Fiber *allocFiber(){
-		for( int i=1;i<MaxFibers;++i ){
-			if( fibers[i].id>=0 ) continue;
-			Fiber *fiber=&fibers[i];
-			fiber->dbContext->init();
-			fiber->id=(-fiber->id)+MaxFibers;
-			fiber->canceled=nullptr;
-			return fiber;
-		}
-		printf( "Out of fibers!\n" );
-		exit( -1 );
-	}
 	
-	void freeFiber( Fiber *fiber ){
-		fiber->id=-fiber->id;
-	}
+		if( !fibers ) init();
 	
-	Fiber *getFiber( int fiberid ){
+		Fiber *fiber=freeFibers;
+		if( !fiber ) return nullptr;
 		
-		Fiber *fiber=&fibers[fiberid & FiberIdMask];
+		if( !fiber->stack ) fiber->stack=allocStack();
 		
-		if( fiber->id!=fiberid ){
-			printf( "Invalid fiber id\n" );fflush( stdout );
-			exit( -1 );
-		}
+		freeFibers=fiber->succ;
+		
+		fiber->id+=MAX_FIBERS;
 		
 		return fiber;
 	}
 	
-	void pushReadyStack(){
+	fcontext_t freeFiber( Fiber *fiber ){
 	
-		if( readyStackSp==readyStack+256 ){
-			printf( "Fiber stack overflow\n" );fflush( stdout );
-			exit( -1 );
-		}
-		*readyStackSp++=currentFiber->id;
-	}
-	
-	Fiber *popReadyStack(){
-	
-		while( readyStackSp!=readyStack ){
-			Fiber *fiber=getFiber( *--readyStackSp );
-			if( fiber ) return fiber;
-		}
-		printf( "Fiber stack underflow\n" );
-		fflush( stdout );
-		exit( -1 );
-	}
-	
-	void switchToFiber( Fiber *fiber ){
-
-		Fiber *current=currentFiber;
+		fcontext_t fcontext=fiber->fcontext2;
 		
-		currentFiber=fiber;
+		fiber->id+=MAX_FIBERS;
+		
+		fiber->succ=freeFibers;
+		freeFibers=fiber;
+		
+		return fcontext;
+	}
+	
+	void setCurrFiber( Fiber *fiber ){
+
 		bbGC::currentFiber=fiber->gcFiber;
 		bbDB::currentContext=fiber->dbContext;
-		fiber->semaphore.signal();
-		
-		current->semaphore.wait();
-		if( current->canceled ) throw new TerminateEx;
+		currFiber=fiber;
 	}
-}
+	
+	void fiberEntry( transfer_t t ){
+	
+		Fiber *fiber=(Fiber*)t.data;
+		
+		fiber->fcontext2=t.fcontext;
+		fiber->dbContext->init();
+		fiber->gcFiber->link();
+		
+		setCurrFiber( fiber );
+		
+		fiber->entry();
+		
+		fiber->gcFiber->unlink();
+		
+		jump_fcontext( freeFiber( fiber ),nullptr );
+	}
+	
+	// ***** API *****
 
-namespace bbFiber{
-
-	int CreateFiber( Entry entry ){
-		init();
-
+	int createFiber( Entry entry ){
+	
 		Fiber *fiber=allocFiber();
+		if( !fiber ) return 0;
 		
-		std::thread thread( [=](){
-		
-			fiber->semaphore.wait();
-			
-			Fiber *nextFiber=fiber->canceled;
-			
-			if( !nextFiber ){
-
-				fiber->gcFiber->link();
-				
-				try{
-				
-					entry();
-					
-					nextFiber=popReadyStack();
-					
-				}catch( TerminateEx ){
-				
-					nextFiber=fiber->canceled;
-				}
-				
-				fiber->gcFiber->unlink();
-			}
-			
-			freeFiber( fiber );
-			
-			currentFiber=nextFiber;
-			bbGC::currentFiber=nextFiber->gcFiber;
-			bbDB::currentContext=nextFiber->dbContext;
-			nextFiber->semaphore.signal();
-		} );
-		
-		thread.detach();
+		fiber->entry=entry;
+		fiber->fcontext=make_fcontext( fiber->stack+STACK_SIZE,STACK_SIZE,fiberEntry );
 		
 		return fiber->id;
 	}
 	
-	int StartFiber( Entry entry ){
+	void resumeFiber( int id ){
 	
-		int fiberid=CreateFiber( entry );
+		Fiber *fiber=getFiber( id );
+		if( !fiber ){
+			bbDB::error( "Invalid fiber id" );
+			return;
+		}
 		
-		ResumeFiber( fiberid );
+		Fiber *curr=currFiber;
 		
-		return fiberid;
+		fiber->fcontext=jump_fcontext( fiber->fcontext,fiber ).fcontext;
+		
+		setCurrFiber( curr );
 	}
 	
-	void ResumeFiber( int fiberid ){
+	void suspendCurrentFiber(){
 	
-		Fiber *fiber=getFiber( fiberid );
-		if( !fiber ) return;
+		if( currFiber==mainFiber ){
+			bbDB::error( "Can't suspend main fiber" );
+			return;
+		}
+	
+		Fiber *fiber=currFiber;
 		
-		pushReadyStack();
+		fiber->fcontext2=jump_fcontext( fiber->fcontext2,nullptr ).fcontext;
 		
-		switchToFiber( fiber );
+		setCurrFiber( fiber );
 	}
 	
-	void TerminateFiber( int fiberid ){
+	int startFiber( bbFunction<void()> entry ){
 	
-		Fiber *fiber=getFiber( fiberid );
-		if( !fiber ) return;
+		int id=createFiber( entry );
 		
-		fiber->canceled=currentFiber;
+		if( id ) resumeFiber( id );
 		
-		switchToFiber( fiber );
+		return id;
 	}
 	
-	void SuspendCurrentFiber(){
+	void terminateFiber( int id ){
 	
-		Fiber *fiber=popReadyStack();
-		
-		switchToFiber( fiber );
 	}
 	
-	int GetCurrentFiber(){
-		init();
+	int getCurrentFiber(){
+	
+		if( fibers ) return currFiber->id;
 		
-		return currentFiber->id;
+		return 0;
 	}
 }

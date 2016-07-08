@@ -1,22 +1,25 @@
 
 Namespace std.fiber
 
+#import "fcontext"
+
+#import "native/fcontext.cpp"
 #Import "native/fiber.cpp"
 #Import "native/fiber.h"
 
 Extern Private
 
-Function StartFiber:Int( entry:Void() )="bbFiber::StartFiber"
+Function StartFiber:Int( entry:Void() )="bbFiber::startFiber"
 
-Function CreateFiber:Int( entry:Void() )="bbFiber::CreateFiber"
+Function CreateFiber:Int( entry:Void() )="bbFiber::createFiber"
 
-Function ResumeFiber:Void( fiber:Int )="bbFiber::ResumeFiber"
+Function ResumeFiber:Void( fiber:Int )="bbFiber::resumeFiber"
 
-Function TerminateFiber:Void( fiber:Int )="bbFiber::TerminateFiber"
+Function TerminateFiber:Void( fiber:Int )="bbFiber::terminateFiber"
 
-Function SuspendCurrentFiber:Void()="bbFiber::SuspendCurrentFiber"
+Function SuspendCurrentFiber:Void()="bbFiber::suspendCurrentFiber"
 
-Function GetCurrentFiber:Int()="bbFiber::GetCurrentFiber"
+Function GetCurrentFiber:Int()="bbFiber::getCurrentFiber"
 
 Public
 
@@ -48,7 +51,7 @@ Struct Fiber
 	Method New( entry:Void() )
 		_fiber=StartFiber( entry )
 	End
-
+	
 	#rem monkeydoc Resumes a suspended fiber.
 	#end	
 	Method Resume()
