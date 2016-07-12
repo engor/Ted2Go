@@ -16,6 +16,10 @@
 	#import "native/asm/ontop_x86_64_sysv_elf_gas.S"
 #end
 
+'Testing purposes only - use Fiber instead!
+'
+'Will generally cause havoc on GC and debugger as they wont know you're messing with the stack...
+'
 Extern
 
 Alias fcontext_t:Void Ptr
