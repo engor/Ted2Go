@@ -9,6 +9,7 @@ Namespace std
 #Import "collections/stack"
 #Import "collections/list"
 #Import "collections/map"
+#Import "collections/deque"
 
 #Import "memory/byteorder"
 #Import "memory/databuffer"
@@ -33,6 +34,10 @@ Namespace std
 #Import "graphics/pixmaploader"
 #Import "graphics/pixmapsaver"
 #Import "graphics/color"
+
+#import "audio/audioformat"
+#import "audio/audiodata"
+#import "audio/audioloader"
 
 #Import "misc/random"
 #Import "misc/chartype"
