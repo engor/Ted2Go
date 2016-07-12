@@ -3,13 +3,13 @@
 #Import "<std>"
 
 #If __HOSTOS__="windows"
-'
-'to build resource.o from monkey.ico:
+
+'to build resource.o when icon changes...
 '
 'windres resource.rc resource.o
-'
+
 #Import "resource.o"
-'
+
 #Endif
 
 Function Main()
