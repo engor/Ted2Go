@@ -23,5 +23,8 @@ else
 	cp -R "$ted2_new" "$ted2"
 	rm -r -f "$launcher"
 	cp -R "$launcher_new" "$launcher"
+	
+	cp ../src/launcher/info.plist "$launcher/Contents"
+	cp ../src/launcher/Monkey2logo.icns "$launcher/Contents/Resources"
 
 fi
