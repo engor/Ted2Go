@@ -1,0 +1,10 @@
+{
+	"module":"stb-vorbis",
+	"about":"Ogg Vorbis IO",
+	"author":"Sean Barret",
+	"version":"1.0.0",
+	"support":"monkey2.monkey-x.com",
+	"depends":["libc"]
+}
+
+	
