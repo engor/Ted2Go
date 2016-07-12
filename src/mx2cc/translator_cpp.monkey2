@@ -47,6 +47,11 @@ Class Translator_CPP Extends Translator
 		Emit( "// ***** Internal *****" )
 		
 		EmitBr()
+		For Local etype:=Eachin fdecl.enums
+			Emit( "enum class "+EnumName( etype )+";" )
+		Next
+		
+		EmitBr()
 		For Local ctype:=Eachin fdecl.classes
 			Emit( "struct "+ClassName( ctype )+";" )
 		Next
@@ -92,7 +97,7 @@ Class Translator_CPP Extends Translator
 		BeginDeps()
 		
 		Emit( "// ***** Internal *****" )
-
+		
 		EmitBr()
 		For Local vvar:=Eachin fdecl.globals
 			Uses( vvar.type )
@@ -999,16 +1004,6 @@ Class Translator_CPP Extends Translator
 		Local lhs:=Trans( stmt.lhs )
 		Local rhs:=Trans( stmt.rhs )
 
-		Local etype:=TCast<EnumType>( stmt.lhs.type )
-		If etype And etype.edecl.IsExtern
-			If op<>"="
-				If stmt.lhs.HasSideEffects Print "Danger Will Robinson!!!!!!"
-				rhs=lhs+op.Slice( 0,-1 )+rhs
-				op="="
-			Endif
-			rhs=EnumName( etype )+"("+rhs+")"
-		Endif
-		
 		Emit( lhs+op+rhs+";" )
 	End
 
@@ -1418,10 +1413,15 @@ Class Translator_CPP Extends Translator
 		Case "not" op="!"
 		End
 		
-		Local t:=op+Trans( value.value )
-		
 		Local etype:=TCast<EnumType>( value.type )
-		If etype And etype.edecl.IsExtern t=EnumName( etype )+"("+t+")"
+
+		Local t:=Trans( value.value )
+
+		If etype t="int("+t+")"
+		
+		t=op+t
+		
+		If etype t=EnumName( etype )+"("+t+")"
 		
 		Return t
 	End
@@ -1442,8 +1442,10 @@ Class Translator_CPP Extends Translator
 			Endif
 			
 		Case "mod"
+		
 			Local ptype:=TCast<PrimType>( value.type )
 			If ptype=Type.FloatType Or ptype=Type.DoubleType Return "std::fmod("+Trans( value.lhs )+","+Trans( value.rhs )+")"
+			
 			op="%"
 		Case "and" op="&&"
 		Case "or" op="||"
@@ -1452,10 +1454,16 @@ Class Translator_CPP Extends Translator
 		Case "shr" op=">>"
 		End
 		
-		Local t:="("+Trans( value.lhs )+op+Trans( value.rhs )+")"
-		
 		Local etype:=TCast<EnumType>( value.type )
-		If etype And etype.edecl.IsExtern t=EnumName( etype )+t
+
+		Local lhs:=Trans( value.lhs )
+		Local rhs:=Trans( value.rhs )
+		
+		If etype lhs="int("+lhs+")" ; rhs="int("+rhs+")"
+		
+		Local t:="("+lhs+op+rhs+")"
+		
+		If etype t=EnumName( etype )+"("+t+")"
 		
 		Return t
 	End

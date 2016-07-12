@@ -76,9 +76,20 @@ Class AssignStmtExpr Extends StmtExpr
 	Method OnSemant:Stmt( block:Block ) Override
 	
 		Local op:=Self.op
-	
 		Local lhs:=Self.lhs.Semant( block )
-		Local rhs:=Self.rhs.Semant( block )
+		Local rhs:Value=Null
+		
+		If op<>"="
+			Local etype:=TCast<EnumType>( lhs.type )
+			If etype
+				lhs=lhs.RemoveSideEffects( block )
+				Local t:=New BinaryopExpr( op.Slice( 0,-1 ),New ValueExpr( lhs,srcpos,endpos ),Self.rhs,srcpos,endpos )
+				rhs=t.Semant( block )
+				op="="
+			Endif
+		Endif
+		
+		If not rhs rhs=Self.rhs.Semant( block )
 		
 		If op<>"=" And lhs.IsLValue
 		

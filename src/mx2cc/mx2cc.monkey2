@@ -18,17 +18,17 @@ Using mx2..
 
 Global StartDir:String
 
-'Const TestArgs:="mx2cc makemods"
+Const TestArgs:="mx2cc makemods"
 
-Const TestArgs:="mx2cc makedocs monkey std mojo"
+'Const TestArgs:="mx2cc makedocs monkey std mojo"
 
-'Const TestArgs:="mx2cc makeapp src/mx2new/test.monkey2"
+'Const TestArgs:="mx2cc makeapp src/mx2cc/test.monkey2"
 
 'Const TestArgs:="mx2cc makeapp src/ted2/ted2.monkey2"
 
 'Const TestArgs:="mx2cc makemods -clean -config=release monkey libc miniz stb-image hoedown std"
 
-'Const TestArgs:="mx2cc makeapp -verbose -target=desktop -config=release src/mx2new/mx2cc.monkey2"
+'Const TestArgs:="mx2cc makeapp -verbose -target=desktop -config=release src/mx2cc/mx2cc.monkey2"
 
 Function Main()
 

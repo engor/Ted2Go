@@ -123,8 +123,10 @@ Class FileDecl Extends Decl
 	Field exhfile:String	
 	Field hfile:String
 	Field cfile:String
-	Field functions:=New Stack<FuncValue>
+	
+	Field enums:=New Stack<EnumType>
 	Field classes:=New Stack<ClassType>
 	Field globals:=New Stack<VarValue>
+	Field functions:=New Stack<FuncValue>
 
 End

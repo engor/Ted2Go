@@ -15,14 +15,16 @@ End
 Class EnumType Extends Type
 
 	Field edecl:EnumDecl
+	Field transFile:FileDecl
+
 	Field scope:EnumScope
-	
-	Field superType:EnumType
 	Field nextInit:Int
 	
 	Method New( edecl:EnumDecl,outer:Scope )
 		Self.pnode=edecl
 		Self.edecl=edecl
+		Self.transFile=outer.FindFile().fdecl
+		
 		Self.scope=New EnumScope( Self,outer )
 	End
 	
@@ -31,7 +33,7 @@ Class EnumType Extends Type
 	End
 	
 	Property Name:String() Override
-		Return scope.Name+"."+edecl.ident
+		Return scope.Name
 	End
 	
 	Property TypeId:String() Override
@@ -40,27 +42,6 @@ Class EnumType Extends Type
 	
 	Method OnSemant:SNode() Override
 	
-		If edecl.superType
-			Try
-				superType=TCast<EnumType>( edecl.superType.Semant( scope ) )
-				
-				If Not superType Or superType.edecl.kind<>"enum"
-					Throw New SemantEx( "Cant find super type "+edecl.superType.ToString(),edecl )
-				Endif
-				
-				nextInit=superType.nextInit
-				
-			Catch ex:ParseEx
-			End
-			
-		Endif
-	
-'		Local escope:=scope
-'		If edecl.IsExtern
-'			escope=escope.FindFile()
-'			If edecl.IsPublic escope=escope.outer
-'		Endif
-		
 		For Local decl:=Eachin edecl.members
 		
 			Local vdecl:=Cast<VarDecl>( decl )
@@ -70,6 +51,7 @@ Class EnumType Extends Type
 				Local symbol:=vdecl.symbol
 				If Not symbol symbol="@"+vdecl.ident			
 				Local value:=New LiteralValue( Self,symbol )
+				
 				scope.Insert( decl.ident,value )
 				
 			Else
@@ -85,11 +67,19 @@ Class EnumType Extends Type
 				Endif
 				
 				Local value:=New LiteralValue( Self,String( nextInit  ) )
+				
 				scope.Insert( decl.ident,value )
+				
 				nextInit+=1
 				
 			Endif
 		Next
+		
+		If Not edecl.IsExtern And Not scope.IsGeneric
+	
+			scope.FindFile().fdecl.enums.Push( Self )
+		
+		Endif
 		
 		Return Self
 	End
@@ -98,8 +88,6 @@ Class EnumType Extends Type
 	
 		Local node:=scope.GetNode( ident )
 		If node Return node
-		
-		If superType Return superType.FindNode( ident )
 		
 		Return Null
 	End
@@ -114,15 +102,6 @@ Class EnumType Extends Type
 			If ptype.IsIntegral Return MAX_DISTANCE
 			Return -1
 		Endif
-	
-		Local etype:=TCast<EnumType>( type )
-		If Not etype Return -1
-		
-		Local dist:=0
-		While etype
-			If etype=Self Return dist
-			etype=etype.superType
-		Wend
 		
 		Return -1
 	End
@@ -132,11 +111,16 @@ End
 Class EnumScope Extends Scope
 
 	Field etype:EnumType
-
+	
 	Method New( etype:EnumType,outer:Scope )
 		Super.New( outer )
 		
 		Self.etype=etype
+	End
+	
+	Property Name:String() Override
+	
+		Return outer.Name+"."+etype.edecl.ident
 	End
 
 End

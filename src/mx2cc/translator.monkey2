@@ -289,10 +289,9 @@ Class Translator
 	
 	Field _refs:=New Map<SNode,Bool>
 	
-'	Field _refs:=New StringMap<SNode>
 	Field _refsVars:=New Stack<VarValue>
 	Field _refsFuncs:=New Stack<FuncValue>
-	Field _refsTypes:=New Stack<ClassType>
+	Field _refsTypes:=New Stack<Type>
 
 	Field _incs:=New StringMap<FileDecl>
 	
@@ -316,10 +315,13 @@ Class Translator
 		Next
 		
 		EmitBr()
-		For Local ctype:=Eachin _refsTypes
+		For Local type:=Eachin _refsTypes
 		
-			If Not Included( ctype.transFile ) 
-			
+			Local ctype:=TCast<ClassType>( type )
+			If ctype
+		
+				If Included( ctype.transFile ) Continue
+				
 				Local cname:=ClassName( ctype )
 				Emit( "struct "+ClassName( ctype )+";" )
 				
@@ -329,8 +331,20 @@ Class Translator
 					Emit( "bbString bbDBType("+tname+"*);" )
 					Emit( "bbString bbDBValue("+tname+"*);" )
 				Endif
-				
+					
+				Continue
 			Endif
+			
+			Local etype:=TCast<EnumType>( type )
+			If etype
+			
+				If Included( etype.transFile ) Continue
+				
+				Emit( "enum class "+EnumName( etype )+";" )
+				
+				Continue
+			Endif
+
 		Next
 		_refsTypes.Clear()
 		
@@ -417,6 +431,13 @@ Class Translator
 			If IsStruct( ctype ) Uses( ctype ) ; Return
 			If AddRef( ctype ) Return
 			_refsTypes.Push( ctype )
+			Return
+		Endif
+		
+		Local etype:=TCast<EnumType>( type )
+		If etype
+			If AddRef( etype ) Return
+			_refsTypes.Push( etype )
 			Return
 		Endif
 		

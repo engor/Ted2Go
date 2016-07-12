@@ -33,7 +33,7 @@ Class Scope
 		Return ""
 	End
 	
-	'Is generic scope? ie: scope has access to generic types.
+	'Is generic scope? ie: does scope have access to any generic types?
 	'
 	Property IsGeneric:Bool() Virtual
 	

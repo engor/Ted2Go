@@ -122,6 +122,13 @@ Function ScopeName:String( scope:Scope )
 		Return sym
 	End
 	
+	Local escope:=Cast<EnumScope>( scope )
+	If escope
+		Local etype:=escope.etype
+		Local sym:=ScopeName( scope.outer )+"_"+MungIdent( etype.edecl.ident )
+		Return sym
+	Endif
+	
 	Return ScopeName( scope.outer )
 End
 
@@ -136,12 +143,14 @@ Function EnumName:String( etype:EnumType )
 	
 	If edecl.IsExtern Return edecl.ident
 	
-	Return "bbInt"
+	Return "t_"+ScopeName( etype.scope )
 End
 
 Function EnumValueName:String( etype:EnumType,value:String )
 
-	If Not value.StartsWith( "@" ) Return value
+	If Not value.StartsWith( "@" )
+		Return EnumName( etype )+"("+value+")"
+	Endif
 	
 	value=value.Slice( 1 )
 	

@@ -666,7 +666,7 @@ Class ClassScope Extends Scope
 		Next
 		If args args="<"+args.Slice( 1 )+">"
 		
-		If ctype.cdecl.ident.StartsWith( "@" ) Return ctype.cdecl.ident.Slice( 1  ).Capitalize()+args
+		If ctype.cdecl.ident.StartsWith( "@" ) Return ctype.cdecl.ident.Slice( 1 ).Capitalize()+args
 		
 		Return outer.Name+"."+ctype.cdecl.ident+args
 	End
