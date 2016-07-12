@@ -62,6 +62,20 @@ Class Stream
 	#end
 	Method Write:Int( mem:Void Ptr,count:Int ) Abstract
 	
+	#rem monkeydoc Reads data from the filestream and throws it away.
+
+	@param count The number of bytes to skip.
+	
+	@return The number of bytes actually skipped.
+	
+	#end
+	Method Skip:Int( count:Int )
+		Local tmp:=libc.malloc( count )
+		Local n:=Read( tmp,count )
+		libc.free( tmp )
+		Return n
+	End
+	
 	#rem monkeydoc The byte order of the stream.
 	#end
 	Property ByteOrder:ByteOrder()
