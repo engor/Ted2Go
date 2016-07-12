@@ -699,7 +699,7 @@ Class Stack<T> Implements IContainer<T>
 	@param hi Index of last value to sort.
 
 	#end
-	Method Sort( ascending:Bool=True )
+	Method Sort( ascending:Int=True )
 		If ascending
 			Sort( Lambda:Int( x:T,y:T )
 				Return x<=>y

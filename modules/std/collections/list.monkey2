@@ -575,7 +575,8 @@ Class List<T> Implements IContainer<T>
 	@param compareFunc Function to be used to compare values when sorting.
 	
 	#end
-	Method Sort( ascending:Bool=True )
+	Method Sort( ascending:Int=True )
+	
 		If ascending
 			Sort( Lambda:Int( x:T,y:T )
 				Return x<=>y
