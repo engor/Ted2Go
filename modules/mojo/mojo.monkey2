@@ -5,7 +5,7 @@ Namespace mojo
 #Import "<std>"
 #Import "<sdl2>"
 #Import "<gles20>"
-#Import "<sdl2-mixer>"
+#Import "<openal>"
 
 #Import "app/app"
 #Import "app/event"
@@ -41,6 +41,7 @@ Using emscripten..
 Using std..
 Using sdl2..
 Using gles20..
+Using openal..
 Using mojo..
 
 Private

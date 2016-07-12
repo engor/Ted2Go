@@ -61,7 +61,7 @@ Class AppInstance
 	
 		App=Self
 	
-		SDL_Init( SDL_INIT_EVERYTHING )
+		SDL_Init( SDL_INIT_EVERYTHING & ~SDL_INIT_AUDIO )
 		
 		_sdlThread=SDL_ThreadID()
 		
