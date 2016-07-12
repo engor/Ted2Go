@@ -1,6 +1,7 @@
 #Import "<std>"
 #Import "<mojo>"
 #Import "<sdl2>"
+#import "<sdl2-mixer>"
 
 #Import "audiopipe.monkey2"
 

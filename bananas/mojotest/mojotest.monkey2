@@ -1,13 +1,13 @@
 
-Namespace mojotest
-
 #Import "<std>"
 #Import "<mojo>"
 
+#Import "assets/RedbrushAlpha.png"
+
+Namespace mojotest
+
 Using std..
 Using mojo..
-
-#Import "assets/RedbrushAlpha.png"
 
 Class MojoTest Extends Window
 

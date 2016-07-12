@@ -17,13 +17,11 @@ Class MyWindow Extends mojo.app.Window
 
 	Method New()
 	
-		image=New Image( 256,256,TextureFlags.Mipmap|TextureFlags.Dynamic )
+		image=New Image( 256,256,TextureFlags.Dynamic )
 		
 		image.Handle=New Vec2f( .5,.5 )
 		
 		icanvas=New Canvas( image )
-		
-'		RenderImage()
 	End
 	
 	Method RenderImage()
@@ -51,7 +49,6 @@ Class MyWindow Extends mojo.app.Window
 		
 		RenderImage()
 				
-'		canvas.DrawImage( image,App.MouseLocation.x,App.MouseLocation.y,0,1,1 )
 		canvas.DrawImage( image,App.MouseLocation.x,App.MouseLocation.y,0,.5,.5 )
 		
 		canvas.DrawText( "Here!",0,0 )
