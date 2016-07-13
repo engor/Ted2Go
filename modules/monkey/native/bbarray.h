@@ -32,7 +32,7 @@ template<class T,int D> class bbArray : public bbGCNode{
 	
 	public:
 	
-	const char *typeName(){
+	virtual const char *typeName()const{
 		return "bbArray";
 	}
 	
