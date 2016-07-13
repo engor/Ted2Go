@@ -4,7 +4,8 @@ Namespace myapp
 #Import "<std>"
 #Import "<mojo>"
 
-#import "fine_morning.wav"
+'#import "fine_morning.wav"
+#import "fine_morning.ogg"
 
 Using std..
 Using mojo..
@@ -16,7 +17,8 @@ Class MyWindow Extends Window
 	
 	Method New()
 
-		sound=Sound.Load( "asset::fine_morning.wav" )
+'		sound=Sound.Load( "asset::fine_morning.wav" )
+		sound=Sound.Load( "asset::fine_morning.ogg" )
 		channel=New Channel
 		
 		'SineWave()
@@ -57,7 +59,7 @@ Class MyWindow Extends Window
 	
 		App.RequestRender()
 	
-		canvas.DrawText( "1:Play, 2:Pause, 3:Stop, 4/5:Volume 6/7:Rate 8/9:Pan",0,0 )
+		canvas.DrawText( "1:Play, 2:Loop, 3:Pause, 4:Stop, 5/6:Volume 7/8:Rate 9/0:Pan",0,0 )
 	
 		canvas.DrawText( "Playing="+Int( channel.Playing ),0,24 )
 		canvas.DrawText( "Paused="+Int( channel.Paused ),0,40 )
@@ -73,22 +75,24 @@ Class MyWindow Extends Window
 		Case EventType.KeyDown
 			Select event.Key
 			Case Key.Key1
-				channel.Play( sound,True )
+				channel.Play( sound )
 			Case Key.Key2
-				channel.Paused=Not channel.Paused
+				channel.Play( sound,True )
 			Case Key.Key3
-				channel.Stop()
+				channel.Paused=Not channel.Paused
 			Case Key.Key4
-				channel.Volume-=.125
+				channel.Stop()
 			Case Key.Key5
-				channel.Volume+=.125
+				channel.Volume-=.125
 			Case Key.Key6
-				channel.Rate*=1.125
+				channel.Volume+=.125
 			Case Key.Key7
-				channel.Rate/=1.125
+				channel.Rate*=1.125
 			Case Key.Key8
-				channel.Pan-=.25
+				channel.Rate/=1.125
 			Case Key.Key9
+				channel.Pan-=.25
+			Case Key.Key0
 				channel.Pan+=.25
 			End
 		End
