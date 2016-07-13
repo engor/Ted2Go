@@ -5,6 +5,9 @@
 
 #include "bbgc.h"
 
+// For testing only...
+// #define BBGC_DISABLED 1
+
 //For future ref...
 #if BB_THREADED
 
@@ -164,6 +167,8 @@ namespace bbGC{
 			
 			markedBytes+=bbMallocSize( p );
 			
+//			printf( "marking %s\n",p->typeName() );fflush( stdout );
+			
 			p->gcMark();
 		}
 	}
@@ -201,6 +206,8 @@ namespace bbGC{
 	}
 	
 	bbGCNode *alloc( size_t size ){
+
+#ifndef BBGC_DISABLED
 	
 		if( allocedBytes>=BBGC_TRIGGER ){
 
@@ -214,11 +221,14 @@ namespace bbGC{
 #if BBGC_INCREMENTAL
 
 //			size_t tomark=double( allocedBytes ) / double( BBGC_TRIGGER ) * double( unmarkedBytes + allocedBytes );
+
 			size_t tomark=double( allocedBytes ) / double( BBGC_TRIGGER ) * double( unmarkedBytes + BBGC_TRIGGER );
 	
 			markQueued( tomark );
 #endif
 		}
+
+#endif
 	
 		bbGCNode *p=(bbGCNode*)bbMalloc( size );
 		
