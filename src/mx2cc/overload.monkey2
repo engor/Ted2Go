@@ -106,7 +106,11 @@ Function IsBetter:Bool( func:FuncValue,func2:FuncValue,args:Type[] )
 	'if exact match, prefer non-generic over generic		
 	'
 	If exact And Not func.instanceOf And func2.instanceOf Return True
-
+	
+	'If exact match, not better.
+	'
+	If exact Return False
+	
 	'compare 2 generic func instances!
 	'		
 	If func.instanceOf And func2.instanceOf
@@ -179,7 +183,7 @@ Function FindOverload:FuncValue( funcs:Stack<FuncValue>,ret:Type,args:Type[] )
 '	If ret Print "Return:"+ret.ToString()
 '	Print "Candidates:"+Join( candidates.ToArray() )
 	
-	Local match:FuncValue
+	Local best:FuncValue
 	
 	For Local func:=Eachin candidates
 	
@@ -197,11 +201,11 @@ Function FindOverload:FuncValue( funcs:Stack<FuncValue>,ret:Type,args:Type[] )
 		
 		If Not better Continue
 		
-		If match Return Null
+		If best Return Null
 		
-		match=func
+		best=func
 	Next
 	
-	Return match
+	Return best
 End
 
