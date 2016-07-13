@@ -995,7 +995,7 @@ Class Translator_CPP Extends Translator
 		Case "~=" op="^="
 		Case "mod=" op="%="
 		Case "shl=" op="<<="
-		Case "shr" op=">>="
+		Case "shr=" op=">>="
 		Case "="
 			Local vvar:=Cast<VarValue>( stmt.lhs )
 			If vvar And vvar.vdecl.kind="param" FindGCTmp( vvar )
@@ -1003,6 +1003,8 @@ Class Translator_CPP Extends Translator
 		
 		Local lhs:=Trans( stmt.lhs )
 		Local rhs:=Trans( stmt.rhs )
+		
+		Uses( stmt.lhs.type )
 
 		Emit( lhs+op+rhs+";" )
 	End
