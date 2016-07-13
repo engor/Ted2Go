@@ -643,16 +643,26 @@ Class Builder
 		
 		cmd+=" -o ~q"+outputFile+"~q"
 		
+		Local lnkFiles:=""
+		
 		For Local obj:=Eachin OBJ_FILES
-			cmd+=" ~q"+obj+"~q"
+			lnkFiles+=" ~q"+obj+"~q"
 		Next
 		
 		For Local lib:=Eachin LD_LIBS
-			cmd+=" ~q"+lib+"~q"
+			lnkFiles+=" ~q"+lib+"~q"
 		Next
-
-		cmd+=" "+LD_SYSLIBS.Join( " " )
 		
+		lnkFiles+=" "+LD_SYSLIBS.Join( " " )
+		
+		If HostOS="windows"
+			Local tmp:=AllocTmpFile( "lnkFiles" )
+			SaveString( lnkFiles,tmp )
+			cmd+=" -Wl,@"+tmp
+		Else
+			cmd+=lnkFiles
+		Endif
+
 '		Print cmd
 		Exec( cmd )
 		
@@ -883,28 +893,6 @@ Class Builder
 		Type.ThrowableClass.Semant()
 	End
 	
-	#rem
-	Method AllocTmp:String()
-
-		tmpId+=1
-		
-		For Local i:=0 Until 10
-		
-			Local id:=(tmpId+i) Mod 10
-			
-			Local tmp:="tmp/tmp"+id+".txt"
-			Local f:=FileStream.Open( tmp,"w" )
-			If Not f Continue
-			
-			f.Close()
-			tmpId=id
-			Return tmp
-		Next
-		
-		Return ""
-	End
-	#end
-	
 	Method ImportFile:Void( path:String )
 	
 		If path.StartsWith( "<" ) And path.EndsWith( ">" )
@@ -1080,17 +1068,23 @@ Class Builder
 	
 	End
 	
-	Method Exec:Bool( cmd:String )
+	Method AllocTmpFile:String( kind:String )
 	
 		CreateDir( "tmp" )
 
-		Local errs:=""
 		For Local i:=1 Until 10
-			errs="tmp/errs"+i+".txt"
-			DeleteFile( errs )
-			If GetFileType( errs )=FileType.None Exit
-			errs=""
+			Local file:="tmp/"+kind+i+".txt"
+			DeleteFile( file )
+			If GetFileType( file )=FileType.None Return file
 		Next
+		
+		Throw New BuildEx( "Can't allocate tmp file" )
+		Return ""
+	End
+	
+	Method Exec:Bool( cmd:String )
+	
+		Local errs:=AllocTmpFile( "stderr" )
 			
 		If Not system( cmd+" 2>"+errs ) Return True
 		
