@@ -493,7 +493,9 @@ Class Builder
 					
 					For Local i:=1 Until srcs.Length
 					
-						If GetFileTime( srcs[i].Trim() )>objTime
+						Local src:=srcs[i].Trim().Replace( "\ "," " )
+					
+						If GetFileTime( src )>objTime
 							uptodate=False
 							Exit
 						Endif
