@@ -1,5 +1,5 @@
 {
 	"module":"std",
 	"version":"1.0.0",
-	"depends":["libc","stb-image","stb-image-write","miniz"]
+	"depends":["libc","miniz","stb-image","stb-image-write","stb-vorbis"]
 }

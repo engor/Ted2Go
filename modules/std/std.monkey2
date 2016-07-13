@@ -4,6 +4,7 @@ Namespace std
 #Import "<libc.monkey2>"
 #Import "<stb-image>"
 #Import "<stb-image-write>"
+#import "<stb-vorbis>"
 
 #Import "collections/container"
 #Import "collections/stack"
@@ -37,7 +38,8 @@ Namespace std
 
 #import "audio/audioformat"
 #import "audio/audiodata"
-#import "audio/audioloader"
+#import "audio/load_wav"
+#import "audio/load_vorbis"
 
 #Import "misc/random"
 #Import "misc/chartype"

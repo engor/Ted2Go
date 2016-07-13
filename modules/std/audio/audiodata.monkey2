@@ -7,23 +7,23 @@ Class AudioData
 
 	Method New( length:Int,format:AudioFormat,hertz:Int )
 	
-		Local data:=Cast<UByte Ptr>( libc.malloc( BytesPerSample( format )*length ) )
+		Local data:=libc.malloc( BytesPerSample( format )*length )
 		
 		_length=length
 		_format=format
 		_hertz=hertz
-		_data=data
+		_data=Cast<UByte Ptr>( data )
 		
 		OnDiscarded=Lambda()
 			libc.free( data )
 		End
 	End
 
-	Method New( length:Int,format:AudioFormat,hertz:Int,data:UByte ptr )
+	Method New( length:Int,format:AudioFormat,hertz:Int,data:Void Ptr )
 		_length=length
 		_format=format
 		_hertz=hertz
-		_data=data
+		_data=Cast<UByte Ptr>( data )
 	End
 	
 	Property Length:Int()
@@ -62,7 +62,12 @@ Class AudioData
 	
 	Function Load:AudioData( path:String )
 	
-		Return wavloader.LoadAudioData( path )
+		Select ExtractExt( path ).ToLower()
+		Case ".wav" Return LoadAudioData_WAV( path )
+		Case ".ogg" Return LoadAudioData_OGG( path )
+		End
+		
+		Return Null
 	End
 	
 	Private
