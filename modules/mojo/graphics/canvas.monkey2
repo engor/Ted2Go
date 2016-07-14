@@ -520,11 +520,30 @@ Class Canvas
 		Local sc:=0.5/Sqrt( dx*dx+dy*dy )*_lineWidth
 		dx*=sc;dy*=sc
 		
-		AddDrawOp( _materials[2],4,1 )
+		If _blendMode=BlendMode.Opaque
+			AddDrawOp( _materials[2],4,1 )
+			AddVertex( x0-dx,y0-dy,0,0 )
+			AddVertex( x0+dx,y0+dy,0,0 )
+			AddVertex( x1+dx,y1+dy,0,0 )
+			AddVertex( x1-dx,y1-dy,0,0 )
+			Return
+		End
+		
+		Local pmcolor:=_pmcolor
+		
+		AddDrawOp( _materials[2],4,2 )
+
+		AddVertex( x0,y0,0,0 )
+		AddVertex( x1,y1,0,0 )
+		_pmcolor=0
+		AddVertex( x1-dx,y1-dy,0,0 )
 		AddVertex( x0-dx,y0-dy,0,0 )
-		AddVertex( x0+dx,y0+dy,1,0 )
-		AddVertex( x1+dx,y1+dy,1,1 )
-		AddVertex( x1-dx,y1-dy,0,1 )
+
+		AddVertex( x0+dx,y0+dy,0,0 )
+		AddVertex( x1+dx,y1+dy,0,0 )
+		_pmcolor=pmcolor
+		AddVertex( x1,y1,0,0 )
+		AddVertex( x0,y0,0,0 )
 		
 	End
 	
