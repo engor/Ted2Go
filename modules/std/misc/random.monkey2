@@ -23,7 +23,9 @@ Public
 #end
 Function SeedRnd( seed:ULong )
 	state0=seed
-	state1=seed+ULong( 1 )
+	state1=seed
+	RndULong()
+	RndULong()
 End
 
 #rem monkeydoc Generates a random unsigned long value.

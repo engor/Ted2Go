@@ -415,7 +415,7 @@ Class Stack<T> Implements IContainer<T>
 	
 	#rem monkeydoc Gets the value of a stack element.
 	
-	In debug builds, a runtime error will occur if `index` is less than 0, or greather than or equal to the length of the stack.
+	In debug builds, a runtime error will occur if `index` is less than 0, or greater than or equal to the length of the stack.
 	
 	@param index The index of the element to get.
 	
@@ -428,7 +428,7 @@ Class Stack<T> Implements IContainer<T>
 	
 	#rem monkeydoc Sets the value of a stack element.
 
-	In debug builds, a runtime error will occur if `index` is less than 0, or greather than or equal to the length of the stack.
+	In debug builds, a runtime error will occur if `index` is less than 0, or greater than or equal to the length of the stack.
 	
 	@param index The index of the element to set.
 	
@@ -443,7 +443,7 @@ Class Stack<T> Implements IContainer<T>
 	
 	#rem monkeydoc Gets the value of a stack element.
 	
-	In debug builds, a runtime error will occur if `index` is less than 0, or greather than or equal to the length of the stack.
+	In debug builds, a runtime error will occur if `index` is less than 0, or greater than or equal to the length of the stack.
 	
 	@param index The index of the element to get.
 
@@ -456,7 +456,7 @@ Class Stack<T> Implements IContainer<T>
 	
 	#rem monkeydoc Sets the value of a stack element.
 	
-	In debug builds, a runtime error will occur if `index` is less than 0, or greather than or equal to the length of the stack.
+	In debug builds, a runtime error will occur if `index` is less than 0, or greater than or equal to the length of the stack.
 	
 	@param index The index of the element to set.
 	
