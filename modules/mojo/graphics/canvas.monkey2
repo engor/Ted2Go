@@ -249,6 +249,9 @@ Class Canvas
 		
 		Viewport=bounds
 		Scissor=New Recti( 0,0,bounds.Size )
+		PointSize=1
+		LineWidth=1
+		BlendMode=BlendMode.Alpha
 		TextureFilteringEnabled=True
 		ClearMatrix()
 	End
@@ -355,6 +358,29 @@ Class Canvas
 	
 		_blendMode=blendMode
 	End
+	
+	#rem monkeydoc The current point size for use with DrawPoint.
+	#end
+	Property PointSize:Float()
+	
+		Return _pointSize
+	
+	Setter( pointSize:Float )
+	
+		_pointSize=pointSize
+	End
+
+	#rem monkeydoc The current line width for use with DrawLine.
+	
+	#end	
+	Property LineWidth:Float()
+
+		Return _lineWidth
+	
+	Setter( lineWidth:Float )
+	
+		_lineWidth=lineWidth
+	End
 
 	#rem monkeydoc @hidden The materials used to render primitives.
 	#end	
@@ -441,16 +467,27 @@ Class Canvas
 	@param y Point y coordinate.
 	
 	#end
+	Method DrawPoint( x:Float,y:Float )
+		If _pointSize<=1
+			AddDrawOp( _materials[1],1,1 )
+			AddVertex( x+.5,y+.5,0,0 )
+			Return
+		Endif
+		
+		Local d:=_pointSize/2
+		AddDrawOp( _materials[1],4,1 )
+		AddVertex( x-d,y-d,0,0 )
+		AddVertex( x+d,y-d,1,0 )
+		AddVertex( x+d,y+d,1,1 )
+		AddVertex( x-d,y+d,0,1 )
+		
+	End
+
 	Method DrawPoint( v:Vec2f )
 		AddDrawOp( _materials[1],1,1 )
 		AddVertex( v.x+.5,v.y+.5,0,0 )
 	End
 	
-	Method DrawPoint( x:Float,y:Float )
-		AddDrawOp( _materials[1],1,1 )
-		AddVertex( x+.5,y+.5,0,0 )
-	End
-
 	#rem monkeydoc Draws a line.
 
 	Draws a line in the current [[Color]] using the current [[BlendMode]].
@@ -470,16 +507,29 @@ Class Canvas
 	@param y1 Y coordinate of first endpoint of the line.
 	
 	#end
-	Method DrawLine( v0:Vec2f,v1:Vec2f )
-		AddDrawOp( _materials[2],2,1 )
-		AddVertex( v0.x+.5,v0.y+.5,0,0 )
-		AddVertex( v1.x+.5,v1.y+.5,1,1 )
+	Method DrawLine( x0:Float,y0:Float,x1:Float,y1:Float )
+
+		If _lineWidth<=1
+			AddDrawOp( _materials[2],2,1 )
+			AddVertex( x0+.5,y0+.5,0,0 )
+			AddVertex( x1+.5,y1+.5,1,1 )
+			Return
+		Endif
+		
+		Local dx:=y0-y1,dy:=x1-x0
+		Local sc:=0.5/Sqrt( dx*dx+dy*dy )*_lineWidth
+		dx*=sc;dy*=sc
+		
+		AddDrawOp( _materials[2],4,1 )
+		AddVertex( x0-dx,y0-dy,0,0 )
+		AddVertex( x0+dx,y0+dy,1,0 )
+		AddVertex( x1+dx,y1+dy,1,1 )
+		AddVertex( x1-dx,y1-dy,0,1 )
+		
 	End
 	
-	Method DrawLine( x0:Float,y0:Float,x1:Float,y1:Float )
-		AddDrawOp( _materials[2],2,1 )
-		AddVertex( x0+.5,y0+.5,0,0 )
-		AddVertex( x1+.5,y1+.5,1,1 )
+	Method DrawLine( v0:Vec2f,v1:Vec2f )
+		DrawLine( v0.x,v0.y,v1.x,v1.y )
 	End
 	
 	#rem monkeydoc Draws a triangle.
@@ -886,6 +936,8 @@ Class Canvas
 	Field _pmcolor:UInt
 	Field _matrix:AffineMat3f
 	Field _blendMode:BlendMode
+	Field _pointSize:Float
+	Field _lineWidth:Float
 	Field _matrixStack:=New Stack<AffineMat3f>
 	
 	Field _ops:=New Stack<DrawOp>
@@ -933,6 +985,8 @@ Class Canvas
 		Color=Color.White
 		Matrix=New AffineMat3f
 		BlendMode=BlendMode.Alpha
+		PointSize=1
+		LineWidth=1
 		For Local i:=0 Until _materials.Length
 			_materials[i]=New Material( _nullShader )
 		Next

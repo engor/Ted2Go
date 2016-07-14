@@ -146,9 +146,7 @@ Class Style
 	#rem monkeydoc @hidden
 	#end
 	Method Render( canvas:Canvas,bounds:Recti )
-	
-		canvas.BlendMode=BlendMode.Alpha
-	
+
 		bounds-=Margin
 		
 		Local border:=Border
@@ -186,11 +184,8 @@ Class Style
 			skin.Draw( canvas,bounds )
 		Endif
 		
-		Local font:=DefaultFont
-		Local color:=DefaultColor
-		
-		canvas.Font=font
-		canvas.Color=color
+		canvas.Font=_font
+		canvas.Color=_color
 		
 	End
 	
