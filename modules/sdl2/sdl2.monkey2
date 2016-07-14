@@ -1066,7 +1066,7 @@ Function SDL_GetAudioStatus:SDL_AudioStatus()
 Function SDL_GetAudioDeviceStatus:SDL_AudioStatus(dev_:SDL_AudioDeviceID)
 Function SDL_PauseAudio:Void(pause_on_:Int)
 Function SDL_PauseAudioDevice:Void(dev_:SDL_AudioDeviceID,pause_on_:Int)
-Function SDL_LoadWAV_RW:SDL_AudioSpec Ptr(src_:SDL_RWops Ptr,freesrc_:Int,spec_:SDL_AudioSpec Ptr,audio_buf_:Byte Ptr Ptr,audio_len_:Int Ptr)
+Function SDL_LoadWAV_RW:SDL_AudioSpec Ptr(src_:SDL_RWops Ptr,freesrc_:Int,spec_:SDL_AudioSpec Ptr,audio_buf_:UByte Ptr Ptr,audio_len_:UInt Ptr)
 Const SDL_LoadWAV:Int
 Function SDL_FreeWAV:Void(audio_buf_:Byte Ptr)
 Function SDL_BuildAudioCVT:Int(cvt_:SDL_AudioCVT Ptr,src_format_:SDL_AudioFormat,src_channels_:Byte,src_rate_:Int,dst_format_:SDL_AudioFormat,dst_channels_:Byte,dst_rate_:Int)
