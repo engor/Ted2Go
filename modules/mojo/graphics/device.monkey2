@@ -259,6 +259,8 @@ Class GraphicsDevice
 	Const BYTES_PER_VERTEX:=28
 	
 	Function InitGLState()
+		glDisable( GL_CULL_FACE )
+		glDisable( GL_DEPTH_TEST )
 		glGetIntegerv( GL_FRAMEBUFFER_BINDING,Varptr _defaultFbo )
 	End
 	
