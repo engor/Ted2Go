@@ -163,32 +163,38 @@ Class Channel
 	#end
 	Property Playing:Bool()
 		If Not _alSource Return False
-		UpdateALState()
-		Return _alState=AL_PLAYING Or _alState=AL_PAUSED
+		
+		Local state:=ALState()
+		Return state=AL_PLAYING Or state=AL_PAUSED
 	End
 	
 	#rem monkeydoc True if channel is paused.
 	#end
 	Property Paused:Bool()
 		If Not _alSource Return False
-		UpdateALState()
-		Return _alState=AL_PAUSED
+		
+		Return ALState()=AL_PAUSED
+		
 	Setter( paused:Bool )
 		If Not Playing Return
+		
 		If paused
 			alSourcePause( _alSource )
 		Else
 			alSourcePlay( _alSource )
 		Endif
-		UpdateALState()
 	End
 	
 	#rem monkeydoc Channel volume in the range 0 to 1.
 	#end
 	Property Volume:Float()
+		If Not _alSource Return 0
+	
 		Return _volume
+		
 	Setter( volume:Float )
 		If Not _alSource Return
+		
 		_volume=Clamp( volume,0.0,1.0 )
 		alSourcef( _alSource,AL_GAIN,_volume )
 	End
@@ -196,9 +202,13 @@ Class Channel
 	#rem monkeydoc Channel playback rate.
 	#end	
 	Property Rate:Float()
+		If Not _alSource Return 0
+
 		Return _rate
+		
 	Setter( rate:Float )
 		If Not _alSource Return
+		
 		_rate=rate
 		alSourcef( _alSource,AL_PITCH,_rate )
 	End
@@ -206,9 +216,13 @@ Class Channel
 	#rem monkeydoc Channel pan in the range -1 (left) to 1 (right).
 	#end	
 	Property Pan:Float()
+		If Not _alSource Return 0
+	
 		Return _pan
+		
 	Setter( pan:Float)
 		If Not _alSource Return
+		
 		_pan=Clamp( pan,-1.0,1.0 )
 		Local x:=Sin( _pan ),z:=-Cos( _pan )
 		alSource3f( _alSource,AL_POSITION,x,0,z )
@@ -218,6 +232,7 @@ Class Channel
 	#end
 	Method Discard()
 		If Not _alSource Return
+		
 		alDeleteSources( 1,Varptr _alSource )
 		_alSource=0
 	End
@@ -235,57 +250,63 @@ Class Channel
 	End
 	
 	#rem monkeydoc @hidden - Highly experimental!!!!!
-	#end
-	Method Queue( data:AudioData )
 	
-		If _waiting Return
-		
-		If Not _buffers
-		
-			Local n_bufs:=4	'need some work on these magic numbers!
-		
-			_buffers=New ALuint[n_bufs]
-			_ubuffers=New ALuint[n_bufs]
-			_pbuffers=New Stack<ALuint>
-
-			For Local i:=0 Until n_bufs
-				Local buf:ALuint
-				alGenBuffers( 1,Varptr buf )
-				_buffers[i]=buf
-				_pbuffers.Push( buf )
-			Next
-			
-			_future=New Future<Int>
-			
-			_waiting=False
-			
-			_timer=New Timer( 25,Lambda()
-			
-				FlushProcessed()
-			End )
-			
-		Endif
-		
-		If _pbuffers.Empty
+	#end
+	
+	Method WaitQueued( queued:Int )
+	
+		While _queued>queued
 		
 			FlushProcessed()
 			
-			If _pbuffers.Empty
-				_waiting=True
-				If Not _future.Get() Return
-			Endif
-			
-		Endif
+			If _queued<=queued Return
 		
-		Local buf:=_pbuffers.Pop()
+			_waiting=True
+			
+			_future.Get()
+		
+		Wend
+
+	End
+	
+	#rem monkeydoc @hidden - Highly experimental!!!!!
+	
+	#end
+	Method Queue( data:AudioData )
+	
+		Local buf:ALuint
+		
+		If Not _tmpBuffers
+		
+			_tmpBuffers=New Stack<ALuint>
+			_freeBuffers=New Stack<ALuint>
+			_future=New Future<Int>
+			_waiting=False
+			_queued=0
+			
+			_timer=New Timer( 20,Lambda()
+				FlushProcessed()
+			End )
+
+		Endif		
+		
+		If _freeBuffers.Empty
+			
+			alGenBuffers( 1,Varptr buf )
+			_tmpBuffers.Push( buf )
+		
+		Else
+			buf=_freeBuffers.Pop()
+		Endif
 		
 		alBufferData( buf,ALFormat( data.Format ),data.Data,data.Size,data.Hertz )
 		
 		alSourceQueueBuffers( _alSource,1,Varptr buf )
+		_queued+=1
 		
-		UpdateALState()
-		If _alState=AL_INITIAL Or _alState=AL_STOPPED alSourcePlay( _alSource )
-		
+		Local state:=ALState()
+		If state=AL_INITIAL Or state=AL_STOPPED alSourcePlay( _alSource )
+	
 	End
 	
 	#rem monkeydoc Stops channel.
@@ -298,29 +319,34 @@ Class Channel
 	Private
 	
 	Field _alSource:ALuint
-	Field _alState:ALenum=AL_INITIAL
 	Field _volume:Float=1
 	Field _rate:Float=1
 	Field _pan:Float=0
 	
-	Field _buffers:ALuint[]
-	Field _ubuffers:ALuint[]
-	Field _pbuffers:Stack<ALuint>
+	Field _tmpBuffers:Stack<ALuint>
+	Field _freeBuffers:Stack<ALuint>
 	Field _future:Future<Int>
 	Field _waiting:Bool
+	Field _queued:Int
 	Field _timer:Timer
 	
 	Method FlushProcessed:Int()
 	
 		Local proc:ALint
 		alGetSourcei( _alSource,AL_BUFFERS_PROCESSED,Varptr proc )
+		
 '		Print "processed: "+proc
+
 		If Not proc Return 0
-				
-		alSourceUnqueueBuffers( _alSource,proc,_ubuffers.Data )
-				
+		
 		For Local i:=0 Until proc
-			_pbuffers.Push( _ubuffers[i] )
+		
+			Local buf:ALuint
+			
+			alSourceUnqueueBuffers( _alSource,1,Varptr buf )
+			_queued-=1
+			
+			If _tmpBuffers.Contains( buf ) _freeBuffers.Push( buf )
 		Next
 
 		If _waiting 
@@ -329,12 +355,13 @@ Class Channel
 		Endif
 		
 		Return proc
-		
+
 	End
 	
-	Method UpdateALState:ALenum()
-		alGetSourcei( _alSource,AL_SOURCE_STATE,Varptr _alState )
-		Return _alState
+	Method ALState:ALenum()
+		Local state:ALenum
+		alGetSourcei( _alSource,AL_SOURCE_STATE,Varptr state )
+		Return state
 	End
 	
 End
