@@ -849,22 +849,27 @@ Class MainWindowInstance Extends Window
 		
 		If obj.Contains( "openDocuments" )
 			For Local doc:=Eachin obj["openDocuments"].ToArray()
+				Local path:=doc.ToString()
+				If GetFileType( path )<>FileType.File Continue
 				OpenDocument( doc.ToString() )
 			Next
 		Endif
 		
 		If obj.Contains( "recentFiles" )
 			_recent.Clear()
-			For Local path:=Eachin obj["recentFiles"].ToArray()
-				_recent.Push( path.ToString() )
+			For Local file:=Eachin obj["recentFiles"].ToArray()
+				Local path:=file.ToString()
+				If GetFileType( path )<>FileType.File Continue
+				_recent.Push( path )
 			Next
 		End
 		
 		If obj.Contains( "openProjects" )
 			_projects.Clear()
-			For Local jdir:=Eachin obj["openProjects"].ToArray()
-				Local dir:=jdir.ToString()
-				If _projectView.OpenProject( dir ) _projects.Push( dir )
+			For Local proj:=Eachin obj["openProjects"].ToArray()
+				Local dir:=proj.ToString()
+				If Not _projectView.OpenProject( dir ) Continue
+				_projects.Push( dir )
 			Next
 		Endif
 		
@@ -1106,7 +1111,7 @@ Class MainWindowInstance Extends Window
 		
 		Endif
 		
-		If Not doc.Load()
+		If GetFileType( path )<>FileType.File Or Not doc.Load()
 			ReadError( path )
 			Return Null
 		End
