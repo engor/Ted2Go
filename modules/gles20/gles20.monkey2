@@ -13,11 +13,6 @@ Using monkey
 		#Import "angle/include/*.h"
 		#Import "<GLES2/gl2.h>"
 
-'		#Import "angle/lib/*.lib"
-'		#Import "<libEGL.lib>"
-'		#Import "<libGLESv2.lib>"
-		
-		'mingw 5.1.0 doesn't like linking lib files! Use 4.9.2!
 		#Import "angle/lib/libEGL.lib"
 		#Import "angle/lib/libGLESv2.lib"
 		
@@ -25,13 +20,9 @@ Using monkey
 		#Import "angle/bin/libGLESv2.dll"
 		#Import "angle/bin/d3dcompiler_47.dll"
 		
-		'#Import "native/gles20_windows.c"
-		'#Import "native/gles20_windows.h"
-		'#Import "<libopengl32.a>"
-		
 	#Else If __HOSTOS__="macos"
 	
-		#Import "<OpenGL/gl.h>"
+		#Import "native/gles20_macos.h"
 		#Import "<OpenGL.framework>"
 		
 	#Else If __HOSTOS__="linux"
