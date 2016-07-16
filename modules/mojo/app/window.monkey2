@@ -61,6 +61,17 @@ Class Window Extends View
 		_clearColor=clearColor
 	End
 	
+	#rem monkeydoc True if window clearing is enabled.
+	#end
+	Property ClearEnabled:Bool()
+	
+		Return _clearEnabled
+		
+	Setter( clearEnabled:Bool )
+	
+		_clearEnabled=clearEnabled
+	End
+	
 	#rem monkeydoc The window swap interval.
 	#end
 	Property SwapInterval:Int()
@@ -141,10 +152,9 @@ Class Window Extends View
 	#end
 	Method Render()
 	
-		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )
-
+		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )	
 		SDL_GL_SetSwapInterval( _swapInterval )
-
+	
 #If __TARGET__="desktop" And __HOSTOS__="windows"
 		If _weirdHack
 			_weirdHack=False
@@ -158,7 +168,7 @@ Class Window Extends View
 		
 		_canvas.BeginRender( bounds,New AffineMat3f )
 		
-		_canvas.Clear( _clearColor )
+		If _clearEnabled _canvas.Clear( _clearColor )
 		
 		Render( _canvas )
 		
@@ -174,13 +184,19 @@ Class Window Extends View
 		Return Self
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc The internal SDL_Window used by this window.
 	#end
-	Property NativeWindow:SDL_Window Ptr()
+	Property SDLWindow:SDL_Window Ptr()
 	
 		Return _sdlWindow
 	End
-	
+
+	#rem monkeydoc @hidden The internal SDL_GLContext used by this window.
+	#end	
+	Property SDLGLContext:SDL_GLContext()
+		Return _sdlGLContext
+	End
+
 	#rem monkeydoc @hidden
 	#end
 	Function AllWindows:Window[]()
@@ -229,6 +245,21 @@ Class Window Extends View
 		_keyView=keyView
 	End
 	
+	#rem monkeydoc @hidden
+	
+	Dummy default window.
+	
+	#end
+	Method New( title:String,app:AppInstance )
+	
+		_sdlWindow=SDL_CreateWindow( title,0,0,0,0,SDL_WINDOW_HIDDEN|SDL_WINDOW_OPENGL )
+		Assert( _sdlWindow,"FATAL ERROR: SDL_CreateWindow failed" )
+
+		_sdlGLContext=SDL_GL_CreateContext( _sdlWindow )
+		Assert( _sdlGLContext,"FATAL ERROR: SDL_GL_CreateContext failed" )
+		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )	
+	End
+	
 	Protected
 	
 	#rem monkeydoc Window event handler.
@@ -259,15 +290,19 @@ Class Window Extends View
 	
 	Private
 	
-	Field _flags:WindowFlags
-	Field _fullscreen:Bool
 	Field _sdlWindow:SDL_Window Ptr
 	Field _sdlGLContext:SDL_GLContext
-	Field _swapInterval:Int=1
+
+	Field _flags:WindowFlags
+	Field _fullscreen:=False
+
+	Field _swapInterval:=1
 	
 	Field _canvas:Canvas
 
 	Field _clearColor:=Color.Grey
+	Field _clearEnabled:=True
+	
 	Field _keyView:View
 	
 	Field _minSize:Vec2i
@@ -317,7 +352,7 @@ Class Window Extends View
 		_flags=flags
 		
 		_sdlWindow=SDL_CreateWindow( title,x,y,rect.Width,rect.Height,sdlFlags )
-		Assert( _sdlWindow,"Failed to create SDL_Window" )
+		Assert( _sdlWindow,"FATAL ERROR: SDL_CreateWindow failed" )
 
 		_allWindows.Push( Self )
 		_windowsByID[SDL_GetWindowID( _sdlWindow )]=Self
@@ -332,10 +367,10 @@ Class Window Extends View
 		_frame=GetFrame()
 		Frame=_frame
 		
-		'Create GLContext and canvas
-		
+		'create GL context
 		_sdlGLContext=SDL_GL_CreateContext( _sdlWindow )
-		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )
+		Assert( _sdlGLContext,"FATAL ERROR: SDL_GL_CreateContext failed" )
+		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )	
 		
 		_canvas=New Canvas( _frame.Width,_frame.Height )
 		

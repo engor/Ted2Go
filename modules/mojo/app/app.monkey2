@@ -57,10 +57,14 @@ Class AppInstance
 
 	#rem monkeydoc Create a new app instance.
 	#end
-	Method New()
+	Method New( config:StringMap<String> =Null )
 	
 		App=Self
+		
+		If Not config config=New StringMap<String>
 	
+		_config=config
+		
 		SDL_Init( SDL_INIT_EVERYTHING & ~SDL_INIT_AUDIO )
 		
 		_sdlThread=SDL_ThreadID()
@@ -73,15 +77,13 @@ Class AppInstance
 
 #If __TARGET__<>"emscripten"
 
-		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER,1 )
-
-		_glWindow=SDL_CreateWindow( "<hidden>",0,0,0,0,SDL_WINDOW_HIDDEN|SDL_WINDOW_OPENGL )
-
-		_glContext=SDL_GL_CreateContext( _glWindow )
-
-		SDL_GL_MakeCurrent( _glWindow,_glContext )
-		
 		SDL_GL_SetAttribute( SDL_GL_SHARE_WITH_CURRENT_CONTEXT,1 )
+		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER,1 )
+		
+		SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE,Int( GetConfig( "GL_depth_buffer_enabled",0 ) ) )
+		SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE,Int( GetConfig( "GL_stencil_buffer_enabled",0 ) ) )
+
+		_dummyWindow=New Window( "<hidden>",Self )
 		
 #Endif
 		_defaultFont=Font.Open( DefaultFontName,16 )
@@ -92,7 +94,7 @@ Class AppInstance
 		style.DefaultFont=_defaultFont
 		style.DefaultColor=Color.White
 	End
-
+	
 	#rem monkeydoc @hidden
 	#end
 	Property DefaultFontName:String()
@@ -246,6 +248,13 @@ Class AppInstance
 	
 	#rem monkeydoc @hidden
 	#end
+	Method GetConfig:String( name:String,defValue:String )
+		If _config.Contains( name ) Return _config[name]
+		Return defValue
+	End
+
+	#rem monkeydoc @hidden
+	#end
 	Method GetDisplayModes:DisplayMode[]()
 	
 		Local n:=SDL_GetNumDisplayModes( 0 )
@@ -347,8 +356,10 @@ Class AppInstance
 	Private
 	
 	Field _sdlThread:SDL_threadID
-	Field _glWindow:SDL_Window Ptr
-	Field _glContext:SDL_GLContext
+	
+	Field _config:StringMap<String>
+	
+	Field _dummyWindow:Window
 
 	Field _defaultFont:Font
 	Field _defaultMonoFont:Font
