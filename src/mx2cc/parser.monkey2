@@ -715,11 +715,13 @@ Class Parser
 
 			Try
 				If toke="elseif"
+				
 					cond=ParseExpr()
-					If block ParseEol() Else CParse( "then" )
-				Else
-					If block ParseEol()
+					CParse( "then" )
+
 				Endif
+
+				If block ParseEol()
 			
 			Catch ex:ParseEx
 			
