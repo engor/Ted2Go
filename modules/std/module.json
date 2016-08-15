@@ -1,5 +1,8 @@
 {
 	"module":"std",
+	"about":"Standard monkey2 library",
+	"author":"Mark Sibly",
 	"version":"1.0.0",
+	"support":"http://monkey2.monkey-x.com",
 	"depends":["libc","miniz","stb-image","stb-image-write","stb-vorbis"]
 }

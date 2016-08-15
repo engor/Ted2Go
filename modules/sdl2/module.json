@@ -1,5 +1,8 @@
 {
 	"module":"sdl2",
+	"about":"SDL2 library wrapper",
+	"author":"Mark Sibly",
 	"version":"1.0.0",
+	"support":"http://monkey2.monkey-x.com",
 	"depends":["libc","gles20"]
 }

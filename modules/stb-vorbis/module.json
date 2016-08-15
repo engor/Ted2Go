@@ -1,10 +1,10 @@
 {
 	"module":"stb-vorbis",
-	"about":"Ogg Vorbis IO",
+	"about":"Minimal vorbis loader",
 	"author":"Sean Barret",
 	"version":"1.0.0",
-	"support":"monkey2.monkey-x.com",
-	"depends":["libc"]
+	"support":"http://monkey2.monkey-x.com",
+	"depends":[]
 }
 
 	

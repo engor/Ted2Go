@@ -4,10 +4,10 @@ Namespace sdl2
 #Import "<libc>"
 #Import "<gles20>"
 
-#Import "makefile.monkey2"
-
 #Import "SDL/include/*.h"
 #Import "<SDL.h>"
+
+#Import "makefile.monkey2"
 
 Using libc
 

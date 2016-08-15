@@ -46,7 +46,9 @@ Namespace std
 #Import "misc/filesystem"
 #Import "misc/stringio"
 #Import "misc/json"
+#Import "misc/jsonify"
 #Import "misc/time"
+#Import "misc/zipfile"
 
 #Import "fiber/fiber"
 #Import "fiber/future"

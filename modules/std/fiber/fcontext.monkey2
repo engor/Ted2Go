@@ -1,8 +1,18 @@
 
+'For testing purposes only - use Fiber instead!
+'
+'Will generally cause havoc on GC and debugger as they wont know you're messing with the stack...
+
+Namespace std.fiber
+
 #import "native/fcontext.cpp"
 #import "native/fcontext.h"
 
-#if __HOSTOS__="windows"
+#if __TARGET__="android"
+	#import "native/asm/make_arm_aapcs_elf_gas.S"
+	#import "native/asm/jump_arm_aapcs_elf_gas.S"
+	#import "native/asm/ontop_arm_aapcs_elf_gas.S"
+#else if __HOSTOS__="windows"
 	#import "native/asm/make_i386_ms_pe_gas.asm"
 	#import "native/asm/jump_i386_ms_pe_gas.asm"
 	#import "native/asm/ontop_i386_ms_pe_gas.asm"
@@ -16,10 +26,6 @@
 	#import "native/asm/ontop_x86_64_sysv_elf_gas.S"
 #end
 
-'Testing purposes only - use Fiber instead!
-'
-'Will generally cause havoc on GC and debugger as they wont know you're messing with the stack...
-'
 Extern
 
 Alias fcontext_t:Void Ptr

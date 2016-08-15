@@ -1,28 +1,38 @@
 
 #import "<libc>"
 
-#if __HOSTOS__="windows"
+#if __TARGET__="desktop"
 
-	#import "openal-soft/bin/OpenAL32.dll"
-	#import "openal-soft/lib/OpenAL32.lib"
+	#if __HOSTOS__="windows"
 	
+		#import "openal-soft/bin/OpenAL32.dll"
+		#import "openal-soft/lib/OpenAL32.lib"
+		
+		#import "openal-soft/include/*.h"
+		#import "<AL/al.h>"
+		#import "<AL/alc.h>"
+	
+	#else if __HOSTOS__="macos"
+	
+		#import "<OpenAL.framework>"
+		
+		#import "<OpenAL/al.h>"
+		#import "<OpenAL/alc.h>"
+		
+	#else if __HOSTOS__="linux"
+	
+		#import "<libopenal.a>"
+		#import "<AL/al.h>"
+		#import "<AL/alc.h>"
+		
+	#endif
+
+#else if __TARGET__="android"
+
 	#import "openal-soft/include/*.h"
 	#import "<AL/al.h>"
 	#import "<AL/alc.h>"
 
-#else if __HOSTOS__="macos"
-
-	#import "<OpenAL.framework>"
-	
-	#import "<OpenAL/al.h>"
-	#import "<OpenAL/alc.h>"
-	
-#else if __HOSTOS__="linux"
-
-	#import "<libopenal.a>"
-	#import "<AL/al.h>"
-	#import "<AL/alc.h>"
-	
 #endif
 		
 Namespace openal

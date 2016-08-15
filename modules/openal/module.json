@@ -1,6 +1,6 @@
 {
 	"module":"openal",
-	"about":"OpenAL audio",
+	"about":"OpenAL library wrapper",
 	"author":"Mark Sibly",
 	"version":"1.0.0",
 	"support":"http://monkey2.monkey-x.com",

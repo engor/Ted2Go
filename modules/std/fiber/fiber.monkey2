@@ -52,6 +52,12 @@ Struct Fiber
 		_fiber=StartFiber( entry )
 	End
 	
+	#rem monkeydoc @hidden
+	#end
+	Property Debug:String()
+		Return _fiber
+	End
+	
 	#rem monkeydoc Resumes a suspended fiber.
 	#end	
 	Method Resume()
@@ -70,6 +76,15 @@ Struct Fiber
 		SuspendCurrentFiber()
 	End
 	
+	#rem monkeydoc Gets the main fiber.
+	
+	Suspending the main fiber will result in a runtime error.
+	
+	#end
+	Function Main:Fiber()
+		Return _main
+	End
+	
 	#rem monkeydoc Gets the currently running fiber.
 	#end
 	Function Current:Fiber()
@@ -81,10 +96,12 @@ Struct Fiber
 	Function CreateSuspended:Fiber( entry:Void() )
 		Return New Fiber( CreateFiber( entry ) )
 	End
-
+	
 	Private
 	
 	Field _fiber:Int
+	
+	Global _main:=New Fiber( 0 )
 	
 	Method New( fiber:Int )
 		_fiber=fiber

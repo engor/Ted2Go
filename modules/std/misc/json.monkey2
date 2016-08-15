@@ -82,18 +82,27 @@ Class JsonValue Abstract
 		Return stringio.SaveString( src,path )
 	End
 	
-	Function Load:JsonValue( path:String )
+	Function Load:JsonValue( path:String,throwex:Bool=False )
 	
 		Local src:=stringio.LoadString( path )
 		If Not src Return Null
 		
-		Local parser:=New JsonParser( src )
-		Local value:=parser.ParseValue()
-		
-		Return value
+		Return Parse( src,throwex )
+	End
+	
+	Function Parse:JsonValue( src:String,throwex:Bool=False )
+		Try
+			Local parser:=New JsonParser( src )
+			Return parser.ParseValue()
+		Catch ex:JsonError
+			If throwex Throw ex
+		End
+		Return Null
 	End
 	
 	Protected
+	
+	Global _indent:String
 	
 	#rem monkeydoc @hidden
 	#end
@@ -134,7 +143,8 @@ Class JsonBool Extends JsonValue
 	End
 	
 	Method ToJson:String() Override
-		Return _data ? "true" Else "false"
+		If _data Return "true"
+		Return "false"
 	End
 
 	Private
@@ -169,7 +179,7 @@ Class JsonNumber Extends JsonValue
 	End
 	
 	Method ToJson:String() Override
-		Return _data
+		Return String( _data )
 	End
 
 	Private
@@ -238,6 +248,24 @@ Class JsonArray Extends JsonValue
 		Return _data.Length
 	End
 	
+	Operator[]:JsonValue( index:Int )
+		DebugAssert( index>=0 )
+	
+		If index<_data.Length Return _data[index]
+		Return Null
+	End
+	
+	Operator[]=( index:Int,value:JsonValue )
+		DebugAssert( index>=0 )
+		
+		If index>=_data.Length _data.Resize( index+1 )
+		_data[index]=value
+	End
+	
+	Method Push( value:JsonValue )
+		_data.Push( value )
+	End
+	
 	Method Add( value:JsonValue )
 		_data.Add( value )
 	End
@@ -251,13 +279,30 @@ Class JsonArray Extends JsonValue
 	Field _data:Stack<JsonValue>
 	
 	Method PushJson:Void( buf:StringStack ) Override
+	
 		buf.Push( "[" )
-		Local t:=False
+		
+		Local indent:=_indent
+		
+		Local n:=0
+		
 		For Local value:=Eachin _data
-			If t buf.Push( "," )
-			If value value.PushJson( buf ) Else buf.Push( "null" )
-			t=True
+		
+			If n 
+				buf.Push( "," )
+			Endif
+			n+=1
+			
+			If value
+				buf.Push( value.ToJson() )
+			Else
+				buf.Push( "null" )
+			Endif
+			
 		Next
+		
+		_indent=indent
+
 		buf.Push( "]" )
 	End
 	
@@ -294,17 +339,20 @@ Class JsonObject Extends JsonValue
 		Return Data
 	End
 	
-	Function Load:JsonObject( path:String )
-		Local json:=std.stringio.LoadString( path )
-		If json Return Parse( json )
-		Return Null
+	Function Load:JsonObject( path:String,throwex:Bool=False )
+
+		Local src:=std.stringio.LoadString( path )
+		If Not src Return Null
+		
+		Return Parse( src,throwex )
 	End
 	
-	Function Parse:JsonObject( json:String )
+	Function Parse:JsonObject( json:String,throwex:Bool=False )
 		Try
 			Local parser:=New JsonParser( json )
 			Return New JsonObject( parser.ParseObject() )
 		Catch ex:JsonError
+			If throwex Throw ex
 		End
 		Return Null
 	End
@@ -314,15 +362,21 @@ Class JsonObject Extends JsonValue
 	Field _data:StringMap<JsonValue>
 
 	Method PushJson:Void( buf:StringStack ) Override
-		buf.Push( "{" )
+		buf.Push( "{~n" )
+		_indent+="~t"
 		Local t:=False
 		For Local it:=Eachin _data
-			If t buf.Push( "," )
-			buf.Push( "~q"+it.Key.Replace( "~q","\~q" )+"~q:" )
-			If it.Value it.Value.PushJson( buf ) Else buf.Push( "null" )
+			If t buf.Push( ",~n" )
+			buf.Push( _indent+"~q"+it.Key.Replace( "~q","\~q" )+"~q:" )
+			If it.Value
+				buf.Push( it.Value.ToJson() )
+			Else
+				buf.Push( "null" )
+			Endif
 			t=True
 		Next
-		buf.Push( "}" )
+		_indent=_indent.Slice( 0,-1 )
+		buf.Push( "~n"+_indent+"}" )
 	End
 	
 End
@@ -392,8 +446,19 @@ Class JsonParser
 	
 	Method Bump:String()
 	
-		While _pos<_text.Length And _text[_pos]<=32
-			_pos+=1
+		While _pos<_text.Length
+			If _text[_pos]=47
+				'// comment? - can't live without 'em!
+				If _pos+1=_text.Length Or _text[_pos+1]<>47 Exit
+				_pos+=2
+				While _pos<_text.Length And _text[_pos]<>10
+					_pos+=1
+				Wend
+				If _pos<_text.Length _pos+=1
+			Else
+				If _text[_pos]>32 Exit
+				_pos+=1
+			Endif
 		Wend
 		
 		If _pos=_text.Length

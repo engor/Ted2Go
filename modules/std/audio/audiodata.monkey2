@@ -51,6 +51,25 @@ Class AudioData
 		Return BytesPerSample( _format ) * _length
 	End
 	
+	Method GetSample:Float( index:Int,channel:Int=0 )
+		DebugAssert( index>=0 And index<_length )
+		Select _format
+		Case AudioFormat.Mono8
+			Return _data[index]/128.0-1
+		Case AudioFormat.Stereo8
+			Return _data[index*2+(channel&1)]/128.0-1
+		Case AudioFormat.Mono16
+			Return Cast<Short Ptr>( _data )[index]/32767.0
+		Case AudioFormat.Stereo16
+			Return Cast<Short Ptr>( _data )[index*2+(channel&1)]/32767.0
+		End
+		Return 0
+	End
+	
+	Method SetSample( index:Int,channel:Int=0,sample:Float )
+		DebugAssert( index>=0 And index<_length )
+	End
+	
 	Method Discard()
 		If _discarded Return
 		_discarded=True

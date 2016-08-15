@@ -133,7 +133,7 @@ Function StringToULong:ULong( str:String,base:UInt )
 			value=value*base+(ch-48)
 		Else If ch>=65 And ch<65+(base-10)
 			value=value*base+(ch-55)
-		Else If ch>=97 And ch<07+(base-10)
+		Else If ch>=97 And ch<97+(base-10)
 			value=value*base+(ch-87)
 		Else
 			Exit

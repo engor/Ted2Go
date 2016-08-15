@@ -1,5 +1,8 @@
 {
 	"module":"sdl2-mixer",
+	"about":"SDL mixer library",
+	"author":"Mark Sibly",
 	"version":"1.0.0",
+	"support":"http://monkey2.monkey-x.com",
 	"depends":["sdl2"]
 }

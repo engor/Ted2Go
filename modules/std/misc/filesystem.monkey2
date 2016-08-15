@@ -87,6 +87,20 @@ Function AssetsDir:String()
 
 End
 
+Function DesktopDir:String()
+
+#If __TARGET__="desktop"
+	#If __HOSTOS__="windows"
+		Return (String.FromCString( getenv( "HOMEDRIVE" ) )+String.FromCString( getenv( "HOMEPATH" ) )).Replace( "\","/" )+"/Desktop/"
+	#Else
+		Return String.FromCString( getenv( "HOME" ) )+"/Desktop/"
+	#endif
+#else
+	RuntimeError( "Target has no desktop dir" )
+#endif
+
+End
+
 #rem monkeydoc Extracts the root directory from a file system path.
 
 @param path The filesystem path.
@@ -184,10 +198,14 @@ If `path` does not contain a directory component, an empty string is returned.
 Function ExtractDir:String( path:String )
 
 	path=StripSlashes( path )
+
 	If IsRootDir( path ) Return path
 	
 	Local i:=path.FindLast( "/" )
 	If i>=0 Return path.Slice( 0,i+1 )
+	
+	i=path.Find( "::" )
+	If i>=0 Return path.Slice( 0,i+2 )
 	
 	Return ""
 End
@@ -206,10 +224,14 @@ If `path` does not contain a directory component, `path` is returned without mod
 Function StripDir:String( path:String )
 
 	path=StripSlashes( path )
+
 	If IsRootDir( path ) Return ""
 
 	Local i:=path.FindLast( "/" )
 	If i>=0 Return path.Slice( i+1 )
+	
+	i=path.Find( "::" )
+	If i>=0 Return path.Slice( i+2 )
 	
 	Return path
 End
@@ -289,23 +311,6 @@ Function RealPath:String( path:String )
 	Return rpath
 End
 
-#rem monkeydoc Gets the time a file was most recently modified.
-
-@param path The filesystem path.
-
-@return The time the file at `path` was most recently modified.
-
-#end
-Function GetFileTime:Long( path:String )
-
-	path=StripSlashes( path )
-
-	Local st:stat_t
-	If stat( path,Varptr st )<0 Return 0
-	
-	Return libc.tolong( st.st_mtime )
-End
-
 #rem monkeydoc Gets the type of the file at a filesystem path.
 
 @param path The filesystem path.
@@ -315,10 +320,8 @@ End
 #end
 Function GetFileType:FileType( path:String )
 
-	path=StripSlashes( path )
-
 	Local st:stat_t
-	If stat( path,Varptr st )<0 Return FileType.None
+	If stat( StripSlashes( path ),Varptr st )<0 Return FileType.None
 	
 	Select st.st_mode & S_IFMT
 	Case S_IFREG Return FileType.File
@@ -326,6 +329,38 @@ Function GetFileType:FileType( path:String )
 	End
 	
 	Return FileType.Unknown
+End
+
+#rem monkeydoc Gets the time a file was most recently modified.
+
+@param path The filesystem path.
+
+@return The time the file at `path` was most recently modified.
+
+#end
+Function GetFileTime:Long( path:String )
+
+	Local st:stat_t
+	If stat( StripSlashes( path ),Varptr st )<0 Return 0
+	
+	Return libc.tolong( st.st_mtime )
+End
+
+#rem monkeydoc Gets the size of the file at a filesystem path.
+
+@param path The filesystem path.
+
+@return The size file at `path` in bytes.
+
+#end
+Function GetFileSize:Long( path:String )
+
+	path=StripSlashes( path )
+
+	Local st:stat_t
+	If stat( path,Varptr st )<0 Return 0
+
+	return st.st_size
 End
 
 #rem monkeydoc Gets the process current directory.
@@ -353,9 +388,7 @@ End
 #end
 Function ChangeDir( path:String )
 
-	path=StripSlashes( path )
-	
-	chdir( path )
+	chdir( StripSlashes( path ) )
 End
 
 #rem monkeydoc Loads a directory.
@@ -389,95 +422,57 @@ Function LoadDir:String[]( path:String )
 	Return files.ToArray()
 End
 
+#rem monkeydoc Creates a file at a filesystem path.
+
+Any existing file at the path will be overwritten.
+
+@param path The filesystem path of the file file to create.
+
+@param createDir If true, also creates the file directory if necessary.
+
+@return True if a file at the given path was created.
+
+#end
+Function CreateFile:Bool( path:String,createDir:Bool=True )
+
+	If createDir And Not CreateDir( ExtractDir( path ),True ) Return False
+	
+	Local f:=fopen( path,"wb" )
+	If Not f Return False
+	
+	fclose( f )
+	Return True
+End
+
 #rem monkeydoc Creates a directory at a filesystem path.
 
-@param path The filesystem path of ther directory to create.
+@param path The filesystem path of the directory to create.
 
 @param recursive If true, any required parent directories are also created.
 
 @return True if a directory at `path` was successfully created or already existed.
 
 #end
-Function CreateDir:Bool( path:String,recursive:Bool=True )
-
-	path=StripSlashes( path )
+Function CreateDir:Bool( dir:String,recursive:Bool=True )
 
 	If recursive
-		Local parent:=ExtractDir( path )
+	
+		Local parent:=ExtractDir( dir )
 		If parent And Not IsRootDir( parent )
+		
 			Select GetFileType( parent )
 			Case FileType.None
 				If Not CreateDir( parent,True ) Return False
 			Case FileType.File
 				Return False
-			Case FileType.Directory
 			End
+			
 		Endif
+		
 	Endif
 
-	mkdir( path,$1ff )
-	Return GetFileType( path )=FileType.Directory
-End
-
-Private
-
-Function DeleteAll:Bool( path:String )
-
-	Select GetFileType( path )
-	Case FileType.None
-	
-		Return True
-		
-	Case FileType.File
-	
-		Return DeleteFile( path )
-		
-	Case FileType.Directory
-	
-		For Local f:=Eachin LoadDir( path )
-			If Not DeleteAll( path+"/"+f ) Return False
-		Next
-		
-		rmdir( path )
-		Return GetFileType( path )=FileType.None
-	End
-	
-	Return False
-End
-
-Public
-
-#rem monkeydoc Deletes a directory at a filesystem path.
-
-@param path The filesystem path.
-
-@param recursive True to delete subdirectories too.
-
-@return True if the directory was successfully deleted or never existed.
-
-#end
-Function DeleteDir:Bool( path:String,recursive:Bool=False )
-
-	path=StripSlashes( path )
-
-	Select GetFileType( path )
-	Case FileType.None
-
-		Return True
-		
-	Case FileType.File
-	
-		Return False
-		
-	Case FileType.Directory
-	
-		If recursive Return DeleteAll( path )
-		
-		rmdir( path )
-		Return GetFileType( path )=FileType.None
-	End
-	
-	Return False
+	mkdir( StripSlashes( dir ),$1ff )
+	Return GetFileType( dir )=FileType.Directory
 End
 
 #rem monkeydoc Deletes a file at a filesystem path.
@@ -491,5 +486,71 @@ Function DeleteFile:Bool( path:String )
 
 	remove( path )
 	Return GetFileType( path )=FileType.None
+End
+
+#rem monkeydoc Deletes a directory at a filesystem path.
+
+@param path The filesystem path.
+
+@param recursive True to delete subdirectories too.
+
+@return True if the directory was successfully deleted or never existed.
+
+#end
+Function DeleteDir:Bool( dir:String,recursive:Bool=False )
+
+	Select GetFileType( dir )
+	Case FileType.None
+	
+		Return True
+		
+	Case FileType.Directory
+	
+		If recursive
+		
+			For Local f:=Eachin LoadDir( dir )
+			
+				Local p:=dir+"/"+f
+				
+				Select GetFileType( p )
+				Case FileType.File
+					If Not DeleteFile( p ) Return False
+				Case FileType.Directory
+					If Not DeleteDir( p,True ) Return false
+				End
+			Next
+			
+		Endif
+		
+		rmdir( StripSlashes( dir ) )
+		
+		Return GetFileType( dir )=FileType.None
+	End
+	
+	Return False
+End
+
+Function CopyDir:Bool( srcDir:String,dstDir:String,recursive:Bool=True )
+
+	If GetFileType( srcDir )<>FileType.Directory Return False
+	
+	If GetFileType( dstDir )<>FileType.Directory And Not CreateDir( dstDir,True ) Return False
+	
+	For Local f:=Eachin LoadDir( srcDir )
+	
+		Local src:=srcDir+"/"+f
+		Local dst:=dstDir+"/"+f
+		
+		Select GetFileType( src )
+		Case FileType.File
+			If Not CopyFile( src,dst ) Return False
+		Case FileType.Directory
+			If recursive And Not CopyDir( src,dst ) Return False
+		End
+		
+	Next
+	
+	Return True
+
 End
 
