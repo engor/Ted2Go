@@ -3,36 +3,31 @@ Namespace ted2
 
 Class FindDialog Extends Dialog
 
-	Method New()
+	Method New( actions:FindActions )
 	
 		_findField=New TextField
 		
 		_replaceField=New TextField
 		
-		_findField.EnterHit=MainWindow.OnFindNext
-		_findField.TabHit=Lambda()
-			_replaceField.MakeKeyView()
-			_replaceField.SelectAll()
+		_findField.Entered+=Lambda()
+			actions.findNext.Trigger()
 		End
 
-		_replaceField.EnterHit=MainWindow.OnFindNext
-		_replaceField.TabHit=Lambda()
-			_findField.MakeKeyView()
-			_findField.SelectAll()
-		End
+		_findField.Tabbed+=_replaceField.MakeKeyView
+
+		_replaceField.Tabbed+=_findField.MakeKeyView
 		
-		_caseSensitive=New Button( "Case sensitive: " )
-		_caseSensitive.Checkable=True
+		_caseSensitive=New CheckButton( "Case sensitive" )
+		_caseSensitive.Layout="float"
 		
-		_escapedText=New Button( "Escaped text: ")
-		_escapedText.Checkable=True
+'		_escapedText=New CheckButton( "Escaped text" )
 		
 		Local find:=New DockingView
-		find.AddView( New Label( "Find:" ),"left",80,False )
+		find.AddView( New Label( "Find" ),"left",80,False )
 		find.ContentView=_findField
 		
 		Local replace:=New DockingView
-		replace.AddView( New Label( "Replace:" ),"left",80,False )
+		replace.AddView( New Label( "Replace" ),"left",80,False )
 		replace.ContentView=_replaceField
 		
 		_docker=New DockingView
@@ -48,24 +43,18 @@ Class FindDialog Extends Dialog
 		
 		ContentView=_docker
 		
-		AddAction( MainWindow._findNext )
+		AddAction( actions.findNext )
+		AddAction( actions.findPrevious )
+		AddAction( actions.replace )
+		AddAction( actions.replaceAll )
 		
-		AddAction( MainWindow._findPrevious )
+		Local close:=AddAction( "Close" )
+		SetKeyAction( Key.Escape,close )
+		close.Triggered=Close
 		
-		AddAction( MainWindow._findReplace )
+		_findField.Activated+=_findField.MakeKeyView
 		
-		AddAction( MainWindow._findReplaceAll )
-		
-		AddAction( "Close" ).Triggered=Lambda()
-			Close()
-			MainWindow.UpdateKeyView()
-		End
-
-		Opened=Lambda()
-			_findField.MakeKeyView()
-			_findField.SelectAll()
-		End
-
+		Deactivated+=MainWindow.UpdateKeyView
 	End
 	
 	Property FindText:String()
@@ -87,8 +76,8 @@ Class FindDialog Extends Dialog
 	
 	Field _findField:TextField
 	Field _replaceField:TextField
-	Field _caseSensitive:Button
-	Field _escapedText:Button
+	Field _caseSensitive:CheckButton
+	Field _escapedText:CheckButton
 
 	Field _docker:DockingView
 

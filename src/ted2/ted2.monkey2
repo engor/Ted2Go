@@ -1,17 +1,32 @@
 
-#Import "mojox/mojox"
+#If __HOSTOS__="windows"
+#Import "bin/wget.exe"
+#End
+
+#Import "<std>"
+#Import "<mojo>"
+#Import "<mojox>"
 
 #Import "mainwindow"
-#Import "projectview"
-#Import "debugview"
-#Import "helpview"
-#Import "finddialog"
+#Import "documentmanager"
+#import "fileactions"
+#import "editactions"
+#import "findactions"
+#import "finddialog"
+#import "buildactions"
+#import "helpactions"
+#import "debugview"
+#import "projectview"
+#import "helptree"
+#Import "modulemanager"
+#Import "gutterview"
 
 #Import "ted2document"
-#Import "txtdocument"
-#Import "mx2document"
-#Import "mx2highlighter"
-#Import "imgdocument"
+#Import "monkey2document"
+#Import "plaintextdocument"
+#Import "imagedocument"
+#import "audiodocument"
+#import "jsondocument"
 
 Namespace ted2
 
@@ -21,28 +36,26 @@ Using mojox..
 
 Function Main()
 
-'	Print "Hello World from Ted2"
-
 	ChangeDir( AppDir() )
 		
 	While GetFileType( "bin" )<>FileType.Directory Or GetFileType( "modules" )<>FileType.Directory
 
-'		Print "CurrentDir="+CurrentDir()
-			
 		If IsRootDir( CurrentDir() )
 			Print "Error initializing Ted2 - can't find working dir!"
-			libc.exit_( -1 )
+			libc.exit_( 1 )
 		Endif
 		
 		ChangeDir( ExtractDir( CurrentDir() ) )
-		
 	Wend
+	
+	Local jobj:=JsonObject.Load( "bin/ted2.state.json" )
+	
+	Local rect:=New Recti( 16,16,960,800 )
+	If jobj And jobj.Contains( "windowRect" ) rect=ToRecti( jobj["windowRect"] )
 	
 	New AppInstance
 	
-	Theme.Load()
-	
-	New MainWindowInstance( "Ted2",New Recti( 16,16,960,800 ),WindowFlags.Resizable|WindowFlags.Center )
+	New MainWindowInstance( "Ted2",rect,WindowFlags.Resizable,jobj )
 	
 	App.Run()
 End
