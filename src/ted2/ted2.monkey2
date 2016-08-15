@@ -50,7 +50,7 @@ Function Main()
 	
 	Local jobj:=JsonObject.Load( "bin/ted2.state.json" )
 	
-	Local rect:=New Recti( 16,16,960,800 )
+	Local rect:=New Recti( 64,64,64+960,64+800 )
 	If jobj And jobj.Contains( "windowRect" ) rect=ToRecti( jobj["windowRect"] )
 	
 	New AppInstance

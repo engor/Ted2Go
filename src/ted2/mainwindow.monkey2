@@ -305,28 +305,30 @@ Class MainWindowInstance Extends Window
 	Private
 	
 	Method LoadState( jobj:JsonObject )
-		
-		If Not jobj Return
-		
-'		If jobj.Contains( "windowRect" ) Frame=ToRecti( jobj["windowRect"] )
-		If jobj.Contains( "browserSize" ) _contentView.SetViewSize( _browsersTabView,jobj["browserSize"].ToNumber() )
-		If jobj.Contains( "consoleSize" ) _contentView.SetViewSize( _consolesTabView,jobj["consoleSize"].ToNumber() )
-		
-		If jobj.Contains( "recentFiles" )
-			For Local file:=Eachin jobj["recentFiles"].ToArray()
-				Local path:=file.ToString()
-				If GetFileType( path )<>FileType.File Continue
-				_recentFiles.Push( path )
-			Next
-		End
-		
+	
 		_projectView.ProjectOpened-=UpdateCloseProjectMenu
 		
-		_docsManager.LoadState( jobj )
-		_buildActions.LoadState( jobj )
-		_projectView.LoadState( jobj )
+		If jobj
 		
-		If Not _projectView.OpenProjects.Length _projectView.OpenProject( CurrentDir() )
+	'		If jobj.Contains( "windowRect" ) Frame=ToRecti( jobj["windowRect"] )
+			If jobj.Contains( "browserSize" ) _contentView.SetViewSize( _browsersTabView,jobj["browserSize"].ToNumber() )
+			If jobj.Contains( "consoleSize" ) _contentView.SetViewSize( _consolesTabView,jobj["consoleSize"].ToNumber() )
+			
+			If jobj.Contains( "recentFiles" )
+				For Local file:=Eachin jobj["recentFiles"].ToArray()
+					Local path:=file.ToString()
+					If GetFileType( path )<>FileType.File Continue
+					_recentFiles.Push( path )
+				Next
+			End
+			
+			_docsManager.LoadState( jobj )
+			_buildActions.LoadState( jobj )
+			_projectView.LoadState( jobj )
+		
+		Endif
+		
+		If Not _projectView.OpenProjects _projectView.OpenProject( CurrentDir() )
 		
 		_projectView.ProjectOpened+=UpdateCloseProjectMenu
 		
