@@ -131,6 +131,7 @@ Const S_IFREG:mode_t	'$8000
 
 Struct stat_t
 	Field st_mode:mode_t
+	Field st_size:Long
 	Field st_atime:time_t	'last access
 	Field st_mtime:time_t	'last modification
 	Field st_ctime:time_t	'status change

@@ -1,4 +1,8 @@
 {
 	"module":"libc",
-	"versoin":"1.0.0"
+	"about":"StdC library wrapper",
+	"author":"Mark Sibly",
+	"version":"1.0.0",
+	"support":"http://monkey2.monkey-x.com",
+	"depends":[]
 }

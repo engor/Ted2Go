@@ -1,4 +1,8 @@
 {
 	"module":"litehtml",
-	"version":"1.0.0"
+	"about":"Simple html renderer",
+	"author":"Mark Sibly",
+	"version":"1.0.0",
+	"support":"http://monkey2.monkey-x.com",
+	"depends":["libc"]
 }

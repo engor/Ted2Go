@@ -32,9 +32,12 @@ Using monkey
 		
 	#Endif
 	
-#Else If __TARGET__="emscripten"
+#Else
 
-	#Import "<GLES2/gl2.h>"	
+	#Import "<GLES2/gl2.h>"
+	
+	#import "<libGLESv1_CM.a>"
+	#import "<libGLESv2.a>"
 	
 #Endif
 
