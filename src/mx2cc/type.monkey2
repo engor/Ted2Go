@@ -249,12 +249,29 @@ Class PrimType Extends Type
 	
 		If type=Self Return 0
 		
+		Select type
+		Case StringType
+
+			If IsNumeric Return MAX_DISTANCE
+
+		Case CStringClass,WStringClass,Utf8StringClass
+		
+			If Self=StringType Or IsNumeric Return MAX_DISTANCE
+			
+		Default
+		
+			If TCast<PrimType>( type ) Return MAX_DISTANCE
+		
+		End
+		
+		#rem
 		If TCast<PrimType>( type ) Return MAX_DISTANCE
 		
 		Select type
 		Case CStringClass,WStringClass,Utf8StringClass
 			Return MAX_DISTANCE
 		End
+		#end
 		
 		Return -1
 	End

@@ -364,21 +364,44 @@ Class Block Extends Scope
 		
 		Local vvar:=Cast<VarValue>( node )
 		If vvar
+		
 			Select vvar.vdecl.kind
 			Case "local","param","capture"
-				If Cast<Block>( vvar.scope ).func<>func
+			
+				Local vfunc:=Cast<Block>( vvar.scope ).func
+				
+				If vfunc<>func
 				
 					If func.fdecl.kind<>"lambda" Return Null
 					
-'					Print "Capturing "+vvar.vdecl.ident
+					'capture vvar...
+					'
+					'find all funcs (lambdas) up to vvar func
+					'
+					Local tfunc:=func,funcs:=New Stack<FuncValue>
+
+					While tfunc<>vfunc
+						funcs.Push( tfunc )
+						tfunc=Cast<Block>( tfunc.block.outer ).func
+					Wend
 					
-					vvar=New VarValue( "capture",vvar.vdecl.ident,vvar,func.block )
-					func.block.Insert( vvar.vdecl.ident,vvar )
-					func.captures.Push( vvar )
+					While Not funcs.Empty
+					
+						Local tfunc:=funcs.Pop()
+						
+						'FXIME: this pollutes outer func scope with captured var name.
+						'
+						vvar=New VarValue( "capture",vvar.vdecl.ident,vvar,tfunc.block )
+						tfunc.block.Insert( vvar.vdecl.ident,vvar )
+						tfunc.captures.Push( vvar )
+					
+					Wend
+					
 					node=vvar
 					
 				Endif
 			End
+			
 		Endif
 		
 		Return node.ToValue( func.selfValue )

@@ -11,6 +11,7 @@ Using mx2.docs
 #Import "docs/docsmaker.monkey2"
 #Import "docs/jsonbuffer.monkey2"
 #Import "docs/markdownbuffer.monkey2"
+#Import "docs/manpage.monkey2"
 
 Using libc..
 Using std..
@@ -18,11 +19,11 @@ Using mx2..
 
 Global StartDir:String
 
-Const TestArgs:="mx2cc makemods"
+Const TestArgs:="mx2cc makedocs mojox"
 
-'Const TestArgs:="mx2cc makedocs monkey std mojo"
+'Const TestArgs:="mx2cc makemods -clean std"' -target=android"
 
-'Const TestArgs:="mx2cc makeapp src/mx2cc/test.monkey2"
+'Const TestArgs:="mx2cc makeapp -clean src/mx2cc/test.monkey2"
 
 'Const TestArgs:="mx2cc makeapp src/ted2/ted2.monkey2"
 
@@ -53,7 +54,8 @@ Function Main()
 	
 	If args.Length<2
 
-		Print "Usage: mx2cc makeapp|makemods|makedocs [-run] [-clean] [-verbose] [-target=desktop|emscripten] [-config=debug|release] source|modules..."
+		Print "Usage: mx2cc makeapp|makemods|makedocs [-build|-run] [-clean] [-verbose[=1|2|3]] [-target=desktop|emscripten] [-config=debug|release] [-apptype=gui|console] source|modules..."
+		Print "Defaults: -run -target=desktop -config=debug -apptype=gui"
 
 #If __CONFIG__="release"
 		exit_(0)
@@ -62,6 +64,8 @@ Function Main()
 		
 	Endif
 	
+	Local ok:=False
+	
 	Try
 	
 		Local cmd:=args[1]
@@ -69,24 +73,25 @@ Function Main()
 		
 		Select cmd
 		Case "makeapp"
-			MakeApp( args )
+			ok=MakeApp( args )
 		Case "makemods"
-			MakeMods( args )
+			ok=MakeMods( args )
 		Case "makedocs"
-			MakeDocs( args )
+			ok=MakeDocs( args )
 		Default
 			Fail( "Unrecognized mx2cc command: '"+cmd+"'" )
 		End
 		
 	Catch ex:BuildEx
 	
-		Fail( "Build error." )
+		Fail( "Internal mx2cc build error" )
 		
 	End
 	
+	If Not ok libc.exit_( 1 )
 End
 
-Function MakeApp( args:String[] )
+Function MakeApp:Bool( args:String[] )
 
 	Local opts:=New BuildOpts
 	opts.productType="app"
@@ -116,24 +121,26 @@ Function MakeApp( args:String[] )
 	Local builder:=New Builder( opts )
 	
 	builder.Parse()
-	If builder.errors.Length Return
+	If builder.errors.Length Return False
 	
 	builder.Semant()
-	If builder.errors.Length Return
+	If builder.errors.Length Return False
 	
 	builder.Translate()
-	If builder.errors.Length Return
+	If builder.errors.Length Return False
 
 	builder.Compile()
-	If builder.errors.Length Return
+	If builder.errors.Length Return False
 
 	Local app:=builder.Link()
-	If builder.errors.Length Return
+	If builder.errors.Length Return False
 	
 	If Not opts.run Print "Application built:"+app
+	
+	Return True
 End
 
-Function MakeMods( args:String[] )
+Function MakeMods:Bool( args:String[] )
 
 	Local opts:=New BuildOpts
 	opts.productType="module"
@@ -146,6 +153,8 @@ Function MakeMods( args:String[] )
 	args=ParseOpts( opts,args )
 
 	If Not args args=EnumModules()
+	
+	Local errs:=0
 	
 	For Local modid:=Eachin args
 	
@@ -161,22 +170,25 @@ Function MakeMods( args:String[] )
 		Local builder:=New Builder( opts )
 		
 		builder.Parse()
-		If builder.errors.Length Continue
+		If builder.errors.Length errs+=1;Continue
 
 		builder.Semant()
-		If builder.errors.Length Continue
+		If builder.errors.Length errs+=1;Continue
 		
 		builder.Translate()
-		If builder.errors.Length Continue
+		If builder.errors.Length errs+=1;Continue
 		
 		builder.Compile()
-		If builder.errors.Length Continue
+		If builder.errors.Length errs+=1;Continue
 
 		builder.Link()
+		If builder.errors.Length errs+=1
 	Next
+	
+	Return errs=0
 End
 
-Function MakeDocs( args:String[] )
+Function MakeDocs:Bool( args:String[] )
 
 	Local opts:=New BuildOpts
 	opts.productType="module"
@@ -193,7 +205,7 @@ Function MakeDocs( args:String[] )
 	
 	Local docsMaker:=New DocsMaker
 	
-	Local mx2_api:=""
+	Local errs:=0
 	
 	For Local modid:=Eachin args
 
@@ -209,28 +221,36 @@ Function MakeDocs( args:String[] )
 		Local builder:=New Builder( opts )
 
 		builder.Parse()
-		If builder.errors.Length Continue
+		If builder.errors.Length errs+=1;Continue
 		
 		builder.Semant()
-		If builder.errors.Length Continue
+		If builder.errors.Length errs+=1;Continue
 		
-		Local tree:=docsMaker.MakeDocs( builder.modules.Top )
-		
-		If mx2_api mx2_api+=","
-		mx2_api+=tree
-
+		docsMaker.MakeDocs( builder.modules.Top )
 	Next
 	
-'	stringio.SaveString( "mx2_api_tree="+mx2_api+";","docs/api-tree.js" )
-	Local mods:=stringio.LoadString( "docs/modules_template.html" )
-	mods=mods.Replace( "${MX2_API}",mx2_api )
-	stringio.SaveString( mods,"docs/modules.html" )
+	Local api_indices:=New StringStack
+	Local man_indices:=New StringStack
 	
-	Local lang_nav:=docsMaker.MakeLangNav()
-	Local lang:=stringio.LoadString( "docs/language_template.html" )
-	lang=lang.Replace( "${LANG_NAV}",lang_nav )
-	stringio.SaveString( lang,"docs/language.html" )
+	For Local modid:=Eachin EnumModules()
 	
+		Local index:=LoadString( "modules/"+modid+"/docs/__MANPAGES__/index.js" )
+		If index man_indices.Push( index )
+		
+		index=LoadString( "modules/"+modid+"/docs/__PAGES__/index.js" )
+		If index api_indices.Push( index )
+		
+	Next
+	
+	Local page:=LoadString( "docs/modules_template.html" )
+	page=page.Replace( "${API_INDEX}",api_indices.Join( "," ) )
+	SaveString( page,"docs/modules.html" )
+	
+	page=LoadString( "docs/manuals_template.html" )
+	page=page.Replace( "${MAN_INDEX}",man_indices.Join( "," ) )
+	SaveString( page,"docs/manuals.html" )
+	
+	Return True
 End
 
 Function ParseOpts:String[]( opts:BuildOpts,args:String[] )
@@ -270,10 +290,10 @@ Function ParseOpts:String[]( opts:BuildOpts,args:String[] )
 			End
 		Case "-target"
 			Select val
-			Case "desktop","emscripten"
+			Case "desktop","emscripten","android","ios"
 				opts.target=val
 			Default
-				Fail( "Invalid value for 'target' option: '"+val+"' - must be 'desktop' or 'emscripten'" )
+				Fail( "Invalid value for 'target' option: '"+val+"' - must be 'desktop', 'emscripten', 'android' or 'ios'" )
 			End
 		Case "-config"
 			Select val
@@ -284,10 +304,10 @@ Function ParseOpts:String[]( opts:BuildOpts,args:String[] )
 			End
 		Case "-verbose"
 			Select val
-			Case "0","1","2","-1"
+			Case "0","1","2","3","-1"
 				opts.verbose=Int( val )
 			Default
-				Fail( "Invalid value for 'verbose' option: '"+val+"' - must be '0', '1', '2' or '-1'" )
+				Fail( "Invalid value for 'verbose' option: '"+val+"' - must be '0', '1', '2', '3' or '-1'" )
 			End
 		Default
 			Fail( "Invalid option: '"+opt+"'" )
@@ -405,5 +425,5 @@ Function Fail( msg:String )
 	Print ""
 	Print msg
 		
-	exit_( -1 )
+	exit_( 1 )
 End

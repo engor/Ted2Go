@@ -113,16 +113,23 @@ Class Builder
 		
 		Select opts.target
 		Case "desktop"
-			AR_CMD="ar"
-			CC_CMD="gcc"
+			AR_CMD= "ar"
+			CC_CMD= "gcc"
 			CXX_CMD="g++"
-			LD_CMD="g++"
-			AS_CMD="as"
+			LD_CMD= "g++"
+			AS_CMD= "as"
 		Case "emscripten"
-			AR_CMD="emar"
-			CC_CMD="emcc"
+			AR_CMD= "emar"
+			CC_CMD= "emcc"
 			CXX_CMD="em++"
-			LD_CMD="em++"
+			LD_CMD= "em++"
+			AS_CMD= "as"		'as?
+		Case "android"
+			AR_CMD= "arm-linux-androideabi-ar"
+			CC_CMD= "arm-linux-androideabi-clang"
+			CXX_CMD="arm-linux-androideabi-clang++"
+			LD_CMD= "arm-linux-androideabi-clang++"
+			AS_CMD= "arm-linux-androideabi-as"
 		End
 		
 		ppsyms["__HOSTOS__"]="~q"+HostOS+"~q"
@@ -456,18 +463,24 @@ Class Builder
 			
 			Local ext:=ExtractExt( src ).ToLower()
 						
-			Local cmd:="",scanable:=True
+			Local cmd:="",isasm:=False
+			
 			Select ext
 			Case ".c",".m"
-				cmd=CC_CMD+" "+CC_OPTS.Join( " " )
-			Case ".cc",".cxx",".cpp",".mm"
-				cmd=CXX_CMD+" "+CPP_OPTS.Join( " " )
-			Case ".asm",".s"
-				cmd=AS_CMD
-				scanable=False
-			End
 			
-			cmd+=" -I~q"+modulesDir+"monkey/native~q"
+				cmd=CC_CMD+" "+CC_OPTS.Join( " " )
+				cmd+=" -I~q"+modulesDir+"monkey/native~q"
+				
+			Case ".cc",".cxx",".cpp",".mm"
+
+				cmd=CXX_CMD+" "+CPP_OPTS.Join( " " )
+				cmd+=" -I~q"+modulesDir+"monkey/native~q"
+
+			Case ".asm",".s"
+			
+				cmd=AS_CMD
+				isasm=True
+			End
 			
 			'Check dependancies
 			'			
@@ -479,7 +492,7 @@ Class Builder
 			
 				Local uptodate:=True
 			
-				If scanable
+				If Not isasm
 			
 					If GetFileType( deps )=FILETYPE_NONE
 					
@@ -518,7 +531,9 @@ Class Builder
 			
 			If opts.verbose>0 Print "Compiling "+src
 			
-			cmd+=" -c -o ~q"+obj+"~q ~q"+src+"~q"
+			If Not isasm cmd+=" -c"
+			
+			cmd+=" -o ~q"+obj+"~q ~q"+src+"~q"
 			
 			Exec( cmd )
 			
@@ -562,7 +577,7 @@ Class Builder
 
 			cmd+=" --preload-file ~q"+assetsDir+"@/assets~q"
 			
-		Else If HostOS="windows"
+		Else If opts.target="desktop" And HostOS="windows"
 		
 			If opts.appType="gui" cmd+=" -mwindows"
 		
@@ -570,7 +585,7 @@ Class Builder
 			assetsDir=module.outputDir+"assets/"
 			dllsDir=ExtractDir( outputFile )
 			
-		Else If HostOS="macos"
+		Else If opts.target="desktop" And HostOS="macos"
 		
 			If opts.appType="gui"
 			
@@ -611,21 +626,80 @@ Class Builder
 			
 			Endif
 			
-		Else	'linux!
+		Else If opts.target="desktop" And HostOS="linux"
 		
 			outputFile=module.outputDir+module.name
 			assetsDir=module.outputDir+"assets/"
 			dllsDir=ExtractDir( outputFile )
-
+			
+		Else If opts.target="android"
+		
+			outputFile=module.outputDir+"lib"+module.name+".so"
+			assetsDir=module.outputDir+"assets/"
+			dllsDir=ExtractDir( outputFile )
+			
 		Endif
 		
 		If opts.verbose>=0 Print "Linking "+outputFile
 		
 		DeleteDir( assetsDir,True )
+
 		CreateDir( assetsDir )
 		
-		For Local ass:=Eachin ASSET_FILES
+		Local assetFiles:=New StringMap<String>
 		
+		For Local src:=Eachin ASSET_FILES
+		
+			Local dst:=assetsDir
+		
+			Local i:=src.Find( "@/" )
+			If i<>-1
+				dst+=src.Slice( i+2 )
+				src=src.Slice( 0,i )
+				If Not dst.EndsWith( "/" ) dst+="/"
+			Endif
+			
+			Select GetFileType( src )
+			
+			Case FileType.File
+			
+				dst+=StripDir( src )
+				EnumAssetFiles( src,dst,assetFiles )
+				
+			Case FileType.Directory
+			
+				EnumAssetFiles( src,dst,assetFiles )
+			End
+			
+		Next
+		
+		CopyAssetFiles( assetFiles )
+	
+		#rem
+		For Local src:=Eachin ASSET_FILES.Backwards()
+		
+			Local dst:=assetsDir
+			
+			Local i:=src.Find( "@/" )
+			If i<>-1
+				dst+=src.Slice( i+2 )
+				src=src.Slice( 0,i )
+				If Not dst.EndsWith( "/" ) dst+="/"
+			Endif
+			
+			Select GetFileType( src )
+			
+			Case FileType.File
+			
+				CreateDir( dst )
+				dst+=StripDir( src )
+				If Not CopyFile( src,dst ) New BuildEx( "Error copying asset '"+src+"'" )
+				
+			Case FileType.Directory
+			
+				If Not CopyAll( src,dst ) New BuildEx( "Error copying asset '"+src+"'" )
+			End
+			#rem		
 			Local i:=ass.Find( "@/" )
 			If i=-1
 				CopyFile( ass,assetsDir+StripDir( ass ) )
@@ -639,7 +713,9 @@ Class Builder
 			ass=ass.Slice( 0,i )
 			
 			CopyFile( ass,dst+StripDir( ass ) )
+			#end
 		Next
+		#end
 		
 		cmd+=" -o ~q"+outputFile+"~q"
 		
@@ -649,13 +725,25 @@ Class Builder
 			lnkFiles+=" ~q"+obj+"~q"
 		Next
 		
+		If opts.target="android"
+			lnkFiles+=" -Wl,--whole-archive"
+		Endif
+		
 		For Local lib:=Eachin LD_LIBS
 			lnkFiles+=" ~q"+lib+"~q"
 		Next
+	
+		If opts.target="android"	
+			lnkFiles+=" -Wl,--no-whole-archive"
+		Endif
 		
 		lnkFiles+=" "+LD_SYSLIBS.Join( " " )
 		
-		If HostOS="windows"
+		If opts.target="android"
+			lnkFiles+=" -lstdc++"
+		Endif
+		
+		If HostOS="windows" And opts.target<>"android"
 			Local tmp:=AllocTmpFile( "lnkFiles" )
 			SaveString( lnkFiles,tmp )
 			cmd+=" -Wl,@"+tmp
@@ -663,7 +751,6 @@ Class Builder
 			cmd+=lnkFiles
 		Endif
 
-'		Print cmd
 		Exec( cmd )
 		
 		For Local src:=Eachin DLL_FILES
@@ -711,6 +798,45 @@ Class Builder
 		Return outputFile
 	End
 	
+	Method CopyAssetFiles( files:StringMap<String> )
+	
+		For Local it:=Eachin files
+		
+			Local src:=it.Value
+			Local dst:=it.Key
+			
+			If CreateDir( ExtractDir( dst ) )
+			
+				If GetFileTime( dst )>=GetFileTime( src ) Continue
+				
+				If CopyFile( src,dst ) Continue
+
+			Endif
+			
+			Throw New BuildEx( "Error copying asset file '"+src+"' to '"+dst+"'" )
+		Next
+	End
+	
+	Method EnumAssetFiles( src:String,dst:String,files:StringMap<String> )
+
+		Select GetFileType( src )
+
+		Case FILETYPE_FILE
+		
+			If Not files.Contains( dst ) files[dst]=src
+			
+		Case FILETYPE_DIR
+		
+			For Local f:=Eachin LoadDir( src )
+			
+				EnumAssetFiles( src+"/"+f,dst+"/"+f,files )
+
+			Next
+		
+		End
+		
+	End
+	
 	Method CopyAll:Bool( src:String,dst:String )
 		
 		Select GetFileType( src )
@@ -719,9 +845,9 @@ Class Builder
 		
 			If Not CreateDir( ExtractDir( dst ) ) Return False
 		
-			If GetFileTime( src )>GetFileTime( dst )
+'			If GetFileTime( src )>GetFileTime( dst )
 				If Not CopyFile( src,dst ) Return False
-			Endif
+'			Endif
 			
 			Return True
 			
@@ -730,9 +856,7 @@ Class Builder
 			If Not CreateDir( dst ) Return False
 			
 			For Local file:=Eachin LoadDir( src )
-			
 				If Not CopyAll( src+"/"+file,dst+"/"+file ) Return False
-			
 			Next
 			
 			Return True
@@ -951,6 +1075,19 @@ Class Builder
 		If imported.Contains( path ) Return
 		imported[path]=True
 		
+		Local i:=path.Find( "@/" )
+		If i<>-1
+			Local src:=path.Slice( 0,i )
+			
+			If GetFileType( src )=FileType.None
+				New BuildEx( "Asset '"+src+"' not found" )
+				Return
+			Endif
+			
+			ASSET_FILES.Push( path )
+			Return
+		Endif
+		
 		Local ext:=ExtractExt( path ).ToLower()
 		
 		Local name:=StripDir( StripExt( path ) )
@@ -993,27 +1130,29 @@ Class Builder
 		Endif
 		
 		Local qpath:="~q"+path+"~q"
-		
+
 		Select ext
 		Case ".framework"
 			
-			If GetFileType( path )<>FILETYPE_DIR
+			If GetFileType( path )<>FileType.Directory
 				New BuildEx( "Framework "+qpath+" not found" )
 				Return
 			Endif
 			
 		Default
 		
-			Local tpath:=path
-		
-			Local i:=tpath.Find( "@/" )
-			If i<>-1 tpath=tpath.Slice( 0,i )
-		
-			If GetFileType( tpath )<>FILETYPE_FILE
+			Select GetFileType( path )
+			Case FileType.Directory
+			
+				ASSET_FILES.Push( path )
+				Return
+				
+			Case FileType.None
+			
 				New BuildEx( "File "+qpath+" not found" )
 				Return
-			Endif
-			
+				
+			End
 		End
 		
 		Select ext
@@ -1041,7 +1180,17 @@ Class Builder
 		
 			LD_SYSLIBS.Push( qpath )
 			
-		Case ".so",".dll",".exe"
+		Case ".so"
+		
+			If opts.target="android"		'probably all non-windows targets
+			
+				LD_SYSLIBS.Push( qpath )
+			
+			Endif
+			
+			DLL_FILES.Push( path )
+			
+		Case ".dll",".exe"
 		
 			DLL_FILES.Push( path )
 			
@@ -1083,6 +1232,8 @@ Class Builder
 	End
 	
 	Method Exec:Bool( cmd:String )
+	
+		If opts.verbose>2 Print cmd
 	
 		Local errs:=AllocTmpFile( "stderr" )
 			
