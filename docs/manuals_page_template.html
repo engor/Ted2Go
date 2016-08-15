@@ -1,0 +1,38 @@
+<!doctype html>
+
+<html>
+
+<head>
+
+<link rel="stylesheet" href="${MX2_DIR}/docs/style.css">
+
+<script type='text/javascript'>
+
+function openDocsPage( page ){
+
+	var url='${MX2_DIR}/modules/'+page.replace( ':','/docs/__PAGES__/' ).replace( /\./g,'-' )+'.html';
+
+	document.location.href=url;
+	
+	return false;
+}
+
+</script>
+
+</head>
+
+<body class="docs_body">
+
+<div class="docs_content">
+
+<!-- CONTENT -->
+
+${CONTENT}
+
+<!-- END -->
+
+</div>
+
+</body>
+
+</html>
