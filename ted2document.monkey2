@@ -3,11 +3,17 @@ Namespace ted2
 
 Class Ted2Document
 
-	Field DirtyChanged:Void()
+	Field DirtyChanged:Void()	'also triggered by save/rename
+	
+	Field StateChanged:Void()
+
+	Field Closed:Void()
 
 	Method New( path:String )
 	
 		_path=path
+		
+		_modTime=GetFileTime( _path )
 	End
 	
 	Property Path:String()
@@ -15,11 +21,32 @@ Class Ted2Document
 		Return _path
 	End
 	
+	Property ModTime:Long()
+	
+		Return _modTime
+	End
+	
+	Property State:String()
+	
+		Return _state
+	
+	Setter( state:String )
+	
+		_state=state
+		
+		StateChanged()
+	End
+	
 	Property View:View()
 	
 		If Not _view _view=OnCreateView()
 		
 		Return _view
+	End
+	
+	Property TextView:TextView()
+	
+		Return OnGetTextView( View )
 	End
 	
 	Property Dirty:Bool()
@@ -37,7 +64,12 @@ Class Ted2Document
 	
 	Method Load:Bool()
 	
-		If Not OnLoad() Return False
+		If Not OnLoad() 
+			MainWindow.ReadError( _path )
+			Return False
+		Endif
+		
+		_modTime=GetFileTime( _path )
 
 		Dirty=False
 		
@@ -48,7 +80,12 @@ Class Ted2Document
 	
 		If Not _dirty Return True
 		
-		If Not OnSave() Return False
+		If Not OnSave()
+			MainWindow.WriteError( _path )
+			Return False
+		Endif
+		
+		_modTime=GetFileTime( _path )
 		
 		Dirty=False
 
@@ -65,7 +102,8 @@ Class Ted2Document
 	Method Close()
 	
 		OnClose()
-	
+		
+		Closed()
 	End
 	
 	Protected
@@ -80,18 +118,25 @@ Class Ted2Document
 		Return False
 	End
 	
-	Method OnClose() Virtual
-	End
-	
 	Method OnCreateView:View() Virtual
 	
 		Return Null
+	End
+	
+	Method OnGetTextView:TextView( view:View ) virtual
+	
+		Return Cast<TextView>( view )
+	End
+	
+	Method OnClose() Virtual
 	End
 	
 	Private
 
 	Field _dirty:Bool
 	Field _path:String
+	Field _modTime:Long
+	Field _state:String
 	Field _view:View
 	
 End
