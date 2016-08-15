@@ -32,7 +32,7 @@ Class MyWindow Extends GLWindow
 		'
 		App.RequestRender()
 
-		'This will result in OnRnderGL being called.
+		'This will result in OnRenderGL being called.
 		'
 		Super.OnRender( canvas )
 		

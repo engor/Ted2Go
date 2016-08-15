@@ -49,7 +49,7 @@ Class MyWindow Extends mojo.app.Window
 		
 		RenderImage()
 				
-		canvas.DrawImage( image,App.MouseLocation.x,App.MouseLocation.y,0,.5,.5 )
+		canvas.DrawImage( image,App.MouseLocation.x,App.MouseLocation.y )
 		
 		canvas.DrawText( "Here!",0,0 )
 	End

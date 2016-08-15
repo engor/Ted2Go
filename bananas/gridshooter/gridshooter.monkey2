@@ -136,7 +136,6 @@ Class Game Extends RenderWindow
 
 End
 
-
 Function Main()
 	New AppInstance
 	New Game()

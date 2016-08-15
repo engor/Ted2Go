@@ -29,7 +29,7 @@ Class MyWindow Extends Window
 		'
 		Super.New( title,width,height,WindowFlags.Resizable )
 		
-		Layout="letterbox-int"
+		Layout="letterbox"
 		
 		'Black 'coz we're in space!
 		'

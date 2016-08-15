@@ -234,7 +234,7 @@ Class RenderWindow Extends Window
 		_renderImage = New Image( _renderTexture )
 		_renderImage.Handle=New Vec2f( 0, 0 )
 		_textureCanvas = New Canvas( _renderImage )
-		_textureCanvas.Font = App.DefaultFont
+'		_textureCanvas.Font = App.DefaultFont
 	End
 
 

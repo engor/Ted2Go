@@ -142,7 +142,7 @@ End
 Function Main()
 
 	New AppInstance
-
+	
 	'Show raw key mappings...	
 	Print "W->"+Keyboard.KeyName( Key.W | Key.Raw )
 	Print "A->"+Keyboard.KeyName( Key.A | Key.Raw )
