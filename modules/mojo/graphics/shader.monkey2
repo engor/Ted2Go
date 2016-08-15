@@ -1,11 +1,6 @@
 
 Namespace mojo.graphics
 
-#Import "assets/shader_sprite.glsl@/mojo"
-#Import "assets/shader_phong.glsl@/mojo"
-#Import "assets/shader_font.glsl@/mojo"
-#Import "assets/shader_null.glsl@/mojo"
-
 Private
 
 Function BindUniforms( uniforms:Uniform[],params:ParamBuffer,filter:Bool )
@@ -25,13 +20,16 @@ Function BindUniforms( uniforms:Uniform[],params:ParamBuffer,filter:Bool )
 			Local tex:=p.texture
 			DebugAssert( tex,"Can't bind shader texture uniform '"+u.name+"' - no texture!" )
 			glActiveTexture( GL_TEXTURE0+u.texunit )
-			glBindTexture( GL_TEXTURE_2D,tex.GLTexture )
-			If (tex.Flags & TextureFlags.Filter) And filter
-				glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR )
-			Else
-				glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST )
+			Local gltex:=tex.GLTexture
+			If gltex
+				glBindTexture( GL_TEXTURE_2D,tex.GLTexture )
+				If (tex.Flags & TextureFlags.Filter) And filter
+					glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR )
+				Else
+					glTexParameteri( GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST )
+				Endif
+				glUniform1i( u.location,u.texunit )
 			Endif
-			glUniform1i( u.location,u.texunit )
 		Default
 			Assert( False,"Unsupported uniform type for param:"+u.name )
 		End

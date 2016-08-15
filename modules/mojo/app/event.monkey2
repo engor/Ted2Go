@@ -10,6 +10,9 @@ Namespace mojo.app
 | KeyUp				| Key up event.
 | KeyChar			| Key char event.
 | MouseDown			| Mouse button down event.
+| MouseClick		| Mouse left click event.
+| MouseRightClick	| Mouse right click event.
+| MouseDoubleClick	| Mouse double left click event.
 | MouseUp			| Mouse button up event.
 | MouseMove			| Mouse movement event.
 | MouseWheel		| Mouse wheel event.
@@ -30,6 +33,9 @@ Enum EventType
 	KeyChar,
 	
 	MouseDown,
+	MouseClick,
+	MouseRightClick,
+	MouseDoubleClick,
 	MouseUp,
 	MouseMove,
 	MouseWheel,
@@ -42,7 +48,7 @@ Enum EventType
 	WindowGainedFocus,
 	WindowLostFocus,
 	
-	Eaten=$80000000
+	Eaten=$40000000
 End
 
 #rem monkeydoc The Event class.
@@ -145,15 +151,16 @@ Class MouseEvent Extends Event
 
 	#rem monkeydoc @hidden
 	#end
-	Method New( type:EventType,view:View,location:Vec2i,button:MouseButton,wheel:Vec2i,modifiers:Modifier )
+	Method New( type:EventType,view:View,location:Vec2i,button:MouseButton,wheel:Vec2i,modifiers:Modifier,clicks:Int )
 		Super.New( type,view )
 		_location=location
 		_button=button
 		_wheel=wheel
 		_modifiers=modifiers
+		_clicks=clicks
 	End
 	
-	#rem monkeydoc Mouse location.
+	#rem monkeydoc Mouse location in View.
 	#end
 	Property Location:Vec2i()
 		Return _location
@@ -177,13 +184,25 @@ Class MouseEvent Extends Event
 		Return _modifiers
 	End
 	
+	#rem monkeydoc Number of mouse clicks.
+	#end
+	Property Clicks:Int()
+		Return _clicks
+	End
+	
+	Method TransformToView:MouseEvent( view:View )
+		If view=View Return self
+		Local location:=view.TransformPointFromView( _location,_view )
+		Return New MouseEvent( Type,View,location,_button,_wheel,_modifiers,_clicks )
+	End
+	
 	Private
 	
 	Field _location:Vec2i
 	Field _button:MouseButton
 	Field _wheel:Vec2i
 	Field _modifiers:Modifier
-	
+	Field _clicks:Int
 End
 
 #rem monkeydoc The WindowEvent class.

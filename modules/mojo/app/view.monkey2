@@ -5,15 +5,30 @@ Namespace mojo.app
 #end
 Class View
 
-	Method New()
+	#rem monkeydoc Invoked when a view becomes visble and active.
+	#end
+	Field Activated:Void()
 	
-		_style=New Style
+	#rem monkeydoc Invoked when a view becomes is not longer visble or active.
+	#end
+	Field Deactivated:Void()
+
+	Method New()
+		
+		If Not _themeSeq
+			_themeSeq=1
+			App.ThemeChanged+=Lambda()
+				_themeSeq+=1
+				If _themeSeq<0 _themeSeq=1
+			End
+		Endif
+		
+		_style=New Style( App.Theme.DefaultStyle )
+		
+		InvalidateStyle()
 	End
 
-	#rem monkeydoc @hidden View visible flag.
-	
-	Use [[ReallyVisible]] to test if the view is really visible.
-	
+	#rem monkeydoc View visibility state.
 	#end
 	Property Visible:Bool()
 	
@@ -23,26 +38,17 @@ Class View
 		If visible=_visible Return
 	
 		_visible=visible
-	End
-
-	#rem monkeydoc @hidden View visibility state.
-	
-	True if the view's visibility flag is set AND all its parent visibility flags up to the root window are also set.
-	
-	#end
-	Property ReallyVisible:Bool()
-	
-		Return _visible And (Not _parent Or _parent.ReallyVisible)
+		
+		RequestRender()
+		
+		UpdateActive()
 	End
 	
-	#rem monkeydoc @hidden View enabled flag.
-	
-	Use [[ReallyEnabled]] to test if the view is really enabled.
-	
+	#rem monkeydoc View enabled state.
 	#end
 	Property Enabled:Bool()
 	
-		Return _enabled
+		Return _enabled And (Not _parent Or _parent.Enabled)
 	
 	Setter( enabled:Bool )
 		If enabled=_enabled Return
@@ -50,16 +56,42 @@ Class View
 		_enabled=enabled
 		
 		InvalidateStyle()
+		
+		UpdateActive()
 	End
 
-	#rem monkeydoc @hidden View enabled state.
+	#rem monkeydoc View active state.
 	
-	True if the view's enabled flag is set AND all its parent enabled flags are set AND [[ReallyVisible]] is also true. 
+	A view is active it is visible, enabled, attached to a window and all its parents are also active.
 	
+	Events are only sent to active windows.
+	
+	#end	
+	Property Active:Bool()
+	
+		Return _active
+	End
+	
+	#rem monkeydoc Whether the view accepts key events.
 	#end
-	Property ReallyEnabled:Bool()
+	Property AcceptsKeyEvents:Bool()
 	
-		Return _enabled And _visible And (Not _parent Or _parent.ReallyEnabled)
+		Return _acceptsKeyEvents
+	
+	Setter( acceptsKeyEvents:Bool )
+	
+		_acceptsKeyEvents=acceptsKeyEvents
+	End
+	
+	#rem monkeydoc Whether the view accepts mouse events.
+	#end
+	Property AcceptsMouseEvents:Bool()
+	
+		Return _acceptsMouseEvents
+	
+	Setter( acceptsMouseEvents:Bool )
+	
+		_acceptsMouseEvents=acceptsMouseEvents
 	End
 	
 	#rem monkeydoc View style.
@@ -76,7 +108,7 @@ Class View
 		InvalidateStyle()
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc View style state.
 	#end
 	Property StyleState:String()
 	
@@ -90,7 +122,10 @@ Class View
 		InvalidateStyle()
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc View render style.
+	
+	This is the style used to render the view, and is dependant on [[Style]] and [[StyleState]].
+	
 	#end
 	Property RenderStyle:Style()
 	
@@ -105,11 +140,14 @@ Class View
 	
 	| Layout mode		| Description
 	|:------------------|:-----------
-	| "resize"			| View is resized to fit its layout frame.
+	| "fill"			| View is resized to fit its layout frame.
+	| "float"			| View floats within its layout frame according to the view [[Gravity]].
+	| "fill-x"			| View is resized on the x axis and floats on the y axis.
+	| "fill-y"			| View is resized on the y axis and floats on the x axs.
 	| "stretch"			| View is stretched to fit its layout frame.
 	| "letterbox"		| View is uniformly stretched on both axii and centered within its layout frame.
-	| "float"			| View floats within its layout frame according to the view [[Gravity]].
-	
+	| "letterbox-int"	| View is uniformly stretched on both axii and centered within its layout frame. Scale factors are integrized.
+
 	#end
 	Property Layout:String()
 
@@ -125,7 +163,7 @@ Class View
 	
 	The 'frame' the view is contained in.
 	
-	Note that the frame rect is in 'parent space' coordinates, and is usually set by the parent view when layout occurs.
+	Note that the frame rect is in parent space coordinates, and is usually set by the parent view when layout occurs.
 	
 	#end	
 	Property Frame:Recti()
@@ -133,7 +171,6 @@ Class View
 		Return _frame
 	
 	Setter( frame:Recti )
-		If frame=_frame Return
 	
 		_frame=frame
 	End
@@ -172,8 +209,6 @@ Class View
 	Setter( minSize:Vec2i )
 	
 		_minSize=minSize
-		
-		InvalidateStyle()
 	End
 	
 	#rem monkeydoc Maximum view size.
@@ -185,8 +220,6 @@ Class View
 	Setter( maxSize:Vec2i )
 	
 		_maxSize=maxSize
-		
-		InvalidateStyle()
 	End
 	
 	#rem monkeydoc View content rect.
@@ -269,37 +302,71 @@ Class View
 		Return _rmatrix
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc The parent view of this view.
 	#end
 	Property Parent:View()
 	
 		Return _parent
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc The Window this view is attached to, if any.
 	#end
-	Method AddChild( view:View )
+	Property Window:Window()
 	
-		If Not view Return
-		
-		Assert( Not view._parent )
-		
-		_children.Add( view )
-		
-		view._parent=Self
+		Return _window
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc Gets a style.
+	
+	This is a convenience method equivalent to App.Theme.GetStyle( name ).
+	
 	#end
-	Method RemoveChild( view:View )
+	Method GetStyle:Style( name:String )
+	
+		Return App.Theme.GetStyle( name )
+	End
+	
+	#rem monkeydoc Adds a child view to this view.
+	
+	AddChildView is normally used internally by 'layout' views. However you can also add a child view to any view
+	directly by calling this method.
+	
+	If you use this method to add a child view to a view, it is your responsiblity to also manage the child view's frame using
+	the [[Frame]] property.
+
+	#end
+	Method AddChildView( view:View )
 	
 		If Not view Return
 		
-		Assert( view._parent=Self )
+		Assert( Not view._parent,"View already has a parent" )
+
+		Assert( Not Cast<Window>( view ),"Windows cannot be child views" )
+	
+		view._parent=Self
+		view.SetWindow( _window )
+		_children.Add( view )
 		
+		RequestRender()
+		
+		view.UpdateActive()
+	End
+	
+	#rem monkeydoc Removes a child view from this view.
+	#end
+	Method RemoveChildView( view:View )
+	
+		If Not view Return
+		
+		Assert( view._parent=Self,"View is not a child view" )
+
+		view._parent=Null
+		view.SetWindow( Null )
 		_children.Remove( view )
 		
-		view._parent=Null
+		RequestRender()
+		
+		view.UpdateActive()
 	End
 	
 	#rem monkeydoc @hidden
@@ -342,7 +409,7 @@ Class View
 	
 	#rem monkeydoc Transforms a point from another view.
 	
-	Transforms `point` in coordinates local to 'view' to coodinates local to this view.
+	Transforms `point` in coordinates local to 'view' to coordinates local to this view.
 	
 	@param point The point to transform.
 	
@@ -388,7 +455,14 @@ Class View
 		Return New Recti( TransformPointFromView( rect.min,view ),TransformPointFromView( rect.max,view ) )
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc Transforms a point in window coordinates to view coordinates.
+
+	Transforms `point` in window coordinates to coordinates local to this view.
+	
+	@param point The point to transform.
+	
+	@return The transformed point.
+	
 	#end
 	Method TransformWindowPointToView:Vec2i( point:Vec2i )
 	
@@ -397,73 +471,54 @@ Class View
 		Return New Vec2i( Round( t.x ),Round( t.y ) )
 	End
 	
-	
-	#rem monkeydoc Makes this view the 'key' view.
+	#rem monkeydoc Makes this view the key view.
 	
 	The key view is the view that receives keyboard events.
 	
 	#end
 	Method MakeKeyView()
-	
-		If Not ReallyEnabled Return
-	
-		OnMakeKeyView()
+
+		Local oldKeyView:=App.KeyView
+		If oldKeyView=Self Return
+		
+		If Not Active Return
+		
+		App.KeyView=Self
+		
+		If oldKeyView oldKeyView.OnKeyViewChanged( oldKeyView,Self )
+		
+		OnKeyViewChanged( oldKeyView,Self )
 	End
 	
-	#rem monkeydoc @hidden
-	#end
-	Method SendMouseEvent( event:MouseEvent )
-	
-		If Not ReallyEnabled
-			Select event.Type
-			Case EventType.MouseUp,EventType.MouseLeave
-				OnMouseEvent( event )
-			End
-			Return
-		Endif
-	
-		OnMouseEvent( event )
-		
-		If event.Eaten Return
-	
-		Select event.Type
-		Case EventType.MouseWheel
-			Local view:=_parent
-			While view
-				view.OnMouseEvent( event )
-				If event.Eaten Return
-				view=view._parent
-			Wend
-		End
-		
-	End
-	
-	#rem monkeydoc @hidden
+	#rem monkeydoc Sends a key event to the view.
 	#end
 	Method SendKeyEvent( event:KeyEvent )
 	
-		If Not ReallyEnabled Return
-	
-		OnKeyEvent( event )
-	End
-	
-	#rem monkeydoc @hidden
-	#end
-	Property Container:View() Virtual
-	
-		Return Self
-	End
-	
-	#rem monkeydoc @hidden
-	#end
-	Method FindWindow:Window() Virtual
-	
-		If _parent Return _parent.FindWindow()
+		If _acceptsKeyEvents
 		
-		Return Null
+			OnKeyEvent( event )
+			
+			If event.Eaten Return
+		Endif
+		
+		If _parent _parent.SendKeyEvent( event )
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc Sends a mouse event to the view.
+	#end
+	Method SendMouseEvent( event:MouseEvent )
+	
+		If _acceptsMouseEvents
+
+			OnMouseEvent( event.TransformToView( Self ) )
+			
+			If event.Eaten Return
+		Endif
+		
+		If _parent _parent.SendMouseEvent( event )
+	End
+	
+	#rem monkeydoc Checks if the view is a child of another view.
 	#end
 	Method IsChildOf:Bool( view:View )
 		
@@ -476,30 +531,56 @@ Class View
 	
 	#rem monkeydoc @hidden
 	#end
+	Method RequestRender()
+	
+		App.RequestRender()
+	End
+
+	#rem monkeydoc @hidden
+	#end
 	Method InvalidateStyle()
 	
-		_dirty|=Dirty.Style
+		_styleSeq=-1
+		
+		App.RequestRender()
 	End
 	
 	#rem monkeydoc @hidden
 	#end
 	Method ValidateStyle()
 	
-		If Not (_dirty & Dirty.Style) Return
+		If _styleSeq=_themeSeq Return
 		
+		If _styleSeq<>-1
+		
+			Local name:=_style.Name
+			If name
+				Local style:=App.Theme.GetStyle( name )
+				If style _style=style
+			Endif
+
+		Endif
+	
 		_rstyle=_style
 		
-		If Not ReallyEnabled 
-			_rstyle=_style.GetState( "disabled" )
-		Else If _styleState
+		If Enabled
 			_rstyle=_style.GetState( _styleState )
+		Else
+			_rstyle=_style.GetState( "disabled" )
 		Endif
 		
 		_styleBounds=_rstyle.Bounds
-
-		_dirty&=~Dirty.Style
+		
+		_styleSeq=_themeSeq
 				
 		OnValidateStyle()
+	End
+	
+	Method MeasureLayoutSize:Vec2i()
+	
+		Measure()
+		
+		Return _layoutSize
 	End
 	
 	Protected
@@ -507,13 +588,11 @@ Class View
 	#rem monkeydoc @hidden
 	#end
 	Method Measure()
-	
-		If Not _visible Return
+
+'		If Not _visible Return
 		
 		For Local view:=Eachin _children
-		
 			view.Measure()
-
 		Next
 		
 		ValidateStyle()
@@ -559,6 +638,15 @@ Class View
 			_bounds.max.x=_rect.max.x+_styleBounds.max.x
 			
 			_matrix=_matrix.Translate( 0,(_frame.Height-_bounds.Height)*_gravity.y )
+			
+		Case "fill-y"
+		
+			_rect.max.y=_frame.Height-_styleBounds.Height
+			
+			_bounds.min.y=_rect.min.y+_styleBounds.min.y
+			_bounds.max.y=_rect.max.y+_styleBounds.max.y
+			
+			_matrix=_matrix.Translate( (_frame.Width-_bounds.Width)*_gravity.x,0 )
 			
 		Case "float"
 		
@@ -654,61 +742,46 @@ Class View
 		Next
 		
 		canvas.EndRender()
-		
 	End
-	
+
 	Protected
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc Called during layout if [[Style]] or [[StyleState]] have changed.
+
+	Views can use this method to cache [[RenderStyle]] properties if necessary.
+		
 	#end
 	Method OnValidateStyle() Virtual
-	
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc Called during layout to measure the view.
+	
+	Overriding methods should return their preferred content size.
+	
 	#end
 	Method OnMeasure:Vec2i() Virtual
-	
 		Return New Vec2i( 0,0 )
 	End
 	
-	#rem monkeydoc @hidden
-	#end
-	Method OnMeasure2:Vec2i( size:Vec2i ) Virtual
+	#rem monkeydoc Called during layout when the view needs to update its child views.
 	
-		Return New Vec2i( 0,0 )
-	End
+	Overriding methods should set the [[Frame]] property of any child views they are resposible for.
 	
-	#rem monkeydoc @hidden
 	#end
 	Method OnLayout() Virtual
-	
-		For Local view:=Eachin _children
-			view.Frame=Rect
-		Next
-
 	End
 	
-	#rem monkeydoc Render this view.
-	
-	Called when the view should render itself.
-	
+	#rem monkeydoc Called when the view needs to render itself.
 	#end
 	Method OnRender( canvas:Canvas ) Virtual
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc Called when the key view changes.
+	
+	This method is invoked on both the old key view and new key view when the key view changes.
+	
 	#end
-	Method OnRenderBounds( canvas:Canvas ) Virtual
-	End
-	
-	#rem monkeydoc @hidden
-	#end
-	Method OnMakeKeyView() Virtual
-	
-		Local window:=FindWindow()
-		If window window.KeyView=Self
-	
+	Method OnKeyViewChanged( oldKeyView:View,newKeyView:View ) Virtual
 	End
 	
 	#rem monkeydoc Keyboard event handler.
@@ -727,53 +800,105 @@ Class View
 	Method OnMouseEvent( event:MouseEvent ) Virtual
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc The last size returned by OnMeasure.
 	#end
 	Property MeasuredSize:Vec2i()
 	
 		Return _measuredSize
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc MeasuredSize plus the current [[RenderStyle]] bounds size.
+	
+	Use this instead of MeasuredSize when calculating layout size for child views.
+	
 	#end
 	Property LayoutSize:Vec2i()
 	
 		Return _layoutSize
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc The current [[RenderStyle]] bounds rect.
 	#end
 	Property StyleBounds:Recti()
 	
 		Return _styleBounds
 	End
 	
+	'***** INTERNAL *****
+	
 	#rem monkeydoc @hidden
+	
+	For height-dependant-on-width views - clean me up!
+	
+	#end
+	Method OnMeasure2:Vec2i( size:Vec2i ) Virtual
+		Return New Vec2i( 0,0 )
+	End
+	
+	#rem monkeydoc @hidden
+	
+	For height-dependant-on-width views - clean me up!
+	
 	#end
 	Method Measure2:Vec2i( size:Vec2i )
 		size=OnMeasure2( size-_styleBounds.Size )
 		If size.x And size.y _layoutSize=size+_styleBounds.Size
 		Return _layoutSize
 	End
+
+	#rem monkeydoc @hidden
+	#end
+	Method SetWindow( window:Window )
+	
+		_window=window
+		
+		For Local view:=Eachin _children
+			view.SetWindow( window )
+		Next
+	End
+	
+	#rem monkeydoc @hidden
+	#end
+	Method UpdateActive()
+	
+		'Note: views are activated top-down, deactivated bottom-up.
+		'	
+		Local active:=_visible And _enabled And _window And (Not _parent Or _parent._active )
+		
+		Local changed:=active<>_active
+		
+		If changed
+			_active=active
+			If Not _active Deactivated()
+		Endif
+		
+		For Local child:=Eachin _children
+			child.UpdateActive()
+		Next
+		
+		If changed And _active Activated()
+	End
 	
 	Private
 	
-	Enum Dirty
-		Style=1
-		All=1
-	End
+	Global _themeSeq:Int
 	
-	Field _dirty:Dirty=Dirty.All
-
+	Field _styleSeq:Int=-1
+	
 	Field _parent:View
+	Field _window:Window
 	Field _children:=New Stack<View>
 	
 	Field _visible:Bool=True
 	Field _enabled:Bool=True
+	Field _active:Bool=False
+	Field _acceptsKeyEvents:Bool=True
+	Field _acceptsMouseEvents:Bool=True
+	
 	Field _style:Style
 	Field _styleState:String
-
-	Field _layout:String
+	
+	Field _layout:String="fill"
 	Field _gravity:=New Vec2f( .5,.5 )
 	Field _offset:=New Vec2i( 0,0 )
 
@@ -782,13 +907,13 @@ Class View
 	
 	Field _frame:Recti
 	
-	'After Measuring...
+	'After measuring...
 	Field _rstyle:Style
 	Field _styleBounds:Recti
 	Field _measuredSize:Vec2i
 	Field _layoutSize:Vec2i
 	
-	'After layout
+	'After layout..
 	Field _rect:Recti
 	Field _bounds:Recti
 	Field _matrix:AffineMat3f
@@ -796,5 +921,4 @@ Class View
 	Field _rbounds:Recti
 	Field _rclip:Recti
 	Field _clip:Recti
-	
 End

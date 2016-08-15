@@ -1,9 +1,10 @@
 
+#Import "native/async.cpp"
+
 Namespace mojo.app
 
-#Import "native/async.cpp"
-#Import "assets/Roboto-Regular.ttf@/mojo"
-#Import "assets/RobotoMono-Regular.ttf@/mojo"
+'#Import "assets/Roboto-Regular.ttf@/mojo"
+'#Import "assets/RobotoMono-Regular.ttf@/mojo"
 
 #rem monkeydoc The global AppInstance instance.
 #end
@@ -40,8 +41,22 @@ Class AppInstance
 	#rem monkeydoc @hidden
 	#end
 	Field NextIdle:Void()	
+
+	#rem monkeydoc @hidden
+	#end
+	Field ThemeChanged:Void()
+	
+	#rem monkeydoc Invoked when app is activated.
+	#end
+	Field Activated:Void()
+	
+	#rem monkeydoc Invoked when app is deactivated.
+	#end
+	Field Deactivated:Void()
 	
 	#rem monkeydoc Key event filter.
+	
+	To prevent the event from being sent to a view, a filter can eat the event using [[Event.Eat]].
 	
 	Functions should check if the event has already been 'eaten' by checking the event's [[Event.Eaten]] property before processing the event.
 	
@@ -49,6 +64,8 @@ Class AppInstance
 	Field KeyEventFilter:Void( event:KeyEvent )
 
 	#rem monkeydoc MouseEvent filter.
+	
+	To prevent the event from being sent to a view, a filter can eat the event using [[Event.Eat]].
 
 	Functions should check if the event has already been 'eaten' by checking the event's [[Event.Eaten]] property before processing the event.
 	
@@ -67,8 +84,6 @@ Class AppInstance
 		
 		SDL_Init( SDL_INIT_EVERYTHING & ~SDL_INIT_AUDIO )
 		
-		_sdlThread=SDL_ThreadID()
-		
 		Keyboard.Init()
 		
 		Mouse.Init()
@@ -83,40 +98,38 @@ Class AppInstance
 		SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE,Int( GetConfig( "GL_depth_buffer_enabled",0 ) ) )
 		SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE,Int( GetConfig( "GL_stencil_buffer_enabled",0 ) ) )
 
-		_dummyWindow=New Window( "<hidden>",Self )
-		
-#Endif
-		_defaultFont=Font.Open( DefaultFontName,16 )
-		
-		_defaultMonoFont=Font.Open( DefaultMonoFontName,16 )
+		'create dummy window/context
+		Local _sdlWindow:=SDL_CreateWindow( "<dummy>",0,0,0,0,SDL_WINDOW_HIDDEN|SDL_WINDOW_OPENGL )
+		Assert( _sdlWindow,"FATAL ERROR: SDL_CreateWindow failed" )
 
-		Local style:=Style.GetStyle( "" )
-		style.DefaultFont=_defaultFont
-		style.DefaultColor=Color.White
+		Local _sdlGLContext:=SDL_GL_CreateContext( _sdlWindow )
+		Assert( _sdlGLContext,"FATAL ERROR: SDL_GL_CreateContext failed" )
+		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )	
+
+#Endif
+		_defaultFont=Font.Open( "asset::fonts/DejaVuSans.ttf",16 )
+		
+		_theme=Theme.Load( GetConfig( "initialTheme","asset::themes/default.json" ) )
 	End
 	
-	#rem monkeydoc @hidden
-	#end
-	Property DefaultFontName:String()
-		Return "asset::mojo/Roboto-Regular.ttf"
-	End
-	
-	#rem monkeydoc @hidden
-	#end
-	Property DefaultMonoFontName:String()
-		Return "asset::mojo/RobotoMono-Regular.ttf"
-	End
-	
-	#rem monkeydoc @hidden
+	#rem monkeydoc Fallback font.
 	#end
 	Property DefaultFont:Font()
+	
 		Return _defaultFont
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc The current theme.
 	#end
-	Property DefaultMonoFont:Font()
-		Return _defaultMonoFont
+	Property Theme:Theme()
+	
+		Return _theme
+		
+	Setter( theme:Theme )
+	
+		_theme=theme
+		
+		ThemeChanged()
 	End
 	
 	#rem monkeydoc True if clipboard text is empty.
@@ -159,16 +172,15 @@ Class AppInstance
 	#end
 	Property KeyView:View()
 	
-		Local window:=ActiveWindow
-		If window Return window.KeyView
+		If IsActive( _keyView ) Return _keyView
 		
-		Return Null
+		If _modalView Return _modalView
+		
+		Return _activeWindow
 		
 	Setter( keyView:View )
-
-		Local window:=ActiveWindow
-		If window window.KeyView=keyView
-
+	
+		_keyView=keyView
 	End
 	
 	#rem monkeydoc The current mouse view.
@@ -208,15 +220,40 @@ Class AppInstance
 #Endif
 
 	End
-
-	#rem monkeydoc The current active window.
 	
-	The active window is the window that has input focus.
+	#rem monkeydoc True if app is active.
+	
+	An app is active if any of its windows has system input focus.
+	
+	If Active is true, then [[ActiveWindow]] will always be non-null.
+	
+	If Active is false, then [[ActiveWindow]] will always be null.
+	
+	#end
+	Property Active:Bool()
+	
+		Return _active
+	End
+
+	#rem monkeydoc The currently active window.
+	
+	The active window is the window that has system input focus.
+	
+	If ActiveWindow is non-null, then [[Active]] will always be true.
+	
+	If ActiveWindow is null, then [[Active]] will always be false.
 	
 	#end
 	Property ActiveWindow:Window()
+
+		#rem	
+		If Not _activeWindow
+			Local windows:=Window.VisibleWindows()
+			If windows _activeWindow=windows[0]
+		Endif
+		#end
 	
-		Return Window.VisibleWindows()[0]
+		Return _activeWindow
 	End
 	
 	#rem monkeydoc Approximate frames per second rendering rate.
@@ -246,6 +283,23 @@ Class AppInstance
 		Return _mouseLocation
 	End
 	
+	Property ModalView:View()
+	
+		Return _modalView
+	End
+	
+	#rem monkeydoc @hidden
+	#end
+	Method WaitIdle()
+		Local future:=New Future<Bool>
+		
+		Idle+=Lambda()
+			future.Set( True )
+		End
+		
+		future.Get()
+	End
+	
 	#rem monkeydoc @hidden
 	#end
 	Method GetConfig:String( name:String,defValue:String )
@@ -273,14 +327,21 @@ Class AppInstance
 	#rem monkeydoc @hidden
 	#end
 	Method BeginModal( view:View )
+	
 		_modalStack.Push( _modalView )
+		
 		_modalView=view
+		
+		RequestRender()
 	End
 	
 	#rem monkeydoc @hidden
 	#end
 	Method EndModal()
+	
 		_modalView=_modalStack.Pop()
+		
+		RequestRender()
 	End
 	
 	#rem monkeydoc Terminate the app.
@@ -293,7 +354,7 @@ Class AppInstance
 	#rem monkeydoc Request that the app render itself.
 	#end
 	Method RequestRender()
-
+	
 		_requestRender=True
 	End
 
@@ -309,17 +370,57 @@ Class AppInstance
 	
 		UpdateEvents()
 		
-		If Not _requestRender Return
+		UpdateWindows()
+	End
+	
+	#rem @hiddden
+	#end
+	Method IsActive:Bool( view:View )
+	
+		Return view And view.Active And (Not _modalView Or view.IsChildOf( _modalView ))
+	End
+	
+	#rem @hiddden
+	#end
+	Method ActiveViewAtMouseLocation:View()
+	
+		If Not _window Return Null
 		
+		Local view:=_window.FindViewAtWindowPoint( _mouseLocation )
+		If IsActive( view ) Return view
+		
+		Return Null
+	End
+
+	#rem @hidden
+	#end	
+	Method UpdateWindows()
+	
+		Local render:=_requestRender
 		_requestRender=False
 		
-		UpdateFPS()
-			
+		If render UpdateFPS()
+		
 		For Local window:=Eachin Window.VisibleWindows()
-			window.Update()
-			window.Render()
-		Next
-			
+			window.UpdateWindow( render )
+		End
+
+		If _mouseView And Not IsActive( _mouseView )
+			SendMouseEvent( EventType.MouseUp,_mouseView )
+			_mouseView=Null
+		Endif
+		
+		If _hoverView And Not IsActive( _hoverView )
+			SendMouseEvent( EventType.MouseLeave,_hoverView )
+			_hoverView=Null
+		Endif
+		
+		If Not _hoverView
+			_hoverView=ActiveViewAtMouseLocation()
+			If _mouseView And _hoverView<>_mouseView _hoverView=Null
+			If _hoverView SendMouseEvent( EventType.MouseEnter,_hoverView )
+		Endif
+		
 	End
 	
 	#rem monkeydoc @hidden
@@ -355,24 +456,23 @@ Class AppInstance
 
 	Private
 	
-	Field _sdlThread:SDL_threadID
-	
 	Field _config:StringMap<String>
 	
-	Field _dummyWindow:Window
-
 	Field _defaultFont:Font
-	Field _defaultMonoFont:Font
-		
-	Field _requestRender:Bool
+	Field _theme:Theme
+
+	Field _active:Bool
+	Field _activeWindow:Window
 	
+	Field _keyView:View
 	Field _hoverView:View
 	Field _mouseView:View
 	
+	Field _requestRender:Bool
 	Field _fps:Float
 	Field _fpsFrames:Int
 	Field _fpsMillis:Int
-	
+
 	Field _window:Window
 	Field _key:Key
 	Field _rawKey:Key
@@ -381,6 +481,7 @@ Class AppInstance
 	Field _mouseButton:MouseButton
 	Field _mouseLocation:Vec2i
 	Field _mouseWheel:Vec2i
+	Field _mouseClicks:Int=0
 	
 	Field _modalView:View
 	Field _modalStack:=New Stack<View>
@@ -424,16 +525,11 @@ Class AppInstance
 		NextIdle=Null
 		idle()
 		
-		For Local window:=Eachin Window.VisibleWindows()
-'			window.Update()
-		Next
-
 	End
 	
 	Method SendKeyEvent( type:EventType )
 	
 		Local view:=KeyView
-		If view And Not view.ReallyEnabled view=Null
 		
 		Local event:=New KeyEvent( type,view,_key,_rawKey,_modifiers,_keyChar )
 		
@@ -441,28 +537,43 @@ Class AppInstance
 		
 		If event.Eaten Return
 		
-		If _modalView And Not view.IsChildOf( _modalView ) Return
-		
-		If view 
-			view.SendKeyEvent( event )
-		Else If ActiveWindow
-			ActiveWindow.SendKeyEvent( event )
-		Endif
+		If view view.SendKeyEvent( event )
 	End
 	
 	Method SendMouseEvent( type:EventType,view:View )
 	
 		Local location:=view.TransformWindowPointToView( _mouseLocation )
 		
-		Local event:=New MouseEvent( type,view,location,_mouseButton,_mouseWheel,_modifiers )
+		Local event:=New MouseEvent( type,view,location,_mouseButton,_mouseWheel,_modifiers,_mouseClicks )
 		
 		MouseEventFilter( event )
 		
 		If event.Eaten Return
 		
-		If _modalView And Not view.IsChildOf( _modalView ) Return
-		
 		view.SendMouseEvent( event )
+		
+		If event.Eaten Return
+		
+		Select type
+		Case EventType.MouseDown
+		
+			Select _mouseButton
+			Case MouseButton.Left
+			
+				SendMouseEvent( EventType.MouseClick,view )
+				
+				If _mouseClicks And Not (_mouseClicks & 1)
+				
+					SendMouseEvent( EventType.MouseDoubleClick,view )
+					
+				End
+			
+			Case MouseButton.Right
+
+				SendMouseEvent( EventType.MouseRightClick,view )
+			End
+		End
+		
 	End
 	
 	Method SendWindowEvent( type:EventType )
@@ -535,7 +646,8 @@ Class AppInstance
 			
 			If Not _mouseView
 			
-				Local view:=_window.FindViewAtWindowPoint( _mouseLocation )
+				Local view:=ActiveViewAtMouseLocation()
+
 				If view
 '#If __HOSTOS__<>"linux"
 					SDL_CaptureMouse( SDL_TRUE )
@@ -544,7 +656,14 @@ Class AppInstance
 				Endif
 			Endif
 				
-			If _mouseView SendMouseEvent( EventType.MouseDown,_mouseView )
+			If _mouseView 
+			
+				_mouseClicks=mevent->clicks
+				
+				SendMouseEvent( EventType.MouseDown,_mouseView )
+				
+				_mouseClicks=0
+			Endif
 		
 		Case SDL_MOUSEBUTTONUP
 		
@@ -576,8 +695,7 @@ Class AppInstance
 			
 			_mouseLocation=New Vec2i( mevent->x,mevent->y )
 			
-			Local view:=_window.FindViewAtWindowPoint( _mouseLocation )
-
+			Local view:=ActiveViewAtMouseLocation()
 			If _mouseView And view<>_mouseView view=Null
 			
 			If view<>_hoverView
@@ -639,11 +757,23 @@ Class AppInstance
 			
 			Case SDL_WINDOWEVENT_FOCUS_GAINED
 			
+				Local active:=_active
+				_activeWindow=_window
+				_active=True
+				
 				SendWindowEvent( EventType.WindowGainedFocus )
+				
+				If active<>_active Activated()
 			
 			Case SDL_WINDOWEVENT_FOCUS_LOST
 			
+				Local active:=_active
+				_activeWindow=Null
+				_active=False
+			
 				SendWindowEvent( EventType.WindowLostFocus )
+				
+				If active<>_active Deactivated()
 				
 			Case SDL_WINDOWEVENT_LEAVE
 			
@@ -680,13 +810,6 @@ Class AppInstance
 	
 	Method EventFilter:Int( userData:Void Ptr,event:SDL_Event Ptr )
 	
-		#rem
-		If SDL_ThreadID()<>_sdlThread 
-			Print "Yikes! EventFilter running in non-main thread..."
-			Return 1
-		Endif
-		#end
-			
 		Select event[0].type
 		Case SDL_WINDOWEVENT
 
@@ -707,16 +830,7 @@ Class AppInstance
 			
 				SendWindowEvent( EventType.WindowResized )
 				
-				If _requestRender
-				
-					_requestRender=False
-					
-					For Local window:=Eachin Window.VisibleWindows()
-						window.Update()
-						window.Render()
-					Next
-					
-				Endif
+				UpdateWindows()
 			
 				Return 0
 

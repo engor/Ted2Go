@@ -1,5 +1,8 @@
 {
 	"module":"mojo",
+	"about":"Monkey2 app framework",
+	"author":"Mark Sibly",
 	"version":"1.0.0",
+	"support":"http://monkey2.monkey-x.com",
 	"depends":["freetype","emscripten","std","sdl2","gles20","openal"]
 }

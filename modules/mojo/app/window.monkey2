@@ -107,10 +107,160 @@ Class Window Extends View
 	
 	End
 	
-	#rem monkeydoc @hidden
-	#End
-	Method Update()
+	Property ContentView:View()
+	
+		Return _contentView
+	
+	Setter( contentView:View )
+	
+		If _contentView RemoveChildView( _contentView )
+		
+		_contentView=contentView
+		
+		If _contentView AddChildView( _contentView )
+		
+	End
+	
+	Method UpdateWindow( render:Bool )
+	
+		LayoutWindow()
+		
+		If render RenderWindow()
+	End
+	
+	'***** INTERNAL *****
 
+	#rem monkeydoc The internal SDL_Window used by this window.
+	#end
+	Property SDLWindow:SDL_Window Ptr()
+	
+		Return _sdlWindow
+	End
+
+	#rem monkeydoc @hidden The internal SDL_GLContext used by this window.
+	#end	
+	Property SDLGLContext:SDL_GLContext()
+		Return _sdlGLContext
+	End
+
+	#rem monkeydoc @hidden
+	#end
+	Function AllWindows:Window[]()
+	
+		Return _allWindows.ToArray()
+	End
+
+	#rem monkeydoc @hidden
+	#end
+	Function VisibleWindows:Window[]()
+	
+		Return _visibleWindows.ToArray()
+	End
+	
+	#rem monkeydoc @hidden
+	#end
+	Function WindowForID:Window( id:UInt )
+	
+		Return _windowsByID[id]
+	End
+
+	#rem monkeydoc @hidden
+	#end
+	Method SendWindowEvent( event:WindowEvent )
+	
+		Select event.Type
+		Case EventType.WindowMoved,EventType.WindowResized
+			_frame=GetFrame()
+			Frame=_frame
+			_weirdHack=true
+		End
+		
+		OnWindowEvent( event )
+	End
+	
+	Protected
+	
+	#rem monkeydoc Window event handler.
+	
+	Called when the window is sent a window event.
+	
+	#end
+	Method OnWindowEvent( event:WindowEvent ) Virtual
+	
+		Select event.Type
+		Case EventType.WindowClose
+		
+			App.Terminate()
+			
+		Case EventType.WindowMoved
+		
+		Case EventType.WindowResized
+		
+			App.RequestRender()
+			
+		Case EventType.WindowGainedFocus
+		
+		Case EventType.WindowLostFocus
+		
+		End
+		
+	End
+	
+	Protected
+	
+	Method OnLayout() Override
+	
+		If _contentView _contentView.Frame=Rect
+	End
+	
+	Private
+	
+	Field _sdlWindow:SDL_Window Ptr
+	Field _sdlGLContext:SDL_GLContext
+	
+	Field _flags:WindowFlags
+	Field _fullscreen:=False
+	Field _swapInterval:=1
+	
+	Field _canvas:Canvas
+
+	Field _clearColor:=Color.Grey
+	Field _clearEnabled:=True
+	
+	Field _contentView:View
+
+	Field _minSize:Vec2i
+	Field _maxSize:Vec2i
+	Field _frame:Recti
+
+	'Ok, angles glViewport appears To be 'lagging' by one frame, causing weirdness when resizing.
+	Field _weirdHack:Bool
+	
+	Global _allWindows:=New Stack<Window>
+	Global _visibleWindows:=New Stack<Window>
+	Global _windowsByID:=New Map<UInt,Window>
+	
+	Method GetMinSize:Vec2i()
+		Local w:Int,h:Int
+		SDL_GetWindowMinimumSize( _sdlWindow,Varptr w,Varptr h )
+		Return New Vec2i( w,h )
+	End
+	
+	Method GetMaxSize:Vec2i()
+		Local w:Int,h:Int
+		SDL_GetWindowMaximumSize( _sdlWindow,Varptr w,Varptr h )
+		Return New Vec2i( w,h )
+	End
+	
+	Method GetFrame:Recti()
+		Local x:Int,y:Int,w:Int,h:Int
+		SDL_GetWindowPosition( _sdlWindow,Varptr x,Varptr y )
+		SDL_GetWindowSize( _sdlWindow,Varptr w,Varptr h )
+		Return New Recti( x,y,x+w,y+h )
+	End
+	
+	Method LayoutWindow()
+	
 #If __TARGET__="emscripten"
 
 		'ugly...fixme.
@@ -150,7 +300,7 @@ Class Window Extends View
 	
 	#rem monkeydoc @hidden
 	#end
-	Method Render()
+	Method RenderWindow()
 	
 		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )	
 		SDL_GL_SetSwapInterval( _swapInterval )
@@ -177,167 +327,7 @@ Class Window Extends View
 		SDL_GL_SwapWindow( _sdlWindow )
 	End
 	
-	#rem monkeydoc @hidden
-	#end
-	Method FindWindow:Window() Override
-	
-		Return Self
-	End
-	
-	#rem monkeydoc The internal SDL_Window used by this window.
-	#end
-	Property SDLWindow:SDL_Window Ptr()
-	
-		Return _sdlWindow
-	End
-
-	#rem monkeydoc @hidden The internal SDL_GLContext used by this window.
-	#end	
-	Property SDLGLContext:SDL_GLContext()
-		Return _sdlGLContext
-	End
-
-	#rem monkeydoc @hidden
-	#end
-	Function AllWindows:Window[]()
-	
-		Return _allWindows.ToArray()
-	End
-
-	#rem monkeydoc @hidden
-	#end
-	Function VisibleWindows:Window[]()
-	
-		Return _visibleWindows.ToArray()
-	End
-	
-	#rem monkeydoc @hidden
-	#end
-	Function WindowForID:Window( id:UInt )
-	
-		Return _windowsByID[id]
-	End
-
-	'***** INTERNAL *****
-	
-	#rem monkeydoc @hidden
-	#end
-	Method SendWindowEvent( event:WindowEvent )
-	
-		Select event.Type
-		Case EventType.WindowMoved,EventType.WindowResized
-			_frame=GetFrame()
-			Frame=_frame
-			_weirdHack=true
-		End
-		
-		OnWindowEvent( event )
-	End
-	
-	#rem monkeydoc @hidden
-	#end
-	Property KeyView:View()
-	
-		Return _keyView
-		
-	Setter( keyView:View )
-	
-		_keyView=keyView
-	End
-	
-	#rem monkeydoc @hidden
-	
-	Dummy default window.
-	
-	#end
-	Method New( title:String,app:AppInstance )
-	
-		_sdlWindow=SDL_CreateWindow( title,0,0,0,0,SDL_WINDOW_HIDDEN|SDL_WINDOW_OPENGL )
-		Assert( _sdlWindow,"FATAL ERROR: SDL_CreateWindow failed" )
-
-		_sdlGLContext=SDL_GL_CreateContext( _sdlWindow )
-		Assert( _sdlGLContext,"FATAL ERROR: SDL_GL_CreateContext failed" )
-		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )	
-	End
-	
-	Protected
-	
-	#rem monkeydoc Window event handler.
-	
-	Called when the window is sent a window event.
-	
-	#end
-	Method OnWindowEvent( event:WindowEvent ) Virtual
-	
-		Select event.Type
-		Case EventType.WindowClose
-		
-			App.Terminate()
-			
-		Case EventType.WindowMoved
-		
-		Case EventType.WindowResized
-		
-			App.RequestRender()
-			
-		Case EventType.WindowGainedFocus
-		
-		Case EventType.WindowLostFocus
-		
-		End
-		
-	End
-	
-	Private
-	
-	Field _sdlWindow:SDL_Window Ptr
-	Field _sdlGLContext:SDL_GLContext
-
-	Field _flags:WindowFlags
-	Field _fullscreen:=False
-
-	Field _swapInterval:=1
-	
-	Field _canvas:Canvas
-
-	Field _clearColor:=Color.Grey
-	Field _clearEnabled:=True
-	
-	Field _keyView:View
-	
-	Field _minSize:Vec2i
-	Field _maxSize:Vec2i
-	Field _frame:Recti
-
-	'Ok, angles glViewport appears To be 'lagging' by one frame, causing weirdness when resizing.
-	Field _weirdHack:Bool
-	
-	Global _allWindows:=New Stack<Window>
-	Global _visibleWindows:=New Stack<Window>
-	Global _windowsByID:=New Map<UInt,Window>
-	
-	Method GetMinSize:Vec2i()
-		Local w:Int,h:Int
-		SDL_GetWindowMinimumSize( _sdlWindow,Varptr w,Varptr h )
-		Return New Vec2i( w,h )
-	End
-	
-	Method GetMaxSize:Vec2i()
-		Local w:Int,h:Int
-		SDL_GetWindowMaximumSize( _sdlWindow,Varptr w,Varptr h )
-		Return New Vec2i( w,h )
-	End
-	
-	Method GetFrame:Recti()
-		Local x:Int,y:Int,w:Int,h:Int
-		SDL_GetWindowPosition( _sdlWindow,Varptr x,Varptr y )
-		SDL_GetWindowSize( _sdlWindow,Varptr w,Varptr h )
-		Return New Recti( x,y,x+w,y+h )
-	End
-	
 	Method Init( title:String,rect:Recti,flags:WindowFlags )
-	
-		Layout="fill"
 	
 		Local x:=(flags & WindowFlags.CenterX) ? SDL_WINDOWPOS_CENTERED Else rect.X
 		Local y:=(flags & WindowFlags.CenterY) ? SDL_WINDOWPOS_CENTERED Else rect.Y
@@ -374,6 +364,12 @@ Class Window Extends View
 		
 		_canvas=New Canvas( _frame.Width,_frame.Height )
 		
-		Update()
+		_clearColor=App.Theme.GetColor( "windowClearColor" )
+		
+		SetWindow( Self )
+		
+		UpdateActive()
+
+		LayoutWindow()
 	End
 End

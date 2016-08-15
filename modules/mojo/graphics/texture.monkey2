@@ -153,7 +153,8 @@ Class Texture
 	#rem monkeydoc @hidden
 	#end	
 	Property GLTexture:GLuint()
-		DebugAssert( Not _discarded,"texture has been discarded" )
+		If _discarded Return 0
+'		DebugAssert( Not _discarded,"texture has been discarded" )
 	
 		If _texSeq=glGraphicsSeq And Not _texDirty And Not _mipsDirty Return _glTexture
 		

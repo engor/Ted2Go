@@ -192,7 +192,10 @@ bbString bbRequesters::RequestDir( bbString title,bbString dir ){
 
 void bbRequesters::OpenUrl( bbString url ){
 
-	ShellExecute( HWND_DESKTOP,"open",url.c_str(),0,0,SW_SHOWNORMAL );
+	CoInitializeEx( NULL,COINIT_APARTMENTTHREADED|COINIT_DISABLE_OLE1DDE );
+	
+	ShellExecute( HWND_DESKTOP,0,url.c_str(),0,0,SW_SHOWNORMAL );
+//	ShellExecute( HWND_DESKTOP,"open",url.c_str(),0,0,SW_SHOWNORMAL );
 }
 
 #elif __linux

@@ -1,6 +1,8 @@
 
 Namespace mojo
 
+#Import "assets/"
+
 #Import "<emscripten>"
 #Import "<std>"
 #Import "<sdl2>"
@@ -11,6 +13,9 @@ Namespace mojo
 #Import "app/event"
 #Import "app/skin"
 #Import "app/style"
+#Import "app/theme"
+#import "app/jsonify"
+
 #Import "app/view"
 #Import "app/window"
 #Import "app/glwindow"
@@ -47,4 +52,22 @@ Using mojo..
 Private
 
 Function Main()
+
+	Stream.OpenFuncs["font"]=Lambda:Stream( proto:String,path:String,mode:String )
+	
+		Return Stream.Open( "asset::fonts/"+path,mode )
+	End
+		
+	Stream.OpenFuncs["image"]=Lambda:Stream( proto:String,path:String,mode:String )
+	
+		Return Stream.Open( "asset::images/"+path,mode )
+	End
+
+	Stream.OpenFuncs["theme"]=Lambda:Stream( proto:String,path:String,mode:String )
+	
+		If Not App Or Not App.Theme Or Not App.Theme.Path Return Null
+
+		Return Stream.Open( ExtractDir( App.Theme.Path )+path,mode )
+	End
+	
 End

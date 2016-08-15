@@ -1,9 +1,6 @@
 
 Namespace mojo.graphics
 
-#Import "assets/shader_env.glsl@/mojo"
-#Import "assets/RobotoMono-Regular.ttf@/mojo"
-
 #rem monkeydoc @hidden
 #end	
 Class DrawOp
@@ -20,17 +17,11 @@ Canvas objects are used to perform rendering to either a mojo [[app.View]] or an
 To draw to a canvas, use one of the 'Draw' methods. Drawing is affected by a number of draw states, including:
 
 * [[Color]] - the current drawing color. This is combined with the current alpha to produce the final rendering color and alpha values.
-
 * [[Alpha]] - the current drawing alpha level.
-
 * [[Matrix]] - the current drawing matrix. All drawing coordinates are multiplied by this matrix before rendering.
-
 * [[BlendMode]] - the blending mode for drawing, eg: opaque, alpha, additive, multiply.
-
 * [[Viewport]] - the current viewport. All drawing coordinates are relative to the top-left of the viewport.
-
 * [[Scissor]] - the current scissor rect. All rendering is clipped to the union of the viewport and the scissor rect.
-
 * [[Font]] - The current font to use when drawing text with [[DrawText]].
 
 Drawing does not occur immediately. Drawing commands are 'buffered' to reduce the overhead of sending lots of draw calls to the lower level graphics API. You can force all drawing commands in the buffer to actually render using [[Flush]].
@@ -631,6 +622,11 @@ Class Canvas
 		AddVertex( rect.min.x,rect.max.y,s0,t1 )
 	End
 	
+	Method DrawRect( x:Float,y:Float,width:Float,height:Float,srcImage:Image,srcX:Int,srcY:Int )
+
+		DrawRect( New Rectf( x,y,x+width,y+height ),srcImage,New Recti( srcX,srcY,srcX+width,srcY+height ) )
+	End
+	
 	Method DrawRect( x:Float,y:Float,width:Float,height:Float,srcImage:Image,srcX:Int,srcY:Int,srcWidth:Int,srcHeight:Int )
 
 		DrawRect( New Rectf( x,y,x+width,y+height ),srcImage,New Recti( srcX,srcY,srcX+srcWidth,srcY+srcHeight ) )
@@ -843,8 +839,8 @@ Class Canvas
 		_matrix=matrix
 	End
 
-	Method DrawImage( image:Image,tv:Vec2f,rz:Float,scale:Vec2f )
-		DrawImage( image,tv.x,tv.y,rz,scale.x,scale.y )
+	Method DrawImage( image:Image,translation:Vec2f,rz:Float,scale:Vec2f )
+		DrawImage( image,translation.x,translation.y,rz,scale.x,scale.y )
 	End
 	
 	#rem monkeydoc Draws text.
@@ -975,7 +971,7 @@ Class Canvas
 			Local env:=stringio.LoadString( "asset::mojo/shader_env.glsl" )
 			_ambientEnv=New ShaderEnv( "#define RENDERPASS_AMBIENT~n"+env )
 '			_ambientEnv=New ShaderEnv( "#define RENDERPASS_NORMAL~n"+env )
-			_defaultFont=Font.Load( "asset::mojo/RobotoMono-Regular.ttf",16 )
+			_defaultFont=Font.Load( "font::DejaVuSans.ttf",16 )
 			_nullShader=Shader.GetShader( "null" )
 		Endif
 

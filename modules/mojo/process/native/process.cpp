@@ -34,6 +34,8 @@ struct semaphore{
 #include <windows.h>
 #include <tlhelp32.h>
 
+extern "C" WINBASEAPI WINBOOL WINAPI CancelIoEx( HANDLE hFile,LPOVERLAPPED lpOverlapped );
+
 #else
 
 #include <sys/ioctl.h>
@@ -451,7 +453,11 @@ void bbProcess::terminate(){
 	if( !_rep ) return;
 
 #if _WIN32
+
 	TerminateProcessGroup( _rep->proc,-1 );
+	
+	CancelIoEx( _rep->out,0 );
+
 #else
 	killpg( _rep->proc,SIGTERM );
 #endif

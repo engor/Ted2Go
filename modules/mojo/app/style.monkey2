@@ -6,46 +6,37 @@ Namespace mojo.app
 Class Style
 
 	Method New()
-		Init( "",Null,False )
 	End
 	
 	Method New( style:Style )
-		Init( "",style,True )
+		Init( style )
 	End
 	
-	#rem monkeydoc @hidden
-	#end
-	Method New( name:String )
-		Init( name,Null,False )
+	Method Copy:Style()
+		Return New Style( Self )
 	End
 	
-	#rem monkeydoc @hidden
-	#end
-	Method New( name:String,style:Style )
-		Init( name,style,True )
+	Method GetState:Style( name:String )
+		Local state:=_states[name]
+		If Not state Return Self
+		
+		Return state
+	End
+
+	Method AddState:Style( name:String )
+		Local state:=_states[name]
+		If state Return state
+
+		state=New Style( Self )
+		_states[name]=state
+
+		Return state
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc Name of the style.
 	#end
-	Method AddState:Style( state:String,srcState:String="" )
-	
-		Local style:=New Style
-		
-		style.Init( "",GetState( srcState ),False )
-		
-		_states[state]=style
-		
-		Return style
-	End
-	
-	#rem monkeydoc @hidden
-	#end
-	Method GetState:Style( state:String )
-	
-		Local style:=_states[state]
-		If style Return style
-		
-		Return Self
+	Property Name:String()
+		Return _name
 	End
 
 	#rem monkeydoc Background color.
@@ -104,35 +95,50 @@ Class Style
 		_margin=margin
 	End
 	
-	#rem monkeydoc Default canvas color.
+	#rem monkeydoc Color to use when drawing text.
 	#end
-	Property DefaultColor:Color()
-		Return _color
+	Property TextColor:Color()
+		Return _textColor
 	Setter( color:Color )
-		_color=color
+		_textColor=color
 	End
-
-	#rem monkeydoc Default canvas font.
-	#end	
+	
+	#rem monkeydoc Color to use when drawing icons.
+	#end
+	Property IconColor:Color()
+		Return _iconColor
+	Setter( color:Color )
+		_iconColor=color
+	End
+	
+	#rem monkeydoc Font to use when drawing text.
+	
+	Deprecated! Just use [[Font]] instead...
+	
+	#end
 	Property DefaultFont:Font()
 		Return _font
 	Setter( font:Font )
 		_font=font
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc Font to use when drawing text.
 	#end
-	Method SetImage( name:String,image:Image )
-		_images[name]=image
+	Property Font:Font()
+		Return _font
+	Setter( font:Font )
+		_font=font
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc Custom icons.
 	#end
-	Method GetImage:Image( name:String )
-		Return _images[name]
+	Property Icons:Image[]()
+		Return _icons
+	Setter( icons:Image[] )
+		_icons=icons
 	End
 	
-	#rem monkeydoc @hidden
+	#rem monkeydoc Total style bounds.
 	#end
 	Property Bounds:Recti()
 		Local bounds:=Padding
@@ -141,6 +147,83 @@ Class Style
 		bounds+=Border
 		bounds+=Margin
 		Return bounds
+	End
+
+	#rem monkeydoc Measure text.
+	#end
+	Method MeasureText:Vec2i( text:String )
+	
+		If Not text Return New Vec2i( 0,0 )
+		
+		If text.Contains( "~n" )
+
+			Local lines:=text.Split( "~n" ),w:=0
+
+			For Local line:=Eachin lines
+				w=Max( w,Int( _font.TextWidth( line ) ) )
+			Next
+			Return New Vec2i( w,_font.Height * lines.Length )
+		Else
+			Return New Vec2i( _font.TextWidth( text ),_font.Height )
+		Endif
+	End
+	
+	Method DrawText( canvas:Canvas,text:String,x:Int,y:Int,handlex:Float=0,handley:Float=0 )
+
+		Local font:=canvas.Font
+		Local color:=canvas.Color
+		
+		canvas.Font=_font
+		canvas.Color=_textColor
+		
+		canvas.DrawText( text,x,y,handlex,handley )
+		
+		canvas.Font=font
+		canvas.Color=color
+	End
+	
+	Method DrawText( canvas:Canvas,text:String,rect:Recti,gravity:Vec2f )
+	
+		If Not text Return
+	
+		Local size:=MeasureText( text )
+		
+		Local x:=rect.Left + (rect.Width-size.x) * gravity.x
+		Local y:=rect.Top + (rect.Height-size.y) * gravity.y
+		
+		Local font:=canvas.Font
+		Local color:=canvas.Color
+		
+		canvas.Font=_font
+		canvas.Color=_textColor
+		
+		If text.Contains( "~n" )
+		
+			Local lines:=text.Split( "~n" )
+			
+			For Local line:=Eachin lines
+			
+				If line canvas.DrawText( line,x + (size.x-_font.TextWidth( line )) * gravity.x,y )
+				y+=_font.Height
+			Next
+		
+		Else If text<>"~n"
+		
+			canvas.DrawText( text,x,y )
+		Endif
+		
+		canvas.Font=font
+		canvas.Color=color
+	End
+	
+	Method DrawIcon( canvas:Canvas,icon:Image,x:Int,y:Int )
+	
+		Local color:=canvas.Color
+		canvas.Color=_iconColor
+		
+		canvas.DrawImage( icon,x,y )
+		
+		canvas.Color=color
 	End
 	
 	#rem monkeydoc @hidden
@@ -185,31 +268,21 @@ Class Style
 		Endif
 		
 		canvas.Font=_font
-		canvas.Color=_color
-		
+		canvas.Color=Color.White
 	End
 	
+	'***** INTERNAL *****
+
 	#rem monkeydoc @hidden
 	#end
-	Function GetStyle:Style( name:String )
-	
-		Local style:=_styles[name]
-		If style Return style
-		
-		Local i:=name.Find( ":" )
-		If i<>-1 Return GetStyle( name.Slice( 0,i ) )
-		
-		If Not _defaultStyle _defaultStyle=New Style
-		Return _defaultStyle
+	Property States:StringMap<Style>()
+		If Not _states _states=New StringMap<Style>
+		Return _states
 	End
-
+	
 	Private
 	
-	Global _defaultStyle:Style
-	Global _styles:=New StringMap<Style>
-	
-	Field _states:=New StringMap<Style>
-	
+	Field _name:String
 	Field _bgcolor:Color=Color.None
 	Field _padding:Recti
 	Field _skin:Skin
@@ -217,35 +290,29 @@ Class Style
 	Field _border:Recti
 	Field _bdcolor:Color=Color.None
 	Field _margin:Recti
-	Field _color:Color
+	Field _textColor:Color=Color.Black
+	Field _iconColor:Color=Color.White
+	Field _icons:Image[]
 	Field _font:Font
-	Field _images:=New StringMap<Image>
-	
-	Method Init( name:String,style:Style,copyStates:Bool )
-	
-		If Not style style=_defaultStyle
-		
-		If style
-			_bgcolor=style._bgcolor
-			_padding=style._padding
-			_skin=style._skin
-			_skcolor=style._skcolor
-			_border=style._border
-			_bdcolor=style._bdcolor
-			_margin=style._margin
-			_color=style._color
-			_font=style._font
-			_images=style._images.Copy()
-			
-			If copyStates
-				For Local it:=Eachin style._states
-					_states[it.Key]=New Style( it.Value )
-				Next
-			Endif
-		Endif
-		
-		If name
-			_styles[name]=Self
+	Field _states:=New StringMap<Style>
+
+	Method Init( style:Style )
+		If Not style Return
+		_bgcolor=style._bgcolor
+		_padding=style._padding
+		_skin=style._skin
+		_skcolor=style._skcolor
+		_border=style._border
+		_bdcolor=style._bdcolor
+		_margin=style._margin
+		_textColor=style._textColor
+		_iconColor=style._iconColor
+		_icons=style._icons.Slice( 0 )
+		_font=style._font
+		If style._states
+			For Local it:=Eachin style._states
+				_states[it.Key]=New Style( it.Value )
+			Next
 		Endif
 	End
 	

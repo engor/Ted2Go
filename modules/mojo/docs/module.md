@@ -1,5 +1,5 @@
 
-# The mojo module
+# The mojo module.
 
 The mojo module provides a simple cross platform application framework for writing games and other graphical apps.
 
@@ -9,24 +9,18 @@ The mojo module provides a simple cross platform application framework for writi
 To initialize mojo, you need to do at least 3 things:
 
 * Create an [[app.AppInstance]] using 'New AppInstance'. This will automatically initialize the [[app.App]] global variable.
-
-* Create a [[app.Window]]. You will generally create a subclass of window you have defined yourself, eg: 'New MyWindow'.
-
+* Create an [[app.Window]]. You will generally create a subclass of window you have defined yourself, eg: 'New MyWindow'.
 * Start the app using App.Run().
 
 This can all be done inside Main().
 
-
 Once the app is running, mojo runs a simple event loop that looks like this:
 
 * Get OS events and dispatch corresponding mojo events if necessary.
-
 * Once there are no OS events left to process, any custom [[app.AppInstance.Idle]] handlers are called.
-
 * If the application has called [[app.AppInstance.RequestRender]], then the app is rendered.
 
 The app will continue executing the event loop until [[app.AppInstance.Terminate]] is called.
-
 
 ## Subclassing Window
 
@@ -37,7 +31,6 @@ To render to the window, you will also need to override the [[app.Window.OnRende
 The OnRender method is called when the app needs to be rendered, and is passed a [[graphics.Canvas]] instance for window rendering code to use.
 
 In addition, you may also want to override the [[app.Window.OnWindowEvent]] method to handle window close, resize etc events.
-
 
 ## Handling user input
 

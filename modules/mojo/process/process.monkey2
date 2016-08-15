@@ -1,8 +1,8 @@
 
-Namespace mojo.process
-
 #Import "native/process.h"
 #Import "native/process.cpp"
+
+Namespace mojo.process
 
 Extern
 
