@@ -6,7 +6,15 @@ char **bb_argv;
 
 void bbMain();
 
+#ifdef __ANDROID__
+
+extern "C" int SDL_main( int argc,char *argv[] ){
+
+#else
+
 int main( int argc,char **argv ){
+
+#endif
 
 	bb_argc=argc;
 	bb_argv=argv;

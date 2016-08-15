@@ -114,7 +114,15 @@ Function Ceil:Double( x:Double )="std::ceil"
 @return The integral value nearest to `x`.
 
 #end
+#if __TARGET__="android"
+Public
+Function Round:Double( x:Double )
+	Return Floor( x+.5 )
+End
+Extern
+#else
 Function Round:Double( x:Double )="std::round"
+#endif
 
 
 #rem monkeydoc Raises a number to a power.
@@ -143,7 +151,15 @@ Function Log:Double( x:Double )="std::log"
 @return The base 2 logarithm of `x`.
 
 #end
+#if __TARGET__="android"
+Public
+Function Log2:Double( x:Double )
+	Return Log(x)/Log(2)
+End
+Extern
+#else
 Function Log2:Double( x:Double )="std::log2"
+#endif
 
 #rem monkeydoc Computes the base 10 logarithm of a number.
 

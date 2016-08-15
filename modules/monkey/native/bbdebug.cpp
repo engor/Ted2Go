@@ -30,15 +30,16 @@ namespace bbDB{
 		case SIGSEGV:err="Memory access violation";break;
 		case SIGILL:err="Illegal instruction";
 		case SIGFPE:err="Floating point exception";
-	#if !_WIN32
+#if !_WIN32
 		case SIGBUS:err="Bus error";
-	#endif	
+#endif	
 		}
 				
 #ifndef NDEBUG
 		error( err );
 		exit( 0 );
 #endif
+
 		printf( "Caught signal:%s\n",err );
 		exit( -1 );
 	}
@@ -51,9 +52,13 @@ namespace bbDB{
 		signal( SIGSEGV,sighandler );
 		signal( SIGILL,sighandler );
 		signal( SIGFPE,sighandler );
+#if !_WIN32
+		signal( SIGBUS,sighandler );
+#endif		
 
+#ifndef NDEBUG
+		
 #if _WIN32
-
 		if( HANDLE breakEvent=OpenEvent( EVENT_ALL_ACCESS,false,"MX2_BREAK_EVENT" ) ){
 //			printf( "Found BREAK_EVENT!\n" );fflush( stdout );
 		    std::thread( [=](){
@@ -64,11 +69,12 @@ namespace bbDB{
 		    	}
 		    } ).detach();
 		}
-	
 #else		
-		signal( SIGBUS,sighandler );
 		signal( SIGTSTP,breakHandler );
 #endif
+
+#endif
+
 	}
 	
 	void emitVar( bbDBVar *v ){

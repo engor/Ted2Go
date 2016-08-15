@@ -190,6 +190,27 @@ Struct @String ="bbString"
 	#end
 	Method Trim:String()="trim"
 	
+	#rem monkeydoc Trim whitespace from the start a string.
+	
+	@return The string with any leading whitespace removed.
+	
+	#end
+	Method TrimStart:String()="trimStart"
+	
+	#rem monkeydoc Trim whitespace from the end of a string.
+	
+	@return The string with any trailing whitespace removed.
+	
+	#end
+	Method TrimEnd:String()="trimEnd"
+	
+	#rem monkeydoc Duplicates a string.
+	
+	@return The string duplicated `count` times.
+	
+	#end
+	Method Dup:String( count:Int )="dup"
+	
 	#rem monkeydoc Replace all occurances of a substring with another string.
 	
 	@param find The string to search for.
@@ -201,8 +222,26 @@ Struct @String ="bbString"
 	#end
 	Method Replace:String( find:String,replace:String )="replace"
 	
+	#rem monkeydoc Splits this string.
+	
+	Splits this string into an array of strings.
+	
+	@param separator Separator to use for splitting.
+	
+	@return An array of strings.
+	
+	#end
 	Method Split:String[]( separator:String )="split"
 	
+	#rem monkeydoc Joins an array of strings.
+	
+	Joins an array of strings, inserting this string between elements.
+	
+	@param bits The strings to join.
+
+	@return The joined string.	
+	
+	#end
 	Method Join:String( bits:String[] )="join"
 	
 	#rem monkeydoc Converts the string to a CString.
@@ -247,7 +286,9 @@ Struct @String ="bbString"
 	
 	#rem monkeydoc Creates a string from a null terminated CString.
 	
-	Note: Only `bufSize` bytes at most will be used to create the string, so this method is safe to call even if the string is not null terminated.
+	If `bufSize` is specified, only `bufsize` bytes at most bytes will be read.
+	
+	If `bufsize` is not specified, the CString must be correctly null terminated or Bad Things Will Happen.
 	
 	@param buf The memory buffer containing the CString.
 	
@@ -255,10 +296,14 @@ Struct @String ="bbString"
 	
 	#end	
 	Function FromCString:String( buf:Void Ptr,bufSize:Int )="bbString::fromCString"
+
+	Function FromCString:String( buf:Void Ptr )="bbString::fromCString"
 	
 	#rem monkeydoc Creates a string from a null terminated WString.
 	
-	Note: Only `bufSize` bytes at most will be used to create the string, so this method is safe to call even if the string is not null terminated.
+	If `bufSize` is specified, only `bufsize` bytes at most bytes will be read.
+	
+	If `bufsize` is not specified, the WString must be correctly null terminated or Bad Things Will Happen.
 	
 	@param buf The memory buffer containing the WString.
 	
@@ -266,10 +311,15 @@ Struct @String ="bbString"
 	
 	#end	
 	Function FromWString:String( buf:Void Ptr,bufSize:Int )="bbString::fromWString"
+	
+	Function FromWString:String( buf:Void Ptr )="bbString::fromWString"
+	
 
 	#rem monkeydoc Creates a string from a null terminated Utf8String.
 	
-	Note: Only `bufSize` bytes at most will be used to create the string, so this method is safe to call even if the string is not null terminated.
+	If `bufSize` is specified, only `bufsize` bytes at most bytes will be read.
+	
+	If `bufsize` is not specified, the Utf8String must be correctly null terminated or Bad Things Will Happen.
 	
 	@param buf The memory buffer containing the Utf8String.
 	
@@ -278,32 +328,6 @@ Struct @String ="bbString"
 	#end	
 	Function FromUtf8String:String( buf:Void Ptr,bufSize:Int )="bbString::fromUtf8String"
 	
-	
-	#rem monkeydoc Creates a string from a null terminated CString.
-	
-	Note: The CString must be correctly null terminated, or Bad Things Will Happen.
-	
-	@param buf The memory buffer containing the CString.
-	
-	#end	
-	Function FromCString:String( buf:Void Ptr )="bbString::fromCString"
-
-	#rem monkeydoc Creates a string from a null terminated WString.
-	
-	Note: The WString must be correctly null terminated, or Bad Things Will Happen.
-	
-	@param buf The memory buffer containing the WString.
-	
-	#end	
-	Function FromWString:String( buf:Void Ptr )="bbString::fromWString"
-
-	#rem monkeydoc Creates a string from a null terminated Utf8String.
-	
-	Note: The Utf8String must be correctly null terminated, or Bad Things Will Happen.
-	
-	@param buf The memory buffer containing the Utf8String.
-	
-	#end	
 	Function FromUtf8String:String( buf:Void Ptr )="bbString::fromUtf8String"
 	
 End

@@ -289,6 +289,31 @@ class bbString{
 		return bbString( beg,end-beg );
 	}
 	
+	bbString trimStart()const{
+		const bbChar *beg=data();
+		const bbChar *end=data()+length();
+		while( beg!=end && *beg<=32 ) ++beg;
+		if( end-beg==length() ) return *this;
+		return bbString( beg,end-beg );
+	}
+	
+	bbString trimEnd()const{
+		const bbChar *beg=data();
+		const bbChar *end=data()+length();
+		while( beg!=end && *(end-1)<=32 ) --end;
+		if( end-beg==length() ) return *this;
+		return bbString( beg,end-beg );
+	}
+	
+	bbString dup( int n )const{
+		Rep *rep=Rep::alloc( length()*n );
+		bbChar *p=rep->data;
+		for( int j=0;j<n;++j ){
+			for( int i=0;i<_rep->length;++i ) *p++=data()[i];
+		}
+		return rep;
+	}
+	
 	bbString replace( const bbString &str,const bbString &repl )const{
 	
 		int n=0;

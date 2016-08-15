@@ -3,11 +3,22 @@ Namespace monkey.debug
 
 Extern
 
-#rem monkeydoc @hidden
+#rem monkeydoc Stops the app and activates the debugger (debug builds only).
+
+Stops the app, causing the debugger (if available) to activate. The app will then wait for further instructions from the
+debugger (step, continue, end etc).
+
+The debugger is only available in debug builds, and when running an app from the Ted2 IDE.
+
 #end
 Function DebugStop()="bbDB::stop"
 
-#rem monkeydoc @hidden
+#rem monkeydoc Generates a non-recoverable runtime error.
+
+Halts the program with a non-recoverable runtime error.
+
+@param message Runtime error message to generate.
+
 #end
 Function RuntimeError( message:String )="bbDB::error"
 
@@ -20,7 +31,7 @@ Function RuntimeError( message:String )="bbDB::error"
 #end
 Function Assert( condition:Bool,message:String="Assert failed" )="bbAssert"
 
-#rem monkeydoc Generates a runtime error if a boolean expression is false (Debug builds only).
+#rem monkeydoc Generates a runtime error if a boolean expression is false (debug builds only).
 
 This function does not execute at all in release builds, so make sure that `condition` doesn't inadvertantly execute
 any critical code.
@@ -32,7 +43,7 @@ any critical code.
 #end
 Function DebugAssert( condition:Bool,message:String="Debug assert failed" )="bbDebugAssert"
 
-#rem monkeydoc Gets the current stack state (Debug builds only).
+#rem monkeydoc Gets the current stack state (debug builds only).
 
 In release mode, an empty array is returned.
 
