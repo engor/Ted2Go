@@ -10,20 +10,24 @@
 
 	<link rel="stylesheet" href="style.css">
 	
-	<link rel="stylesheet" href="jstree/dist/themes/default/style.min.css" />
+	<link rel="stylesheet" href="jstree/dist/themes/default-dark/style.min.css" />
 
 	<script src="jstree/dist/libs/jquery-1.9.1.min.js"></script>
 
 	<script src="jstree/dist/jstree.min.js"></script>
 
 	<script>
+	
+	var jstree_theme='default-dark';
+	
+	function openDocsPage( page ){
 
-		function openDocsPage( page ){
+		var url='../modules/'+page.replace( ':','/docs/__PAGES__/' ).replace( /\./g,'-' )+'.html';
 
-			var url='../modules/'+page.replace( ':','/docs/__PAGES__/' ).replace( /\./g,'-' )+'.html';
-
-			document.getElementById( 'docs' ).src=url;
-		}
+		var docs=document.getElementById( 'docs-iframe' );
+		
+		docs.contentWindow.location=url;
+	}
 
 	</script>
 
@@ -36,12 +40,12 @@
 <!-- CONTENT -->
 
 <div class="modules_nav_wrapper">
-<form role="search"><input type="text" id="search" placeholder="API search" style="width:100%;" /></form>
+<form role="search"><input type="text" id="search" placeholder="Search for..." style="width:100%;" /></form>
 <div id="tree" class="modules_nav_tree"></div>
 </div>
 
 <div class="modules_docs_wrapper">
-<iframe id="docs" class="modules_docs_iframe"></iframe>
+<iframe id="docs-iframe" class="modules_docs_iframe"></iframe>
 </div>
 
 <script>
@@ -54,11 +58,12 @@ jQuery( function($){
 			'multiple' : false,
 			'animation' : false,
 			'themes':{
+				'name' : jstree_theme,
 				'dots' : false,
 				'icons' : false,
 				'stripes' : false
 			},
-			'data':[ ${MX2_API} ]
+			'data':[ ${API_INDEX} ]
 		},
 		'plugins':[ 'search' ]
  	});
@@ -70,8 +75,6 @@ jQuery( function($){
 		
 		var page=node.data.page;
 		if( !page ) return;
-		
-		console.log( page );
 		
 		openDocsPage( page );
 	} );
