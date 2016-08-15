@@ -21,8 +21,6 @@ __MANPAGES__/
 /tmp/*
 !/tmp/.gitignore
 
-**/assets/mojo
-
 /modules/module-manager/downloads/*.zip
 
 Monkey2 (Windows).exe

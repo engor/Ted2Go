@@ -31,7 +31,7 @@ script {
 
 body {
 	display:block; 
-	margin:8px; 
+/*	margin:8px; */
     height:100%;
     width:100%;
 }
@@ -237,8 +237,8 @@ pre, xmp, plaintext, listing {
 ul, menu, dir {
     display: block;
     list-style-type: disc;
-    margin-top: 1em;
-    margin-bottom: 1em;
+    margin-top: 0;
+    margin-bottom: 0;
     margin-left: 0;
     margin-right: 0;
     padding-left: 40px
@@ -247,8 +247,8 @@ ul, menu, dir {
 ol {
     display: block;
     list-style-type: decimal;
-    margin-top: 1em;
-    margin-bottom: 1em;
+    margin-top: 0;
+    margin-bottom: 0;
     margin-left: 0;
     margin-right: 0;
     padding-left: 40px

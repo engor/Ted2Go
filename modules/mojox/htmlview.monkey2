@@ -17,7 +17,7 @@ Class HtmlView Extends ScrollableView
 		Style=GetStyle( "HtmlView" )
 		
 		_context=New litehtml.context
-		_context.load_master_stylesheet( stringio.LoadString( "asset::mojox/htmlview_master_css.css" ) )
+		_context.load_master_stylesheet( stringio.LoadString( "theme::htmlview_master_css.css" ) )
 
 		_container=New document_container( Self )
 		
@@ -73,7 +73,7 @@ Class HtmlView Extends ScrollableView
 		
 		If ExtractExt( url )=".md"
 			src=hoedown.MarkdownToHtml( src )
-			Local wrapper:=stringio.LoadString( "asset::mojox/markdown_wrapper.html" )
+			Local wrapper:=stringio.LoadString( "theme::markdown_wrapper.html" )
 			src=wrapper.Replace( "${CONTENT}",src )
 		End
 		
