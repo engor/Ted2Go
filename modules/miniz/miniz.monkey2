@@ -91,3 +91,4 @@ Function mz_zip_reader_extract_file_to_mem:Int( pZip:mz_zip_archive Ptr,pFilenam
 'Extracts a archive file to a dynamically allocated heap buffer.
 Function mz_zip_reader_extract_to_heap:Void Ptr( pZip:mz_zip_archive Ptr,file_index:Int,pSize:size_t Ptr,flags:Int )
 Function mz_zip_reader_extract_file_to_heap:Void Ptr( pZip:mz_zip_archive Ptr,pFilename:CString,pSize:size_t Ptr,flags:Int )
+
