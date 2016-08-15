@@ -19,7 +19,7 @@ PATH=${MX2_HOME}\devtools\i686-5.3.0-posix-dwarf-rt_v4-rev0\mingw32\bin;${PATH}
 MX2_BUILD_DIR_DESKTOP_DEBUG=desktop_debug_windows
 MX2_BUILD_DIR_DESKTOP_RELEASE=desktop_release_windows
 
-MX2_LD_OPTS_DESKTOP=-m32 -static
+MX2_LD_OPTS_DESKTOP=-static -m32
 MX2_LD_OPTS_DESKTOP_DEBUG=
 MX2_LD_OPTS_DESKTOP_RELEASE=-s ' -Wl,--gc-sections 
 
@@ -30,6 +30,27 @@ MX2_CC_OPTS_DESKTOP_RELEASE=-O3 -DNDEBUG ' -fdata-sections -ffunction-sections
 MX2_CPP_OPTS_DESKTOP=-std=c++11 -m32
 MX2_CPP_OPTS_DESKTOP_DEBUG=
 MX2_CPP_OPTS_DESKTOP_RELEASE=-O3 -DNDEBUG ' -fvtable-gc -fdata-sections -ffunction-sections
+
+
+'***** ANDROID *****
+
+PATH=${MX2_HOME}\devtools\android-ndk-arm-12\bin;${PATH}
+
+MX2_BUILD_DIR_ANDROID_DEBUG=android_debug_windows
+MX2_BUILD_DIR_ANDROID_RELEASE=android_release_windows
+
+MX2_LD_OPTS_ANDROID=-shared -march=armv7-a -Wl,--fix-cortex-a8
+MX2_LD_OPTS_ANDROID_DEBUG=
+MX2_LD_OPTS_ANDROID_RELEASE=
+
+MX2_CC_OPTS_ANDROID=-std=gnu99 -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16
+MX2_CC_OPTS_ANDROID_DEBUG=
+MX2_CC_OPTS_ANDROID_RELEASE=-O3 -DNDEBUG
+
+MX2_CPP_OPTS_ANDROID=-std=c++11 -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16
+MX2_CPP_OPTS_ANDROID_DEBUG=
+MX2_CPP_OPTS_ANDROID_RELEASE=-O3 -DNDEBUG
+
 
 '***** EMSCRIPTEN *****
 
