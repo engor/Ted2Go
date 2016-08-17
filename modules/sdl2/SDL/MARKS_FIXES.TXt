@@ -1,6 +1,8 @@
 
 * SDL_windowsopengles.c - enabled SwapInterval.
 
+* SDL_windowsopengl.c - Disabled "_this->gl_data->HAS_WGL_EXT_create_context_es2_profile = SDL_TRUE;" so angle always used for gles20.
+
 * SDL_events.c - used semaphore for WaitEvent instead SDL_Delay( 10 )!
 
 * SDL_timer.c - fixed 'slippage' bug.

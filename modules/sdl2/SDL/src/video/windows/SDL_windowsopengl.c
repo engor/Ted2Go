@@ -405,11 +405,17 @@ WIN_GL_InitExtensions(_THIS)
         _this->gl_data->wglSwapIntervalEXT = NULL;
         _this->gl_data->wglGetSwapIntervalEXT = NULL;
     }
-
+    
     /* Check for WGL_EXT_create_context_es2_profile */
     _this->gl_data->HAS_WGL_EXT_create_context_es2_profile = SDL_FALSE;
     if (HasExtension("WGL_EXT_create_context_es2_profile", extensions)) {
-        _this->gl_data->HAS_WGL_EXT_create_context_es2_profile = SDL_TRUE;
+    
+    
+		// MARK WAS HERE!!!!
+		// Disabled this so angle is ALWAYS used for gles20.
+		//
+		// _this->gl_data->HAS_WGL_EXT_create_context_es2_profile = SDL_TRUE;
+		
     }
 
     /* Check for GLX_ARB_context_flush_control */
@@ -592,6 +598,8 @@ WIN_GL_SetupWindow(_THIS, SDL_Window * window)
     WIN_GL_MakeCurrent(_this, current_win, current_ctx);
     return retval;
 }
+
+#include <stdio.h>
 
 SDL_GLContext
 WIN_GL_CreateContext(_THIS, SDL_Window * window)

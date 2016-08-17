@@ -132,10 +132,13 @@
 #define SDL_VIDEO_DRIVER_DUMMY  1
 #define SDL_VIDEO_DRIVER_COCOA  1
 
+//#define SDL_RENDER_DISABLED 1
+
 /* Enable OpenGL support */
 #define SDL_VIDEO_OPENGL    1
 #define SDL_VIDEO_OPENGL_CGL    1
-#define SDL_VIDEO_RENDER_OGL    1
+
+#define SDL_VIDEO_RENDER_OGL    0
 
 /* Enable system power support */
 #define SDL_POWER_MACOSX 1
