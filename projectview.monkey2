@@ -202,17 +202,10 @@ Class ProjectView Extends ScrollView
 
 	Method OnOpenProject()
 	
-		Local future:=New Future<String>
-		
-		App.Idle+=Lambda()
-			Local dir:=RequestDir( "Select Project Directory...","" )
-			future.Set( dir )
-		End
-		
-		Local dir:=future.Get()
+		Local dir:=MainWindow.RequestDir( "Select Project Directory...","" )
 		If Not dir Return
 		
-		If Not OpenProject( dir ) Return
+		OpenProject( dir )
 	End
 	
 End

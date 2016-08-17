@@ -3,7 +3,7 @@ Namespace ted2
 
 Class Ted2Document
 
-	Field DirtyChanged:Void()	'also triggered by save/rename
+	Field DirtyChanged:Void()
 	
 	Field StateChanged:Void()
 
@@ -91,9 +91,9 @@ Class Ted2Document
 
 		Return True
 	End
-	
+
+	'DON'T USE YET!	
 	Method Rename( path:String )
-	
 		_path=path
 		
 		Dirty=True

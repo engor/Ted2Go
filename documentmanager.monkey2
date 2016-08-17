@@ -92,7 +92,7 @@ Class DocumentManager
 	End
 	
 	Method AddDocument( doc:Ted2Document,index:Int=-1 )
-		
+	
 		doc.DirtyChanged+=Lambda()
 			UpdateTabLabel( doc )
 		End
@@ -176,7 +176,6 @@ Class DocumentManager
 		End
 		
 		If GetFileType( path )<>FileType.File Or Not doc.Load()
-			MainWindow.ReadError( path )
 			Return Null
 		End
 		
@@ -209,6 +208,9 @@ Class DocumentManager
 		
 		Local docs:=New JsonArray
 		For Local doc:=Eachin _openDocs
+
+			If MainWindow.IsTmpPath( doc.Path ) And Not doc.Dirty Continue
+			
 			docs.Add( New JsonString( doc.Path ) )
 		Next
 		jobj["openDocuments"]=docs
@@ -221,16 +223,21 @@ Class DocumentManager
 		If Not jobj.Contains( "openDocuments" ) Return
 		
 		For Local doc:=Eachin jobj["openDocuments"].ToArray()
+		
 			Local path:=doc.ToString()
 			If GetFileType( path )<>FileType.File Continue
-			OpenDocument( doc.ToString() )
+			
+			Local tdoc:=OpenDocument( doc.ToString() )
+			If tdoc And MainWindow.IsTmpPath( path ) tdoc.Dirty=True
 		Next
 		
 		If jobj.Contains( "currentDocument" )
 			Local path:=jobj["currentDocument"].ToString()
 			Local doc:=FindDocument( path )
 			If doc CurrentDocument=doc
-		Else If _openDocs.Length
+		Endif
+		
+		If Not _currentDoc And _openDocs.Length
 			CurrentDocument=_openDocs[0]
 		Endif
 		
@@ -248,23 +255,6 @@ Class DocumentManager
 	Field _currentDoc:Ted2Document
 	
 	Field _openDocs:=New Stack<Ted2Document>
-	
-	Field _tmp:String
-	
-	Method AllocTmpPath:String()
-	
-		For Local i:=1 Until 10
-			Local path:=_tmp+"untitled"+i+".monkey2"
-			If GetFileType( path )=FileType.None Return path
-		Next
-
-		Return ""
-	End
-	
-	Method IsTmpPath:Bool( path:String )
-
-		Return path.StartsWith( _tmp )
-	End
 	
 	Method DocumentTabLabel:String( doc:Ted2Document )
 	
