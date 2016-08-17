@@ -73,7 +73,7 @@ Class MainWindowInstance Extends Window
 		_docsTabView.CloseClicked+=Lambda( index:Int )
 
 			Local doc:=_docsManager.FindDocument( _docsTabView.TabView( index ) )
-			If Not doc.Dirty
+			If Not doc.Dirty And Not IsTmpPath( doc.Path )
 				doc.Close()
 				Return
 			Endif
@@ -196,6 +196,30 @@ Class MainWindowInstance Extends Window
 		LoadState( jobj )
 
 		App.Idle+=OnAppIdle
+	End
+
+	'Use these as macos still seems to have problems running requesters on a fiber - stacksize?
+	'
+	Method RequestFile:String( title:String,path:String,save:Bool )
+	
+		Local future:=New Future<String>
+		
+		App.Idle+=Lambda()
+			future.Set( requesters.RequestFile( "Save As","",True ) )
+		End
+		
+		Return future.Get()
+	End
+
+	Method RequestDir:String( title:String,dir:String )
+		
+		Local future:=New Future<String>
+		
+		App.Idle+=Lambda()
+			future.Set( requesters.RequestDir( "Select Project Directory...","" ) )
+		End
+		
+		Return future.Get()
 	End
 	
 	Method AllocTmpPath:String( ext:String )
