@@ -55,8 +55,8 @@ Namespace sdl2
 #Import "SDL/src/power/macosx/SDL_syspower.c"
 #Import "SDL/src/power/SDL_power.c"
 
-#Import "SDL/src/render/opengl/SDL_render_gl.c"
-#Import "SDL/src/render/opengl/SDL_shaders_gl.c"
+'#Import "SDL/src/render/opengl/SDL_render_gl.c"
+'#Import "SDL/src/render/opengl/SDL_shaders_gl.c"
 
 #Import "SDL/src/render/software/SDL_blendfillrect.c"
 #Import "SDL/src/render/software/SDL_blendline.c"

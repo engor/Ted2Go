@@ -73,9 +73,8 @@ Namespace sdl2
 
 #Import "SDL/src/power/SDL_power.c"
 
-'GLES20 renderer...not used by mojo, but there if ya want it.
-#Import "SDL/src/render/opengles2/SDL_render_gles2.c"
-#Import "SDL/src/render/opengles2/SDL_shaders_gles2.c"
+'#Import "SDL/src/render/opengles2/SDL_render_gles2.c"
+'#Import "SDL/src/render/opengles2/SDL_shaders_gles2.c"
 
 'Have to include SW renderer...?
 #Import "SDL/src/render/software/SDL_blendfillrect.c"

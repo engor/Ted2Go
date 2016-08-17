@@ -29,6 +29,10 @@ Const SDL_TRUE:SDL_bool
 
 '${EXTERN}
 
+'FILE=sdl2/SDL_hints.h
+
+Function SDL_SetHint( name:CString,value:CString )
+
 'FILE="sdl2/SDL.h"
 
 Const SDL_INIT_TIMER:Int
