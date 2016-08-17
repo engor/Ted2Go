@@ -92,12 +92,37 @@ Class AppInstance
 
 #If __TARGET__<>"emscripten"
 
+#If __HOSTOS__="windows"
+
+		Local gl_major:=Int( GetConfig( "GL_context_major_version",-1 ) )
+		Local gl_minor:=Int( GetConfig( "GL_context_major_version",-1 ) )
+		
+		Local gl_profile:Int
+
+		Select GetConfig( "GL_context_profile","es" )
+		Case "core"
+			gl_profile=SDL_GL_CONTEXT_PROFILE_CORE
+		Case "compatibility"
+			gl_profile=SDL_GL_CONTEXT_PROFILE_COMPATIBILITY
+		Default
+			gl_profile=SDL_GL_CONTEXT_PROFILE_ES
+			If gl_major=-1 gl_major=2
+			If gl_minor=-1 gl_minor=0
+		End
+		
+		SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK,gl_profile )
+		
+		If gl_major<>-1 SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION,gl_major )
+		If gl_minor<>-1 SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION,gl_minor )
+
+#Endif
+
 		SDL_GL_SetAttribute( SDL_GL_SHARE_WITH_CURRENT_CONTEXT,1 )
 		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER,1 )
 		
 		SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE,Int( GetConfig( "GL_depth_buffer_enabled",0 ) ) )
 		SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE,Int( GetConfig( "GL_stencil_buffer_enabled",0 ) ) )
-
+		
 		'create dummy window/context
 		Local _sdlWindow:=SDL_CreateWindow( "<dummy>",0,0,0,0,SDL_WINDOW_HIDDEN|SDL_WINDOW_OPENGL )
 		Assert( _sdlWindow,"FATAL ERROR: SDL_CreateWindow failed" )
