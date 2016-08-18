@@ -19,14 +19,18 @@
 #import "projectview"
 #import "helptree"
 #Import "modulemanager"
+#import "ted2textview"
 #Import "gutterview"
 
+#import "plugin"
 #Import "ted2document"
 #Import "monkey2document"
 #Import "plaintextdocument"
 #Import "imagedocument"
 #import "audiodocument"
 #import "jsondocument"
+
+#import "textviewkeyeventfilter"
 
 Namespace ted2
 
