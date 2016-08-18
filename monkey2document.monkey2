@@ -174,7 +174,7 @@ End
 
 Public
 
-Class Monkey2DocumentView Extends TextView
+Class Monkey2DocumentView Extends Ted2TextView
 
 	Method New( doc:Monkey2Document )
 	

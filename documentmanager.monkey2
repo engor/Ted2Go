@@ -168,7 +168,7 @@ Class DocumentManager
 		Case ".png",".jpg"
 			doc=New ImageDocument( path )
 		Case ".wav",".ogg"
-			doc=New AudioDocument( path )
+			doc=Ted2DocumentType.CreateDocument( path )
 		Case ".json"
 			doc=New JsonDocument( path )
 		Default
