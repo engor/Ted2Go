@@ -205,7 +205,7 @@ Class MainWindowInstance Extends Window
 		Local future:=New Future<String>
 		
 		App.Idle+=Lambda()
-			future.Set( requesters.RequestFile( "Save As","",True ) )
+			future.Set( requesters.RequestFile( title,path,save ) )
 		End
 		
 		Return future.Get()
@@ -216,7 +216,7 @@ Class MainWindowInstance Extends Window
 		Local future:=New Future<String>
 		
 		App.Idle+=Lambda()
-			future.Set( requesters.RequestDir( "Select Project Directory...","" ) )
+			future.Set( requesters.RequestDir( title,dir ) )
 		End
 		
 		Return future.Get()
