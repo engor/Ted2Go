@@ -176,14 +176,7 @@ Class FileActions
 		
 	Method OnOpen()
 	
-		Local future:=New Future<String>
-		
-		App.Idle+=Lambda()
-			Local path:=MainWindow.RequestFile( "Open file...","",False )
-			future.Set( path )
-		End
-		
-		Local path:=future.Get()
+		Local path:=MainWindow.RequestFile( "Open file...","",False )
 		If Not path Return
 		
 		path=RealPath( path )
