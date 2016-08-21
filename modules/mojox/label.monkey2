@@ -156,6 +156,7 @@ Class Label Extends View
 			view.Frame=New Recti( x0,0,x1,Height )
 			x1=x0
 		Next
+		_textRect.Right=x1
 		
 		Return
 		
