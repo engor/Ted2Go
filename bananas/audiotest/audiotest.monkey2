@@ -21,10 +21,13 @@ Class MyWindow Extends Window
 		sound=Sound.Load( "asset::fine_morning.ogg" )
 		channel=New Channel
 		
+#if __TARGET__<>"emscripten"	
 		'SineWave()
+#endif
 		
 	End
-	
+
+#if __TARGET__<>"emscripten"	
 	Method SineWave()
 	
 		New Fiber( Lambda()
@@ -54,6 +57,7 @@ Class MyWindow Extends Window
 			
 		End )
 	End
+#endif
 	
 	Method OnRender( canvas:Canvas ) Override
 	

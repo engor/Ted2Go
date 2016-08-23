@@ -248,11 +248,11 @@ Class Channel
 		
 		alSourcePlay( _alSource )
 	End
-	
+
+	#if __TARGET__<>"emscripten"
+
 	#rem monkeydoc @hidden - Highly experimental!!!!!
-	
 	#end
-	
 	Method WaitQueued( queued:Int )
 	
 		While _queued>queued
@@ -270,7 +270,6 @@ Class Channel
 	End
 	
 	#rem monkeydoc @hidden - Highly experimental!!!!!
-	
 	#end
 	Method Queue( data:AudioData )
 	
@@ -309,6 +308,8 @@ Class Channel
 	
 	End
 	
+	#endif
+	
 	#rem monkeydoc Stops channel.
 	#end
 	Method Stop()
@@ -325,6 +326,9 @@ Class Channel
 	
 	Field _tmpBuffers:Stack<ALuint>
 	Field _freeBuffers:Stack<ALuint>
+	
+	#if __TARGET__<>"emscripten"
+	
 	Field _future:Future<Int>
 	Field _waiting:Bool
 	Field _queued:Int
@@ -357,6 +361,8 @@ Class Channel
 		Return proc
 
 	End
+	
+	#endif
 	
 	Method ALState:ALenum()
 		Local state:ALenum
