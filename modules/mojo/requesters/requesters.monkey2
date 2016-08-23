@@ -5,18 +5,19 @@ Namespace mojo.requesters
 
 #Import "native/requesters.h"
 
-#If __HOSTOS__="windows"
-#Import "native/requesters.cpp"
-#Import "<libcomdlg32.a>"
-#Endif
-
 #If __HOSTOS__="macos"
-#Import "native/requesters.mm"
-#Endif
 
-#If __HOSTOS__="linux"
-#Import "native/requesters.cpp"
-#Endif
+	#Import "native/requesters.mm"
+
+#else
+
+	#Import "native/requesters.cpp"
+
+	#if __HOSTOS__="windows"
+		#Import "<libcomdlg32.a>"
+	#endif
+
+#endif
 
 Extern
 
@@ -32,17 +33,13 @@ Function RequestDir:String( title:String,dir:String="" )="bbRequesters::RequestD
 
 Function OpenUrl( url:String )="bbRequesters::OpenUrl"
 
-#Else
+#else
 
-Function Notify( title:String,text:String,serious:Bool=False )
+Function Notify:Void( title:String,text:String,serious:Bool=False )
 End
 
 Function Confirm:Bool( title:String,text:String,serious:Bool=False )
 	Return False
-End
-
-Function Proceed:Int( title:String,text:String,serious:Bool=False )
-	Return -1
 End
 
 Function RequestFile:String( title:String,filter:String="",save:Bool=False,file:String="" )
@@ -53,4 +50,7 @@ Function RequestDir:String( title:String,dir:String="" )
 	Return ""
 End
 
-#Endif
+Function OpenUrl( url:String )
+End
+
+#endif
