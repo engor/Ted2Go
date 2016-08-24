@@ -176,7 +176,7 @@ Enum Modifier
 	Alt=			LeftAlt|RightAlt
 	Gui=			LeftGui|RightGui
 	
-#if __TARGET__="macos"
+#if __HOSTOS__="macos"
 	LeftMenu=		LeftGui
 	RightMenu=		RightGui
 	Menu=			Gui
@@ -185,4 +185,5 @@ Enum Modifier
 	RightMenu=		RightControl
 	Menu=			Control
 #endif
+
 End

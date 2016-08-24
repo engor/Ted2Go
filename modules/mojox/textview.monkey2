@@ -1090,7 +1090,7 @@ Class TextView Extends ScrollableView
 						
 					Default
 					
-						If Not OnKeyDown( event.Key ) Return
+						If Not OnKeyDown( event.Key,event.Modifiers ) Return
 					End
 
 				Endif
