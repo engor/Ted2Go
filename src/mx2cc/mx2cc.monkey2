@@ -19,11 +19,13 @@ Using mx2..
 
 Global StartDir:String
 
-Const TestArgs:="mx2cc makedocs mojox"
+Const TestArgs:="mx2cc makemods -clean"	' -target=android"
+
+'Const TestArgs:="mx2cc makeapp -clean -target=android src/mx2cc/test.monkey2"
+
+'Const TestArgs:="mx2cc makeapp -clean -target=android bananas/gridshooter/gridshooter.monkey2"
 
 'Const TestArgs:="mx2cc makemods -clean std"' -target=android"
-
-'Const TestArgs:="mx2cc makeapp -clean src/mx2cc/test.monkey2"
 
 'Const TestArgs:="mx2cc makeapp src/ted2/ted2.monkey2"
 
@@ -47,7 +49,7 @@ Function Main()
 	Wend
 	
 	If GetFileType( env )<>FILETYPE_FILE Fail( "Unable to locate mx2cc 'bin' directory" )
-	
+
 	LoadEnv( env )
 	
 	Local args:=AppArgs()
@@ -100,8 +102,8 @@ Function MakeApp:Bool( args:String[] )
 	opts.config="debug"
 	opts.clean=False
 	opts.fast=True
-	opts.run=true
 	opts.verbose=0
+	opts.passes=5
 	
 	args=ParseOpts( opts,args )
 	
@@ -122,21 +124,24 @@ Function MakeApp:Bool( args:String[] )
 	
 	builder.Parse()
 	If builder.errors.Length Return False
+	If opts.passes=1 Return True
 	
 	builder.Semant()
 	If builder.errors.Length Return False
+	If opts.passes=2 Return True
 	
 	builder.Translate()
 	If builder.errors.Length Return False
-
-	builder.Compile()
-	If builder.errors.Length Return False
-
-	Local app:=builder.Link()
-	If builder.errors.Length Return False
+	If opts.passes=3 Return True
 	
-	If Not opts.run Print "Application built:"+app
+	builder.product.Build()
+	If builder.errors.Length Return False
+	If opts.passes=4
+		Print "Application built:"+builder.product.outputFile
+		Return True
+	Endif
 	
+	builder.product.Run()
 	Return True
 End
 
@@ -149,6 +154,7 @@ Function MakeMods:Bool( args:String[] )
 	opts.clean=False
 	opts.fast=True
 	opts.verbose=0
+	opts.passes=4
 	
 	args=ParseOpts( opts,args )
 
@@ -171,18 +177,18 @@ Function MakeMods:Bool( args:String[] )
 		
 		builder.Parse()
 		If builder.errors.Length errs+=1;Continue
+		If opts.passes=1 Continue
 
 		builder.Semant()
 		If builder.errors.Length errs+=1;Continue
+		If opts.passes=2 Continue
 		
 		builder.Translate()
 		If builder.errors.Length errs+=1;Continue
+		If opts.passes=3 Continue
 		
-		builder.Compile()
+		builder.product.Build()
 		If builder.errors.Length errs+=1;Continue
-
-		builder.Link()
-		If builder.errors.Length errs+=1
 	Next
 	
 	Return errs=0
@@ -197,8 +203,10 @@ Function MakeDocs:Bool( args:String[] )
 	opts.clean=False
 	opts.fast=True
 	opts.verbose=0
+	opts.passes=2
 	
 	args=ParseOpts( opts,args )
+	
 	opts.clean=False
 	
 	If Not args args=EnumModules()
@@ -265,9 +273,15 @@ Function ParseOpts:String[]( opts:BuildOpts,args:String[] )
 		If j=-1 
 			Select arg
 			Case "-run"
-				opts.run=True
+				opts.passes=5
 			Case "-build"
-				opts.run=False
+				opts.passes=4
+			Case "-translate"
+				opts.passes=3
+			Case "-semant"
+				opts.passes=2
+			Case "-parse"
+				opts.passes=1
 			Case "-clean"
 				opts.clean=True
 			Case "-verbose"
@@ -373,6 +387,7 @@ End
 Function LoadEnv:Bool( path:String )
 
 	SetEnv( "MX2_HOME",CurrentDir() )
+	SetEnv( "MX2_MODULES",CurrentDir()+"modules" )
 
 	Local lineid:=0
 	

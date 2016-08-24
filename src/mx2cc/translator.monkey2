@@ -375,8 +375,8 @@ Class Translator
 	Method EmitInclude( fdecl:FileDecl,baseDir:String )
 	
 		If _incs.Contains( fdecl.ident ) Return
-		
-		Emit( "#include ~q"+MakeRelativePath( fdecl.hfile,baseDir )+"~q" )
+
+		Emit( "#include ~q"+MakeIncludePath( fdecl.hfile,baseDir )+"~q" )
 		
 		_incs[fdecl.ident]=fdecl
 	End

@@ -33,6 +33,7 @@ Namespace mx2
 #Import "mung.monkey2"
 
 #Import "builder.monkey2"
+#Import "buildproduct.monkey2"
 
 Using std
 Using std.stringio
@@ -48,4 +49,4 @@ Using lib.c
 ' 3) edit .sh and .bat files to use new version (common.sh, common.bat)
 ' 4) ./rebuildall
 '
-Const MX2CC_VERSION:="1.0.3"
+Const MX2CC_VERSION:="1.0.4"

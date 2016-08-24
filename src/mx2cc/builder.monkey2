@@ -12,14 +12,14 @@ Class BuildOpts
 	Field target:String
 	
 	Field config:String
-
+	
 	Field clean:Bool
 	
 	Field verbose:Int
 	
 	Field fast:Bool
-	
-	Field run:Bool
+
+	Field passes:Int	'1=parse, 2=semant, 3=translate, 4=build, 5=run
 	
 End
 
@@ -31,8 +31,8 @@ Class Builder
 
 	Field opts:BuildOpts
 	
-	Field modulesDir:String
-
+	Field product:BuildProduct
+	
 	Field profileName:String
 	
 	Field ppsyms:=New StringMap<String>
@@ -58,94 +58,39 @@ Class Builder
 	Field imported:=New StringMap<Bool>
 	
 	Field currentDir:String
-
 	
-	Field tmpId:Int
-	
-	Field maxObjTime:Long
-
 	Field MX2_SRCS:=New StringStack
+
 	Field MX2_LIBS:=New StringStack
-	
-	Field SRC_FILES:=New StringStack
-	Field OBJ_FILES:=New StringStack
-	Field LD_OPTS:=New StringStack	
-	Field CC_OPTS:=New StringStack
-	Field CPP_OPTS:=New StringStack
-	Field LD_LIBS:=New StringStack
-	Field LD_SYSLIBS:=New StringStack
-	Field DLL_FILES:=New StringStack
-	Field ASSET_FILES:=New StringStack
-	
-	Field AR_CMD:="ar"
-	Field CC_CMD:="gcc"
-	Field CXX_CMD:="g++"
-	Field AS_CMD:="as"
-	Field LD_CMD:="g++"
 	
 	Method New( opts:BuildOpts )
 	
-'		If instance Print "OOPS! There is already a builder instance!"
-		
 		Self.opts=opts
 
 		instance=Self
 		
 		Local copts:=""
 		
-		copts=GetEnv( "MX2_LD_OPTS_"+opts.target.ToUpper() )
-		If copts LD_OPTS.Push( copts )
-
-		copts=GetEnv( "MX2_LD_OPTS_"+opts.target.ToUpper()+"_"+opts.config.ToUpper() )
-		If copts LD_OPTS.Push( copts )
-		
-		copts=GetEnv( "MX2_CC_OPTS_"+opts.target.ToUpper() )
-		If copts CC_OPTS.Push( copts )
-		
-		copts=GetEnv( "MX2_CC_OPTS_"+opts.target.ToUpper()+"_"+opts.config.ToUpper() )
-		If copts CC_OPTS.Push( copts )
-		
-		copts=GetEnv( "MX2_CPP_OPTS_"+opts.target.ToUpper() )
-		If opts CPP_OPTS.Push( copts )
-		
-		copts=GetEnv( "MX2_CPP_OPTS_"+opts.target.ToUpper()+"_"+opts.config.ToUpper() )
-		If copts CPP_OPTS.Push( copts )
-		
-		Select opts.target
-		Case "desktop"
-			AR_CMD= "ar"
-			CC_CMD= "gcc"
-			CXX_CMD="g++"
-			LD_CMD= "g++"
-			AS_CMD= "as"
-		Case "emscripten"
-			AR_CMD= "emar"
-			CC_CMD= "emcc"
-			CXX_CMD="em++"
-			LD_CMD= "em++"
-			AS_CMD= "as"		'as?
-		Case "android"
-			AR_CMD= "arm-linux-androideabi-ar"
-			CC_CMD= "arm-linux-androideabi-clang"
-			CXX_CMD="arm-linux-androideabi-clang++"
-			LD_CMD= "arm-linux-androideabi-clang++"
-			AS_CMD= "arm-linux-androideabi-as"
-		End
-		
 		ppsyms["__HOSTOS__"]="~q"+HostOS+"~q"
 		ppsyms["__TARGET__"]="~q"+opts.target+"~q"
 		ppsyms["__CONFIG__"]="~q"+opts.config+"~q"
 		
-		profileName=opts.target+"_"+opts.config+"_"+HostOS
+		Select opts.target
+		Case "desktop"
+			profileName=HostOS+"_"+opts.config
+		Default
+			profileName=opts.target+"_"+opts.config
+		End
 		
-		modulesDir=RealPath( "modules" )+"/"
+		MODULES_DIR=CurrentDir()+"modules/"
+		
+		If opts.productType="app" APP_DIR=ExtractDir( opts.mainSource )
 		
 		ClearPrimTypes()
 		
 		rootNamespace=New NamespaceScope( Null,Null )
 		
 		monkeyNamespace=GetNamespace( "monkey" )
-		
 	End
 	
 	Method Parse()
@@ -154,12 +99,20 @@ Class Builder
 		
 		Local name:=StripDir( StripExt( opts.mainSource ) )
 
-		Local module:=New Module( name,opts.mainSource,opts.productType,MX2CC_VERSION )
+		Local module:=New Module( name,opts.mainSource,MX2CC_VERSION,profileName )
 		modulesMap[name]=module
 		modules.Push( module )
 		
+		Select opts.target
+		Case "android"
+			product=New AndroidBuildProduct( module,opts )
+		Default
+			product=New GccBuildProduct( module,opts )
+		End
+		
 		mainModule=module
-		If name="monkey" And module.productType="module" modulesMap["monkey"]=module
+		
+		If name="monkey" And opts.productType="module" modulesMap["monkey"]=module
 		
 		If opts.clean 
 			DeleteDir( module.outputDir,True )
@@ -183,9 +136,9 @@ Class Builder
 				Endif
 				
 				Local name:=MX2_LIBS.Pop()
-				Local srcPath:=modulesDir+name+"/"+name+".monkey2"
+				Local srcPath:=MODULES_DIR+name+"/"+name+".monkey2"
 				
-				module=New Module( name,srcPath,"module",MX2CC_VERSION )
+				module=New Module( name,srcPath,MX2CC_VERSION,profileName )
 				modulesMap[name]=module
 				modules.Push( module )
 				
@@ -264,7 +217,7 @@ Class Builder
 		
 			Local module:=modules[modules.Length-i-1]
 
-			If module<>mainModule LD_LIBS.Push( module.outputDir+module.name+".a" )
+			If module<>mainModule product.LD_LIBS.Push( module.outputDir+module.name+".a" )
 			
 		Next
 		
@@ -430,10 +383,10 @@ Class Builder
 		
 		Local module:=mainModule
 		
-		CreateDir( module.buildDir )
-		CreateDir( module.buildDir+"build_cache" )
-		If Not CreateDir( module.cacheDir ) Print "Failed to create dir:"+module.cacheDir
-		If Not CreateDir( module.outputDir ) Print "Failed to create dir:"+module.outputDir
+		CreateDir( module.outputDir )
+
+		If Not CreateDir( module.hfileDir ) Throw New BuildEx( "Failed to create dir:"+module.hfileDir )
+		If Not CreateDir( module.cfileDir ) Throw New BuildEx( "Failed to create dir:"+module.cfileDir )
 
 		For Local fdecl:=Eachin module.fileDecls
 		
@@ -446,457 +399,8 @@ Class Builder
 			Catch ex:TransEx
 			End
 			
-			SRC_FILES.Push( fdecl.cfile )
+			product.SRC_FILES.Push( fdecl.cfile )
 		Next
-	
-	End
-	
-	Method Compile()
-	
-		If opts.verbose=0 Print "Compiling...."
-		
-		Local module:=mainModule
-	
-		For Local src:=Eachin SRC_FILES
-		
-			Local obj:=module.cacheDir+MungPath( MakeRelativePath( src,module.cacheDir ) )+".o"
-			
-			Local ext:=ExtractExt( src ).ToLower()
-						
-			Local cmd:="",isasm:=False
-			
-			Select ext
-			Case ".c",".m"
-			
-				cmd=CC_CMD+" "+CC_OPTS.Join( " " )
-				cmd+=" -I~q"+modulesDir+"monkey/native~q"
-				
-			Case ".cc",".cxx",".cpp",".mm"
-
-				cmd=CXX_CMD+" "+CPP_OPTS.Join( " " )
-				cmd+=" -I~q"+modulesDir+"monkey/native~q"
-
-			Case ".asm",".s"
-			
-				cmd=AS_CMD
-				isasm=True
-			End
-			
-			'Check dependancies
-			'			
-			Local objTime:=GetFileTime( obj )
-			
-			Local deps:=StripExt( obj )+".deps"
-			
-			If opts.fast And objTime>=GetFileTime( src )	'source file up to date?
-			
-				Local uptodate:=True
-			
-				If Not isasm
-			
-					If GetFileType( deps )=FILETYPE_NONE
-					
-						If opts.verbose>0 Print "Scanning "+src
-				
-						Exec( cmd+" -MM ~q"+src+"~q >~q"+deps+"~q" ) 
-						
-					Endif
-					
-					Local srcs:=LoadString( deps ).Split( " \" )
-					
-					For Local i:=1 Until srcs.Length
-					
-						Local src:=srcs[i].Trim().Replace( "\ "," " )
-					
-						If GetFileTime( src )>objTime
-							uptodate=False
-							Exit
-						Endif
-						
-					Next
-				
-				Endif
-				
-				If uptodate
-					maxObjTime=Max( maxObjTime,objTime )
-					OBJ_FILES.Push( obj )
-					Continue
-				Endif
-				
-			Else
-			
-				DeleteFile( deps )
-
-			Endif
-			
-			If opts.verbose>0 Print "Compiling "+src
-			
-			If Not isasm cmd+=" -c"
-			
-			cmd+=" -o ~q"+obj+"~q ~q"+src+"~q"
-			
-			Exec( cmd )
-			
-			maxObjTime=Max( maxObjTime,GetFileTime( obj ) )
-			
-			OBJ_FILES.Push( obj )
-			
-		Next
-	
-	End
-	
-	Method Link:String()
-	
-		Select opts.productType
-		Case "app"
-			Return CreateApp()
-		Case "module"
-			Return CreateArchive()
-		End
-		
-		Return ""
-	End
-	
-	Method CreateApp:String()
-	
-		Local module:=mainModule
-		
-		Local outputFile:="",assetsDir:="",dllsDir:=""
-		
-		Local cmd:=LD_CMD
-		cmd+=" "+LD_OPTS.Join( " " )
-		
-		If opts.target="emscripten"
-		
-			outputFile=module.outputDir+module.name+".html"
-			assetsDir=module.buildDir+"assets/"
-			dllsDir=ExtractDir( outputFile )
-			
-'			Note: mserver can't handle --emrun as it tries to POST stdout
-'			cmd="em++ --emrun --preload-file ~q"+assetsDir+"@/assets~q"
-
-			cmd+=" --preload-file ~q"+assetsDir+"@/assets~q"
-			
-		Else If opts.target="desktop" And HostOS="windows"
-		
-			If opts.appType="gui" cmd+=" -mwindows"
-		
-			outputFile=module.outputDir+module.name+".exe"
-			assetsDir=module.outputDir+"assets/"
-			dllsDir=ExtractDir( outputFile )
-			
-		Else If opts.target="desktop" And HostOS="macos"
-		
-			If opts.appType="gui"
-			
-				Local productName:=module.name
-	
-				Local outputDir:=module.outputDir+module.name+".app/"
-				
-				outputFile=outputDir+"Contents/MacOS/"+module.name
-				assetsDir=outputDir+"Contents/Resources/"
-				dllsDir=ExtractDir( outputFile )
-				
-				CreateDir( outputDir )
-				CreateDir( outputDir+"Contents" )
-				CreateDir( outputDir+"Contents/MacOS" )
-				CreateDir( outputDir+"Contents/Resources" )
-				
-				Local plist:=""
-				plist+="<?xml version=~q1.0~q encoding=~qUTF-8~q?>~n"
-				plist+="<!DOCTYPE plist PUBLIC ~q-//Apple Computer//DTD PLIST 1.0//EN~q ~qhttp://www.apple.com/DTDs/PropertyList-1.0.dtd~q>~n"
-				plist+="<plist version=~q1.0~q>~n"
-				plist+="<dict>~n"
-				plist+="~t<key>CFBundleExecutable</key>~n"
-				plist+="~t<string>"+productName+"</string>~n"
-				plist+="~t<key>CFBundleIconFile</key>~n"
-				plist+="~t<string>"+productName+"</string>~n"
-				plist+="~t<key>CFBundlePackageType</key>~n"
-				plist+="~t<string>APPL</string>~n"
-				plist+="</dict>~n"
-				plist+="</plist>~n"
-				
-				SaveString( plist,outputDir+"Contents/Info.plist" )
-				
-			Else
-			
-				outputFile=module.outputDir+module.name
-				assetsDir=module.outputDir+"assets/"
-				dllsDir=ExtractDir( outputFile )
-			
-			Endif
-			
-		Else If opts.target="desktop" And HostOS="linux"
-		
-			outputFile=module.outputDir+module.name
-			assetsDir=module.outputDir+"assets/"
-			dllsDir=ExtractDir( outputFile )
-			
-		Else If opts.target="android"
-		
-			outputFile=module.outputDir+"lib"+module.name+".so"
-			assetsDir=module.outputDir+"assets/"
-			dllsDir=ExtractDir( outputFile )
-			
-		Endif
-		
-		If opts.verbose>=0 Print "Linking "+outputFile
-		
-		DeleteDir( assetsDir,True )
-
-		CreateDir( assetsDir )
-		
-		Local assetFiles:=New StringMap<String>
-		
-		For Local src:=Eachin ASSET_FILES
-		
-			Local dst:=assetsDir
-		
-			Local i:=src.Find( "@/" )
-			If i<>-1
-				dst+=src.Slice( i+2 )
-				src=src.Slice( 0,i )
-				If Not dst.EndsWith( "/" ) dst+="/"
-			Endif
-			
-			Select GetFileType( src )
-			
-			Case FileType.File
-			
-				dst+=StripDir( src )
-				EnumAssetFiles( src,dst,assetFiles )
-				
-			Case FileType.Directory
-			
-				EnumAssetFiles( src,dst,assetFiles )
-			End
-			
-		Next
-		
-		CopyAssetFiles( assetFiles )
-	
-		#rem
-		For Local src:=Eachin ASSET_FILES.Backwards()
-		
-			Local dst:=assetsDir
-			
-			Local i:=src.Find( "@/" )
-			If i<>-1
-				dst+=src.Slice( i+2 )
-				src=src.Slice( 0,i )
-				If Not dst.EndsWith( "/" ) dst+="/"
-			Endif
-			
-			Select GetFileType( src )
-			
-			Case FileType.File
-			
-				CreateDir( dst )
-				dst+=StripDir( src )
-				If Not CopyFile( src,dst ) New BuildEx( "Error copying asset '"+src+"'" )
-				
-			Case FileType.Directory
-			
-				If Not CopyAll( src,dst ) New BuildEx( "Error copying asset '"+src+"'" )
-			End
-			#rem		
-			Local i:=ass.Find( "@/" )
-			If i=-1
-				CopyFile( ass,assetsDir+StripDir( ass ) )
-				Continue
-			Endif
-			
-			Local dst:=assetsDir+ass.Slice( i+2 )
-			If Not dst.EndsWith( "/" ) dst+="/"
-			CreateDir( dst )
-			
-			ass=ass.Slice( 0,i )
-			
-			CopyFile( ass,dst+StripDir( ass ) )
-			#end
-		Next
-		#end
-		
-		cmd+=" -o ~q"+outputFile+"~q"
-		
-		Local lnkFiles:=""
-		
-		For Local obj:=Eachin OBJ_FILES
-			lnkFiles+=" ~q"+obj+"~q"
-		Next
-		
-		If opts.target="android"
-			lnkFiles+=" -Wl,--whole-archive"
-		Endif
-		
-		For Local lib:=Eachin LD_LIBS
-			lnkFiles+=" ~q"+lib+"~q"
-		Next
-	
-		If opts.target="android"	
-			lnkFiles+=" -Wl,--no-whole-archive"
-		Endif
-		
-		lnkFiles+=" "+LD_SYSLIBS.Join( " " )
-		
-		If opts.target="android"
-			lnkFiles+=" -lstdc++"
-		Endif
-		
-		If HostOS="windows" And opts.target<>"android"
-			Local tmp:=AllocTmpFile( "lnkFiles" )
-			SaveString( lnkFiles,tmp )
-			cmd+=" -Wl,@"+tmp
-		Else
-			cmd+=lnkFiles
-		Endif
-
-		Exec( cmd )
-		
-		For Local src:=Eachin DLL_FILES
-		
-			Local dir:=dllsDir
-			
-			Local ext:=ExtractExt( src )
-			If ext
-				Local rdir:=GetEnv( "MX2_APP_DIR_"+ext.Slice( 1 ).ToUpper() )
-				If rdir dir=RealPath( dir+rdir )
-			Endif
-			
-			If Not dir.EndsWith( "/" ) dir+="/"
-			
-			Local dst:=dir+StripDir( src )
-			
-			'FIXME! Hack for copying frameworks on macos!
-			'		
-#If __HOSTOS__="macos"
-			If ExtractExt( src ).ToLower()=".framework"
-				CreateDir( ExtractDir( dst ) )
-				If Not Exec( "rm -f -R "+dst ) Throw New BuildEx( "rm failed" )
-				If Not Exec( "cp -f -R "+src+" "+dst ) Throw New BuildEx( "cp failed" )
-				Continue
-			Endif
-#Endif
-			
-			If Not CopyAll( src,dst ) Throw New BuildEx( "Failed to copy '"+src+"' to '"+dst+"'" )
-			
-		Next
-		
-		If Not opts.run Return outputFile
-	
-		Local run:=""
-		If opts.target="emscripten"
-			Local mserver:=GetEnv( "MX2_MSERVER" )
-			run=mserver+" ~q"+outputFile+"~q"
-		Else
-			run="~q"+outputFile+"~q"
-		Endif
-		
-		If opts.verbose>=0 Print "Running "+outputFile
-		Exec( run )
-		
-		Return outputFile
-	End
-	
-	Method CopyAssetFiles( files:StringMap<String> )
-	
-		For Local it:=Eachin files
-		
-			Local src:=it.Value
-			Local dst:=it.Key
-			
-			If CreateDir( ExtractDir( dst ) )
-			
-				If GetFileTime( dst )>=GetFileTime( src ) Continue
-				
-				If CopyFile( src,dst ) Continue
-
-			Endif
-			
-			Throw New BuildEx( "Error copying asset file '"+src+"' to '"+dst+"'" )
-		Next
-	End
-	
-	Method EnumAssetFiles( src:String,dst:String,files:StringMap<String> )
-
-		Select GetFileType( src )
-
-		Case FILETYPE_FILE
-		
-			If Not files.Contains( dst ) files[dst]=src
-			
-		Case FILETYPE_DIR
-		
-			For Local f:=Eachin LoadDir( src )
-			
-				EnumAssetFiles( src+"/"+f,dst+"/"+f,files )
-
-			Next
-		
-		End
-		
-	End
-	
-	Method CopyAll:Bool( src:String,dst:String )
-		
-		Select GetFileType( src )
-
-		Case FILETYPE_FILE
-		
-			If Not CreateDir( ExtractDir( dst ) ) Return False
-		
-'			If GetFileTime( src )>GetFileTime( dst )
-				If Not CopyFile( src,dst ) Return False
-'			Endif
-			
-			Return True
-			
-		Case FILETYPE_DIR
-		
-			If Not CreateDir( dst ) Return False
-			
-			For Local file:=Eachin LoadDir( src )
-				If Not CopyAll( src+"/"+file,dst+"/"+file ) Return False
-			Next
-			
-			Return True
-		
-		End
-		
-		Return False
-		
-	End
-	
-	Method CreateArchive:String()
-
-		Local module:=mainModule
-		
-		Local outputFile:=module.outputDir+module.name+".a"
-		
-		'AR is slow! This is probably not quite right, but it'll do for now...
-		If GetFileTime( outputFile )>maxObjTime Return outputFile
-		
-		If opts.verbose>=0 Print "Archiving "+outputFile
-		
-		DeleteFile( outputFile )
-		
-		Local objs:=""
-		
-		For Local i:=0 Until OBJ_FILES.Length
-			
-			objs+=" ~q"+OBJ_FILES.Get( i )+"~q"
-			
-			If objs.Length<1000 And i<OBJ_FILES.Length-1 Continue
-
-			Local cmd:=AR_CMD+" q ~q"+outputFile+"~q"+objs
-
-			Exec( cmd )
-			
-			objs=""
-			
-		Next
-		
-		Return outputFile
 		
 	End
 	
@@ -1044,15 +548,15 @@ Class Builder
 		Case ".a"
 
 			If name.StartsWith( "lib" ) name=name.Slice( 3 ) Else name=path
-			LD_SYSLIBS.Push( "-l"+name )
+			product.LD_SYSLIBS.Push( "-l"+name )
 			
 		Case ".lib",".dylib"
 		
-			LD_SYSLIBS.Push( "-l"+name )
+			product.LD_SYSLIBS.Push( "-l"+name )
 			
 		Case ".framework"
 		
-			LD_SYSLIBS.Push( "-framework "+name )
+			product.LD_SYSLIBS.Push( "-framework "+name )
 			
 		Case ".h",".hh",".hpp"
 		
@@ -1084,7 +588,7 @@ Class Builder
 				Return
 			Endif
 			
-			ASSET_FILES.Push( path )
+			product.ASSET_FILES.Push( path )
 			Return
 		Endif
 		
@@ -1106,20 +610,20 @@ Class Builder
 			Select ext
 			Case ".h"
 			
-				CC_OPTS.Push( "-I"+qdir )
-				CPP_OPTS.Push( "-I"+qdir )
+				product.CC_OPTS.Push( "-I"+qdir )
+				product.CPP_OPTS.Push( "-I"+qdir )
 				
 			Case ".hh",".hpp"
 			
-				CPP_OPTS.Push( "-I"+qdir )
+				product.CPP_OPTS.Push( "-I"+qdir )
 				
 			Case ".a",".lib",".dylib"
 			
-				LD_OPTS.Push( "-L"+qdir )
+				product.LD_OPTS.Push( "-L"+qdir )
 				
 			Case ".framework"
 			
-				LD_OPTS.Push( "-F"+qdir )
+				product.LD_OPTS.Push( "-F"+qdir )
 				
 			Default
 			
@@ -1144,7 +648,7 @@ Class Builder
 			Select GetFileType( path )
 			Case FileType.Directory
 			
-				ASSET_FILES.Push( path )
+				product.ASSET_FILES.Push( path )
 				Return
 				
 			Case FileType.None
@@ -1166,7 +670,7 @@ Class Builder
 			
 		Case ".c",".cc",".cxx",".cpp",".m",".mm",".asm",".s"
 		
-			If parsingModule=mainModule SRC_FILES.Push( path )
+			If parsingModule=mainModule product.SRC_FILES.Push( path )
 		
 '			If modules.Length=1
 '				SRC_FILES.Push( path )
@@ -1174,31 +678,31 @@ Class Builder
 			
 		Case ".o"
 		
-			OBJ_FILES.Push( path )
+			product.OBJ_FILES.Push( path )
 			
 		Case ".a",".lib"
 		
-			LD_SYSLIBS.Push( qpath )
+			product.LD_SYSLIBS.Push( qpath )
 			
 		Case ".so"
 		
 			If opts.target="android"		'probably all non-windows targets
 			
-				LD_SYSLIBS.Push( qpath )
+				product.LD_SYSLIBS.Push( qpath )
 			
 			Endif
 			
-			DLL_FILES.Push( path )
+			product.DLL_FILES.Push( path )
 			
 		Case ".dll",".exe"
 		
-			DLL_FILES.Push( path )
+			product.DLL_FILES.Push( path )
 			
 		Case ".dylib"
 		
-			LD_SYSLIBS.Push( qpath )
+			product.LD_SYSLIBS.Push( qpath )
 			
-			DLL_FILES.Push( path )
+			product.DLL_FILES.Push( path )
 			
 		Case ".framework"
 		
@@ -1208,11 +712,11 @@ Class Builder
 			
 			ImportSystemFile( StripDir( path ) )
 			
-			DLL_FILES.Push( path )
+			product.DLL_FILES.Push( path )
 		
 		Default
 		
-			ASSET_FILES.Push( path )
+			product.ASSET_FILES.Push( path )
 		End
 	
 	End

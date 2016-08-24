@@ -20,7 +20,7 @@ Class Translator_CPP Extends Translator
 		Emit( "#include <bbmonkey.h>" )
 		
 		If fdecl.exhfile
-			Emit( "#include ~q"+MakeRelativePath( fdecl.exhfile,ExtractDir( fdecl.hfile ) )+"~q" )
+			Emit( "#include ~q"+MakeIncludePath( fdecl.exhfile,ExtractDir( fdecl.hfile ) )+"~q" )
 		End
 		
 		For Local ipath:=Eachin fdecl.imports
@@ -31,7 +31,7 @@ Class Translator_CPP Extends Translator
 			
 			If imp.EndsWith( ".h" ) Or imp.EndsWith( ".hh" ) Or imp.EndsWith( ".hpp" )
 				Local path:=ExtractDir( fdecl.path )+ipath
-				Emit( "#include ~q"+MakeRelativePath( path,ExtractDir( fdecl.hfile ) )+"~q" )
+				Emit( "#include ~q"+MakeIncludePath( path,ExtractDir( fdecl.hfile ) )+"~q" )
 				Continue
 			Endif
 			
@@ -934,8 +934,8 @@ Class Translator_CPP Extends Translator
 	End
 	
 	Method EmitStmt( stmt:PrintStmt )
-	
-		Emit( "puts("+Trans( stmt.value )+".c_str());fflush( stdout );" )
+
+		Emit( "bb_print("+Trans( stmt.value )+");" )
 	End
 	
 	Method EmitStmt( stmt:ExitStmt )

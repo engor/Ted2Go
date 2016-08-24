@@ -44,6 +44,21 @@ Global STRING_MX2EOL:=STRING_TILDE+"n"
 Global STRING_MX2RETURN:=STRING_TILDE+"r"
 Global STRING_MX2TAB:=STRING_TILDE+"t"
 
+Global APP_DIR:String
+Global MODULES_DIR:String
+
+Function MakeIncludePath:String( path:String,baseDir:String )
+
+'	Return MakeRelativePath( path,baseDir )
+'	Return path
+
+	If path.StartsWith( MODULES_DIR ) Return path.Slice( MODULES_DIR.Length )
+	
+	If APP_DIR And path.StartsWith( APP_DIR ) Return path.Slice( APP_DIR.Length )
+	
+	Return path
+End
+
 Function MungPath:String( path:String )
 	Local id:=path
 	id=id.Replace( "_","_0" )
