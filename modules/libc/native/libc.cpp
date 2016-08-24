@@ -25,24 +25,36 @@ int system_( const char *cmd ){
 #if _WIN32
 
 	bbString tmp;
-	DWORD flags=0;
 	
-	if( GetStdHandle( STD_OUTPUT_HANDLE ) ){
-		tmp=BB_T( "cmd /S /C\"" )+BB_T( cmd )+BB_T( "\"" );
-	}else{
-		flags=CREATE_NO_WINDOW;
-		tmp=cmd;
-	}
-
+	DWORD flags=0;
+	bool inherit=false;
 	PROCESS_INFORMATION pi={0};
 	STARTUPINFOA si={sizeof(si)};
 	
-	if( !CreateProcessA( 0,(LPSTR)tmp.c_str(),0,0,1,flags,0,0,&si,&pi ) ) return -1;
+	if( GetStdHandle( STD_OUTPUT_HANDLE ) ){
+	
+		tmp=BB_T( "cmd /S /C\"" )+BB_T( cmd )+BB_T( "\"" );
+	
+		inherit=true;
+		
+		si.dwFlags=STARTF_USESTDHANDLES;
+		si.hStdInput=GetStdHandle( STD_INPUT_HANDLE );
+		si.hStdOutput=GetStdHandle( STD_OUTPUT_HANDLE );
+		si.hStdError=GetStdHandle( STD_ERROR_HANDLE );
+		
+	}else{
+
+		tmp=cmd;
+
+		flags=CREATE_NO_WINDOW;
+	}
+	
+	if( !CreateProcessA( 0,(LPSTR)tmp.c_str(),0,0,inherit,flags,0,0,&si,&pi ) ) return -1;
 
 	WaitForSingleObject( pi.hProcess,INFINITE );
 	
 	int res=GetExitCodeProcess( pi.hProcess,(DWORD*)&res ) ? res : -1;
-
+	
 	CloseHandle( pi.hProcess );
 	CloseHandle( pi.hThread );
 
