@@ -1,5 +1,5 @@
 
-#If __HOSTOS__="windows"
+#If __TARGET__="desktop" and __HOSTOS__="windows"
 #Import "bin/wget.exe"
 #End
 
@@ -40,8 +40,10 @@ Using mojox..
 
 Function Main()
 
-	ChangeDir( AppDir() )
+#if __TARGET__="desktop"
 		
+	ChangeDir( AppDir() )
+	
 	While GetFileType( "bin" )<>FileType.Directory Or GetFileType( "modules" )<>FileType.Directory
 
 		If IsRootDir( CurrentDir() )
@@ -52,10 +54,13 @@ Function Main()
 		ChangeDir( ExtractDir( CurrentDir() ) )
 	Wend
 	
+#endif
+	
 	Local jobj:=JsonObject.Load( "bin/ted2.state.json" )
+	If Not jobj jobj=New JsonObject
 	
 	Local rect:=New Recti( 64,64,64+960,64+800 )
-	If jobj And jobj.Contains( "windowRect" ) rect=ToRecti( jobj["windowRect"] )
+	If jobj.Contains( "windowRect" ) rect=ToRecti( jobj["windowRect"] )
 	
 	New AppInstance
 	

@@ -17,29 +17,23 @@ Class FileActions
 	
 		_docs=docs
 		
-#if __HOSTOS__="macos"
-		Local menuCmd:=Modifier.Gui
-#else		
-		Local menuCmd:=Modifier.Control
-#endif
-
 		new_=New Action( "New" )
 		new_.HotKey=Key.N
-		new_.HotKeyModifiers=menuCmd
+		new_.HotKeyModifiers=Modifier.Menu
 		new_.Triggered=OnNew
 		
 		open=New Action( "Open" )
 		open.HotKey=Key.O
-		open.HotKeyModifiers=menuCmd
+		open.HotKeyModifiers=Modifier.Menu
 		open.Triggered=OnOpen
 		
 		close=New Action( "Close" )
 #if __HOSTOS__="macos"
 		close.HotKey=Key.W
-		close.HotKeyModifiers=menuCmd
+		close.HotKeyModifiers=Modifier.Menu
 #else
 		close.HotKey=Key.F4
-		close.HotKeyModifiers=menuCmd
+		close.HotKeyModifiers=Modifier.Menu
 #endif		
 		close.Triggered=OnClose
 		
@@ -51,10 +45,12 @@ Class FileActions
 		
 		save=New Action( "Save" )
 		save.HotKey=Key.S
-		save.HotKeyModifiers=menuCmd
+		save.HotKeyModifiers=Modifier.Menu
 		save.Triggered=OnSave
 
 		saveAs=New Action( "Save As" )
+		saveAs.HotKey=Key.S
+		saveAs.HotKeyModifiers=Modifier.Menu|Modifier.Shift
 		saveAs.Triggered=OnSaveAs
 
 		saveAll=New Action( "Save All" )
@@ -62,7 +58,6 @@ Class FileActions
 		
 		quit=New Action( "Quit" )
 		quit.Triggered=OnQuit
-		
 	End
 	
 	Method Update()
@@ -88,73 +83,52 @@ Class FileActions
 	
 	Field _docs:DocumentManager
 	
-	Method IsTmpPath:Bool( path:String )
+	Method SaveAs:Ted2Document()
 	
-		Return MainWindow.IsTmpPath( path )
-	End
-	
-	'Ok, pretty ugly - changing doc type is tricky.
-	'
-	'Wait until we have a propery DocumentType class before getting too carried away...
-	'
-	Method Rename:Ted2Document( doc:Ted2Document,path:String,reopen:Bool,makeCurrent:Bool )
+		Local doc:=_docs.CurrentDocument
+		If Not doc Return Null
 		
-		Local tpath:=doc.Path
+		Local path:=MainWindow.RequestFile( "Save As","",True )
+		If Not path Return Null
+				
+		If Not ExtractExt( path ) path+=ExtractExt( doc.Path )
+		
+		Return _docs.RenameDocument( doc,path )
+	End
 
-		doc.Rename( path )
-		If Not doc.Save()
-			doc.Rename( tpath )
-			Return Null
-		Endif
-		
-		If reopen And ExtractExt( tpath ).ToLower()<>ExtractExt( path ).ToLower()
-			doc.Close()
-			Return _docs.OpenDocument( path,makeCurrent )
-		Endif
-		
-		Return doc
-	End
+	Method CanClose:Ted2Document( doc:Ted2Document )
 	
-	Method CanClose:Bool( doc:Ted2Document )
-	
-		If Not doc.Dirty Return True
+		If Not doc.Dirty Return doc
 		
 		_docs.CurrentDocument=doc
 				
 		Local buttons:=New String[]( "Save","Discard Changes","Cancel" )
 			
-		Select TextDialog.Run( "Close All","File '"+doc.Path+"' has been modified.",buttons )
+		Select TextDialog.Run( "Close File","File '"+doc.Path+"' has been modified.",buttons )
 		Case 0
 			If MainWindow.IsTmpPath( doc.Path )
-			
-				Local path:=MainWindow.RequestFile( "Save As","",True )
-				If Not path Return False
-				
-				If Not Rename( doc,path,False,False ) Return False
+				Return SaveAs()
 			Else
- 
-				If Not doc.Save() Return False
+				If Not doc.Save() Return Null
 			Endif
-		Case 2 
-			Return False
+		Case 2
+			Return Null
 		End
 		
-		Return True
+		Return doc
 	End
 	
 	Method CloseAll:Bool( except:Ted2Document )
 
-		Local close:=New Stack<Ted2Document>
-	
 		For Local doc:=Eachin _docs.OpenDocuments
 			If doc=except Continue
-		
-			If Not CanClose( doc ) Return False
 			
-			close.Add( doc )
+			If Not CanClose( doc ) Return False
 		Next
 		
-		For Local doc:=Eachin close
+		For Local doc:=Eachin _docs.OpenDocuments
+			If doc=except Continue
+			
 			doc.Close()
 		Next
 		
@@ -176,7 +150,7 @@ Class FileActions
 		
 	Method OnOpen()
 	
-		Local path:=MainWindow.RequestFile( "Open file...","",False )
+		Local path:=MainWindow.RequestFile( "Open File","",False )
 		If Not path Return
 		
 		path=RealPath( path )
@@ -189,19 +163,20 @@ Class FileActions
 		Local doc:=_docs.CurrentDocument
 		If Not doc Return
 		
-		If Not CanClose( doc ) Return
+		doc=CanClose( doc )
+		If Not doc return
 		
 		doc.Close()
 	End
 	
 	Method OnCloseOthers()
 	
-		If Not CloseAll( _docs.CurrentDocument ) Return
+		CloseAll( _docs.CurrentDocument )
 	End
 	
 	Method OnCloseAll()
 	
-		If Not CloseAll( Null ) Return
+		CloseAll( Null )
 	End
 	
 	Method OnSave()
@@ -210,26 +185,15 @@ Class FileActions
 		If Not doc Return
 		
 		If MainWindow.IsTmpPath( doc.Path )
-
-			Local path:=MainWindow.RequestFile( "Save As","",True )
-			If Not path Return
-			
-			Rename( doc,path,True,True )
+			SaveAs()
 		Else
-		
 			doc.Save()
 		Endif
 	End
 	
 	Method OnSaveAs()
 	
-		Local doc:=_docs.CurrentDocument
-		If Not doc Return
-	
-		Local path:=MainWindow.RequestFile( "Save As","",True )
-		If Not path Return 
-		
-		Rename( doc,path,True,True )
+		SaveAs()
 	End
 	
 	Method OnSaveAll()
@@ -237,13 +201,9 @@ Class FileActions
 		For Local doc:=Eachin _docs.OpenDocuments
 
 			If MainWindow.IsTmpPath( doc.Path )
-	
-				Local path:=MainWindow.RequestFile( "Save As","",True )
-				If Not path Return
-				
-				Rename( doc,path,True,False )
+				_docs.CurrentDocument=doc
+				If Not SaveAs() Return
 			Else
-			
 				doc.Save()
 			Endif
 		Next
@@ -254,13 +214,12 @@ Class FileActions
 		For Local doc:=Eachin _docs.OpenDocuments
 		
 			If MainWindow.IsTmpPath( doc.Path )
-			
 				If Not doc.Save() Return
 			Else
 				If Not CanClose( doc ) Return
 			Endif
 		Next
 		
-		App.Terminate()
+		MainWindow.Terminate()
 	End
 End

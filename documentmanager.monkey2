@@ -91,52 +91,7 @@ Class DocumentManager
 		Return _openDocs.ToArray()
 	End
 	
-	Method AddDocument( doc:Ted2Document,index:Int=-1 )
-	
-		doc.DirtyChanged+=Lambda()
-			UpdateTabLabel( doc )
-		End
-		
-		doc.StateChanged+=Lambda()
-			UpdateTabLabel( doc )
-		End
-
-		doc.Closed+=Lambda()
-		
-			Local index:=_tabView.TabIndex( doc.View )
-
-			_tabView.RemoveTab( index )
-			_openDocs.Remove( doc )
-			
-			If doc=_currentDoc
-				If _tabView.NumTabs
-					If index=_tabView.NumTabs index-=1
-					CurrentDocument=FindDocument( _tabView.TabView( index ) )
-				Else
-					CurrentDocument=Null
-				Endif
-			Endif
-			
-			DocumentRemoved( doc )
-		End
-		
-		If index=-1
-		
-			_tabView.AddTab( DocumentTabLabel( doc ),doc.View )
-			
-			_openDocs.Add( doc )
-		
-		Else
-			_tabView.SetTabView( index,doc.View )
-			
-			_openDocs.Insert( index,doc )
-			
-		Endif
-		
-		DocumentAdded( doc )
-	End
-	
-	Method OpenDocument:Ted2Document( path:String,makeCurrent:Bool=False,index:Int=-1 )
+	Method OpenDocument:Ted2Document( path:String,makeCurrent:Bool=False )
 	
 		path=RealPath( path )
 		
@@ -146,44 +101,66 @@ Class DocumentManager
 			Return doc
 		Endif
 		
-		Local ext:=ExtractExt( path ).ToLower()
-			
-		Select ext
-		Case ".monkey2"
-		Case ".png",".jpg",".bmp"
-		Case ".wav",".ogg"
-		Case ".h",".hpp",".hxx",".c",".cpp",".cxx",".m",".mm",".s",".asm"
-		Case ".html",".js",".css",".php",".md",".json",".xml",".ini"
-		Case ".sh",".bat"
-		Case ".glsl"
-		Case ".txt"
-		Default
-			Alert( "Unrecognized file type extension for file '"+path+"'" )
-			Return Null
-		End
+		If GetFileType( path )<>FileType.File Return Null
 		
-		Select ext
-		Case ".monkey2"
-			doc=New Monkey2Document( path )
-		Case ".png",".jpg"
-			doc=New ImageDocument( path )
-		Case ".wav",".ogg"
-			doc=Ted2DocumentType.CreateDocument( path )
-		Case ".json"
-			doc=New JsonDocument( path )
-		Default
-			doc=New PlainTextDocument( path )
-		End
+		Local docType:=Ted2DocumentType.ForExtension( ExtractExt( path ) )
+		If Not docType Return Null
 		
-		If GetFileType( path )<>FileType.File Or Not doc.Load()
-			Return Null
-		End
+		doc=docType.CreateDocument( path )
+		If Not doc.Load() Return Null
+
+		InitDoc( doc )
+	
+		_openDocs.Add( doc )
+		_tabView.AddTab( TabText( doc ),doc.View )
 		
-		AddDocument( doc,index )
+		DocumentAdded( doc )
 		
 		If makeCurrent CurrentDocument=doc
 		
 		Return doc
+	End
+	
+	'Currently also saves doc.
+	'
+	Method RenameDocument:Ted2Document( doc:Ted2Document,newPath:String )
+	
+		For Local i:=0 Until _openDocs.Length
+			If doc<>_openDocs[i] Continue
+			
+			Local newType:=Ted2DocumentType.ForExtension( ExtractExt( newPath ) )
+			If Not newType Return Null
+
+			Local oldPath:=doc.Path
+			doc.Rename( newPath )
+			If Not doc.Save()
+				doc.Rename( oldPath )
+				Return Null
+			Endif
+			
+			If newType=Ted2DocumentType.ForExtension( ExtractExt( oldPath ) ) Return doc
+			
+			Local newDoc:=newType.CreateDocument( newPath )
+			If Not newDoc.Load() Return Null
+			
+			InitDoc( newDoc )
+			
+			_openDocs[i]=newDoc
+			_tabView.SetTabText( i,TabText( newDoc ) )
+			_tabView.SetTabView( i,newDoc.View )
+			
+			doc.Close()
+			
+			DocumentRemoved( doc )
+			
+			DocumentAdded( newDoc )
+			
+			If doc=_currentDoc CurrentDocument=newDoc
+
+			Return newDoc
+		Next
+		
+		Return Null
 	End
 	
 	Method FindDocument:Ted2Document( path:String )
@@ -208,9 +185,6 @@ Class DocumentManager
 		
 		Local docs:=New JsonArray
 		For Local doc:=Eachin _openDocs
-
-			If MainWindow.IsTmpPath( doc.Path ) And Not doc.Dirty Continue
-			
 			docs.Add( New JsonString( doc.Path ) )
 		Next
 		jobj["openDocuments"]=docs
@@ -256,13 +230,45 @@ Class DocumentManager
 	
 	Field _openDocs:=New Stack<Ted2Document>
 	
-	Method DocumentTabLabel:String( doc:Ted2Document )
+	Method InitDoc( doc:Ted2Document )
+	
+		doc.DirtyChanged+=Lambda()
+		
+			UpdateTabLabel( doc )
+		End
+		
+		doc.StateChanged+=Lambda()
+		
+			UpdateTabLabel( doc )
+		End
+
+		doc.Closed+=Lambda()
+		
+			Local index:=_tabView.TabIndex( doc.View )
+			If index=-1 Return	'in case doc already removed via Rename.
+
+			_tabView.RemoveTab( index )
+			_openDocs.Remove( doc )
+			
+			If doc=_currentDoc
+				If _tabView.NumTabs
+					If index=_tabView.NumTabs index-=1
+					CurrentDocument=FindDocument( _tabView.TabView( index ) )
+				Else
+					CurrentDocument=Null
+				Endif
+			Endif
+			
+			DocumentRemoved( doc )
+		End
+		
+	End
+	
+	Method TabText:String( doc:Ted2Document )
 	
 		Local label:=StripDir( doc.Path )
 		
 		If ExtractExt( doc.Path ).ToLower()=".monkey2"  label=StripExt( label )
-		
-		'If IsTmpPath( doc.Path ) label="<"+label+">"
 		
 		label=doc.State+label
 		
@@ -272,7 +278,8 @@ Class DocumentManager
 	End
 	
 	Method UpdateTabLabel( doc:Ted2Document )
-		If doc _tabView.SetTabText( doc.View,DocumentTabLabel( doc ) )
+	
+		If doc _tabView.SetTabText( doc.View,TabText( doc ) )
 	End
 	
 	Method OnNextDocument()
