@@ -1,6 +1,8 @@
 
 Namespace mojox
 
+#if __TARGET__<>"emscripten"
+
 #rem monkeydoc The Console class.
 #end
 Class Console Extends TextView
@@ -210,3 +212,5 @@ Class Console Extends TextView
 	End
 
 End
+
+#endif

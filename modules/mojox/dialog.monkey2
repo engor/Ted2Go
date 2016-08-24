@@ -156,6 +156,8 @@ Class Dialog Extends View
 		_window=Null
 	End
 
+#if __TARGET__<>"emscripten"
+	
 	#rem monkeydoc Creates and runs a modal dialog.
 	#end
 	Function Run:Int( title:String,view:View,actions:String[],onEnter:Int=-1,onEscape:Int=-1 )
@@ -193,6 +195,8 @@ Class Dialog Extends View
 		
 		Return result
 	End
+	
+	#end
 	
 	Protected
 	
@@ -253,6 +257,8 @@ Class TextDialog Extends Dialog
 		_label.Text=text
 	End
 	
+#if __TARGET__<>"emscripten"
+	
 	#rem monkeydoc Creates and runs a modal text dialog.
 	#end
 	Function Run:Int( title:String,text:String,actions:String[],onEnter:Int=-1,onEscape:Int=-1 )
@@ -288,6 +294,8 @@ Class TextDialog Extends Dialog
 		
 		Return r
 	End
+	
+	#end
 	
 	Private
 	

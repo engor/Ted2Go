@@ -73,9 +73,9 @@ Class Action
 	
 	#rem monkeydoc Action async flag.
 	
-	If true, then when the action is triggered the [[Triggered]] signal is run on a new fiber.
+	If true (the default), then when the action is triggered the [[Triggered]] signal is run on a new fiber.
 	
-	Default to true.
+	Note: Fiber are not supported in emscripten, so this property has no effect.
 	
 	#end
 	Property Async:Bool()
@@ -83,7 +83,7 @@ Class Action
 		Return _async
 	
 	Setter( async:Bool )
-	
+
 		_async=async
 	End
 	
@@ -134,11 +134,18 @@ Class Action
 	#end	
 	Method Trigger()
 	
+#if __TARGET__<>"emscripten"
+	
 		If _async
 			New Fiber( Triggered )
 		Else
 			Triggered()
 		Endif
+
+#else
+
+		Triggered()
+#endif
 		
 	End
 	

@@ -34,9 +34,9 @@ Class MyWindow Extends Window
 		
 			tabView.RemoveTab( index )
 		
-			If tabView.CurrentView Or Not tabView.Count Return
+			If tabView.CurrentView Or Not tabView.NumTabs Return
 			
-			If index=tabView.Count index-=1
+			If index=tabView.NumTabs index-=1
 
 			tabView.CurrentIndex=index
 		End

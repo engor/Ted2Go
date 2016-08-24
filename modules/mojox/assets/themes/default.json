@@ -14,8 +14,6 @@
 		"text-disabled": "#888",
 		"text-background": "#888",
 		
-		"menu" : "content",
-
 		"textview-color0":"#0000",
 		"textview-color1":"#fff",
 		"textview-color2":"#ff0",
@@ -156,16 +154,15 @@
 		},
 		
 		"Menu":{
+			
 			"padding":[ 0 ],
 			"skin":"dialog_skin.png",
 			"skinColor":"panel"
 		},
 		
 		"MenuButton":{
-			"extends":"Button",
-			"skin":"",
+			"extends":"Label",
 			"padding":[8,4],
-			"backgroundColor":"menu",
 			"states":{
 				"hover":{
 					"backgroundColor":"hover"
@@ -181,14 +178,13 @@
 		
 		"MenuBar":{
 			"extends":"ToolBar",
-			"backgroundColor":"menu"
+			"backgroundColor":"content"
 		},
 		
 		"MenuSeparator":{
 			"padding":[ 0,0,0,1 ],
-			"backgroundColor":"panel",
-			"border":[ 8,8,7,7 ],
-			"borderColor":"menu"
+			"backgroundColor":"content",
+			"border":[ 8,8,7,7 ]
 		},
 
 		"TabView":{

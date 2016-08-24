@@ -20,7 +20,7 @@ End
 
 #rem monkeydoc The CheckButton class.
 #end
-Class CheckButton Extends Button
+Class CheckButton Extends Label
 
 	#rem monkeydoc Invoked when the button's [[Checked]] state changes.
 	

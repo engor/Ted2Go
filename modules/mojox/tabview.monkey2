@@ -248,7 +248,7 @@ Class TabView Extends DockingView
 		
 		tab.CloseClicked=Lambda()
 		
-			CloseClicked( TabIndex( view ) )
+			CloseClicked( TabIndex( tab.View ) )
 		End
 		
 		Local index:=_tabs.Length

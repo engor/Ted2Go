@@ -1,6 +1,8 @@
 
 Namespace mojox
 
+#if __TARGET__<>"emscripten"
+
 #rem monkeydoc Runs a simple 'alert' dialog.
 
 If this function is called from the main fiber, a new fiber is created to the alert on.
@@ -84,3 +86,4 @@ Function RequestString:String( message:String="Enter a string:",title:String="St
 	Return str
 End
 
+#endif
