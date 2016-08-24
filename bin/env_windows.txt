@@ -32,39 +32,14 @@ MX2_CPP_OPTS_DESKTOP_DEBUG=
 MX2_CPP_OPTS_DESKTOP_RELEASE=-O3 -DNDEBUG ' -fvtable-gc -fdata-sections -ffunction-sections
 
 
-'***** ANDROID *****
-
-PATH=${MX2_HOME}\devtools\android-ndk-arm-12\bin;${PATH}
-
-MX2_BUILD_DIR_ANDROID_DEBUG=android_debug_windows
-MX2_BUILD_DIR_ANDROID_RELEASE=android_release_windows
-
-MX2_LD_OPTS_ANDROID=-shared -march=armv7-a -Wl,--fix-cortex-a8
-MX2_LD_OPTS_ANDROID_DEBUG=
-MX2_LD_OPTS_ANDROID_RELEASE=
-
-MX2_CC_OPTS_ANDROID=-std=gnu99 -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16
-MX2_CC_OPTS_ANDROID_DEBUG=
-MX2_CC_OPTS_ANDROID_RELEASE=-O3 -DNDEBUG
-
-MX2_CPP_OPTS_ANDROID=-std=c++11 -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16
-MX2_CPP_OPTS_ANDROID_DEBUG=
-MX2_CPP_OPTS_ANDROID_RELEASE=-O3 -DNDEBUG
-
-
 '***** EMSCRIPTEN *****
 
-'EM_CONFIG=C:\Users\Mark Sibly\.emscripten
-'EMSCRIPTEN=D:\devtools\Emscripten\emscripten\incoming
-
-'PATH=D:\devtools\Emscripten;${PATH}
-'PATH=D:\devtools\Emscripten\spidermonkey\37.0.1_64bit;${PATH}
-'PATH=D:\devtools\Emscripten\crunch\1.03;${PATH}
-'PATH=D:\devtools\Emscripten\clang\fastcomp\build_incoming_vs2013_64\RelWithDebInfo\bin;${PATH}
-'PATH=D:\devtools\Emscripten\node\4.1.1_64bit\bin;${PATH}
-'PATH=D:\devtools\Emscripten\python\2.7.5.3_64bit;${PATH}
-'PATH=D:\devtools\Emscripten\java\7.45_64bit\bin;${PATH}
-'PATH=D:\devtools\Emscripten\emscripten\incoming;${PATH}
+'Note:
+'
+' For emscripten builds, you'll need to ensure emcc, em++ and emar are usable from the command line.
+'
+' To run emscripten apps, you need to set MX2_SERVER
+'
 
 MX2_MSERVER="${MX2_HOME}\devtools\MonkeyXFree86c\bin\mserver_winnt"
 
@@ -72,13 +47,24 @@ MX2_BUILD_DIR_EMSCRIPTEN_DEBUG=emscripten_debug
 MX2_BUILD_DIR_EMSCRIPTEN_RELEASE=emscripten_release
 
 MX2_LD_OPTS_EMSCRIPTEN=-s USE_SDL=2 -s FULL_ES2=1 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1 ' -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1
-MX2_LD_OPTS_EMSCRIPTEN_DEBUG=-O2
+MX2_LD_OPTS_EMSCRIPTEN_DEBUG=-O0	'-O2
 MX2_LD_OPTS_EMSCRIPTEN_RELEASE=-O3
 
 MX2_CC_OPTS_EMSCRIPTEN=-std=gnu99 -s USE_SDL=2 -s FULL_ES2=1 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1 ' -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1 -Wno-undefined-bool-conversion -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-warn-absolute-paths 
-MX2_CC_OPTS_EMSCRIPTEN_DEBUG=-O2
+MX2_CC_OPTS_EMSCRIPTEN_DEBUG=-O0	'-O2
 MX2_CC_OPTS_EMSCRIPTEN_RELEASE=-O3
 
 MX2_CPP_OPTS_EMSCRIPTEN=-std=c++11 -s USE_SDL=2 -s FULL_ES2=1 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1 ' -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1 -Wno-undefined-bool-conversion
-MX2_CPP_OPTS_EMSCRIPTEN_DEBUG=-O2
+MX2_CPP_OPTS_EMSCRIPTEN_DEBUG=-O0	'-O2
 MX2_CPP_OPTS_EMSCRIPTEN_RELEASE=-O3
+
+
+'***** ANDROID *****
+
+'Notes:
+'
+' This is where *my* ndk-bundle is located - yours is probably somewhere else!
+'
+' For android builds, you need to either set this correctly or make sure 'ndk-build' is in your system PATH.
+'
+PATH=D:\devtools\Android\sdk\ndk-bundle;${PATH}

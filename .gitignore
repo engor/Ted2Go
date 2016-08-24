@@ -23,4 +23,7 @@ __MANPAGES__/
 
 /modules/module-manager/downloads/*.zip
 
+/modules/wdw-game2d
+/modules/portmidi
+
 Monkey2 (Windows).exe

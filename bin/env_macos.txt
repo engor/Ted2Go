@@ -1,4 +1,9 @@
 
+'***** IMPORTANT ******
+
+'If you change anything in this file, you should rebuild all!
+
+
 '***** COMMON *****
 
 MX2_VERSION=002
@@ -33,27 +38,33 @@ MX2_CPP_OPTS_DESKTOP=-std=c++11 -Wno-deprecated-declarations -Wno-tautological-p
 MX2_CPP_OPTS_DESKTOP_DEBUG=-O0 '-g
 MX2_CPP_OPTS_DESKTOP_RELEASE=-O3 -DNDEBUG
 
+
 '***** EMSCRIPTEN *****
 
+' For emscripten builds, you need emcc, em++ and emar in your PATH.
+'
+' To run emscripten apps, you need 'MonkeyXFree86c' in your devtools dir.
+
+'Need this 'coz Mac is getting seriously locked down...
+'
 EMSCRIPTEN=${HOME}/emsdk/emscripten/1.35.0
 PATH=${HOME}/emsdk:${HOME}/emsdk/clang/e1.35.0_64bit:${HOME}/emsdk/node/0.12.2_64bit/bin:${HOME}/emsdk/emscripten/1.35.0:${PATH}
 
-MX2_MSERVER=open "${MX2_HOME}devtools/MonkeyXFree86c/bin/mserver_macos.app" --args
-
 'El Capitan broke my python...
+'
 PATH=/usr/local/bin:${PATH}
 
 MX2_BUILD_DIR_EMSCRIPTEN_DEBUG=emscripten_debug
 MX2_BUILD_DIR_EMSCRIPTEN_RELEASE=emscripten_release
 
 MX2_LD_OPTS_EMSCRIPTEN=-s USE_SDL=2 -s FULL_ES2=1 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1 ' -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1
-MX2_LD_OPTS_EMSCRIPTEN_DEBUG=-O2
+MX2_LD_OPTS_EMSCRIPTEN_DEBUG=-O0	'-O2
 MX2_LD_OPTS_EMSCRIPTEN_RELEASE=-O3
 
-MX2_CC_OPTS_EMSCRIPTEN=-std=gnu99 -s USE_SDL=2 -s FULL_ES2=1 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1 -Wno-warn-absolute-paths ' -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1 -Wno-undefined-bool-conversion -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-warn-absolute-paths 
-MX2_CC_OPTS_EMSCRIPTEN_DEBUG=-O2
+MX2_CC_OPTS_EMSCRIPTEN=-std=gnu99 -s USE_SDL=2 -s FULL_ES2=1 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1 ' -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1 -Wno-undefined-bool-conversion -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-warn-absolute-paths 
+MX2_CC_OPTS_EMSCRIPTEN_DEBUG=-O0	'-O2
 MX2_CC_OPTS_EMSCRIPTEN_RELEASE=-O3
 
-MX2_CPP_OPTS_EMSCRIPTEN=-std=c++11 -s USE_SDL=2 -s FULL_ES2=1 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1 -Wno-warn-absolute-paths ' -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1 -Wno-undefined-bool-conversion
-MX2_CPP_OPTS_EMSCRIPTEN_DEBUG=-O2
+MX2_CPP_OPTS_EMSCRIPTEN=-std=c++11 -s USE_SDL=2 -s FULL_ES2=1 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1 ' -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1 -Wno-undefined-bool-conversion
+MX2_CPP_OPTS_EMSCRIPTEN_DEBUG=-O0	'-O2
 MX2_CPP_OPTS_EMSCRIPTEN_RELEASE=-O3
