@@ -13,15 +13,10 @@ Class FindActions
 		
 		_docs=docs
 		
-#if __HOSTOS__="macos"
-		Local menuCmd:=Modifier.Gui
-#else		
-		Local menuCmd:=Modifier.Control
-#endif
 		find=New Action( "Find" )
 		find.Triggered=OnFind
 		find.HotKey=Key.F
-		find.HotKeyModifiers=menuCmd
+		find.HotKeyModifiers=Modifier.Menu
 		
 		findNext=New Action( "Find Next" )
 		findNext.Triggered=OnFindNext

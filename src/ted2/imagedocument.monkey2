@@ -101,3 +101,24 @@ Class ImageDocument Extends Ted2Document
 	Field _view:ImageDocumentView
 	
 End
+
+Class ImageDocumentType Extends Ted2DocumentType
+
+	Protected
+	
+	Method New()
+		AddPlugin( Self )
+		
+		Extensions=New String[]( ".png",".jpg",".bmp" )
+	End
+	
+	Method OnCreateDocument:Ted2Document( path:String ) Override
+	
+		Return New ImageDocument( path )
+	End
+	
+	Private
+	
+	Global _instance:=New ImageDocumentType
+	
+End

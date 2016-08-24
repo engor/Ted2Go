@@ -33,8 +33,7 @@ Class BuildActions
 	Field moduleManager:Action
 	Field rebuildHelp:Action
 	
-	Field configMenu:Menu
-	Field targetMenu:Menu
+	Field settingsMenu:Menu
 	
 	Method New( docs:DocumentManager,console:Console,debugView:DebugView )
 	
@@ -56,11 +55,6 @@ Class BuildActions
 #Endif
 		_mx2cc=RealPath( _mx2cc )
 		
-#if __HOSTOS__="macos"
-		Local menuCmd:=Modifier.Gui
-#else		
-		Local menuCmd:=Modifier.Control
-#endif
 		buildAndRun=New Action( "Build And Run" )
 		buildAndRun.Triggered=OnBuildAndRun
 		buildAndRun.HotKey=Key.F5
@@ -76,17 +70,17 @@ Class BuildActions
 		lockBuildFile=New Action( "Lock Build File" )
 		lockBuildFile.Triggered=OnLockBuildFile
 		lockBuildFile.HotKey=Key.L
-		lockBuildFile.HotKeyModifiers=menuCmd
+		lockBuildFile.HotKeyModifiers=Modifier.Menu
 		
 		updateModules=New Action( "Update Modules" )
 		updateModules.Triggered=OnUpdateModules
 		updateModules.HotKey=Key.U
-		updateModules.HotKeyModifiers=menuCmd
+		updateModules.HotKeyModifiers=Modifier.Menu
 		
 		rebuildModules=New Action( "Rebuild Modules" )
 		rebuildModules.Triggered=OnRebuildModules
 		rebuildModules.HotKey=Key.U
-		rebuildModules.HotKeyModifiers=menuCmd|Modifier.Shift
+		rebuildModules.HotKeyModifiers=Modifier.Menu|Modifier.Shift
 		
 		moduleManager=New Action( "Module Manager" )
 		moduleManager.Triggered=OnModuleManager
@@ -106,9 +100,6 @@ Class BuildActions
 			_buildConfig="release"
 		End
 		_buildConfig="debug"
-		configMenu=New Menu( "Config..." )
-		configMenu.AddView( _debugConfig )
-		configMenu.AddView( _releaseConfig )
 		
 		group=New CheckGroup
 		_desktopTarget=New CheckButton( "Desktop",,group )
@@ -116,7 +107,11 @@ Class BuildActions
 		_consoleTarget=New CheckButton( "Console",,group )
 		_consoleTarget.Layout="fill-x"
 		_emscriptenTarget=New CheckButton( "Emscripten",,group )
-		_desktopTarget.Layout="fill-x"
+		_emscriptenTarget.Layout="fill-x"
+		_androidTarget=New CheckButton( "Android",,group )
+		_androidTarget.Layout="fill-x"
+		_iosTarget=New CheckButton( "iOS",,group )
+		_iosTarget.Layout="fill-x"
 		_desktopTarget.Clicked+=Lambda()
 			_buildTarget="desktop"
 		End
@@ -126,11 +121,23 @@ Class BuildActions
 		_emscriptenTarget.Clicked+=Lambda()
 			_buildTarget="emscripten"
 		End
+		_androidTarget.Clicked+=Lambda()
+			_buildTarget="android"
+		End
+		_iosTarget.Clicked+=Lambda()
+			_buildTarget="ios"
+		End
 		_buildTarget="desktop"
-		targetMenu=New Menu( "Target..." )
-		targetMenu.AddView( _desktopTarget )
-		targetMenu.AddView( _consoleTarget )
-		targetMenu.AddView( _emscriptenTarget )
+		
+		settingsMenu=New Menu( "Build Settings..." )
+		settingsMenu.AddView( _debugConfig )
+		settingsMenu.AddView( _releaseConfig )
+		settingsMenu.AddSeparator()
+		settingsMenu.AddView( _desktopTarget )
+		settingsMenu.AddView( _consoleTarget )
+		settingsMenu.AddView( _emscriptenTarget )
+		settingsMenu.AddView( _androidTarget )
+		settingsMenu.AddView( _iosTarget )
 
 	End
 	
@@ -169,6 +176,10 @@ Class BuildActions
 				_consoleTarget.Checked=True
 			Case "emscripten"
 				_emscriptenTarget.Checked=True
+			Case "android"
+				_androidTarget.Checked=True
+			Case "ios"
+				_iosTarget.Checked=True
 			Default
 				_desktopTarget.Checked=True
 				_buildTarget="desktop"
@@ -214,6 +225,8 @@ Class BuildActions
 	Field _consoleTarget:CheckButton
 	Field _desktopTarget:CheckButton
 	Field _emscriptenTarget:CheckButton
+	Field _androidTarget:CheckButton
+	Field _iosTarget:CheckButton
 	
 	Field _appFile:String
 	
@@ -331,17 +344,26 @@ Class BuildActions
 	
 	Method BuildModules:Bool( clean:Bool )
 	
+		Local target:=""
+		
+		Select TextDialog.Run( "Build Modules","Select target...",New String[]( "Desktop","Emscripten","Android","Cancel" ),0,3 )
+		Case 0 target="desktop"
+		Case 1 target="emscripten"
+		Case 2 target="android"
+		Default Return False
+		End
+	
 		Local n:=clean ? "Rebuilding" Else "Updating"
 		
 		For Local config:=0 Until 2
 		
 			Local t:=(config ? "debug" Else "release")
 			
-			Local cmd:=_mx2cc+" makemods"
+			Local cmd:=_mx2cc+" makemods -target="+target
 			If clean cmd+=" -clean"
 			cmd+=" -config="+t
 			
-			If Not BuildMx2( cmd,n+" "+t+" modules..." ) Return False
+			If Not BuildMx2( cmd,n+" "+target+" "+t+" modules..." ) Return False
 
 		Next
 		
@@ -370,11 +392,29 @@ Class BuildActions
 		cmd+=" -target="+target
 		cmd+=" ~q"+buildDoc.Path+"~q"
 		
-		If Not BuildMx2( cmd,"Building "+buildDoc.Path+"..." ) Return False
+		Local msg:="Building "+StripDir( buildDoc.Path )+" for "+target+" "+config
+		
+		If Not BuildMx2( cmd,msg ) Return False
 		
 		If Not run Or Not _appFile Return True
 		
-		_debugView.DebugApp( _appFile,config )
+		Select target
+		Case "desktop"
+			_debugView.DebugApp( _appFile,config )
+
+		Case "emscripten"	'cheese it for now...
+
+			Local mserver:=""
+
+#if __HOSTOS__="windows"
+			mserver="~q"+RealPath( "devtools/MonkeyXFree86c/bin/mserver_winnt.exe" )+"~q"
+#else if __HOSTOS__="linux"
+			mserver="~q"+RealPath( "devtools/MonkeyXFree86c/bin/mserver_linux" )+"~q"
+#else if __HOSTOS__="macos"
+			mserver="open ~q"+RealPath( "devtools/MonkeyXFree86c/bin/mserver_macos.app" )+"~q --args"
+#endif
+			_console.Run( mserver+" ~q"+_appFile+"~q" )
+		End
 		
 		Return True
 	End

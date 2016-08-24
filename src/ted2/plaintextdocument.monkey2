@@ -74,3 +74,23 @@ Class PlainTextDocument Extends Ted2Document
 
 End
 
+Class PlainTextDocumentType Extends Ted2DocumentType
+
+	Protected
+	
+	Method New()
+		AddPlugin( Self )
+		
+		Extensions=New String[]( ".h",".hpp",".hxx",".c",".cpp",".cxx",".m",".mm",".s",".asm",".html",".js",".css",".php",".md",".xml",".ini",".sh",".bat",".glsl",".txt" )
+	End
+	
+	Method OnCreateDocument:Ted2Document( path:String ) Override
+	
+		Return New PlainTextDocument( path )
+	End
+	
+	Private
+	
+	Global _instance:=New PlainTextDocumentType
+	
+End

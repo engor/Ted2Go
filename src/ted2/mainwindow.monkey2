@@ -147,9 +147,7 @@ Class MainWindowInstance Extends Window
 		_buildMenu=New Menu( "Build" )
 		_buildMenu.AddAction( _buildActions.buildAndRun )
 		_buildMenu.AddAction( _buildActions.build )
-		_buildMenu.AddSeparator()
-		_buildMenu.AddSubMenu( _buildActions.configMenu )
-		_buildMenu.AddSubMenu( _buildActions.targetMenu )
+		_buildMenu.AddSubMenu( _buildActions.settingsMenu )
 		_buildMenu.AddSeparator()
 		_buildMenu.AddAction( _buildActions.nextError )
 		_buildMenu.AddSeparator()
@@ -196,6 +194,13 @@ Class MainWindowInstance Extends Window
 		LoadState( jobj )
 
 		App.Idle+=OnAppIdle
+	End
+	
+	Method Terminate()
+	
+		SaveState()
+		
+		App.Terminate()
 	End
 
 	'Use these as macos still seems to have problems running requesters on a fiber - stacksize?
@@ -330,27 +335,24 @@ Class MainWindowInstance Extends Window
 	
 	Method LoadState( jobj:JsonObject )
 	
+		'for 'reload' later...
 		_projectView.ProjectOpened-=UpdateCloseProjectMenu
 		
-		If jobj
-		
-	'		If jobj.Contains( "windowRect" ) Frame=ToRecti( jobj["windowRect"] )
-			If jobj.Contains( "browserSize" ) _contentView.SetViewSize( _browsersTabView,jobj["browserSize"].ToNumber() )
-			If jobj.Contains( "consoleSize" ) _contentView.SetViewSize( _consolesTabView,jobj["consoleSize"].ToNumber() )
+'		If jobj.Contains( "windowRect" ) Frame=ToRecti( jobj["windowRect"] )
+		If jobj.Contains( "browserSize" ) _contentView.SetViewSize( _browsersTabView,jobj["browserSize"].ToNumber() )
+		If jobj.Contains( "consoleSize" ) _contentView.SetViewSize( _consolesTabView,jobj["consoleSize"].ToNumber() )
 			
-			If jobj.Contains( "recentFiles" )
-				For Local file:=Eachin jobj["recentFiles"].ToArray()
-					Local path:=file.ToString()
-					If GetFileType( path )<>FileType.File Continue
-					_recentFiles.Push( path )
-				Next
-			End
+		If jobj.Contains( "recentFiles" )
+			For Local file:=Eachin jobj["recentFiles"].ToArray()
+				Local path:=file.ToString()
+				If GetFileType( path )<>FileType.File Continue
+				_recentFiles.Push( path )
+			Next
+		End
 			
-			_docsManager.LoadState( jobj )
-			_buildActions.LoadState( jobj )
-			_projectView.LoadState( jobj )
-		
-		Endif
+		_docsManager.LoadState( jobj )
+		_buildActions.LoadState( jobj )
+		_projectView.LoadState( jobj )
 		
 		If Not _projectView.OpenProjects _projectView.OpenProject( CurrentDir() )
 		

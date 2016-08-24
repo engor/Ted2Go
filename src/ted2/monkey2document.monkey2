@@ -401,3 +401,25 @@ Class Monkey2Document Extends Ted2Document
 	End
 	
 End
+
+Class Monkey2DocumentType Extends Ted2DocumentType
+
+	Protected
+	
+	Method New()
+		AddPlugin( Self )
+		
+		Extensions=New String[]( ".monkey2",".ogg" )
+	End
+	
+	Method OnCreateDocument:Ted2Document( path:String ) Override
+	
+		Return New Monkey2Document( path )
+	End
+	
+	Private
+	
+	Global _instance:=New Monkey2DocumentType
+	
+End
+

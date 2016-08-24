@@ -165,3 +165,24 @@ Class JsonDocument Extends Ted2Document
 	
 	Field _view:JsonDocumentView
 End
+
+Class JsonDocumentType Extends Ted2DocumentType
+
+	Protected
+	
+	Method New()
+		AddPlugin( Self )
+		
+		Extensions=New String[]( ".json" )
+	End
+	
+	Method OnCreateDocument:Ted2Document( path:String ) Override
+	
+		Return New JsonDocument( path )
+	End
+	
+	Private
+	
+	Global _instance:=New JsonDocumentType
+	
+End

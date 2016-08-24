@@ -3,27 +3,6 @@ Namespace ted2
 
 Private
 
-Class AudioDocumentType Extends Ted2DocumentType
-
-	Protected
-	
-	Method New()
-		AddPlugin( Self )
-		
-		Extensions=New String[]( ".wav",".ogg" )
-	End
-	
-	Method OnCreateDocument:Ted2Document( path:String ) Override
-	
-		Return New AudioDocument( path )
-	End
-	
-	Private
-	
-	Global _instance:=New AudioDocumentType
-	
-End
-
 Class AudioDocumentView Extends View
 
 	Method New( doc:AudioDocument )
@@ -181,5 +160,26 @@ Class AudioDocument Extends Ted2Document
 	Field _data:AudioData
 	
 	Field _sound:Sound
+	
+End
+
+Class AudioDocumentType Extends Ted2DocumentType
+
+	Protected
+	
+	Method New()
+		AddPlugin( Self )
+		
+		Extensions=New String[]( ".wav",".ogg" )
+	End
+	
+	Method OnCreateDocument:Ted2Document( path:String ) Override
+	
+		Return New AudioDocument( path )
+	End
+	
+	Private
+	
+	Global _instance:=New AudioDocumentType
 	
 End

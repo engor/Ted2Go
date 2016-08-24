@@ -1,53 +1,6 @@
 
 Namespace ted2
 
-Class Ted2DocumentType Extends Plugin
-
-	Function CreateDocument:Ted2Document( path:String )
-	
-		Local ext:=ExtractExt( path ).ToLower()
-	
-		Local types:=Plugin.PluginsOfType<Ted2DocumentType>()
-
-		For Local type:=Eachin types
-		
-			For Local ext2:=Eachin type.Extensions	'Array.Contains() would be nice!
-			
-				If ext=ext2 Return type.OnCreateDocument( path )
-			
-			Next
-			
-		Next
-		
-		Return Null
-	End
-	
-	Protected
-	
-	Method New()
-		AddPlugin( Self )
-	
-	End
-	
-	Property Extensions:String[]()
-	
-		Return _exts
-	
-	Setter( exts:String[] )
-	
-		_exts=exts
-	End
-	
-	Method OnCreateDocument:Ted2Document( path:String ) Virtual
-	
-		Return Null	'should return hex editor!
-	End
-	
-	Private
-	
-	Field _exts:String[]
-End
-
 Class Ted2Document
 
 	Field DirtyChanged:Void()
@@ -186,4 +139,56 @@ Class Ted2Document
 	Field _state:String
 	Field _view:View
 	
+End
+
+Class Ted2DocumentType Extends Plugin
+
+	Function ForExtension:Ted2DocumentType( ext:String )
+	
+		ext=ext.ToLower()
+
+		Local types:=Plugin.PluginsOfType<Ted2DocumentType>()
+
+		For Local type:=Eachin types
+		
+			For Local ext2:=Eachin type.Extensions	'Array.Contains() would be nice!
+			
+				If ext=ext2 Return type
+			
+			Next
+			
+		Next
+		
+		Return Null
+	End
+	
+	Method CreateDocument:Ted2Document( path:String )
+	
+		Return OnCreateDocument( path )
+	End
+
+	Protected
+	
+	Method New()
+
+		AddPlugin( Self )
+	End
+	
+	Property Extensions:String[]()
+	
+		Return _exts
+	
+	Setter( exts:String[] )
+	
+		_exts=exts
+	End
+	
+	Method OnCreateDocument:Ted2Document( path:String ) Virtual
+	
+		Return Null	'should return hex editor!
+	End
+	
+	Private
+	
+	Field _exts:String[]
 End
