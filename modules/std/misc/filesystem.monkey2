@@ -80,9 +80,17 @@ Const FILETYPE_UNKNOWN:=FileType.Unknown
 Function AssetsDir:String()
 
 #If __TARGET__="desktop" And __HOSTOS__="macos"
+
 	Return AppDir()+"../Resources/"
-#Else
+	
+#Else __TARGET__="desktop" Or __TARGET__="emscripten"
+
 	Return AppDir()+"assets/"
+	
+#Else
+
+	Return ""
+	
 #Endif
 
 End
@@ -95,9 +103,9 @@ Function DesktopDir:String()
 	#Else
 		Return String.FromCString( getenv( "HOME" ) )+"/Desktop/"
 	#endif
-#else
-	RuntimeError( "Target has no desktop dir" )
 #endif
+
+	Return ""
 
 End
 

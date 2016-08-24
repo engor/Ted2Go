@@ -52,29 +52,35 @@ Namespace std
 
 #Import "fiber/fiber"
 #Import "fiber/future"
-'#Import "_dev/fiber"
-'#Import "_dev/generator"
 
 Private
 
 Function Main()
 
-	'capture app start time
+	'Capture app start time
+	'
 	std.time.Microsecs()
+
+	Stream.OpenFuncs["zip"]=Lambda:Stream( proto:String,path:String,mode:String )
+
+		Return ZipStream.Open( path,mode )
+	End
 
 	Stream.OpenFuncs["file"]=Lambda:Stream( proto:String,path:String,mode:String )
 
 		Return FileStream.Open( path,mode )
 	End
 	
+	'Note: "asset::" support for android/ios is in mojo, as it uses SDL_RWop and we don't want to std to be dependant on SDL2...
+	'	
+#if __TARGET__="desktop" Or __TARGET__="emscripten"
+	
 	Stream.OpenFuncs["asset"]=Lambda:Stream( proto:String,path:String,mode:String )
-	
+
 		Return FileStream.Open( filesystem.AssetsDir()+path,mode )
+
 	End
 	
-	Stream.OpenFuncs["zip"]=Lambda:Stream( proto:String,path:String,mode:String )
-
-		Return ZipStream.Open( path,mode )
-	End
-
+#endif
+	
 End
