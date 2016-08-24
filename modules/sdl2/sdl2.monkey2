@@ -13,11 +13,6 @@ Using libc
 
 Extern
 
-Struct SDL_RWops
-End
-
-Function SDL_RWFromMem:SDL_RWops Ptr( mem:Void Ptr,size:Int )
-
 Struct SDL_Surface
 End
 
@@ -28,6 +23,24 @@ Const SDL_FALSE:SDL_bool
 Const SDL_TRUE:SDL_bool
 
 '${EXTERN}
+
+'FILE="sdl2/SDL_rwops.h"
+Struct SDL_RWops
+End
+
+Const RW_SEEK_SET:Int
+Const RW_SEEK_CUR:Int
+Const RW_SEEK_END:Int
+
+Function SDL_RWFromMem:SDL_RWops Ptr( mem:Void Ptr,size:Int )
+Function SDL_RWFromFile:SDL_RWops Ptr( file:CString,mode:CString )
+
+Function SDL_RWsize:Long( ops:SDL_RWops Ptr )
+Function SDL_RWtell:Long( ops:SDL_RWops Ptr )
+Function SDL_RWseek:Long( ops:SDL_RWops Ptr,offset:Long,whence:Int )
+Function SDL_RWread:Long( ops:SDL_RWops Ptr,buf:Void Ptr,size:Long,count:Long )
+Function SDL_RWwrite:Long( ops:SDL_RWops Ptr,buf:Void Ptr,size:Long,count:Long )
+Function SDL_RWclose:Int( ops:SDL_RWops Ptr )
 
 'FILE=sdl2/SDL_hints.h
 

@@ -135,7 +135,7 @@
 #define SDL_VIDEO_DRIVER_X11_SUPPORTS_GENERIC_EVENTS 1
 
 #ifndef SDL_VIDEO_RENDER_OGL
-#define SDL_VIDEO_RENDER_OGL    1
+#define SDL_VIDEO_RENDER_OGL    0
 #endif
 
 /* Enable OpenGL support */
