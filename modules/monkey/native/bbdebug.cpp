@@ -1,6 +1,7 @@
 
 #include "bbdebug.h"
 #include "bbarray.h"
+#include <bbmonkey.h>
 
 #if _WIN32
 #include <windows.h>
@@ -39,8 +40,7 @@ namespace bbDB{
 		error( err );
 		exit( 0 );
 #endif
-
-		printf( "Caught signal:%s\n",err );
+		bb_printf( "Caught signal:%s\n",err );
 		exit( -1 );
 	}
 	
@@ -60,11 +60,11 @@ namespace bbDB{
 		
 #if _WIN32
 		if( HANDLE breakEvent=OpenEvent( EVENT_ALL_ACCESS,false,"MX2_BREAK_EVENT" ) ){
-//			printf( "Found BREAK_EVENT!\n" );fflush( stdout );
+//			bb_printf( "Found BREAK_EVENT!\n" );fflush( stdout );
 		    std::thread( [=](){
 		    	for( ;; ){
 		    		WaitForSingleObject( breakEvent,INFINITE );
-//	    			printf( "Break event!\n" );fflush( stdout );
+//	    			bb_printf( "Break event!\n" );fflush( stdout );
 		    		currentContext->stopped=0x10000000;
 		    	}
 		    } ).detach();
@@ -82,7 +82,7 @@ namespace bbDB{
 		bbString type=v->type->type();
 		bbString value=v->type->value( v->var );
 		bbString t=id+":"+type+"="+value+"\n";
-		printf( t.c_str() );
+		bb_printf( "%s",t.c_str() );
 	}
 	
 	void emitStack(){
@@ -90,7 +90,7 @@ namespace bbDB{
 		
 		for( bbDBFrame *f=currentContext->frames;f;f=f->succ ){
 
-			printf( ">%s;%s;%i;%i\n",f->decl,f->srcFile,f->srcPos>>12,f->seq );
+			bb_printf( ">%s;%s;%i;%i\n",f->decl,f->srcFile,f->srcPos>>12,f->seq );
 			
 			for( bbDBVar *v=f->locals;v!=ev;++v ){
 				emitVar( v );
@@ -121,11 +121,11 @@ namespace bbDB{
 	
 	void stopped(){
 
-		printf( "{{!DEBUG!}}\n" );
+		bb_printf( "{{!DEBUG!}}\n" );
 		
 		emitStack();
 
-		printf( "\n" );
+		bb_printf( "\n" );
 		fflush( stdout );
 		
 		for(;;){
@@ -142,14 +142,14 @@ namespace bbDB{
 			case '@':emit( e+1 );continue;
 			case 'q':exit( 0 );return;
 			}
-			printf( "Unrecognized debug cmd: %s\n",buf );fflush( stdout );
+			bb_printf( "Unrecognized debug cmd: %s\n",buf );fflush( stdout );
 			exit( -1 );
 		}
 	}
 	
 	void error( bbString msg ){
 		
-		printf( "\n%s\n",msg.c_str() );
+		bb_printf( "\n%s\n",msg.c_str() );
 		stopped();
 
 	}

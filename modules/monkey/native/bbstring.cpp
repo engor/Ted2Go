@@ -97,36 +97,39 @@ bbString bbString::fromChar( int chr ){
 }
 
 bbString bbString::fromCString( const void *data,int size ){
+	if( !data ) return bbString();
 	const char *p=(const char*)data;
 	const char *e=p;
-	while( e<p+size && *e ) ++e;
+	while( e!=p+size && *e ) ++e;
 	return bbString( p,e-p );
 }
 
 bbString bbString::fromWString( const void *data,int size ){
+	if( !data ) return bbString();
 	size/=sizeof(wchar_t);
 	const wchar_t *p=(const wchar_t*)data;
 	const wchar_t *e=p;
-	while( e<p+size && *e ) ++e;
+	while( e!=p+size && *e ) ++e;
 	return bbString( p,e-p );
 }
 
 bbString bbString::fromUtf8String( const void *data,int size ){
+	if( !data ) return bbString();
 
 	const char *p=(const char*)data;
 	const char *e=p+size;
 
 	int len=0;
 		
-	while( p<e && *p ){
+	while( p!=e && *p ){
 		int c=*p++;
 		
 		if( c & 0x80 ){
 			if( (c & 0xe0)==0xc0 ){
-				if( p>=e || (p[0] & 0xc0)!=0x80 ) break;
+				if( p==e || (p[0] & 0xc0)!=0x80 ) break;
 				p+=1;
 			}else if( (c & 0xf0)==0xe0 ){
-				if( p+1>=e || (p[0] & 0xc0)!=0x80 || (p[1] & 0xc0)!=0x80 ) break;
+				if( p+1==e || (p[0] & 0xc0)!=0x80 || (p[1] & 0xc0)!=0x80 ) break;
 				p+=2;
 			}else{
 				break;

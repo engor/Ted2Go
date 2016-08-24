@@ -1,6 +1,10 @@
 
 Namespace monkey
 
+#if __TARGET__="android"
+#import "<liblog.a>"
+#endif
+
 #Import "types.monkey2"
 #Import "math.monkey2"
 #Import "debug.monkey2"

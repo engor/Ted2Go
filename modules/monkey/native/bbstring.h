@@ -444,35 +444,20 @@ class bbString{
 	
 	static bbString fromChar( int chr );
 	
-	static bbString fromCString( const void *data,int size );
+	static bbString fromCString( const void *data,int size=-1 );
 
-	static bbString fromWString( const void *data,int size );
+	static bbString fromWString( const void *data,int size=-1 );
 	
-	static bbString fromUtf8String( const void *data,int size );
+	static bbString fromUtf8String( const void *data,int size=-1 );
 	
-	static bbString fromTString( const void *data,int size ){
+	static bbString fromTString( const void *data,int size=-1 ){
 #if _WIN32
 		return fromCString( data,size );
 #else
 		return fromUtf8String( data,size );
 #endif
 	}
-	
-	static bbString fromCString( const void *data ){
-		return fromCString( data,0x7fffffff );
-	}
-	
-	static bbString fromWString( const void *data ){
-		return fromWString( data,0x7fffffff );
-	}
-	
-	static bbString fromUtf8String( const void *data ){
-		return fromUtf8String( data,0x7fffffff );
-	}
-	
-	static bbString fromTString( const void *data ){
-		return fromTString( data,0x7fffffff );
-	}
+
 };
 
 class bbCString{
