@@ -1,6 +1,8 @@
 
 Namespace std.fiber
 
+#if __TARGET__<>"emscripten"
+
 #import "fcontext"
 
 #import "native/fcontext.cpp"
@@ -108,3 +110,5 @@ Struct Fiber
 	End
 	
 End
+
+#endif
