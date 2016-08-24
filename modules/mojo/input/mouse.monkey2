@@ -133,6 +133,10 @@ Class MouseDevice Extends InputDevice
 		Reset()
 	End
 	
+	Method SendEvent( event:SDL_Event Ptr )
+		'NOP for now...
+	End
+	
 	Private
 
 	Field _init:Bool	
@@ -152,5 +156,5 @@ Class MouseDevice Extends InputDevice
 		_buttons[MouseButton.Right]=mask & 4
 		App.Idle+=Poll
 	End
-
+	
 End

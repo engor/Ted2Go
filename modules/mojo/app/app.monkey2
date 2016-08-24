@@ -81,6 +81,10 @@ Class AppInstance
 		If Not config config=New StringMap<String>
 	
 		_config=config
+
+#if __TARGET__="android"
+		_touchMouse=True
+#endif
 		
 		SDL_Init( SDL_INIT_EVERYTHING & ~SDL_INIT_AUDIO )
 		
@@ -89,10 +93,16 @@ Class AppInstance
 		Mouse.Init()
 		
 		Audio.Init()
+		
+#if __TARGET__="android"		
 
-#If __TARGET__<>"emscripten"
-
-#If __HOSTOS__="windows"
+		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION,2 )
+	    SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION,0 ) 
+    	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_ES )
+    	
+#endif
+    
+#if __TARGET__="desktop" and __HOSTOS__="windows"
 
 		Local gl_major:=Int( GetConfig( "GL_context_major_version",-1 ) )
 		Local gl_minor:=Int( GetConfig( "GL_context_major_version",-1 ) )
@@ -116,6 +126,8 @@ Class AppInstance
 		If gl_minor<>-1 SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION,gl_minor )
 
 #Endif
+
+#if __TARGET__="desktop"
 
 		SDL_GL_SetAttribute( SDL_GL_SHARE_WITH_CURRENT_CONTEXT,1 )
 		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER,1 )
@@ -250,10 +262,6 @@ Class AppInstance
 	
 	An app is active if any of its windows has system input focus.
 	
-	If Active is true, then [[ActiveWindow]] will always be non-null.
-	
-	If Active is false, then [[ActiveWindow]] will always be null.
-	
 	#end
 	Property Active:Bool()
 	
@@ -264,19 +272,13 @@ Class AppInstance
 	
 	The active window is the window that has system input focus.
 	
-	If ActiveWindow is non-null, then [[Active]] will always be true.
-	
-	If ActiveWindow is null, then [[Active]] will always be false.
-	
 	#end
 	Property ActiveWindow:Window()
-
-		#rem	
+	
 		If Not _activeWindow
 			Local windows:=Window.VisibleWindows()
 			If windows _activeWindow=windows[0]
 		Endif
-		#end
 	
 		Return _activeWindow
 	End
@@ -313,6 +315,8 @@ Class AppInstance
 		Return _modalView
 	End
 	
+	#if __TARGET__="desktop"
+	
 	#rem monkeydoc @hidden
 	#end
 	Method WaitIdle()
@@ -324,6 +328,8 @@ Class AppInstance
 		
 		future.Get()
 	End
+	
+	#endif
 	
 	#rem monkeydoc @hidden
 	#end
@@ -392,7 +398,7 @@ Class AppInstance
 			SDL_WaitEvent( Null )
 			
 		Endif
-	
+		
 		UpdateEvents()
 		
 		UpdateWindows()
@@ -440,7 +446,7 @@ Class AppInstance
 			_hoverView=Null
 		Endif
 		
-		If Not _hoverView
+		If Not _hoverView And Not _touchMouse
 			_hoverView=ActiveViewAtMouseLocation()
 			If _mouseView And _hoverView<>_mouseView _hoverView=Null
 			If _hoverView SendMouseEvent( EventType.MouseEnter,_hoverView )
@@ -461,8 +467,11 @@ Class AppInstance
 	#end
 	Method Run()
 	
+#if __TARGET__="desktop"
+	
 		SDL_AddEventWatch( _EventFilter,Null )
-		
+
+#endif
 		RequestRender()
 		
 #If __TARGET__="emscripten"
@@ -482,6 +491,8 @@ Class AppInstance
 	Private
 	
 	Field _config:StringMap<String>
+	
+	Field _touchMouse:Bool=False		'mouse is really touch...
 	
 	Field _defaultFont:Font
 	Field _theme:Theme
@@ -538,6 +549,10 @@ Class AppInstance
 		_polling=True
 		
 		While SDL_PollEvent( Varptr event )
+		
+			Keyboard.SendEvent( Varptr event )
+			
+			Mouse.SendEvent( Varptr event )
 		
 			DispatchEvent( Varptr event )
 			
@@ -609,7 +624,7 @@ Class AppInstance
 	End
 	
 	Method DispatchEvent( event:SDL_Event Ptr )
-
+	
 		Select event->type
 		
 		Case SDL_KEYDOWN
@@ -658,7 +673,7 @@ Class AppInstance
 			_keyChar=String.FromChar( tevent->text[0] )
 			
 			SendKeyEvent( EventType.KeyChar )
-		
+			
 		Case SDL_MOUSEBUTTONDOWN
 		
 			Local mevent:=Cast<SDL_MouseButtonEvent Ptr>( event )
@@ -674,20 +689,22 @@ Class AppInstance
 				Local view:=ActiveViewAtMouseLocation()
 
 				If view
-'#If __HOSTOS__<>"linux"
+
+					If _touchMouse
+						_hoverView=view
+						SendMouseEvent( EventType.MouseEnter,_hoverView )
+					Endif
+					
 					SDL_CaptureMouse( SDL_TRUE )
-'#Endif
 					_mouseView=view
+					
+					_mouseClicks=mevent->clicks
+					
+					SendMouseEvent( EventType.MouseDown,_mouseView )
+					
+					_mouseClicks=0
 				Endif
-			Endif
 				
-			If _mouseView 
-			
-				_mouseClicks=mevent->clicks
-				
-				SendMouseEvent( EventType.MouseDown,_mouseView )
-				
-				_mouseClicks=0
 			Endif
 		
 		Case SDL_MOUSEBUTTONUP
@@ -703,44 +720,85 @@ Class AppInstance
 			If _mouseView
 
 				SendMouseEvent( EventType.MouseUp,_mouseView )
-'#If __HOSTOS__<>"linux"				
+				
 				SDL_CaptureMouse( SDL_FALSE )
-'#Endif
+				
 				_mouseView=Null
 
 				_mouseButton=Null
+				
+				If _touchMouse
+					SendMouseEvent( EventType.MouseLeave,_hoverView )
+					_hoverView=Null
+				Endif
+				
 			Endif
 			
 		Case SDL_MOUSEMOTION
 		
 			Local mevent:=Cast<SDL_MouseMotionEvent Ptr>( event )
-			
+				
 			_window=Window.WindowForID( mevent->windowID )
 			If Not _window Return
-			
+				
 			_mouseLocation=New Vec2i( mevent->x,mevent->y )
 			
-			Local view:=ActiveViewAtMouseLocation()
-			If _mouseView And view<>_mouseView view=Null
-			
-			If view<>_hoverView
-			
-				If _hoverView SendMouseEvent( EventType.MouseLeave,_hoverView )
-				
-				_hoverView=view
-				
-				If _hoverView SendMouseEvent( EventType.MouseEnter,_hoverView )
-			Endif
-			
 			If _mouseView
-
+			
 				SendMouseEvent( EventType.MouseMove,_mouseView )
+			
+			Else If Not _touchMouse
+			
+				Local view:=ActiveViewAtMouseLocation()
 				
-			Else If _hoverView
+				If view<>_hoverView
 
-				SendMouseEvent( EventType.MouseMove,_hoverView )
+					If _hoverView SendMouseEvent( EventType.MouseLeave,_hoverView )
+					
+					_hoverView=view
+					
+					If _hoverView SendMouseEvent( EventType.MouseEnter,_hoverView )
+
+				Endif
+				
+				If _hoverView SendMouseEvent( EventType.MouseMove,_hoverView )
 			
 			Endif
+			
+			#rem
+			If Not _touchMouse Or _mouseView
+		
+				Local mevent:=Cast<SDL_MouseMotionEvent Ptr>( event )
+				
+				_window=Window.WindowForID( mevent->windowID )
+				If Not _window Return
+				
+				_mouseLocation=New Vec2i( mevent->x,mevent->y )
+				
+				Local view:=ActiveViewAtMouseLocation()
+				If _mouseView And view<>_mouseView view=Null
+				
+				If view<>_hoverView
+				
+					If _hoverView SendMouseEvent( EventType.MouseLeave,_hoverView )
+					
+					_hoverView=view
+					
+					If _hoverView SendMouseEvent( EventType.MouseEnter,_hoverView )
+				Endif
+				
+				If _mouseView
+	
+					SendMouseEvent( EventType.MouseMove,_mouseView )
+					
+				Else If _hoverView
+	
+					SendMouseEvent( EventType.MouseMove,_hoverView )
+				
+				Endif
+			
+			Endif
+			#end
 
 		Case SDL_MOUSEWHEEL
 		
@@ -760,7 +818,7 @@ Class AppInstance
 				SendMouseEvent( EventType.MouseWheel,_hoverView )
 			
 			Endif
-			
+
 		Case SDL_WINDOWEVENT
 		
 			Local wevent:=Cast<SDL_WindowEvent Ptr>( event )
@@ -782,6 +840,8 @@ Class AppInstance
 			
 			Case SDL_WINDOWEVENT_FOCUS_GAINED
 			
+				Print "SDL_WINDOWEVENT_FOCUS_GAINED"
+			
 				Local active:=_active
 				_activeWindow=_window
 				_active=True
@@ -792,8 +852,10 @@ Class AppInstance
 			
 			Case SDL_WINDOWEVENT_FOCUS_LOST
 			
+				Print "SDL_WINDOWEVENT_FOCUS_LOST"
+			
 				Local active:=_active
-				_activeWindow=Null
+'				_activeWindow=Null		'too dangerous for now!
 				_active=False
 			
 				SendWindowEvent( EventType.WindowLostFocus )
@@ -823,6 +885,18 @@ Class AppInstance
 			Else If code & $80000000
 				RemoveAsyncCallback( id )
 			Endif
+
+		Case SDL_RENDER_TARGETS_RESET
+		
+			Print "SDL_RENDER_TARGETS_RESET"
+		
+			RequestRender()
+			
+		Case SDL_RENDER_DEVICE_RESET
+		
+			Print "SDL_RENDER_DEVICE_RESET"
+		
+			mojo.graphics.glutil.glGraphicsSeq+=1
 
 		End
 			

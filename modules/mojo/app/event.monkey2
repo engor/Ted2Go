@@ -102,7 +102,7 @@ End
 #end
 Class KeyEvent Extends Event
 
-	#rem monkeydoc @hidden
+	#rem monkeydoc Creates a new key event.
 	#end
 	Method New( type:EventType,view:View,key:Key,rawKey:Key,modifiers:Modifier,text:String )
 		Super.New( type,view )
@@ -149,7 +149,7 @@ End
 #end
 Class MouseEvent Extends Event
 
-	#rem monkeydoc @hidden
+	#rem monkeydoc Creates a new mouse event.
 	#end
 	Method New( type:EventType,view:View,location:Vec2i,button:MouseButton,wheel:Vec2i,modifiers:Modifier,clicks:Int )
 		Super.New( type,view )
@@ -209,7 +209,7 @@ End
 #end
 Class WindowEvent Extends Event
 
-	#rem monkeydoc @hidden
+	#rem monkeydoc Creates a new window event.
 	#end
 	Method New( type:EventType,window:Window )
 		Super.New( type,window )

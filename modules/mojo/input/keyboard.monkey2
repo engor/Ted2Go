@@ -198,6 +198,7 @@ Class KeyboardDevice Extends InputDevice
 			_names[key]=name
 			_raw2scan[key]=scanCode
 			_scan2raw[scanCode]=key | Key.Raw
+			
 #If __TARGET__="emscripten"
 			_key2scan[key]=scanCode
 #Else
@@ -208,9 +209,14 @@ Class KeyboardDevice Extends InputDevice
 			p=p+1
 		Wend
 		
-		SDL_AddEventWatch( _EventFilter,Null )
-		
 		Reset()
+	End
+	
+	#rem monkeydoc @hidden
+	#end
+	Method SendEvent( event:SDL_Event Ptr )
+
+		OnEvent( event )
 	End
 
 	Private
@@ -229,12 +235,7 @@ Class KeyboardDevice Extends InputDevice
 	Method New()
 	End
 	
-	Function _EventFilter:Int( userData:Void Ptr,event:SDL_Event Ptr )
-	
-		Return Keyboard.EventFilter( userData,event )
-	End
-	
-	Method EventFilter:Int( userData:Void Ptr,event:SDL_Event Ptr )
+	Method OnEvent( event:SDL_Event Ptr )
 
 		Select event->type
 			
@@ -273,8 +274,7 @@ Class KeyboardDevice Extends InputDevice
 			End
 
 		End
-		
-		Return 1
+
 	End
 
 End

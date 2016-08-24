@@ -204,10 +204,12 @@ void bbRequesters::OpenUrl( bbString url ){
 
 bbString bbRequesters::RequestFile( bbString title,bbString exts,bbBool save,bbString path ){
 
-	bbString cmd=BB_T("zenity --title=\"")+title+BB_T("\" --file-selection");
+//	unsetenv( "WINDOWID" );
+
+	bbString cmd=BB_T("zenity --title=\"")+title+BB_T("\" --file-selection");	// --modal");
 	
 	if( save ) cmd+=" --save";
-
+	
 	FILE *f=popen( cmd.c_str(),"r" );
 	if( !f ) return "";
 	

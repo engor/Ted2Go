@@ -8,15 +8,17 @@ Namespace mojo.requesters
 #If __HOSTOS__="macos"
 
 	#Import "native/requesters.mm"
-
+	
 #else
 
 	#Import "native/requesters.cpp"
-
+	
 	#if __HOSTOS__="windows"
-		#Import "<libcomdlg32.a>"
-	#endif
 
+		#Import "<libcomdlg32.a>"
+
+	#endif
+	
 #endif
 
 Extern

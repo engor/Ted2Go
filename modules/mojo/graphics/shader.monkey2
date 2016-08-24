@@ -138,8 +138,8 @@ Class ShaderProgram
 	
 		glAttachShader( _glProgram,vshader )
 		glAttachShader( _glProgram,fshader )
-		glDeleteShader( vshader )
-		glDeleteShader( fshader )
+'		glDeleteShader( vshader )
+'		glDeleteShader( fshader )
 		
 		glBindAttribLocation( _glProgram,0,"mx2_VertexPosition" )
 		glBindAttribLocation( _glProgram,1,"mx2_VertexTexCoord0" )
@@ -156,19 +156,17 @@ Class ShaderProgram
 		
 		Local n:Int
 		glGetProgramiv( _glProgram,GL_ACTIVE_UNIFORMS,Varptr n )
-
+		
 		Local size:Int,type:UInt,length:Int,nameBuf:=New Byte[256],texunit:=0
 		
 		For Local i:=0 Until n
 		
-			glGetActiveUniform( _glProgram,i,nameBuf.Length,Varptr length,Varptr size,Varptr type,Cast<GLchar Ptr>( Varptr nameBuf[0] ) )
-			
+			glGetActiveUniform( _glProgram,i,nameBuf.Length,Varptr length,Varptr size,Varptr type,Cast<GLchar Ptr>( nameBuf.Data ) )
+
 			Local name:=String.FromCString( nameBuf.Data )
 			
 			Local location:=glGetUniformLocation( _glProgram,name )
 			If location=-1 Continue  'IE fix...
-			
-'			Print "Uniform "+name+" location="+location
 			
 			Local u:=New Uniform( name,location,texunit,size,type )
 			If name.StartsWith( "mx2_" )

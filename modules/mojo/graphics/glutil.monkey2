@@ -63,8 +63,7 @@ End
 #end
 Function glCompile:Int( type:Int,source:String )
 
-	#If __TARGET__="emscripten"	Or (__TARGET__="desktop" And __HOSTOS__="windows")
-'	#If TARGET<>"glfw" Or GLFW_USE_ANGLE_GLES20
+	#if __TARGET__<>"desktop" Or __HOSTOS__="windows"
 		source="precision mediump float;~n"+source
 	#Endif
 	

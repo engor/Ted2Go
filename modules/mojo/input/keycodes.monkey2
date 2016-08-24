@@ -152,6 +152,9 @@ End
 | Control		| LeftControl | RightControl mask.
 | Alt			| LeftAlt | RightAlt mask.
 | Gui			| LeftGui | RightGui mask.
+| LeftMenu		| LeftGui on Mac target, LeftControl on other targets.
+| RightMenu		| RightGui on Mac target, RightControl on other targets.
+| Menu			| Gui on Mac target, Control on other targets.
 
 #end
 Enum Modifier
@@ -172,4 +175,14 @@ Enum Modifier
 	Control=		LeftControl|RightControl
 	Alt=			LeftAlt|RightAlt
 	Gui=			LeftGui|RightGui
+	
+#if __TARGET__="macos"
+	LeftMenu=		LeftGui
+	RightMenu=		RightGui
+	Menu=			Gui
+#else
+	LeftMenu=		LeftControl
+	RightMenu=		RightControl
+	Menu=			Control
+#endif
 End

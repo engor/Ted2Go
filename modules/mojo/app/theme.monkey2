@@ -64,6 +64,8 @@ Class Theme
 	#end
 	Method LoadFont:Font( file:String,size:Int )
 	
+		size*=_themeScale
+	
 		Local font:Font
 		
 		If ExtractRootDir( file )
@@ -112,6 +114,8 @@ Class Theme
 
 		If Not atlas Return Null
 		
+		atlas.Scale=New Vec2f( _themeScale,_themeScale )
+		
 		Local size:=atlas.Height
 		
 		Local n:=atlas.Width/size
@@ -147,6 +151,10 @@ Class Theme
 			If Not skin skin=Skin.Load( "asset::images/"+file )
 		Endif
 		
+		If Not skin Return Null
+		
+		skin.Image.Scale=New Vec2f( _themeScale,_themeScale )
+		
 		Return skin
 	End
 
@@ -167,6 +175,12 @@ Class Theme
 	Private
 	
 	Const _jdefault:=New JsonString( "default" )
+
+#if __TARGET__="android"	
+	Field _themeScale:Int=2
+#else
+	Field _themeScale:Int=1
+#endif
 
 	Field _themePath:String
 	Field _themeDir:String
@@ -236,6 +250,11 @@ Class Theme
 			r=arr[2].ToNumber()
 			b=arr[3].ToNumber()
 		End
+		
+		l*=_themeScale
+		t*=_themeScale
+		r*=_themeScale
+		b*=_themeScale
 		
 		Return New Recti( -l,-t,r,b )
 	End

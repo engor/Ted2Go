@@ -19,6 +19,8 @@ Namespace mojo
 #Import "app/window"
 #Import "app/glwindow"
 
+#Import "app/sdl_rwstream.monkey2"
+
 #Import "graphics/canvas"
 #Import "graphics/device"
 #Import "graphics/font"
@@ -68,5 +70,15 @@ Function Main()
 
 		Return Stream.Open( ExtractDir( App.Theme.Path )+path,mode )
 	End
+	
+#if __TARGET__="android"
+
+	Stream.OpenFuncs["asset"]=Lambda:Stream( proto:String,path:String,mode:String )
+	
+		Return SDL_RWStream.Open( path,mode )
+
+	End
+
+#endif
 	
 End

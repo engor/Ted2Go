@@ -260,18 +260,18 @@ Class Window Extends View
 	End
 	
 	Method LayoutWindow()
+
+		'All this polling is a bit ugly...fixme.
 	
 #If __TARGET__="emscripten"
 
-		'ugly...fixme.
 		Local w:Int,h:Int,fs:Int
 		emscripten_get_canvas_size( Varptr w,Varptr h,Varptr fs )
 		If w<>Frame.Width Or h<>Frame.Height
 			Frame=New Recti( 0,0,w,h )
 		Endif
-	
+
 #Else
-		'ugly...fixme.
 		If MinSize<>_minSize
 			SDL_SetWindowMinimumSize( _sdlWindow,MinSize.x,MinSize.y )
 			_minSize=GetMinSize()
@@ -283,7 +283,7 @@ Class Window Extends View
 			_maxSize=GetMaxSize()
 			MaxSize=_maxSize
 		Endif
-		
+
 		If Frame<>_frame
 			SDL_SetWindowPosition( _sdlWindow,Frame.X,Frame.Y )
 			SDL_SetWindowSize( _sdlWindow,Frame.Width,Frame.Height )
@@ -291,8 +291,8 @@ Class Window Extends View
 			Frame=_frame
 			_weirdHack=True
 		Endif
-		
 #Endif
+
 		Measure()
 		
 		UpdateLayout()
@@ -302,7 +302,8 @@ Class Window Extends View
 	#end
 	Method RenderWindow()
 	
-		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )	
+		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )
+
 		SDL_GL_SetSwapInterval( _swapInterval )
 	
 #If __TARGET__="desktop" And __HOSTOS__="windows"
