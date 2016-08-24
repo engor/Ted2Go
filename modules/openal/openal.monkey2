@@ -29,7 +29,14 @@
 
 #else if __TARGET__="android"
 
+	#Import "openal-soft/jniLibs/armeabi-v7a/libopenal.so"
+
 	#import "openal-soft/include/*.h"
+	#import "<AL/al.h>"
+	#import "<AL/alc.h>"
+	
+#else
+
 	#import "<AL/al.h>"
 	#import "<AL/alc.h>"
 
