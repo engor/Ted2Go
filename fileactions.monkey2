@@ -48,12 +48,12 @@ Class FileActions
 		save.HotKeyModifiers=Modifier.Menu
 		save.Triggered=OnSave
 
-		saveAs=New Action( "Save As" )
-		saveAs.HotKey=Key.S
-		saveAs.HotKeyModifiers=Modifier.Menu|Modifier.Shift
+		saveAs=New Action( "Save As..." )
 		saveAs.Triggered=OnSaveAs
 
 		saveAll=New Action( "Save All" )
+		saveAll.HotKey=Key.S
+		saveAll.HotKeyModifiers=Modifier.Menu|Modifier.Shift
 		saveAll.Triggered=OnSaveAll
 		
 		quit=New Action( "Quit" )

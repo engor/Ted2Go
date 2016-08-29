@@ -12,31 +12,9 @@ Const COLOR_COMMENT:=5
 Const COLOR_PREPROC:=6
 Const COLOR_OTHER:=7
 
-Global Keywords:=New StringMap<String>
+Global Keywords:Keywords
 
-Function InitKeywords()
-	Local kws:=""
 
-	kws+="Namespace;Using;Import;Extern;"
-	kws+="Public;Private;Protected;Friend;"
-	kws+="Void;Bool;Byte;UByte;Short;UShort;Int;UInt;Long;ULong;Float;Double;String;Object;Continue;Exit;"
-	kws+="New;Self;Super;Eachin;True;False;Null;Where;"
-	kws+="Alias;Const;Local;Global;Field;Method;Function;Property;Getter;Setter;Operator;Lambda;"
-	kws+="Enum;Class;Interface;Struct;Extends;Implements;Virtual;Override;Abstract;Final;Inline;"
-	kws+="Var;Varptr;Ptr;"
-	kws+="Not;Mod;And;Or;Shl;Shr;End;"
-	kws+="If;Then;Else;Elseif;Endif;"
-	kws+="While;Wend;"
-	kws+="Repeat;Until;Forever;"
-	kws+="For;To;Step;Next;"
-	kws+="Select;Case;Default;"
-	kws+="Try;Catch;Throw;Throwable;"
-	kws+="Return;Print;Static;Cast"
-	
-	For Local kw:=Eachin kws.Split( ";" )
-		Keywords[kw.ToLower()]=kw
-	Next
-End
 
 Function Monkey2TextHighlighter:Int( text:String,colors:Byte[],sol:Int,eol:Int,state:Int )
 
@@ -249,7 +227,7 @@ Class Monkey2DocumentView Extends Ted2TextView
 		Local ident:=text.Slice( start,cursor )
 		If Not ident Return
 		
-		Local kw:=Keywords[ident.ToLower()]
+		Local kw:=Keywords.Get(ident)
 		If kw And kw<>ident Document.ReplaceText( Cursor-ident.Length,Cursor,kw )
 		
 	End
@@ -283,18 +261,63 @@ Class Monkey2DocumentView Extends Ted2TextView
 		Select event.Type
 		Case EventType.KeyDown
 		
-			Select event.Key
-			Case Key.F1
+			Local ctrl := (event.Modifiers & Modifier.Control)
 			
-				Local ident:=IdentAtCursor()
+			If ctrl
+					
+				Select event.Key
 				
-				If ident MainWindow.ShowQuickHelp( ident )
-				
-			Case Key.Tab,Key.Enter
-				Capitalize()
-			Case Key.Up,Key.Down
-				Capitalize()
-			End
+					Case Key.E 'delete whole line
+						Local line := Document.FindLine(Cursor)
+						SelectText(Document.StartOfLine(line), Document.EndOfLine(line)+1)
+						ReplaceText("")
+						event.Eat()
+						
+					Case Key.X
+						If CanCopy
+							Cut()
+						Else
+							'nothing selected - cut whole line
+							Local line := Document.FindLine(Cursor)
+							SelectText(Document.StartOfLine(line), Document.EndOfLine(line)+1)
+							Cut()
+						Endif
+						event.Eat()
+						
+					Case Key.C, Key.Insert
+						If CanCopy
+							Copy()
+						Else
+							'nothing selected - copy whole line
+							Local cur := Cursor
+							Local line := Document.FindLine(Cursor)
+							SelectText(Document.StartOfLine(line), Document.EndOfLine(line))
+							Copy()
+							SelectText(cur,cur)'restore
+						Endif
+						event.Eat()
+				End
+			
+			Else 'without ctrl modifier
+			
+				Select event.Key
+							
+					Case Key.F1
+					
+						Local ident:=IdentAtCursor()
+						
+						If ident MainWindow.ShowQuickHelp( ident )
+						
+					Case Key.Tab,Key.Enter
+						Capitalize()
+					
+					Case Key.Up,Key.Down
+						Capitalize()
+						
+				End
+		
+		Endif
+		
 		
 		Case EventType.KeyChar
 		
@@ -314,7 +337,7 @@ Class Monkey2Document Extends Ted2Document
 	Method New( path:String )
 		Super.New( path )
 	
-		InitKeywords()
+		Keywords = KeywordsManager.Get("monkey2")
 		
 		_doc=New TextDocument
 		

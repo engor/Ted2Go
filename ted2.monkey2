@@ -32,11 +32,19 @@
 
 #import "textviewkeyeventfilter"
 
+#import "code2go/keywords"
+'#import "views2go/codetextview"
+
+
+
 Namespace ted2
 
 Using std..
 Using mojo..
 Using mojox..
+Using code2go
+Using views2go
+
 
 Function Main()
 
@@ -55,6 +63,8 @@ Function Main()
 	Wend
 	
 #endif
+	
+	KeywordsManager.Init()
 	
 	Local jobj:=JsonObject.Load( "bin/ted2.state.json" )
 	If Not jobj jobj=New JsonObject
