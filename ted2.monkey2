@@ -32,7 +32,10 @@
 
 #import "textviewkeyeventfilter"
 
-#import "code2go/keywords"
+#import "syntax/keywords"
+#Import "syntax/highlighter"
+#Import "syntax/monkey2highlighter"
+
 '#import "views2go/codetextview"
 
 

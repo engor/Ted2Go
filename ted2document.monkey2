@@ -1,6 +1,34 @@
 
 Namespace ted2
 
+
+Class Ted2CodeDocument Extends Ted2Document
+	
+	Method New( path:String )
+		Super.New( path )
+	End
+	
+	Property Keywords:Keywords()
+		Return _keywords
+	Setter(value:Keywords)
+		_keywords = value
+	End
+	
+	Property Highlighter:Highlighter()
+		Return _highlighter
+	Setter(value:Highlighter)
+		_highlighter = value
+	End
+	
+	Private
+	
+	Field _keywords:Keywords
+	Field _highlighter:Highlighter
+	
+End
+
+
+
 Class Ted2Document
 
 	Field DirtyChanged:Void()

@@ -1,156 +1,6 @@
 
 Namespace ted2
 
-Private
-
-Const COLOR_NONE:=0
-Const COLOR_IDENT:=1
-Const COLOR_KEYWORD:=2
-Const COLOR_STRING:=3
-Const COLOR_NUMBER:=4
-Const COLOR_COMMENT:=5
-Const COLOR_PREPROC:=6
-Const COLOR_OTHER:=7
-
-Global Keywords:Keywords
-
-
-
-Function Monkey2TextHighlighter:Int( text:String,colors:Byte[],sol:Int,eol:Int,state:Int )
-
-	Local i0:=sol
-	
-	Local icolor:=0
-	Local istart:=sol
-	Local preproc:=False
-	
-	If state>-1 icolor=COLOR_COMMENT
-	
-	While i0<eol
-	
-		Local start:=i0
-		Local chr:=text[i0]
-		i0+=1
-		If IsSpace( chr ) Continue
-		
-		If chr=35 And istart=sol
-			preproc=True
-			If state=-1 icolor=COLOR_PREPROC
-			Continue
-		Endif
-		
-		If preproc And (IsAlpha( chr ) Or chr=95)
-
-			While i0<eol And (IsAlpha( text[i0] ) Or IsDigit( text[i0] )  Or text[i0]=95)
-				i0+=1
-			Wend
-			
-			Local id:=text.Slice( start,i0 )
-			
-			Select id.ToLower()
-			Case "rem"
-				state+=1
-				icolor=COLOR_COMMENT
-			Case "end"
-				If state>-1 
-					state-=1
-					icolor=COLOR_COMMENT
-				Endif
-			End
-			
-			Exit
-		
-		Endif
-		
-		If state>-1 Or preproc Exit
-		
-		Local color:=icolor
-		
-		If chr=39
-		
-			i0=eol
-			color=COLOR_COMMENT
-			
-		Else If chr=34
-		
-			While i0<eol And text[i0]<>34
-				i0+=1
-			Wend
-			If i0<eol i0+=1
-			
-			color=COLOR_STRING
-			
-		Else If IsAlpha( chr ) Or chr=95
-
-			While i0<eol And (IsAlpha( text[i0] ) Or IsDigit( text[i0] )  Or text[i0]=95)
-				i0+=1
-			Wend
-			
-			Local id:=text.Slice( start,i0 )
-			
-			If preproc And istart=sol
-			
-				Select id.ToLower()
-				Case "rem"				
-					state+=1
-				Case "end"
-					state=Max( state-1,-1 )
-				End
-				
-				icolor=COLOR_COMMENT
-				
-				Exit
-			Else
-			
-				color=COLOR_IDENT
-				
-				If Keywords.Contains( id.ToLower() ) color=COLOR_KEYWORD
-			
-			Endif
-			
-		Else If IsDigit( chr )
-		
-			While i0<eol And IsDigit( text[i0] )
-				i0+=1
-			Wend
-			
-			color=COLOR_NUMBER
-			
-		Else If chr=36 And i0<eol And IsHexDigit( text[i0] )
-		
-			i0+=1
-			While i0<eol And IsHexDigit( text[i0] )
-				i0+=1
-			Wend
-			
-			color=COLOR_NUMBER
-			
-		Else
-			
-			color=COLOR_NONE
-			
-		Endif
-		
-		If color=icolor Continue
-		
-		For Local i:=istart Until start
-			colors[i]=icolor
-		Next
-		
-		icolor=color
-		istart=start
-	
-	Wend
-	
-	For Local i:=istart Until eol
-		colors[i]=icolor
-	Next
-	
-	Return state
-
-End
-
-Public
 
 Class Monkey2DocumentView Extends Ted2TextView
 
@@ -221,13 +71,13 @@ Class Monkey2DocumentView Extends Ted2TextView
 		
 		If start<text.Length 
 			Local color:=Document.Colors[start]
-			If color<>COLOR_KEYWORD And color<>COLOR_IDENT Return
+			If color<>Highlighter.COLOR_KEYWORD And color<>Highlighter.COLOR_IDENT Return
 		Endif
 		
 		Local ident:=text.Slice( start,cursor )
 		If Not ident Return
 		
-		Local kw:=Keywords.Get(ident)
+		Local kw := _doc.Keywords.Get(ident)
 		If kw And kw<>ident Document.ReplaceText( Cursor-ident.Length,Cursor,kw )
 		
 	End
@@ -332,12 +182,15 @@ Class Monkey2DocumentView Extends Ted2TextView
 
 End
 
-Class Monkey2Document Extends Ted2Document
+Class Monkey2Document Extends Ted2CodeDocument
 
 	Method New( path:String )
 		Super.New( path )
 	
+		' need to extract it from Plugins
 		Keywords = KeywordsManager.Get("monkey2")
+		Highlighter = New Monkey2Highlighter
+		
 		
 		_doc=New TextDocument
 		
@@ -345,7 +198,7 @@ Class Monkey2Document Extends Ted2Document
 			Dirty=True
 		End
 		
-		_doc.TextHighlighter=Monkey2TextHighlighter
+		_doc.TextHighlighter = Highlighter.Executor
 		
 		_doc.LinesModified=Lambda( first:Int,removed:Int,inserted:Int )
 			Local put:=0

@@ -1,5 +1,5 @@
 
-Namespace code2go
+Namespace ted2
 
 
 #rem monkeydoc Keywords for someone language
