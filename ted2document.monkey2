@@ -8,9 +8,9 @@ Class Ted2CodeDocument Extends Ted2Document
 		Super.New( path )
 	End
 	
-	Property Keywords:Keywords()
+	Property Keywords:IKeywords()
 		Return _keywords
-	Setter(value:Keywords)
+	Setter(value:IKeywords)
 		_keywords = value
 	End
 	
@@ -22,7 +22,7 @@ Class Ted2CodeDocument Extends Ted2Document
 	
 	Private
 	
-	Field _keywords:Keywords
+	Field _keywords:IKeywords
 	Field _highlighter:Highlighter
 	
 End

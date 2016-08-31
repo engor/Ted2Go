@@ -188,7 +188,7 @@ Class Monkey2Document Extends Ted2CodeDocument
 		Super.New( path )
 	
 		' need to extract it from Plugins
-		Keywords = KeywordsManager.Get("monkey2")
+		Keywords = Monkey2Keywords.Acquire()
 		Highlighter = New Monkey2Highlighter
 		
 		

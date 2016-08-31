@@ -33,6 +33,7 @@
 #import "textviewkeyeventfilter"
 
 #import "syntax/keywords"
+#import "syntax/monkey2keywords"
 #Import "syntax/highlighter"
 #Import "syntax/monkey2highlighter"
 
@@ -45,8 +46,6 @@ Namespace ted2
 Using std..
 Using mojo..
 Using mojox..
-Using code2go
-Using views2go
 
 
 Function Main()
@@ -66,8 +65,6 @@ Function Main()
 	Wend
 	
 #endif
-	
-	KeywordsManager.Init()
 	
 	Local jobj:=JsonObject.Load( "bin/ted2.state.json" )
 	If Not jobj jobj=New JsonObject

@@ -2,9 +2,15 @@
 Namespace ted2
 
 
+Interface IKeywords
+	Method Contains:Bool(word:String)
+	Method Get:String(word:String)
+End
+
+
 #rem monkeydoc Keywords for someone language
 #end
-Class Keywords
+Class Keywords Implements IKeywords
 	
 	Method New()
 	End
@@ -23,10 +29,11 @@ Class Keywords
 		Return _keywords[word.ToLower()]
 	End	
 	
+	
 
 Private
 	
-	Global _keywords := New StringMap<String>
+	Field _keywords := New StringMap<String>
 	
 End
 
@@ -36,6 +43,25 @@ Storage for all keywords for all supported highlighted langs.
 #end
 
 Class KeywordsManager
+	
+	Function Contains:Bool(lang:String)
+		If Not _inited Then Init()
+		Return _map.Contains(lang.ToLower())
+	End
+
+	Function Get:Keywords(lang:String)
+		If Not _inited Then Init()
+		Local kw := _map[lang.ToLower()]
+		If kw = Null Then kw = _empty
+		Return kw
+	End	
+	
+
+Private
+	
+	Global _inited:Bool
+	Global _map := New StringMap<Keywords>
+	Global _empty := New Keywords
 	
 	Function Init()
 		Local json:JsonObject
@@ -52,23 +78,9 @@ Class KeywordsManager
 			Local words := json[l].ToString().Split(";")
 			_map[l.ToLower()] = New Keywords(words)
 		Next
+		
+		_inited = True
 	End
-	
-	Function Contains:Bool(lang:String)
-		Return _map.Contains(lang.ToLower())
-	End
-
-	Function Get:Keywords(lang:String)
-		Local kw := _map[lang.ToLower()]
-		If kw = Null Then kw = _empty
-		Return kw
-	End	
-	
-
-Private
-	
-	Global _map := New StringMap<Keywords>
-	Global _empty := New Keywords
 	
 	Function GetInternal:JsonObject()
 		Local json:="{"
