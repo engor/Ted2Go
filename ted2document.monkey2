@@ -2,33 +2,6 @@
 Namespace ted2
 
 
-Class Ted2CodeDocument Extends Ted2Document
-	
-	Method New( path:String )
-		Super.New( path )
-	End
-	
-	Property Keywords:IKeywords()
-		Return _keywords
-	Setter(value:IKeywords)
-		_keywords = value
-	End
-	
-	Property Highlighter:Highlighter()
-		Return _highlighter
-	Setter(value:Highlighter)
-		_highlighter = value
-	End
-	
-	Private
-	
-	Field _keywords:IKeywords
-	Field _highlighter:Highlighter
-	
-End
-
-
-
 Class Ted2Document
 
 	Field DirtyChanged:Void()
@@ -40,6 +13,7 @@ Class Ted2Document
 	Method New( path:String )
 	
 		_path=path
+		_fileType = ExtractExt(path).Slice(1)
 		
 		_modTime=GetFileTime( _path )
 	End
@@ -47,6 +21,11 @@ Class Ted2Document
 	Property Path:String()
 
 		Return _path
+	End
+	
+	Property FileType:String()'file extension
+		
+		Return _fileType
 	End
 	
 	Property ModTime:Long()
@@ -166,11 +145,16 @@ Class Ted2Document
 	Field _modTime:Long
 	Field _state:String
 	Field _view:View
+	Field _fileType:String
 	
 End
 
 Class Ted2DocumentType Extends Plugin
 
+	Property Name:String() Override
+		Return "Ted2DocumentType"
+	End
+	
 	Function ForExtension:Ted2DocumentType( ext:String )
 	
 		ext=ext.ToLower()
@@ -215,8 +199,10 @@ Class Ted2DocumentType Extends Plugin
 	
 		Return Null	'should return hex editor!
 	End
-	
+
 	Private
 	
 	Field _exts:String[]
+	
+	
 End

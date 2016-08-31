@@ -1,9 +1,21 @@
 
 Namespace ted2
 
-Class TextViewKeyEventFilter Extends Plugin
+Class TextViewKeyEventFilter Extends Plugin Implements IDependsOnFileType
 
-	Function FilterKeyEvent( event:KeyEvent,textView:TextView )
+	Property Name:String() Override
+		Return "TextViewKeyEventFilter"
+	End
+	
+	Method GetFileTypes:String[]() Virtual
+		Return Null
+	End
+	
+	Method GetMainFileType:String() Virtual
+		Return "*"
+	End
+	
+	Function FilterKeyEvent( event:KeyEvent,textView:TextView, fileType:String=Null )
 	
 		Local filters:=Plugin.PluginsOfType<TextViewKeyEventFilter>()
 		
@@ -11,7 +23,9 @@ Class TextViewKeyEventFilter Extends Plugin
 		
 			If event.Eaten Return
 			
-			filter.OnFilterKeyEvent( event,textView )
+			If fileType = Null Or filter.CheckFileTypeSuitability(fileType)
+				filter.OnFilterKeyEvent( event,textView )
+			Endif
 		Next
 	
 	End
@@ -29,36 +43,56 @@ Class TextViewKeyEventFilter Extends Plugin
 	
 End
 
-Class IJKMTextViewKeyEventFilter Extends TextViewKeyEventFilter
 
+Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
+
+	Property Name:String() Override
+		Return "Monkey2KeyEventFilter"
+	End
+	
+	Method GetFileTypes:String[]() Override
+		Return _types
+	End
+	
+	Method GetMainFileType:String() Override
+		Return "monkey2"
+	End
+	
 	Protected
 	
 	Method New()
 	
-		AddPlugin( Self ) 'don't REALLY need this unless when want to enum all IJKTextViewBlah filters!
+		AddPlugin( Self )
 	End
 	
 	Method OnFilterKeyEvent( event:KeyEvent,textView:TextView ) Override
 	
-		If (event.Type<>EventType.KeyDown And event.Type<>EventType.KeyRepeat) Or Not (event.Modifiers & Modifier.Alt) Return
-
-		Local fake:Key
-		Select event.Key
-		Case Key.I fake=Key.Up
-		Case Key.J fake=Key.Left
-		Case Key.K fake=Key.Right
-		Case Key.M fake=Key.Down
-		Default
-			Return
+		Local codeView := Cast<CodeTextView>(textView)
+		
+		Select event.Type
+		Case EventType.KeyDown
+			
+			Local ctrl := (event.Modifiers & Modifier.Control)
+			
+			Select event.Key
+						
+				Case Key.F1
+					Local ident := codeView.IdentAtCursor()
+					If ident Then MainWindow.ShowQuickHelp( ident )
+				
+				Case Key.Apostrophe
+					If ctrl 'comment / uncomment block
+					
+					End
+			End
 		End
-			
-		textView.SendKeyEvent( New KeyEvent( EventType.KeyDown,textView,fake,Null,event.Modifiers & Modifier.Shift,"" ) )
-			
-		event.Eat()
+		
 	End
+	
 	
 	Private
 	
-	Global _instance:=New IJKMTextViewKeyEventFilter
+	Global _types := New String[]("monkey2")
+	Global _instance:=New Monkey2KeyEventFilter
 
 End

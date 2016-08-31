@@ -2,10 +2,10 @@
 Namespace ted2
 
 
-Class Monkey2Highlighter Extends HighlighterPlugin
+Class CppHighlighter Extends HighlighterPlugin
 
 	Property Name:String() Override
-		Return "monkey2 highlighter"
+		Return "cpp highlighter"
 	End
 
 	Method GetFileTypes:String[]() Override
@@ -13,15 +13,15 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 	End
 	
 	Method GetMainFileType:String() Override
-		Return "monkey2"
+		Return "cpp"
 	End
 	
 	
 	Private
 	
-	Global _types := New String[]("monkey2")
-	Global _instance := New Monkey2Highlighter
-	
+	Global _types := New String[]("cpp","h","hpp")
+	Global _instance := New CppHighlighter
+		
 	Method New()
 		Super.New()
 		_hl = New Highlighter
@@ -165,4 +165,3 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 	End
 	
 End
-

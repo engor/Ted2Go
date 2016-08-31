@@ -2,7 +2,7 @@
 Namespace ted2
 
 
-Class Monkey2DocumentView Extends Ted2TextView
+Class Monkey2DocumentView Extends Ted2CodeTextView
 
 	Method New( doc:Monkey2Document )
 	
@@ -16,6 +16,13 @@ Class Monkey2DocumentView Extends Ted2TextView
 
 		CursorColor=New Color( 0,.5,1 )
 		SelectionColor=New Color( .4,.4,.4 )
+		
+		FileType = doc.FileType
+		
+		Keywords = KeywordsManager.Get(FileType)
+		Highlighter = HighlightersManager.Get(FileType)
+		
+		Document.TextHighlighter = Highlighter.Painter
 	End
 	
 	Protected
@@ -53,152 +60,20 @@ Class Monkey2DocumentView Extends Ted2TextView
 	
 	Field _doc:Monkey2Document
 	
-	Method Capitalize()
-	
-		Local cursor:=Cursor
-		
-		Local state:=Document.LineState( Document.FindLine( cursor ) )
-		If state<>-1 Return
-		
-		Local text:=Text
-		Local start:=cursor
-		While start And IsIdent( text[start-1] )
-			start-=1
-		Wend
-		While start<text.Length And IsDigit( text[start] )
-			start+=1
-		Wend
-		
-		If start<text.Length 
-			Local color:=Document.Colors[start]
-			If color<>Highlighter.COLOR_KEYWORD And color<>Highlighter.COLOR_IDENT Return
-		Endif
-		
-		Local ident:=text.Slice( start,cursor )
-		If Not ident Return
-		
-		Local kw := _doc.Keywords.Get(ident)
-		If kw And kw<>ident Document.ReplaceText( Cursor-ident.Length,Cursor,kw )
-		
-	End
-	
-	Method IdentAtCursor:String()
-	
-		Local text:=Text
-		Local start:=Cursor
-		
-		While start And Not IsIdent( text[start] ) And text[start-1]<>10
-			start-=1
-		Wend
-		While start And IsIdent( text[start-1] ) And text[start-1]<>10
-			start-=1
-		Wend
-		While start<text.Length And IsDigit( text[start] ) And text[start]<>10
-			start+=1
-		Wend
-		
-		Local ends:=start
-		
-		While ends<text.Length And IsIdent( text[ends] ) And text[ends]<>10
-			ends+=1
-		Wend
-		
-		Return text.Slice( start,ends )
-	End
-	
-	Method OnKeyEvent( event:KeyEvent ) Override
-	
-		Select event.Type
-		Case EventType.KeyDown
-		
-			Local ctrl := (event.Modifiers & Modifier.Control)
-			
-			If ctrl
-					
-				Select event.Key
-				
-					Case Key.E 'delete whole line
-						Local line := Document.FindLine(Cursor)
-						SelectText(Document.StartOfLine(line), Document.EndOfLine(line)+1)
-						ReplaceText("")
-						event.Eat()
-						
-					Case Key.X
-						If CanCopy
-							Cut()
-						Else
-							'nothing selected - cut whole line
-							Local line := Document.FindLine(Cursor)
-							SelectText(Document.StartOfLine(line), Document.EndOfLine(line)+1)
-							Cut()
-						Endif
-						event.Eat()
-						
-					Case Key.C, Key.Insert
-						If CanCopy
-							Copy()
-						Else
-							'nothing selected - copy whole line
-							Local cur := Cursor
-							Local line := Document.FindLine(Cursor)
-							SelectText(Document.StartOfLine(line), Document.EndOfLine(line))
-							Copy()
-							SelectText(cur,cur)'restore
-						Endif
-						event.Eat()
-				End
-			
-			Else 'without ctrl modifier
-			
-				Select event.Key
-							
-					Case Key.F1
-					
-						Local ident:=IdentAtCursor()
-						
-						If ident MainWindow.ShowQuickHelp( ident )
-						
-					Case Key.Tab,Key.Enter
-						Capitalize()
-					
-					Case Key.Up,Key.Down
-						Capitalize()
-						
-				End
-		
-		Endif
-		
-		
-		Case EventType.KeyChar
-		
-			If Not IsIdent( event.Text[0] )
-				Capitalize()
-			Endif
-		End
-
-		Super.OnKeyEvent( event )
-
-	End
 
 End
 
-Class Monkey2Document Extends Ted2CodeDocument
+
+Class Monkey2Document Extends Ted2Document
 
 	Method New( path:String )
 		Super.New( path )
 	
-		' need to extract it from Plugins
-		Keywords = Monkey2Keywords.Acquire()
-		Highlighter = New Monkey2Highlighter
-		
-		
 		_doc=New TextDocument
 		
 		_doc.TextChanged=Lambda()
 			Dirty=True
 		End
-		
-		_doc.TextHighlighter = Highlighter.Executor
 		
 		_doc.LinesModified=Lambda( first:Int,removed:Int,inserted:Int )
 			Local put:=0
@@ -280,12 +155,16 @@ End
 
 Class Monkey2DocumentType Extends Ted2DocumentType
 
+	Property Name:String() Override
+		Return "Monkey2DocumentType"
+	End
+	
 	Protected
 	
 	Method New()
 		AddPlugin( Self )
 		
-		Extensions=New String[]( ".monkey2",".ogg" )
+		Extensions=New String[]( ".monkey2",".ogg",".cpp",".h",".hpp")
 	End
 	
 	Method OnCreateDocument:Ted2Document( path:String ) Override

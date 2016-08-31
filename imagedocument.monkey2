@@ -104,12 +104,16 @@ End
 
 Class ImageDocumentType Extends Ted2DocumentType
 
+	Property Name:String() Override
+		Return "ImageDocumentType"
+	End
+	
 	Protected
 	
 	Method New()
 		AddPlugin( Self )
 		
-		Extensions=New String[]( ".png",".jpg",".bmp" )
+		Extensions=New String[]( ".png",".jpg",".jpeg",".bmp" )
 	End
 	
 	Method OnCreateDocument:Ted2Document( path:String ) Override

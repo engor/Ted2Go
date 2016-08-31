@@ -14,15 +14,50 @@ Class Highlighter
 	Const COLOR_OTHER:=7
 	
 	'use it like a property, as readonly
-	Field Executor:Int( text:String,colors:Byte[],sol:Int,eol:Int,state:Int )
+	Field Painter:Int( text:String,colors:Byte[],sol:Int,eol:Int,state:Int )
 	
-	Property Keywords:Keywords()
-		Return _keywords
+End
+
+
+Class HighlighterPlugin Extends Plugin Implements IDependsOnFileType
+
+	Property Highlighter:Highlighter()
+		Return _hl
+	End
+	
+	Method GetFileTypes:String[]() Virtual
+		Return Null
+	End
+	
+	Method GetMainFileType:String() Virtual
+		Return "*"
 	End
 	
 	
 	Protected
 	
-	Field _keywords:Keywords 'or codeanalyzer here which will be include keywords
+	Method New()
+		AddPlugin(Self)
+	End
+		
+	Field _hl:Highlighter
+	Field _keywords:IKeywords
+	
+End
+
+
+Class HighlightersManager
+	
+	Function Get:Highlighter(fileType:String)
+		Local plugins := Plugin.PluginsOfType<HighlighterPlugin>()
+		For Local p := Eachin plugins
+			If p.CheckFileTypeSuitability(fileType) Then Return p.Highlighter
+		Next
+		Return _empty
+	End
+	
+	Private
+	
+	Global _empty := New Highlighter
 	
 End

@@ -165,6 +165,10 @@ End
 
 Class AudioDocumentType Extends Ted2DocumentType
 
+	Property Name:String() Override
+		Return "AudioDocumentType"
+	End
+	
 	Protected
 	
 	Method New()

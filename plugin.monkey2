@@ -13,6 +13,15 @@ Class Plugin
 		Return Plugins<T>.Plugins().ToArray()
 	End
 	
+	Method CheckFileTypeSuitability:Bool(fileType:String)
+		Local dep := Cast<IDependsOnFileType>(Self)
+		If Not dep Return True
+		If dep.GetMainFileType() = "*" Return True 'any files
+		Local types := dep.GetFileTypes()
+		Return Utils.ArrayContains(types,fileType)
+	End
+	
+	
 	Protected
 	
 	Method New()
@@ -25,6 +34,7 @@ Class Plugin
 		Plugins<T>.Plugins().Add( plugin )
 	End
 
+
 	Private
 	
 	Struct Plugins<T>
@@ -36,4 +46,10 @@ Class Plugin
 		End
 	End
 
+End
+
+
+Interface IDependsOnFileType
+	Method GetFileTypes:String[]()
+	Method GetMainFileType:String()
 End
