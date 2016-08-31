@@ -41,6 +41,7 @@
 #Import "syntax/cppkeywords"
 
 #Import "views/codetextview"
+#Import "views/consolewithcopy"
 
 #Import "utils/jsonutils"
 #Import "utils/utils"
