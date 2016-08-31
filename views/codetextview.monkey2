@@ -18,7 +18,12 @@ Class CodeTextView Extends TextView
 		_highlighter = value
 	End
 	
-		
+	Method IsCursorAtTheEndOfLine:Bool()
+		Local line := Document.FindLine(Cursor)
+		Local pos := Document.EndOfLine(line)
+		Return pos=Cursor
+	End
+	
 	Method IdentAtCursor:String()
 	
 		Local text:=Text
@@ -43,8 +48,30 @@ Class CodeTextView Extends TextView
 		Return text.Slice( start,ends )
 	End
 	
+	Method FirstSelectedLine:Int()
+		Local min := Min( Anchor,Cursor )
+		Return Document.FindLine(min)
+	End
 	
-	Protected
+	Method LastSelectedLine:Int()
+		Local max := Max( Anchor,Cursor )
+		Return Document.FindLine(max)
+	End
+	
+	Method FirstIdentInLine:String(cursor:Int)
+		Local line := Document.FindLine(cursor)
+		Local text := Document.GetLine(line)
+		Local n := 0
+		'skip empty chars
+		While n < text.Length And text[n] <= 32
+			n += 1
+		Wend
+		Local indent := n
+		While n < text.Length And IsIdent(text[n])
+			n += 1
+		Wend
+		Return (n > indent ? text.Slice(indent,n) Else "")
+	End
 	
 	Method GetIndent:Int(text:String)
 		Local n := 0
@@ -53,7 +80,10 @@ Class CodeTextView Extends TextView
 		Wend
 		Return n
 	End
+
 	
+	Protected
+		
 	Method OnKeyEvent(event:KeyEvent) Override
 	
 		Select event.Type
@@ -93,10 +123,17 @@ Class CodeTextView Extends TextView
 					Case Key.Enter 'auto indent
 						
 						DoFormat()
-										
-						Local line := CursorRow
-						Local text := Document.GetLine( line )
+						
+						Local info := CurrentTextLine
+						Local line := info.line
+						Local text := info.text
 						Local indent := GetIndent(text)
+						
+						'fix 'bug' when we delete ~n at the end of line.
+						'in this case GetLine return 2 lines, and if they empty
+						'then we get double indent
+						'need to fix inside mojox
+						if indent > info.posInLine Then indent = info.posInLine
 						
 						Local s := (indent ? text.Slice(0, indent) Else "")
 						ReplaceText( "~n"+s )

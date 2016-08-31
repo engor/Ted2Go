@@ -58,6 +58,7 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 		Return "monkey2"
 	End
 	
+		
 	Protected
 	
 	Method New()
@@ -80,10 +81,24 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 					Local ident := codeView.IdentAtCursor()
 					If ident Then MainWindow.ShowQuickHelp( ident )
 				
-				Case Key.Apostrophe
-					If ctrl 'comment / uncomment block
-					
+				Case Key.Apostrophe 'ctrl+' - comment / uncomment block
+					If ctrl
+						
+						
 					End
+					
+					
+				Case Key.Enter 'ctrl+enter - smart ending of expression
+					If ctrl And Not codeView.CanCopy And codeView.IsCursorAtTheEndOfLine()
+						Local ident := codeView.FirstIdentInLine(codeView.Cursor)
+						Print "ident: "+ident
+						ident = ident.ToLower()
+						Select ident
+							Case "method","function","class","interface","if","select"
+								'need to add 'End' keyword here for rapid coding
+								event.Eat()
+						End
+					Endif
 			End
 		End
 		
