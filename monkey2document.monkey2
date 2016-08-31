@@ -14,9 +14,6 @@ Class Monkey2DocumentView Extends Ted2CodeTextView
 		
 		AddView( New GutterView( Self ),"left" )
 
-		CursorColor=New Color( 0,.5,1 )
-		SelectionColor=New Color( .4,.4,.4 )
-		
 		FileType = doc.FileType
 		
 		Keywords = KeywordsManager.Get(FileType)
