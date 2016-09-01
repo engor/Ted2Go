@@ -24,7 +24,7 @@
 
 #Import "plugin"
 #Import "ted2document"
-#Import "monkey2document"
+#Import "codedocument"
 #Import "plaintextdocument"
 #Import "imagedocument"
 #Import "audiodocument"

@@ -2,9 +2,9 @@
 Namespace ted2
 
 
-Class Monkey2DocumentView Extends Ted2CodeTextView
+Class CodeDocumentView Extends Ted2CodeTextView
 
-	Method New( doc:Monkey2Document )
+	Method New( doc:CodeDocument )
 	
 		_doc=doc
 		
@@ -53,13 +53,13 @@ Class Monkey2DocumentView Extends Ted2CodeTextView
 	
 	Private
 	
-	Field _doc:Monkey2Document
+	Field _doc:CodeDocument
 	
 
 End
 
 
-Class Monkey2Document Extends Ted2Document
+Class CodeDocument Extends Ted2Document
 
 	Method New( path:String )
 		Super.New( path )
@@ -88,7 +88,7 @@ Class Monkey2Document Extends Ted2Document
 		End
 
 	
-		_view=New Monkey2DocumentView( Self )
+		_view=New CodeDocumentView( Self )
 	End
 	
 	Property TextDocument:TextDocument()
@@ -118,7 +118,7 @@ Class Monkey2Document Extends Ted2Document
 
 	Field _doc:TextDocument
 
-	Field _view:Monkey2DocumentView
+	Field _view:CodeDocumentView
 
 	Field _errors:=New Stack<BuildError>
 
@@ -148,10 +148,10 @@ Class Monkey2Document Extends Ted2Document
 	
 End
 
-Class Monkey2DocumentType Extends Ted2DocumentType
+Class CodeDocumentType Extends Ted2DocumentType
 
 	Property Name:String() Override
-		Return "Monkey2DocumentType"
+		Return "CodeDocumentType"
 	End
 	
 	Protected
@@ -159,17 +159,17 @@ Class Monkey2DocumentType Extends Ted2DocumentType
 	Method New()
 		AddPlugin( Self )
 		
-		Extensions=New String[]( ".monkey2",".ogg",".cpp",".h",".hpp")
+		Extensions=New String[]( ".monkey2",".cpp",".h",".hpp",".hxx",".c",".cxx",".m",".mm",".s",".asm",".html",".js",".css",".php",".md",".xml",".ini",".sh",".bat",".glsl")
 	End
 	
 	Method OnCreateDocument:Ted2Document( path:String ) Override
 	
-		Return New Monkey2Document( path )
+		Return New CodeDocument( path )
 	End
 	
 	Private
 	
-	Global _instance:=New Monkey2DocumentType
+	Global _instance:=New CodeDocumentType
 	
 End
 

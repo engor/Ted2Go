@@ -154,7 +154,7 @@ Class BuildActions
 	
 		If jobj.Contains( "lockedDocument" )
 			Local path:=jobj["lockedDocument"].ToString()
-			_locked=Cast<Monkey2Document>( _docs.FindDocument( path ) )
+			_locked=Cast<CodeDocument>( _docs.FindDocument( path ) )
 			If _locked _locked.State="+"
 		Endif
 		
@@ -213,7 +213,7 @@ Class BuildActions
 
 	Field _mx2cc:String
 	
-	Field _locked:Monkey2Document
+	Field _locked:CodeDocument
 	
 	Field _errors:=New List<BuildError>
 	
@@ -230,9 +230,9 @@ Class BuildActions
 	
 	Field _appFile:String
 	
-	Method BuildDoc:Monkey2Document()
+	Method BuildDoc:CodeDocument()
 		
-		If Not _locked Return Cast<Monkey2Document>( _docs.CurrentDocument )
+		If Not _locked Return Cast<CodeDocument>( _docs.CurrentDocument )
 		
 		Return _locked
 	End
@@ -251,7 +251,7 @@ Class BuildActions
 		_errors.Clear()
 	
 		For Local doc:=Eachin _docs.OpenDocuments
-			Local mx2Doc:=Cast<Monkey2Document>( doc )
+			Local mx2Doc:=Cast<CodeDocument>( doc )
 			If mx2Doc mx2Doc.Errors.Clear()
 		Next
 
@@ -259,7 +259,7 @@ Class BuildActions
 
 	Method GotoError( err:BuildError )
 	
-		Local doc:=Cast<Monkey2Document>( _docs.OpenDocument( err.path,True ) )
+		Local doc:=Cast<CodeDocument>( _docs.OpenDocument( err.path,True ) )
 		If Not doc Return
 		
 		Local tv:=Cast<TextView>( doc.View )
@@ -318,7 +318,7 @@ Class BuildActions
 						Local msg:=stdout.Slice( i+12 )
 						
 						Local err:=New BuildError( path,line,msg )
-						Local doc:=Cast<Monkey2Document>( _docs.OpenDocument( path,False ) )
+						Local doc:=Cast<CodeDocument>( _docs.OpenDocument( path,False ) )
 						
 						If doc
 							doc.Errors.Add( err )
@@ -444,7 +444,7 @@ Class BuildActions
 	
 	Method OnLockBuildFile()
 	
-		Local doc:=Cast<Monkey2Document>( _docs.CurrentDocument )
+		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
 		If Not doc Return
 		
 		If _locked _locked.State=""

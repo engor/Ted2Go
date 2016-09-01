@@ -108,7 +108,7 @@ Class DebugView Extends DockingView
 			
 			If node.srcFile
 			
-				Local doc:=Cast<Monkey2Document>( _docs.OpenDocument( node.srcFile,True ) )
+				Local doc:=Cast<CodeDocument>( _docs.OpenDocument( node.srcFile,True ) )
 				If Not doc Return
 				
 				MainWindow.UpdateWindow( False )
@@ -179,7 +179,7 @@ Class DebugView Extends DockingView
 		DebugEnd()
 		
 		For Local doc:=Eachin _docs.OpenDocuments
-			Local mx2Doc:=Cast<Monkey2Document>( doc )
+			Local mx2Doc:=Cast<CodeDocument>( doc )
 			If mx2Doc mx2Doc.DebugLine=-1
 		Next
 			
@@ -360,7 +360,7 @@ Class DebugView Extends DockingView
 				Endif
 				
 				If Not first
-					Local doc:=Cast<Monkey2Document>( _docs.OpenDocument( func.srcFile,True ) )
+					Local doc:=Cast<CodeDocument>( _docs.OpenDocument( func.srcFile,True ) )
 					If doc
 						MainWindow.UpdateWindow( False )
 						doc.DebugLine=func.srcLine-1
