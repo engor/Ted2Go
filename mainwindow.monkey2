@@ -37,8 +37,8 @@ Class MainWindowInstance Extends Window
 			If IsTmpPath( doc.Path ) DeleteFile( doc.Path )
 		End
 
-		_buildConsole=New ConsoleWithCopy
-		_outputConsole=New ConsoleWithCopy
+		_buildConsole=New ConsoleExt
+		_outputConsole=New ConsoleExt
 		_helpView=New HtmlView
 '		_helpView.Style=New Style( _helpView.Style )
 '		_helpView.Style.Border=New Recti( 0,-4,0,0 )

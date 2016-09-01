@@ -42,7 +42,9 @@
 #Import "syntax/monkey2formatter"
 
 #Import "views/codetextview"
-#Import "views/consolewithcopy"
+#Import "views/consoleext"
+
+#Import "analyzer/autocompleteview"
 
 #Import "utils/jsonutils"
 #Import "utils/utils"
