@@ -21,8 +21,8 @@ End
 
 Class HighlighterPlugin Extends Plugin Implements IDependsOnFileType
 
-	Property Highlighter:Highlighter()
-		Return _hl
+	Property Name:String() Override
+		Return "HighlighterPlugin"
 	End
 	
 	Method GetFileTypes:String[]() Virtual
@@ -31,6 +31,10 @@ Class HighlighterPlugin Extends Plugin Implements IDependsOnFileType
 	
 	Method GetMainFileType:String() Virtual
 		Return "*"
+	End
+	
+	Property Highlighter:Highlighter()
+		Return _hl
 	End
 	
 	

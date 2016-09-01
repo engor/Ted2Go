@@ -36,9 +36,10 @@
 #Import "syntax/monkey2keywords"
 #Import "syntax/highlighter"
 #Import "syntax/monkey2highlighter"
-#Import "syntax/codeformatter"
 #Import "syntax/cpphighlighter"
 #Import "syntax/cppkeywords"
+#Import "syntax/codeformatter"
+#Import "syntax/monkey2formatter"
 
 #Import "views/codetextview"
 #Import "views/consolewithcopy"

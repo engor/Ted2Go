@@ -4,7 +4,16 @@ Namespace ted2
 
 Class Ted2CodeTextView Extends CodeTextView
 
-	Field FileType:String 'where else we can store this type?
+	Property FileType:String() 'where else we can store this type?
+		return _type
+	Setter(value:String)
+		_type = value
+		Keywords = KeywordsManager.Get(_type)
+		Highlighter = HighlightersManager.Get(_type)
+		Formatter = FormattersManager.Get(_type)
+		Document.TextHighlighter = Highlighter.Painter
+	End
+	
 	
 	Protected
 	
@@ -15,6 +24,10 @@ Class Ted2CodeTextView Extends CodeTextView
 		If Not event.Eaten Super.OnKeyEvent( event )
 	End
 
+	private
+	
+	Field _type:String
+	
 End
 
 

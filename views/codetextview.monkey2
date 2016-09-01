@@ -4,19 +4,9 @@ Namespace ted2
 
 Class CodeTextView Extends TextView
 
-	Field Formatter:ICodeFormatter
-		
-	Property Keywords:IKeywords()
-		Return _keywords
-	Setter(value:IKeywords)
-		_keywords = value
-	End
-	
-	Property Highlighter:Highlighter()
-		Return _highlighter
-	Setter(value:Highlighter)
-		_highlighter = value
-	End
+	Field Formatter:ICodeFormatter		
+	Field Keywords:IKeywords
+	Field Highlighter:Highlighter
 	
 	Method IsCursorAtTheEndOfLine:Bool()
 		Local line := Document.FindLine(Cursor)
@@ -187,11 +177,8 @@ Class CodeTextView Extends TextView
 	
 	Private 
 	
-	Field _keywords:IKeywords
-	Field _highlighter:Highlighter
-	
 	Method DoFormat()
-		'If Formatter Then Formatter.Format
+		If Formatter Then Formatter.Format(Self)
 	End
 	
 End

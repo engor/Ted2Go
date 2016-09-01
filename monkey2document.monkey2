@@ -14,12 +14,10 @@ Class Monkey2DocumentView Extends Ted2CodeTextView
 		
 		AddView( New GutterView( Self ),"left" )
 
+		'very important to set FileType for init
+		'formatter, highlighter and keywords
 		FileType = doc.FileType
 		
-		Keywords = KeywordsManager.Get(FileType)
-		Highlighter = HighlightersManager.Get(FileType)
-		
-		Document.TextHighlighter = Highlighter.Painter
 	End
 	
 	Protected
