@@ -30,7 +30,8 @@
 #Import "audiodocument"
 #Import "jsondocument"
 
-#Import "textviewkeyeventfilter"
+#Import "eventfilters/textviewkeyeventfilter"
+#Import "eventfilters/monkey2keyeventfilter"
 
 #Import "syntax/keywords"
 #Import "syntax/monkey2keywords"

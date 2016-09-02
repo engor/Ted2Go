@@ -110,6 +110,7 @@ Class CodeTextView Extends TextView
 							Return
 						Endif
 						
+						#rem
 					Case Key.Enter 'auto indent
 						
 						DoFormat()
@@ -155,6 +156,7 @@ Class CodeTextView Extends TextView
 						Endif
 					
 						Return 
+					#end
 						
 					Case Key.Up, Key.Down, Key.Tab
 						DoFormat()

@@ -1,6 +1,7 @@
 
 Namespace ted2
 
+
 Class Plugin
 
 	Property Name:String() Virtual
@@ -11,14 +12,6 @@ Class Plugin
 	Function PluginsOfType<T>:T[]() Where T Extends Plugin
 		
 		Return Plugins<T>.Plugins().ToArray()
-	End
-	
-	Method CheckFileTypeSuitability:Bool(fileType:String)
-		Local dep := Cast<IDependsOnFileType>(Self)
-		If Not dep Return True
-		If dep.GetMainFileType() = "*" Return True 'any files
-		Local types := dep.GetFileTypes()
-		Return Utils.ArrayContains(types,fileType)
 	End
 	
 	
@@ -46,6 +39,28 @@ Class Plugin
 		End
 	End
 
+End
+
+
+Class PluginDependsOnFileType Extends Plugin Implements IDependsOnFileType
+
+	Property Name:String() Override
+		Return "PluginDependsOnFileType"
+	End
+	
+	Method GetFileTypes:String[]() Virtual
+		Return Null
+	End
+	
+	Method GetMainFileType:String() Virtual
+		Return "*"
+	End
+
+	Method CheckFileTypeSuitability:Bool(fileType:String)
+		If GetMainFileType() = "*" Return True 'any files
+		Return Utils.ArrayContains( GetFileTypes(),fileType )
+	End
+	
 End
 
 

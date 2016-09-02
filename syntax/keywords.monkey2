@@ -37,18 +37,10 @@ Class Keywords Implements IKeywords
 End
 
 
-Class KeywordsPlugin Extends Plugin Implements IDependsOnFileType
+Class KeywordsPlugin Extends PluginDependsOnFileType
 	
 	Property Name:String() Override
 		Return "KeywordsPlugin"
-	End
-	
-	Method GetFileTypes:String[]() Virtual
-		Return Null
-	End
-	
-	Method GetMainFileType:String() Virtual
-		Return "*"
 	End
 	
 	Property Keywords:IKeywords()

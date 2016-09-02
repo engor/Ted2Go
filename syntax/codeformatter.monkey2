@@ -10,18 +10,10 @@ End
 
 
 'base wrapper for code formatter
-Class CodeFormatterPlugin Extends Plugin Implements IDependsOnFileType, ICodeFormatter
+Class CodeFormatterPlugin Extends PluginDependsOnFileType Implements ICodeFormatter
 
 	Property Name:String() Override
 		Return "CodeFormatterPlugin"
-	End
-	
-	Method GetFileTypes:String[]() Virtual
-		Return Null
-	End
-	
-	Method GetMainFileType:String() Virtual
-		Return "*"
 	End
 	
 	

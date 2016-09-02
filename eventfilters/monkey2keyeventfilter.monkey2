@@ -1,48 +1,6 @@
 
 Namespace ted2
 
-Class TextViewKeyEventFilter Extends Plugin Implements IDependsOnFileType
-
-	Property Name:String() Override
-		Return "TextViewKeyEventFilter"
-	End
-	
-	Method GetFileTypes:String[]() Virtual
-		Return Null
-	End
-	
-	Method GetMainFileType:String() Virtual
-		Return "*"
-	End
-	
-	Function FilterKeyEvent( event:KeyEvent,textView:TextView, fileType:String=Null )
-	
-		Local filters:=Plugin.PluginsOfType<TextViewKeyEventFilter>()
-		
-		For Local filter:=Eachin filters
-		
-			If event.Eaten Return
-			
-			If fileType = Null Or filter.CheckFileTypeSuitability(fileType)
-				filter.OnFilterKeyEvent( event,textView )
-			Endif
-		Next
-	
-	End
-
-	Protected
-	
-	Method New()
-	
-		AddPlugin( Self )
-	End
-	
-	Method OnFilterKeyEvent( event:KeyEvent,textView:TextView ) Virtual
-
-	End
-	
-End
-
 
 Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 
@@ -60,11 +18,6 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 	
 		
 	Protected
-	
-	Method New()
-	
-		AddPlugin( Self )
-	End
 	
 	Method OnFilterKeyEvent( event:KeyEvent,textView:TextView ) Override
 	
@@ -86,8 +39,7 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 						
 						
 					End
-					
-					
+										
 				Case Key.Enter 'ctrl+enter - smart ending of expression
 					If ctrl And Not codeView.CanCopy And codeView.IsCursorAtTheEndOfLine()
 						Local ident := codeView.FirstIdentInLine(codeView.Cursor)
@@ -108,6 +60,6 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 	Private
 	
 	Global _types := New String[]("monkey2")
-	Global _instance:=New Monkey2KeyEventFilter
+	Global _instance := New Monkey2KeyEventFilter
 
 End
