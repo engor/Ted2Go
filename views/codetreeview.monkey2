@@ -1,5 +1,5 @@
 
-Namespace ted2
+Namespace ted2go
 
 
 Class CodeTreeView Extends TextView

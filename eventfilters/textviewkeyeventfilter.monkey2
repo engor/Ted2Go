@@ -1,5 +1,5 @@
 
-Namespace ted2
+Namespace ted2go
 
 
 'now filters depend on filetype

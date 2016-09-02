@@ -1,5 +1,6 @@
 
-Namespace ted2
+Namespace ted2go
+
 
 #Import "assets/debug_icons.png@/ted2"
 

@@ -52,7 +52,7 @@
 #Import "utils/utils"
 
 
-Namespace ted2
+Namespace ted2go
 
 Using std..
 Using mojo..
@@ -85,7 +85,7 @@ Function Main()
 	
 	New AppInstance
 	
-	New MainWindowInstance( "Ted2",rect,WindowFlags.Resizable,jobj )
+	New MainWindowInstance( "Ted2Go",rect,WindowFlags.Resizable,jobj )
 	
 	App.Run()
 End

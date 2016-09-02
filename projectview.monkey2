@@ -1,5 +1,6 @@
 
-Namespace ted2
+Namespace ted2go
+
 
 Class ProjectView Extends ScrollView
 

@@ -1,5 +1,6 @@
 
-Namespace ted2
+Namespace ted2go
+
 
 Class DocumentManager
 
@@ -63,9 +64,9 @@ Class DocumentManager
 		'
 		App.Idle+=Lambda()
 			If _currentDoc
-				MainWindow.Title="Ted2 - "+_currentDoc.Path
+				MainWindow.Title="Ted2Go - "+_currentDoc.Path
 			Else
-				MainWindow.Title="Ted2"
+				MainWindow.Title="Ted2Go"
 			Endif
 		End
 		

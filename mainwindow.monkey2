@@ -1,5 +1,6 @@
 
-Namespace ted2
+Namespace ted2go
+
 
 #Import "assets/about.html@/ted2"
 #Import "assets/scripts.json@/ted2"
