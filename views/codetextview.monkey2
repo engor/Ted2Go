@@ -2,7 +2,7 @@
 Namespace ted2
 
 
-Class CodeTextView Extends TextView
+Class CodeTextView Extends TextViewExt
 
 	Field Formatter:ICodeFormatter		
 	Field Keywords:IKeywords
@@ -110,7 +110,6 @@ Class CodeTextView Extends TextView
 							Return
 						Endif
 						
-						#rem
 					Case Key.Enter 'auto indent
 						
 						DoFormat()
@@ -133,30 +132,31 @@ Class CodeTextView Extends TextView
 						
 					Case Key.Home 'smart Home behaviour
 			
-						Local line := CurrentTextLine
-						Local txt := line.text
-						Local n := 0
-						Local n2 := txt.Length
-						'check for whitespaces before cursor
-						While (n < n2 And IsSpace(txt[n]))
-							n += 1
-						Wend
-						n += line.posStart
-						Local newPos := 0
-						If n >= Cursor And Cursor > line.posStart
-							newPos = line.posStart
-						Else
-							newPos = n
-						Endif
+						If Not ctrl
+							Local line := CurrentTextLine
+							Local txt := line.text
+							Local n := 0
+							Local n2 := txt.Length
+							'check for whitespaces before cursor
+							While (n < n2 And IsSpace(txt[n]))
+								n += 1
+							Wend
+							n += line.posStart
+							Local newPos := 0
+							If n >= Cursor And Cursor > line.posStart
+								newPos = line.posStart
+							Else
+								newPos = n
+							Endif
+								
+							If event.Modifiers & Modifier.Shift 'selection
+								SelectText(Anchor, newPos)
+							Else
+								SelectText(newPos, newPos)
+							Endif
 							
-						If event.Modifiers & Modifier.Shift 'selection
-							SelectText(Anchor, newPos)
-						Else
-							SelectText(newPos, newPos)
+							Return
 						Endif
-					
-						Return 
-					#end
 						
 					Case Key.Up, Key.Down, Key.Tab
 						DoFormat()

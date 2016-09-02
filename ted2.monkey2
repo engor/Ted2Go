@@ -42,6 +42,7 @@
 #Import "syntax/codeformatter"
 #Import "syntax/monkey2formatter"
 
+#Import "views/textviewext"
 #Import "views/codetextview"
 #Import "views/consoleext"
 
