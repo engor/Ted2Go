@@ -1,0 +1,12 @@
+{
+	"scripts":[
+		{
+			"name":"Update mx2cc",
+			"script":"updatemx2cc"
+		},
+		{
+			"name":"Rebuild mx2cc",
+			"script":"rebuildmx2cc"
+		}
+	]
+}
