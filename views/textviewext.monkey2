@@ -60,7 +60,7 @@ Class TextViewExt Extends TextView
 	Method OnKeyEvent(event:KeyEvent) Override
 		
 		Select event.Type
-			Case EventType.KeyDown
+			Case EventType.KeyDown, EventType.KeyRepeat
 				
 				Local ctrl := event.Modifiers & Modifier.Control
 				Local shift := event.Modifiers & Modifier.Shift

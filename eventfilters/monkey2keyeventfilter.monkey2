@@ -24,7 +24,7 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 		Local codeView := Cast<CodeTextView>(textView)
 		
 		Select event.Type
-		Case EventType.KeyDown
+		Case EventType.KeyDown, EventType.KeyRepeat
 			
 			Local ctrl := (event.Modifiers & Modifier.Control)
 			

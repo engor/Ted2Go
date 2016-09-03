@@ -21,7 +21,10 @@ Class Ted2CodeTextView Extends CodeTextView
 	
 		TextViewKeyEventFilter.FilterKeyEvent( event,Self,FileType )
 		
-		If Not event.Eaten Super.OnKeyEvent( event )
+		If Not event.Eaten
+			Super.OnKeyEvent( event )
+		Endif
+		
 	End
 
 	private

@@ -109,7 +109,7 @@ Class CodeTextView Extends TextViewExt
 							SelectText(cur,cur)'restore
 							Return
 						Endif
-						
+					
 					Case Key.Enter 'auto indent
 						
 						DoFormat()
