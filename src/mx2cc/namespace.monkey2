@@ -45,6 +45,7 @@ End
 Class NamespaceScope Extends Scope
 
 	Field ntype:NamespaceType
+	Field classexts:=New Stack<ClassType>
 	
 	Method New( ntype:NamespaceType,outer:NamespaceScope )
 		Super.New( outer )
@@ -88,6 +89,29 @@ Class NamespaceScope Extends Scope
 		If nmspace And nmspace.ntype Return nmspace.FindRoot()
 		
 		Return Self
+	End
+	
+	Method FindClassExtensions:Stack<ClassType>( ctype:ClassType )
+	
+		Local exts:Stack<ClassType>
+		
+		For Local ext:=Eachin classexts
+		
+			If ext.IsGeneric
+				If ctype.instanceOf
+					If ext.superType.instanceOf.ExtendsType( ctype.instanceOf )
+						ext=TCast<ClassType>( ext.GenInstance( ctype.types ) )
+					Endif
+				Endif
+			Endif
+
+			If Not ext.superType.ExtendsType( ctype ) Continue
+			
+			If Not exts exts=New Stack<ClassType>
+			exts.Push( ext )
+		Next
+		
+		Return exts
 	End
 
 End

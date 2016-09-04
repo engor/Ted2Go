@@ -31,12 +31,14 @@ End
 
 Function BalancePrimTypes:Type( lhs:PrimType,rhs:PrimType )
 
+	If lhs=Type.StringType Or rhs=Type.StringType Return Type.StringType
+	
+	If lhs=Type.BoolType Or rhs=Type.BoolType Return Type.BoolType
+	
 	If Not lhs Or Not rhs
 		Throw New SemantEx( "Types must be primitive" )
 	Endif
 
-	If lhs=Type.StringType Or rhs=Type.StringType Return Type.StringType
-	
 	Return BalanceNumericTypes( lhs,rhs )
 End
 
@@ -117,6 +119,9 @@ Function BalanceBinaryopTypes:Type( op:String,lhs:Type,rhs:Type,argTypes:Type[] 
 		ltype=BalanceTypes( lhs,rhs )
 		rtype=ltype
 		
+	Case "and","or"
+
+		type=Type.BoolType
 	End
 	
 	If Not type Throw New SemantEx( "Invalid operand types for binary operator '"+op+"'" )

@@ -4,7 +4,7 @@ Namespace mx2
 Class AliasDecl Extends Decl
 
 	Field genArgs:String[]
-	Field type:TypeExpr
+	Field type:Expr
 	
 	Method ToNode:SNode( scope:Scope ) Override
 	
@@ -14,6 +14,7 @@ Class AliasDecl Extends Decl
 		Next
 		
 		Return New AliasType( Self,scope,types,Null )
+		
 	End
 End
 
@@ -52,7 +53,7 @@ Class AliasType Extends ProxyType
 			Next
 		Endif
 		
-		_alias=adecl.type.Semant( tscope )
+		_alias=adecl.type.SemantType( tscope )
 		
 		flags=_alias.flags
 		

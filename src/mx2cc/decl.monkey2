@@ -91,24 +91,14 @@ Class Decl Extends PNode
 		Return (flags & DECL_DEFAULT)<>0
 	End
 	
-	Method ToString:String() Override
-		Return kind.Capitalize()+" "+ident
-	End
-	
-	Method Emit( buf:StringStack,spc:String ) Virtual
-	
-		buf.Push( spc+ToString() )
-		
-		spc+="  "
-		For Local member:=Eachin members
-			member.Emit( buf,spc )
-		Next
-	End
-	
 	Method ToNode:SNode( scope:Scope ) Virtual
 		Return Null
 	End
 
+	Method ToString:String() Override
+		Return kind.Capitalize()+" "+ident
+	End
+	
 End
 
 Class FileDecl Extends Decl
@@ -128,5 +118,9 @@ Class FileDecl Extends Decl
 	Field classes:=New Stack<ClassType>
 	Field globals:=New Stack<VarValue>
 	Field functions:=New Stack<FuncValue>
+	
+	Method ToString:String() Override
+		Return "~q"+path+"~q"
+	End
 
 End

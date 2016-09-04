@@ -7,8 +7,7 @@ Class ErrorEx Extends Throwable
 	Method New( msg:String )
 		Self.msg=msg
 		
-		Local builder:=Builder.instance
-		builder.errors.Push( Self )
+		Builder.errors.Push( Self )
 	End
 	
 	Method ToString:String() Virtual

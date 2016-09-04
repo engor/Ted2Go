@@ -226,7 +226,12 @@ Class Toker
 		
 			While _pos<_len
 				Local ch:=_text[_pos]
-				If ch=CHAR_QUOTE Or ch=CHAR_EOL Exit
+				If ch=CHAR_QUOTE Exit
+				If ch=CHAR_EOL
+					_line+=1
+					_linePos=_pos
+				
+				Endif
 				_pos+=1
 			Wend
 			If _pos<_len And _text[_pos]=CHAR_QUOTE

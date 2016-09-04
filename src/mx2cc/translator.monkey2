@@ -58,8 +58,7 @@ Class Translator
 	Field debug:Bool
 	
 	Method New()
-		Local builder:=Builder.instance
-		Self.debug=builder.opts.config="debug"
+		Self.debug=Builder.opts.config="debug"
 	End
 	
 	Method Trans:String( value:Value ) Abstract

@@ -1,39 +1,41 @@
 
 Namespace mx2
 
-#Import "util.monkey2"
+#Import "util"
 
-#Import "scope.monkey2"
-#Import "value.monkey2"
-#Import "type.monkey2"
-#Import "node.monkey2"
-#Import "stmt.monkey2"
+#Import "scope"
+#Import "value"
+#Import "type"
+#Import "node"
+#Import "stmt"
+#Import "filescope"
+#Import "block"
 
-#Import "errors.monkey2"
-#Import "toker.monkey2"
-#Import "parser.monkey2"
-#Import "decl.monkey2"
-#Import "expr.monkey2"
-#Import "eval.monkey2"
-#Import "typeexpr.monkey2"
-#Import "stmtexpr.monkey2"
-#Import "class.monkey2"
-#Import "func.monkey2"
-#Import "var.monkey2"
-#Import "enum.monkey2"
-#Import "property.monkey2"
-#Import "alias.monkey2"
-#Import "namespace.monkey2"
-#Import "overload.monkey2"
-#Import "balance.monkey2"
-#Import "module.monkey2"
+#Import "errors"
+#Import "toker"
+#Import "parser"
+#Import "decl"
+#Import "expr"
+#Import "eval"
+#Import "stmtexpr"
+#Import "class"
+#Import "func"
+#Import "var"
+#Import "enum"
+#Import "property"
+#Import "alias"
+#Import "namespace"
+#Import "overload"
+#Import "balance"
+#Import "module"
+#Import "nodefinder"
 
-#Import "translator.monkey2"
-#Import "translator_cpp.monkey2"
-#Import "mung.monkey2"
+#Import "translator"
+#Import "translator_cpp"
+#Import "mung"
 
-#Import "builder.monkey2"
-#Import "buildproduct.monkey2"
+#Import "builder"
+#Import "buildproduct"
 
 Using std
 Using std.stringio
@@ -49,4 +51,4 @@ Using lib.c
 ' 3) edit .sh and .bat files to use new version (common.sh, common.bat)
 ' 4) ./rebuildall
 '
-Const MX2CC_VERSION:="1.0.4"
+Const MX2CC_VERSION:="1.0.5"

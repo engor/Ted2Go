@@ -1,19 +1,27 @@
 
 Namespace mx2
 
+Global Builder:BuilderInstance
+
 Class BuildOpts
 
 	Field mainSource:String
 	
-	Field productType:String
-	
-	Field appType:String
+	Field productType:String	'"app" or "module"
 	
 	Field target:String
 	
 	Field config:String
 	
 	Field clean:Bool
+	
+	Field product:String
+
+	Field assets:String
+
+	Field dlls:String
+
+	Field appType:String
 	
 	Field verbose:Int
 	
@@ -23,10 +31,8 @@ Class BuildOpts
 	
 End
 
-Class Builder
+Class BuilderInstance
 
-	Global instance:Builder
-	
 	Field errors:=New Stack<ErrorEx>
 
 	Field opts:BuildOpts
@@ -66,21 +72,31 @@ Class Builder
 	Method New( opts:BuildOpts )
 	
 		Self.opts=opts
-
-		instance=Self
 		
-		Local copts:=""
+		Builder=self
+
+		If opts.target="desktop" opts.target=HostOS
 		
 		ppsyms["__HOSTOS__"]="~q"+HostOS+"~q"
 		ppsyms["__TARGET__"]="~q"+opts.target+"~q"
 		ppsyms["__CONFIG__"]="~q"+opts.config+"~q"
 		
 		Select opts.target
-		Case "desktop"
-			profileName=HostOS+"_"+opts.config
-		Default
-			profileName=opts.target+"_"+opts.config
+		Case "windows","macos","linux"
+			ppsyms["__DESKTOP_TARGET__"]="true"
+			ppsyms["__WEB_TARGET__"]="false"
+			ppsyms["__MOBILE_TARGET__"]="false"
+		Case "emscripten"
+			ppsyms["__DESKTOP_TARGET__"]="false"
+			ppsyms["__WEB_TARGET__"]="true"
+			ppsyms["__MOBILE_TARGET__"]="false"
+		Case "android","ios"
+			ppsyms["__DESKTOP_TARGET__"]="false"
+			ppsyms["__WEB_TARGET__"]="false"
+			ppsyms["__MOBILE_TARGET__"]="true"
 		End
+		
+		profileName=opts.target+"_"+opts.config
 		
 		MODULES_DIR=CurrentDir()+"modules/"
 		
@@ -106,6 +122,8 @@ Class Builder
 		Select opts.target
 		Case "android"
 			product=New AndroidBuildProduct( module,opts )
+		Case "ios"
+			product=New IosBuildProduct( module,opts )
 		Default
 			product=New GccBuildProduct( module,opts )
 		End
@@ -263,6 +281,7 @@ Class Builder
 					Local ctype:=semantMembers.RemoveFirst()
 					
 					PNode.semanting.Push( ctype.cdecl )
+					Scope.semanting.Push( Null )
 					
 					Try
 					
@@ -272,12 +291,14 @@ Class Builder
 					End
 					
 					PNode.semanting.Pop()
+					Scope.semanting.Pop()
 
 				Else If Not semantStmts.Empty
 		
 					Local func:=semantStmts.Pop()
 					
 					PNode.semanting.Push( func.fdecl )
+					Scope.semanting.Push( Null )
 					
 					Try
 						func.SemantStmts()
@@ -286,6 +307,7 @@ Class Builder
 					End
 					
 					PNode.semanting.Pop()
+					Scope.semanting.Pop()
 				
 				Else
 					Exit

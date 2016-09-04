@@ -547,7 +547,7 @@ End
 Class ForStmtExpr Extends StmtExpr
 
 	Field varIdent:String
-	Field varType:TypeExpr
+	Field varType:Expr
 	Field varExpr:Expr
 	Field kind:String
 	Field init:Expr
@@ -556,7 +556,7 @@ Class ForStmtExpr Extends StmtExpr
 	
 	Field stmts:StmtExpr[]
 	
-	Method New( varIdent:String,varType:TypeExpr,varExpr:Expr,kind:String,init:Expr,cond:Expr,incr:Expr,stmts:StmtExpr[],srcpos:Int,endpos:Int )
+	Method New( varIdent:String,varType:Expr,varExpr:Expr,kind:String,init:Expr,cond:Expr,incr:Expr,stmts:StmtExpr[],srcpos:Int,endpos:Int )
 		Super.New( srcpos,endpos )
 		
 		Self.varIdent=varIdent
@@ -674,7 +674,7 @@ Class ForStmtExpr Extends StmtExpr
 		Endif
 		
 		If varIdent
-			If varType curr=curr.UpCast( varType.Semant( block ) )
+			If varType curr=curr.UpCast( varType.SemantType( block ) )
 			block.AllocLocal( varIdent,curr )
 		Else
 			Local iter:=varExpr.Semant( block ).RemoveSideEffects( block )
@@ -699,7 +699,7 @@ Class ForStmtExpr Extends StmtExpr
 		Local init:=Self.init.SemantRValue( iblock )
 		
 		If varIdent
-			If varType init=init.UpCast( varType.Semant( iblock ) )
+			If varType init=init.UpCast( varType.SemantType( iblock ) )
 			iter=iblock.AllocLocal( varIdent,init )
 		Else
 			iter=varExpr.Semant( iblock ).RemoveSideEffects( iblock )
@@ -758,10 +758,10 @@ End
 Class CatchExpr
 
 	Field varIdent:String
-	Field varType:TypeExpr
+	Field varType:Expr
 	Field stmts:StmtExpr[]
 
-	Method New( varIdent:String,varType:TypeExpr,stmts:StmtExpr[] )
+	Method New( varIdent:String,varType:Expr,stmts:StmtExpr[] )
 		Self.varIdent=varIdent
 		Self.varType=varType
 		Self.stmts=stmts
@@ -796,7 +796,7 @@ Class TryStmtExpr Extends StmtExpr
 			Local vvar:VarValue
 
 			If cexpr.varType
-				Local type:=cexpr.varType.Semant( iblock )
+				Local type:=cexpr.varType.SemantType( iblock )
 				vvar=New VarValue( "local",cexpr.varIdent,New LiteralValue( type,"" ),iblock )
 				iblock.Insert( cexpr.varIdent,vvar )
 			Endif

@@ -4,16 +4,8 @@ Namespace mx2
 Class ClassDecl Extends Decl
 
 	Field genArgs:String[]
-	Field superType:TypeExpr
-	Field ifaceTypes:TypeExpr[]
-	
-	Method ToString:String() Override
-		Local str:=Super.ToString()
-		If genArgs str+="<"+",".Join( genArgs )+">"
-		If superType str+=" extends "+superType.ToString()
-		If ifaceTypes str+=" implements "+Join( ifaceTypes )
-		Return str
-	End
+	Field superType:Expr
+	Field ifaceTypes:Expr[]
 	
 	Method ToNode:SNode( scope:Scope ) Override
 	
@@ -23,6 +15,16 @@ Class ClassDecl Extends Decl
 		Next
 		
 		Return New ClassType( Self,scope,types,Null )
+	End
+	
+	Method ToString:String() Override
+		Local str:=Super.ToString()
+		If genArgs str+="<"+",".Join( genArgs )+">"
+		If superType str+=" Extends "+superType.ToString()
+		If ifaceTypes 
+			If kind="interface" str+=" Extends "+Join( ifaceTypes ) Else str+=" Implements "+Join( ifaceTypes )
+		Endif
+		Return str
 	End
 	
 End
@@ -128,7 +130,8 @@ Class ClassType Extends Type
 		If cdecl.superType
 		
 			Try
-				Local type:=cdecl.superType.Semant( scope )
+				Local type:=cdecl.superType.SemantType( scope )
+
 				If TCast<VoidType>( type )
 				
 					If Not cdecl.IsExtern Or cdecl.kind<>"class" Throw New SemantEx( "Only extern classes can extend 'Void'" )
@@ -167,7 +170,8 @@ Class ClassType Extends Type
 			For Local iface:=Eachin cdecl.ifaceTypes
 			
 				Try
-					Local type:=iface.Semant( scope )
+					Local type:=iface.SemantType( scope )
+
 					Local ifaceType:=TCast<ClassType>( type )
 					
 					If Not ifaceType Or (ifaceType.cdecl.kind<>"interface" And ifaceType.cdecl.kind<>"protocol" ) Throw New SemantEx( "Type '"+type.ToString()+"' is not a valid interface type" )
@@ -199,20 +203,18 @@ Class ClassType Extends Type
 		
 		Endif
 		
-		Local builder:=Builder.instance
-		
 		If scope.IsGeneric Or cdecl.IsExtern
 		
-			builder.semantMembers.AddLast( Self )
+			Builder.semantMembers.AddLast( Self )
 			
 		Else
 		
 			If IsGenInstance
 				SemantMembers()
-				Local module:=builder.semantingModule 
+				Local module:=Builder.semantingModule 
 				module.genInstances.Push( Self )
 			Else
-				builder.semantMembers.AddLast( Self )
+				Builder.semantMembers.AddLast( Self )
 			Endif
 			
 			transFile.classes.Push( Self )
@@ -391,28 +393,41 @@ Class ClassType Extends Type
 		Return Null
 	End
 	
-	'***** Type overrides *****
-
-	Method FindNode:SNode( ident:String ) Override
-	
+	Method FindNode2:SNode( ident:String )
 		If membersSemanting SemantError( "ClassType.FindNode() class='"+ToString()+"', ident='"+ident+"'" )
 	
 		Local node:=scope.GetNode( ident )
 		If node Or ident="new" Return node
 		
-		If superType Return superType.FindNode( ident )
-		
+		If superType Return superType.FindNode2( ident )
 		Return Null
 	End
-		
-	Method FindType:Type( ident:String ) Override
+
+	Method FindType2:Type( ident:String )
 	
 		Local type:=scope.GetType( ident )
 		If type Return type
 		
-		If superType Return superType.FindType( ident )
-		
+		If superType Return superType.FindType2( ident )
 		Return Null
+	End
+
+	'***** Type overrides *****
+	
+	Method FindNode:SNode( ident:String ) Override
+	
+		Local node:=FindNode2( ident )
+		If node Return node
+		
+		Return FileScope.FindExtension( ident,False,Self )
+	End
+		
+	Method FindType:Type( ident:String ) Override
+	
+		Local type:=FindType2( ident )
+		If type Return type
+		
+		Return Cast<Type>( FileScope.FindExtension( ident,True,Self ) )
 	End
 	
 	Method Index:Value( args:Value[],value:Value ) Override
@@ -426,17 +441,15 @@ Class ClassType Extends Type
 	'
 	Method GenInstance:Type( types:Type[] ) Override
 			
-		'FIXME! This is (minaly) so code can generate C<T2> inside class C<T>
+		'FIXME! This is (mainly) so code can generate C<T2> inside class C<T>
 		'
 		If instanceOf Return instanceOf.GenInstance( types )
 
-		If Not IsGeneric
-
-			Throw New SemantEx( "Class '"+ToString()+"' is not generic" )
-
-		Endif
+		If Not IsGeneric Throw New SemantEx( "Class '"+ToString()+"' is not generic" )
 
 		If types.Length<>Self.types.Length Throw New SemantEx( "Wrong number of generic type parameters" )
+
+'		If AnyTypeGeneric( types ) Return Self
 
 		If Not instances instances=New Stack<ClassType>
 	
@@ -452,28 +465,33 @@ Class ClassType Extends Type
 		Return inst
 	End
 	
-	Method DistanceToType:Int( type:Type ) Override
+	Method FindToFunc:FuncValue( type:Type )
 	
-		If type=Self Return 0
+		Local flist:=Cast<FuncList>( FindNode( "to" ) )
+		If Not flist Return Null
 		
-		'cast anything to bool
-		If type=BoolType 
-			If IsClass Or IsInterface Return MAX_DISTANCE
-			Return -1
+		Return overload.FindOverload( flist.funcs,type,Null )
+		
+		#rem		
+		
+		If flist
+			Local func:=overload.FindOverload( flist.funcs,type,Null )
+			If func Return func
 		Endif
-
-		#rem
-		'cast native classes to void ptr		
-		Local ptype:=TCast<PointerType>( type )
-		If ptype 
-			If IsVoid And ptype.elemType=Type.VoidType Return MAX_DISTANCE
-			Return -1
-		Endif
+		
+		flist=Cast<FuncList>( FileScope.FindExtension( "to",False,Self ) )
+		If Not flist Return Null
+		
+		Return overload.FindOverload( flist.funcs,type,Null )
 		#end
 		
+	End
+	
+	Method DistanceToBase:Int( type:Type )
+	
 		Local ctype:=TCast<ClassType>( type )
 		If Not ctype Return -1
-	
+
 		Local dist:=0
 		Local stype:=Self
 		
@@ -493,12 +511,57 @@ Class ClassType Extends Type
 		
 		Return -1
 	End
+	
+	Method DistanceToType:Int( type:Type ) Override
+	
+		If type=Self Return 0
+
+		'Cast to super class
+		Local dist:=DistanceToBase( type )
+		If dist>=0 Return dist
+		
+		'Cast to bool
+		If type=BoolType 
+			If IsClass Or IsInterface Return MAX_DISTANCE
+			Return -1
+		Endif
+
+		'Operator To:
+		Local func:=FindToFunc( type )
+		If func Return MAX_DISTANCE
+		
+		Return -1
+
+		#rem
+		'cast native classes to void ptr		
+		Local ptype:=TCast<PointerType>( type )
+		If ptype 
+			If IsVoid And ptype.elemType=Type.VoidType Return MAX_DISTANCE
+			Return -1
+		Endif
+		#end
+	End
+	
+	Method UpCast:Value( rvalue:Value,type:Type ) Override
+	
+		'Cast to superclass
+		Local dist:=DistanceToBase( type )
+		If dist>=0 Return New UpCastValue( type,rvalue )
+		
+		'Cast to bool
+		If type=BoolType Return New UpCastValue( type,rvalue )
+		
+		'Operator To:
+		Local func:=FindToFunc( type )
+		If func Return func.ToValue( rvalue ).Invoke( Null )
+
+		Throw New SemantEx( "Unable to convert value from type '"+rvalue.type.ToString()+"' to type '"+type.ToString()+"'" )
+		Return Null
+	End
 
 	Method ExtendsType:Bool( type:Type ) Override
 	
-		Local t:=DistanceToType( type )
-		
-		Return t>=0 And t<MAX_DISTANCE
+		Return DistanceToBase( type )>=0
 	End
 	
 	Method CanCastToType:Bool( type:Type ) Override
@@ -577,13 +640,6 @@ Class OpIndexValue Extends Value
 		
 		Return invokeGet
 	End
-	
-	#rem
-	Method UpCast:Value( type:Type ) Override
-	
-		Return ToRValue().UpCast( type )
-	End
-	#end
 	
 	Method Assign:Stmt( pnode:PNode,op:String,rvalue:Value,block:Block ) Override
 		
@@ -701,7 +757,7 @@ Class ClassScope Extends Scope
 	
 	Method FindType:Type( ident:String ) Override
 	
-		If ident=ctype.cdecl.ident
+		If ident=ctype.cdecl.ident And Not ctype.cdecl.IsExtension
 			If Not itype
 				If ctype.types And Not ctype.instanceOf
 					itype=ctype.GenInstance( ctype.types )

@@ -16,8 +16,8 @@ Class BuildProduct
 	Field OBJ_FILES:=New StringStack
 	Field LD_LIBS:=New StringStack
 	Field LD_SYSLIBS:=New StringStack
-	Field DLL_FILES:=New StringStack
 	Field ASSET_FILES:=New StringStack
+	Field DLL_FILES:=New StringStack
 	
 	Method New( module:Module,opts:BuildOpts )
 		Self.module=module
@@ -85,6 +85,8 @@ Class BuildProduct
 	
 	Method CopyAssets( assetsDir:String )
 	
+		If Not assetsDir.EndsWith( "/" ) assetsDir+="/"
+		
 		DeleteDir( assetsDir,True )
 		
 		CreateDir( assetsDir )
@@ -119,6 +121,42 @@ Class BuildProduct
 		CopyAssetFiles( assetFiles )
 	End
 
+	Method CopyDlls( dllsDir:String )
+	
+		If Not dllsDir.EndsWith( "/" ) dllsDir+="/"
+	
+		For Local src:=Eachin DLL_FILES
+		
+			Local dir:=dllsDir
+			
+			Local ext:=ExtractExt( src )
+			If ext
+				Local rdir:=GetEnv( "MX2_APP_DIR_"+ext.Slice( 1 ).ToUpper() )
+				If rdir 
+					dir=RealPath( dir+rdir )
+					If Not dir.EndsWith( "/" ) dir+="/"
+				Endif
+			Endif
+			
+			Local dst:=dir+StripDir( src )
+			
+			'FIXME! Hack for copying frameworks on macos!
+			'		
+#If __HOSTOS__="macos"
+			If ExtractExt( src ).ToLower()=".framework"
+				CreateDir( ExtractDir( dst ) )
+				If Not Exec( "rm -f -R "+dst ) Throw New BuildEx( "rm failed" )
+				If Not Exec( "cp -f -R "+src+" "+dst ) Throw New BuildEx( "cp failed" )
+				Continue
+			Endif
+#Endif
+			
+			If Not CopyAll( src,dst ) Throw New BuildEx( "Failed to copy '"+src+"' to '"+dst+"'" )
+			
+		Next
+	
+	End
+		
 	Private
 		
 	Method CopyAll:Bool( src:String,dst:String )
@@ -200,8 +238,6 @@ Class GccBuildProduct Extends BuildProduct
 	Field AS_CMD:="as"
 	Field LD_CMD:="g++"
 	
-	Field maxObjTime:Long
-
 	Method New( module:Module,opts:BuildOpts )
 		Super.New( module,opts )
 		
@@ -218,257 +254,131 @@ Class GccBuildProduct Extends BuildProduct
 			CXX_CMD="g++"
 			LD_CMD= "g++"
 			AS_CMD= "as"
+			If opts.target="ios" AS_CMD+=" -arch armv7"
 		End
 		
+	End
+	
+	Method CompileSource:String( src:String )
+
+		Local obj:=module.cacheDir+MungPath( MakeRelativePath( src,module.cacheDir ) )+".o"
+			
+		Local ext:=ExtractExt( src ).ToLower()
+						
+		Local cmd:="",isasm:=False
+			
+		Select ext
+		Case ".c",".m"
+			
+			cmd=CC_CMD+" "+CC_OPTS.Join( " " )
+			cmd+=" -I~q"+MODULES_DIR+"monkey/native~q"
+			cmd+=" -I~q"+MODULES_DIR+"~q"
+			If APP_DIR cmd+=" -I~q"+APP_DIR+"~q"
+				
+		Case ".cc",".cxx",".cpp",".mm"
+
+			cmd=CXX_CMD+" "+CPP_OPTS.Join( " " )
+			cmd+=" -I~q"+MODULES_DIR+"monkey/native~q"
+			cmd+=" -I~q"+MODULES_DIR+"~q"
+			If APP_DIR cmd+=" -I~q"+APP_DIR+"~q"
+
+		Case ".asm",".s"
+			
+			cmd=AS_CMD
+			isasm=True
+		End
+			
+		'Check dependancies
+		'			
+		Local objTime:=GetFileTime( obj )
+			
+		Local deps:=StripExt( obj )+".deps"
+			
+		If opts.fast And objTime>=GetFileTime( src )	'source file up to date?
+			
+			Local uptodate:=True
+			
+			If Not isasm
+			
+				If GetFileType( deps )=FILETYPE_NONE
+					
+					If opts.verbose>0 Print "Scanning "+src
+				
+					Exec( cmd+" -MM ~q"+src+"~q >~q"+deps+"~q" ) 
+						
+				Endif
+					
+				Local srcs:=LoadString( deps ).Split( " \" )
+					
+				For Local i:=1 Until srcs.Length
+					
+					Local src:=srcs[i].Trim().Replace( "\ "," " )
+					
+					If GetFileTime( src )>objTime
+						uptodate=False
+						Exit
+					Endif
+						
+				Next
+				
+			Endif
+				
+			If uptodate Return obj
+				
+		Else
+			
+			DeleteFile( deps )
+
+		Endif
+			
+		If opts.verbose>0 Print "Compiling "+src
+			
+		If Not isasm cmd+=" -c"
+			
+		cmd+=" -o ~q"+obj+"~q ~q"+src+"~q"
+			
+		Exec( cmd )
+		
+		Return obj
 	End
 	
 	Method Build() Override
-
-		If opts.verbose=0 Print "Compiling...."
+	
+		If opts.verbose=0 Print "Compiling..."
 		
 		If Not CreateDir( module.cacheDir ) Throw New BuildEx( "Error create dir '"+module.cacheDir+"'" )
-		
+
 		For Local src:=Eachin SRC_FILES
-		
-			Local obj:=module.cacheDir+MungPath( MakeRelativePath( src,module.cacheDir ) )+".o"
 			
-			Local ext:=ExtractExt( src ).ToLower()
-						
-			Local cmd:="",isasm:=False
-			
-			Select ext
-			Case ".c",".m"
-			
-				cmd=CC_CMD+" "+CC_OPTS.Join( " " )
-				cmd+=" -I~q"+MODULES_DIR+"monkey/native~q"
-				cmd+=" -I~q"+MODULES_DIR+"~q"
-				If APP_DIR cmd+=" -I~q"+APP_DIR+"~q"
-				
-			Case ".cc",".cxx",".cpp",".mm"
-
-				cmd=CXX_CMD+" "+CPP_OPTS.Join( " " )
-				cmd+=" -I~q"+MODULES_DIR+"monkey/native~q"
-				cmd+=" -I~q"+MODULES_DIR+"~q"
-				If APP_DIR cmd+=" -I~q"+APP_DIR+"~q"
-
-			Case ".asm",".s"
-			
-				cmd=AS_CMD
-				isasm=True
-			End
-			
-			'Check dependancies
-			'			
-			Local objTime:=GetFileTime( obj )
-			
-			Local deps:=StripExt( obj )+".deps"
-			
-			If opts.fast And objTime>=GetFileTime( src )	'source file up to date?
-			
-				Local uptodate:=True
-			
-				If Not isasm
-			
-					If GetFileType( deps )=FILETYPE_NONE
-					
-						If opts.verbose>0 Print "Scanning "+src
-				
-						Exec( cmd+" -MM ~q"+src+"~q >~q"+deps+"~q" ) 
-						
-					Endif
-					
-					Local srcs:=LoadString( deps ).Split( " \" )
-					
-					For Local i:=1 Until srcs.Length
-					
-						Local src:=srcs[i].Trim().Replace( "\ "," " )
-					
-						If GetFileTime( src )>objTime
-							uptodate=False
-							Exit
-						Endif
-						
-					Next
-				
-				Endif
-				
-				If uptodate
-					maxObjTime=Max( maxObjTime,objTime )
-					OBJ_FILES.Push( obj )
-					Continue
-				Endif
-				
-			Else
-			
-				DeleteFile( deps )
-
-			Endif
-			
-			If opts.verbose>0 Print "Compiling "+src
-			
-			If Not isasm cmd+=" -c"
-			
-			cmd+=" -o ~q"+obj+"~q ~q"+src+"~q"
-			
-			Exec( cmd )
-			
-			maxObjTime=Max( maxObjTime,GetFileTime( obj ) )
-			
-			OBJ_FILES.Push( obj )
+			OBJ_FILES.Push( CompileSource( src ) )
 			
 		Next
-	
-		Select opts.productType
-		Case "app"
-			CreateApp()
-		Case "module"
-			CreateArchive()
-		End
-	
-	End
-	
-	Method CreateApp()
-	
-		Local assetsDir:="",dllsDir:=""
-		
-		Local cmd:=LD_CMD
-		cmd+=" "+LD_OPTS.Join( " " )
-		
-		If opts.target="desktop" And HostOS="windows"
-		
-			If opts.appType="gui" cmd+=" -mwindows"
-		
-			outputFile=module.outputDir+module.name+".exe"
-			assetsDir=module.outputDir+"assets/"
-			dllsDir=ExtractDir( outputFile )
-			
-		Else If opts.target="desktop" And HostOS="macos"
-		
-			If opts.appType="gui"
-			
-				Local productName:=module.name
-	
-				Local outputDir:=module.outputDir+module.name+".app/"
-				
-				outputFile=outputDir+"Contents/MacOS/"+module.name
-				assetsDir=outputDir+"Contents/Resources/"
-				dllsDir=ExtractDir( outputFile )
-				
-				CreateDir( outputDir )
-				CreateDir( outputDir+"Contents" )
-				CreateDir( outputDir+"Contents/MacOS" )
-				CreateDir( outputDir+"Contents/Resources" )
-				
-				Local plist:=""
-				plist+="<?xml version=~q1.0~q encoding=~qUTF-8~q?>~n"
-				plist+="<!DOCTYPE plist PUBLIC ~q-//Apple Computer//DTD PLIST 1.0//EN~q ~qhttp://www.apple.com/DTDs/PropertyList-1.0.dtd~q>~n"
-				plist+="<plist version=~q1.0~q>~n"
-				plist+="<dict>~n"
-				plist+="~t<key>CFBundleExecutable</key>~n"
-				plist+="~t<string>"+productName+"</string>~n"
-				plist+="~t<key>CFBundleIconFile</key>~n"
-				plist+="~t<string>"+productName+"</string>~n"
-				plist+="~t<key>CFBundlePackageType</key>~n"
-				plist+="~t<string>APPL</string>~n"
-				plist+="</dict>~n"
-				plist+="</plist>~n"
-				
-				SaveString( plist,outputDir+"Contents/Info.plist" )
-				
-			Else
-			
-				outputFile=module.outputDir+module.name
-				assetsDir=module.outputDir+"assets/"
-				dllsDir=ExtractDir( outputFile )
-			
-			Endif
-			
-		Else If opts.target="desktop" And HostOS="linux"
-		
-			outputFile=module.outputDir+module.name
-			assetsDir=module.outputDir+"assets/"
-			dllsDir=ExtractDir( outputFile )
-			
-		Else If opts.target="emscripten"
-		
-			outputFile=module.outputDir+module.name+".html"
-			assetsDir=module.outputDir+"assets/"
-			dllsDir=ExtractDir( outputFile )
-			
-'			Note: mserver can't handle --emrun as it tries to POST stdout
-'			cmd="em++ --emrun --preload-file ~q"+assetsDir+"@/assets~q"
 
-			cmd+=" --preload-file ~q"+assetsDir+"@/assets~q"
+		If opts.productType="module"
 			
-		Endif
-		
-		If opts.verbose>=0 Print "Linking "+outputFile
-		
-		CopyAssets( assetsDir )
-		
-		cmd+=" -o ~q"+outputFile+"~q"
-		
-		Local lnkFiles:=""
-		
-		For Local obj:=Eachin OBJ_FILES
-			lnkFiles+=" ~q"+obj+"~q"
-		Next
-		
-		For Local lib:=Eachin LD_LIBS
-			lnkFiles+=" ~q"+lib+"~q"
-		Next
-	
-		lnkFiles+=" "+LD_SYSLIBS.Join( " " )
-		
-		If HostOS="windows" And opts.target="desktop"
-			Local tmp:=AllocTmpFile( "lnkFiles" )
-			SaveString( lnkFiles,tmp )
-			cmd+=" -Wl,@"+tmp
+			BuildArchive()
+			
 		Else
-			cmd+=lnkFiles
+			
+			BuildApp()
+			
 		Endif
-
-		Exec( cmd )
-		
-		For Local src:=Eachin DLL_FILES
-		
-			Local dir:=dllsDir
-			
-			Local ext:=ExtractExt( src )
-			If ext
-				Local rdir:=GetEnv( "MX2_APP_DIR_"+ext.Slice( 1 ).ToUpper() )
-				If rdir dir=RealPath( dir+rdir )
-			Endif
-			
-			If Not dir.EndsWith( "/" ) dir+="/"
-			
-			Local dst:=dir+StripDir( src )
-			
-			'FIXME! Hack for copying frameworks on macos!
-			'		
-#If __HOSTOS__="macos"
-			If ExtractExt( src ).ToLower()=".framework"
-				CreateDir( ExtractDir( dst ) )
-				If Not Exec( "rm -f -R "+dst ) Throw New BuildEx( "rm failed" )
-				If Not Exec( "cp -f -R "+src+" "+dst ) Throw New BuildEx( "cp failed" )
-				Continue
-			Endif
-#Endif
-			
-			If Not CopyAll( src,dst ) Throw New BuildEx( "Failed to copy '"+src+"' to '"+dst+"'" )
-			
-		Next
 		
 	End
 	
-	Method CreateArchive:String()
+	Method BuildArchive:String()
 
 		Local outputFile:=module.outputDir+module.name+".a"
 		
 		'AR is slow! This is probably not quite right, but it'll do for now...
+		'
+		Local maxObjTime:Long
+		For Local obj:=Eachin OBJ_FILES
+			maxObjTime=Max( maxObjTime,GetFileTime( obj ) )
+		Next
 		If GetFileTime( outputFile )>maxObjTime Return outputFile
 		
-		If opts.verbose>=0 Print "Archiving "+outputFile
+		If opts.verbose>=0 Print "Archiving "+outputFile+"..."
 		
 		DeleteFile( outputFile )
 		
@@ -491,7 +401,106 @@ Class GccBuildProduct Extends BuildProduct
 		Return outputFile
 		
 	End
+	
+	Method BuildApp() Virtual
+	
+		outputFile=opts.product
+		If Not outputFile outputFile=module.outputDir+module.name
+		
+		Local assetsDir:=ExtractDir( outputFile )+"assets/"
+		Local dllsDir:=ExtractDir( outputFile )
 
+		Local cmd:=LD_CMD
+		cmd+=" "+LD_OPTS.Join( " " )
+		
+		Select opts.target
+		Case "windows"
+		
+			If ExtractExt( outputFile ).ToLower()<>".exe" outputFile+=".exe"
+		
+			If opts.appType="gui" cmd+=" -mwindows"
+			
+		Case "macos"
+		
+			If opts.appType="gui"
+			
+				Local appDir:=outputFile
+				If ExtractExt( appDir ).ToLower()<>".app" appDir+=".app"
+				appDir+="/"
+				
+				Local appName:=StripExt( StripDir( outputFile ) )
+				
+				outputFile=appDir+"Contents/MacOS/"+appName
+				assetsDir=appDir+"Contents/Resources/"
+				dllsDir=ExtractDir( outputFile )
+				
+				If GetFileType( appDir )=FileType.None
+
+					CreateDir( appDir )
+					CreateDir( appDir+"Contents" )
+					CreateDir( appDir+"Contents/MacOS" )
+					CreateDir( appDir+"Contents/Resources" )
+					
+					Local plist:=""
+					plist+="<?xml version=~q1.0~q encoding=~qUTF-8~q?>~n"
+					plist+="<!DOCTYPE plist PUBLIC ~q-//Apple Computer//DTD PLIST 1.0//EN~q ~qhttp://www.apple.com/DTDs/PropertyList-1.0.dtd~q>~n"
+					plist+="<plist version=~q1.0~q>~n"
+					plist+="<dict>~n"
+					plist+="~t<key>CFBundleExecutable</key>~n"
+					plist+="~t<string>"+appName+"</string>~n"
+					plist+="~t<key>CFBundleIconFile</key>~n"
+					plist+="~t<string>"+appName+"</string>~n"
+					plist+="~t<key>CFBundlePackageType</key>~n"
+					plist+="~t<string>APPL</string>~n"
+					plist+="</dict>~n"
+					plist+="</plist>~n"
+					
+					SaveString( plist,appDir+"Contents/Info.plist" )
+				
+				Endif
+			
+			Endif
+		
+		Case "emscripten"
+
+			assetsDir=module.outputDir+"assets/"
+			
+			If ExtractExt( outputFile ).ToLower()<>".html" outputFile+=".html"
+			
+			cmd+=" --preload-file ~q"+assetsDir+"@/assets~q"
+		End
+		
+		If opts.verbose>=0 Print "Linking "+outputFile+"..."
+		
+		cmd+=" -o ~q"+outputFile+"~q"
+		
+		Local lnkFiles:=""
+		
+		For Local obj:=Eachin OBJ_FILES
+			lnkFiles+=" ~q"+obj+"~q"
+		Next
+		
+		For Local lib:=Eachin LD_LIBS
+			lnkFiles+=" ~q"+lib+"~q"
+		Next
+	
+		lnkFiles+=" "+LD_SYSLIBS.Join( " " )
+		
+		If opts.target="windows"
+			Local tmp:=AllocTmpFile( "lnkFiles" )
+			SaveString( lnkFiles,tmp )
+			cmd+=" -Wl,@"+tmp
+		Else
+			cmd+=lnkFiles
+		Endif
+
+		CopyAssets( assetsDir )
+		
+		CopyDlls( dllsDir )
+		
+		Exec( cmd )
+	End
+	
 	Method Run() Override
 	
 		Local run:=""
@@ -507,7 +516,35 @@ Class GccBuildProduct Extends BuildProduct
 	End
 	
 End
+
+Class IosBuildProduct Extends GccBuildProduct
+
+	Method New( module:Module,opts:BuildOpts )
+		Super.New( module,opts )
+	End
 	
+	Method BuildApp() Override
+	
+		Local arc:=BuildArchive()
+		
+		Local outputFile:=module.outputDir+"libmx2_main.a"
+		
+		Local cmd:="libtool -static -o ~q"+outputFile+"~q ~q"+arc+"~q"
+		
+		For Local lib:=Eachin LD_LIBS
+			cmd+=" ~q"+lib+"~q"
+		Next
+		
+		Print "cmd="+cmd
+		
+		Exec( cmd )
+	End
+	
+	Method Run() Override
+	End
+	
+End
+
 Class AndroidBuildProduct Extends BuildProduct
 
 	Method New( module:Module,opts:BuildOpts )
@@ -544,7 +581,7 @@ Class AndroidBuildProduct Extends BuildProduct
 		
 		If opts.productType="app"
 		
-			For Local extmod:=Eachin Builder.instance.modules
+			For Local extmod:=Eachin Builder.modules
 				If extmod=module continue
 			
 				Local src:=extmod.outputDir+"obj/local/$(TARGET_ARCH_ABI)/libmx2_"+extmod.name+".a"
@@ -591,7 +628,7 @@ Class AndroidBuildProduct Extends BuildProduct
 		If opts.productType="app"
 		
 			buf.Push( "LOCAL_STATIC_LIBRARIES := \" )
-			For Local extmod:=Eachin Builder.instance.modules.Backwards()
+			For Local extmod:=Eachin Builder.modules.Backwards()
 				If extmod=module Continue
 				
 				buf.Push( "mx2_"+extmod.name+" \" )
@@ -629,9 +666,11 @@ Class AndroidBuildProduct Extends BuildProduct
 		
 		ChangeDir( cd )
 		
-		If opts.productType="app"
+		If opts.productType="app" And opts.assets And opts.dlls
 		
-			CopyAssets( module.outputDir+"assets/" )
+			CopyDir( module.outputDir+"libs",opts.dlls )
+
+			CopyAssets( opts.assets )
 		
 		Endif
 		

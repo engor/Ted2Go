@@ -3,15 +3,15 @@ Namespace mx2cc
 
 Using mx2.docs
 
-#Import "<hoedown>"
 #Import "<std>"
 
-#Import "mx2.monkey2"
+#Import "mx2"
 
-#Import "docs/docsmaker.monkey2"
-#Import "docs/jsonbuffer.monkey2"
-#Import "docs/markdownbuffer.monkey2"
-#Import "docs/manpage.monkey2"
+#Import "docs/docsmaker"
+#Import "docs/jsonbuffer"
+#Import "docs/minimarkdown"
+#Import "docs/markdownbuffer"
+#Import "docs/manpage"
 
 Using libc..
 Using std..
@@ -19,19 +19,16 @@ Using mx2..
 
 Global StartDir:String
 
-Const TestArgs:="mx2cc makemods -clean"	' -target=android"
+'Const TestArgs:="mx2cc makedocs mojo"
 
-'Const TestArgs:="mx2cc makeapp -clean -target=android src/mx2cc/test.monkey2"
+Const TestArgs:="mx2cc makeapp -clean -config=debug -target=desktop -product=D:/test_app/test.exe -assets=D:/test_app/assets -dlls=D:/test_app/ src/mx2cc/test.monkey2"
+'Const TestArgs:="mx2cc makeapp -clean -config=debug -target=desktop src/mx2cc/test.monkey2"
 
-'Const TestArgs:="mx2cc makeapp -clean -target=android bananas/gridshooter/gridshooter.monkey2"
-
-'Const TestArgs:="mx2cc makemods -clean std"' -target=android"
-
-'Const TestArgs:="mx2cc makeapp src/ted2/ted2.monkey2"
+'Const TestArgs:="mx2cc makeapp -clean src/ted2/ted2"
 
 'Const TestArgs:="mx2cc makemods -clean -config=release monkey libc miniz stb-image hoedown std"
 
-'Const TestArgs:="mx2cc makeapp -verbose -target=desktop -config=release src/mx2cc/mx2cc.monkey2"
+'Const TestArgs:="mx2cc makeapp -verbose -target=desktop -config=release src/mx2cc/mx2cc"
 
 Function Main()
 
@@ -63,6 +60,7 @@ Function Main()
 		exit_(0)
 #Endif
 		args=TestArgs.Split( " " )
+		If args.Length<2 exit_(0)
 		
 	Endif
 	
@@ -120,28 +118,28 @@ Function MakeApp:Bool( args:String[] )
 	Print "***** Building app '"+opts.mainSource+"' *****"
 	Print ""
 
-	Local builder:=New Builder( opts )
+	New BuilderInstance( opts )
 	
-	builder.Parse()
-	If builder.errors.Length Return False
+	Builder.Parse()
+	If Builder.errors.Length Return False
 	If opts.passes=1 Return True
 	
-	builder.Semant()
-	If builder.errors.Length Return False
+	Builder.Semant()
+	If Builder.errors.Length Return False
 	If opts.passes=2 Return True
 	
-	builder.Translate()
-	If builder.errors.Length Return False
+	Builder.Translate()
+	If Builder.errors.Length Return False
 	If opts.passes=3 Return True
 	
-	builder.product.Build()
-	If builder.errors.Length Return False
+	Builder.product.Build()
+	If Builder.errors.Length Return False
 	If opts.passes=4
-		Print "Application built:"+builder.product.outputFile
+		Print "Application built:"+Builder.product.outputFile
 		Return True
 	Endif
 	
-	builder.product.Run()
+	Builder.product.Run()
 	Return True
 End
 
@@ -162,9 +160,12 @@ Function MakeMods:Bool( args:String[] )
 	
 	Local errs:=0
 	
+	Local target:=opts.target
+	
 	For Local modid:=Eachin args
 	
 		Local path:="modules/"+modid+"/"+modid+".monkey2"
+		
 		If GetFileType( path )<>FILETYPE_FILE Fail( "Module file '"+path+"' not found" )
 	
 		Print ""
@@ -172,23 +173,24 @@ Function MakeMods:Bool( args:String[] )
 		Print ""
 		
 		opts.mainSource=RealPath( path )
+		opts.target=target
 		
-		Local builder:=New Builder( opts )
+		New BuilderInstance( opts )
 		
-		builder.Parse()
-		If builder.errors.Length errs+=1;Continue
+		Builder.Parse()
+		If Builder.errors.Length errs+=1;Continue
 		If opts.passes=1 Continue
 
-		builder.Semant()
-		If builder.errors.Length errs+=1;Continue
+		Builder.Semant()
+		If Builder.errors.Length errs+=1;Continue
 		If opts.passes=2 Continue
 		
-		builder.Translate()
-		If builder.errors.Length errs+=1;Continue
+		Builder.Translate()
+		If Builder.errors.Length errs+=1;Continue
 		If opts.passes=3 Continue
 		
-		builder.product.Build()
-		If builder.errors.Length errs+=1;Continue
+		Builder.product.Build()
+		If Builder.errors.Length errs+=1;Continue
 	Next
 	
 	Return errs=0
@@ -226,15 +228,15 @@ Function MakeDocs:Bool( args:String[] )
 		
 		opts.mainSource=RealPath( path )
 		
-		Local builder:=New Builder( opts )
+		New BuilderInstance( opts )
 
-		builder.Parse()
-		If builder.errors.Length errs+=1;Continue
+		Builder.Parse()
+		If Builder.errors.Length errs+=1;Continue
 		
-		builder.Semant()
-		If builder.errors.Length errs+=1;Continue
+		Builder.Semant()
+		If Builder.errors.Length errs+=1;Continue
 		
-		docsMaker.MakeDocs( builder.modules.Top )
+		docsMaker.MakeDocs( Builder.modules.Top )
 	Next
 	
 	Local api_indices:=New StringStack
@@ -292,9 +294,20 @@ Function ParseOpts:String[]( opts:BuildOpts,args:String[] )
 			Continue
 		Endif
 		
-		Local opt:=arg.Slice( 0,j ),val:=arg.Slice( j+1 ).ToLower()
+		Local opt:=arg.Slice( 0,j ),val:=arg.Slice( j+1 )
+		
+		Local path:=val.Replace( "\","/" )
+		If path.StartsWith( "~q" ) And path.EndsWith( "~q" ) path=path.Slice( 1,-1 )
+		
+		val=val.ToLower()
 		
 		Select opt
+		Case "-product"
+			opts.product=path
+		Case "-assets"
+			opts.assets=path
+		Case "-dlls"
+			opts.dlls=path
 		Case "-apptype"
 			Select val
 			Case "gui","console"
@@ -304,7 +317,7 @@ Function ParseOpts:String[]( opts:BuildOpts,args:String[] )
 			End
 		Case "-target"
 			Select val
-			Case "desktop","emscripten","android","ios"
+			Case "desktop","windows","macos","linux","emscripten","android","ios"
 				opts.target=val
 			Default
 				Fail( "Invalid value for 'target' option: '"+val+"' - must be 'desktop', 'emscripten', 'android' or 'ios'" )

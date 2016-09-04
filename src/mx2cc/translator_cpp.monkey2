@@ -224,7 +224,7 @@ Class Translator_CPP Extends Translator
 		If Not func.IsCtor retType=TransType( ftype.retType )+" "
 
 		Local params:=""
-		If func.IsExtension params=TransType( ctype )+" l_self"
+		If func.IsExtension params=TransType( func.selfType )+" l_self"
 
 		For Local p:=Eachin func.params
 			If params params+=","
@@ -322,22 +322,26 @@ Class Translator_CPP Extends Translator
 				xtends="public bbObject"
 			Endif
 			
+		Case "struct"
+
+			If ctype.superType
+				Uses( ctype.superType )
+				superName=ClassName( ctype.superType )
+				xtends="public "+superName
+			Endif
+		
 		Case "interface"
 		
 			If Not ctype.ifaceTypes xtends="public bbInterface"
 			
-		Case "struct"
-		
 		End
 		
-		If cdecl.kind<>"struct"
-			For Local iface:=Eachin ctype.ifaceTypes
-				If iface.cdecl.kind="protocol" Continue
-				Uses( iface )
-				If xtends xtends+=","
-				xtends+="public virtual "+ClassName( iface )
-			Next
-		Endif
+		For Local iface:=Eachin ctype.ifaceTypes
+			If iface.cdecl.kind="protocol" Continue
+			Uses( iface )
+			If xtends xtends+=","
+			xtends+="public virtual "+ClassName( iface )
+		Next
 		
 		If xtends xtends=" : "+xtends
 		
@@ -355,7 +359,7 @@ Class Translator_CPP Extends Translator
 				If Not flist Or it.Key="new" Continue
 				
 				For Local func:=Eachin flist.funcs
-					If Not func.IsMethod Or func.scope<>ctype.superType.scope Continue
+					If Not func.IsMethod Or func.scope<>ctype.superType.scope Continue	'Or func.fdecl.IsExtension Continue
 					Local sym:=FuncName( func )
 					If done[sym] Continue
 					done[sym]=True
@@ -720,10 +724,9 @@ Class Translator_CPP Extends Translator
 			Emit( "if(done) return;" )
 			Emit( "done=true;" )
 			
-			Local builder:=Builder.instance
 			For Local dep:=Eachin module.moduleDeps.Keys
 			
-				Local mod2:=builder.modulesMap[dep]
+				Local mod2:=Builder.modulesMap[dep]
 				
 				If mod2.main
 					Emit( "void mx2_"+mod2.ident+"_main();mx2_"+mod2.ident+"_main();" )
@@ -850,10 +853,10 @@ Class Translator_CPP Extends Translator
 				
 				Select func.cscope.ctype.cdecl.kind
 				Case "struct"
-					Emit( ClassName( func.cscope.ctype )+"*self=&"+Trans(func.selfValue)+";" )
+					Emit( ClassName( func.selfType )+"*self=&"+Trans( func.selfValue )+";" )
 					Emit( "bbDBLocal(~qSelf~q,self);" )
 				Case "class"
-					Emit( ClassName( func.cscope.ctype )+"*self="+Trans(func.selfValue)+";" )
+					Emit( ClassName( func.selfType )+"*self="+Trans( func.selfValue )+";" )
 					Emit( "bbDBLocal(~qSelf~q,&self);" )
 				End
 				

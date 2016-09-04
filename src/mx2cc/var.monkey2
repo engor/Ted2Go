@@ -3,32 +3,19 @@ Namespace mx2
 
 Class VarDecl Extends Decl
 
-	Field type:TypeExpr
+	Field type:Expr
 	Field init:Expr
-	
-	Method ToString:String() Override
-	
-		Local str:=""
-		If kind="param"
-			str=ident
-		Else
-			str=Super.ToString()
-		Endif
-		
-		If type
-			If str str+=":"
-			str+=type.ToString()
-			If init str+="="+init.ToString()
-		Else If init
-			str+=":="+init.ToString()
-		Endif
-		
-		Return str
-	End
 	
 	Method ToNode:SNode( scope:Scope ) Override
 	
 		Return New VarValue( Self,scope )
+	End
+	
+	Method ToString:String() Override
+		Local str:=Super.ToString()+":"
+		If type str+=type.ToString()
+		If init str+="="+init.ToString()
+		Return str
 	End
 
 End
@@ -76,8 +63,10 @@ Class VarValue Extends Value
 	
 	Method OnSemant:SNode() Override
 	
+		Scope.semanting.Push( scope )
+	
 		If vdecl.type
-			type=vdecl.type.Semant( scope )
+			type=vdecl.type.SemantType( scope )
 			If vdecl.init init=vdecl.init.SemantRValue( scope,type )
 		Else If vdecl.init
 			init=vdecl.init.SemantRValue( scope )
@@ -96,6 +85,8 @@ Class VarValue Extends Value
 			Endif
 			
 		Endif
+		
+		Scope.semanting.Pop()
 	
 		Return Self
 	End

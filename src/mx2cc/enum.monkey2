@@ -3,8 +3,6 @@ Namespace mx2
 
 Class EnumDecl Extends Decl
 
-	Field superType:TypeExpr
-
 	Method ToNode:SNode( scope:Scope ) Override
 	
 		Return New EnumType( Self,scope )

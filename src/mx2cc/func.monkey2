@@ -11,18 +11,6 @@ Class FuncDecl Extends Decl
 	
 	Field stmts:StmtExpr[]
 	
-	Method ToString:String() Override
-		Local str:=Super.ToString()
-		If genArgs str+="<"+",".Join( genArgs )+">"
-		Return str+":"+type.ToString()
-	End
-	
-	Method Emit( buf:StringStack,spc:String ) Override
-		buf.Push( spc+ToString() )
-		EmitStmts( stmts,buf,spc )
-		buf.Push( spc+"End" )
-	End
-	
 	Method ToNode:SNode( scope:Scope ) Override
 	
 		Local types:=New Type[genArgs.Length]
@@ -33,6 +21,12 @@ Class FuncDecl Extends Decl
 		Return New FuncValue( Self,scope,types,Null )
 	End
 
+	Method ToString:String() Override
+		Local str:=Super.ToString()
+		If genArgs str+="<"+",".Join( genArgs )+">"
+		Return str+":"+type.ToString()
+	End
+	
 End
 
 '***** FuncValue *****
@@ -53,6 +47,8 @@ Class FuncValue Extends Value
 	Field overrides:FuncValue
 	
 	Field params:VarValue[]
+	
+	Field selfType:ClassType
 	Field selfValue:Value
 	
 	Field instances:Stack<FuncValue>
@@ -168,8 +164,43 @@ Class FuncValue Extends Value
 
 		'Semant func type
 		'
-		type=fdecl.type.Semant( block )
+		type=fdecl.type.SemantType( block )
 		ftype=TCast<FuncType>( type )
+		
+		'Semant selfType and selfValue
+		'
+		If IsCtor Or IsMethod
+	
+			If IsExtension
+			
+				selfType=cscope.ctype
+				
+				If selfType.cdecl.IsExtension selfType=selfType.superType
+				
+'				If fdecl.IsExtension selfType=selfType.superType
+			
+				selfValue=New VarValue( "capture","self",New LiteralValue( selfType,"" ),scope )
+				
+			Else
+			
+				selfType=cscope.ctype
+			
+				selfValue=New SelfValue( selfType )
+				
+			Endif
+			
+		Else If IsLambda
+		
+			selfValue=Cast<Block>( scope ).func.selfValue
+			
+			If selfValue
+			
+				selfValue=New VarValue( "capture","self",selfValue,block )
+				
+				captures.Push( Cast<VarValue>( selfValue ) )
+			Endif
+		
+		Endif
 		
 		'That's it for generic funcs
 		'
@@ -275,7 +306,7 @@ Class FuncValue Extends Value
 		If used Return
 		used=True
 
-		Builder.instance.semantStmts.Push( Self )
+		Builder.semantStmts.Push( Self )
 	End
 	
 	Method ToValue:Value( instance:Value ) Override
@@ -290,7 +321,7 @@ Class FuncValue Extends Value
 		
 			If Not instance Throw New SemantEx( "Method '"+ToString()+"' cannot be accessed without an instance" )
 			
-			If Not instance.type.ExtendsType( cscope.ctype )
+			If Not instance.type.ExtendsType( selfValue.type )'cscope.ctype )
 				Throw New SemantEx( "Method '"+ToString()+"' cannot be accessed from an instance of a different class" )
 			Endif
 			
@@ -346,11 +377,17 @@ Class FuncValue Extends Value
 			End
 		Next
 		
+		#rem
+		
 		If IsCtor Or IsMethod
 	
 			If IsExtension
-	
-				selfValue=New VarValue( "capture","self",New LiteralValue( cscope.ctype,"" ),scope )
+			
+				Local ctype:=cscope.ctype
+				
+				If fdecl.IsExtension ctype=ctype.superType
+			
+				selfValue=New VarValue( "capture","self",New LiteralValue( ctype,"" ),scope )
 				
 			Else
 			
@@ -361,12 +398,18 @@ Class FuncValue Extends Value
 		Else If IsLambda
 		
 			selfValue=Cast<Block>( scope ).func.selfValue
+			
 			If selfValue
+			
 				selfValue=New VarValue( "capture","self",selfValue,block )
+				
 				captures.Push( Cast<VarValue>( selfValue ) )
 			Endif
 		
 		Endif
+		
+		#end
+		
 	End
 	
 	Method SemantInvokeNew()
@@ -418,8 +461,7 @@ Class FuncValue Extends Value
 			Endif
 			
 			If instanceOf
-				Local builder:=Builder.instance
-				Local module:=builder.semantingModule
+				Local module:=Builder.semantingModule
 				module.genInstances.Push( Self )
 			Endif
 
@@ -678,7 +720,7 @@ Class FuncList Extends SNode
 				Local func:=Cast<FuncValue>( tfunc.Semant() )
 				If Not func Continue
 				
-				If Not func.block.IsGeneric
+				If ident<>"to" And Not func.block.IsGeneric
 					Local func2:=FindFunc( func.ftype.argTypes )
 					If func2 Throw New SemantEx( "Duplicate declaration '"+func.ToString()+"'",tfunc.pnode )
 				Endif

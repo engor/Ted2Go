@@ -3,7 +3,24 @@ Namespace mx2
 
 Const DEBUG_SEMANTS:=False'True
 
-Class PNode
+Class UNode
+
+	Method ToString:String() Virtual
+		Return "?????"
+	End
+
+	Function Join<T>:String( args:T[] ) Where T Extends UNode
+		Local str:=""
+		For Local arg:=Eachin args
+			If str str+=","
+			str+=arg.ToString()
+		Next
+		Return str
+	End
+End
+
+
+Class PNode Extends UNode
 
 	Field srcfile:FileDecl
 	Field srcpos:Int
@@ -22,34 +39,33 @@ Class PNode
 		Self.endpos=endpos
 	End
 
-	Method ToString:String() Virtual
-		If srcfile Return srcfile.path+" ["+(srcpos Shr 12)+"]"
-		Return "? ["+(srcpos Shr 12)+"]"
-	End
-
 	Method ToDebugString:String() Virtual
 		If srcfile Return srcfile.path+" ["+(srcpos Shr 12)+"]"
 		Return "? ["+(srcpos Shr 12)+"]"
 	End
+	
 End
 
 Const SNODE_INIT:=0
 Const SNODE_SEMANTING:=1
 Const SNODE_SEMANTED:=2
 
-Class SNode
+Class SNode Extends UNode
 
 	Field pnode:PNode
 	Field semanted:SNode
 	Field state:Int
 	
 	Global semtab:String
-
+	
 	Method Semant:SNode()
 	
 		If state=SNODE_SEMANTED Or semanted Return semanted
 		
-		If state=SNODE_SEMANTING Throw New SemantEx( "Cyclic declaration of '"+ToString()+"'" )'"+pnode.ToString()+"'" )
+		If state=SNODE_SEMANTING 
+'			If Cast<Type>( Self ) Return Self
+			Throw New SemantEx( "Cyclic declaration of '"+ToString()+"'" )'"+pnode.ToString()+"'" )
+		Endif
 		
 		Try
 					
@@ -59,11 +75,13 @@ Class SNode
 			Endif
 
 			state=SNODE_SEMANTING
+			Scope.semanting.Push( Null )
 			PNode.semanting.Push( pnode )
 		
 			semanted=OnSemant()
 
 			PNode.semanting.Pop()
+			Scope.semanting.Pop()
 			state=SNODE_SEMANTED
 			
 			If DEBUG_SEMANTS And pnode 
@@ -76,6 +94,7 @@ Class SNode
 		Catch ex:SemantEx
 		
 			PNode.semanting.Pop()
+			Scope.semanting.Pop()
 			state=SNODE_SEMANTED
 			
 			If DEBUG_SEMANTS And pnode
@@ -93,12 +112,6 @@ Class SNode
 		Return Self
 	End
 	
-	Method ToString:String() Virtual
-		If pnode Return pnode.ToString()
-		Print String.FromCString( typeName() )
-		Return "????? SNode.ToString() ?????"
-	End
-	
 	Method ToType:Type() Virtual
 		SemantError( "SNode.ToType()" )
 		Return Null
@@ -108,6 +121,12 @@ Class SNode
 		Print String.FromCString( typeName() )
 		SemantError( "SNode.ToValue()" )
 		Return Null
+	End
+	
+	Method ToString:String() override
+		If pnode Return pnode.ToString()
+		Print String.FromCString( typeName() )
+		Return "????? SNode.ToString() ?????"
 	End
 	
 End

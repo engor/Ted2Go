@@ -34,6 +34,7 @@ Class Type Extends SNode
 	Global ExceptionClass:ClassType
 	
 	Field _alias:Type
+	
 	Field flags:Int
 	
 	Method New()
@@ -87,6 +88,34 @@ Class Type Extends SNode
 		Return Null
 	End
 	
+	Method InferType:Type( type:Type,args:Type[] ) Virtual
+		If Equals( type ) Return type	
+		Return Null
+	End
+	
+	Method Equals:Bool( type:Type ) Virtual
+		Return type=Self
+	End
+	
+	Method ExtendsType:Bool( type:Type ) Virtual
+		Return Equals( type )
+	End
+	
+	Method DistanceToType:Int( type:Type ) Virtual
+		Return Equals( type ) ? 0 Else -1
+	End
+	
+	Method CanCastToType:Bool( type:Type ) Virtual
+		Return Equals( type )
+	End
+
+	Method UpCast:Value( rvalue:Value,type:Type ) Virtual
+		Local d:=DistanceToType( type )
+		If d<0 Throw New UpCastEx( rvalue,type )
+		If d>0 Return New UpCastValue( type,rvalue )
+		Return rvalue
+	End
+
 	Method Invoke:Value( args:Value[],value:Value ) Virtual
 		Throw New SemantEx( "Type '"+ToString()+"' cannot be invoked" )
 		Return Null
@@ -99,28 +128,6 @@ Class Type Extends SNode
 	
 	Method GenInstance:Type( types:Type[] ) Virtual
 		Throw New SemantEx( "Type '"+ToString()+"' is not generic" )
-		Return Null
-	End
-	
-	Method Equals:Bool( type:Type ) Virtual
-		Return type=Self
-	End
-	
-	Method DistanceToType:Int( type:Type ) Virtual
-		If Equals( type ) Return 0
-		Return -1
-	End
-	
-	Method ExtendsType:Bool( type:Type ) Virtual
-		Return Equals( type )
-	End
-	
-	Method CanCastToType:Bool( type:Type ) Virtual
-		Return Equals( type )
-	End
-
-	Method InferType:Type( type:Type,args:Type[] ) Virtual
-		If Equals( type ) Return type	
 		Return Null
 	End
 	
@@ -150,6 +157,10 @@ Class ProxyType Extends Type
 	
 	Method FindType:Type( ident:String ) Override
 		Return _alias.FindType( ident )
+	End
+	
+	Method UpCast:Value( rvalue:Value,type:Type ) Override
+		Return _alias.UpCast( rvalue,type )
 	End
 	
 	Method Invoke:Value( args:Value[],value:Value ) Override
@@ -264,15 +275,6 @@ Class PrimType Extends Type
 		
 		End
 		
-		#rem
-		If TCast<PrimType>( type ) Return MAX_DISTANCE
-		
-		Select type
-		Case CStringClass,WStringClass,Utf8StringClass
-			Return MAX_DISTANCE
-		End
-		#end
-		
 		Return -1
 	End
 	
@@ -282,9 +284,8 @@ Class PrimType Extends Type
 	End
 	
 	Method CanCastToType:Bool( type:Type ) Override
-		
-		'prim->prim
-		If TCast<PrimType>( type ) Return True
+	
+		If DistanceToType( type )>=0 Return True
 		
 		'integral->enum
 		If IsIntegral And TCast<EnumType>( type ) Return True

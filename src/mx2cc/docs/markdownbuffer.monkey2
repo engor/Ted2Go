@@ -214,7 +214,7 @@ Class MarkdownBuffer
 		_return=""
 		_label=""
 		
-		Local docs:=hoedown.MarkdownToHtml( markdown )
+		Local docs:=minimarkdown.MarkdownToHtml( markdown )
 		
 		Return docs
 	End

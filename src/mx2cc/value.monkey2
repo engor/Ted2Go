@@ -39,10 +39,7 @@ Class Value Extends SNode
 	
 	Method UpCast:Value( type:Type ) Virtual
 		Local rvalue:=ToRValue()
-		Local d:=rvalue.type.DistanceToType( type )
-		If d<0 Throw New UpCastEx( rvalue,type )
-		If d>0 Return New UpCastValue( type,rvalue )
-		Return rvalue
+		Return rvalue.type.UpCast( rvalue,type )
 	End
 	
 	Method FindValue:Value( ident:String ) Virtual
@@ -71,11 +68,6 @@ Class Value Extends SNode
 		
 		Local rtype:=BalanceAssignTypes( op,type,value.type )
 		Return New AssignStmt( pnode,op,Self,value.UpCast( rtype ) )
-		
-'		ValidateAssignOp( op,type )
-'		value=value.UpCast( type )
-'		Return New AssignStmt( pnode,op,Self,value )
-
 	End
 	
 	Method CheckAccess( tscope:Scope ) Virtual
@@ -118,37 +110,6 @@ Class Value Extends SNode
 		Endif
 		
 	End
-	
-	#rem
-	Function IsValidAssignOp:Bool( op:String,type:Type )
-
-		If op="=" Return True
-
-		Local ptype:=TCast<PrimType>( type )
-		If ptype
-			Select op
-			Case "+=" Return ptype=Type.StringType Or ptype.IsNumeric
-			Case "*=","/=","mod=","-=" Return ptype.IsNumeric
-			Case "&=","|=","~=" Return ptype.IsIntegral
-			Case "shl=","shr=" Return ptype.IsIntegral
-			Case "and","or" Return ptype=Type.BoolType
-			End
-			Return False
-		Endif
-		
-		If TCast<EnumType>( type ) Return op="&=" Or op="|=" Or op="~="
-		
-		If TCast<PointerType>( type ) Return op="+=" Or op="-="
-		
-		If TCast<FuncType>( type ) Return op="+=" Or op="-="
-		
-		Return False
-	End
-	
-	Function ValidateAssignOp( op:String,type:Type )
-		If Not IsValidAssignOp( op,type ) Throw New SemantEx( "Assignment operator '"+op+"' cannot be used with type '"+type.ToString()+"'" )
-	End
-	#end
 	
 End
 

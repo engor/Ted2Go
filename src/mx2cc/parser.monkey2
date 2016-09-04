@@ -91,6 +91,7 @@ Class Parser
 				Case "global"
 					ParseVars( decls,flags )
 				Case "field"
+					If flags & DECL_EXTENSION Error( "Fields cannot be declared in extension classes" )
 					If fileScope Error( "Fields can only be declared inside a class, struct or interface" )
 					ParseVars( decls,flags )
 				Case "local"
@@ -252,19 +253,41 @@ Class Parser
 	End
 	
 	Method ParseClass:ClassDecl( flags:Int )
-		
+	
 		Local decl:=New ClassDecl
 		decl.srcpos=SrcPos
 		decl.kind=Parse()
 		decl.docs=Docs()
 		decl.ident="?????"
 		
+		flags&=(DECL_ACCESSMASK|DECL_EXTERN)
+		
 		Try
 			decl.ident=ParseIdent()
 			
 			decl.genArgs=ParseGenArgs()
 			
+			If CParse( "extension" )
+			
+'				If decl.genArgs Error( "Extension classed cannot be generic" )
+				
+				decl.superType=New IdentExpr( decl.ident,decl.srcpos,decl.srcpos )
+
+				If decl.genArgs
+					Local exprs:=New Expr[decl.genArgs.Length]
+					For Local i:=0 Until decl.genArgs.Length
+						exprs[i]=New IdentExpr( decl.genArgs[i],decl.srcpos,decl.srcpos )
+					Next
+					decl.superType=New GenericExpr( decl.superType,exprs,decl.srcpos,decl.srcpos )
+				Endif
+				
+				flags|=DECL_EXTENSION
+			Endif
+			
 			If CParse( "extends" )
+			
+				If flags & DECL_EXTENSION Error( "Extension classes cannot use 'Extends'" )
+				
 				If decl.kind="interface" Or decl.kind="protocol"
 					decl.ifaceTypes=ParseTypes()
 				Else
@@ -273,13 +296,20 @@ Class Parser
 			Endif
 			
 			If CParse( "implements" )
+
+				If flags & DECL_EXTENSION Error( "Extension classes cannot implement interfaces" )
+				
 				If decl.kind<>"class" And decl.kind<>"struct" Error( "'Implements' can only be used with classes and structs" )
+				
 				decl.ifaceTypes=ParseTypes()
+
 			Endif
 			
 			Select Toke
 			Case "virtual","abstract","final"
-			
+
+				If flags & DECL_EXTENSION Error( "Extension classes cannot have modifiers" )
+				
 				If decl.kind="interface" Error( "Interfaces are implicitly abstract" )
 				
 				If decl.kind="protocol" Error( "Protocols cannot have modifiers" )
@@ -308,7 +338,8 @@ Class Parser
 		
 		decl.flags=flags
 		
-		Local mflags:=(flags & DECL_EXTERN) | DECL_PUBLIC
+		Local mflags:=(flags & (DECL_EXTERN|DECL_EXTENSION)) | DECL_PUBLIC
+
 		If decl.kind="interface" Or decl.kind="protocol" mflags|=DECL_IFACEMEMBER|DECL_ABSTRACT
 		
 		decl.members=ParseDecls( mflags,False )
@@ -358,6 +389,8 @@ Class Parser
 				flags|=DECL_OPERATOR
 			
 				Select Toke
+				Case "to"
+					ident=Parse()
 				Case "*","/","+","-","&","|","~~"
 					ident=Parse()
 				Case "*=","/=","+=","-=","&=","|=","~~="
@@ -376,7 +409,19 @@ Class Parser
 				
 			Case "method"
 			
-				If CParse( "new" ) ident="new" Else ident=ParseIdent()
+				If CParse( "new" )
+					ident="new"
+				Else If CParse( "to" )
+					ident="to"
+				Else
+					ident=ParseIdent()
+				Endif
+				
+			Case "function"
+			
+				flags&=~DECL_EXTENSION
+			
+				ident=ParseIdent()
 				
 			Default
 			
@@ -385,11 +430,13 @@ Class Parser
 	
 			genArgs=ParseGenArgs()
 			
+'			If genArgs And (flags & DECL_EXTENSION) Error( "Extension methods cannot be generic" )
+			
 			If CParse( ":" )
 				type=Cast<FuncTypeExpr>( ParseType() )
 				If Not type Error( "Expecting function type" )
 			Else
-				type=ParseFuncType( New IdentTypeExpr( "void",SrcPos,SrcPos ) )
+				type=ParseFuncType( New IdentExpr( "void",SrcPos,SrcPos ) )
 			Endif
 			
 			If Not (flags & DECL_EXTERN)
@@ -419,6 +466,8 @@ Class Parser
 			
 			Select Toke
 			Case "virtual","abstract","override","final","extension"
+			
+				If (flags & DECL_EXTENSION) Error( "Extension methods cannot have modifiers" )
 			
 				If (flags & DECL_IFACEMEMBER) Error( "Interface methods are implictly abstract" )
 				
@@ -513,8 +562,6 @@ Class Parser
 		
 		Try
 			decl.ident=ParseIdent()
-			
-			If CParse( "extends" ) decl.superType=ParseType()
 			
 			If CParse( "=" )
 				If Not (flags & DECL_EXTERN) Error( "Non-extern declaration cannot be assigned an extern symbol" )
@@ -815,7 +862,7 @@ Class Parser
 		Local srcpos:=SrcPos
 		
 		Local varIdent:String
-		Local varType:TypeExpr
+		Local varType:Expr
 		Local varExpr:Expr
 		Local kind:String
 		Local init:Expr
@@ -973,7 +1020,7 @@ Class Parser
 			Bump()
 			
 			Local varIdent:String
-			Local varType:TypeExpr
+			Local varType:Expr
 			
 			Try
 				varIdent=ParseIdent()
@@ -1094,8 +1141,8 @@ Class Parser
 	End
 	
 	'THROWS!
-	Method ParseTypes:TypeExpr[]()
-		Local types:=New Stack<TypeExpr>
+	Method ParseTypes:Expr[]()
+		Local types:=New Stack<Expr>
 		Repeat
 			types.Push( ParseType() )
 		Until Not CParse( "," )
@@ -1103,7 +1150,7 @@ Class Parser
 	End
 	
 	'THROWS!
-	Method ParseFuncType:FuncTypeExpr( retType:TypeExpr )
+	Method ParseFuncType:FuncTypeExpr( retType:Expr )
 	
 		Parse( "(" )
 		
@@ -1126,7 +1173,7 @@ Class Parser
 						decl.type=ParseType()
 						If CParse( "=" ) decl.init=ParseExpr()
 					Else
-						decl.type=ParseType( New IdentTypeExpr( ident,decl.srcpos,EndPos ) )
+						decl.type=ParseType( New IdentExpr( ident,decl.srcpos,EndPos ) )
 					Endif
 				Else
 					decl.type=ParseType()
@@ -1146,20 +1193,20 @@ Class Parser
 	End
 	
 	'THROWS!
-	Method ParseIdentType:IdentTypeExpr()
+	Method ParseIdentType:IdentExpr()
 	
 		Local srcpos:=SrcPos
 		
 		Local ident:=CParseIdent()
 		If Not ident And IsTypeIdent( Toke ) ident=Parse()
 		If Not ident Error( "Expecting type identifier" )
-		Return New IdentTypeExpr( ident,srcpos,EndPos )
+		Return New IdentExpr( ident,srcpos,EndPos )
 	End
 
 	'THROWS!	
-	Method ParseBaseType:TypeExpr( identType:IdentTypeExpr=Null )
+	Method ParseBaseType:Expr( identType:IdentExpr=Null )
 	
-		Local type:TypeExpr=identType
+		Local type:Expr=identType
 		
 		If Not type type=ParseIdentType()
 		Local srcpos:=type.srcpos
@@ -1168,15 +1215,15 @@ Class Parser
 			If Toke="."
 				Bump()
 				Local ident:=ParseIdent()
-				type=New MemberTypeExpr( type,ident,srcpos,EndPos )
+				type=New MemberExpr( type,ident,srcpos,EndPos )
 			Else If Toke="<"
 				Bump()
-				Local args:=New Stack<TypeExpr>
+				Local args:=New Stack<Expr>
 				Repeat
 					args.Push( ParseType() )
 				Until Not CParse( "," )
 				Parse( ">" )
-				type=New GenericTypeExpr( type,args.ToArray(),srcpos,EndPos )
+				type=New GenericExpr( type,args.ToArray(),srcpos,EndPos )
 			Else
 				Exit
 			Endif
@@ -1190,7 +1237,7 @@ Class Parser
 	End
 	
 	'THROWS!
-	Method ParseType:TypeExpr( identType:IdentTypeExpr=Null )
+	Method ParseType:Expr( identType:IdentExpr=Null )
 	
 		Local type:=ParseBaseType( identType )
 		Local srcpos:=type.srcpos
@@ -1216,7 +1263,7 @@ Class Parser
 	End
 
 	'THROWS! Some ugly stunt parsing to handle operator New.
-	Method ParseNewType:TypeExpr()
+	Method ParseNewType:Expr()
 	
 		Local srcpos:=SrcPos
 		Local type:=ParseBaseType()
@@ -1339,7 +1386,7 @@ Class Parser
 				Local ident:=Parse()
 				
 				If Toke="ptr" Or Toke="("
-					Local type:=ParseBaseType( New IdentTypeExpr( ident,srcpos,EndPos ) )
+					Local type:=ParseBaseType( New IdentExpr( ident,srcpos,EndPos ) )
 					
 					Parse( "(" )
 					Local expr:=ParseExpr()
@@ -1359,7 +1406,7 @@ Class Parser
 		
 			Local toke:=Toke
 			Local tokeType:=TokeType
-			Local typeExpr:TypeExpr
+			Local typeExpr:Expr
 
 			Bump()
 			If CParse( ":" ) typeExpr=ParseType()
@@ -1370,7 +1417,7 @@ Class Parser
 
 			Local toke:=Toke
 			Local tokeType:=TokeType
-			Local typeExpr:TypeExpr
+			Local typeExpr:Expr
 
 			Bump()
 		
@@ -1413,7 +1460,7 @@ Class Parser
 				expr=New InvokeExpr( expr,args,srcpos,EndPos )
 			Case "<"
 				BeginTryParse()
-				Local args:=New Stack<TypeExpr>
+				Local args:=New Stack<Expr>
 				Try
 					Bump()
 					Repeat
@@ -1873,8 +1920,8 @@ Class Parser
 		Return "true"
 	End
 	
-	Method EvalError()
-		Error( "Failed to evaluate preprocessor expression: toke='"+Toke+"'" )
+	Method EvalError( msg:String )
+		Error( "Failed to evaluate preprocessor expression: "+msg )' toke='"+Toke+"'" )
 	End
 		
 	Method EvalPrimary:String()
@@ -1889,13 +1936,14 @@ Class Parser
 		Case TOKE_IDENT
 			Local id:=Parse()
 			Local t:=_ppsyms[id]
-			If Not t t="false"
+			If Not t EvalError( "Preprocessor symbol '"+id+"' not found" )
+'			If Not t t="false"
 			Return t
 		Case TOKE_STRINGLIT
 			Return Parse()
 		End
 
-		EvalError()
+		EvalError( "Failed to evaludate preprocessor expression - unexpected token '"+Toke+"'" )
 		Return Null
 	End
 	
@@ -1915,6 +1963,9 @@ Class Parser
 			If IsBool( lhs ) Or IsBool( rhs ) 
 				lhs=ToBool( lhs )
 				rhs=ToBool( rhs )
+			Endif
+			If (lhs="~q"+HostOS+"~q" And rhs="~qdesktop~q") Or (lhs="~qdesktop~q" And rhs="~q"+HostOS+"~q" ) 
+				EvalError( "__TARGET__=~qdesktop~q no longer supported! Use boolean __DESKTOP_TARGET__ instead!" )
 			Endif
 			Select op
 			Case "=" If lhs=rhs lhs="true" Else lhs="false"

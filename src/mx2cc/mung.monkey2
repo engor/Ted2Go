@@ -183,6 +183,9 @@ Function ClassName:String( ctype:ClassType )
 	
 		Return symbol
 	Endif
+	
+	If ctype.cdecl.IsExtension Return "x_"+ScopeName( ctype.scope )
+
 
 	Return "t_"+ScopeName( ctype.scope )
 End
@@ -207,9 +210,11 @@ Function FuncName:String( func:FuncValue )
 		Return symbol
 	Endif
 	
-	If fdecl.kind="function" Or func.types
-
+	If fdecl.kind="function" Or func.IsExtension'types
+	
 		Local sym:="g_"+ScopeName( func.scope )+"_"+MungIdent( fdecl.ident )
+		
+		If fdecl.ident="to" sym+="_"+MungArg( func.ftype.retType )
 
 '		hopefully not necessary!		
 		If func.types sym+=MungArgs( func.types )
