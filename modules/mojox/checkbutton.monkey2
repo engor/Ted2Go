@@ -5,6 +5,8 @@ Namespace mojox
 #end
 Class CheckGroup
 
+	Field CheckedChanged:Void()
+
 	Property Checked:CheckButton()
 	
 		Return _checked
@@ -50,11 +52,13 @@ Class CheckButton Extends Label
 			Checked=Not Checked
 			
 			Clicked()
+			
+			If _group _group.CheckedChanged()
 		End
 		
-		Super.Clicked+=clicked
-		
 		_checkBox.Clicked+=clicked
+		
+		Super.Clicked+=clicked
 		
 		AddView( _checkBox )
 
