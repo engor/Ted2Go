@@ -5,6 +5,10 @@ Namespace mojox
 #end
 Class TextField Extends TextView
 
+	#rem monkeydoc Invoked when the user edits text.
+	#end
+	Field TextChanged:Void()
+
 	#rem monkeydoc Invoked when the user hits 'Enter'.
 	#end
 	Field Entered:Void()
@@ -26,6 +30,12 @@ Class TextField Extends TextView
 		Gravity=New Vec2f( 0,.5 )
 		
 		ScrollBarsVisible=False
+		
+		MaxSize=New Vec2i( 512,0 )
+		
+		Document.TextChanged+=Lambda()
+			TextChanged()
+		End
 	End
 	
 	Method New( maxLength:Int )
