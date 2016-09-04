@@ -13,9 +13,11 @@ if [ "$OSTYPE" = "linux-gnu" ]
 then
 
 	rm -r -f "$ted2"
-	cp -R "$ted2_new" "$ted2"
+	mkdir "$ted2"
+	cp -R "$ted2_new/assets" "$ted2/assets"
+	cp "$ted2_new/ted2" "$ted2/ted2"
 	rm -r -f "$launcher"
-	cp -R "$launcher_new" "$launcher"
+	cp "$launcher_new" "$launcher"
 
 else
 

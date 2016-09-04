@@ -2,9 +2,7 @@
 
 ***** Welcome to Monkey2! *****
 
-Emscripten support is currently WIP.
-
-Android and iOS support are currently MIA (but on the way).
+iOS support are currently MIA (but on the way).
 
 The Ted2 IDE is currently very minimal. If you find it a little *too* minimal, a package for integrating monkey2 with 
 Sublime Text 3 is available here: http://monkey2.monkey-x.com/forums/forum/general-programming-discussion/

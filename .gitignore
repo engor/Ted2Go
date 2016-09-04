@@ -12,6 +12,8 @@
 /devtools/*
 !/devtools/.gitignore
 
+*.products/
+
 /docs/modules.html
 /docs/manuals.html
 
@@ -23,7 +25,11 @@ __MANPAGES__/
 
 /modules/module-manager/downloads/*.zip
 
+/modules/cmark
+/modules/lua
 /modules/wdw-game2d
 /modules/portmidi
+
+/modules/module-manager/backups
 
 Monkey2 (Windows).exe

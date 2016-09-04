@@ -20,9 +20,6 @@ MX2_APP_DIR_FRAMEWORK=../Frameworks		'ie: frameworks go in app Contents/Framewor
 
 '***** DESKTOP *****
 
-MX2_BUILD_DIR_DESKTOP_DEBUG=desktop_debug_macos
-MX2_BUILD_DIR_DESKTOP_RELEASE=desktop_release_macos
-
 'LD options
 MX2_LD_OPTS_DESKTOP=-Wl,-rpath,@executable_path -Wl,-rpath,@executable_path/../Frameworks
 MX2_LD_OPTS_DESKTOP_DEBUG=-O0 '-g
@@ -37,6 +34,23 @@ MX2_CC_OPTS_DESKTOP_RELEASE=-O3 -DNDEBUG
 MX2_CPP_OPTS_DESKTOP=-std=c++11 -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-undefined-bool-conversion -Wno-int-to-void-pointer-cast -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-parentheses-equality
 MX2_CPP_OPTS_DESKTOP_DEBUG=-O0 '-g
 MX2_CPP_OPTS_DESKTOP_RELEASE=-O3 -DNDEBUG
+
+'***** MACOS *****
+
+'LD options
+MX2_LD_OPTS_MACOS=-Wl,-rpath,@executable_path -Wl,-rpath,@executable_path/../Frameworks
+MX2_LD_OPTS_MACOS_DEBUG=-O0 '-g
+MX2_LD_OPTS_MACOS_RELEASE=-O3
+
+'C compiler options
+MX2_CC_OPTS_MACOS=-std=gnu99 -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-undefined-bool-conversion -Wno-int-to-void-pointer-cast -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-parentheses-equality
+MX2_CC_OPTS_MACOS_DEBUG=-O0 '-g
+MX2_CC_OPTS_MACOS_RELEASE=-O3 -DNDEBUG
+
+'C++ compiler options
+MX2_CPP_OPTS_MACOS=-std=c++11 -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-undefined-bool-conversion -Wno-int-to-void-pointer-cast -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-parentheses-equality
+MX2_CPP_OPTS_MACOS_DEBUG=-O0 '-g
+MX2_CPP_OPTS_MACOS_RELEASE=-O3 -DNDEBUG
 
 
 '***** EMSCRIPTEN *****
@@ -68,3 +82,24 @@ MX2_CC_OPTS_EMSCRIPTEN_RELEASE=-O3
 MX2_CPP_OPTS_EMSCRIPTEN=-std=c++11 -s USE_SDL=2 -s FULL_ES2=1 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1 ' -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1 -Wno-undefined-bool-conversion
 MX2_CPP_OPTS_EMSCRIPTEN_DEBUG=-O0	'-O2
 MX2_CPP_OPTS_EMSCRIPTEN_RELEASE=-O3
+
+'***** ANDROID *****
+
+'***** IOS *****
+
+MX2_SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS9.3.sdk
+
+'LD options
+MX2_LD_OPTS_IOS=-arch armv7 -isysroot ${MX2_SDKROOT}
+MX2_LD_OPTS_IOS_DEBUG=-O0 -g
+MX2_LD_OPTS_IOS_RELEASE=-O3
+
+'C compiler options
+MX2_CC_OPTS_IOS=-std=gnu99 -arch armv7 -isysroot ${MX2_SDKROOT} -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-undefined-bool-conversion -Wno-int-to-void-pointer-cast -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-parentheses-equality
+MX2_CC_OPTS_IOS_DEBUG=-O0 -g
+MX2_CC_OPTS_IOS_RELEASE=-O3 -DNDEBUG
+
+'C++ compiler options
+MX2_CPP_OPTS_IOS=-std=c++11 -arch armv7 -isysroot ${MX2_SDKROOT} -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-undefined-bool-conversion -Wno-int-to-void-pointer-cast -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-parentheses-equality
+MX2_CPP_OPTS_IOS_DEBUG=-O0 -g
+MX2_CPP_OPTS_IOS_RELEASE=-O3 -DNDEBUG
