@@ -1,19 +1,19 @@
 
 Namespace mojo.requesters
 
-#If __TARGET__="desktop"
+#If __DESKTOP_TARGET__
 
 #Import "native/requesters.h"
 
-#If __HOSTOS__="macos"
+#If __TARGET__="macos"
 
 	#Import "native/requesters.mm"
 	
-#else
+#Else
 
 	#Import "native/requesters.cpp"
 	
-	#if __HOSTOS__="windows"
+	#if __TARGET__="windows"
 
 		#Import "<libcomdlg32.a>"
 

@@ -306,7 +306,8 @@ Class Window Extends View
 
 		SDL_GL_SetSwapInterval( _swapInterval )
 	
-#If __TARGET__="desktop" And __HOSTOS__="windows"
+#If __TARGET__="windows"
+
 		If _weirdHack
 			_weirdHack=False
 			SDL_GL_SwapWindow( _sdlWindow )

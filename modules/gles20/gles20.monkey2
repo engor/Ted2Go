@@ -5,39 +5,48 @@ Namespace gles20
 
 Using monkey
 
-#If __TARGET__="desktop"
-
-	#If __HOSTOS__="windows"
+#If __TARGET__="windows"
 	
-		'USE ANGLE!
-		#Import "angle/include/*.h"
-		#Import "<GLES2/gl2.h>"
-
-		#Import "angle/lib/libEGL.lib"
-		#Import "angle/lib/libGLESv2.lib"
+	'USE ANGLE!
+	#Import "angle/lib/libEGL.lib"
+	#Import "angle/lib/libGLESv2.lib"
 		
-		#Import "angle/bin/libEGL.dll"
-		#Import "angle/bin/libGLESv2.dll"
-		#Import "angle/bin/d3dcompiler_47.dll"
+	#Import "angle/bin/libEGL.dll"
+	#Import "angle/bin/libGLESv2.dll"
+	#Import "angle/bin/d3dcompiler_47.dll"
 		
-	#Else If __HOSTOS__="macos"
-	
-		#Import "native/gles20_macos.h"
-		#Import "<OpenGL.framework>"
-		
-	#Else If __HOSTOS__="linux"
-	
-		#Import "native/gles20_linux.h"
-		#Import "<libGL.a>"
-		
-	#Endif
-	
-#Else
+	#Import "angle/include/*.h"
 
 	#Import "<GLES2/gl2.h>"
+
+#Else If __TARGET__="macos"
 	
+	#Import "<OpenGL.framework>"
+
+	#Import "native/gles20_macos.h"
+		
+#Else If __TARGET__="linux"
+	
+	#Import "<libGL.a>"
+
+	#Import "native/gles20_linux.h"
+		
+#Else If __TARGET__="emscripten"
+	
+	#Import "<GLES2/gl2.h>"
+	
+#Else If __TARGET__="android"
+
 	#import "<libGLESv1_CM.a>"
 	#import "<libGLESv2.a>"
+	
+	#Import "<GLES2/gl2.h>"
+	
+#Else If __TARGET__="ios"
+
+	#Import "<OpenGLES.framework>"
+
+	#import "<OpenGLES/ES2/gl.h>"
 	
 #Endif
 
@@ -540,7 +549,7 @@ Function glVertexAttribPointer:Void(indx_:GLuint,size_:GLint,type_:GLenum,normal
 Function glViewport:Void(x_:GLint,y_:GLint,width_:GLsizei,height_:GLsizei)
 '${END}
 
-#If __TARGET__="desktop" And __HOSTOS__="windows"
+#If __TARGET__="windows"
 Function bb_gles20_windows_init()
 #Endif
 
@@ -549,7 +558,7 @@ Public
 'Must call this after creating context...
 '
 Function glInitEx()
-	#If __TARGET__="desktop" And __HOSTOS__="windows"
+	#If __TARGET__="windows"
 '		bb_gles20_windows_init()
 	#Endif
 End

@@ -61,9 +61,11 @@ Class HtmlView Extends ScrollableView
 		Local root:=ExtractRootDir( url )
 		
 		If root="http://" Or root="https://"
-#if __TARGET__="desktop"		
+		
+#If __DESKTOP_TARGET__			
 			requesters.OpenUrl( url )
-#endif
+#Endif
+
 			Return
 		Endif
 		

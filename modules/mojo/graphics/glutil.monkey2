@@ -63,9 +63,9 @@ End
 #end
 Function glCompile:Int( type:Int,source:String )
 
-	#if __TARGET__<>"desktop" Or __HOSTOS__="windows"
-		source="precision mediump float;~n"+source
-	#Endif
+#If __TARGET__="windows" Or Not __DESKTOP_TARGET__
+	source="precision mediump float;~n"+source
+#Endif
 	
 	Local shader:=glCreateShader( type )
 	glShaderSourceEx( shader,source )

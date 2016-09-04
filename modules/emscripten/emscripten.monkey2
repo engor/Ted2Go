@@ -1,9 +1,9 @@
 
-Namespace emscripten
-
 #If __TARGET__="emscripten"
+
 #Import "<emscripten.h>"
-#Endif
+
+Namespace emscripten
 
 Extern
 
@@ -30,3 +30,5 @@ Function emscripten_get_device_pixel_ratio:Double()
 Function emscripten_set_canvas_size:Void( width:Int,height:Int )
 Function emscripten_get_canvas_size:Void( width:Int Ptr,height:Int Ptr,fullScreen:Int Ptr )
 Function emscripten_get_now:Double()
+
+#Endif

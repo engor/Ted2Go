@@ -8,23 +8,37 @@ Namespace std.fiber
 #import "native/fcontext.cpp"
 #import "native/fcontext.h"
 
-#if __TARGET__="android"
-	#import "native/asm/make_arm_aapcs_elf_gas.S"
-	#import "native/asm/jump_arm_aapcs_elf_gas.S"
-	#import "native/asm/ontop_arm_aapcs_elf_gas.S"
-#else if __HOSTOS__="windows"
+#If __TARGET__="windows"
+
 	#import "native/asm/make_i386_ms_pe_gas.asm"
 	#import "native/asm/jump_i386_ms_pe_gas.asm"
 	#import "native/asm/ontop_i386_ms_pe_gas.asm"
-#else if __HOSTOS__="macos"
+
+#Else If __TARGET__="macos"
+
 	#import "native/asm/make_x86_64_sysv_macho_gas.S"
 	#import "native/asm/jump_x86_64_sysv_macho_gas.S"
 	#import "native/asm/ontop_x86_64_sysv_macho_gas.S"
-#else if __HOSTOS__="linux"
+
+#Else If __TARGET__="linux"
+
 	#import "native/asm/make_x86_64_sysv_elf_gas.S"
 	#import "native/asm/jump_x86_64_sysv_elf_gas.S"
 	#import "native/asm/ontop_x86_64_sysv_elf_gas.S"
-#end
+
+#Else If __TARGET__="android"
+
+	#import "native/asm/make_arm_aapcs_elf_gas.S"
+	#import "native/asm/jump_arm_aapcs_elf_gas.S"
+	#import "native/asm/ontop_arm_aapcs_elf_gas.S"
+
+#Else If __TARGET__="ios"
+
+	#import "native/asm/make_arm_aapcs_macho_gas.S"
+	#import "native/asm/jump_arm_aapcs_macho_gas.S"
+	#import "native/asm/ontop_arm_aapcs_macho_gas.S"
+
+#Endif
 
 Extern
 

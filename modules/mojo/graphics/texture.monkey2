@@ -30,7 +30,7 @@ Class Texture
 
 	Method New( pixmap:Pixmap,flags:TextureFlags=TextureFlags.Filter|TextureFlags.Mipmap )
 		
-#If __TARGET__<>"desktop"
+#If Not __DESKTOP_TARGET__
 		If flags & TextureFlags.Mipmap
 			Local tw:=Log2( pixmap.Width ),th:=Log2( pixmap.Height )
 			If tw<>Round( tw ) Or th<>Round( th ) flags&=~TextureFlags.Mipmap
