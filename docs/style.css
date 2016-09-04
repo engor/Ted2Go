@@ -62,6 +62,15 @@ pre>code{
 	font-weight: 300;
 }
 
+div.syntax{
+	color: #ffff00;
+	display: block;
+	color: #eeee00;
+	overflow: auto;
+	white-space: pre;
+	padding: 4px 0px;
+}
+
 /* ***** link ***** */
 
 a{
