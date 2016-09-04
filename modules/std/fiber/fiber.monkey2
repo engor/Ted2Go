@@ -21,6 +21,8 @@ Function TerminateFiber:Void( fiber:Int )="bbFiber::terminateFiber"
 
 Function SuspendCurrentFiber:Void()="bbFiber::suspendCurrentFiber"
 
+Function CurrentFiberSleep:Void( seconds:Double )="bbFiber::currentFiberSleep"
+
 Function GetCurrentFiber:Int()="bbFiber::getCurrentFiber"
 
 Public
@@ -93,9 +95,16 @@ Struct Fiber
 		Return New Fiber( GetCurrentFiber() )
 	End
 	
+	#rem monkeydoc Puts current fiber to sleep.
+	#end
+	Function Sleep( seconds:Double )
+		CurrentFiberSleep( seconds )
+	End
+	
 	#rem monkeydoc @hidden - not really needed?
 	#end
 	Function CreateSuspended:Fiber( entry:Void() )
+	
 		Return New Fiber( CreateFiber( entry ) )
 	End
 	

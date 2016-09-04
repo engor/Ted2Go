@@ -79,11 +79,11 @@ Const FILETYPE_UNKNOWN:=FileType.Unknown
 #end
 Function AssetsDir:String()
 
-#If __TARGET__="desktop" And __HOSTOS__="macos"
+#If __TARGET__="macos"
 
 	Return AppDir()+"../Resources/"
 	
-#Else __TARGET__="desktop" Or __TARGET__="emscripten"
+#Else If __DESKTOP_TARGET__ Or __TARGET__="emscripten"
 
 	Return AppDir()+"assets/"
 	
@@ -97,13 +97,15 @@ End
 
 Function DesktopDir:String()
 
-#If __TARGET__="desktop"
-	#If __HOSTOS__="windows"
-		Return (String.FromCString( getenv( "HOMEDRIVE" ) )+String.FromCString( getenv( "HOMEPATH" ) )).Replace( "\","/" )+"/Desktop/"
-	#Else
-		Return String.FromCString( getenv( "HOME" ) )+"/Desktop/"
-	#endif
-#endif
+#If __TARGET__="windows"
+	
+	Return (String.FromCString( getenv( "HOMEDRIVE" ) )+String.FromCString( getenv( "HOMEPATH" ) )).Replace( "\","/" )+"/Desktop/"
+	
+#Else If __DESKTOP_TARGET__
+
+	Return String.FromCString( getenv( "HOME" ) )+"/Desktop/"
+
+#Endif
 
 	Return ""
 

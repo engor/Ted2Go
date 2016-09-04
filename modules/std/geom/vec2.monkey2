@@ -26,15 +26,23 @@ Struct Vec2<T>
 	Method New()
 	End
 	
-'	Method New( v:Vec2 )
-'		x=v.x;y=v.y
-'	End
-	
 	Method New( x:T,y:T )
 		Self.x=x
 		Self.y=y
 	End
 	
+	#rem monkeydoc Converts the vector to a vector of a different type.
+	#end
+	Operator To<C>:Vec2<C>()
+		Return New Vec2<C>( x,y )
+	End
+
+	#rem monkeydoc Converts the vector to a printable string.
+	#end
+	Operator To:String()
+		Return "Vec2("+x+","+y+")"
+	End
+
 	#rem monkeydoc The X coordinate of the vector.
 	#end
 	Property X:T()
@@ -104,7 +112,7 @@ Struct Vec2<T>
 	Operator-:Vec2( s:T )
 		Return New Vec2( x-s,y-s )
 	End
-
+	
 	#rem monkeydoc The length of the vector.
 	#end
 	Property Length:Double()
@@ -132,7 +140,7 @@ Struct Vec2<T>
 	#rem monkeydoc Gets a string representation for the vector.
 	#end
 	Method ToString:String()
-		Return "Vec2("+x+","+y+")"
+		Return Self
 	End
 
 End

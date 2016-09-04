@@ -41,17 +41,20 @@ Namespace std
 #import "audio/load_wav"
 #import "audio/load_vorbis"
 
+#Import "async/async"
+#Import "time/time"
+#Import "time/timer"
+#Import "fiber/fiber"
+#Import "fiber/future"
+#Import "process/process"
+#Import "filesystem/filesystem"
+
 #Import "misc/random"
 #Import "misc/chartype"
-#Import "misc/filesystem"
 #Import "misc/stringio"
 #Import "misc/json"
 #Import "misc/jsonify"
-#Import "misc/time"
 #Import "misc/zipfile"
-
-#Import "fiber/fiber"
-#Import "fiber/future"
 
 Private
 
@@ -73,7 +76,7 @@ Function Main()
 	
 	'Note: "asset::" support for android/ios is in mojo, as it uses SDL_RWop and we don't want to std to be dependant on SDL2...
 	'	
-#if __TARGET__="desktop" Or __TARGET__="emscripten"
+#If Not __MOBILE_TARGET__
 	
 	Stream.OpenFuncs["asset"]=Lambda:Stream( proto:String,path:String,mode:String )
 

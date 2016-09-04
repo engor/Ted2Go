@@ -47,6 +47,18 @@ Struct Rect<T>
 		Self.max=New Vec2<T>( x1,y1 )
 	End
 	
+	#rem monkeydoc Converts the rect to a rect of a different type
+	#end
+	Operator To<C>:Rect<C>()
+		Return New Rect<C>( min.x,min.y,max.x,max.y )
+	End
+	
+	#rem  monkeydoc Converts the rect to a printable string.
+	#end
+	Operator To:String()
+		Return "Rect("+min.x+","+min.y+","+max.x+","+max.y+")"
+	End
+	
 	#rem monkeydoc The minimum X coordinate.
 	#end
 	Property X:T()
@@ -321,9 +333,12 @@ Struct Rect<T>
 	End
 	
 	#rem monkeydoc Gets a string describing the rect.
+	
+	Deprecated: Use Operator To:String instead.
+	
 	#end
 	Method ToString:String()
-		Return "Rect("+min.ToString()+","+max.ToString()+")"
+		Return Self
 	End
 	
 End

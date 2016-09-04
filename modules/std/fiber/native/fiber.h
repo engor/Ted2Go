@@ -18,6 +18,8 @@ namespace bbFiber{
 	
 	void suspendCurrentFiber();
 	
+	void currentFiberSleep( double seconds );
+	
 	int getCurrentFiber();
 }
 

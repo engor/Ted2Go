@@ -88,6 +88,12 @@ Struct Color
 		Self.a=a
 	End
 	
+	#rem monkeydoc Converts the color to printable string.
+	#end
+	Operator To:String()
+		Return "Color("+r+","+g+","+b+","+a+")"
+	End
+	
 	#rem monkeydoc The Red color component.
 	#end
 	Property R:Float()
@@ -172,11 +178,11 @@ Struct Color
 	Method ToARGB:UInt()
 		Return UInt(a*255) Shl 24 | UInt(r*255) Shl 16 | UInt(g*255) Shl 8 | UInt(b*255)
 	End
-	
+
 	#rem monkeydoc Converts the color to printable string.
 	#end
 	Method ToString:String()
-		Return "Color("+r+","+g+","+b+","+a+")"
+		Return Self
 	End
 	
 	#rem monkeydoc Creates a color from hue, saturation and value.

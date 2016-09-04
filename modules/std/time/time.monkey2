@@ -1,11 +1,40 @@
 
+#Import "native/time.h"
+#Import "native/time.cpp"
+
 Namespace std.time
 
 Private
 
 Global _us0:Long
 
+Extern
+
+#rem monkeydoc Gets the number of seconds elapsed since the app started.
+
+#end
+Function Now:Double()="bbTime::now"
+
+#rem monkeydoc Puts app to sleep.
+
+Note: this will also cause all fibers to sleep.
+
+#end
+Function Sleep( seconds:Double )="bbTime::sleep"
+
 Public
+
+#rem monkeydoc Gets the number of microseconds since the app started.
+#end
+Function Microsecs:Long()
+	Return Now() * 1000000
+End
+
+#rem monkeydoc Gets the number of milliseconds since the app started.
+#end
+Function Millisecs:Int()
+	Return Now() * 1000
+End
 
 #rem monkeydoc @hidden Time class.
 #end
@@ -109,6 +138,14 @@ Class Time
 	
 End
 
+#rem
+
+#rem monkeydoc Gets the number of seconds since the app started.
+#end
+Function Now:Double()
+	Return Double( Microsecs() )/1000000
+End
+
 #rem monkeydoc Gets the number of microseconds since the app started.
 #end
 Function Microsecs:Long()
@@ -126,8 +163,4 @@ Function Millisecs:Int()
 	Return Microsecs()/1000
 End
 
-#rem monkeydoc @hidden Gets the number of seconds since the app started.
 #end
-Function Seconds:Double()
-	Return Microsecs()/1000000.0
-End

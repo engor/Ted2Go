@@ -40,6 +40,18 @@ Struct AffineMat3<T>
 		Self.i.x=ix;Self.i.y=iy;Self.j.x=jx;Self.j.y=jy;Self.t.x=tx;Self.t.y=ty
 	End
 	
+	#rem monkeydoc Converts the matrix to a matrix of a different type.
+	#end
+	Operator To<C>:AffineMat3<C>()
+		Return New AffineMat3<C>( i.x,i.y,j.x,j.y,t.x,t.y )
+	End 
+	
+	#rem monkeydoc Converts the matrix to a printable string.
+	#end
+	Operator To:String()
+		Return "AffineMat3("+i.x+","+i.y+","+j.x+","+j.y+","+t.x+","+t.y+")"
+	End
+	
 	#rem monkeydoc Returns the inverse of the matrix.
 	#end
 	Operator-:AffineMat3()
@@ -63,6 +75,12 @@ Struct AffineMat3<T>
 			i.x*m.i.x + j.x*m.i.y       , i.y*m.i.x + j.y*m.i.y ,
 			i.x*m.j.x + j.x*m.j.y       , i.y*m.j.x + j.y*m.j.y ,
 			i.x*m.t.x + j.x*m.t.y + t.x , i.y*m.t.x + j.y*m.t.y + t.y )
+	End
+	
+	#rem monkeydoc Multiplies a vector by the matrix and returns the result.
+	#end
+	Method Transform:Vec2<T>( v:Vec2<T> )
+		Return New Vec2<T>( i.x*v.x + j.x*v.y + t.x , i.y*v.x + j.y*v.y + t.y )
 	End
 			
 	#rem monkeydoc Multiplies a vector by the matrix and returns the result.

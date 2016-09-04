@@ -2,6 +2,9 @@
 #include "fiber.h"
 #include "fcontext.h"
 
+#include "../../time/native/time.h"
+#include "../../async/native/async.h"
+
 namespace bbFiber{
 
 	const int MAX_FIBERS=1024;
@@ -151,6 +154,9 @@ namespace bbFiber{
 	
 		Fiber *fiber=getFiber( id );
 		if( !fiber ){
+			//
+			// could signal a semaphore...
+			//
 			bbDB::error( "Invalid fiber id" );
 			return;
 		}
@@ -165,6 +171,9 @@ namespace bbFiber{
 	void suspendCurrentFiber(){
 	
 		if( currFiber==mainFiber ){
+			//
+			// could wait on a semaphore...
+			//
 			bbDB::error( "Can't suspend main fiber" );
 			return;
 		}
@@ -174,6 +183,27 @@ namespace bbFiber{
 		fiber->fcontext2=jump_fcontext( fiber->fcontext2,nullptr ).fcontext;
 		
 		setCurrFiber( fiber );
+	}
+	
+	void currentFiberSleep( double seconds ){
+	
+		struct ResumeEvent : public bbAsync::Event{
+		
+			int fiber;
+			
+			ResumeEvent():fiber( getCurrentFiber() ){}
+			
+			void dispatch(){
+			
+				resumeFiber( fiber );
+			}
+		};
+		
+		ResumeEvent event;
+		
+		event.post( seconds );
+		
+		suspendCurrentFiber();
 	}
 	
 	int startFiber( bbFunction<void()> entry ){
@@ -186,7 +216,7 @@ namespace bbFiber{
 	}
 	
 	void terminateFiber( int id ){
-	
+
 	}
 	
 	int getCurrentFiber(){
