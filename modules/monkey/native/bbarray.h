@@ -4,6 +4,7 @@
 
 #include "bbgc.h"
 #include "bbdebug.h"
+#include "bbobject.h"
 
 template<class T,int D> class bbArray : public bbGCNode{
 
