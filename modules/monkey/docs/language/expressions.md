@@ -180,3 +180,4 @@ End
 </pre>
 
 If you have already written an Operator+ (as is the case here) this is not strictly necessary, as monkey2 will generate the code for Operator+= for you. However, you may still want to provide a custom version for Operator+= if your code can do so in a more efficient way.
+

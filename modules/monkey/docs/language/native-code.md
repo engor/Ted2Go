@@ -54,32 +54,3 @@ However, you can override this by declaring an extern class that extends `Void`.
 * A native object is not memory managed in any way. It is up to you to 'delete' or otherwise destroy it.
 
 * A native object has no runtime type information, so it cannot be downcast using the `Cast<>` operator.
- 
- ---
-
-### The mx2cc tool
-
-mx2cc is the command line compiler for monkey2. The actual executable is named differently depending on the OS:
-
-/bin/mx2cc_windows.exe
-/bin/mx2cc_macos
-/bin/mx2cc_linux
-
-The command line options for mx2cc are:
-
-`mx2cc` _command_ _options_ _input_
-
-Valid commands are:
-
-* `makeapp` - make an app. _input_ should be a monkey2 file path.
-* `makemods` - make a set of modules. _input_ should be a space separated list of module names in dependency order.
-* `makedocs` - make the documentation for a set of modules. _input_ should be a space separated list of module names in dependency order.
-
-Valid options are:
-
-* `clean` - rebuilds everything from scratch.
-* `verbose` - provides more information while building.
-* `target=`_target_ - set target to `desktop` (the default) or `emscripten`.
-*  `config=`_config_ - set config to `debug` (the default) or `release`.
-* `apptype`=_apptype_ set apptype to `gui` (the default) or `console`.
-

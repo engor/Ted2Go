@@ -1,15 +1,17 @@
 
-@manpage The mx2cc compiler
+# The mx2cc compiler
 
 Mx2cc is the command line compiler for monkey2. The actual executable is named differently depending on the OS:
 
-/bin/mx2cc_windows.exe  
-/bin/mx2cc_macos  
-/bin/mx2cc_linux  
+* Windows: /bin/mx2cc_windows.exe  
+* MacOS: /bin/mx2cc_macos  
+* Linux: /bin/mx2cc_linux  
 
 The command line options for mx2cc are:
 
+<div class=syntax>
 `mx2cc` _command_ _options_ _input_
+</div>
 
 Valid commands are:
 
