@@ -1,5 +1,5 @@
 
-#If __TARGET__="desktop" and __HOSTOS__="windows"
+#If __TARGET__="windows"
 #Import "bin/wget.exe"
 #End
 
@@ -32,6 +32,9 @@
 
 #import "textviewkeyeventfilter"
 
+#Import "buildproduct"
+#Import "editproductdialog"
+
 Namespace ted2
 
 Using std..
@@ -40,7 +43,7 @@ Using mojox..
 
 Function Main()
 
-#if __TARGET__="desktop"
+#if __DESKTOP_TARGET__
 		
 	ChangeDir( AppDir() )
 	
