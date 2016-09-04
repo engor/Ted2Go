@@ -230,9 +230,14 @@ Class ModuleManager Extends Dialog
 
 			Local zip:=module.name+"-v"+module.new_version+".zip"
 			Local dst:=downloadDir+zip
+			
+			If Not DeleteDir( "modules/"+module.name,True )
+				Alert( "Error deleting module directory '"+module.name+"'" )
+				Return False
+			End
 		
 			If Not ExtractZip( dst,"modules",module.name+"/" )
-				Alert( "Error extracting zip '"+dst+"'" )
+				Alert( "Error extracting zip to '"+dst+"'" )
 				Return False
 			Endif
 			

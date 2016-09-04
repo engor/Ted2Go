@@ -26,6 +26,7 @@ Class BuildActions
 
 	Field buildAndRun:Action
 	Field build:Action
+	Field buildSettings:Action
 	Field nextError:Action
 	Field lockBuildFile:Action
 	Field updateModules:Action
@@ -33,7 +34,7 @@ Class BuildActions
 	Field moduleManager:Action
 	Field rebuildHelp:Action
 	
-	Field settingsMenu:Menu
+	Field targetMenu:Menu
 	
 	Method New( docs:DocumentManager,console:Console,debugView:DebugView )
 	
@@ -62,6 +63,9 @@ Class BuildActions
 		build=New Action( "Build Only" )
 		build.Triggered=OnBuild
 		build.HotKey=Key.F6
+		
+		buildSettings=New Action( "Build Settings" )
+		buildSettings.Triggered=OnBuildFileSettings
 		
 		nextError=New Action( "Next Error" )
 		nextError.Triggered=OnNextError
@@ -104,8 +108,6 @@ Class BuildActions
 		group=New CheckGroup
 		_desktopTarget=New CheckButton( "Desktop",,group )
 		_desktopTarget.Layout="fill-x"
-		_consoleTarget=New CheckButton( "Console",,group )
-		_consoleTarget.Layout="fill-x"
 		_emscriptenTarget=New CheckButton( "Emscripten",,group )
 		_emscriptenTarget.Layout="fill-x"
 		_androidTarget=New CheckButton( "Android",,group )
@@ -114,9 +116,6 @@ Class BuildActions
 		_iosTarget.Layout="fill-x"
 		_desktopTarget.Clicked+=Lambda()
 			_buildTarget="desktop"
-		End
-		_consoleTarget.Clicked+=Lambda()
-			_buildTarget="console"
 		End
 		_emscriptenTarget.Clicked+=Lambda()
 			_buildTarget="emscripten"
@@ -129,15 +128,14 @@ Class BuildActions
 		End
 		_buildTarget="desktop"
 		
-		settingsMenu=New Menu( "Build Settings..." )
-		settingsMenu.AddView( _debugConfig )
-		settingsMenu.AddView( _releaseConfig )
-		settingsMenu.AddSeparator()
-		settingsMenu.AddView( _desktopTarget )
-		settingsMenu.AddView( _consoleTarget )
-		settingsMenu.AddView( _emscriptenTarget )
-		settingsMenu.AddView( _androidTarget )
-		settingsMenu.AddView( _iosTarget )
+		targetMenu=New Menu( "Build Target..." )
+		targetMenu.AddView( _debugConfig )
+		targetMenu.AddView( _releaseConfig )
+		targetMenu.AddSeparator()
+		targetMenu.AddView( _desktopTarget )
+		targetMenu.AddView( _emscriptenTarget )
+		targetMenu.AddView( _androidTarget )
+		targetMenu.AddView( _iosTarget )
 
 	End
 	
@@ -172,8 +170,6 @@ Class BuildActions
 		If jobj.Contains( "buildTarget" )
 			_buildTarget=jobj["buildTarget"].ToString()
 			Select _buildTarget
-			Case "console"
-				_consoleTarget.Checked=True
 			Case "emscripten"
 				_emscriptenTarget.Checked=True
 			Case "android"
@@ -222,7 +218,6 @@ Class BuildActions
 
 	Field _debugConfig:CheckButton
 	Field _releaseConfig:CheckButton
-	Field _consoleTarget:CheckButton
 	Field _desktopTarget:CheckButton
 	Field _emscriptenTarget:CheckButton
 	Field _androidTarget:CheckButton
@@ -380,13 +375,18 @@ Class BuildActions
 		Local buildDoc:=BuildDoc()
 		If Not buildDoc Return False
 		
+		Local product:=BuildProduct.GetBuildProduct( buildDoc.Path,target,False )
+		If Not product Return False
+		
+		Local opts:=product.GetMx2ccOpts()
+		
 		Local appType:="gui"
 		If target="console"
 			appType="console"
 			target="desktop"
 		End
 
-		Local cmd:=_mx2cc+" makeapp -build"
+		Local cmd:=_mx2cc+" makeapp -build "+opts
 		cmd+=" -apptype="+appType+" "
 		cmd+=" -config="+config
 		cmd+=" -target="+target
@@ -419,14 +419,14 @@ Class BuildActions
 		Return True
 	End
 	
-	Method OnBuild()
-	
-		BuildApp( _buildConfig,_buildTarget,False )
-	End
-	
 	Method OnBuildAndRun()
 
 		BuildApp( _buildConfig,_buildTarget,True )
+	End
+	
+	Method OnBuild()
+	
+		BuildApp( _buildConfig,_buildTarget,False )
 	End
 	
 	Method OnNextError()
@@ -457,6 +457,14 @@ Class BuildActions
 		_locked=doc
 		_locked.State="+"
 		
+	End
+	
+	Method OnBuildFileSettings()
+
+		Local buildDoc:=BuildDoc()
+		If Not buildDoc Return
+		
+		local product:=BuildProduct.GetBuildProduct( buildDoc.Path,_buildTarget,True )
 	End
 	
 	Method OnUpdateModules()

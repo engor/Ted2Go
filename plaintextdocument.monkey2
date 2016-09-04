@@ -81,7 +81,7 @@ Class PlainTextDocumentType Extends Ted2DocumentType
 	Method New()
 		AddPlugin( Self )
 		
-		Extensions=New String[]( ".h",".hpp",".hxx",".c",".cpp",".cxx",".m",".mm",".s",".asm",".html",".js",".css",".php",".md",".xml",".ini",".sh",".bat",".glsl",".txt" )
+		Extensions=New String[]( ".h",".hpp",".hxx",".c",".cpp",".cxx",".m",".mm",".s",".asm",".java",".html",".js",".css",".php",".md",".xml",".ini",".sh",".bat",".glsl",".txt",".gradle" )
 	End
 	
 	Method OnCreateDocument:Ted2Document( path:String ) Override

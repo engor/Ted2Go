@@ -31,7 +31,7 @@ Function InitKeywords()
 	kws+="For;To;Step;Next;"
 	kws+="Select;Case;Default;"
 	kws+="Try;Catch;Throw;Throwable;"
-	kws+="Return;Print;Static;Cast"
+	kws+="Return;Print;Static;Cast;Extension"
 	
 	For Local kw:=Eachin kws.Split( ";" )
 		Keywords[kw.ToLower()]=kw
@@ -45,19 +45,38 @@ Function Monkey2TextHighlighter:Int( text:String,colors:Byte[],sol:Int,eol:Int,s
 	Local icolor:=0
 	Local istart:=sol
 	Local preproc:=False
+
+	'comment nest
+	'
+	Local cnest:=state & 255
+	If cnest=255 cnest=-1
 	
-	If state>-1 icolor=COLOR_COMMENT
+	'block string flag
+	'	
+	Local blkstr:=(state & 256)=0
+	
+	If cnest<>-1 
+		icolor=COLOR_COMMENT
+	Else If blkstr
+		icolor=COLOR_STRING
+	Endif
 	
 	While i0<eol
 	
 		Local start:=i0
 		Local chr:=text[i0]
 		i0+=1
+		
 		If IsSpace( chr ) Continue
+		
+		If blkstr
+			If chr=34 blkstr=False
+			Continue
+		Endif
 		
 		If chr=35 And istart=sol
 			preproc=True
-			If state=-1 icolor=COLOR_PREPROC
+			If cnest=-1 icolor=COLOR_PREPROC
 			Continue
 		Endif
 		
@@ -71,11 +90,11 @@ Function Monkey2TextHighlighter:Int( text:String,colors:Byte[],sol:Int,eol:Int,s
 			
 			Select id.ToLower()
 			Case "rem"
-				state+=1
+				cnest+=1
 				icolor=COLOR_COMMENT
 			Case "end"
-				If state>-1 
-					state-=1
+				If cnest<>-1
+					cnest-=1
 					icolor=COLOR_COMMENT
 				Endif
 			End
@@ -84,13 +103,14 @@ Function Monkey2TextHighlighter:Int( text:String,colors:Byte[],sol:Int,eol:Int,s
 		
 		Endif
 		
-		If state>-1 Or preproc Exit
+		If cnest<>-1 Or preproc Exit
 		
 		Local color:=icolor
 		
 		If chr=39
 		
 			i0=eol
+			
 			color=COLOR_COMMENT
 			
 		Else If chr=34
@@ -98,7 +118,11 @@ Function Monkey2TextHighlighter:Int( text:String,colors:Byte[],sol:Int,eol:Int,s
 			While i0<eol And text[i0]<>34
 				i0+=1
 			Wend
-			If i0<eol i0+=1
+			If i0<eol
+				i0+=1
+			Else
+				blkstr=True
+			Endif
 			
 			color=COLOR_STRING
 			
@@ -114,9 +138,9 @@ Function Monkey2TextHighlighter:Int( text:String,colors:Byte[],sol:Int,eol:Int,s
 			
 				Select id.ToLower()
 				Case "rem"				
-					state+=1
+					cnest+=1
 				Case "end"
-					state=Max( state-1,-1 )
+					cnest=Max( cnest-1,-1 )
 				End
 				
 				icolor=COLOR_COMMENT
@@ -168,8 +192,11 @@ Function Monkey2TextHighlighter:Int( text:String,colors:Byte[],sol:Int,eol:Int,s
 		colors[i]=icolor
 	Next
 	
+	state=cnest & 255
+	
+	If Not blkstr state|=256
+	
 	Return state
-
 End
 
 Public
@@ -230,7 +257,7 @@ Class Monkey2DocumentView Extends Ted2TextView
 		Local cursor:=Cursor
 		
 		Local state:=Document.LineState( Document.FindLine( cursor ) )
-		If state<>-1 Return
+		If state & 255 <> 255 Return
 		
 		Local text:=Text
 		Local start:=cursor

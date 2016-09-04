@@ -142,7 +142,7 @@ Class DebugView Extends DockingView
 			
 		MainWindow.ShowOutputConsole()
 	
-		Local cmd:=RealPath( appFile )
+		Local cmd:="~q"+RealPath( appFile )+"~q"
 		
 		If config<>"debug"
 		
