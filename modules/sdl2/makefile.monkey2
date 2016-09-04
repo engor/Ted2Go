@@ -1,27 +1,23 @@
 
 Namespace sdl2
 
-#If __TARGET__="desktop"
+#If __TARGET__="windows"
 
-	#If __HOSTOS__="macos"
-	
-		#Import "makefile_macos.monkey2"
-		
-	#Elseif __HOSTOS__="windows"
-	
 		#Import "makefile_windows.monkey2"
 		
-	#Elseif __HOSTOS__="linux"
+#Else If __TARGET__="macos"
 	
-		#Import "makefile_linux.monkey2"
+	#Import "makefile_macos.monkey2"
 		
-	#Endif
+#Else If __TARGET__="linux"
 	
-#Elseif __TARGET__="emscripten"
+	#Import "makefile_linux.monkey2"
+		
+#Else If __TARGET__="emscripten"
 
 	#Import "makefile_emscripten.monkey2"
 	
-#Elseif __TARGET__="android"
+#Else If __TARGET__="android"
 
 	#Import "makefile_android.monkey2"
 
