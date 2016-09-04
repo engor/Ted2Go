@@ -1,31 +1,32 @@
 
 #import "<libc>"
 
-#if __TARGET__="desktop"
+#if __TARGET__="windows"
 
-	#if __HOSTOS__="windows"
-	
-		#import "openal-soft/bin/OpenAL32.dll"
-		#import "openal-soft/lib/OpenAL32.lib"
+	#import "openal-soft/bin/OpenAL32.dll"
+	#import "openal-soft/lib/OpenAL32.lib"
 		
-		#import "openal-soft/include/*.h"
-		#import "<AL/al.h>"
-		#import "<AL/alc.h>"
+	#import "openal-soft/include/*.h"
+	#import "<AL/al.h>"
+	#import "<AL/alc.h>"
 	
-	#else if __HOSTOS__="macos"
+#else if __TARGET__="macos"
 	
-		#import "<OpenAL.framework>"
+	#import "<OpenAL.framework>"
 		
-		#import "<OpenAL/al.h>"
-		#import "<OpenAL/alc.h>"
+	#import "<OpenAL/al.h>"
+	#import "<OpenAL/alc.h>"
 		
-	#else if __HOSTOS__="linux"
+#else if __TARGET__="linux"
 	
-		#import "<libopenal.a>"
-		#import "<AL/al.h>"
-		#import "<AL/alc.h>"
-		
-	#endif
+	#import "<libopenal.a>"
+	#import "<AL/al.h>"
+	#import "<AL/alc.h>"
+	
+#else if __TARGET__="emscripten"
+
+	#import "<AL/al.h>"
+	#import "<AL/alc.h>"
 
 #else if __TARGET__="android"
 
@@ -35,10 +36,10 @@
 	#import "<AL/al.h>"
 	#import "<AL/alc.h>"
 	
-#else
+#else if __TARGET__="ios"
 
-	#import "<AL/al.h>"
-	#import "<AL/alc.h>"
+	#import "<OpenAL/al.h>"
+	#import "<OpenAL/alc.h>"
 
 #endif
 		
