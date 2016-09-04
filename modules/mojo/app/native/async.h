@@ -14,4 +14,8 @@ void bbInvokeAsyncCallback( int callback,bool remove );
 
 void bbRemoveAsyncCallback( int callback );
 
+void bbAppFiberSleep( int millis );
+
+void bbAppSetPostEventFilter();
+
 #endif

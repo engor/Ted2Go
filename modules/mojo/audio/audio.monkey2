@@ -66,33 +66,6 @@ Class AudioDevice
 	Field _alcContext:ALCcontext Ptr
 	Field _error:String
 	
-	Field _channels:=New Stack<Channel>
-
-	Method FlushTmpChannels()
-	
-		Local put:=0
-		For Local chan:=Eachin _channels
-		
-			If chan.Playing
-				_channels[put]=chan;put+=1
-				Continue
-			Endif
-			
-			chan.Discard()
-		Next
-		_channels.Resize( put )
-	End
-
-	Method AllocTmpChannel:Channel()
-	
-		FlushTmpChannels()
-		
-		Local channel:=New Channel()
-		_channels.Push( channel )
-		
-		Return channel
-	End
-	
 End
 
 #rem monkeydoc The Sound class.
@@ -121,7 +94,7 @@ Class Sound
 	#end
 	Method Play:Channel( loop:Bool=False )
 	
-		Local channel:=Audio.AllocTmpChannel()
+		Local channel:=New Channel( ChannelFlags.AutoDiscard )
 		
 		channel.Play( Self,loop )
 		
@@ -147,13 +120,42 @@ Class Sound
 
 End
 
+#rem monkeydoc ChannelFlags enum.
+
+| Flag			| Description
+|:--------------|:-----------
+| `AutoDiscard`	| Channel will be automatically discarded when it finishes playing, or when it is stopped using [[Channel.Stop]].
+
+#end
+Enum ChannelFlags
+	AutoDiscard=1
+End
+
 Class Channel
 
-	#rem monkeydoc Creates a new audio channel
+	#rem monkeydoc Creates a new audio channel.
+	
+	If `flags` is ChannelFlags.AutoDiscard, then the channel will be automatically discarded when it finishes playing, or when it is
+	stopped using [[Stop]].
+	
 	#end
-	Method New()
-		Audio.FlushTmpChannels()
+	Method New( flags:ChannelFlags=Null )
+	
+		_flags=flags
+	
+		FlushTmpChannels()
+		
 		alGenSources( 1,Varptr _alSource )
+		
+		If _flags & ChannelFlags.AutoDiscard _tmpChannels.Push( Self )
+		
+		_active+=1
+		Print "Active channels="+_active
+	End
+	
+	Property Flags:ChannelFlags()
+	
+		Return _flags
 	End
 	
 	#rem monkeydoc True if channel is playing audio.
@@ -235,6 +237,9 @@ Class Channel
 		
 		alDeleteSources( 1,Varptr _alSource )
 		_alSource=0
+		
+		_active-=1
+		Print "Active channels="+_active
 	End
 
 	#rem monkeydoc Play a sound through the channel.
@@ -314,21 +319,51 @@ Class Channel
 	#end
 	Method Stop()
 		If Not _alSource Return
+
 		alSourceStop( _alSource )
+		
+		If _flags & ChannelFlags.AutoDiscard Discard()
 	End
 
 	Private
 	
+	Field _flags:ChannelFlags
 	Field _alSource:ALuint
 	Field _volume:Float=1
 	Field _rate:Float=1
 	Field _pan:Float=0
 	
-	Field _tmpBuffers:Stack<ALuint>
-	Field _freeBuffers:Stack<ALuint>
+	Global _active:=0
+	
+	Global _tmpChannels:=New Stack<Channel>
+	
+	Method ALState:ALenum()
+		Local state:ALenum
+		alGetSourcei( _alSource,AL_SOURCE_STATE,Varptr state )
+		Return state
+	End
+	
+	Function FlushTmpChannels()
+	
+		Local put:=0
+		For Local chan:=Eachin _tmpChannels
+			If Not chan._alSource Continue
+		
+			If chan.ALState()<>AL_STOPPED
+				_tmpChannels[put]=chan;put+=1
+				Continue
+			Endif
+			
+			chan.Discard()
+		Next
+
+		_tmpChannels.Resize( put )
+	End
 	
 	#if __TARGET__<>"emscripten"
 	
+	Field _tmpBuffers:Stack<ALuint>
+	Field _freeBuffers:Stack<ALuint>
 	Field _future:Future<Int>
 	Field _waiting:Bool
 	Field _queued:Int
@@ -363,11 +398,5 @@ Class Channel
 	End
 	
 	#endif
-	
-	Method ALState:ALenum()
-		Local state:ALenum
-		alGetSourcei( _alSource,AL_SOURCE_STATE,Varptr state )
-		Return state
-	End
 	
 End

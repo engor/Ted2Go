@@ -1,7 +1,14 @@
 
-#Import "native/async.cpp"
+#Import "native/app.cpp"
+#Import "native/app.h"
 
 Namespace mojo.app
+
+Extern Private
+
+Function AppInit()="bbApp::init"
+
+Public
 
 '#Import "assets/Roboto-Regular.ttf@/mojo"
 '#Import "assets/RobotoMono-Regular.ttf@/mojo"
@@ -29,22 +36,9 @@ by prefixing it with 'App.', eg: App.MilliSecs
 #end
 Class AppInstance
 	
-	#rem monkeydoc Idle signal.
-	
-	Invoked when the app becomes idle.
-	
-	This is reset to null after being invoked.
-
+	#rem monkeydoc Invoked when the app becomes idle.
 	#end
 	Field Idle:Void()
-	
-	#rem monkeydoc @hidden
-	#end
-	Field NextIdle:Void()	
-
-	#rem monkeydoc @hidden
-	#end
-	Field ThemeChanged:Void()
 	
 	#rem monkeydoc Invoked when app is activated.
 	#end
@@ -54,11 +48,19 @@ Class AppInstance
 	#end
 	Field Deactivated:Void()
 	
+	#rem monkeydoc @hidden
+	#end
+	Field ThemeChanged:Void()
+	
+	#rem monkeydoc Invoked when a file is dropped on an app window.
+	#end
+	Field FileDropped:Void( path:String )
+	
 	#rem monkeydoc Key event filter.
 	
 	To prevent the event from being sent to a view, a filter can eat the event using [[Event.Eat]].
 	
-	Functions should check if the event has already been 'eaten' by checking the event's [[Event.Eaten]] property before processing the event.
+	Filter functions should check if the event has already been 'eaten' by checking the event's [[Event.Eaten]] property before processing the event.
 	
 	#end
 	Field KeyEventFilter:Void( event:KeyEvent )
@@ -67,7 +69,7 @@ Class AppInstance
 	
 	To prevent the event from being sent to a view, a filter can eat the event using [[Event.Eat]].
 
-	Functions should check if the event has already been 'eaten' by checking the event's [[Event.Eaten]] property before processing the event.
+	Filter functions should check if the event has already been 'eaten' by checking the event's [[Event.Eaten]] property before processing the event.
 	
 	#end	
 	Field MouseEventFilter:Void( event:MouseEvent )
@@ -82,11 +84,9 @@ Class AppInstance
 	
 		_config=config
 
-#if __TARGET__="android"
-		_touchMouse=True
-#endif
+		SDL_Init( SDL_INIT_VIDEO|SDL_INIT_JOYSTICK )
 		
-		SDL_Init( SDL_INIT_EVERYTHING & ~SDL_INIT_AUDIO )
+		AppInit()
 		
 		Keyboard.Init()
 		
@@ -94,15 +94,22 @@ Class AppInstance
 		
 		Audio.Init()
 		
-#if __TARGET__="android"		
+#if __MOBILE_TARGET__
+
+		_touchMouse=True
 
 		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION,2 )
 	    SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION,0 ) 
     	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_ES )
     	
 #endif
+
+#If __TARGET__="windows" Or __TARGET__="macos"
+
+		_captureMouse=True
+#Endif
     
-#if __TARGET__="desktop" and __HOSTOS__="windows"
+#if __TARGET__="windows"
 
 		Local gl_major:=Int( GetConfig( "GL_context_major_version",-1 ) )
 		Local gl_minor:=Int( GetConfig( "GL_context_major_version",-1 ) )
@@ -127,7 +134,7 @@ Class AppInstance
 
 #Endif
 
-#if __TARGET__="desktop"
+#if __DESKTOP_TARGET__
 
 		SDL_GL_SetAttribute( SDL_GL_SHARE_WITH_CURRENT_CONTEXT,1 )
 		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER,1 )
@@ -283,23 +290,6 @@ Class AppInstance
 		Return _activeWindow
 	End
 	
-	#rem monkeydoc Approximate frames per second rendering rate.
-	#end
-	Property FPS:Float()
-
-		Return _fps
-	End
-	
-	#rem monkeydoc Number of milliseconds app has been running.
-	
-	This property uses the high precision system timer if possible.
-	
-	#end
-	Property Millisecs:Int()
-	
-		Return SDL_GetTicks()
-	End
-	
 	#rem monkeydoc Mouse location relative to the active window.
 	
 	@see [[ActiveWindow]], [[MouseX]], [[MouseY]]
@@ -315,7 +305,46 @@ Class AppInstance
 		Return _modalView
 	End
 	
-	#if __TARGET__="desktop"
+	#rem monkeydoc Approximate frames per second rendering rate.
+	#end
+	Property FPS:Float()
+
+		Return _fps
+	End
+	
+	#rem monkeydoc Number of milliseconds app has been running.
+	
+	Deprecated! Just use std.time.Millisecs()
+	
+	#end
+	Property Millisecs:Int()
+	
+		Return std.time.Millisecs()
+	End
+	
+#If __TARGET__<>"emscripten"
+
+	Method Sleep( seconds:Double )
+	
+		Local timeout:=Now()+seconds
+		
+		Repeat
+			Local sleep:=timeout-Now()
+			If sleep>10
+				time.Sleep( sleep )
+				UpdateWindows()
+			Else If sleep>0
+				time.Sleep( sleep )
+			Else
+				Return
+			Endif
+		Forever
+	
+	End
+
+#endif
+	
+#If __DESKTOP_TARGET__
 	
 	#rem monkeydoc @hidden
 	#end
@@ -329,7 +358,7 @@ Class AppInstance
 		future.Get()
 	End
 	
-	#endif
+#Endif
 	
 	#rem monkeydoc @hidden
 	#end
@@ -467,7 +496,7 @@ Class AppInstance
 	#end
 	Method Run()
 	
-#if __TARGET__="desktop"
+#if __DESKTOP_TARGET__ 
 	
 		SDL_AddEventWatch( _EventFilter,Null )
 
@@ -491,8 +520,9 @@ Class AppInstance
 	Private
 	
 	Field _config:StringMap<String>
-	
-	Field _touchMouse:Bool=False		'mouse is really touch...
+
+	Field _touchMouse:Bool=False		'Whether mouse is really touch
+	Field _captureMouse:Bool=False		'Whether to use SDL_CaptureMouse
 	
 	Field _defaultFont:Font
 	Field _theme:Theme
@@ -561,8 +591,7 @@ Class AppInstance
 		_polling=False
 		
 		Local idle:=Idle
-		Idle=NextIdle
-		NextIdle=Null
+		Idle=Null
 		idle()
 		
 	End
@@ -686,23 +715,28 @@ Class AppInstance
 			
 			If Not _mouseView
 			
-				Local view:=ActiveViewAtMouseLocation()
-
-				If view
+				Local mouseView:=ActiveViewAtMouseLocation()
+				
+				If mouseView
 
 					If _touchMouse
-						_hoverView=view
-						SendMouseEvent( EventType.MouseEnter,_hoverView )
-					Endif
 					
-					SDL_CaptureMouse( SDL_TRUE )
-					_mouseView=view
+						_hoverView=mouseView
+						
+						SendMouseEvent( EventType.MouseEnter,_hoverView )
+					
+					Endif
+				
+					If _captureMouse SDL_CaptureMouse( SDL_TRUE )
+					
+					_mouseView=mouseView
 					
 					_mouseClicks=mevent->clicks
 					
 					SendMouseEvent( EventType.MouseDown,_mouseView )
 					
 					_mouseClicks=0
+
 				Endif
 				
 			Endif
@@ -719,19 +753,22 @@ Class AppInstance
 			
 			If _mouseView
 
+				If _captureMouse SDL_CaptureMouse( SDL_FALSE )
+
 				SendMouseEvent( EventType.MouseUp,_mouseView )
-				
-				SDL_CaptureMouse( SDL_FALSE )
-				
-				_mouseView=Null
 
 				_mouseButton=Null
 				
-				If _touchMouse
-					SendMouseEvent( EventType.MouseLeave,_hoverView )
-					_hoverView=Null
-				Endif
+				_mouseView=Null
 				
+				If _touchMouse
+					
+					SendMouseEvent( EventType.MouseLeave,_hoverView )
+				
+					_hoverView=Null
+
+				Endif
+
 			Endif
 			
 		Case SDL_MOUSEMOTION
@@ -743,62 +780,32 @@ Class AppInstance
 				
 			_mouseLocation=New Vec2i( mevent->x,mevent->y )
 			
+			If Not _touchMouse
+			
+				Local hoverView:=ActiveViewAtMouseLocation()
+				If _mouseView And hoverView<>_mouseView hoverView=Null
+	
+				If hoverView<>_hoverView
+	
+					If _hoverView SendMouseEvent( EventType.MouseLeave,_hoverView )
+						
+					_hoverView=hoverView
+						
+					If _hoverView SendMouseEvent( EventType.MouseEnter,_hoverView )
+				
+				Endif
+				
+			Endif
+			
 			If _mouseView
 			
 				SendMouseEvent( EventType.MouseMove,_mouseView )
 			
-			Else If Not _touchMouse
-			
-				Local view:=ActiveViewAtMouseLocation()
-				
-				If view<>_hoverView
+			Else If _hoverView
 
-					If _hoverView SendMouseEvent( EventType.MouseLeave,_hoverView )
-					
-					_hoverView=view
-					
-					If _hoverView SendMouseEvent( EventType.MouseEnter,_hoverView )
-
-				Endif
-				
-				If _hoverView SendMouseEvent( EventType.MouseMove,_hoverView )
+				SendMouseEvent( EventType.MouseMove,_hoverView )
 			
 			Endif
-			
-			#rem
-			If Not _touchMouse Or _mouseView
-		
-				Local mevent:=Cast<SDL_MouseMotionEvent Ptr>( event )
-				
-				_window=Window.WindowForID( mevent->windowID )
-				If Not _window Return
-				
-				_mouseLocation=New Vec2i( mevent->x,mevent->y )
-				
-				Local view:=ActiveViewAtMouseLocation()
-				If _mouseView And view<>_mouseView view=Null
-				
-				If view<>_hoverView
-				
-					If _hoverView SendMouseEvent( EventType.MouseLeave,_hoverView )
-					
-					_hoverView=view
-					
-					If _hoverView SendMouseEvent( EventType.MouseEnter,_hoverView )
-				Endif
-				
-				If _mouseView
-	
-					SendMouseEvent( EventType.MouseMove,_mouseView )
-					
-				Else If _hoverView
-	
-					SendMouseEvent( EventType.MouseMove,_hoverView )
-				
-				Endif
-			
-			Endif
-			#end
 
 		Case SDL_MOUSEWHEEL
 		
@@ -858,11 +865,26 @@ Class AppInstance
 '				_activeWindow=Null		'too dangerous for now!
 				_active=False
 			
+				If _mouseView And Not _captureMouse
+					SendMouseEvent( EventType.MouseUp,_mouseView )
+					_mouseView=Null
+				Endif
+
+				If _hoverView
+					SendMouseEvent( EventType.MouseLeave,_hoverView )
+					_hoverView=Null
+				Endif
+			
 				SendWindowEvent( EventType.WindowLostFocus )
 				
 				If active<>_active Deactivated()
 				
 			Case SDL_WINDOWEVENT_LEAVE
+			
+				If _mouseView And Not _captureMouse
+					SendMouseEvent( EventType.MouseUp,_mouseView )
+					_mouseView=Null
+				Endif
 			
 				If _hoverView
 					SendMouseEvent( EventType.MouseLeave,_hoverView )
@@ -873,18 +895,11 @@ Class AppInstance
 			
 		Case SDL_USEREVENT
 		
-			Local t:=Cast<SDL_UserEvent Ptr>( event )
+			Local uevent:=Cast<SDL_UserEvent Ptr>( event )
 			
-			Local code:=t[0].code
-			Local id:=code & $3fffffff
+			Local event:=Cast<AsyncEvent Ptr>( uevent->data1 )
 			
-			If code & $40000000
-				Local func:=_asyncCallbacks[ id ]				'null if removed
-				If code & $80000000 RemoveAsyncCallback( id )
-				If Not _disabledCallbacks[id] func()
-			Else If code & $80000000
-				RemoveAsyncCallback( id )
-			Endif
+			event->Dispatch()
 
 		Case SDL_RENDER_TARGETS_RESET
 		
@@ -897,6 +912,30 @@ Class AppInstance
 			Print "SDL_RENDER_DEVICE_RESET"
 		
 			mojo.graphics.glutil.glGraphicsSeq+=1
+#rem
+
+		'Linux weirdness: These may or may not be necessary when I get mouse cpature working again.
+			
+		Case SDL_WINDOWEVENT_MOVED
+			
+			SendWindowEvent( EventType.WindowMoved )
+					
+		Case SDL_WINDOWEVENT_RESIZED
+		
+			SendWindowEvent( EventType.WindowResized )
+				
+			UpdateWindows()
+#end
+
+		Case SDL_DROPFILE
+		
+			Local devent:=Cast<SDL_DropEvent Ptr>( event )
+			
+			Local path:=String.FromCString( devent->file ).Replace( "\","/" )
+			
+			SDL_free( devent->file )
+			
+			FileDropped( path )
 
 		End
 			
@@ -937,26 +976,6 @@ Class AppInstance
 		End
 		
 		Return 1
-	End
-	
-	Function AddAsyncCallback:Int( func:Void() )
-		_nextCallbackId+=1
-		Local id:=_nextCallbackId
-		_asyncCallbacks[id]=func
-		Return id
-	End
-	
-	Function RemoveAsyncCallback( id:Int )
-		_disabledCallbacks.Remove( id )
-		_asyncCallbacks.Remove( id )
-	End
-	
-	Function EnableAsyncCallback( id:Int )
-		_disabledCallbacks.Remove( id )
-	End
-	
-	Function DisableAsyncCallback( id:Int )
-		If _asyncCallbacks.Contains( id ) _disabledCallbacks[id]=True
 	End
 	
 End

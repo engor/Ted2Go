@@ -204,9 +204,7 @@ void bbRequesters::OpenUrl( bbString url ){
 
 bbString bbRequesters::RequestFile( bbString title,bbString exts,bbBool save,bbString path ){
 
-//	unsetenv( "WINDOWID" );
-
-	bbString cmd=BB_T("zenity --title=\"")+title+BB_T("\" --file-selection");	// --modal");
+	bbString cmd=BB_T("zenity --title=\"")+title+BB_T("\" --file-selection");
 	
 	if( save ) cmd+=" --save";
 	
