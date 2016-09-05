@@ -2,10 +2,9 @@
 
 ***** Welcome to Monkey2! *****
 
-iOS support are currently MIA (but on the way).
+WARNING: The master branch is super-volatile. Grabbing the most recently tagged branch is recommended if you jjust want to monkey2 a try.
 
-The Ted2 IDE is currently very minimal. If you find it a little *too* minimal, a package for integrating monkey2 with 
-Sublime Text 3 is available here: http://monkey2.monkey-x.com/forums/forum/general-programming-discussion/
+iOS support are currently MIA (but on the way).
 
 
 ***** Building monkey2 on Windows *****
