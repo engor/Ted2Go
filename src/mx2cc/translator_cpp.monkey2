@@ -581,7 +581,7 @@ Class Translator_CPP Extends Translator
 			
 			Emit( "void "+cname+"::dbEmit(){" )
 
-			If ctype.superType And ctype.superType<>Type.ObjectClass
+			If ctype.superType And Not ctype.superType.cdecl.IsExtern	'And ctype.superType<>Type.ObjectClass
 				Emit( ClassName( ctype.superType )+"::dbEmit();" )
 			End
 			
@@ -633,23 +633,30 @@ Class Translator_CPP Extends Translator
 		If debug
 			Local tname:=cname
 			If Not IsStruct( ctype ) tname+="*"
+			
 			Emit( "bbString bbDBType("+tname+"*){" )
 			Emit( "return ~q"+ctype.Name+"~q;" )
 			Emit( "}" )
+			
 			Emit( "bbString bbDBValue("+tname+"*p){" )
-			Select cdecl.kind
-			Case "class"
 			
-				Emit( "return bbDBObjectValue(*p);" )
+			If ctype.IsVoid
+				Emit( "return bbDBValue(*p);" )
+			Else
+				Select cdecl.kind
+				Case "class"
+
+					Emit( "return bbDBObjectValue(*p);" )
+					
+				Case "interface"
 				
-			Case "interface"
-			
-				Emit( "return bbDBInterfaceValue(*p);" )
+					Emit( "return bbDBInterfaceValue(*p);" )
+					
+				Case "struct"
 				
-			Case "struct"
-			
-				Emit( "return bbDBStructValue(p);" )
-			End
+					Emit( "return bbDBStructValue(p);" )
+				End
+			Endif
 				
 			Emit( "}" )
 				
