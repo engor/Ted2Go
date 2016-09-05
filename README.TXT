@@ -2,9 +2,9 @@
 
 ***** Welcome to Monkey2! *****
 
-WARNING: The master branch is super-volatile. Grabbing the most recently tagged branch is recommended if you jjust want to monkey2 a try.
+WARNING: The master branch is super-volatile. Grabbing the most recently tagged branch is recommended if you just want to monkey2 a try.
 
-iOS support are currently MIA (but on the way).
+iOS support currently MIA but on the way.
 
 
 ***** Building monkey2 on Windows *****
