@@ -90,7 +90,7 @@ Class KeyboardDevice Extends InputDevice
 
 		Local scode:=ScanCode( key )
 
-		Return _matrix[scode]
+		Return _down[scode]
 	End
 	
 	#rem monkeydoc Checks if a key was pressed.
@@ -106,14 +106,7 @@ Class KeyboardDevice Extends InputDevice
 	
 		Local scode:=ScanCode( key )
 		
-		If _matrix[scode]
-			If _pressed[scode] Return False
-			_pressed[scode]=True
-			Return True
-		Endif
-
-		_pressed[scode]=False
-		Return False
+		Return _pressed[scode]
 	End
 
 	#rem monkeydoc Checks if a key was released.
@@ -128,15 +121,8 @@ Class KeyboardDevice Extends InputDevice
 	Method KeyReleased:Bool( key:Key )
 	
 		Local scode:=ScanCode( key )
-
-		If Not _matrix[scode]
-			If _released[scode] Return False
-			_released[scode]=True
-			Return True
-		Endif
-	
-		_released[scode]=False
-		Return False
+		
+		Return _released[scode]
 	End
 	
 	#rem monkeydoc @hidden
@@ -148,17 +134,6 @@ Class KeyboardDevice Extends InputDevice
 	
 	'***** Internal *****
 	
-	#rem  monkeydoc @hidden
-	#end
-	Method Reset()
-		For Local i:=0 Until 512
-			_matrix[i]=False
-			_pressed[i]=True
-			_released[i]=True
-		Next
-		_modifiers=Null
-	End
-
 	#rem monkeydoc @hidden
 	#end
 	Method ScanCode:Int( key:Key )
@@ -182,9 +157,6 @@ Class KeyboardDevice Extends InputDevice
 	#rem monkeydoc @hidden
 	#end
 	Method Init()
-		If _init Return
-		_init=True
-		
 		Local p:=bbKeyInfos
 		
 		While p->name
@@ -208,43 +180,41 @@ Class KeyboardDevice Extends InputDevice
 			
 			p=p+1
 		Wend
+	End
+	
+	#rem monkeydoc @hidden
+	#end
+	Method Update()
+	
+		For Local key:=Eachin _pressedKeys
+			_pressed[key]=False
+		Next
+		_pressedKeys.Clear()
 		
-		Reset()
+		For Local key:=Eachin _releasedKeys
+			_released[key]=False
+		Next
+		_releasedKeys.Clear()
 	End
 	
 	#rem monkeydoc @hidden
 	#end
 	Method SendEvent( event:SDL_Event Ptr )
-
-		OnEvent( event )
-	End
-
-	Private
 	
-	Field _init:Bool
-	Field _modifiers:Modifier
-	Field _matrix:=New Bool[512]
-	Field _pressed:=New Bool[512]
-	Field _released:=New Bool[512]
-	Field _names:=New String[512]
-	Field _raw2scan:=New Int[512]	'no translate
-	Field _scan2raw:=New Key[512]	'no translate
-	Field _key2scan:=New Int[512]	'translate
-	Field _scan2key:=New Int[512]	'translate
-	
-	Method New()
-	End
-	
-	Method OnEvent( event:SDL_Event Ptr )
-
 		Select event->type
 			
 		Case SDL_KEYDOWN
 		
 			Local kevent:=Cast<SDL_KeyboardEvent Ptr>( event )
 			
-			_matrix[kevent->keysym.scancode]=True
+			Local scode:=kevent->keysym.scancode
 			
+			If _down[scode] Return
+			
+			_down[scode]=True
+			_pressed[scode]=True
+			_pressedKeys.Push( scode )
+				
 			Select kevent->keysym.sym
 			Case $400000e0 _modifiers|=Modifier.LeftControl
 			Case $400000e1 _modifiers|=Modifier.LeftShift
@@ -259,9 +229,15 @@ Class KeyboardDevice Extends InputDevice
 		Case SDL_KEYUP
 		
 			Local kevent:=Cast<SDL_KeyboardEvent Ptr>( event )
-		
-			_matrix[kevent->keysym.scancode]=False
-
+			
+			Local scode:=kevent->keysym.scancode
+			
+			If Not _down[scode] Return
+			
+			_down[scode]=False
+			_released[scode]=True
+			_releasedKeys.Push( scode )
+	
 			Select kevent->keysym.sym
 			Case $400000e0 _modifiers&=~Modifier.LeftControl
 			Case $400000e1 _modifiers&=~Modifier.LeftShift
@@ -277,4 +253,21 @@ Class KeyboardDevice Extends InputDevice
 
 	End
 
+	Private
+	
+	Field _modifiers:Modifier
+	Field _down:=New Bool[512]
+	Field _pressed:=New Bool[512]
+	Field _released:=New Bool[512]
+	Field _pressedKeys:=New IntStack
+	Field _releasedKeys:=New IntStack
+	Field _names:=New String[512]
+	Field _raw2scan:=New Int[512]	'no translate
+	Field _scan2raw:=New Key[512]	'no translate
+	Field _key2scan:=New Int[512]	'translate
+	Field _scan2key:=New Int[512]	'translate
+	
+	Method New()
+	End
+	
 End

@@ -30,15 +30,6 @@ The mouse device should only used after a new [[app.AppInstance]] is created.
 #end
 Class MouseDevice Extends InputDevice
 
-	#rem monkeydoc @hidden
-	#end
-	Method Reset()
-		For Local i:=0 Until 4
-			_pressed[i]=True
-			_released[i]=True
-		Next
-	End
-	
 	#rem monkeydoc Pointer visiblity state.
 	#end
 	Property PointerVisible:Bool()
@@ -76,44 +67,32 @@ Class MouseDevice Extends InputDevice
 	@param button Button to checl.
 	#end
 	Method ButtonDown:Bool( button:MouseButton )
-		DebugAssert( button>=0 And button<4,"Mouse buttton out of range" )
-		Return _buttons[button]
+		DebugAssert( button>=0 And button<4,"Mouse button out of range" )
+		Return _down[button]
 	End
 
 	#rem monkeydoc Checks if a mouse button was pressed.
 	
-	Returns true if `button` was pressed since the last call to ButtonPressed with the same button.
+	Returns true if `button` was pressed since the last app update.
 
 	@param button Button to check.
 	
 	#end
 	Method ButtonPressed:Bool( button:MouseButton )
-		DebugAssert( button>=0 And button<4,"Mouse buttton out of range" )
-		If _buttons[button]
-			If _pressed[button] Return False
-			_pressed[button]=True
-			Return True
-		Endif
-		_pressed[button]=False
-		Return False
+		DebugAssert( button>=0 And button<4,"Mouse button out of range" )
+		Return _pressed[button]
 	End
 	
 	#rem monkeydoc Checks if a mouse button was released.
 	
-	Returns true if `button` was released since the last call to ButtonReleased with the same button.
+	Returns true if `button` was released since the last app update.
 	
 	@param button Button to check.
 	
 	#end
 	Method ButtonReleased:Bool( button:MouseButton )
-		DebugAssert( button>=0 And button<4,"Mouse buttton out of range" )
-		If Not _buttons[button]
-			If _released[button] Return False
-			_released[button]=True
-			Return True
-		Endif
-		_released[button]=False
-		Return False
+		DebugAssert( button>=0 And button<4,"Mouse button out of range" )
+		Return _released[button]
 	End
 	
 	#rem monkeydoc @hidden
@@ -127,34 +106,39 @@ Class MouseDevice Extends InputDevice
 	#rem monkeydoc @hidden
 	#end
 	Method Init()
-		If _init Return
-		App.Idle+=Poll
-		_init=True
-		Reset()
 	End
 	
-	Method SendEvent( event:SDL_Event Ptr )
-		'NOP for now...
+	#rem monkeydoc @hidden
+	#end
+	Method Update()
+	
+		Local mask:=SDL_GetMouseState( Varptr _location.x,Varptr _location.y )
+		If App.ActiveWindow _location=App.ActiveWindow.TransformPointFromView( _location,Null )
+		
+		UpdateButton( MouseButton.Left,mask & 1 )
+		UpdateButton( MouseButton.Middle,mask & 2 )
+		UpdateButton( MouseButton.Right,mask & 4)
+	End
+	
+	#rem monkeydoc @hidden
+	#end
+	Method UpdateButton( button:MouseButton,down:Bool )
+		_pressed[button]=False
+		_released[button]=False
+		If down=_down[button] Return
+		If down _pressed[button]=True Else _released[button]=True
+		_down[button]=down
 	End
 	
 	Private
 
 	Field _init:Bool	
 	Field _location:Vec2i
-	Field _buttons:=New Bool[4]
+	Field _down:=New Bool[4]
 	Field _pressed:=New Bool[4]
 	Field _released:=New Bool[4]
 	
 	Method New()
-	End
-	
-	Method Poll()
-		Local mask:=SDL_GetMouseState( Varptr _location.x,Varptr _location.y )
-		If App.ActiveWindow _location=App.ActiveWindow.TransformPointFromView( _location,Null )
-		_buttons[MouseButton.Left]=mask & 1
-		_buttons[MouseButton.Middle]=mask & 2
-		_buttons[MouseButton.Right]=mask & 4
-		App.Idle+=Poll
 	End
 	
 End

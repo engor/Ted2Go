@@ -422,7 +422,7 @@ Class AppInstance
 	#end
 	Method MainLoop()
 	
-		If Not _requestRender 
+		If Not _requestRender
 
 			SDL_WaitEvent( Null )
 			
@@ -554,10 +554,6 @@ Class AppInstance
 	
 	Field _polling:Bool
 	
-	Global _nextCallbackId:Int
-	Global _asyncCallbacks:=New IntMap<Void()>
-	Global _disabledCallbacks:=New IntMap<Bool>
-	
 	Method UpdateFPS()
 	
 		_fpsFrames+=1
@@ -578,12 +574,14 @@ Class AppInstance
 
 		_polling=True
 		
+		Mouse.Update()
+		
+		Keyboard.Update()
+		
 		While SDL_PollEvent( Varptr event )
 		
 			Keyboard.SendEvent( Varptr event )
 			
-			Mouse.SendEvent( Varptr event )
-		
 			DispatchEvent( Varptr event )
 			
 		Wend
@@ -862,10 +860,10 @@ Class AppInstance
 				Print "SDL_WINDOWEVENT_FOCUS_LOST"
 			
 				Local active:=_active
-'				_activeWindow=Null		'too dangerous for now!
+'				_activeWindow=Null		'Not a great idea!
 				_active=False
 			
-				If _mouseView And Not _captureMouse
+				If _mouseView And Not _captureMouse	'should probably do this anyway?
 					SendMouseEvent( EventType.MouseUp,_mouseView )
 					_mouseView=Null
 				Endif
@@ -914,7 +912,7 @@ Class AppInstance
 			mojo.graphics.glutil.glGraphicsSeq+=1
 #rem
 
-		'Linux weirdness: These may or may not be necessary when I get mouse cpature working again.
+		'Linux weirdness: These may or may not be necessary when/if I get mouse capture working again.
 			
 		Case SDL_WINDOWEVENT_MOVED
 			
