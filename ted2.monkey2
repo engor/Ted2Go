@@ -1,5 +1,5 @@
 
-#If __TARGET__="desktop" and __HOSTOS__="windows"
+#If __TARGET__="windows"
 #Import "bin/wget.exe"
 #End
 
@@ -61,7 +61,7 @@ Using mojox..
 
 Function Main()
 
-#if __TARGET__="desktop"
+#if __TARGET__="windows"
 		
 	ChangeDir( AppDir() )
 	
