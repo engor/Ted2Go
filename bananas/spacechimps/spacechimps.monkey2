@@ -10,8 +10,8 @@ Namespace spacechimps
 Using std..
 Using mojo..
 
-Const VirtualWidth:=512
-Const VirtualHeight:=256
+Const VirtualWidth:=320
+Const VirtualHeight:=240
 
 Class MyWindow Extends Window
 
@@ -27,14 +27,16 @@ Class MyWindow Extends Window
 	
 		'Call super class constructor - this just passes the arguments 'up' to the Window class constructor.
 		'
-		Super.New( title,width,height,WindowFlags.Resizable )
+		Super.New( title,width,height )
 		
 		Layout="letterbox"
+
+		'Letterbox color
+		'		
+		ClearColor=New Color( .03,.03,.03 )
 		
 		'Black 'coz we're in space!
 		'
-		ClearColor=New Color( .03,.03,.03 )
-		
 		Style.BackgroundColor=Color.Black
 
 		'Load laser sound effecy
@@ -188,6 +190,11 @@ Class MyWindow Extends Window
 		
 		If y-image.Radius<0 canvas.DrawImage( image,x,y+Height,r )
 		If y+image.Radius>Height canvas.DrawImage( image,x,y-Height,r )
+		
+		If Mouse.ButtonDown( MouseButton.Left )
+			canvas.Color=Color.Green
+			canvas.DrawCircle( Mouse.X,Mouse.Y,16 )
+		Endif
 	End
 	
 	Method OnMeasure:Vec2i() Override
@@ -202,7 +209,7 @@ Function Main()
 
 	New AppInstance
 	
-	New MyWindow( "Chimps in Space!",App.DesktopSize.x/2,App.DesktopSize.y/2 )
+	New MyWindow( "Chimps in Space!",640,480 )
 	
 	App.Run()
 End
