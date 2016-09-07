@@ -20,5 +20,9 @@ Namespace sdl2
 #Else If __TARGET__="android"
 
 	#Import "makefile_android.monkey2"
+	
+#Else If __TARGET__="ios"
+
+	#Import "makefile_ios.monkey2"
 
 #Endif

@@ -39,6 +39,10 @@
 #include "SDL_config_linux.h"
 #elif defined(EMSCRIPTEN)
 #include "SDL_config_emscripten.h"
+#elif defined(__ANDROID__)
+#include "SDL_config_android.h"
+#elif defined(__IPHONEOS__)
+#include "SDL_config_iphoneos.h"
 /*
 #elif defined(__WINRT__)
 #include "SDL_config_winrt.h"
