@@ -334,7 +334,7 @@ Class GccBuildProduct Extends BuildProduct
 		If opts.verbose>0 Print "Compiling "+src
 			
 		If Not isasm cmd+=" -c"
-			
+		
 		cmd+=" -o ~q"+obj+"~q ~q"+src+"~q"
 			
 		Exec( cmd )
@@ -465,7 +465,7 @@ Class GccBuildProduct Extends BuildProduct
 
 			assetsDir=module.outputDir+"assets/"
 			
-			If ExtractExt( outputFile ).ToLower()<>".html" outputFile+=".html"
+			If ExtractExt( outputFile ).ToLower()<>".js" And ExtractExt( outputFile ).ToLower()<>".html" outputFile+=".html"
 			
 			cmd+=" --preload-file ~q"+assetsDir+"@/assets~q"
 		End
@@ -513,34 +513,6 @@ Class GccBuildProduct Extends BuildProduct
 		
 		If opts.verbose>=0 Print "Running "+outputFile
 		Exec( run )
-	End
-	
-End
-
-Class IosBuildProduct Extends GccBuildProduct
-
-	Method New( module:Module,opts:BuildOpts )
-		Super.New( module,opts )
-	End
-	
-	Method BuildApp() Override
-	
-		Local arc:=BuildArchive()
-		
-		Local outputFile:=module.outputDir+"libmx2_main.a"
-		
-		Local cmd:="libtool -static -o ~q"+outputFile+"~q ~q"+arc+"~q"
-		
-		For Local lib:=Eachin LD_LIBS
-			cmd+=" ~q"+lib+"~q"
-		Next
-		
-		Print "cmd="+cmd
-		
-		Exec( cmd )
-	End
-	
-	Method Run() Override
 	End
 	
 End
@@ -624,6 +596,8 @@ Class AndroidBuildProduct Extends BuildProduct
 			buf.Push( MakeRelativePath( src,jniDir )+" \" )
 		Next
 		buf.Push( "" )
+
+		buf.Push( "LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES" )
 		
 		If opts.productType="app"
 		
@@ -641,11 +615,16 @@ Class AndroidBuildProduct Extends BuildProduct
 			Next
 			buf.Push( "" )
 			
+			buf.Push( "LOCAL_LDLIBS += -ldl" )
+			
 			For Local lib:=Eachin LD_SYSLIBS
 				If lib.StartsWith( "-l" ) buf.Push( "LOCAL_LDLIBS += "+lib )
 			Next
 			
-			'This keeps the JNI functions in sdl2 alive, or it gets optimized out of the build as its unused...
+			buf.Push( "LOCAL_LDLIBS += -llog -landroid" )
+
+			'This keeps the JNI functions in sdl2 alive, or it gets optimized out of the build as its unused...alas, probably keeps
+			'entire static lib alive...
 			'
 			buf.Push( "LOCAL_WHOLE_STATIC_LIBRARIES := mx2_sdl2" )
 
@@ -654,6 +633,7 @@ Class AndroidBuildProduct Extends BuildProduct
 
 			buf.Push( "include $(BUILD_STATIC_LIBRARY)" )
 		Endif
+
 		
 		CSaveString( buf.Join( "~n" ),jniDir+"Android.mk" )
 		buf.Clear()
@@ -674,6 +654,38 @@ Class AndroidBuildProduct Extends BuildProduct
 		
 		Endif
 		
+	End
+	
+End
+
+Class IosBuildProduct Extends GccBuildProduct
+
+	Method New( module:Module,opts:BuildOpts )
+		Super.New( module,opts )
+	End
+	
+	Method BuildApp() Override
+	
+		Local arc:=BuildArchive()
+
+		Local outputFile:=opts.product+"libmx2_main.a"
+		
+		Local cmd:="libtool -static -o ~q"+outputFile+"~q ~q"+arc+"~q"
+		
+		For Local lib:=Eachin LD_LIBS
+			cmd+=" ~q"+lib+"~q"
+		Next
+		
+		For Local lib:=Eachin LD_SYSLIBS
+			If lib.ToLower().EndsWith( ".a~q" ) cmd+=" "+lib
+		Next
+		
+		Exec( cmd )
+		
+		CopyAssets( opts.product+"assets/" )
+	End
+	
+	Method Run() Override
 	End
 	
 End

@@ -1,27 +1,15 @@
 
-Namespace myapp
+#if __DESKTOP_TARGET__
 
-#Import "<std>"
-#Import "<mojo>"
+#else
 
-Using std..
-Using mojo..
+#if __TARGET__="emscripten"
 
-Class MyWindow Extends Window
+#endif
 
-	Method OnRender( canvas:Canvas ) Override
-	
-		canvas.DrawText( "Hello World",Width/2,Height/2,.5,.5 )
-	
-	End
-	
-End
+KNOB!
+
+#endif
 
 Function Main()
-
-	New AppInstance
-	
-	New MyWindow
-	
-	App.Run()
 End

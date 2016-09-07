@@ -12,6 +12,7 @@ Class Parser
 	End
 	
 	Method New( source:String,ppsyms:StringMap<String> )
+		Self.New()
 	
 		_ppsyms=ppsyms
 		
@@ -22,6 +23,9 @@ Class Parser
 	Method ParseFile:FileDecl( ident:String,srcPath:String,ppsyms:StringMap<String> )
 	
 		_ppsyms=ppsyms
+		
+		_cc.Clear()
+		_cc.Push( 1 )
 		
 		_fdecl=New FileDecl
 		_fdecl.ident=ident
@@ -1837,7 +1841,8 @@ Class Parser
 				
 				Continue
 				
-			Else If _ccnest<>_ifnest
+'			Else If _ccnest<>_ifnest
+			Else If _cc.Top<>1
 			
 				Local pos:=_toker.LinePos
 			
@@ -1904,9 +1909,18 @@ Class Parser
 	
 	'***** Messy Preprocessor - FIXME! *****
 	
+	Class EvalEx Extends Throwable
+		Field msg:String
+		Method new( msg:String )
+			Self.msg=msg
+		End
+	End
+	
 	Field _ppsyms:StringMap<String>
-	Field _ccnest:Int
-	Field _ifnest:Int
+	
+	Field _cc:=New Stack<Int>
+'	Field _ccnest:Int
+'	Field _ifnest:Int
 	Field _docs:=New StringStack
 	Field _doccing:Bool
 	Field _imports:=New StringStack
@@ -1921,7 +1935,8 @@ Class Parser
 	End
 	
 	Method EvalError( msg:String )
-		Error( "Failed to evaluate preprocessor expression: "+msg )' toke='"+Toke+"'" )
+		Throw New EvalEx( msg )
+'		Error( "Failed to evaluate preprocessor expression: "+msg )' toke='"+Toke+"'" )
 	End
 		
 	Method EvalPrimary:String()
@@ -1936,14 +1951,13 @@ Class Parser
 		Case TOKE_IDENT
 			Local id:=Parse()
 			Local t:=_ppsyms[id]
-			If Not t EvalError( "Preprocessor symbol '"+id+"' not found" )
-'			If Not t t="false"
+			If Not t EvalError( "symbol '"+id+"' not found" )
 			Return t
 		Case TOKE_STRINGLIT
 			Return Parse()
 		End
 
-		EvalError( "Failed to evaludate preprocessor expression - unexpected token '"+Toke+"'" )
+		EvalError( "unexpected token '"+Toke+"'" )
 		Return Null
 	End
 	
@@ -2009,6 +2023,99 @@ Class Parser
 	
 		Try
 		
+			Select p.Toke.ToLower()
+			Case "if"
+			
+				If _cc.Top=1
+					p.Bump()
+					If p.EvalBool() _cc.Push( 1 ) Else _cc.Push( 0 )
+				Else
+					_cc.Push( -1 )
+				Endif
+				
+			Case "else","elseif"
+			
+				If _cc.Top=1
+				
+					_cc.Pop()
+					_cc.Push( -1 )
+					
+				Else If _cc.Top=0
+
+					Local t:=True
+
+					If p.CParse( "else" )
+						If p.CParse( "if" ) t=p.EvalBool()
+					Else 
+						p.Bump()
+						t=p.EvalBool()
+					Endif
+					
+					If t
+						_cc.Pop()
+						_cc.Push( 1 )
+					Endif
+				
+				Endif
+				
+			Case "end","endif"
+			
+				If _cc.Length=1 EvalError( "#end without matching #if or #rem" )
+			
+				If p.CParse( "end" )
+					p.CParse( "if" )
+				Else
+					p.Bump()
+				End
+				
+				_cc.Pop()
+				
+				If _cc.Top=1 _doccing=False
+				
+			Case "rem"
+			
+				If _cc.Top=1 And p.Bump()="monkeydoc"
+
+					Local qhelp:=p._toker.Text.Slice( p._toker.TokePos+9 ).Trim()
+					_docs.Clear()
+					_docs.Push( qhelp )
+					_doccing=True
+
+				Endif
+				
+				_cc.Push( -1 )
+				
+			Case "import"
+			
+				If _cc.Top=1
+
+					p.Bump()
+					Local path:=p.ParseString()
+					
+					If path.StartsWith( "<" ) And path.EndsWith( ">" )
+					
+						If Not ExtractExt( path ) path=path.Slice( 0,-1 )+".monkey2>"
+						
+					Else If Not path.Contains( "@/" ) And Not path.EndsWith( "/" )
+					
+						If Not ExtractExt( path ) path+=".monkey2"
+						
+					Endif
+					
+					_imports.Push( path )
+					
+				Endif
+				
+			Case "print"
+			
+				If _cc.Top=1
+					p.Bump()				
+					Print p.Eval()
+				Endif
+				
+			End
+		
+			#rem
 			Select p.Toke.ToLower()
 			Case "if"
 				
@@ -2096,8 +2203,11 @@ Class Parser
 				Endif
 				
 			End
+			#end
 			
-		Catch ex:ParseEx
+		Catch ex:EvalEx
+		
+			Error( "Preprocessor error - "+ex.msg )
 		End
 		
 	End
