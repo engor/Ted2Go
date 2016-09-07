@@ -1,6 +1,8 @@
 
 #include "bbmonkey.h"
 
+#include "bbplatform.h"
+
 #include <stdarg.h>
 
 int bb_argc;
@@ -8,7 +10,7 @@ char **bb_argv;
 
 void bbMain();
 
-#ifdef __ANDROID__
+#if BB_ANDROID
 
 #include <android/log.h>
 
@@ -39,7 +41,7 @@ void bb_printf( const char *fmt,... ){
 
 #endif
 
-#ifdef __ANDROID__
+#if BB_ANDROID || BB_IOS
 
 extern "C" int SDL_main( int argc,char *argv[] ){
 

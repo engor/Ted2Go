@@ -10,6 +10,7 @@ struct bbDBVarType;
 struct bbDBVar;
 
 inline bbString bbDBType( const void *p ){ return "Void"; }
+inline bbString bbDBType( bbBool *p ){ return "Bool"; }
 inline bbString bbDBType( bbByte *p ){ return "Byte"; }
 inline bbString bbDBType( bbUByte *p ){ return "UByte"; }
 inline bbString bbDBType( bbShort *p ){ return "Short"; }
@@ -23,6 +24,7 @@ inline bbString bbDBType( bbDouble *p ){ return "Double"; }
 inline bbString bbDBType( bbString *p ){ return "String"; }
 
 inline bbString bbDBValue( void *p ){ return "?????"; }
+inline bbString bbDBValue( bbBool *p ){ return *p ? "True" : "False"; }
 inline bbString bbDBValue( bbByte *p ){ return *p; }
 inline bbString bbDBValue( bbUByte *p ){ return *p; }
 inline bbString bbDBValue( bbShort *p ){ return *p; }
@@ -33,13 +35,17 @@ inline bbString bbDBValue( bbLong *p ){ return *p; }
 inline bbString bbDBValue( bbULong *p ){ return *p; }
 inline bbString bbDBValue( bbFloat *p ){ return *p; }
 inline bbString bbDBValue( bbDouble *p ){ return *p; }
-bbString bbDBValue( bbString *p );
-
-template<class T> bbString bbDBType( T **p ){ return bbDBType( (T*)0 )+" Ptr"; }
+extern bbString bbDBValue( bbString *p );
 
 template<class T> bbString bbDBType(){
 	return bbDBType( (T*)0 );
 }
+
+template<class T> bbString bbDBType( bbGCVar<T> *p ){ return bbDBType<T*>(); }
+template<class T> bbString bbDBValue( bbGCVar<T> *p ){ T *t=p->get();return t ? bbDBValue( &t ) : "Null"; }
+
+template<class T> bbString bbDBType( T **p ){ return bbDBType<T>()+" Ptr"; }
+template<class T> bbString bbDBValue( T **p ){ char buf[64];sprintf( buf,"$%x",p );return buf; }
 
 struct bbDBVarType{
 	virtual bbString type()=0;

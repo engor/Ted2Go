@@ -37,8 +37,8 @@ Using monkey
 	
 #Else If __TARGET__="android"
 
-	#import "<libGLESv1_CM.a>"
-	#import "<libGLESv2.a>"
+	#Import "<libGLESv1_CM.a>"
+	#Import "<libGLESv2.a>"
 	
 	#Import "<GLES2/gl2.h>"
 	

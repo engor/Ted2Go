@@ -98,13 +98,26 @@ Class AppInstance
 
 		_touchMouse=True
 
-		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION,2 )
-	    SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION,0 ) 
+		#rem		
+		SDL_GL_SetAttribute( SDL_GL_RED_SIZE,5 )
+		SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE,6 )
+		SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE,5 )
+		SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE,0 )
+		SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE,0 )
+		SDL_GL_SetAttribute( SDL_GL_RETAINED_BACKING,0 )
+		SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL,1 )
+		#end
+		
+		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER,1 )
+		
     	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_ES )
+		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION,2 )
+
+'	    SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION,0 ) 
     	
 #endif
 
-#If __TARGET__="windows" Or __TARGET__="macos"
+#If __TARGET__="windows" Or __TARGET__="macos" Or __TARGET__="emscripten"
 
 		_captureMouse=True
 #Endif
@@ -148,8 +161,9 @@ Class AppInstance
 
 		Local _sdlGLContext:=SDL_GL_CreateContext( _sdlWindow )
 		Assert( _sdlGLContext,"FATAL ERROR: SDL_GL_CreateContext failed" )
-		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )	
-
+		
+		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )
+		
 #Endif
 		_defaultFont=Font.Open( "asset::fonts/DejaVuSans.ttf",16 )
 		
@@ -257,9 +271,7 @@ Class AppInstance
 
 #Else
 		Local dm:SDL_DisplayMode
-		
 		If SDL_GetDesktopDisplayMode( 0,Varptr dm ) Return New Vec2i
-		
 		Return New Vec2i( dm.w,dm.h )
 #Endif
 
@@ -708,7 +720,7 @@ Class AppInstance
 			_window=Window.WindowForID( mevent->windowID )
 			If Not _window Return
 			
-			_mouseLocation=New Vec2i( mevent->x,mevent->y )
+			_mouseLocation=_window.MouseScale * New Vec2i( mevent->x,mevent->y )
 			_mouseButton=Cast<MouseButton>( mevent->button )
 			
 			If Not _mouseView
@@ -746,7 +758,7 @@ Class AppInstance
 			_window=Window.WindowForID( mevent->windowID )
 			If Not _window Return
 			
-			_mouseLocation=New Vec2i( mevent->x,mevent->y )
+			_mouseLocation=_window.MouseScale * New Vec2i( mevent->x,mevent->y )
 			_mouseButton=Cast<MouseButton>( mevent->button )
 			
 			If _mouseView
@@ -776,7 +788,7 @@ Class AppInstance
 			_window=Window.WindowForID( mevent->windowID )
 			If Not _window Return
 				
-			_mouseLocation=New Vec2i( mevent->x,mevent->y )
+			_mouseLocation=_window.MouseScale * New Vec2i( mevent->x,mevent->y )
 			
 			If Not _touchMouse
 			
@@ -969,8 +981,40 @@ Class AppInstance
 				UpdateWindows()
 			
 				Return 0
-
+				
 			End
+
+#if __TARGET__="ios"
+
+		Case SDL_APP_TERMINATING
+			'Terminate the app.
+			'Shut everything down before returning from this function.		
+			return 0
+		Case SDL_APP_LOWMEMORY
+			'You will get this when your app is paused and iOS wants more memory.
+			'Release as much memory as possible.		
+	        return 0
+		Case SDL_APP_WILLENTERBACKGROUND
+			'Prepare your app to go into the background. Stop loops, etc.
+			'This gets called when the user hits the home button, or gets a call.
+	        return 0
+		Case SDL_APP_DIDENTERBACKGROUND
+			'This will get called if the user accepted whatever sent your app to the background.
+			'If the user got a phone call and canceled it, you'll instead get an SDL_APP_DIDENTERFOREGROUND event and restart your loops.
+			'When you get this, you have 5 seconds to save all your state or the app will be terminated.
+			'Your app is NOT active at this point.
+	        return 0
+		Case SDL_APP_WILLENTERFOREGROUND
+			'This call happens when your app is coming back to the foreground.
+			'Restore all your state here.
+	        return 0
+		Case SDL_APP_DIDENTERFOREGROUND
+			'Restart your loops here.
+			'Your app is interactive and getting CPU again.
+	        return 0
+
+#Endif
+	        
 		End
 		
 		Return 1

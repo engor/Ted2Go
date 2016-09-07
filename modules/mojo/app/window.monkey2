@@ -20,6 +20,7 @@ Enum WindowFlags
 	Resizable=8
 	Borderless=16
 	Fullscreen=32
+	HighDPI=64
 	Center=CenterX|CenterY
 End
 
@@ -130,7 +131,14 @@ Class Window Extends View
 	
 	'***** INTERNAL *****
 
-	#rem monkeydoc The internal SDL_Window used by this window.
+	#rem monkeydoc @hidden Mouse scale for ios retina devices.
+	#end
+	Property MouseScale:Vec2f()
+	
+		Return _mouseScale
+	End
+	
+	#rem monkeydoc @hidden The internal SDL_Window used by this window.
 	#end
 	Property SDLWindow:SDL_Window Ptr()
 	
@@ -232,6 +240,8 @@ Class Window Extends View
 	Field _minSize:Vec2i
 	Field _maxSize:Vec2i
 	Field _frame:Recti
+	
+	Field _mouseScale:=New Vec2f( 1,1 )
 
 	'Ok, angles glViewport appears To be 'lagging' by one frame, causing weirdness when resizing.
 	Field _weirdHack:Bool
@@ -253,25 +263,36 @@ Class Window Extends View
 	End
 	
 	Method GetFrame:Recti()
+	
+#If __DESKTOP_TARGET__
+
 		Local x:Int,y:Int,w:Int,h:Int
 		SDL_GetWindowPosition( _sdlWindow,Varptr x,Varptr y )
 		SDL_GetWindowSize( _sdlWindow,Varptr w,Varptr h )
 		Return New Recti( x,y,x+w,y+h )
+		
+#Else
+		
+		Local w:Int,h:Int,dw:Int,dh:Int
+		SDL_GetWindowSize( _sdlWindow,Varptr w,Varptr h )
+#If __TARGET__="emscripten"
+		emscripten_get_canvas_size( Varptr dw,Varptr dh,Null )'Varptr fs )
+#Else
+		SDL_GL_GetDrawableSize( _sdlWindow,Varptr dw,Varptr dh )
+#Endif
+		_mouseScale=New Vec2f( Float(dw)/w,Float(dh)/h )
+		Return New Recti( 0,0,dw,dh )
+
+#Endif
+
 	End
 	
 	Method LayoutWindow()
 
 		'All this polling is a bit ugly...fixme.
-	
-#If __TARGET__="emscripten"
+		'		
+#If __DESKTOP_TARGET__
 
-		Local w:Int,h:Int,fs:Int
-		emscripten_get_canvas_size( Varptr w,Varptr h,Varptr fs )
-		If w<>Frame.Width Or h<>Frame.Height
-			Frame=New Recti( 0,0,w,h )
-		Endif
-
-#Else
 		If MinSize<>_minSize
 			SDL_SetWindowMinimumSize( _sdlWindow,MinSize.x,MinSize.y )
 			_minSize=GetMinSize()
@@ -291,8 +312,12 @@ Class Window Extends View
 			Frame=_frame
 			_weirdHack=True
 		Endif
-#Endif
+#Else
 
+		_frame=GetFrame()
+		Frame=_frame
+
+#Endif
 		Measure()
 		
 		UpdateLayout()
@@ -340,12 +365,25 @@ Class Window Extends View
 		If flags & WindowFlags.Resizable sdlFlags|=SDL_WINDOW_RESIZABLE
 		If flags & WindowFlags.Borderless sdlFlags|=SDL_WINDOW_BORDERLESS
 		If flags & WindowFlags.Fullscreen _fullscreen=True ; sdlFlags|=SDL_WINDOW_FULLSCREEN
+		If flags & WindowFlags.HighDPI sdlFlags|=SDL_WINDOW_ALLOW_HIGHDPI
 		
 		_flags=flags
 		
+		'Create Window
 		_sdlWindow=SDL_CreateWindow( title,x,y,rect.Width,rect.Height,sdlFlags )
-		Assert( _sdlWindow,"FATAL ERROR: SDL_CreateWindow failed" )
+		If Not _sdlWindow
+			Print "SDL_GetError="+String.FromCString( SDL_GetError() )
+			Assert( _sdlWindow,"FATAL ERROR: SDL_CreateWindow failed" )
+		Endif
 
+		'Create GL context
+		_sdlGLContext=SDL_GL_CreateContext( _sdlWindow )
+		If Not _sdlGLContext
+			Print "SDL_GetError="+String.FromCString( SDL_GetError() )
+			Assert( _sdlGLContext,"FATAL ERROR: SDL_GL_CreateContext failed" )
+		Endif
+		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )	
+		
 		_allWindows.Push( Self )
 		_windowsByID[SDL_GetWindowID( _sdlWindow )]=Self
 		If Not (flags & WindowFlags.Hidden) _visibleWindows.Push( Self )
@@ -358,11 +396,6 @@ Class Window Extends View
 		
 		_frame=GetFrame()
 		Frame=_frame
-		
-		'create GL context
-		_sdlGLContext=SDL_GL_CreateContext( _sdlWindow )
-		Assert( _sdlGLContext,"FATAL ERROR: SDL_GL_CreateContext failed" )
-		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )	
 		
 		_canvas=New Canvas( _frame.Width,_frame.Height )
 		

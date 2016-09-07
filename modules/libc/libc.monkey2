@@ -53,6 +53,7 @@ Function fwrite:Int( buf:Void Ptr,size:Int,count:Int,stream:FILE Ptr )
 Function fclose:Int( stream:FILE Ptr )
 
 Function remove:Int( path:CString )
+Function rename:Int( oldPath:CString,newPath:CString )
 
 '***** stdlib.h *****
 

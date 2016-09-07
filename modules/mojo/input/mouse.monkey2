@@ -113,7 +113,7 @@ Class MouseDevice Extends InputDevice
 	Method Update()
 	
 		Local mask:=SDL_GetMouseState( Varptr _location.x,Varptr _location.y )
-		If App.ActiveWindow _location=App.ActiveWindow.TransformPointFromView( _location,Null )
+		If App.ActiveWindow	_location=App.ActiveWindow.TransformPointFromView( App.ActiveWindow.MouseScale * _location,Null )
 		
 		UpdateButton( MouseButton.Left,mask & 1 )
 		UpdateButton( MouseButton.Middle,mask & 2 )

@@ -77,6 +77,14 @@ Function Main()
 
 	End
 
+#else if __TARGET__="ios"
+
+	Stream.OpenFuncs["asset"]=Lambda:Stream( proto:String,path:String,mode:String )
+	
+		Return SDL_RWStream.Open( "assets/"+path,mode )
+
+	End
+	
 #endif
 	
 End
