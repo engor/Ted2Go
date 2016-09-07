@@ -223,7 +223,6 @@ Class BuildActions
 	Field _androidTarget:CheckButton
 	Field _iosTarget:CheckButton
 	
-	Field _appFile:String
 	
 	Method BuildDoc:Monkey2Document()
 		
@@ -269,8 +268,6 @@ Class BuildActions
 	
 		ClearErrors()
 		
-		_appFile=""
-
 		_console.Clear()
 		
 		MainWindow.ShowBuildConsole( False )
@@ -301,7 +298,7 @@ Class BuildActions
 			
 			If stdout.StartsWith( "Application built:" )
 
-				_appFile=stdout.Slice( stdout.Find( ":" )+1 ).Trim()
+'				_appFile=stdout.Slice( stdout.Find( ":" )+1 ).Trim()
 			Else
 			
 				Local i:=stdout.Find( "] : Error : " )
@@ -336,33 +333,53 @@ Class BuildActions
 		
 		Return _console.ExitCode=0
 	End
+
+	Method BuildModules:Bool( clean:Bool,target:String )
+	
+		Local msg:=(clean ? "Rebuilding " Else "Updating ")+target
+		
+		For Local config:=0 Until 2
+		
+			Local cfg:=(config ? "debug" Else "release")
+			
+			Local cmd:=_mx2cc+" makemods -target="+target
+			If clean cmd+=" -clean"
+			cmd+=" -config="+cfg
+			
+			If Not BuildMx2( cmd,msg+" "+cfg+" modules..." ) Return False
+		Next
+		
+		Return True
+	End
 	
 	Method BuildModules:Bool( clean:Bool )
 	
 		Local target:=""
 		
-		Select TextDialog.Run( "Build Modules","Select target...",New String[]( "Desktop","Emscripten","Android","Cancel" ),0,3 )
+		Local result:=False
+		
+'		Select TextDialog.Run( "Build Modules","Select target...",New String[]( "Desktop","Emscripten","Android","iOS","All!","Cancel" ),0,5 )
+		Select TextDialog.Run( "Build Modules","Select target...",New String[]( "Desktop","Emscripten","Android","iOS","Cancel" ),0,4 )
 		Case 0 target="desktop"
+			result=BuildModules( clean,"desktop" )
 		Case 1 target="emscripten"
+			result=BuildModules( clean,"emscripten" )
 		Case 2 target="android"
-		Default Return False
+			result=BuildModules( clean,"android" )
+		Case 3 target="ios"
+			result=BuildModules( clean,"ios" )
+		Case 4
+			Return False
+'			result=BuildModules( clean,"desktop" ) And BuildModules( clean,"emscripten" ) And BuildModules( clean,"android" ) And BuildModules( clean,"ios" )
 		End
-	
-		Local n:=clean ? "Rebuilding" Else "Updating"
 		
-		For Local config:=0 Until 2
+		If result
+			_console.Write( "~nBuild modules completed successfully!~n" )
+		Else
+			_console.Write( "~nBuild modules failed.~n" )
+		Endif
 		
-			Local t:=(config ? "debug" Else "release")
-			
-			Local cmd:=_mx2cc+" makemods -target="+target
-			If clean cmd+=" -clean"
-			cmd+=" -config="+t
-			
-			If Not BuildMx2( cmd,n+" "+target+" "+t+" modules..." ) Return False
-
-		Next
-		
-		Return True
+		Return result
 	End
 	
 	Method MakeDocs:Bool()
@@ -396,11 +413,14 @@ Class BuildActions
 		
 		If Not BuildMx2( cmd,msg ) Return False
 		
-		If Not run Or Not _appFile Return True
+		If Not run Return True
+		
+		Local exeFile:=product.GetExecutable()
+		If Not exeFile Return True
 		
 		Select target
 		Case "desktop"
-			_debugView.DebugApp( _appFile,config )
+			_debugView.DebugApp( exeFile,config )
 
 		Case "emscripten"	'cheese it for now...
 
@@ -413,7 +433,7 @@ Class BuildActions
 #else if __HOSTOS__="macos"
 			mserver="open ~q"+RealPath( "devtools/MonkeyXFree86c/bin/mserver_macos.app" )+"~q --args"
 #endif
-			_console.Run( mserver+" ~q"+_appFile+"~q" )
+			_console.Run( mserver+" ~q"+exeFile+"~q" )
 		End
 		
 		Return True

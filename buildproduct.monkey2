@@ -3,6 +3,11 @@ Namespace ted2
 
 Class BuildProduct
 
+	Property AppName:String()
+	
+		Return _appName
+	End
+
 	Property ProductDir:String()
 
 		Return _productDir
@@ -11,6 +16,11 @@ Class BuildProduct
 	Method GetMx2ccOpts:String()
 	
 		Return OnGetMx2ccOpts()
+	End
+	
+	Method GetExecutable:String()
+	
+		Return OnGetExecutable()
 	End
 	
 	Function GetBuildProduct:BuildProduct( srcPath:String,target:String,edit:Bool )
@@ -68,17 +78,22 @@ Class BuildProduct
 	
 		_srcPath=srcPath
 		_target=target
+		_appName=StripDir( StripExt( srcPath ) ).Capitalize()
 		_productsDir=StripExt( _srcPath )+".products/"
-		_productDir=_productsDir+_target.Capitalize()+"/"
-
-'		AddVar( "Product Location",StripExt( srcPath )+".products/"+_target.Capitalize()+"/","directory" )
+		_productDir=_productsDir+(target="ios" ? "iOS" Else target.Capitalize())+"/"
+		
+		AddVar( "Application Name",_appName )
+	End
+	
+	Method OnCreateProduct() Virtual
 	End
 	
 	Method OnGetMx2ccOpts:String() Virtual
 		Return ""
 	End
 	
-	Method OnCreateProduct() Virtual
+	Method OnGetExecutable:String() Virtual
+		Return ""
 	End
 	
 	Method AddExts( exts:String[] )
@@ -163,6 +178,7 @@ Class BuildProduct
 
 	Field _srcPath:String
 	Field _target:String
+	Field _appName:String
 	Field _productDir:String
 	Field _productsDir:String
 	Field _exts:=New StringMap<Bool>
@@ -256,6 +272,8 @@ Class BuildProduct
 			Local id:=pvar.name.ToUpper().Replace( " ","_" )
 			_vars[id]=pvar.value
 		Next
+		
+		_appName=GetVar( "APPLICATION_NAME" )
 	End
 	
 	Method SaveVars()
@@ -288,7 +306,6 @@ Class DesktopProduct Extends BuildProduct
 	Method New( srcPath:String,target:String )
 		Super.New( srcPath,target )
 		
-		AddVar( "Application Name","Monkey 2 Game" )
 		AddVar( "Application Type","gui","options:gui|console" )
 	End
 	
@@ -296,19 +313,15 @@ Class DesktopProduct Extends BuildProduct
 
 	Method OnCreateProduct() Override
 	
-		Local appName:=GetVar( "APPLICATION_NAME" )
-		Local appType:=GetVar( "APPLICATION_TYPE" )
-		
 		CreateDir( ProductDir+"assets" )
 	End
 	
 	Method OnGetMx2ccOpts:String() Override
 
-		Local appName:=GetVar( "APPLICATION_NAME" )
 		Local appType:=GetVar( "APPLICATION_TYPE" )
 		
 		Local opts:=""
-		opts+=" ~q-product="+ProductDir+appName+"~q"
+		opts+=" ~q-product="+ProductDir+AppName+"~q"
 		opts+=" -apptype="+appType
 		
 		Return opts
@@ -322,11 +335,28 @@ Class WindowsProduct Extends DesktopProduct
 		Super.New( srcPath,"windows" )
 	End
 
+	Method OnGetMx2ccOpts:String() Override
+
+		Local appType:=GetVar( "APPLICATION_TYPE" )
+		
+		Local opts:=""
+		opts+=" ~q-product="+ProductDir+AppName+"~q"
+		opts+=" -apptype="+appType
+		
+		Return opts
+	End
+	
+	Method OnGetExecutable:String() Override
+
+		Return ProductDir+AppName+".exe"
+	End
+
 End
 
 Class MacosProduct Extends DesktopProduct
 
 	Method New( srcPath:String )
+
 		Super.New( srcPath,"macos" )
 	End
 	
@@ -341,8 +371,7 @@ Class MacosProduct Extends DesktopProduct
 			Return
 		Endif
 
-		Local appName:=GetVar( "APPLICATION_NAME" )
-		Local appDir:=ProductDir+appName+".app/"
+		Local appDir:=ProductDir+AppName+".app/"
 
 		CreateDir( appDir )
 		CreateDir( appDir+"Contents" )
@@ -355,15 +384,24 @@ Class MacosProduct Extends DesktopProduct
 		plist+="<plist version=~q1.0~q>~n"
 		plist+="<dict>~n"
 		plist+="~t<key>CFBundleExecutable</key>~n"
-		plist+="~t<string>"+appName+"</string>~n"
+		plist+="~t<string>"+AppName+"</string>~n"
 		plist+="~t<key>CFBundleIconFile</key>~n"
-		plist+="~t<string>"+appName+"</string>~n"
+		plist+="~t<string>"+AppName+"</string>~n"
 		plist+="~t<key>CFBundlePackageType</key>~n"
 		plist+="~t<string>APPL</string>~n"
 		plist+="</dict>~n"
 		plist+="</plist>~n"
 					
 		SaveString( plist,appDir+"Contents/Info.plist" )
+	End
+	
+	Method OnGetExecutable:String() Override
+
+		Local appType:=GetVar( "APPLICATION_TYPE" )
+		
+		If appType<>"gui" Return ProductDir+AppName
+
+		Return ProductDir+AppName+".app/Contents/MacOS/"+AppName
 	End
 
 End
@@ -373,33 +411,54 @@ Class LinuxProduct Extends DesktopProduct
 	Method New( srcPath:String )
 		Super.New( srcPath,"linux" )
 	End
+
+	Protected
+	
+	Method OnGetExecutable:String() Override
+
+		Return ProductDir+AppName
+	End
+	
 End
 
 Class EmscriptenProduct Extends BuildProduct
 
 	Method New( srcPath:String )
 		Super.New( srcPath,"emscripten" )
+		
+		AddExts( New String[]( ".html" ) )
 
-		AddVar( "Application Name","Monkey 2 Game" )
 	End
 	
 	Protected
 	
 	Method OnCreateProduct() Override
 
-		Local appName:=GetVar( "APPLICATION_NAME" )
+		CopyTemplate( "products/emscripten",StripSlashes( ProductDir ) )
+		
+		CreateDir( ProductDir+"assets" )
+		
+		If AppName<>"Monkey2Game"
+		
+			CopyFile( ProductDir+"Monkey2Game.html",ProductDir+AppName+".html" )
+		
+			DeleteFile( ProductDir+"Monkey2Game.html" )
+		Endif
 	End
 	
 	Method OnGetMx2ccOpts:String() Override
 
-		Local appName:=GetVar( "APPLICATION_NAME" )
-	
 		Local opts:=""
-		opts+=" ~q-product="+ProductDir+appName+"~q"
+		opts+=" ~q-product="+ProductDir+AppName+".js~q"
 		
 		Return opts
 	End
 
+	Method OnGetExecutable:String() Override
+
+		Return ProductDir+AppName+".html"
+	
+	End
 End
 
 Class AndroidProduct Extends BuildProduct
@@ -409,25 +468,21 @@ Class AndroidProduct Extends BuildProduct
 		
 		AddExts( New String[]( ".xml",".java",".gradle" ) )
 		
-		AddVar( "Application Name","Monkey 2 Game" )
 		AddVar( "Package Name","com.monkey2.monkey2game" )
 		AddVar( "Activity Name","Monkey2Game" )
-		AddVar( "Screen Orientation","landscape","options:landscape|portrait|user" )
 	End
 
 	Protected
 	
 	Method OnCreateProduct() Override
 
-		Local appName:=GetVar( "APPLICATION_NAME" )
 		Local packageName:=GetVar( "PACKAGE_NAME" )
 		Local activityName:=GetVar( "ACTIVITY_NAME" )
-		Local screenOrientation:=GetVar( "SCREEN_ORIENTATION" )
 		
 		Local mainDir:=ProductDir+"app/src/main/"
 		Local packageDir:=mainDir+"java/"+packageName.Replace( ".","/" )+"/"
 		
-		CopyTemplate( "android/Monkey2Game",StripSlashes( ProductDir ) )
+		CopyTemplate( "products/android/Monkey2Game",StripSlashes( ProductDir ) )
 
 		CreateDir( packageDir )
 		CopyFile( mainDir+"Monkey2Game.java",packageDir+activityName+".java" )
@@ -438,8 +493,8 @@ Class AndroidProduct Extends BuildProduct
 	Method OnGetMx2ccOpts:String() Override
 
 		Local opts:=""
-		opts+=" -assets=~q"+ProductDir+"app/src/main/assets/~q"
-		opts+=" -dlls=~q"+ProductDir+"app/src/main/jniLibs/~q"
+		opts+=" ~q-assets="+ProductDir+"app/src/main/assets/~q"
+		opts+=" ~q-dlls="+ProductDir+"app/src/main/jniLibs/~q"
 		
 		Return opts
 	End
@@ -451,9 +506,25 @@ Class IosProduct Extends BuildProduct
 	Method New( srcPath:String )
 		Super.New( srcPath,"ios" )
 		
-		AddVar( "Application Name","Monkey 2 Game" )
-		
-		AddVar( "Screen Orientation","landscape","options:landscape|portrait|user" )
+		AddExts( New String[]( ".pbxproj" ) )
 	End
+	
+	Method OnCreateProduct() Override
+
+		CopyTemplate( "products/ios",StripSlashes( ProductDir ) )
+		
+		If AppName<>"Monkey2Game"
+			libc.rename( ProductDir+"Monkey2Game.xcodeproj",ProductDir+AppName+".xcodeproj" )
+		Endif
+	End
+	
+	Method OnGetMx2ccOpts:String() Override
+	
+		Local opts:=""
+		opts+=" ~q-product="+ProductDir+"~q"
+		
+		Return opts
+	End
+	
 
 End
