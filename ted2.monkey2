@@ -45,6 +45,8 @@
 #Import "views/textviewext"
 #Import "views/codetextview"
 #Import "views/consoleext"
+#Import "views/listview"
+#Import "views/dialogext"
 
 #Import "analyzer/autocompleteview"
 

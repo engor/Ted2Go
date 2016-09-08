@@ -2,6 +2,8 @@
 Namespace ted2go
 
 
+Global AutoComplete:AutocompleteDialog
+
 Class CodeDocumentView Extends Ted2CodeTextView
 
 	Method New( doc:CodeDocument )
@@ -18,6 +20,19 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		'formatter, highlighter and keywords
 		FileType = doc.FileType
 		
+		'AutoComplete
+		If AutoComplete = Null Then AutoComplete = New AutocompleteDialog("")
+		AutoComplete.OnChoosen += Lambda(text:String)
+			If App.KeyView = Self
+				SelectText(Cursor,Cursor-AutoComplete.Ident.Length)
+				ReplaceText(text)
+			Endif
+		End
+		
+	End
+	
+	Property CharsToShowAutoComplete:Int()
+		Return 2
 	End
 	
 	Protected
@@ -50,6 +65,45 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		Super.OnRenderContent( canvas )
 	End
+	
+	Method OnKeyEvent( event:KeyEvent ) Override
+		
+		'ctrl+space - show autocomplete list
+		If event.Type = EventType.KeyDown
+			If event.Key = Key.Space And event.Modifiers & Modifier.Control
+				ShowAutocomplete()
+				Return
+			End
+		Endif
+		
+		Super.OnKeyEvent( event )
+		
+		'show autocomplete list after some typed chars
+		If event.Type = EventType.KeyChar
+			Local ident := IdentBeforeCursor()
+			'Print "ident "+ident
+			If ident.Length >= CharsToShowAutoComplete
+				ShowAutocomplete(ident)
+			Else
+				HideAutocomplete()
+			Endif
+		Endif
+		
+	End
+	
+	Method ShowAutocomplete(ident:String = "")
+		'check ident
+		If ident = "" Then ident = IdentBeforeCursor()
+		'check scope
+		
+		'show
+		AutoComplete.Show(ident, FileType)
+	End
+	
+	Method HideAutocomplete()
+		AutoComplete.Hide()
+	End
+	
 	
 	Private
 	

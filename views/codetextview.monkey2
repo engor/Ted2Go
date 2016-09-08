@@ -38,6 +38,22 @@ Class CodeTextView Extends TextViewExt
 		Return text.Slice( start,ends )
 	End
 	
+	Method IdentBeforeCursor:String()
+	
+		Local text := Text
+		Local cur := Cursor
+		Local n := Cursor-1
+		Local start := Document.StartOfLine( Document.FindLine(Cursor) )
+		
+		While n >= start And IsIdent( text[n] )
+			n -= 1
+		Wend
+		n += 1
+		Local ident := (n < cur) ? text.Slice( n,cur ) Else ""
+		
+		Return ident
+	End
+	
 	Method FirstSelectedLine:Int()
 		Local min := Min( Anchor,Cursor )
 		Return Document.FindLine(min)

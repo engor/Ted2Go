@@ -207,6 +207,9 @@ Class TextViewExt Extends TextView
 				SelectWordUnderCursor()
 				Return
 			
+			Case EventType.MouseWheel 'little faster scroll
+		
+				Scroll -= New Vec2i( 0,RenderStyle.Font.Height*event.Wheel.Y*3 )
 		End
 
 		Super.OnContentMouseEvent(event)
