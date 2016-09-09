@@ -176,10 +176,18 @@ Class ProductVar
 			If type.StartsWith( "options:" )
 
 				Local opts:=type.Slice( 8 ).Split( "|" )
+				
+				Local current:=0
+				For Local i:=0 Until opts.Length
+					If value<>opts[i] Continue
+					current=i
+					Exit
+				Next
 
-				Local view:=New OptionsField( opts )
+				Local view:=New OptionsField( opts,current )
 
 				view.CurrentChanged+=Lambda()
+
 					value=opts[view.Current]
 				End
 			

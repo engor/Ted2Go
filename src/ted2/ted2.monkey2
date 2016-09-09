@@ -35,6 +35,8 @@
 #Import "buildproduct"
 #Import "editproductdialog"
 
+#Import "mx2ccenv"
+
 Namespace ted2
 
 Using std..
@@ -62,12 +64,20 @@ Function Main()
 	Local jobj:=JsonObject.Load( "bin/ted2.state.json" )
 	If Not jobj jobj=New JsonObject
 	
-	Local rect:=New Recti( 64,64,64+960,64+800 )
-	If jobj.Contains( "windowRect" ) rect=ToRecti( jobj["windowRect"] )
+	Local flags:=WindowFlags.Resizable
+	
+	Local rect:Recti
+	
+	If jobj.Contains( "windowRect" ) 
+		rect=ToRecti( jobj["windowRect"] )
+	Else
+		rect=New Recti( 0,0,1024,768 )
+		flags|=WindowFlags.Center
+	Endif
 	
 	New AppInstance
 	
-	New MainWindowInstance( "Ted2",rect,WindowFlags.Resizable,jobj )
+	New MainWindowInstance( "Ted2",rect,flags,jobj )
 	
 	App.Run()
 End
