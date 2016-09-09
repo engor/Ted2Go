@@ -1,41 +1,9 @@
 
-'***** IMPORTANT ******
-
 'If you change anything in this file, you should rebuild all!
 
-
-'***** COMMON *****
-
-MX2_VERSION=002
-MX2_BUILDV=002
-
-MX2_BUILD_VERBOSE=0
-
-MX2_MODULES_VERSION=003
-MX2_PRODUCT_VERSION=003
-
-'These relative to app exe
+'Hacks for dylibs in app
 MX2_APP_DIR_DYLIB=						'ie: dylibs go in app Contents/MacOS dir
 MX2_APP_DIR_FRAMEWORK=../Frameworks		'ie: frameworks go in app Contents/Frameworks dir
-
-'***** DESKTOP *****
-
-'LD options
-MX2_LD_OPTS_DESKTOP=-Wl,-rpath,@executable_path -Wl,-rpath,@executable_path/../Frameworks
-MX2_LD_OPTS_DESKTOP_DEBUG=-O0 '-g
-MX2_LD_OPTS_DESKTOP_RELEASE=-O3
-
-'C compiler options
-MX2_CC_OPTS_DESKTOP=-std=gnu99 -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-undefined-bool-conversion -Wno-int-to-void-pointer-cast -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-parentheses-equality
-MX2_CC_OPTS_DESKTOP_DEBUG=-O0 '-g
-MX2_CC_OPTS_DESKTOP_RELEASE=-O3 -DNDEBUG
-
-'C++ compiler options
-MX2_CPP_OPTS_DESKTOP=-std=c++11 -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-undefined-bool-conversion -Wno-int-to-void-pointer-cast -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-parentheses-equality
-MX2_CPP_OPTS_DESKTOP_DEBUG=-O0 '-g
-MX2_CPP_OPTS_DESKTOP_RELEASE=-O3 -DNDEBUG
-
-'***** MACOS *****
 
 'LD options
 MX2_LD_OPTS_MACOS=-Wl,-rpath,@executable_path -Wl,-rpath,@executable_path/../Frameworks
@@ -55,35 +23,39 @@ MX2_CPP_OPTS_MACOS_RELEASE=-O3 -DNDEBUG
 
 '***** EMSCRIPTEN *****
 
-' For emscripten builds, you need emcc, em++ and emar in your PATH.
+'For emscripten builds, you need emcc, em++ and emar in your PATH.
 '
-' To run emscripten apps, you need 'MonkeyXFree86c' in your devtools dir.
-
-'Need this 'coz Mac is getting seriously locked down...
-'
+'Alas, modern macos apps no longer inherit PATH settings so we need to harccode in some in.
+'These may need to be changed depending on where you install emscripten.
 EMSCRIPTEN=${HOME}/emsdk/emscripten/1.35.0
 PATH=${HOME}/emsdk:${HOME}/emsdk/clang/e1.35.0_64bit:${HOME}/emsdk/node/0.12.2_64bit/bin:${HOME}/emsdk/emscripten/1.35.0:${PATH}
 
 'El Capitan broke my python...
-'
 PATH=/usr/local/bin:${PATH}
 
-MX2_BUILD_DIR_EMSCRIPTEN_DEBUG=emscripten_debug
-MX2_BUILD_DIR_EMSCRIPTEN_RELEASE=emscripten_release
+'To run emscripten apps, you'll need MonkeyXFree86c in your devtools dir.
+MX2_MSERVER=open "${MX2_HOME}/devtools/mserver-v86c/mserver_macos.app" --args
 
+'LD options
 MX2_LD_OPTS_EMSCRIPTEN=-s USE_SDL=2 -s FULL_ES2=1 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1 ' -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1
 MX2_LD_OPTS_EMSCRIPTEN_DEBUG=-O0	'-O2
 MX2_LD_OPTS_EMSCRIPTEN_RELEASE=-O3
 
+'C compiler options
 MX2_CC_OPTS_EMSCRIPTEN=-std=gnu99 -s USE_SDL=2 -s FULL_ES2=1 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1 ' -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1 -Wno-undefined-bool-conversion -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-warn-absolute-paths 
 MX2_CC_OPTS_EMSCRIPTEN_DEBUG=-O0	'-O2
 MX2_CC_OPTS_EMSCRIPTEN_RELEASE=-O3
 
+'C++ compiler options
 MX2_CPP_OPTS_EMSCRIPTEN=-std=c++11 -s USE_SDL=2 -s FULL_ES2=1 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1 ' -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1 -Wno-undefined-bool-conversion
 MX2_CPP_OPTS_EMSCRIPTEN_DEBUG=-O0	'-O2
 MX2_CPP_OPTS_EMSCRIPTEN_RELEASE=-O3
 
+
 '***** ANDROID *****
+
+PATH=${HOME}/Library/Android/sdk/ndk-bundle:${PATH}
+
 
 '***** IOS *****
 

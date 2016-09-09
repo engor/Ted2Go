@@ -4,8 +4,6 @@
 
 WARNING: The master branch is super-volatile. Grabbing the most recently tagged branch is recommended if you just want to monkey2 a try.
 
-iOS support currently MIA but on the way.
-
 
 ***** Building monkey2 on Windows *****
 
