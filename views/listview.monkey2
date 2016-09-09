@@ -10,6 +10,27 @@ Interface ListViewItem
 End
 
 
+Class StringItem Implements ListViewItem
+	
+	Property Text:String()
+		Return _text
+	End
+	
+	Method New(text:String)
+		_text = text
+	End
+	
+	Method Draw(canvas:Canvas,x:Float,y:Float, handleX:Float=0, handleY:Float=0)
+		canvas.DrawText(_text,x,y,handleX,handleY)
+	End
+	
+	Private
+	
+	Field _text:String
+	
+End
+
+
 Class ListView Extends ScrollableView
 
 	Field OnItemChoosen:Void()
@@ -17,7 +38,7 @@ Class ListView Extends ScrollableView
 	Method New(lineHeight:Int, width:Int=300, maxHeight:Int=480)
 		_items = New List<ListViewItem>
 		_lineH = lineHeight
-		_selColor = New Color(0.2,0.4,1)
+		_selColor = New Color(0.2,0.4,0.6)
 		_hoverColor = New Color(0.4,0.4,0.4,0.5)
 		_width = width
 		_maxHeight = maxHeight
@@ -116,7 +137,7 @@ Class ListView Extends ScrollableView
 				End
 				'draw item
 				canvas.Color = Color.White
-				item.Draw(canvas, clip.Left, posY, 0, 0.5)
+				item.Draw(canvas, clip.Left+5, posY, 0, 0.5)
 				posY += _lineH
 			Endif
 			k += 1

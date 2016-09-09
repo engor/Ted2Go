@@ -25,27 +25,6 @@ Class CodeItem Implements ICodeItem
 End
 
 
-Class StringItem Implements ListViewItem
-	
-	Property Text:String()
-		Return _text
-	End
-	
-	Method New(text:String)
-		_text = text
-	End
-	
-	Method Draw(canvas:Canvas,x:Float,y:Float, handleX:Float=0, handleY:Float=0)
-		canvas.DrawText(_text,x,y,handleX,handleY)
-	End
-	
-	Private
-	
-	Field _text:String
-	
-End
-
-
 
 Class AutocompleteDialog Extends DialogExt
 	
@@ -101,9 +80,9 @@ Class AutocompleteDialog Extends DialogExt
 			End
 		Next
 		
+		
 		'nothing to show
 		If result.Empty 
-			Hide()
 			Return
 		Endif
 		
@@ -112,7 +91,8 @@ Class AutocompleteDialog Extends DialogExt
 		_view.Reset()'reset selIndex
 		_view.SetItems(result)
 		
-	
+		If IsOpened Then Hide() 'hide to re-layout on open
+		
 		Show()
 			
 		_ident = ident
@@ -163,9 +143,17 @@ Class AutocompleteDialog Extends DialogExt
 	End
 	
 	Method UpdateKeywords(fileType:String)
+		'keywords
 		Local kw := KeywordsManager.Get(fileType)
 		Local list := New List<ListViewItem>
 		For Local i := Eachin kw.Values()
+			list.AddLast(New StringItem(i))
+		Next
+		'preprocessor
+		'need to load it like keywords
+		Local s := "#If ,#Rem,#End,#Import "
+		Local arr := s.Split(",")
+		For Local i := Eachin arr
 			list.AddLast(New StringItem(i))
 		Next
 		_keywords[fileType] = list

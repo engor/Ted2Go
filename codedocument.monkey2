@@ -70,9 +70,22 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		'ctrl+space - show autocomplete list
 		If event.Type = EventType.KeyDown
-			If event.Key = Key.Space And event.Modifiers & Modifier.Control
-				ShowAutocomplete()
-				Return
+			Select event.Key
+			Case Key.Space
+				If event.Modifiers & Modifier.Control
+					ShowAutocomplete()
+					Return
+				Endif
+			Case Key.Backspace
+				If AutoComplete.IsOpened
+					Local ident := IdentBeforeCursor()
+					ident = ident.Slice(0,ident.Length-1)
+					If ident.Length > 0
+						ShowAutocomplete(ident)
+					Else
+						HideAutocomplete()
+					Endif
+				Endif
 			End
 		Endif
 		
@@ -80,12 +93,17 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		'show autocomplete list after some typed chars
 		If event.Type = EventType.KeyChar
-			Local ident := IdentBeforeCursor()
-			'Print "ident "+ident
-			If ident.Length >= CharsToShowAutoComplete
-				ShowAutocomplete(ident)
+			'preprocessor
+			If event.Text = "#"
+				ShowAutocomplete("#")
 			Else
-				HideAutocomplete()
+				Local ident := IdentBeforeCursor()
+				'Print "ident "+ident
+				If ident.Length >= CharsToShowAutoComplete
+					ShowAutocomplete(ident)
+				Else
+					HideAutocomplete()
+				Endif
 			Endif
 		Endif
 		
@@ -100,11 +118,12 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		AutoComplete.Show(ident, FileType)
 		
 		Local frame := AutoComplete.Frame
+		
 		Local w := frame.Width
 		Local h := frame.Height
 		
 		frame.Left = CursorRect.Left+100
-		frame.Top = CursorRect.Top
+		frame.Top = CursorRect.Top - Scroll.y
 		frame.Right = frame.Left+w
 		frame.Bottom = frame.Top+h
 		

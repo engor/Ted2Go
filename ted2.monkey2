@@ -63,6 +63,9 @@ Using mojo..
 Using mojox..
 
 
+Global AppTitle:String = "Ted2Go"
+
+
 Function Main()
 
 #if __TARGET__="windows"
@@ -89,7 +92,21 @@ Function Main()
 	
 	New AppInstance
 	
-	New MainWindowInstance( "Ted2Go",rect,WindowFlags.Resizable,jobj )
+	New MainWindowInstance( AppTitle,rect,WindowFlags.Resizable,jobj )
+	
+	StartRedrawTimer()	
 	
 	App.Run()
+	
+	
+End
+
+
+Private
+
+'redraw app to see flashing cursor
+Function StartRedrawTimer()
+	Local timer := New Timer(5, Lambda()
+		App.RequestRender()
+	End)
 End
