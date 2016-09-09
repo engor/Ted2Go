@@ -2,13 +2,7 @@
 Namespace ted2go
 
 
-
-Interface ICodeItem Extends ListViewItem
-	
-End
-
-
-Class CodeItem Implements ICodeItem
+Class CodeListViewItem Implements ListViewItem
 	
 	Method New(ident:String)
 		_ident = ident
@@ -18,9 +12,15 @@ Class CodeItem Implements ICodeItem
 		canvas.DrawText(_ident,x,y,handleX,handleY)
 	End
 	
+	Property CodeItem:ICodeItem()
+		Return _item
+	End
+	
+	
 	Private
 	
 	Field _ident:String
+	Field _item:ICodeItem
 	
 End
 
@@ -86,7 +86,7 @@ Class AutocompleteDialog Extends DialogExt
 			Return
 		Endif
 		
-		result.Sort()
+		result.Sort(False)
 		
 		_view.Reset()'reset selIndex
 		_view.SetItems(result)
@@ -147,14 +147,14 @@ Class AutocompleteDialog Extends DialogExt
 		Local kw := KeywordsManager.Get(fileType)
 		Local list := New List<ListViewItem>
 		For Local i := Eachin kw.Values()
-			list.AddLast(New StringItem(i))
+			list.AddLast(New StringListViewItem(i))
 		Next
 		'preprocessor
 		'need to load it like keywords
 		Local s := "#If ,#Rem,#End,#Import "
 		Local arr := s.Split(",")
 		For Local i := Eachin arr
-			list.AddLast(New StringItem(i))
+			list.AddLast(New StringListViewItem(i))
 		Next
 		_keywords[fileType] = list
 	End

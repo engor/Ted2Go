@@ -10,7 +10,7 @@ Interface ListViewItem
 End
 
 
-Class StringItem Implements ListViewItem
+Class StringListViewItem Implements ListViewItem
 	
 	Property Text:String()
 		Return _text
