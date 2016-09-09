@@ -288,7 +288,7 @@ Class Channel
 			_waiting=False
 			_queued=0
 			
-			_timer=New Timer( 20,Lambda()
+			_timer=New Timer( 60,Lambda()
 				FlushProcessed()
 			End )
 
