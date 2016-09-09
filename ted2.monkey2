@@ -47,8 +47,10 @@
 #Import "views/consoleext"
 #Import "views/listview"
 #Import "views/dialogext"
+#Import "views/autocompleteview"
 
-#Import "analyzer/autocompleteview"
+#Import "parsers/parser"
+#Import "parsers/monkey2parser"
 
 #Import "utils/jsonutils"
 #Import "utils/utils"

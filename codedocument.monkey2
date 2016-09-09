@@ -98,6 +98,18 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		'show
 		AutoComplete.Show(ident, FileType)
+		
+		Local frame := AutoComplete.Frame
+		Local w := frame.Width
+		Local h := frame.Height
+		
+		frame.Left = CursorRect.Left+100
+		frame.Top = CursorRect.Top
+		frame.Right = frame.Left+w
+		frame.Bottom = frame.Top+h
+		
+		AutoComplete.Frame = frame
+		
 	End
 	
 	Method HideAutocomplete()
