@@ -55,6 +55,8 @@ Function fclose:Int( stream:FILE Ptr )
 Function remove:Int( path:CString )
 Function rename:Int( oldPath:CString,newPath:CString )
 
+Function puts:Int( str:CString )
+
 '***** stdlib.h *****
 
 Function malloc:Void Ptr( size:Int )
