@@ -104,29 +104,20 @@ Class BuildActions
 			_buildConfig="release"
 		End
 		_buildConfig="debug"
-		
+
 		group=New CheckGroup
+
 		_desktopTarget=New CheckButton( "Desktop",,group )
 		_desktopTarget.Layout="fill-x"
+		
 		_emscriptenTarget=New CheckButton( "Emscripten",,group )
 		_emscriptenTarget.Layout="fill-x"
+		
 		_androidTarget=New CheckButton( "Android",,group )
 		_androidTarget.Layout="fill-x"
+		
 		_iosTarget=New CheckButton( "iOS",,group )
 		_iosTarget.Layout="fill-x"
-		_desktopTarget.Clicked+=Lambda()
-			_buildTarget="desktop"
-		End
-		_emscriptenTarget.Clicked+=Lambda()
-			_buildTarget="emscripten"
-		End
-		_androidTarget.Clicked+=Lambda()
-			_buildTarget="android"
-		End
-		_iosTarget.Clicked+=Lambda()
-			_buildTarget="ios"
-		End
-		_buildTarget="desktop"
 		
 		targetMenu=New Menu( "Build Target..." )
 		targetMenu.AddView( _debugConfig )
@@ -136,7 +127,44 @@ Class BuildActions
 		targetMenu.AddView( _emscriptenTarget )
 		targetMenu.AddView( _androidTarget )
 		targetMenu.AddView( _iosTarget )
+		
+		'check valid targets...WIP...
+		
+		_validTargets=EnumValidTargets( _console )
+		
+		If _validTargets _buildTarget=_validTargets[0].ToLower()
+		
+		If _validTargets.Contains( "desktop" )
+			_desktopTarget.Clicked+=Lambda()
+				_buildTarget="desktop"
+			End
+		Else
+			_desktopTarget.Enabled=False
+		Endif
+		
+		If _validTargets.Contains( "emscripten" )
+			_emscriptenTarget.Clicked+=Lambda()
+				_buildTarget="emscripten"
+			End
+		Else
+			_emscriptenTarget.Enabled=False
+		Endif
 
+		If _validTargets.Contains( "android" )
+			_androidTarget.Clicked+=Lambda()
+				_buildTarget="android"
+			End
+		Else
+			_androidTarget.Enabled=False
+		Endif
+
+		If _validTargets.Contains( "ios" )
+			_iosTarget.Clicked+=Lambda()
+				_buildTarget="ios"
+			End
+		Else
+			_iosTarget.Enabled=False
+		Endif
 	End
 	
 	Method SaveState( jobj:JsonObject )
@@ -168,20 +196,27 @@ Class BuildActions
 		Endif
 		
 		If jobj.Contains( "buildTarget" )
-			_buildTarget=jobj["buildTarget"].ToString()
-			Select _buildTarget
-			Case "emscripten"
-				_emscriptenTarget.Checked=True
-			Case "android"
-				_androidTarget.Checked=True
-			Case "ios"
-				_iosTarget.Checked=True
-			Default
-				_desktopTarget.Checked=True
-				_buildTarget="desktop"
-			End
-		Endif
+					
+			local target:=jobj["buildTarget"].ToString()
+
+			If _validTargets.Contains( target )
 			
+				 _buildTarget=target
+				
+				Select _buildTarget
+				Case "desktop"
+					_desktopTarget.Checked=True
+				Case "emscripten"
+					_emscriptenTarget.Checked=True
+				Case "android"
+					_androidTarget.Checked=True
+				Case "ios"
+					_iosTarget.Checked=True
+				End
+			
+			Endif
+			
+		Endif
 	End
 	
 	Method Update()
@@ -191,7 +226,7 @@ Class BuildActions
 		Wend
 	
 		Local idle:=Not _console.Running
-		Local canbuild:=idle And BuildDoc()<>Null
+		Local canbuild:=idle And BuildDoc()<>Null And _buildTarget
 		
 		build.Enabled=canbuild
 		buildAndRun.Enabled=canbuild
@@ -215,7 +250,7 @@ Class BuildActions
 	
 	Field _buildConfig:String
 	Field _buildTarget:String
-
+	
 	Field _debugConfig:CheckButton
 	Field _releaseConfig:CheckButton
 	Field _desktopTarget:CheckButton
@@ -223,6 +258,7 @@ Class BuildActions
 	Field _androidTarget:CheckButton
 	Field _iosTarget:CheckButton
 	
+	Field _validTargets:StringStack
 	
 	Method BuildDoc:Monkey2Document()
 		
@@ -354,23 +390,30 @@ Class BuildActions
 	
 	Method BuildModules:Bool( clean:Bool )
 	
-		Local target:=""
+		Local targets:=New StringStack
 		
-		Local result:=False
+		For Local target:=Eachin _validTargets
+			targets.Push( target="ios" ? "iOS" Else target.Capitalize() )
+		Next
+
+		targets.Push( "All!" )
+		targets.Push( "Cancel" )
 		
-'		Select TextDialog.Run( "Build Modules","Select target...",New String[]( "Desktop","Emscripten","Android","iOS","All!","Cancel" ),0,5 )
-		Select TextDialog.Run( "Build Modules","Select target...",New String[]( "Desktop","Emscripten","Android","iOS","Cancel" ),0,4 )
-		Case 0 target="desktop"
-			result=BuildModules( clean,"desktop" )
-		Case 1 target="emscripten"
-			result=BuildModules( clean,"emscripten" )
-		Case 2 target="android"
-			result=BuildModules( clean,"android" )
-		Case 3 target="ios"
-			result=BuildModules( clean,"ios" )
-		Case 4
+		Local i:=TextDialog.Run( "Build Modules","Select target..",targets.ToArray(),0,targets.Length-1 )
+		
+		Local result:=True
+		
+		Select i
+		Case targets.Length-1	'Cancel
 			Return False
-'			result=BuildModules( clean,"desktop" ) And BuildModules( clean,"emscripten" ) And BuildModules( clean,"android" ) And BuildModules( clean,"ios" )
+		Case targets.Length-2	'All!
+			For Local i:=0 Until targets.Length-2
+				If BuildModules( clean,targets[i] ) Continue
+				result=False
+				Exit
+			Next
+		Default
+			result=BuildModules( clean,targets[i] )
 		End
 		
 		If result
@@ -420,20 +463,14 @@ Class BuildActions
 		
 		Select target
 		Case "desktop"
+
 			_debugView.DebugApp( exeFile,config )
 
-		Case "emscripten"	'cheese it for now...
-
-			Local mserver:=""
-
-#if __HOSTOS__="windows"
-			mserver="~q"+RealPath( "devtools/MonkeyXFree86c/bin/mserver_winnt.exe" )+"~q"
-#else if __HOSTOS__="linux"
-			mserver="~q"+RealPath( "devtools/MonkeyXFree86c/bin/mserver_linux" )+"~q"
-#else if __HOSTOS__="macos"
-			mserver="open ~q"+RealPath( "devtools/MonkeyXFree86c/bin/mserver_macos.app" )+"~q --args"
-#endif
-			_console.Run( mserver+" ~q"+exeFile+"~q" )
+		Case "emscripten"
+		
+			Local mserver:=GetEnv( "MX2_MSERVER" )
+			If mserver _console.Run( mserver+" ~q"+exeFile+"~q" )
+		
 		End
 		
 		Return True

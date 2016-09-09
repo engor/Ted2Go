@@ -203,6 +203,9 @@ Class MainWindowInstance Extends Window
 		Plugin.CreatePlugins()
 
 		App.Idle+=OnAppIdle
+		
+		If GetFileType( "bin/ted2.state.json" )=FileType.None _helpActions.about.Trigger()
+		
 	End
 	
 	Method Terminate()
