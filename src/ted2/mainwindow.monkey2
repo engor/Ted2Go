@@ -222,7 +222,8 @@ Class MainWindowInstance Extends Window
 		Local future:=New Future<String>
 		
 		App.Idle+=Lambda()
-			future.Set( requesters.RequestFile( title,path,save ) )
+		
+			future.Set( requesters.RequestFile( title,,save,path ) )
 		End
 		
 		Return future.Get()
