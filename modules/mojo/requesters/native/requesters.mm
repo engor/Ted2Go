@@ -13,13 +13,19 @@ namespace{
 		NSString *otherButton );
 	
 	NSWindow *keyWin;
+	NSOpenGLContext *glContext;
 	
 	void beginPanel(){
+	
+		glContext=[NSOpenGLContext currentContext];
+
 		keyWin=[NSApp keyWindow];
-		if( !keyWin ) [NSApp activateIgnoringOtherApps:YES];
 	}
 	
 	void endPanel(){
+
+		if( glContext ) [glContext makeCurrentContext];
+
 		if( keyWin ) [keyWin makeKeyWindow];
 	}
 	
@@ -165,6 +171,7 @@ bbString bbRequesters::RequestFile( bbString title,bbString filter,bbBool save,b
 			str=ConvString( [panel filename] );
 		}
 	}
+
 	endPanel();
 
 	return str;
