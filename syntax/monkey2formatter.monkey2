@@ -5,7 +5,7 @@ Namespace ted2go
 Class Monkey2CodeFormatter Extends CodeFormatterPlugin
 
 	Property Name:String() Override
-		Return "monkey2 CodeFormatter"
+		Return "Monkey2CodeFormatter"
 	End
 	
 	Method GetFileTypes:String[]() Override

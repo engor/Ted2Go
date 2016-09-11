@@ -43,6 +43,7 @@ Class AutocompleteDialog Extends DialogExt
 		ContentView = _view
 		
 		_keywords = New StringMap<List<ListViewItem>>
+		_parsers = New StringMap<ICodeParser>
 		
 		_view.OnItemChoosen += Lambda()
 			OnItemChoosen(_view.CurrentItem)
@@ -60,6 +61,8 @@ Class AutocompleteDialog Extends DialogExt
 	
 	Method Show(ident:String, fileType:String)
 		
+		ident = ident.ToLower()
+		
 		'if typed ident starts with previous
 		'need to  simple filter items
 		If IsOpened And ident.StartsWith(_ident)
@@ -68,6 +71,7 @@ Class AutocompleteDialog Extends DialogExt
 		
 		
 		If _keywords[fileType] = Null Then UpdateKeywords(fileType)
+		If _parsers[fileType] = Null Then UpdateParsers(fileType)
 			
 		Local result := New List<ListViewItem>
 		
@@ -80,6 +84,17 @@ Class AutocompleteDialog Extends DialogExt
 			End
 		Next
 		
+		'add parsed words
+		Local items := _parsers[fileType].Items
+		For Local i := Eachin items
+			Local txt := i.Ident.ToLower()
+			If txt.StartsWith(ident)
+				result.AddLast(New StringListViewItem(i.Ident)) 'call NEW everytime - not good
+			End
+		Next
+		
+		
+		If IsOpened Then Hide() 'hide to re-layout on open
 		
 		'nothing to show
 		If result.Empty 
@@ -90,8 +105,6 @@ Class AutocompleteDialog Extends DialogExt
 		
 		_view.Reset()'reset selIndex
 		_view.SetItems(result)
-		
-		If IsOpened Then Hide() 'hide to re-layout on open
 		
 		Show()
 			
@@ -105,6 +118,8 @@ Class AutocompleteDialog Extends DialogExt
 	Field _view:ListView
 	Field _keywords:StringMap<List<ListViewItem>>
 	Field _ident:String
+	Field _parsers:StringMap<ICodeParser>
+	
 	
 	Method New()
 	End
@@ -116,16 +131,29 @@ Class AutocompleteDialog Extends DialogExt
 			Case Key.Escape
 				Hide()
 				event.Eat()
-			case Key.Up
+			Case Key.Up
 				_view.SelectPrev()
 				event.Eat()
-			case Key.Down
+			Case Key.Down
 				_view.SelectNext()
 				event.Eat()
-			case Key.Enter
+			Case Key.Home
+				_view.SelectFirst()
+				event.Eat()
+			Case Key.KeyEnd
+				_view.SelectLast()
+				event.Eat()
+			Case Key.Enter
 				OnItemChoosen(_view.CurrentItem)
 				event.Eat()
-				
+			Case Key.Backspace
+			Case Key.CapsLock
+			Case Key.LeftShift, Key.RightShift
+			Case Key.LeftControl, Key.RightControl
+			Case Key.LeftAlt, Key.RightAlt
+				'do nothing, skip filtering
+			Default
+				Hide()
 			End
 			
 		Endif
@@ -157,6 +185,10 @@ Class AutocompleteDialog Extends DialogExt
 			list.AddLast(New StringListViewItem(i))
 		Next
 		_keywords[fileType] = list
+	End
+	
+	Method UpdateParsers(fileType:String)
+		_parsers[fileType] = ParsersManager.Get(fileType)
 	End
 	
 End

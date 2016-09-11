@@ -45,7 +45,7 @@ Class CodeTextView Extends TextViewExt
 		Local n := Cursor-1
 		Local start := Document.StartOfLine( Document.FindLine(Cursor) )
 		
-		While n >= start And IsIdent( text[n] )
+		While n >= start And (IsIdent(text[n]) Or text[n] = 35) '35 => #
 			n -= 1
 		Wend
 		n += 1
@@ -73,7 +73,7 @@ Class CodeTextView Extends TextViewExt
 			n += 1
 		Wend
 		Local indent := n
-		While n < text.Length And IsIdent(text[n])
+		While n < text.Length And (IsIdent(text[n]) Or text[n] = 35)
 			n += 1
 		Wend
 		Return (n > indent ? text.Slice(indent,n) Else "")

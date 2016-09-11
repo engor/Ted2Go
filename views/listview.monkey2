@@ -73,6 +73,20 @@ Class ListView Extends ScrollableView
 		SelectNextInternal(True)
 	End
 	
+	Method SelectFirst()
+		If _selIndex = 0 Return
+		_selIndex = 0
+		EnsureVisible()
+		RequestRender()
+	End
+	
+	Method SelectLast()
+		If _selIndex = _count-1 Return
+		_selIndex = _count-1
+		EnsureVisible()
+		RequestRender()
+	End
+	
 	
 	Protected
 	

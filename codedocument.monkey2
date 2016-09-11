@@ -28,7 +28,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				ReplaceText(text)
 			Endif
 		End
-		
+			
 	End
 	
 	Property CharsToShowAutoComplete:Int()
@@ -109,6 +109,17 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 	End
 	
+	Method OnContentMouseEvent( event:MouseEvent ) Override
+		
+		Select event.Type
+			Case EventType.MouseClick
+				HideAutocomplete()
+		End
+		
+		Super.OnContentMouseEvent(event)
+		
+	End
+	
 	Method ShowAutocomplete(ident:String = "")
 		'check ident
 		If ident = "" Then ident = IdentBeforeCursor()
@@ -117,17 +128,19 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		'show
 		AutoComplete.Show(ident, FileType)
 		
-		Local frame := AutoComplete.Frame
-		
-		Local w := frame.Width
-		Local h := frame.Height
-		
-		frame.Left = CursorRect.Left+100
-		frame.Top = CursorRect.Top - Scroll.y
-		frame.Right = frame.Left+w
-		frame.Bottom = frame.Top+h
-		
-		AutoComplete.Frame = frame
+		If AutoComplete.IsOpened
+			Local frame := AutoComplete.Frame
+			
+			Local w := frame.Width
+			Local h := frame.Height
+			
+			frame.Left = CursorRect.Left+100
+			frame.Top = CursorRect.Top - Scroll.y
+			frame.Right = frame.Left+w
+			frame.Bottom = frame.Top+h
+			
+			AutoComplete.Frame = frame
+		Endif
 		
 	End
 	
@@ -139,7 +152,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	Private
 	
 	Field _doc:CodeDocument
-	
 
 End
 
@@ -215,12 +227,18 @@ Class CodeDocument Extends Ted2Document
 		
 		_doc.Text=text
 		
+		'code parser
+		ParsersManager.Get(FileType).Parse(text, Path)
+		
 		Return True
 	End
 	
 	Method OnSave:Bool() Override
 	
 		Local text:=_doc.Text
+		
+		'code parser - reparse
+		ParsersManager.Get(FileType).Parse(text, Path)
 		
 		Return stringio.SaveString( text,Path )
 	
