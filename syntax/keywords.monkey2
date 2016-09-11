@@ -29,7 +29,7 @@ Class Keywords Implements IKeywords
 
 	Method Get:String(word:String)
 		Return _keywords[word.ToLower()]
-	End	
+	End 
 	
 	Method Values:String[]()
 		Return _words

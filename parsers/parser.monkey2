@@ -3,6 +3,7 @@ Namespace ted2go
 
 
 Enum CodeItemKind
+	Undefined,
 	Classs,
 	Interfacee,
 	Enumm,
@@ -16,9 +17,11 @@ Enum CodeItemKind
 End
 
 Enum AccessMode
-	Privatee,
-	Protectedd,
-	Publicc
+	PrivateInClass,
+	ProtectedInClass,
+	PublicInClass,
+	PublicInFile,
+	PrivateInFile
 End
 
 
@@ -32,10 +35,13 @@ Interface ICodeItem
 	Property Access:AccessMode()
 	Property Text:String()
 	Property Parent:ICodeItem()
+	Setter(value:ICodeItem)
 	Property Children:List<ICodeItem>()
 	Setter(value:List<ICodeItem>)
 	Property Namespac:String()
 	Property FilePath:String()
+	Property Scope:String()
+	Method AddChild(item:ICodeItem)
 	
 End
 
@@ -69,6 +75,8 @@ Class CodeItem Implements ICodeItem
 	End
 	Property Parent:ICodeItem()
 		Return _parent
+	Setter(value:ICodeItem)
+		SetParent(value)
 	End
 	Property Children:List<ICodeItem>()
 		Return _children
@@ -81,6 +89,15 @@ Class CodeItem Implements ICodeItem
 	Property FilePath:String()
 		Return _filePath
 	End
+	Property Scope:String()
+		Local s := Ident
+		Local i := Parent
+		While i <> Null
+			s = i.Ident+"."+s
+			i = i.Parent
+		Wend
+		Return s
+	End
 	
 	Method SetParent(parent:ICodeItem)
 		If Parent <> Null Then Parent.Children.Remove(Self)
@@ -88,6 +105,11 @@ Class CodeItem Implements ICodeItem
 		If _parent.Children = Null Then _parent.Children = New List<ICodeItem>
 		_parent.Children.AddLast(Self)
 	End
+	
+	Method AddChild(item:ICodeItem)
+		item.Parent = Self
+	End
+	
 	
 	'Protected
 	
@@ -116,6 +138,7 @@ End
 Interface ICodeParser
 
 	Method Parse(text:String, filePath:String)
+	Method IsPosInsideOfQuotes:Bool(text:String, pos:Int)
 	Property Items:List<ICodeItem>()
 	
 End
@@ -175,7 +198,9 @@ Class EmptyParser Implements ICodeParser
 	Method Parse(text:String, filePath:String)
 		'do nothing
 	End
-		
+	Method IsPosInsideOfQuotes:Bool(text:String, pos:Int)
+		Return False
+	End	
 	
 	Private
 	

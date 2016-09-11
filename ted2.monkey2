@@ -55,6 +55,7 @@
 #Import "utils/jsonutils"
 #Import "utils/utils"
 
+#Import "analyzer/analyzer"
 
 Namespace ted2go
 
