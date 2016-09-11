@@ -114,7 +114,7 @@ Class FuncValue Extends Value
 	Property IsGeneric:Bool()
 		If Not ftype SemantError( "FuncValue.IsGeneric()" )
 		
-		Return ftype.IsGeneric Or (types And Not instanceOf)	
+		Return ftype.IsGeneric 'Or (types And Not instanceOf)
 	End
 	
 	Property IsCtor:Bool()
@@ -236,12 +236,10 @@ Class FuncValue Extends Value
 				Case "=","<>","<",">","<=",">="
 					If ftype.retType<>Type.BoolType Throw New SemantEx( "Comparison operator '"+op+"' must return Bool" )
 					If ftype.argTypes.Length<>1 Throw New SemantEx( "Comparison operator '"+op+"' must have 1 parameter" )
-'					If Not ftype.argTypes[0].Equals( ctype ) Throw New SemantEx( "Comparison operator '"+op+"' parameter must be of type '"+ctype.ToString()+"'" )
 				Case "<=>"
 					Local ptype:=TCast<PrimType>( ftype.retType )
 					If Not ptype Or Not ptype.IsNumeric Throw New SemantEx( "Comparison operator '<=>' must return a numeric type" )
 					If ftype.argTypes.Length<>1 Throw New SemantEx( "Comparison operator '"+op+"' must have 1 parameter" )
-'					If Not ftype.argTypes[0].Equals( ctype ) Throw New SemantEx( "Comparison operator '"+op+"' parameter must be of type '"+ctype.ToString()+"'" )
 				End
 			Endif
 			
@@ -249,7 +247,7 @@ Class FuncValue Extends Value
 				Throw New SemantEx( "Virtual class methods cannot be declared 'Virtual' or 'Override'" )
 			Endif
 			
-			Local func2:=ctype.FindSuperFunc( fdecl.ident,ftype.argTypes )
+			Local func2:=ctype.FindSuperFunc( fdecl.ident,ftype )
 			
 			If func2
 			
@@ -265,7 +263,7 @@ Class FuncValue Extends Value
 					 Throw New SemantEx( "Method '"+ToString()+"' overrides a non-virtual superclass method" )
 				Endif
 					
-				If Not ftype.retType.ExtendsType( func2.ftype.retType ) 
+				If Not ftype.retType.ExtendsType( func2.ftype.retType )
 					Throw New SemantEx( "Method '"+ToString()+"' overrides a method with incompatible return type" )
 				Endif
 				
@@ -412,22 +410,6 @@ Class FuncValue Extends Value
 		
 	End
 	
-	Method SemantInvokeNew()
-	
-		If fdecl.ident<>"new" Or invokeNew Return
-
-		Local superType:=scope.FindClass().superType
-		If Not superType Return
-
-		Local flist:=Cast<FuncList>( superType.FindNode( "new" ) )
-		If Not flist Return
-		
-		Local func:=flist.FindFunc( Null )
-		If func Return
-
-		Throw New SemantEx( "Class '"+superType.ToString()+"' has no default constructor",pnode )
-	End
-	
 	Method SemantStmts()
 	
 		If block.IsGeneric SemantError( "FuncValue.SemantStmts(1)" )
@@ -444,9 +426,21 @@ Class FuncValue Extends Value
 			
 			block.Semant( fdecl.stmts )
 			
+			If fdecl.ident="new" And Not invokeNew
+			
+				Local superType:=cscope.ctype.superType
+				If superType And Not superType.hasDefaultCtor
+				
+					Try
+						Throw New SemantEx( "Super class '"+superType.Name+"' has no default constructor",pnode )
+					Catch ex:SemantEx
+					End
+					
+				Endif
+			
+			Endif
+			
 			If block.reachable And ftype.retType<>Type.VoidType Throw New SemantEx( "Missing return statement" )
-
-			SemantInvokeNew()
 
 		Endif
 		
@@ -469,11 +463,11 @@ Class FuncValue Extends Value
 		
 			If IsCtor Or IsMethod
 			
-'				If fdecl.ident="new"
-'					cscope.ctype.ctors.Push( Self )
-'				Else
+				If fdecl.ident="new"
+					cscope.ctype.ctors.Push( Self )
+				Else
 					cscope.ctype.methods.Push( Self )
-'				Endif
+				Endif
 			Endif
 		
 			scope.transMembers.Push( Self )
@@ -694,13 +688,16 @@ Class FuncList Extends SNode
 		funcs.Push( func )
 	End
 	
-	Method FindFunc:FuncValue( argTypes:Type[] )
-	
-		If AnyTypeGeneric( argTypes ) SemantError( "FuncList.FindFunc()" )
-	
+	Method FindFunc:FuncValue( ftype:FuncType )
+
+		If AnyTypeGeneric( ftype.argTypes ) SemantError( "FuncList.FindFunc()" )
+		
 		For Local func:=Eachin funcs
 			If func.block.IsGeneric Continue
-			If TypesEqual( func.ftype.argTypes,argTypes ) Return func
+			If Not TypesEqual( func.ftype.argTypes,ftype.argTypes ) Continue
+			If ident<>"to" Return func
+			If func.ftype.retType.Equals( ftype.retType ) Return func
+			Return Null
 		Next
 		
 		Return Null
@@ -721,7 +718,7 @@ Class FuncList Extends SNode
 				If Not func Continue
 				
 				If ident<>"to" And Not func.block.IsGeneric
-					Local func2:=FindFunc( func.ftype.argTypes )
+					Local func2:=FindFunc( func.ftype )'.argTypes )
 					If func2 Throw New SemantEx( "Duplicate declaration '"+func.ToString()+"'",tfunc.pnode )
 				Endif
 				

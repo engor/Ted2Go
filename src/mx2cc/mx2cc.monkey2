@@ -23,8 +23,9 @@ Global StartDir:String
 
 Const TestArgs:="mx2cc makemods"
 
-'Const TestArgs:="mx2cc makeapp -clean -config=debug -target=desktop -product=D:/test_app/test.exe -assets=D:/test_app/assets -dlls=D:/test_app/ src/mx2cc/test.monkey2"
 'Const TestArgs:="mx2cc makeapp -clean -config=debug -target=desktop src/mx2cc/test.monkey2"
+
+'Const TestArgs:="mx2cc makeapp -clean -config=debug -target=desktop -product=D:/test_app/test.exe -assets=D:/test_app/assets -dlls=D:/test_app/ src/mx2cc/test.monkey2"
 
 'Const TestArgs:="mx2cc makeapp -clean src/ted2/ted2"
 
@@ -87,7 +88,6 @@ Function Main()
 	Catch ex:BuildEx
 	
 		Fail( "Internal mx2cc build error" )
-		
 	End
 	
 	If Not ok libc.exit_( 1 )

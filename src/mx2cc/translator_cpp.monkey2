@@ -5,6 +5,8 @@ Class Translator_CPP Extends Translator
 
 	Field _lambdaId:Int
 	
+	Field _gctmps:=0
+	
 	Method Translate( fdecl:FileDecl ) 'Override
 	
 		_incs[fdecl.ident]=fdecl
@@ -128,7 +130,7 @@ Class Translator_CPP Extends Translator
 	Method GCVarTypeName:String( type:Type )
 	
 		Local ctype:=TCast<ClassType>( type )
-		If ctype And Not ctype.IsVoid And (ctype.cdecl.kind="class" Or ctype.cdecl.kind="interface") Return ClassName( ctype )
+		If ctype And Not ctype.ExtendsVoid And (ctype.cdecl.kind="class" Or ctype.cdecl.kind="interface") Return ClassName( ctype )
 		
 		Local atype:=TCast<ArrayType>( type )
 		If atype Return ArrayName( atype )
@@ -176,32 +178,6 @@ Class Translator_CPP Extends Translator
 		
 		TransError( "Translator.VarType (2)" )
 		Return ""
-#rem	
-		Local type:=vvar.type
-	
-		Local gc:=""
-		Select vvar.vdecl.kind
-		Case "field"
-			gc="bbGCVar<"
-		Case "global","const"
-			gc="bbGCRootVar<"
-		Default
-			Return TransType( type )
-		End
-
-		Local ctype:=TCast<ClassType>( type )
-		If ctype And Not ctype.IsVoid And (ctype.cdecl.kind="class" Or ctype.cdecl.kind="interface")
-			Return gc+ClassName( ctype )+">"
-		Endif
-		
-		Local atype:=TCast<ArrayType>( type )
-		If atype
-			Return gc+ArrayName( atype )+">"
-		Endif
-		
-		Return TransType( type )
-#end
-
 	End
 
 	Method VarProto:String( vvar:VarValue ) Override
@@ -435,9 +411,7 @@ Class Translator_CPP Extends Translator
 		Local hasDefaultCtor:=False
 		
 		EmitBr()
-		For Local node:=Eachin ctype.methods
-			Local func:=Cast<FuncValue>( node )
-			If Not func Or func.fdecl.ident<>"new" Continue
+		For Local func:=Eachin ctype.ctors
 			
 			hasCtor=True
 			If Not func.ftype.argTypes hasDefaultCtor=True
@@ -451,9 +425,7 @@ Class Translator_CPP Extends Translator
 		Local hasCmp:=False
 		
 		EmitBr()
-		For Local node:=Eachin ctype.methods
-			Local func:=Cast<FuncValue>( node )
-			If Not func Or func.fdecl.ident="new" Continue
+		For Local func:=Eachin ctype.methods
 			
 			If func.fdecl.ident="<=>" hasCmp=True
 			
@@ -606,9 +578,7 @@ Class Translator_CPP Extends Translator
 	
 		'Emit ctor methods
 		'
-		For Local node:=Eachin ctype.methods
-			Local func:=Cast<FuncValue>( node )
-			If Not func Or func.fdecl.ident<>"new" Continue
+		For Local func:=Eachin ctype.ctors
 			
 			EmitBr()
 			EmitFunc( func,needsInit )
@@ -618,9 +588,7 @@ Class Translator_CPP Extends Translator
 		'
 		Local hasCmp:=False
 		
-		For Local node:=Eachin ctype.methods
-			Local func:=Cast<FuncValue>( node )
-			If Not func Or func.fdecl.ident="new" Continue
+		For Local func:=Eachin ctype.methods
 			
 			If func.fdecl.ident="<=>" 
 				hasCmp=True
@@ -640,7 +608,7 @@ Class Translator_CPP Extends Translator
 			
 			Emit( "bbString bbDBValue("+tname+"*p){" )
 			
-			If ctype.IsVoid
+			If ctype.ExtendsVoid
 				Emit( "return bbDBValue(*p);" )
 			Else
 				Select cdecl.kind
@@ -719,6 +687,11 @@ Class Translator_CPP Extends Translator
 		EmitBr()
 		
 		Emit( proto+"{" )
+		
+		If _gctmps
+			Emit( "bbGC::popTmps("+_gctmps+");" )
+			_gctmps=0
+		Endif
 		
 		If init Emit( "init();" )
 		
@@ -1384,7 +1357,7 @@ Class Translator_CPP Extends Translator
 		Local ctype:=value.ctype
 		Uses( ctype )
 	
-		If ctype.IsVoid
+		If ctype.ExtendsVoid
 			Return "new "+ClassName( ctype )+"("+TransArgs( value.args )+")"
 		Endif
 		
@@ -1529,7 +1502,14 @@ Class Translator_CPP Extends Translator
 		
 			Local t:=Trans( arg )
 			
-			If IsVolatile( arg ) t=AllocGCTmp( arg.type )+"="+t
+			If IsVolatile( arg )
+				If _gcframe
+					t=AllocGCTmp( arg.type )+"="+t
+				Else
+					t="bbGC::tmp("+t+")"
+					_gctmps+=1
+				Endif
+			Endif
 			
 			If targs targs+=","
 			targs+=t

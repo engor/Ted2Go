@@ -11,8 +11,6 @@ Class FileScope Extends Scope
 	
 	Field toSemant:=New Stack<SNode>
 
-'	Field classexts:=New Stack<ClassType>
-	
 	Method New( fdecl:FileDecl )
 		Super.New( Null )
 		
@@ -108,69 +106,69 @@ Class FileScope Extends Scope
 		
 	End
 	
-	Method FindInUsings:SNode( ident:String,istype:Bool )
-
-		Local finder:=New NodeFinder( ident,istype )
+	Method FindNode:SNode( ident:String ) Override
+	
+		'Search in namespace hierarchy
+		'
+		Local node:=Super.FindNode( ident )
+		If node Return node
+		
+		'Search in usings
+		'
+		Local finder:=New NodeFinder( ident )
 		
 		For Local nmspace:=Eachin usings
-			finder.Find( nmspace )
+			finder.Add( nmspace.GetNode( ident ) )
 		Next
 		
 		Return finder.Found
 	End
 	
-	Method FindNode:SNode( ident:String ) Override
-	
-		Local node:=Super.FindNode( ident )
-		If node Return node
-		
-		Return FindInUsings( ident,False )
-	End
-	
 	Method FindType:Type( ident:String ) Override
 	
+		'Search in namespace hierarchy
+		'
 		Local type:=Super.FindType( ident )
 		If type Return type
 		
-		Return Cast<Type>( FindInUsings( ident,True ) )
-	End
-	
-	Function FindExtension( finder:NodeFinder,nmspace:NamespaceScope,ctype:ClassType )
+		'Search in usings
+		'
+		Local finder:=New NodeFinder( ident )
 
-		Local exts:=nmspace.FindClassExtensions( ctype )
-		If Not exts Return
-			
-		For Local ext:=Eachin exts
-			finder.Find( ext.scope )
+		For Local nmspace:=Eachin usings
+			finder.Add( nmspace.GetType( ident ) )
 		Next
+
+		Return Cast<Type>( finder.Found )
 	End
 	
-	Function FindExtension:SNode( ident:String,istype:Bool,ctype:ClassType )
+	Method FindExtensions:SNode( finder:NodeFinder,ctype:ClassType )
+
+		'Search nmspace hierarchy
+		'		
+		nmspace.FindExtensions( finder,ctype )
+		
+		'Search usings
+		'
+		For Local nmspace:=Eachin usings
+			nmspace.GetExtensions( finder,ctype )
+		Next
+		
+		Return finder.Found
+	End
+	
+	Function FindExtensions:SNode( ident:String,ctype:ClassType,found:SNode )
 	
 		Local scope:=Scope.Semanting()
-		If Not scope Return Null
+		If Not scope Return found
 		
 		Local fscope:=scope.FindFile()
-		If Not fscope Return Null
+		If Not fscope Return found
 		
-		Local finder:=New NodeFinder( ident,istype )
+		Local finder:=New NodeFinder( ident )
+		finder.Add( found )
 		
-		'search hierarchy
-		Local nmspace:=fscope.nmspace
-		While nmspace
-			FindExtension( finder,nmspace,ctype )
-'			If finder.Found Return finder.Found
-			nmspace=Cast<NamespaceScope>( nmspace.outer )
-		Wend
-		If finder.Found Return finder.Found
-
-		'search usings
-		For Local nmspace:=Eachin fscope.usings
-			FindExtension( finder,nmspace,ctype )
-		Next
-		If finder.Found Return finder.Found
-		
-		Return Null
+		Return fscope.FindExtensions( finder,ctype )
 	End
 
 	Method FindFile:FileScope() Override

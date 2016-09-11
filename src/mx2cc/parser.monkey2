@@ -1249,13 +1249,26 @@ Class Parser
 		Repeat
 			Select Toke
 			Case "["
-				Bump()
-				Local rank:=1
-				While CParse( "," )
-					rank+=1
+			
+				'Arrays are backwards! Yikes!
+				Local head:ArrayTypeExpr
+				Local tail:=head
+			
+				While CParse( "[" )
+					Local rank:=1
+					While CParse( "," )
+						rank+=1
+					Wend
+					Parse( "]" )
+					
+					Local type:=New ArrayTypeExpr( Null,rank,srcpos,EndPos )
+					If tail tail.type=type Else head=type
+					tail=type
 				Wend
-				Parse( "]" )
-				type=New ArrayTypeExpr( type,rank,srcpos,EndPos )
+				
+				tail.type=type
+				type=head
+				
 			Case "("
 				type=ParseFuncType( type )
 			Default
@@ -1265,7 +1278,7 @@ Class Parser
 		
 		Return type
 	End
-
+	
 	'THROWS! Some ugly stunt parsing to handle operator New.
 	Method ParseNewType:Expr()
 	
@@ -1275,31 +1288,64 @@ Class Parser
 		Repeat
 			Select Toke
 			Case "["
-				BeginTryParse()
-				Bump()
-				Local rank:=1
-				While CParse( "," )
-					rank+=1
+			
+				'Array types are backwards!
+				'	
+				Local head:ArrayTypeExpr
+				Local tail:=head
+				Local done:=False
+					
+				While Toke="["
+
+					BeginTryParse()
+					Parse()
+					
+					Local rank:=1
+					While CParse( "," )
+						rank+=1
+					Wend
+					
+					If Not CParse( "]" )
+						TryParseFailed()
+						done=True
+						Exit
+					Endif
+					
+					EndTryParse()
+					
+					Local type:=New ArrayTypeExpr( Null,rank,srcpos,EndPos )
+					If tail tail.type=type Else head=type
+					tail=type
+					
 				Wend
-				If Not CParse( "]" )
-					TryParseFailed()
-					Exit
-				Endif
-				EndTryParse()
-				type=New ArrayTypeExpr( type,rank,srcpos,EndPos )
+				
+				If Not head Exit
+
+				tail.type=type
+				type=head
+				
+				If done Exit
+				
 			Case "("
+			
 				BeginTryParse()
+				
 				Try
 					Local ftype:=ParseFuncType( type )
+					
 					If Toke<>"[" And Toke<>"("
 						TryParseFailed()
-						Return type
+						Exit
 					Endif
+					
 					EndTryParse()
 					type=ftype
+					
 				Catch ex:TryParseEx
+				
 					TryParseFailed()
 					Exit
+					
 				End
 			Default
 				Exit
@@ -1320,11 +1366,6 @@ Class Parser
 			Local expr:=ParseExpr()
 			Parse( ")" )
 			Return expr
-'		Case "["
-'			Bump()
-'			Local exprs:=ParseExprs()
-'			Parse( "]" )
-'			Return New ArrayLiteralExpr( exprs,srcpos,EndPos )
 		Case "self"
 			Bump()
 			Return New SelfExpr( srcpos,EndPos )
@@ -1342,7 +1383,25 @@ Class Parser
 			If CParse( "[" )
 				Local sizes:=ParseExprs()
 				Parse( "]" )
-				Return New NewArrayExpr( New ArrayTypeExpr( type,sizes.Length,srcpos,EndPos ),sizes,Null,srcpos,EndPos )
+				
+				Local head:=New ArrayTypeExpr( Null,sizes.Length,srcpos,EndPos )
+				Local tail:=head
+				
+				While CParse( "[" )
+					Local rank:=1
+					While CParse( "," )
+						rank+=1
+					Wend
+					Parse( "]" )
+					
+					Local type:=New ArrayTypeExpr( Null,rank,srcpos,EndPos )
+					tail.type=type
+					tail=type
+				Wend
+				
+				tail.type=type
+				
+				Return New NewArrayExpr( head,sizes,Null,srcpos,EndPos )
 			Endif
 			
 			If Toke="("

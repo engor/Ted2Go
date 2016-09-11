@@ -861,7 +861,7 @@ Class DocsMaker
 				If ctype.superType<>Type.ObjectClass
 					xtends=" Extends "+TypeName( ctype.superType,ctype.scope.outer )
 				Endif
-			Else If ctype.isvoid
+			Else If ctype.extendsVoid
 				xtends=" Extends Void"
 			Endif
 			

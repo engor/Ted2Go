@@ -55,6 +55,8 @@ namespace bbGC{
 	
 	bbGCFiber *fibers;
 	bbGCFiber *currentFiber;
+	
+	bbGCTmp *freeTmps;
 
 	bbGCNode markLists[2];
 	bbGCNode freeList;
@@ -135,7 +137,7 @@ namespace bbGC{
 		}
 	}
 	
-	void markFrames(){
+	void markFibers(){
 	
 		bbGCFiber *fiber=fibers;
 		
@@ -149,6 +151,11 @@ namespace bbGC{
 			for( bbGCNode *node=fiber->ctoring;node;node=node->succ ){
 			
 				node->gcMark();
+			}
+			
+			for( bbGCTmp *tmp=fiber->tmps;tmp;tmp=tmp->succ ){
+			
+				tmp->node->gcMark();
 			}
 			
 			fiber=fiber->succ;
@@ -177,7 +184,7 @@ namespace bbGC{
 	
 //		puts( "bbGC::sweep()" );fflush( stdout );
 	
-		markFrames();
+		markFibers();
 	
 		markQueued();
 		

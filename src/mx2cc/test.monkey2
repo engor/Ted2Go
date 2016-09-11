@@ -1,15 +1,17 @@
 
-#if __DESKTOP_TARGET__
+Class List<T>
 
-#else
-
-#if __TARGET__="emscripten"
-
-#endif
-
-KNOB!
-
-#endif
+	Struct Node
+		Field data:T
+	End
+	
+	Field head:=New Node
+End
 
 Function Main()
+
+	Local list:=New List<Int>
+	
+	list.head.data=10
+	
 End

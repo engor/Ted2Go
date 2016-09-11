@@ -14,7 +14,7 @@ Function IsGCType:Bool( type:Type )
 	Local ctype:=TCast<ClassType>( type )
 	If Not ctype Return False
 	
-	If ctype.IsVoid Return False
+	If ctype.ExtendsVoid Return False
 	
 	If ctype.cdecl.kind="class" Or ctype.cdecl.kind="interface" Return True
 	
@@ -32,7 +32,7 @@ End
 Function IsGCPtrType:Bool( type:Type )
 
 	Local ctype:=TCast<ClassType>( type )
-	If ctype Return Not ctype.IsVoid And Not ctype.IsStruct
+	If ctype Return Not ctype.ExtendsVoid And Not ctype.IsStruct
 	
 	Local atype:=TCast<ArrayType>( type )
 	If atype Return True

@@ -39,11 +39,14 @@ struct bbGCNode;
 struct bbGCFiber;
 struct bbGCFrame;
 struct bbGCRoot;
+struct bbGCTmp;
 
 namespace bbGC{
 
 	extern bbGCRoot *roots;
 	
+	extern bbGCTmp *freeTmps;
+
 	extern bbGCNode *markQueue;
 	extern bbGCNode *unmarkedList;
 	
@@ -88,8 +91,9 @@ struct bbGCFiber{
 	bbGCFiber *pred;
 	bbGCFrame *frames;
 	bbGCNode *ctoring;
+	bbGCTmp *tmps;
 	
-	bbGCFiber():succ( this ),pred( this ),frames( nullptr ),ctoring( nullptr ){
+	bbGCFiber():succ( this ),pred( this ),frames( nullptr ),ctoring( nullptr ),tmps( nullptr ){
 	}
 	
 	void link(){
@@ -131,6 +135,11 @@ struct bbGCRoot{
 	}
 };
 
+struct bbGCTmp{
+	bbGCTmp *succ;
+	bbGCNode *node;
+};
+
 namespace bbGC{
 	
 	inline void insert( bbGCNode *p,bbGCNode *succ ){
@@ -155,6 +164,30 @@ namespace bbGC{
 		markQueue=p;
 		
 		p->flags=markedBit;
+	}
+	
+	inline void pushTmp( bbGCNode *p ){
+		bbGCTmp *tmp=freeTmps;
+		if( !tmp ) tmp=new bbGCTmp;
+		tmp->node=p;
+		tmp->succ=currentFiber->tmps;
+		currentFiber->tmps=tmp;
+//		puts( "pushTmp" );
+	}
+	
+	inline void popTmps( int n ){
+//		printf( "popTmps %i\n",n );
+		while( n-- ){
+			bbGCTmp *tmp=currentFiber->tmps;
+			currentFiber->tmps=tmp->succ;
+			tmp->succ=freeTmps;
+			freeTmps=tmp;
+		}
+	}
+	
+	template<class T> T *tmp( T *p ){
+		pushTmp( p );
+		return p;
 	}
 	
 	inline void beginCtor( bbGCNode *p ){
@@ -259,7 +292,7 @@ template<class T> struct bbGCRootVar : public bbGCVar<T>,public bbGCRoot{
 	}
 };
 
-template<class T> void bbGCMark( const T &t  ){}
+template<class T> void bbGCMark( const T &t ){}
 
 template<class T> void bbGCMark( const bbGCVar<T> &v ){
 	bbGC::enqueue( dynamic_cast<bbGCNode*>( v._ptr ) );

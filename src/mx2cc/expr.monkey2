@@ -85,14 +85,21 @@ Class Expr Extends PNode
 			semanting.Push( Self )
 
 			Local type:=OnSemantType( scope )
-			
+
 			Local ctype:=TCast<ClassType>( type )
-			If ctype
-				If generic
-'					If Not ctype.types Or ctype.instanceOf Throw New SemantEx( "Type '"+ctype.ToString()+"' is not generic" )
-				Else
-					If ctype.types And Not ctype.instanceOf Throw New SemantEx( "Type '"+ctype.ToString()+"' is generic" )
+			
+			If generic
+				
+				If Not ctype Or Not ctype.types 'Or ctype.instanceOf
+					Throw New SemantEx( "Type '"+type.Name+"' must be a generic class type" )
 				Endif
+			
+			Else
+			
+				If ctype And ctype.types And Not ctype.instanceOf
+					Throw New SemantEx( "Generic class type '"+ctype.Name+"' is missing type arguments" )
+				Endif
+
 			Endif
 			
 			semanting.Pop()
@@ -106,7 +113,7 @@ Class Expr Extends PNode
 		
 		Return Null
 	End
-
+	
 	Method SemantWhere:Bool( scope:Scope )
 
 		Try
@@ -309,12 +316,10 @@ Class NewObjectExpr Extends Expr
 		Local type:=Self.type.SemantType( scope )
 		
 		Local ctype:=TCast<ClassType>( type )
-		If Not ctype Throw New SemantEx( "Type '"+type.Name+"' is not a class" )
+		If Not ctype Throw New SemantEx( "Type '"+type.Name+"' is not a class type" )
 		
 		'hmmm...
-		'ctype.SemantMembers()
-		
-		If ctype.IsGeneric Throw New SemantEx( "Class '"+ctype.Name+"' is generic" )
+'		ctype.SemantMembers()
 		
 		If ctype.IsAbstract
 			Local t:=""

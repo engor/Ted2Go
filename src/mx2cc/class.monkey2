@@ -41,8 +41,6 @@ Class ClassType Extends Type
 	Field ifaceTypes:ClassType[]
 	Field allIfaces:ClassType[]
 	
-	Field isvoid:Bool	'Extends 'Void'?
-	
 	Field instances:Stack<ClassType>
 	
 	Field membersSemanted:Bool
@@ -53,6 +51,9 @@ Class ClassType Extends Type
 	Field ctors:=New Stack<FuncValue>
 	Field methods:=New Stack<FuncValue>
 	Field fields:=New Stack<VarValue>
+
+	Field extendsVoid:Bool
+	Field hasDefaultCtor:Bool
 	
 	Method New( cdecl:ClassDecl,outer:Scope,types:Type[],instanceOf:ClassType )
 	
@@ -99,21 +100,17 @@ Class ClassType Extends Type
 		Return cdecl.kind="struct"
 	End
 	
-	Property IsAbstract:Bool()
-		Return cdecl.IsAbstract Or abstractMethods
-	End
-	
 	Property IsVirtual:Bool()
 		Return cdecl.IsVirtual Or (superType And superType.IsVirtual)
 	End
 	
-	Property IsVoid:Bool()
-		Return isvoid Or (superType And superType.IsVoid)
+	Property ExtendsVoid:Bool()
+		Return extendsVoid
 	End
-	
+
 	Method ToString:String() Override
-		Local str:=cdecl.ident
-		If types str+="<"+Join( types )+">"
+		Local str:=Name
+		If cdecl.IsExtension str+=" Extension"
 		Return str
 	End
 	
@@ -123,6 +120,14 @@ Class ClassType Extends Type
 	
 	Property TypeId:String() Override
 		Return scope.TypeId
+	End
+	
+	Property IsAbstract:Bool()
+		If Not membersSemanted
+			If membersSemanting SemantError( "ClassType.IsAbstract()" )
+			SemantMembers()
+		Endif
+		Return cdecl.IsAbstract Or abstractMethods
 	End
 	
 	Method OnSemant:SNode() Override
@@ -136,7 +141,7 @@ Class ClassType Extends Type
 				
 					If Not cdecl.IsExtern Or cdecl.kind<>"class" Throw New SemantEx( "Only extern classes can extend 'Void'" )
 					
-					isvoid=True
+					extendsVoid=True
 					
 				Else
 				
@@ -147,6 +152,8 @@ Class ClassType Extends Type
 					If superType.state=SNODE_SEMANTING Throw New SemantEx( "Cyclic inheritance error for '"+ToString()+"'",cdecl )
 					
 					If superType.cdecl.IsFinal Throw New SemantEx( "Superclass '"+superType.ToString()+"' is final" )
+					
+					extendsVoid=superType.extendsVoid
 					
 				Endif
 				
@@ -226,9 +233,10 @@ Class ClassType Extends Type
 	
 	Method SemantMembers()
 	
-'		Print "Semanting members: "+ToString()
+		If membersSemanted Return
 	
-		If membersSemanted Or membersSemanting Return
+		If membersSemanting SemantError( "ClassType.SemantMembers()" )
+		
 		membersSemanting=True
 		
 		'Semant funcs
@@ -249,12 +257,32 @@ Class ClassType Extends Type
 			flists.Push( flist )
 			
 			For Local func:=Eachin flist.funcs
-			
-				If func.fdecl.IsIfaceMember abstractMethods.Push( func )
-				
+
+				If func.fdecl.IsAbstract abstractMethods.Push( func )
+							
 			Next
-			
+
 		Next
+		
+		'default ctor check
+		'
+		Local flist:=Cast<FuncList>( scope.GetNode( "new" ) )
+		If flist
+			hasDefaultCtor=False
+			For Local func:=Eachin flist.funcs
+				If func.ftype.argTypes Continue
+				hasDefaultCtor=True
+			Next
+		Else
+			If superType And Not superType.hasDefaultCtor
+				Try
+					Throw New SemantEx( "Super class '"+superType.Name+"' has no default constructor" )
+				Catch ex:SemantEx
+				End
+			Endif
+			
+			hasDefaultCtor=True
+		Endif
 		
 		If (cdecl.kind="class" Or cdecl.kind="struct") And Not scope.IsGeneric
 		
@@ -264,21 +292,10 @@ Class ClassType Extends Type
 			
 				For Local func:=Eachin superType.abstractMethods
 				
-					Try
-						Local flist:=Cast<FuncList>( scope.nodes[func.fdecl.ident] )
-						If flist
-							Local func2:=flist.FindFunc( func.ftype.argTypes )
-							If func2
-								If func2.ftype.retType.ExtendsType( func.ftype.retType ) Continue
-								Throw New SemantEx( "Overriding method '"+func2.ToString()+"' has incompatible return type",func2.fdecl )
-							Endif
-						Endif
-						
-						abstractMethods.Push( func )
-						
-					Catch ex:SemantEx
-					End
+					Local flist:=Cast<FuncList>( scope.nodes[func.fdecl.ident] )
+					If flist And flist.FindFunc( func.ftype ) Continue
 					
+					abstractMethods.Push( func )
 				Next
 
 			Endif
@@ -290,52 +307,17 @@ Class ClassType Extends Type
 				If superType And superType.ExtendsType( iface ) Continue
 				
 				For Local func:=Eachin iface.abstractMethods
-				
-'					Print "abstractMethod="+func.ToString()
 
-					Try
-						#rem
-						Local flist:=Cast<FuncList>( scope.nodes[func.fdecl.ident] )
-						If flist
-							Local func2:=overload.FindOverload( flist.funcs,func.ftype.retType,func.ftype.argTypes )
-							If func2
-								If func2.IsGeneric Continue
-								If TypesEqual( func2.ftype.argTypes,func.ftype.argTypes ) Continue
-								Throw New SemantEx( "ERROR!",func2.fdecl )
-							Endif
-						Endif
-						
-						If func.fdecl.IsDefault
-							scope.Insert( func.fdecl.ident,func )
-							Continue
-						Endif
-						
-						abstractMethods.Push( func )
-						#end
-						
-						Local flist:=Cast<FuncList>( scope.nodes[func.fdecl.ident] )
-						If flist
-							Local func2:=flist.FindFunc( func.ftype.argTypes )
-							If func2
-								If func2.ftype.retType.ExtendsType( func.ftype.retType ) Continue
-								Throw New SemantEx( "Overriding method '"+func2.ToString()+"' has incompatible return type",func2.fdecl )
-							Endif
-						Endif
-						
-						If func.fdecl.IsDefault
-							scope.Insert( func.fdecl.ident,func )
-							Continue
-						Endif
-						
-						abstractMethods.Push( func )
+					Local flist:=Cast<FuncList>( scope.nodes[func.fdecl.ident] )
+					If flist And flist.FindFunc( func.ftype ) Continue
 					
-					Catch ex:SemantEx
-					End
-
+					abstractMethods.Push( func )
 				Next
 			
 			Next
 			
+			'Add super class overloads to our scope.
+			'
 			If superType
 			
 				For Local flist:=Eachin flists
@@ -344,7 +326,9 @@ Class ClassType Extends Type
 					If Not flist2 Continue
 						
 					For Local func2:=Eachin flist2.funcs
-						If Not flist.FindFunc( func2.ftype.argTypes ) flist.PushFunc( func2 )
+						If Not flist.FindFunc( func2.ftype )
+							flist.PushFunc( func2 )
+						Endif
 					Next
 	
 				Next
@@ -359,16 +343,15 @@ Class ClassType Extends Type
 		'
 		membersSemanting=False
 		membersSemanted=True
-
-		'Semant vars - should probably do this in another phase?
-		'		
-		For Local it:=Eachin scope.nodes
 		
+		'Semant non-func members
+		'
+		For Local node:=Eachin scope.nodes.Values
+			If Cast<FuncList>( node ) Continue
 			Try
-				If Not Cast<FuncList>( it.Value ) it.Value.Semant()
+				node.Semant()
 			Catch ex:SemantEx
 			End
-			
 		Next
 	
 	End
@@ -384,15 +367,15 @@ Class ClassType Extends Type
 		
 		Return Null
 	End
-	
-	Method FindSuperFunc:FuncValue( ident:String,argTypes:Type[] )
+
+	Method FindSuperFunc:FuncValue( ident:String,ftype:FuncType )
 	
 		Local node:=Cast<FuncList>( FindSuperNode( ident ) )
-		If node Return node.FindFunc( argTypes )
+		If node Return node.FindFunc( ftype )
 		
 		Return Null
 	End
-	
+
 	Method FindNode2:SNode( ident:String )
 		If membersSemanting SemantError( "ClassType.FindNode() class='"+ToString()+"', ident='"+ident+"'" )
 	
@@ -417,17 +400,18 @@ Class ClassType Extends Type
 	Method FindNode:SNode( ident:String ) Override
 	
 		Local node:=FindNode2( ident )
-		If node Return node
+		If ident="new" Return node
 		
-		Return FileScope.FindExtension( ident,False,Self )
+		node=FileScope.FindExtensions( ident,Self,node )
+		
+		Return node
 	End
 		
 	Method FindType:Type( ident:String ) Override
 	
 		Local type:=FindType2( ident )
-		If type Return type
 		
-		Return Cast<Type>( FileScope.FindExtension( ident,True,Self ) )
+		Return type
 	End
 	
 	Method Index:Value( args:Value[],value:Value ) Override

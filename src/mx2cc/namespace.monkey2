@@ -91,27 +91,56 @@ Class NamespaceScope Extends Scope
 		Return Self
 	End
 	
-	Method FindClassExtensions:Stack<ClassType>( ctype:ClassType )
+	Method GetClassExtensions:Stack<ClassType>( ctype:ClassType )
 	
 		Local exts:Stack<ClassType>
 		
 		For Local ext:=Eachin classexts
 		
 			If ext.IsGeneric
-				If ctype.instanceOf
-					If ext.superType.instanceOf.ExtendsType( ctype.instanceOf )
-						ext=TCast<ClassType>( ext.GenInstance( ctype.types ) )
+				continue
+				Local etype:=ctype
+				While etype
+					If etype.instanceOf And etype.instanceOf.Equals( ext.superType.instanceOf )
+						ext=TCast<ClassType>( ext.GenInstance( etype.types ) )
+						Exit
 					Endif
-				Endif
+					etype=etype.superType
+				Wend
+				If Not etype Continue
+			Else
+				If Not ctype.ExtendsType( ext.superType ) Continue
 			Endif
-
-			If Not ext.superType.ExtendsType( ctype ) Continue
 			
 			If Not exts exts=New Stack<ClassType>
 			exts.Push( ext )
 		Next
 		
 		Return exts
+	End
+	
+	Method GetExtensions( finder:NodeFinder,ctype:ClassType )
+	
+		Local exts:=GetClassExtensions( ctype )
+		If Not exts Return
+
+		For Local ext:=Eachin exts
+			finder.Add( ext.scope.GetNode( finder.ident ) )
+		Next
+
+	End
+	
+	Method FindExtensions( finder:NodeFinder,ctype:ClassType )
+	
+		Local nmspace:=Self
+		
+		While nmspace
+		
+			nmspace.GetExtensions( finder,ctype )
+			
+			nmspace=Cast<NamespaceScope>( nmspace.outer )
+		Wend
+		
 	End
 
 End

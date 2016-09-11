@@ -227,6 +227,8 @@ Function FuncName:String( func:FuncValue )
 
 		Local sym:="m_"+MungIdent( fdecl.ident )
 		
+		If fdecl.ident="to" sym+="_"+MungArg( func.ftype.retType )
+
 '		hopefully not necessary!		
 		If func.types sym+=MungArgs( func.types )
 
