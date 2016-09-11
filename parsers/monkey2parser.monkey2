@@ -200,7 +200,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Method ExtractIdent(word:String, line:String)
 		
 		Select word
-		Case "class","struct","enum","global","const","method","function","property"
+		Case "class","interface","struct","enum","global","const","method","function","property"
 		Default
 			Return
 		End

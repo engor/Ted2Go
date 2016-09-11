@@ -115,7 +115,6 @@ End
 
 Interface ICodeParser
 
-	'Method Reset(filePath:String)
 	Method Parse(text:String, filePath:String)
 	Property Items:List<ICodeItem>()
 	
@@ -132,10 +131,6 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 		Return _items
 	End
 	
-	Method Reset(filePath:String) Virtual
-	
-	End
-	
 	
 	Protected
 	
@@ -144,12 +139,9 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 	End
 	
 	
-	Protected
+	Private
 	
 	Field _items := New List<ICodeItem>
-	
-	
-	Private
 	
 End
 

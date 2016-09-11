@@ -237,11 +237,12 @@ Class CodeDocument Extends Ted2Document
 	
 		Local text:=_doc.Text
 		
+		Local ok := stringio.SaveString( text,Path )
+	
 		'code parser - reparse
 		ParsersManager.Get(FileType).Parse(text, Path)
-		
-		Return stringio.SaveString( text,Path )
-	
+				
+		Return ok
 	End
 	
 	Method OnCreateView:View() Override
