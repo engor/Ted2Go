@@ -53,7 +53,7 @@ template<class T,int D> class bbArray : public bbGCNode{
 		return r;
 	}
 	
-	template<class C,class...Args> static bbArray *create( std::initializer_list<C> init,Args...args ){
+	template<class...Args> static bbArray *create( std::initializer_list<T> init,Args...args ){
 	
 		int sizes[]{ args... };
 		for( int i=1;i<D;++i ) sizes[i]*=sizes[i-1];

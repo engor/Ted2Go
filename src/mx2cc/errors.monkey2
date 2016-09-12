@@ -124,6 +124,7 @@ End
 
 Function SemantError( func:String )
 	Print "~n".Join( GetDebugStack() )
+	DebugStop()
 	Throw New SemantEx( func+" Internal Error" )
 End
 

@@ -98,7 +98,6 @@ Class NamespaceScope Extends Scope
 		For Local ext:=Eachin classexts
 		
 			If ext.IsGeneric
-				continue
 				Local etype:=ctype
 				While etype
 					If etype.instanceOf And etype.instanceOf.Equals( ext.superType.instanceOf )

@@ -37,7 +37,10 @@ Class VarValue Extends Value
 		Self.transFile=scope.FindFile().fdecl
 		Self.cscope=Cast<ClassScope>( scope )
 		
-		If vdecl.kind="global" Or vdecl.kind="local" Or vdecl.kind="param" flags|=VALUE_LVALUE|VALUE_ASSIGNABLE
+		Select vdecl.kind
+		Case "global","local","param"
+			flags|=VALUE_LVALUE|VALUE_ASSIGNABLE
+		End
 	End
 	
 	Method New( kind:String,ident:String,init:Value,scope:Scope )
@@ -52,13 +55,20 @@ Class VarValue Extends Value
 		Self.cscope=Cast<ClassScope>( scope )
 		Self.init=init
 		
-		If vdecl.kind="global" Or vdecl.kind="local" Or vdecl.kind="param" flags|=VALUE_LVALUE|VALUE_ASSIGNABLE
+		Select vdecl.kind
+		Case "global","local","param"
+			flags|=VALUE_LVALUE|VALUE_ASSIGNABLE
+		End
 		
 		semanted=Self
 	End
 	
 	Property IsField:Bool()
 		Return vdecl.kind="field"
+	End
+	
+	Property IsStatic:Bool()
+		Return vdecl.kind="const" Or vdecl.kind="global"
 	End
 	
 	Method OnSemant:SNode() Override
@@ -134,8 +144,8 @@ Class MemberVarValue Extends Value
 		
 		If member.vdecl.kind="field"
 			If member.cscope.ctype.IsStruct
-				If instance.IsLValue flags|=VALUE_LVALUE
-				If instance.IsAssignable flags|=VALUE_ASSIGNABLE
+				If instance.IsLValue flags|=VALUE_LVALUE|VALUE_ASSIGNABLE
+'				If instance.IsAssignable flags|=VALUE_ASSIGNABLE
 			Else
 				flags|=VALUE_LVALUE|VALUE_ASSIGNABLE
 			Endif
@@ -143,7 +153,7 @@ Class MemberVarValue Extends Value
 	End
 	
 	Method ToString:String() Override
-		Return instance.ToString()+"."+type.ToString()
+		Return instance.ToString()+"."+member.vdecl.ident
 	End
 	
 	Property HasSideEffects:Bool() Override

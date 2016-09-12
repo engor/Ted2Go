@@ -1,14 +1,8 @@
 
-#Import "<std>"
-
-Using std..
-
-Const TestDoc:="
-Hello World!
-"
- 
-Function Main()
-
-	Print "TestDoc="+TestDoc+"END"
-	
-End
+Enum EntityState
+	ENTERING
+	UPDATING
+	EXPLODING
+	ENDING
+	DONE
+End Enum

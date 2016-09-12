@@ -48,8 +48,8 @@ Class FuncValue Extends Value
 	
 	Field params:VarValue[]
 	
-	Field selfType:ClassType
 	Field selfValue:Value
+	Field selfType:ClassType
 	
 	Field instances:Stack<FuncValue>
 	
@@ -133,6 +133,14 @@ Class FuncValue Extends Value
 		Return fdecl.kind="function"
 	End
 	
+	Property IsStatic:Bool()
+		Return fdecl.kind<>"method" Or types Or fdecl.IsExtension
+	End
+	
+	Property IsMember:Bool()
+		Return Not IsStatic
+	End
+	
 	Property IsExtension:Bool()
 		Return (fdecl.kind="method" And types) Or fdecl.IsExtension
 	End
@@ -170,24 +178,12 @@ Class FuncValue Extends Value
 		'Semant selfType and selfValue
 		'
 		If IsCtor Or IsMethod
-	
-			If IsExtension
+		
+			selfType=cscope.ctype
+
+			If selfType.cdecl.IsExtension selfType=selfType.superType
 			
-				selfType=cscope.ctype
-				
-				If selfType.cdecl.IsExtension selfType=selfType.superType
-				
-'				If fdecl.IsExtension selfType=selfType.superType
-			
-				selfValue=New VarValue( "capture","self",New LiteralValue( selfType,"" ),scope )
-				
-			Else
-			
-				selfType=cscope.ctype
-			
-				selfValue=New SelfValue( selfType )
-				
-			Endif
+			selfValue=New SelfValue( selfType,Self )
 			
 		Else If IsLambda
 		
@@ -195,16 +191,20 @@ Class FuncValue Extends Value
 			
 			If selfValue
 			
-				selfValue=New VarValue( "capture","self",selfValue,block )
+				Local selfVar:=New VarValue( "capture","self",selfValue,block )
+				captures.Push( selfVar )
 				
-				captures.Push( Cast<VarValue>( selfValue ) )
+				selfValue=selfVar
+				selfType=Cast<ClassType>( selfValue.type )
+				
 			Endif
 		
 		Endif
 		
 		'That's it for generic funcs
 		'
-		If block.IsGeneric 
+		If block.IsGeneric
+			used=True
 			Return Self
 		Endif
 		
@@ -287,13 +287,19 @@ Class FuncValue Extends Value
 		Endif
 		
 		If IsLambda
+		
 			used=True
 			semanted=Self
 			SemantStmts()
-		Else If fdecl.IsExtern
+			
+		Else If fdecl.IsExtern 
+		
 			used=True
+			
 		Else If Not types
+		
 			Used()
+
 		Endif
 		
 		Return Self
@@ -374,39 +380,6 @@ Class FuncValue Extends Value
 			Catch ex:SemantEx
 			End
 		Next
-		
-		#rem
-		
-		If IsCtor Or IsMethod
-	
-			If IsExtension
-			
-				Local ctype:=cscope.ctype
-				
-				If fdecl.IsExtension ctype=ctype.superType
-			
-				selfValue=New VarValue( "capture","self",New LiteralValue( ctype,"" ),scope )
-				
-			Else
-			
-				selfValue=New SelfValue( cscope.ctype )
-				
-			Endif
-			
-		Else If IsLambda
-		
-			selfValue=Cast<Block>( scope ).func.selfValue
-			
-			If selfValue
-			
-				selfValue=New VarValue( "capture","self",selfValue,block )
-				
-				captures.Push( Cast<VarValue>( selfValue ) )
-			Endif
-		
-		Endif
-		
-		#end
 		
 	End
 	

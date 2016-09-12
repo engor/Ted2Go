@@ -64,7 +64,7 @@ Class EnumType Extends Type
 					End
 				Endif
 				
-				Local value:=New LiteralValue( Self,String( nextInit  ) )
+				Local value:=New LiteralValue( Self,String( nextInit ) )
 				
 				scope.Insert( decl.ident,value )
 				

@@ -104,7 +104,6 @@ Class Translator_CPP Extends Translator
 		For Local vvar:=Eachin fdecl.globals
 			Uses( vvar.type )
 			Local proto:=VarProto( vvar )
-'			If IsStruct( vvar.type ) proto+="( bbNullCtor )"
 			Emit( proto+";" )
 		Next
 		
@@ -144,20 +143,6 @@ Class Translator_CPP Extends Translator
 		If Not name Return TransType( type )
 		
 		Return "bbGCVar<"+name+">"
-	
-		#rem
-		Local ctype:=TCast<ClassType>( type )
-		If ctype And (ctype.cdecl.kind="class" Or ctype.cdecl.kind="interface")
-			Return "bbGCVar<"+ClassName( ctype )+">"
-		Endif
-		
-		Local atype:=TCast<ArrayType>( type )
-		If atype
-			Return "bbGCVar<"+ArrayName( atype )+">"
-		Endif
-		
-		Return TransType( type )
-		#end
 	End
 	
 	Method VarType:String( vvar:VarValue )
@@ -176,7 +161,7 @@ Class Translator_CPP Extends Translator
 			Return "bbGCRootVar<"+name+">"
 		End
 		
-		TransError( "Translator.VarType (2)" )
+		TransError( "Translator.VarType()" )
 		Return ""
 	End
 
@@ -200,7 +185,10 @@ Class Translator_CPP Extends Translator
 		If Not func.IsCtor retType=TransType( ftype.retType )+" "
 
 		Local params:=""
-		If func.IsExtension params=TransType( func.selfType )+" l_self"
+		If func.IsExtension
+			Local tself:=func.selfType.IsStruct ? "&l_self" Else "l_self"
+			params=TransType( func.selfType )+" "+tself
+		Endif
 
 		For Local p:=Eachin func.params
 			If params params+=","
@@ -215,11 +203,11 @@ Class Translator_CPP Extends Translator
 		Endif
 		
 		Local ident:=FuncName( func )
-		If Not header And fdecl.kind="method" And Not func.IsExtension ident=ClassName( ctype )+"::"+ident
+		If Not header And func.IsMember ident=ClassName( ctype )+"::"+ident
 		
 		Local proto:=retType+ident+"("+params+")"
 		
-		If header And func.IsMethod And Not func.IsExtension
+		If header And func.IsMember
 			If fdecl.IsAbstract Or fdecl.IsVirtual Or ctype.IsVirtual
 				proto="virtual "+proto
 				If fdecl.IsAbstract proto+="=0"
@@ -354,16 +342,7 @@ Class Translator_CPP Extends Translator
 		EmitBr()		
 		For Local vvar:=Eachin ctype.fields
 
-			#rem			
-			If cdecl.kind="struct"
-				Uses( vvar.type )
-			Else
-				Refs( vvar.type )
-			Endif
-			#end
-			
 			Refs( vvar.type )
-
 			If IsGCType( vvar.type ) needsMark=True
 			
 			Local proto:=VarProto( vvar )
@@ -418,6 +397,7 @@ Class Translator_CPP Extends Translator
 			
 			Refs( func.ftype )
 			Emit( FuncProto( func,true )+";" )
+
 		Next
 		
 		'Emit non-ctor methods
@@ -431,6 +411,7 @@ Class Translator_CPP Extends Translator
 			
 			Refs( func.ftype )
 			Emit( FuncProto( func,True )+";" )
+
 		Next
 		
 		If cdecl.kind="struct"
@@ -945,17 +926,17 @@ Class Translator_CPP Extends Translator
 		
 		Refs( vvar.type )
 		
-		Local dbvar:=""
+		Local tvar:=""
 		
 		If vdecl.kind="local" And IsGCType( vvar.type )
 		
-			dbvar=InsertGCTmp( vvar )
+			tvar=InsertGCTmp( vvar )
 
-			If vvar.init Emit( dbvar+"="+Trans( vvar.init )+";" )
+			If vvar.init Emit( tvar+"="+Trans( vvar.init )+";" )
 
 		Else
 		
-			dbvar=VarName( vvar )
+			tvar=VarName( vvar )
 			
 			Local type:=VarType( vvar )
 			If vdecl.kind="global" Or vdecl.kind="const" type="static "+type
@@ -963,11 +944,11 @@ Class Translator_CPP Extends Translator
 			Local init:="{}"
 			If vvar.init init="="+Trans( vvar.init )
 			
-			Emit( type+" "+dbvar+init+";" )
+			Emit( type+" "+tvar+init+";" )
 			
 		Endif
 		
-		If debug And vdecl.kind="local" Emit( "bbDBLocal(~q"+vvar.vdecl.ident+"~q,&"+dbvar+");" )
+		If debug And vdecl.kind="local" Emit( "bbDBLocal(~q"+vvar.vdecl.ident+"~q,&"+tvar+");" )
 
 	End
 	
@@ -993,6 +974,7 @@ Class Translator_CPP Extends Translator
 	End
 
 	Method EmitStmt( stmt:EvalStmt )
+	
 		Emit( Trans( stmt.value )+";" )
 	End
 	
@@ -1216,9 +1198,11 @@ Class Translator_CPP Extends Translator
 	
 	Method Trans:String( value:UpCastValue )
 	
-		Local ctype:=TCast<ClassType>( value.value.type )
-		If ctype Uses( ctype )
-		
+		Uses( value.type )
+	
+'		Local ctype:=TCast<ClassType>( value.value.type )
+'		If ctype Uses( ctype )
+
 		Local t:="("+Trans( value.value )+")"
 		
 		If IsValue( value.type ) Return TransType( value.type )+t
@@ -1228,9 +1212,11 @@ Class Translator_CPP Extends Translator
 	
 	Method Trans:String( value:ExplicitCastValue )
 	
+		Uses( value.type )
+	
 		Local ctype:=TCast<ClassType>( value.type )
 		If ctype 
-			Uses( ctype )
+'			Uses( ctype )
 			Return "bb_object_cast<"+ClassName( ctype )+"*>("+Trans( value.value )+")"
 		Endif
 		
@@ -1250,6 +1236,8 @@ Class Translator_CPP Extends Translator
 			If ptype=Type.DoubleType Return "0.0f"
 			If ptype=Type.BoolType Return "false"
 		Endif
+		
+		Refs( type )
 
 		Local etype:=TCast<EnumType>( type )
 		If etype Return EnumName( etype )+"(0)"
@@ -1274,6 +1262,8 @@ Class Translator_CPP Extends Translator
 			Return "BB_T("+EnquoteCppString( value.value )+")"
 		End
 		
+		Refs( value.type )
+		
 		Local etype:=TCast<EnumType>( value.type )
 		If etype Return EnumValueName( etype,value.value )
 		
@@ -1283,23 +1273,31 @@ Class Translator_CPP Extends Translator
 	End
 	
 	Method Trans:String( value:SelfValue )
-		If IsStruct( value.ctype ) Return "(*this)"
+	
+		If value.func.IsExtension Return "l_self"
+		
+		If value.ctype.IsStruct Return "(*this)"
+		
 		Return "this"
 	End
 	
 	Method Trans:String( value:SuperValue )
-		Local type:=ClassName( value.ctype )
-		If IsStruct( value.ctype ) Return "(*static_cast<"+type+"*>(this))"
-		Return "static_cast<"+type+"*>(this)"
+	
+		Uses( value.ctype )
+		
+		Local cname:=ClassName( value.ctype )
+		
+		If IsStruct( value.ctype ) Return "(*static_cast<"+cname+"*>(this))"
+		
+		Return "static_cast<"+cname+"*>(this)"
 	End
 	
 	Method TransMember:String( instance:Value,member:Value )
 	
-		Local ctype:=TCast<ClassType>( instance.type )
-		If ctype Uses( ctype )
-
+		Uses( instance.type )
+		
 		Local supr:=Cast<SuperValue>( instance )
-		If supr Return ClassName( TCast<ClassType>( supr.type ) )+"::"+Trans( member )
+		If supr Return ClassName( supr.ctype )+"::"+Trans( member )
 		
 		Local tinst:=Trans( instance )
 		Local tmember:=Trans( member )
@@ -1311,28 +1309,33 @@ Class Translator_CPP Extends Translator
 		Return tinst+"->"+tmember
 	End
 	
+	Method TransInvokeMember:String( instance:Value,member:FuncValue,args:Value[] )
+
+		Uses( instance.type )
+	
+		If member.IsExtension
+			
+			Local tinst:=Trans( instance )
+			
+			If member.selfType.IsStruct
+				If Not instance.IsLValue tinst="("+AllocGCTmp( instance.type )+"="+tinst+")"
+			Else
+				If IsVolatile( instance ) tinst="("+AllocGCTmp( instance.type )+"="+tinst+")"
+			Endif
+			
+			If args tinst+=","
+				
+			Return Trans( member )+"("+tinst+TransArgs( args )+")"
+		Endif
+			
+		Return TransMember( instance,member )+"("+TransArgs( args )+")"
+	End
+	
 	Method Trans:String( value:InvokeValue )
 	
 		Local mfunc:=Cast<MemberFuncValue>( value.value )
 		
-		If mfunc
-		
-			Local instance:=mfunc.instance
-			Local member:=mfunc.member
-			
-			If member.IsExtension
-			
-				Refs( member )
-
-				Local tinst:=Trans( instance )
-				If IsVolatile( instance ) tinst="("+AllocGCTmp( instance.type )+"="+tinst+")"
-				If value.args tinst+=","
-				
-				Return Trans( member )+"("+tinst+TransArgs( value.args )+")"
-			Endif
-			
-			Return TransMember( instance,member )+"("+TransArgs( value.args )+")"
-		Endif
+		If mfunc Return TransInvokeMember( mfunc.instance,mfunc.member,value.args )
 		
 		Return Trans( value.value )+"("+TransArgs( value.args )+")"
 	End
@@ -1344,7 +1347,8 @@ Class Translator_CPP Extends Translator
 
 	Method Trans:String( value:MemberFuncValue )
 
-		Local ctype:=value.member.scope.FindClass()
+		Local ctype:=value.member.cscope.ctype
+		
 		Uses( ctype )
 
 		Local cname:=ClassName( ctype )
@@ -1355,19 +1359,21 @@ Class Translator_CPP Extends Translator
 	Method Trans:String( value:NewObjectValue )
 	
 		Local ctype:=value.ctype
+		
+		Local cname:=ClassName( ctype )
 		Uses( ctype )
 	
 		If ctype.ExtendsVoid
-			Return "new "+ClassName( ctype )+"("+TransArgs( value.args )+")"
+			Return "new "+cname+"("+TransArgs( value.args )+")"
 		Endif
 		
 		If IsStruct( ctype )
-			If Not value.args Return ClassName( ctype )+"(bbNullCtor)"
-			If value.args[0].type.Equals( ctype ) Return ClassName( ctype )+"("+TransArgs( value.args )+",bbNullCtor)"
-			Return ClassName( ctype )+"("+TransArgs( value.args )+")"
+			If Not value.args Return cname+"(bbNullCtor)"
+			If value.args[0].type.Equals( ctype ) Return cname+"("+TransArgs( value.args )+",bbNullCtor)"
+			Return cname+"("+TransArgs( value.args )+")"
 		Endif
 		
-		Return "bbGCNew<"+ClassName( ctype )+">("+TransArgs( value.args )+")"
+		Return "bbGCNew<"+cname+">("+TransArgs( value.args )+")"
 	End
 	
 	Method Trans:String( value:NewArrayValue )
@@ -1464,12 +1470,11 @@ Class Translator_CPP Extends Translator
 	
 	Method Trans:String( value:FuncValue )
 	
+		Refs( value )
+	
 		If value.fdecl.kind="lambda" 
-			Refs( value.ftype )
 			Return EmitLambda( value )
 		Endif
-		
-		Refs( value )
 		
 		Return FuncName( value )
 	End
@@ -1578,6 +1583,7 @@ Class Translator_CPP Extends Translator
 	End
 	
 	Method ArrayName:String( type:ArrayType )
+		Refs( type )
 		If type.rank=1 Return "bbArray<"+ElementType( type.elemType )+">"
 		Return "bbArray<"+ElementType( type.elemType )+","+type.rank+">"
 	End

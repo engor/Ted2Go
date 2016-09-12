@@ -40,6 +40,11 @@ int system_( const char *cmd ){
 		si.hStdError=GetStdHandle( STD_ERROR_HANDLE );
 	}
 	
+	if( GetConsoleWindow() ){
+
+		flags=0;
+	}
+	
 	if( !CreateProcessA( 0,(LPSTR)tmp.c_str(),0,0,inherit,flags,0,0,&si,&pi ) ) return -1;
 
 	WaitForSingleObject( pi.hProcess,INFINITE );

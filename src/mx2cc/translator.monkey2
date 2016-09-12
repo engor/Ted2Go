@@ -389,38 +389,25 @@ Class Translator
 	Method Refs( vvar:VarValue )
 	
 		If vvar.vdecl.IsExtern Uses( vvar.transFile ) ; Return
-	
-		Select vvar.vdecl.kind
-		Case "field"
-			Refs( vvar.type )
-			Uses( vvar.scope.FindClass() )
-		Case "const","global"
+		
+		If vvar.IsStatic
 			If AddRef( vvar ) Return
 			_refsVars.Push( vvar )
-			Refs( vvar.type )
-		Case "local","param","capture"
-		Default
-			Throw New TransEx( "Trans.Refs() VarValue '"+String.FromCString( vvar.typeName() )+"' not recognized" )
 		End
+		
+		Refs( vvar.type )
 	End
 	
 	Method Refs( func:FuncValue )
-
-		Local fdecl:=func.fdecl
-			
-		If fdecl.IsExtern Uses( func.transFile ) ; Return
+	
+		If func.fdecl.IsExtern Uses( func.transFile ) ; Return
 		
-		If fdecl.kind="function" Or func.IsExtension
+		If func.IsStatic
 			If AddRef( func ) Return
 			_refsFuncs.Push( func )
-			Refs( func.ftype )
-		Else If fdecl.kind="method"
-			Uses( func.scope.FindClass() )
-			Refs( func.ftype )
-		Else If fdecl.kind="lambda"
-		Else
-			Throw New TransEx( "Trans.Refs() FuncValue '"+String.FromCString( func.typeName() )+"' not recognized" )
-		End
+		Endif
+		
+		Refs( func.ftype )
 	End
 	
 	Method Refs( type:Type )
@@ -464,11 +451,20 @@ Class Translator
 	End
 	
 	Method Uses( type:Type )
+
 		Local ctype:=TCast<ClassType>( type )
-		If ctype Uses( ctype )
+		If ctype 
+			Uses( ctype )
+			Return
+		Endif
 		
 		Local atype:=TCast<ArrayType>( type )
-		If atype Uses( atype.elemType )
+		If atype
+			Uses( atype.elemType )
+			Return
+		Endif
+		
+		Refs( type )
 	End
 	
 	Method Uses( ctype:ClassType )

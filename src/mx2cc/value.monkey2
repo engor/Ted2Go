@@ -188,12 +188,15 @@ End
 Class SelfValue Extends Value
 
 	Field ctype:ClassType
+	Field func:FuncValue
 	
-	Method New( ctype:ClassType )
+	Method New( ctype:ClassType,func:FuncValue )
 		Self.type=ctype
 		Self.ctype=ctype
+		Self.func=func
 		
-		If ctype.IsStruct flags|=VALUE_LVALUE|VALUE_ASSIGNABLE
+		If ctype.IsStruct flags|=VALUE_LVALUE
+'		If ctype.IsStruct And Not func.IsExtension flags|=VALUE_LVALUE
 	End
 	
 	Method ToString:String() Override

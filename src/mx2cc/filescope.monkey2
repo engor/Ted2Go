@@ -143,7 +143,7 @@ Class FileScope Extends Scope
 	End
 	
 	Method FindExtensions:SNode( finder:NodeFinder,ctype:ClassType )
-
+	
 		'Search nmspace hierarchy
 		'		
 		nmspace.FindExtensions( finder,ctype )

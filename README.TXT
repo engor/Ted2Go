@@ -1,23 +1,26 @@
 
-
 ***** Welcome to Monkey2! *****
 
-WARNING: The master branch is super-volatile. Grabbing the most recently tagged branch is recommended if you just want to monkey2 a try.
+W A R N I N G ! The master branch is super-volatile. Grabbing the most recently tagged version is
+recommended if you just want to give monkey2 a try.
+
+Only tagged releases include synced binaries of the compiler. If you pull from master,
+you may or may not have to 'updatemx2cc' before (or after) building everything else.
 
 
 ***** Building monkey2 on Windows *****
 
-1) Install the mingw-64 compiler. Mingw-64 is available here: 
-
-https://sourceforge.net/projects/mingw-w64/
-
-When installing, you should select 'i686' for 'architecture', 'posix' for 'threads' and 'dwarf' for 'exception'.
-
-There is also a self-extracting archive of mingw-64 that has been tested with monkey2 here:
+1) Install the mingw-64 compiler. There is a self-extracting archive of mingw-64 that has been tested with monkey2 here:
 
 http://www.monkey-x.com/mak/devtools/i686-5.3.0-posix-dwarf-rt_v4-rev0.exe
 
 If you install this to the monkey2 'devtools' directory, the following steps should 'just work'.
+
+The general release of mingw-64 is available here: 
+
+https://sourceforge.net/projects/mingw-w64/
+
+When installing, you should select 'i686' for 'architecture', 'posix' for 'threads' and 'dwarf' for 'exception'.
 
 2) Open a command prompt and change to the 'monkey2\scripts' directory.
 

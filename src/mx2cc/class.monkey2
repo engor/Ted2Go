@@ -455,20 +455,6 @@ Class ClassType Extends Type
 		If Not flist Return Null
 		
 		Return overload.FindOverload( flist.funcs,type,Null )
-		
-		#rem		
-		
-		If flist
-			Local func:=overload.FindOverload( flist.funcs,type,Null )
-			If func Return func
-		Endif
-		
-		flist=Cast<FuncList>( FileScope.FindExtension( "to",False,Self ) )
-		If Not flist Return Null
-		
-		Return overload.FindOverload( flist.funcs,type,Null )
-		#end
-		
 	End
 	
 	Method DistanceToBase:Int( type:Type )
@@ -505,7 +491,7 @@ Class ClassType Extends Type
 		If dist>=0 Return dist
 		
 		'Cast to bool
-		If type=BoolType 
+		If type=BoolType
 			If IsClass Or IsInterface Return MAX_DISTANCE
 			Return -1
 		Endif
@@ -533,11 +519,13 @@ Class ClassType Extends Type
 		If dist>=0 Return New UpCastValue( type,rvalue )
 		
 		'Cast to bool
-		If type=BoolType Return New UpCastValue( type,rvalue )
-		
-		'Operator To:
-		Local func:=FindToFunc( type )
-		If func Return func.ToValue( rvalue ).Invoke( Null )
+		If type=BoolType
+			If IsClass Or IsInterface Return New UpCastValue( type,rvalue )
+		Else
+			'Operator To:
+			Local func:=FindToFunc( type )
+			If func Return func.ToValue( rvalue ).Invoke( Null )
+		Endif
 
 		Throw New SemantEx( "Unable to convert value from type '"+rvalue.type.ToString()+"' to type '"+type.ToString()+"'" )
 		Return Null

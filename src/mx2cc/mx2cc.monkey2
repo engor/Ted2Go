@@ -21,9 +21,9 @@ Global StartDir:String
 
 'Const TestArgs:="mx2cc makedocs mojo"
 
-Const TestArgs:="mx2cc makemods"
+'Const TestArgs:="mx2cc makemods"
 
-'Const TestArgs:="mx2cc makeapp -clean -config=debug -target=desktop src/mx2cc/test.monkey2"
+Const TestArgs:="mx2cc makeapp -clean -config=debug -target=desktop src/mx2cc/test.monkey2"
 
 'Const TestArgs:="mx2cc makeapp -clean -config=debug -target=desktop -product=D:/test_app/test.exe -assets=D:/test_app/assets -dlls=D:/test_app/ src/mx2cc/test.monkey2"
 

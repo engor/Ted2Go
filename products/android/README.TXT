@@ -9,8 +9,7 @@ Setting up for Android development:
 
 2) Install the 'NDK' (native development kit) using android studio via 'SDK Manager->SDK Tools'.
 
-3) Edit your monkey2 bin/env_windows.txt file and change the ndk-bundle 'PATH' setting so it points to the NDK. Or, you can just add the
-ndk-bundle dir to your system PATH.
+3) Edit your monkey2 bin/env_windows.txt file and change the ndk-bundle 'PATH' setting so it points to the NDK. Or, you can just add the ndk-bundle dir to your system PATH.
 
 4) Fire up Ted2 and select 'Build->Rebuild Modules->Android'. Wait...
 
