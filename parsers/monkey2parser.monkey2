@@ -16,13 +16,14 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return "monkey2"
 	End
 	
-	Method Parse(text:String, filePath:String)
-	
-		If Not _inited
-			_inited = True
-			'ParseModules()
-		End
+	Method OnCreate() Override
 		
+		'ParseModules()
+		
+	End
+	
+	Method Parse(text:String, filePath:String)
+			
 		'chech did we already parse this file
 		Local time := GetFileTime(filePath)
 		
@@ -59,8 +60,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 		Next
 		
-	End
-	
+
+	End 	
 		
 	Private
 	
@@ -73,7 +74,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Field _namespace:String
 	Field _filePath:String, _fileDir:String
 	Field _files := New StringMap<FileInfo>
-	Field _inited := False
 	Field _itemsMap := New StringMap<ICodeItem> 'for fast checking of duplicates
 	Field _insideRem := False 'is rem block opened
 	Field _insideEnum := False
@@ -109,6 +109,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 			text = text.Slice(0, comPos) 'remove all after comment
 		Endif
 		
+		text = text.TrimEnd()
+		
 		Local p := text.Find(" ")
 				
 		Local word := (p > 0) ? text.Slice(0,p) Else text 'first word
@@ -116,6 +118,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 		If word = "" Return
 						
 		word = word.ToLower()
+		
+		'Print "word: '"+word+"'"
 		
 		'commented block
 		If _insideRem
@@ -188,7 +192,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		
 		Case "end"
-		
+			
 			If _scope <> Null
 				'If _insideInterface And _scope._kind = CodeItemKind.Interfacee
 					_insideInterface = False
@@ -285,14 +289,14 @@ Class Monkey2Parser Extends CodeParserPlugin
 							Else
 								type = "Int"
 							Endif
-			            Endif
-			            
-				    Else
-				    
-					    Local typeIdent := ParseIdent(type)
-					    
-					    If typeIdent = "True" Or typeIdent = "False"
-						    type = "Bool"
+						Endif
+						
+					Else
+					
+						Local typeIdent := ParseIdent(type)
+						
+						If typeIdent = "True" Or typeIdent = "False"
+							type = "Bool"
 						Elseif typeIdent = "Int"
 							type = "Int"
 						Elseif typeIdent = "Float"
@@ -300,20 +304,29 @@ Class Monkey2Parser Extends CodeParserPlugin
 						Elseif typeIdent = "Bool"
 							type = "Bool"
 						Endif
-						    
-				    Endif
-				    
+							
+					Endif
+					
 				Else
 					
 				Endif
 				
 				item = New CodeItem(ident)
-				item._type = type
+				item.Type = type
 				
 				' also need to check arrays
-				' and types which requeres refining after parsing all file
+				' and types which requires refining after parsing all file
 				
-				
+				If item <> Null
+					item.Namespac = _namespace
+					item.Indent = _indent
+					item.FilePath = _filePath
+					
+					AddItem(item)
+					
+					item = Null
+					
+				Endif
 				
 			Next
 			
@@ -328,9 +341,11 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		
 		If item <> Null
-			item._namespace = _namespace
-			item._indent = _indent
-		
+
+			item.Namespac = _namespace
+			item.Indent = _indent
+			item.FilePath = _filePath
+
 			AddItem(item)
 			
 			If isScope
@@ -385,7 +400,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local ident := ParseIdent(line)
 		
 		Local item := New CodeItem(ident)
-		item._namespace = _namespace
+		item.Namespac = _namespace
 		
 		AddItem(item)
 		
@@ -439,25 +454,25 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Method IsPosInsideOfQuotes:Bool(text:String, pos:Int)
 	
-	    Local i := 0
-	    Local n := text.Length
-	    if pos = 0 Or pos >= n Return False
-	    Local quoteCounter := 0
-	    While i < n
-	        Local c := text[i]
-	        If i = pos
-	            If quoteCounter Mod 2 = 0 'not inside of string
-	                Return False
-	            Else 'inside
-	                Return True
-	            Endif
-	        Endif
-	        If c = CHAR_DOUBLE_QUOTE
-	            quoteCounter += 1
-	        Endif
-	        i += 1
-	    Wend
-	    Return False
+		Local i := 0
+		Local n := text.Length
+		if pos = 0 Or pos >= n Return False
+		Local quoteCounter := 0
+		While i < n
+			Local c := text[i]
+			If i = pos
+				If quoteCounter Mod 2 = 0 'not inside of string
+					Return False
+				Else 'inside
+					Return True
+				Endif
+			Endif
+			If c = CHAR_DOUBLE_QUOTE
+				quoteCounter += 1
+			Endif
+			i += 1
+		Wend
+		Return False
 	End	
 	
 	Function ParseIdent:String(line:String)
@@ -476,96 +491,96 @@ Class Monkey2Parser Extends CodeParserPlugin
 	' check if char(') is inside of string or not
 	Function IndexOfCommentChar:Int(text:String)
 	
-	    Local i := 0
-	    Local n := text.Length
-	    Local quoteCounter := 0, lastCommentPos := -1
-	    
-	    While i < n
-	        Local c := text[i]
-	        If c = CHAR_DOUBLE_QUOTE
-	            quoteCounter += 1
-	        Endif
-	        If c = CHAR_SINGLE_QUOTE
-	            If quoteCounter Mod 2 = 0 'not inside of string, so comment starts from here
-	                lastCommentPos = i
-	                Exit
-	            Else 'comment char is between quoters, so that's regular string
-	                lastCommentPos = -i
-	            Endif
-	        Endif
-	        i += 1
-	    Wend
-	    return lastCommentPos
+		Local i := 0
+		Local n := text.Length
+		Local quoteCounter := 0, lastCommentPos := -1
+		
+		While i < n
+			Local c := text[i]
+			If c = CHAR_DOUBLE_QUOTE
+				quoteCounter += 1
+			Endif
+			If c = CHAR_SINGLE_QUOTE
+				If quoteCounter Mod 2 = 0 'not inside of string, so comment starts from here
+					lastCommentPos = i
+					Exit
+				Else 'comment char is between quoters, so that's regular string
+					lastCommentPos = -i
+				Endif
+			Endif
+			i += 1
+		Wend
+		return lastCommentPos
 	End
 	
 	#Rem split the line @text with params by comma and put result into @target
 	#End
 	Function ExtractParams(text:String, target:List<String>)
 	
-	    Local i := 0, prev := 0
-	    Local n := text.Length
-	    Local quoteCounter := 0, lessCounter := 0, squareCounter := 0, roundCounter := 0
-	    
-	    While i < n
-	        
-	        Local c := text[i]
-	        
-	        Select c
-	        
-	        Case CHAR_DOUBLE_QUOTE
-	            
-	            ' check for end of string
-	            i += 1
-	            While i < n And text[i] <> CHAR_DOUBLE_QUOTE
-		            i += 1
-		        Wend
-		    
-	        Case CHAR_LESS_BRACKET
-		        
-		        lessCounter += 1
-		    
-		    Case CHAR_MORE_BRACKET
-		        
-		        lessCounter -= 1
-		    
-		    Case CHAR_OPENED_SQUARE_BRACKET
-		        
-		        squareCounter += 1
-		    
-		    Case CHAR_CLOSED_SQUARE_BRACKET
-		        
-		        squareCounter -= 1
-		    
-		    Case CHAR_OPENED_ROUND_BRACKET
-		        
-		        roundCounter += 1
-		    
-		    Case CHAR_CLOSED_ROUND_BRACKET
-		        
-		        roundCounter -= 1
-		    
-		    Case CHAR_COMMA
-		        
-		        ' if we inside of <...> or [...] or (...)
-		        If lessCounter <> 0 Or squareCounter <> 0 Or roundCounter <> 0
-			        i += 1
-			        Continue
-			    Endif
-			    
-	            Local s := text.Slice(prev, i).Trim()
-	            target.AddLast(s)
-	            prev = i+1
-	            
-	        End
-	        i += 1
-	    Wend
-	    
-	    ' add last part
-	    If i > prev
-		    Local s := text.Slice(prev, n).Trim()
-            target.AddLast(s)
-	    Endif
-	    
+		Local i := 0, prev := 0
+		Local n := text.Length
+		Local quoteCounter := 0, lessCounter := 0, squareCounter := 0, roundCounter := 0
+		
+		While i < n
+			
+			Local c := text[i]
+			
+			Select c
+			
+			Case CHAR_DOUBLE_QUOTE
+				
+				' check for end of string
+				i += 1
+				While i < n And text[i] <> CHAR_DOUBLE_QUOTE
+					i += 1
+				Wend
+			
+			Case CHAR_LESS_BRACKET
+				
+				lessCounter += 1
+			
+			Case CHAR_MORE_BRACKET
+				
+				lessCounter -= 1
+			
+			Case CHAR_OPENED_SQUARE_BRACKET
+				
+				squareCounter += 1
+			
+			Case CHAR_CLOSED_SQUARE_BRACKET
+				
+				squareCounter -= 1
+			
+			Case CHAR_OPENED_ROUND_BRACKET
+				
+				roundCounter += 1
+			
+			Case CHAR_CLOSED_ROUND_BRACKET
+				
+				roundCounter -= 1
+			
+			Case CHAR_COMMA
+				
+				' if we inside of <...> or [...] or (...)
+				If lessCounter <> 0 Or squareCounter <> 0 Or roundCounter <> 0
+					i += 1
+					Continue
+				Endif
+				
+				Local s := text.Slice(prev, i).Trim()
+				target.AddLast(s)
+				prev = i+1
+				
+			End
+			i += 1
+		Wend
+		
+		' add last part
+		If i > prev
+			Local s := text.Slice(prev, n).Trim()
+			target.AddLast(s)
+		Endif
+		
 	End
 	
 End

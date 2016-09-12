@@ -28,19 +28,43 @@ End
 Interface ICodeItem
 	
 	Property Ident:String()
+	Setter(value:String)
+	
 	Property Indent:Int()
+	Setter(value:Int)
+	
 	Property Type:String()
+	Setter(value:String)
+	
 	Property Params:String[]()
+	Setter(value:String[])
+	
 	Property Kind:CodeItemKind()
+	Setter(value:CodeItemKind)
+	
+	Property KindStr:String()
+	Setter(value:String)
+	
 	Property Access:AccessMode()
+	Setter(value:AccessMode)
+	
 	Property Text:String()
+	Setter(value:String)
+	
 	Property Parent:ICodeItem()
 	Setter(value:ICodeItem)
+	
 	Property Children:List<ICodeItem>()
 	Setter(value:List<ICodeItem>)
+	
 	Property Namespac:String()
+	Setter(value:String)
+	
 	Property FilePath:String()
+	Setter(value:String)
+	
 	Property Scope:String()
+	
 	Method AddChild(item:ICodeItem)
 	
 End
@@ -54,41 +78,76 @@ Class CodeItem Implements ICodeItem
 	
 	Property Ident:String()
 		Return _ident
+	Setter(value:String)
+		_ident = value
 	End
+	
 	Property Indent:Int()
 		Return _indent
+	Setter(value:Int)
+		_indent = value
 	End
+	
 	Property Type:String()
 		Return _type
+	Setter(value:String)
+		_type = value
 	End
+	
 	Property Params:String[]()
 		Return _params
+	Setter(value:String[])
+		_params = value
 	End
+	
 	Property Kind:CodeItemKind()
 		Return _kind
+	Setter(value:CodeItemKind)
+		_kind = value
 	End
+	
+	Property KindStr:String()
+		Return _kindStr
+	Setter(value:String)
+		_kindStr = value
+	End
+	
 	Property Access:AccessMode()
 		Return _access
+	Setter(value:AccessMode)
+		_access = value
 	End
+	
 	Property Text:String()
 		Return _text
+	Setter(value:String)
+		_text = value
 	End
+	
 	Property Parent:ICodeItem()
 		Return _parent
 	Setter(value:ICodeItem)
 		SetParent(value)
 	End
+	
 	Property Children:List<ICodeItem>()
 		Return _children
 	Setter(value:List<ICodeItem>)
 		_children = value
 	End
+	
 	Property Namespac:String()
 		Return _namespace
+	Setter(value:String)
+		_namespace = value
 	End
+	
 	Property FilePath:String()
 		Return _filePath
+	Setter(value:String)
+		_filePath = value
 	End
+	
 	Property Scope:String()
 		Local s := Ident
 		Local i := Parent
@@ -111,13 +170,14 @@ Class CodeItem Implements ICodeItem
 	End
 	
 	
-	'Protected
+	Protected
 	
 	Field _ident:String
 	Field _indent:Int
 	Field _type:String
 	Field _params:String[]
 	Field _kind:CodeItemKind
+	Field _kindStr:String
 	Field _access:AccessMode
 	Field _text:String
 	Field _parent:ICodeItem

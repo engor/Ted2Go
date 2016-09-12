@@ -1,4 +1,5 @@
 
 *.buildv*
+*.products/
 
 /desktop.ini
