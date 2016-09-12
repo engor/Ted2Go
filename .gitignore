@@ -29,6 +29,7 @@ __MANPAGES__/
 /modules/lua
 /modules/wdw-game2d
 /modules/portmidi
+/modules/png2polygon
 
 /modules/module-manager/backups
 
