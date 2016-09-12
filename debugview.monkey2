@@ -143,7 +143,7 @@ Class DebugView Extends DockingView
 			
 		MainWindow.ShowOutputConsole()
 	
-		Local cmd:=RealPath( appFile )
+		Local cmd:="~q"+RealPath( appFile )+"~q"
 		
 		If config<>"debug"
 		
@@ -247,10 +247,10 @@ Class DebugView Extends DockingView
 								label+="="+value
 								scope=True
 							Else
-								label+="={null}"
+								label+="=Null"
 							Endif
-						endif
-					Endif
+						Endif
+					Endif					
 				Endif
 			Endif
 			
@@ -311,6 +311,8 @@ Class DebugView Extends DockingView
 		Next
 		
 		node.RemoveChildren( lines.Length )
+		
+		RequestRender()
 	End
 	
 	Method UpdateTree()
@@ -397,6 +399,8 @@ Class DebugView Extends DockingView
 		If func func.RemoveChildren( varIndex )
 		
 		root.RemoveChildren( funcIndex )
+		
+		RequestRender()
 	End
 	
 	Method DebugBegin()
