@@ -14,6 +14,11 @@ Class Ted2CodeTextView Extends CodeTextView
 		Document.TextHighlighter = Highlighter.Painter
 	End
 	
+	Property FilePath:String()
+		return _path
+	Setter(value:String)
+		_path = value
+	End
 	
 	Protected
 	
@@ -27,9 +32,10 @@ Class Ted2CodeTextView Extends CodeTextView
 		
 	End
 
-	private
+	Private
 	
 	Field _type:String
+	Field _path:String
 	
 End
 

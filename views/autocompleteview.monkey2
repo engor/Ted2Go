@@ -59,7 +59,7 @@ Class AutocompleteDialog Extends DialogExt
 		Return _ident
 	End
 	
-	Method Show(ident:String, fileType:String)
+	Method Show(ident:String, filePath:String, fileType:String, docLine:Int)
 		
 		ident = ident.ToLower()
 		
@@ -73,6 +73,8 @@ Class AutocompleteDialog Extends DialogExt
 		If _keywords[fileType] = Null Then UpdateKeywords(fileType)
 		If _parsers[fileType] = Null Then UpdateParsers(fileType)
 			
+		Local parser := _parsers[fileType]
+		
 		Local result := New List<ListViewItem>
 		
 		'add keywords
@@ -84,8 +86,8 @@ Class AutocompleteDialog Extends DialogExt
 			End
 		Next
 		
-		'add parsed words
-		Local items := _parsers[fileType].Items
+		'add parsed words - from global scope
+		Local items := parser.Items
 		For Local i := Eachin items
 			Local txt := i.Ident.ToLower()
 			If txt.StartsWith(ident)
@@ -93,6 +95,9 @@ Class AutocompleteDialog Extends DialogExt
 			End
 		Next
 		
+		'check current scope
+		Local scope := parser.GetScope(filePath, docLine)
+		If scope <> Null Then Print "SCOPE: "+scope.Scope
 		
 		If IsOpened Then Hide() 'hide to re-layout on open
 		

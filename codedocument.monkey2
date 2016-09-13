@@ -19,6 +19,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		'very important to set FileType for init
 		'formatter, highlighter and keywords
 		FileType = doc.FileType
+		FilePath = doc.Path
 		
 		'AutoComplete
 		If AutoComplete = Null Then AutoComplete = New AutocompleteDialog("")
@@ -123,10 +124,10 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	Method ShowAutocomplete(ident:String = "")
 		'check ident
 		If ident = "" Then ident = IdentBeforeCursor()
-		'check scope
 		
 		'show
-		AutoComplete.Show(ident, FileType)
+		Local line := Document.FindLine(Cursor)
+		AutoComplete.Show(ident, FilePath, FileType, line)
 		
 		If AutoComplete.IsOpened
 			Local frame := AutoComplete.Frame

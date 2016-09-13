@@ -65,6 +65,12 @@ Interface ICodeItem
 	
 	Property Scope:String()
 	
+	Property ScopeStartLine:Int()
+	Setter(value:Int)
+	
+	Property ScopeEndLine:Int()
+	Setter(value:Int)
+	
 	Method AddChild(item:ICodeItem)
 	
 End
@@ -158,6 +164,18 @@ Class CodeItem Implements ICodeItem
 		Return s
 	End
 	
+	Property ScopeStartLine:Int()
+		Return _scopeStartLine
+	Setter(value:Int)
+		_scopeStartLine = value
+	End
+	
+	Property ScopeEndLine:Int()
+		Return _scopeEndLine
+	Setter(value:Int)
+		_scopeEndLine = value
+	End
+	
 	Method SetParent(parent:ICodeItem)
 		If Parent <> Null Then Parent.Children.Remove(Self)
 		_parent = parent
@@ -184,6 +202,7 @@ Class CodeItem Implements ICodeItem
 	Field _children:List<ICodeItem>
 	Field _namespace:String
 	Field _filePath:String
+	Field _scopeStartLine:Int, _scopeEndLine:Int
 	
 End
 
@@ -199,6 +218,7 @@ Interface ICodeParser
 
 	Method Parse(text:String, filePath:String)
 	Method IsPosInsideOfQuotes:Bool(text:String, pos:Int)
+	Method GetScope:ICodeItem(docPath:String, docLine:Int)
 	Property Items:List<ICodeItem>()
 	
 End
@@ -261,6 +281,9 @@ Class EmptyParser Implements ICodeParser
 	Method IsPosInsideOfQuotes:Bool(text:String, pos:Int)
 		Return False
 	End	
+	Method GetScope:ICodeItem(docPath:String, docLine:Int)
+		Return Null
+	End
 	
 	Private
 	

@@ -22,6 +22,35 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
+	Method GetScope:ICodeItem(docPath:String, docLine:Int)
+		'dummy check, need to store items lists by filePath
+		Local result:ICodeItem = Null
+		For Local i := Eachin Items
+			If i.FilePath <> docPath Continue 'skip
+			If docLine > i.ScopeStartLine And docLine < i.ScopeEndLine
+				result = i
+				Exit
+			Endif
+		Next
+		If result <> Null
+			Repeat
+				Local i := GetInnerScope(result, docLine)
+				If i = Null Exit
+				result = i
+			Forever
+		End
+		Return result
+	End
+	
+	Method GetInnerScope:ICodeItem(parent:ICodeItem, docLine:Int)
+		Local items := parent.Children
+		If items = Null Return Null
+		For Local i := Eachin items
+			If docLine > i.ScopeStartLine And docLine < i.ScopeEndLine Return i
+		Next
+		Return Null
+	End
+	
 	Method Parse(text:String, filePath:String)
 			
 		'chech did we already parse this file
@@ -56,7 +85,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		For Local k := 0 Until numLines
 			
 			Local txt := doc.GetLine(k)			
-			ParseLine(txt)
+			ParseLine(txt, k)
 			
 		Next
 		
@@ -79,6 +108,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Field _insideEnum := False
 	Field _insideInterface := False
 	Field _params := New List<String>
+	Field _docLine:Int
 	
 	
 	Method GetFileInfo:FileInfo(path:String)
@@ -90,14 +120,19 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return info
 	End
 	
-	Method ParseLine(text:String)
+	Method ParseLine(text:String, line:Int)
 	
 		
 		Local n := 0
+		Local len := text.Length
+		
 		'skip empty chars
-		While n < text.Length And text[n] <= 32
+		While n < len And text[n] <= 32
 			n += 1
 		Wend
+		
+		If n = len-1 Return 'empty line
+		
 		Local indent := n
 		
 		text = text.Slice(indent) 'remove indent
@@ -116,7 +151,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local word := (p > 0) ? text.Slice(0,p) Else text 'first word
 		
 		If word = "" Return
-						
+		
+		_docLine = line
+		
 		word = word.ToLower()
 		
 		'Print "word: '"+word+"'"
@@ -216,7 +253,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			'item._kind = CodeItemKind.Classs
 			isScope = True
 			If _scope <> Null
-				Print "class: "+ident+", "+_scope.Ident
+				'Print "inner class/struct: "+ident+", "+_scope.Ident
 			Endif
 			
 		Case "interface"
@@ -364,11 +401,12 @@ Class Monkey2Parser Extends CodeParserPlugin
 			'Print "push stack"
 		Endif
 		_scope = item
-		
+		_scope.ScopeStartLine = _docLine
 	End
 	
 	Method PopScope()
 		'Print "pop scope"
+		If _scope <> Null Then _scope.ScopeEndLine = _docLine
 		If _stack.Length > 0
 			_scope = _stack.Pop()
 		Else
