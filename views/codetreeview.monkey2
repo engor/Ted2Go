@@ -2,6 +2,6 @@
 Namespace ted2go
 
 
-Class CodeTreeView Extends TextView
+Class CodeTreeView Extends TreeView
 
 Endif

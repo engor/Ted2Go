@@ -1,5 +1,5 @@
 
-#If __TARGET__="desktop" and __HOSTOS__="windows"
+#If __TARGET__="windows"
 #Import "bin/wget.exe"
 #End
 
@@ -33,6 +33,11 @@
 #Import "eventfilters/textviewkeyeventfilter"
 #Import "eventfilters/monkey2keyeventfilter"
 
+#Import "buildproduct"
+#Import "editproductdialog"
+
+#Import "mx2ccenv"
+
 #Import "syntax/keywords"
 #Import "syntax/monkey2keywords"
 #Import "syntax/highlighter"
@@ -45,12 +50,17 @@
 #Import "views/textviewext"
 #Import "views/codetextview"
 #Import "views/consoleext"
+#Import "views/listview"
+#Import "views/dialogext"
+#Import "views/autocompleteview"
 
-#Import "analyzer/autocompleteview"
+#Import "parsers/parser"
+#Import "parsers/monkey2parser"
 
 #Import "utils/jsonutils"
 #Import "utils/utils"
 
+#Import "analyzer/analyzer"
 
 Namespace ted2go
 
@@ -59,9 +69,12 @@ Using mojo..
 Using mojox..
 
 
+Global AppTitle:String = "Ted2Go"
+
+
 Function Main()
 
-#if __TARGET__="desktop"
+#if __DESKTOP_TARGET__
 		
 	ChangeDir( AppDir() )
 	
@@ -80,12 +93,34 @@ Function Main()
 	Local jobj:=JsonObject.Load( "bin/ted2.state.json" )
 	If Not jobj jobj=New JsonObject
 	
-	Local rect:=New Recti( 64,64,64+960,64+800 )
-	If jobj.Contains( "windowRect" ) rect=ToRecti( jobj["windowRect"] )
+	Local flags:=WindowFlags.Resizable
+	
+	Local rect:Recti
+	
+	If jobj.Contains( "windowRect" ) 
+		rect=ToRecti( jobj["windowRect"] )
+	Else
+		rect=New Recti( 0,0,1024,768 )
+		flags|=WindowFlags.Center
+	Endif
 	
 	New AppInstance
 	
-	New MainWindowInstance( "Ted2Go",rect,WindowFlags.Resizable,jobj )
+	New MainWindowInstance( AppTitle,rect,flags,jobj )
+	
+	StartRedrawTimer()	
 	
 	App.Run()
+	
+	
+End
+
+
+Private
+
+'redraw app to see flashing cursor
+Function StartRedrawTimer()
+	Local timer := New Timer(5, Lambda()
+		App.RequestRender()
+	End)
 End

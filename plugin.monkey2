@@ -8,12 +8,21 @@ Class Plugin
 	
 		Return "<unititled plugin>"
 	End
-
+	
 	Function PluginsOfType<T>:T[]() Where T Extends Plugin
 		
 		Return Plugins<T>.Plugins().ToArray()
 	End
 	
+	'***** INTERNAL *****
+	Function CreatePlugins()
+	
+		For Local plugin:=Eachin PluginsOfType<Plugin>()
+			plugin.OnCreate()
+		Next
+	
+	End
+
 	
 	Protected
 	
@@ -25,6 +34,10 @@ Class Plugin
 	Method AddPlugin<T>( plugin:T ) Where T Extends Plugin
 	
 		Plugins<T>.Plugins().Add( plugin )
+	End
+	
+	Method OnCreate() Virtual
+	
 	End
 
 

@@ -2,6 +2,8 @@
 Namespace ted2go
 
 
+Global AutoComplete:AutocompleteDialog
+
 Class CodeDocumentView Extends Ted2CodeTextView
 
 	Method New( doc:CodeDocument )
@@ -18,6 +20,19 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		'formatter, highlighter and keywords
 		FileType = doc.FileType
 		
+		'AutoComplete
+		If AutoComplete = Null Then AutoComplete = New AutocompleteDialog("")
+		AutoComplete.OnChoosen += Lambda(text:String)
+			If App.KeyView = Self
+				SelectText(Cursor,Cursor-AutoComplete.Ident.Length)
+				ReplaceText(text)
+			Endif
+		End
+			
+	End
+	
+	Property CharsToShowAutoComplete:Int()
+		Return 2
 	End
 	
 	Protected
@@ -51,10 +66,92 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		Super.OnRenderContent( canvas )
 	End
 	
+	Method OnKeyEvent( event:KeyEvent ) Override
+		
+		'ctrl+space - show autocomplete list
+		If event.Type = EventType.KeyDown
+			Select event.Key
+			Case Key.Space
+				If event.Modifiers & Modifier.Control
+					ShowAutocomplete()
+					Return
+				Endif
+			Case Key.Backspace
+				If AutoComplete.IsOpened
+					Local ident := IdentBeforeCursor()
+					ident = ident.Slice(0,ident.Length-1)
+					If ident.Length > 0
+						ShowAutocomplete(ident)
+					Else
+						HideAutocomplete()
+					Endif
+				Endif
+			End
+		Endif
+		
+		Super.OnKeyEvent( event )
+		
+		'show autocomplete list after some typed chars
+		If event.Type = EventType.KeyChar
+			'preprocessor
+			If event.Text = "#"
+				ShowAutocomplete("#")
+			Else
+				Local ident := IdentBeforeCursor()
+				'Print "ident "+ident
+				If ident.Length >= CharsToShowAutoComplete
+					ShowAutocomplete(ident)
+				Else
+					HideAutocomplete()
+				Endif
+			Endif
+		Endif
+		
+	End
+	
+	Method OnContentMouseEvent( event:MouseEvent ) Override
+		
+		Select event.Type
+			Case EventType.MouseClick
+				HideAutocomplete()
+		End
+		
+		Super.OnContentMouseEvent(event)
+		
+	End
+	
+	Method ShowAutocomplete(ident:String = "")
+		'check ident
+		If ident = "" Then ident = IdentBeforeCursor()
+		'check scope
+		
+		'show
+		AutoComplete.Show(ident, FileType)
+		
+		If AutoComplete.IsOpened
+			Local frame := AutoComplete.Frame
+			
+			Local w := frame.Width
+			Local h := frame.Height
+			
+			frame.Left = CursorRect.Left+100
+			frame.Top = CursorRect.Top - Scroll.y
+			frame.Right = frame.Left+w
+			frame.Bottom = frame.Top+h
+			
+			AutoComplete.Frame = frame
+		Endif
+		
+	End
+	
+	Method HideAutocomplete()
+		AutoComplete.Hide()
+	End
+	
+	
 	Private
 	
 	Field _doc:CodeDocument
-	
 
 End
 
@@ -130,6 +227,9 @@ Class CodeDocument Extends Ted2Document
 		
 		_doc.Text=text
 		
+		'code parser
+		ParsersManager.Get(FileType).Parse(text, Path)
+		
 		Return True
 	End
 	
@@ -137,8 +237,12 @@ Class CodeDocument Extends Ted2Document
 	
 		Local text:=_doc.Text
 		
-		Return stringio.SaveString( text,Path )
+		Local ok := stringio.SaveString( text,Path )
 	
+		'code parser - reparse
+		ParsersManager.Get(FileType).Parse(text, Path)
+				
+		Return ok
 	End
 	
 	Method OnCreateView:View() Override

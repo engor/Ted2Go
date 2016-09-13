@@ -5,6 +5,7 @@ Namespace ted2go
 Interface IKeywords
 	Method Contains:Bool(word:String)
 	Method Get:String(word:String)
+	Method Values:String[]()
 End
 
 
@@ -19,6 +20,7 @@ Class Keywords Implements IKeywords
 			If kw.Length = 0 Continue
 			_keywords[kw.ToLower()] = kw
 		Next
+		_words = words
 	End
 	
 	Method Contains:Bool(word:String)
@@ -27,12 +29,26 @@ Class Keywords Implements IKeywords
 
 	Method Get:String(word:String)
 		Return _keywords[word.ToLower()]
-	End	
+	End 
+	
+	Method Values:String[]()
+		Return _words
+		#rem
+		Local arr := New String[_keywords.Count()]
+		Local k := 0
+		For Local i := Eachin _keywords.Values
+			arr[k] = i
+			k += 1
+		Next
+		Return arr
+		#end
+	End
 	
 	
 	Private
 	
 	Field _keywords := New StringMap<String>
+	Field _words:String[]
 	
 End
 

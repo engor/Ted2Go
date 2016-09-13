@@ -142,6 +142,21 @@ Class ProjectView Extends ScrollView
 					Alert( "Failed to delete file: '"+path+"'" )
 				End
 			
+				#rem
+				Local name := StripDir(path)
+				If name = "module.json"
+					menu.AddSeparator()
+			
+					menu.AddAction( "Rebuild module Debug" ).Triggered=Lambda()
+											
+					End
+					
+					menu.AddAction( "Rebuild module Release" ).Triggered=Lambda()
+											
+					End
+				Endif
+				#end
+				
 			Default
 			
 				Return

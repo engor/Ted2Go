@@ -23,9 +23,7 @@ Class TextViewExt Extends TextView
 		
 		If _animatedCursor = value Return
 		_animatedCursor=value
-		
-		If _cursorTimer Then _cursorTimer.Cancel()
-		If value Then _cursorTimer = New Timer(5, OnCursorTimer)
+	
 	End
 	
 	
@@ -207,6 +205,9 @@ Class TextViewExt Extends TextView
 				SelectWordUnderCursor()
 				Return
 			
+			Case EventType.MouseWheel 'little faster scroll
+		
+				Scroll -= New Vec2i( 0,RenderStyle.Font.Height*event.Wheel.Y*3 )
 		End
 
 		Super.OnContentMouseEvent(event)
@@ -246,12 +247,8 @@ Class TextViewExt Extends TextView
 	Private
 	
 	Field _animatedCursor:Bool
-	Field _cursorTimer:Timer
 	Field _lineInfo:TextLine
 	
-	Method OnCursorTimer()
-		RequestRender()
-	End
 	
 End
 

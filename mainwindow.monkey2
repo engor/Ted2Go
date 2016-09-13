@@ -29,6 +29,11 @@ Class MainWindowInstance Extends Window
 
 		_docsManager.CurrentDocumentChanged+=UpdateKeyView
 		
+		App.FileDropped+=Lambda( path:String )
+			Print "Dropped:"+path
+			_docsManager.OpenDocument( path,True )
+		End
+
 		_docsManager.DocumentAdded+=Lambda( doc:Ted2Document )
 			AddRecentFile( doc.Path )
 			UpdateRecentFilesMenu()
@@ -66,6 +71,7 @@ Class MainWindowInstance Extends Window
 		_tabMenu.AddAction( _fileActions.saveAs )
 		_tabMenu.AddSeparator()
 		_tabMenu.AddAction( _buildActions.lockBuildFile )
+		_tabMenu.AddAction( _buildActions.buildSettings )
 		
 		_docsTabView.RightClicked+=Lambda()
 			_tabMenu.Open()
@@ -148,7 +154,8 @@ Class MainWindowInstance Extends Window
 		_buildMenu=New Menu( "Build" )
 		_buildMenu.AddAction( _buildActions.buildAndRun )
 		_buildMenu.AddAction( _buildActions.build )
-		_buildMenu.AddSubMenu( _buildActions.settingsMenu )
+		_buildMenu.AddAction( _buildActions.buildSettings )
+		_buildMenu.AddSubMenu( _buildActions.targetMenu )
 		_buildMenu.AddSeparator()
 		_buildMenu.AddAction( _buildActions.nextError )
 		_buildMenu.AddSeparator()
@@ -193,8 +200,13 @@ Class MainWindowInstance Extends Window
 		ContentView=_contentView
 
 		LoadState( jobj )
+		
+		Plugin.CreatePlugins()
 
 		App.Idle+=OnAppIdle
+		
+		If GetFileType( "bin/ted2.state.json" )=FileType.None _helpActions.about.Trigger()
+		
 	End
 	
 	Method Terminate()
@@ -211,7 +223,8 @@ Class MainWindowInstance Extends Window
 		Local future:=New Future<String>
 		
 		App.Idle+=Lambda()
-			future.Set( requesters.RequestFile( title,path,save ) )
+		
+			future.Set( requesters.RequestFile( title,,save,path ) )
 		End
 		
 		Return future.Get()

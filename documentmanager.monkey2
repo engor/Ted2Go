@@ -64,9 +64,9 @@ Class DocumentManager
 		'
 		App.Idle+=Lambda()
 			If _currentDoc
-				MainWindow.Title="Ted2Go - "+_currentDoc.Path
+				MainWindow.Title = AppTitle+" - "+_currentDoc.Path
 			Else
-				MainWindow.Title="Ted2Go"
+				MainWindow.Title = AppTitle
 			Endif
 		End
 		
