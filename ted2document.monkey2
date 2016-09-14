@@ -13,8 +13,8 @@ Class Ted2Document
 	Method New( path:String )
 	
 		_path=path
-		_fileType = ExtractExt(path).Slice(1)
-		
+		_fileType = ExtractExt(path)
+				
 		_modTime=GetFileTime( _path )
 	End
 	
@@ -160,16 +160,19 @@ Class Ted2DocumentType Extends Plugin
 		ext=ext.ToLower()
 
 		Local types:=Plugin.PluginsOfType<Ted2DocumentType>()
-
+		Local defaultType:Ted2DocumentType = Null
+		
 		For Local type:=Eachin types
 		
 			For Local ext2:=Eachin type.Extensions	'Array.Contains() would be nice!
 			
 				If ext=ext2 Return type
-			
+				If ext2 = ".*" Then defaultType = type
 			Next
 			
 		Next
+		
+		If defaultType <> Null Return defaultType 'use it if there is no registered extension
 		
 		Return Null
 	End
@@ -195,6 +198,18 @@ Class Ted2DocumentType Extends Plugin
 		_exts=exts
 	End
 	
+	Method AddExtensions(exts:String[])
+		If _exts = Null
+			_exts = exts
+			Return
+		Endif
+		' check  for duplicates here?
+		Local arr := New String[_exts.Length+exts.Length]
+		_exts.CopyTo(arr,0,0,_exts.Length)
+		exts.CopyTo(arr,0,_exts.Length,exts.Length)
+		_exts = arr
+	End
+		
 	Method OnCreateDocument:Ted2Document( path:String ) Virtual
 	
 		Return Null	'should return hex editor!

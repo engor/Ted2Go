@@ -5,7 +5,7 @@ Namespace ted2go
 Class CppHighlighter Extends HighlighterPlugin
 
 	Property Name:String() Override
-		Return "cpp highlighter"
+		Return "CppHighlighter"
 	End
 
 	Method GetFileTypes:String[]() Override
@@ -13,13 +13,13 @@ Class CppHighlighter Extends HighlighterPlugin
 	End
 	
 	Method GetMainFileType:String() Override
-		Return "cpp"
+		Return _types[0]
 	End
 	
 	
 	Private
 	
-	Global _types := New String[]("cpp","h","hpp")
+	Global _types := New String[](".cpp",".h",".hpp")
 	Global _instance := New CppHighlighter
 		
 	Method New()

@@ -14,15 +14,6 @@ Class Plugin
 		Return Plugins<T>.Plugins().ToArray()
 	End
 	
-	'***** INTERNAL *****
-	Function CreatePlugins()
-	
-		For Local plugin:=Eachin PluginsOfType<Plugin>()
-			plugin.OnCreate()
-		Next
-	
-	End
-
 	
 	Protected
 	
@@ -73,11 +64,13 @@ Class PluginDependsOnFileType Extends Plugin Implements IDependsOnFileType
 		If GetMainFileType() = "*" Return True 'any files
 		Return Utils.ArrayContains( GetFileTypes(),fileType )
 	End
-	
+			
 End
 
 
 Interface IDependsOnFileType
+
 	Method GetFileTypes:String[]()
 	Method GetMainFileType:String()
+	
 End

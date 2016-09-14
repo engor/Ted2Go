@@ -82,7 +82,7 @@ Class PlainTextDocumentType Extends Ted2DocumentType
 	Method New()
 		AddPlugin( Self )
 		
-		Extensions=New String[](".txt" )
+		Extensions=New String[](".*" )
 	End
 	
 	Method OnCreateDocument:Ted2Document( path:String ) Override

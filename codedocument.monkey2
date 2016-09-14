@@ -2,7 +2,18 @@
 Namespace ted2go
 
 
-Global AutoComplete:AutocompleteDialog
+#Rem monkeydoc Add file extensions to open with CodeDocument.
+All plugins with keywords should use this func inside of them OnCreate() callback.
+#End
+Function RegisterCodeExtensions(exts:String[])
+	
+	Local plugs := Plugin.PluginsOfType<CodeDocumentType>()
+	If plugs = Null Return
+	Local p := plugs[0]
+	CodeDocumentTypeBridge.AddExtensions(p, exts)
+	
+End
+
 
 Class CodeDocumentView Extends Ted2CodeTextView
 
@@ -264,7 +275,7 @@ Class CodeDocumentType Extends Ted2DocumentType
 	Method New()
 		AddPlugin( Self )
 		
-		Extensions=New String[]( ".monkey2",".cpp",".h",".hpp",".hxx",".c",".cxx",".m",".mm",".s",".asm",".html",".js",".css",".php",".md",".xml",".ini",".sh",".bat",".glsl")
+		'Extensions=New String[]( ".monkey2",".cpp",".h",".hpp",".hxx",".c",".cxx",".m",".mm",".s",".asm",".html",".js",".css",".php",".md",".xml",".ini",".sh",".bat",".glsl")
 	End
 	
 	Method OnCreateDocument:Ted2Document( path:String ) Override
@@ -272,9 +283,23 @@ Class CodeDocumentType Extends Ted2DocumentType
 		Return New CodeDocument( path )
 	End
 	
+		
 	Private
 	
 	Global _instance:=New CodeDocumentType
 	
 End
 
+
+Private
+
+Global AutoComplete:AutocompleteDialog
+
+
+Class CodeDocumentTypeBridge Extends CodeDocumentType
+	
+	Function AddExtensions(inst:CodeDocumentType, exts:String[])
+		inst.AddExtensions(exts)
+	End
+	
+End

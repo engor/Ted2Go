@@ -60,7 +60,6 @@ Class KeywordsPlugin Extends PluginDependsOnFileType
 	End
 	
 	Property Keywords:IKeywords()
-		If _keywords = Null Then Init()
 		Return _keywords
 	End
 	
@@ -74,6 +73,21 @@ Class KeywordsPlugin Extends PluginDependsOnFileType
 	Method IsNeedLoadFromFile:Bool() Virtual
 		Return True
 	End 
+	
+	
+	Protected
+	
+	Method OnCreate() Override
+		
+		Init()
+		
+		' register extensions
+		Local types := GetFileTypes()
+		If types <> Null
+			RegisterCodeExtensions(types)
+		Endif
+		
+	End
 	
 	
 	Private

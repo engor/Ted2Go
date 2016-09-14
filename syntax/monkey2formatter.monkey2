@@ -13,13 +13,13 @@ Class Monkey2CodeFormatter Extends CodeFormatterPlugin
 	End
 	
 	Method GetMainFileType:String() Override
-		Return "monkey2"
+		Return _types[0]
 	End
 	
 	
 	Private
 	
-	Global _types := New String[]("monkey2")
+	Global _types := New String[](".monkey2")
 	Global _instance := New Monkey2CodeFormatter
 	
 	Method Format(view:CodeTextView, row:Int=-1)

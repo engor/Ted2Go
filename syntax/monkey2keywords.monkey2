@@ -5,7 +5,7 @@ Namespace ted2go
 Class Monkey2Keywords Extends KeywordsPlugin
 	
 	Property Name:String() Override
-		Return "monkey2 keywords"
+		Return "Monkey2Keywords"
 	End
 	
 	Method GetFileTypes:String[]() Override
@@ -13,13 +13,13 @@ Class Monkey2Keywords Extends KeywordsPlugin
 	End
 	
 	Method GetMainFileType:String() Override
-		Return "monkey2"
+		Return _types[0]
 	End
 	
-	
+		
 	Private
 	
-	Global _types := New String[]("monkey2")
+	Global _types := New String[](".monkey2")
 	Global _instance := New Monkey2Keywords
 		
 	Method GetInternal:String() Override

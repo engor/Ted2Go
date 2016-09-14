@@ -199,10 +199,10 @@ Class MainWindowInstance Extends Window
 		
 		ContentView=_contentView
 
+		OnCreatePlugins() 'init plugins before loadstate, to register doctypes before open last opened files
+		
 		LoadState( jobj )
 		
-		Plugin.CreatePlugins()
-
 		App.Idle+=OnAppIdle
 		
 		If GetFileType( "bin/ted2.state.json" )=FileType.None _helpActions.about.Trigger()
@@ -512,6 +512,26 @@ Class MainWindowInstance Extends Window
 		App.Idle+=OnAppIdle
 		
 		GCCollect()	'thrash that GC!
+	End
+	
+End
+
+
+Private
+
+Function OnCreatePlugins()
+
+	For Local plugin:=Eachin Plugin.PluginsOfType<Plugin>()
+		PluginBridge.OnCreate(plugin)
+	Next
+	
+End
+
+
+Class PluginBridge Extends Plugin
+
+	Function OnCreate(plugin:Plugin)
+		plugin.OnCreate() 'use protected method
 	End
 	
 End

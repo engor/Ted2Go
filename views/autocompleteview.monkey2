@@ -184,7 +184,7 @@ Class AutocompleteDialog Extends DialogExt
 		Next
 		'preprocessor
 		'need to load it like keywords
-		Local s := "#If ,#Rem,#End,#Import "
+		Local s := "#If ,#Rem,#End,#Endif,#Import "
 		Local arr := s.Split(",")
 		For Local i := Eachin arr
 			list.AddLast(New StringListViewItem(i))

@@ -5,7 +5,7 @@ Namespace ted2go
 Class CppKeywords Extends KeywordsPlugin
 	
 	Property Name:String() Override
-		Return "cpp keywords"
+		Return "CppKeywords"
 	End
 	
 	Method GetFileTypes:String[]() Override
@@ -13,13 +13,13 @@ Class CppKeywords Extends KeywordsPlugin
 	End
 	
 	Method GetMainFileType:String() Override
-		Return "cpp"
+		Return _types[0]
 	End
 	
-	
+		
 	Private
 	
-	Global _types := New String[]("cpp","h","hpp")
+	Global _types := New String[](".cpp",".h",".hpp")
 	Global _instance := New CppKeywords
 		
 	Method GetInternal:String() Override
