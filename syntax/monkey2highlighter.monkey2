@@ -8,22 +8,14 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 		Return "Monkey2Highlighter"
 	End
 
-	Method GetFileTypes:String[]() Override
-		Return _types
-	End
-	
-	Method GetMainFileType:String() Override
-		Return _types[0]
-	End
-	
 	
 	Private
 	
-	Global _types := New String[](".monkey2")
 	Global _instance := New Monkey2Highlighter
 	
 	Method New()
 		Super.New()
+		_types = New String[](".monkey2")
 		_hl = New Highlighter
 		_hl.Painter = HL
 	End

@@ -8,19 +8,15 @@ Class Monkey2CodeFormatter Extends CodeFormatterPlugin
 		Return "Monkey2CodeFormatter"
 	End
 	
-	Method GetFileTypes:String[]() Override
-		Return _types
-	End
-	
-	Method GetMainFileType:String() Override
-		Return _types[0]
-	End
-	
 	
 	Private
 	
-	Global _types := New String[](".monkey2")
 	Global _instance := New Monkey2CodeFormatter
+	
+	Method New()
+		Super.New()
+		_types = New String[](".monkey2")
+	End
 	
 	Method Format(view:CodeTextView, row:Int=-1)
 	

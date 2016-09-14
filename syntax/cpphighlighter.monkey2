@@ -8,22 +8,14 @@ Class CppHighlighter Extends HighlighterPlugin
 		Return "CppHighlighter"
 	End
 
-	Method GetFileTypes:String[]() Override
-		Return _types
-	End
-	
-	Method GetMainFileType:String() Override
-		Return _types[0]
-	End
-	
-	
+		
 	Private
 	
-	Global _types := New String[](".cpp",".h",".hpp")
 	Global _instance := New CppHighlighter
 		
 	Method New()
 		Super.New()
+		_types = New String[](".cpp",".h",".hpp")
 		_hl = New Highlighter
 		_hl.Painter = HL
 	End

@@ -8,14 +8,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return "Monkey2Parser"
 	End
 	
-	Method GetFileTypes:String[]() Override
-		Return _types
-	End
-	
-	Method GetMainFileType:String() Override
-		Return "monkey2"
-	End
-	
 	Method OnCreate() Override
 		
 		'ParseModules()
@@ -94,7 +86,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	Private
 	
-	Global _types := New String[]("monkey2")
 	Global _instance := New Monkey2Parser
 	Field _stack := New Stack<ICodeItem>
 	Field _scope:ICodeItem
@@ -110,6 +101,11 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Field _params := New List<String>
 	Field _docLine:Int
 	
+	
+	Method New()
+		Super.New()
+		_types = New String[](".monkey2")
+	End
 	
 	Method GetFileInfo:FileInfo(path:String)
 		Local info := _files[path]

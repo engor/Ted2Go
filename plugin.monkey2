@@ -52,18 +52,27 @@ Class PluginDependsOnFileType Extends Plugin Implements IDependsOnFileType
 		Return "PluginDependsOnFileType"
 	End
 	
+	Method New()
+		_types = New String[]("*")
+	End
+	
 	Method GetFileTypes:String[]() Virtual
-		Return Null
+		Return _types
 	End
 	
 	Method GetMainFileType:String() Virtual
-		Return "*"
+		Return _types[0]
 	End
 
 	Method CheckFileTypeSuitability:Bool(fileType:String)
 		If GetMainFileType() = "*" Return True 'any files
 		Return Utils.ArrayContains( GetFileTypes(),fileType )
 	End
+	
+	
+	Protected
+	
+	Field _types:String[]
 			
 End
 

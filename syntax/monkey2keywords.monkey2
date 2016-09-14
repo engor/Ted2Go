@@ -8,20 +8,16 @@ Class Monkey2Keywords Extends KeywordsPlugin
 		Return "Monkey2Keywords"
 	End
 	
-	Method GetFileTypes:String[]() Override
-		Return _types
-	End
-	
-	Method GetMainFileType:String() Override
-		Return _types[0]
-	End
-	
-		
+			
 	Private
 	
-	Global _types := New String[](".monkey2")
 	Global _instance := New Monkey2Keywords
-		
+	
+	Method New()
+		Super.New()
+		_types = New String[](".monkey2")
+	End
+	
 	Method GetInternal:String() Override
 		Local s:="" 
 		s+="Namespace;Using;Import;Extern;"
