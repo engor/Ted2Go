@@ -100,6 +100,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Field _insideInterface := False
 	Field _params := New List<String>
 	Field _docLine:Int
+	Field _isImportEnabled := False
 	
 	
 	Method New()
@@ -207,19 +208,22 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		
 		Case "#import"
-			Local file := postfix.Slice(1,postfix.Length-1) 'skip quotes
-			If file.StartsWith("<") Return 'skip <module> 
-			If Not file.EndsWith(".monkey2") Then file += ".monkey2" 'parse only ".monkey2"
-			file = _fileDir+file 'full path
-			If GetFileType(file) = FileType.File
-				'need to store current path and dir
-				Local path := _filePath
-				Local dir := _fileDir
-				Local nspace := _namespace
-				Parse(Null,file)
-				_filePath = path
-				_fileDir = dir
-				_namespace = nspace
+		
+			If _isImportEnabled
+				Local file := postfix.Slice(1,postfix.Length-1) 'skip quotes
+				If file.StartsWith("<") Return 'skip <module> 
+				If Not file.EndsWith(".monkey2") Then file += ".monkey2" 'parse only ".monkey2"
+				file = _fileDir+file 'full path
+				If GetFileType(file) = FileType.File
+					'need to store current path and dir
+					Local path := _filePath
+					Local dir := _fileDir
+					Local nspace := _namespace
+					Parse(Null,file)
+					_filePath = path
+					_fileDir = dir
+					_namespace = nspace
+				Endif
 			Endif
 			Return
 		
@@ -246,7 +250,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			Local ident := ParseIdent(postfix)
 			item = New CodeItem(ident)
-			'item._kind = CodeItemKind.Classs
 			isScope = True
 			If _scope <> Null
 				'Print "inner class/struct: "+ident+", "+_scope.Ident
@@ -256,7 +259,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			Local ident := ParseIdent(postfix)
 			item = New CodeItem(ident)
-			'item._kind = CodeItemKind.Interfacee
 			isScope = True
 			_insideInterface = True
 			
@@ -264,7 +266,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			Local ident := ParseIdent(postfix)
 			item = New CodeItem(ident)
-			'item._kind = CodeItemKind.Enumm
 			'isScope = True
 			_insideEnum = True
 			
@@ -273,9 +274,12 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			Local ident := ParseIdent(postfix)
 			item = New CodeItem(ident)
-			'item._kind = CodeItemKind.Functionn
 			isScope = Not _insideInterface
 			
+			If Not isScope
+				item.ScopeStartLine = _docLine
+				item.ScopeEndLine = _docLine
+			Endif
 			
 		Case "field", "global", "local", "const", "param"
 			
@@ -286,6 +290,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			' read types and try to parse ':=' expr
 			For Local s := Eachin _params
 				
+				Print "s: "+s
 				's = s.Replace(" ","") 'remove spaces
 				
 				Local p0 := s.Find(":=")
@@ -293,15 +298,17 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Local p2 := s.Find("=")
 				Local p3 := s.Find("[")
 				Local p4 := s.Find("~q")
+				Local p5 := s.Find(" ")
+				
 				
 				Local ident:String
 				Local type:String
 				
 				':= not in string
-				If p0 > 0 And p0 < p4
+				If p0 > 0 And p0 < p2
 					
 					ident = s.Slice(0,p0).Trim()
-					type = s.Slice(p0+1).Trim()
+					type = s.Slice(p0+2).Trim()
 					
 					If type.StartsWith("New")
 					
@@ -340,7 +347,12 @@ Class Monkey2Parser Extends CodeParserPlugin
 							
 					Endif
 					
-				Else
+				Else 'var:Type
+					
+					ident = s.Slice(0,p1).Trim() '[0..:]
+					Local p := Min(p2,p5) '= or space
+					If p = -1 Then p = s.Length
+					type = s.Slice(p1+1,p).Trim()
 					
 				Endif
 				
@@ -350,23 +362,17 @@ Class Monkey2Parser Extends CodeParserPlugin
 				' also need to check arrays
 				' and types which requires refining after parsing all file
 				
-				If item <> Null
-					item.Namespac = _namespace
-					item.Indent = _indent
-					item.FilePath = _filePath
-					
-					AddItem(item)
-					
-					item = Null
-					
-				Endif
+				item.Namespac = _namespace
+				item.Indent = _indent
+				item.FilePath = _filePath
+				
+				AddItem(item)
+				Print "ident: '"+ident+"', type: '"+type+"'"
+				item = Null
+				
 				
 			Next
-			
-			'Local ident := ParseIdent(postfix)
-			'Local item := New CodeItem(ident)
-			'item._kind = CodeItemKind.Globall
-			
+				
 			
 						
 		
@@ -378,7 +384,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 			item.Namespac = _namespace
 			item.Indent = _indent
 			item.FilePath = _filePath
-
+			item.KindStr = word
+			
 			AddItem(item)
 			
 			If isScope

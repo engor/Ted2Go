@@ -49,6 +49,8 @@ Using mojox..
 
 Global AppTitle:String = "Ted2Go"
 
+Global test1 : Float, test2 := True
+
 
 Function Main()
 
