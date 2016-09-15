@@ -34,7 +34,7 @@ Class BuildProduct
 			product=New WindowsProduct( srcPath )
 #else if __TARGET__="macos"
 			product=New MacosProduct( srcPath )
-#else if __TARGET__="linux"
+#else if __TARGET__="linux" Or __TARGET__="raspbian"
 			product=New LinuxProduct( srcPath )
 #endif
 		Case "emscripten"
@@ -410,7 +410,11 @@ End
 Class LinuxProduct Extends DesktopProduct
 
 	Method New( srcPath:String )
+#if __TARGET__="linux"
 		Super.New( srcPath,"linux" )
+#Else
+		Super.New( srcPath,"raspbian" )
+#Endif
 	End
 
 	Protected
