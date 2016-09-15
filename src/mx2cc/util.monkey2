@@ -1,14 +1,20 @@
 
 Namespace mx2
 
-#If __HOSTOS__="macos"
+#If __TARGET__="windows"
+Const HostOS:="windows"
+#Else If __TARGET__="macos"
 Const HostOS:="macos"
-#Elseif __HOSTOS__="winnt"
-Const HostOS:="windows"
-#Elseif __HOSTOS__="windows"
-Const HostOS:="windows"
-#Elseif __HOSTOS__="linux"
+#Else If __TARGET__="linux"
 Const HostOS:="linux"
+#Else If __TARGET__="raspbian"
+Const HostOS:="raspbian"
+#Else If __TARGET__="emscripten"
+Const HostOS:="emscripten"
+#Else If __TARGET__="android"
+Const HostOS:="android"
+#Else If __TARGET__="ios"
+Const HostOS:="ios"
 #Endif
 
 Const CHAR_EOL:=10
