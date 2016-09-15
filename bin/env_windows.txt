@@ -15,6 +15,8 @@ PATH=${MX2_HOME}\devtools\i686-5.3.0-posix-dwarf-rt_v4-rev0\mingw32\bin;${PATH}
 'Mingw-64 for 64 bit apps, but don't use 'coz no 64 bit angle lib yet.
 'PATH=${MX2_HOME}\devtools\x86_64-5.3.0-posix-seh-rt_v4-rev0\mingw64\bin;${PATH}
 
+MX2_GCC_TOOLS_WINDOWS=${MX2_HOME}\devtools\i686-5.3.0-posix-dwarf-rt_v4-rev0\mingw32\bin
+
 'Linker options
 MX2_LD_OPTS_WINDOWS=-static -m32
 MX2_LD_OPTS_WINDOWS_DEBUG=
@@ -62,3 +64,23 @@ MX2_CPP_OPTS_EMSCRIPTEN_RELEASE=-O3
 'For android builds, you need to either set this correctly or make sure 'ndk-build' is in your system PATH.
 
 PATH=D:\devtools\Android\sdk\ndk-bundle;${PATH}
+
+
+'***** RASPBIAN *****
+
+MX2_RASPBIAN_TOOLS=${MX2_HOME}\devtools\SysGCC\Raspberry\bin
+
+'Linker options
+MX2_LD_OPTS_RASPBIAN=-static
+MX2_LD_OPTS_RASPBIAN_DEBUG=
+MX2_LD_OPTS_RASPBIAN_RELEASE=-s ' -Wl,--gc-sections 
+
+'C Compiler options
+MX2_CC_OPTS_RASPBIAN=-std=gnu99
+MX2_CC_OPTS_RASPBIAN_DEBUG=
+MX2_CC_OPTS_RASPBIAN_RELEASE=-O3 -DNDEBUG ' -fdata-sections -ffunction-sections
+
+'C++ Compiler options
+MX2_CPP_OPTS_RASPBIAN=-std=c++11
+MX2_CPP_OPTS_RASPBIAN_DEBUG=
+MX2_CPP_OPTS_RASPBIAN_RELEASE=-O3 -DNDEBUG ' -fvtable-gc -fdata-sections -ffunction-sections
