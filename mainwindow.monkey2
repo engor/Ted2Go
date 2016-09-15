@@ -264,6 +264,8 @@ Class MainWindowInstance Extends Window
 			Local path:=_tmp+f
 			If GetFileType( path )=FileType.File
 				If Not _docsManager.FindDocument( path ) DeleteFile( path )
+			Else
+				DeleteDir( path,True )
 			Endif
 		Next
 		

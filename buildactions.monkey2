@@ -48,10 +48,12 @@ Class BuildActions
 			If doc=_locked _locked=Null
 		End
 	
-#If __HOSTOS__="macos"
+#If __TARGET__="macos"
 		_mx2cc="bin/mx2cc_macos"
-#Else If __HOSTOS__="windows"
+#Else If __TARGET__="windows"
 		_mx2cc="bin/mx2cc_windows.exe"
+#Else If __TARGET__="raspbian"
+		_mx2cc="bin/mx2cc_raspbian"
 #Else
 		_mx2cc="bin/mx2cc_linux"
 #Endif
