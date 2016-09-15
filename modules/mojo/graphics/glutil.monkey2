@@ -63,7 +63,7 @@ End
 #end
 Function glCompile:Int( type:Int,source:String )
 
-#If __TARGET__="windows" Or Not __DESKTOP_TARGET__
+#If __TARGET__="windows" Or __TARGET__="raspbian" Or Not __DESKTOP_TARGET__
 	source="precision mediump float;~n"+source
 #Endif
 	

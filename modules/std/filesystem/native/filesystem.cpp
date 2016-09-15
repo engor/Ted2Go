@@ -85,8 +85,8 @@ namespace bbFileSystem{
 			char buf[PATH_MAX];
 	
 			sprintf( lnk,"/proc/%i/exe",pid );
-			int i=readlink( lnk,buf,PATH_MAX )
-			;
+			int i=readlink( lnk,buf,PATH_MAX );
+			
 			if( i>0 && i<PATH_MAX ){
 				buf[i]=0;
 				_appPath=bbString( buf );

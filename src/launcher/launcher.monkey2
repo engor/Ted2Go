@@ -25,6 +25,9 @@ Function Main()
 
 	libc.system( "bin/ted2_linux/ted2 >/dev/null 2>/dev/null &" )
 
+#Else If __HOSTOS__="raspbian"
+
+	libc.system( "bin/ted2_raspbian/ted2 >/dev/null 2>/dev/null &" )
 
 #Endif
 

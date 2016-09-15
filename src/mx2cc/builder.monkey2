@@ -75,14 +75,23 @@ Class BuilderInstance
 		
 		Builder=self
 
-		If opts.target="desktop" opts.target=HostOS
+		If opts.target="desktop"
 		
+			opts.target=HostOS
+			
+		Else If HostOS="windows" And opts.target="raspbian"
+		
+			SetEnv( "PATH",GetEnv( "MX2_RASPBIAN_TOOLS" )+";"+GetEnv( "PATH" ) )
+			
+		Endif
+		
+		ppsyms["__HOST__"]="~q"+HostOS+"~q"
 		ppsyms["__HOSTOS__"]="~q"+HostOS+"~q"
 		ppsyms["__TARGET__"]="~q"+opts.target+"~q"
 		ppsyms["__CONFIG__"]="~q"+opts.config+"~q"
 		
 		Select opts.target
-		Case "windows","macos","linux"
+		Case "windows","macos","linux","raspbian"
 			ppsyms["__DESKTOP_TARGET__"]="true"
 			ppsyms["__WEB_TARGET__"]="false"
 			ppsyms["__MOBILE_TARGET__"]="false"
@@ -95,7 +104,7 @@ Class BuilderInstance
 			ppsyms["__WEB_TARGET__"]="false"
 			ppsyms["__MOBILE_TARGET__"]="true"
 		End
-		
+
 		profileName=opts.target+"_"+opts.config
 		
 		MODULES_DIR=CurrentDir()+"modules/"

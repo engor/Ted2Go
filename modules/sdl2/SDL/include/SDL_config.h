@@ -31,18 +31,29 @@
 /* Add any platform that doesn't build using the configure system. */
 #ifdef USING_PREMAKE_CONFIG_H
 #include "SDL_config_premake.h"
+
 #elif defined(__WIN32__)
 #include "SDL_config_windows.h"
+
 #elif defined(__MACOSX__)
 #include "SDL_config_macosx.h"
+
 #elif defined(__LINUX__)
+#ifdef __arm__
+#include "SDL_config_raspbian.h"
+#else
 #include "SDL_config_linux.h"
+#endif
+
 #elif defined(EMSCRIPTEN)
 #include "SDL_config_emscripten.h"
+
 #elif defined(__ANDROID__)
 #include "SDL_config_android.h"
+
 #elif defined(__IPHONEOS__)
 #include "SDL_config_iphoneos.h"
+
 /*
 #elif defined(__WINRT__)
 #include "SDL_config_winrt.h"

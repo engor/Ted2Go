@@ -1,0 +1,39 @@
+
+'***** RASPBIAN *****
+
+'LD options
+MX2_LD_OPTS_RASPBIAN=-L/opt/vc/lib -lbcm_host -lvcos -lvchiq_arm 
+MX2_LD_OPTS_RASPBIAN_DEBUG=
+MX2_LD_OPTS_RASPBIAN_RELEASE=-O3 -s
+
+'C compiler options
+MX2_CC_OPTS_RASPBIAN=-std=gnu99 -I/opt/vc/include -I/opt/vc/include/interface/vmcs_host/linux -I/opt/vc/include/interface/vcos/pthreads
+MX2_CC_OPTS_RASPBIAN_DEBUG=
+MX2_CC_OPTS_RASPBIAN_RELEASE=-O3 -DNDEBUG
+
+'C++ compiler options
+MX2_CPP_OPTS_RASPBIAN=-std=c++11 -I/opt/vc/include  -I/opt/vc/include/interface/vmcs_host/linux -I/opt/vc/include/interface/vcos/pthreads
+MX2_CPP_OPTS_RASPBIAN_DEBUG=
+MX2_CPP_OPTS_RASPBIAN_RELEASE=-O3 -DNDEBUG
+
+
+'***** EMSCRIPTEN *****
+
+'For emscripten builds, you need emcc, em++ and emar in your PATH.
+'To run emscripten apps, you'll need MonkeyXFree86c in your devtools dir.
+'MX2_MSERVER="${MX2_HOME}/devtools/MonkeyXFree86c/bin/mserver_linux"
+
+'LD options
+MX2_LD_OPTS_EMSCRIPTEN=-s USE_SDL=2 -s FULL_ES2=1 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1 ' -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1
+MX2_LD_OPTS_EMSCRIPTEN_DEBUG=
+MX2_LD_OPTS_EMSCRIPTEN_RELEASE=-O3
+
+'C compiler options
+MX2_CC_OPTS_EMSCRIPTEN=-std=gnu99 -I. -s USE_SDL=2 -s FULL_ES2=1 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1 -Wno-warn-absolute-paths ' -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1 -Wno-undefined-bool-conversion -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-warn-absolute-paths 
+MX2_CC_OPTS_EMSCRIPTEN_DEBUG=
+MX2_CC_OPTS_EMSCRIPTEN_RELEASE=-O3 -DNDEBUG
+
+'C++ compiler options
+MX2_CPP_OPTS_EMSCRIPTEN=-std=c++11 -I. -s USE_SDL=2 -s FULL_ES2=1 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1 -Wno-warn-absolute-paths ' -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1 -Wno-undefined-bool-conversion
+MX2_CPP_OPTS_EMSCRIPTEN_DEBUG=
+MX2_CPP_OPTS_EMSCRIPTEN_RELEASE=-O3 -DNDEBUG

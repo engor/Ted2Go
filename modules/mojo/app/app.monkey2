@@ -94,26 +94,14 @@ Class AppInstance
 		
 		Audio.Init()
 		
+		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER,1 )
+		
 #if __MOBILE_TARGET__
 
 		_touchMouse=True
 
-		#rem		
-		SDL_GL_SetAttribute( SDL_GL_RED_SIZE,5 )
-		SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE,6 )
-		SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE,5 )
-		SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE,0 )
-		SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE,0 )
-		SDL_GL_SetAttribute( SDL_GL_RETAINED_BACKING,0 )
-		SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL,1 )
-		#end
-		
-		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER,1 )
-		
     	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_ES )
 		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION,2 )
-
-'	    SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION,0 ) 
     	
 #endif
 
@@ -121,6 +109,8 @@ Class AppInstance
 
 		_captureMouse=True
 #Endif
+
+#If __DESKTOP_TARGET__
     
 #if __TARGET__="windows"
 
@@ -145,12 +135,13 @@ Class AppInstance
 		If gl_major<>-1 SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION,gl_major )
 		If gl_minor<>-1 SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION,gl_minor )
 
+#Elseif __TARGET__="raspbian"
+
+   		SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_ES )
+		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION,2 )
+
 #Endif
-
-#if __DESKTOP_TARGET__
-
 		SDL_GL_SetAttribute( SDL_GL_SHARE_WITH_CURRENT_CONTEXT,1 )
-		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER,1 )
 		
 		SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE,Int( GetConfig( "GL_depth_buffer_enabled",0 ) ) )
 		SDL_GL_SetAttribute( SDL_GL_STENCIL_SIZE,Int( GetConfig( "GL_stencil_buffer_enabled",0 ) ) )
@@ -163,7 +154,6 @@ Class AppInstance
 		Assert( _sdlGLContext,"FATAL ERROR: SDL_GL_CreateContext failed" )
 		
 		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )
-		
 #Endif
 		_defaultFont=Font.Open( "asset::fonts/DejaVuSans.ttf",16 )
 		
@@ -922,7 +912,7 @@ Class AppInstance
 			Print "SDL_RENDER_DEVICE_RESET"
 		
 			mojo.graphics.glutil.glGraphicsSeq+=1
-#rem
+'#rem
 
 		'Linux weirdness: These may or may not be necessary when/if I get mouse capture working again.
 			
@@ -935,7 +925,7 @@ Class AppInstance
 			SendWindowEvent( EventType.WindowResized )
 				
 			UpdateWindows()
-#end
+'#end
 
 		Case SDL_DROPFILE
 		

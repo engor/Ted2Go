@@ -26,10 +26,19 @@ Using monkey
 	#Import "native/gles20_macos.h"
 		
 #Else If __TARGET__="linux"
-	
+ 	
 	#Import "<libGL.a>"
 
 	#Import "native/gles20_linux.h"
+		
+#Else If __TARGET__="raspbian"
+	
+	#Import "<libEGL.a>"
+
+	#Import "<libGLESv1_CM.a>"
+	#Import "<libGLESv2.a>"
+	
+	#Import "<GLES2/gl2.h>"
 		
 #Else If __TARGET__="emscripten"
 	

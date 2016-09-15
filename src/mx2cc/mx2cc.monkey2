@@ -19,11 +19,9 @@ Using mx2..
 
 Global StartDir:String
 
-'Const TestArgs:="mx2cc makedocs mojo"
+Const TestArgs:="mx2cc makedocs mojo"
 
-'Const TestArgs:="mx2cc makemods"
-
-Const TestArgs:="mx2cc makeapp -clean -config=debug -target=desktop src/mx2cc/test.monkey2"
+'Const TestArgs:="mx2cc makeapp -clean -config=debug -target=desktop src/mx2cc/test.monkey2"
 
 'Const TestArgs:="mx2cc makeapp -clean -config=debug -target=desktop -product=D:/test_app/test.exe -assets=D:/test_app/assets -dlls=D:/test_app/ src/mx2cc/test.monkey2"
 
@@ -33,12 +31,17 @@ Const TestArgs:="mx2cc makeapp -clean -config=debug -target=desktop src/mx2cc/te
 
 'Const TestArgs:="mx2cc makeapp -verbose -target=desktop -config=release src/mx2cc/mx2cc"
 
+'To build rasbian mx2cc...
+'
+'Const TestArgs:="mx2cc makemods -clean -config=release -target=raspbian monkey libc miniz stb-image stb-image-write stb-vorbis std"
+'Const TestArgs:="mx2cc makeapp -build -clean -config=release -target=raspbian src/mx2cc/mx2cc.monkey2"
+
 Function Main()
 
 	Print "mx2cc version "+MX2CC_VERSION
 
 	StartDir=CurrentDir()
-
+	
 	ChangeDir( AppDir() )
 		
 	Local env:="bin/env_"+HostOS+".txt"
@@ -319,10 +322,10 @@ Function ParseOpts:String[]( opts:BuildOpts,args:String[] )
 			End
 		Case "-target"
 			Select val
-			Case "desktop","windows","macos","linux","emscripten","android","ios"
+			Case "desktop","windows","macos","linux","raspbian","emscripten","android","ios"
 				opts.target=val
 			Default
-				Fail( "Invalid value for 'target' option: '"+val+"' - must be 'desktop', 'emscripten', 'android' or 'ios'" )
+				Fail( "Invalid value for 'target' option: '"+val+"' - must be 'desktop', 'raspbian', 'emscripten', 'android' or 'ios'" )
 			End
 		Case "-config"
 			Select val

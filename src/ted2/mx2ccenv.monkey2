@@ -22,6 +22,8 @@ Const HostOS:="windows"
 Const HostOS:="macos"
 #Else If __TARGET__="linux"
 Const HostOS:="linux"
+#Else IF __TARGET__="raspbian"
+Const HostOS:="raspbian"
 #Else
 Const HostOS:=""
 #Endif

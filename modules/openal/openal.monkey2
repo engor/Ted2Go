@@ -17,7 +17,7 @@
 	#import "<OpenAL/al.h>"
 	#import "<OpenAL/alc.h>"
 		
-#else if __TARGET__="linux"
+#else if __TARGET__="linux" or __TARGET__="raspbian"
 	
 	#import "<libopenal.a>"
 	#import "<AL/al.h>"

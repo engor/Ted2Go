@@ -25,8 +25,8 @@ Namespace std.fiber
 	#import "native/asm/make_x86_64_sysv_elf_gas.S"
 	#import "native/asm/jump_x86_64_sysv_elf_gas.S"
 	#import "native/asm/ontop_x86_64_sysv_elf_gas.S"
-
-#Else If __TARGET__="android"
+	
+#Else If __TARGET__="android" or __TARGET__="raspbian"
 
 	#import "native/asm/make_arm_aapcs_elf_gas.S"
 	#import "native/asm/jump_arm_aapcs_elf_gas.S"

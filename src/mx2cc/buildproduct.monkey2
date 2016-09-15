@@ -248,6 +248,12 @@ Class GccBuildProduct Extends BuildProduct
 			CXX_CMD="em++"
 			LD_CMD= "em++"
 			AS_CMD= ""
+		Case "raspbian"
+			AR_CMD= "arm-linux-gnueabihf-ar"
+			CC_CMD= "arm-linux-gnueabihf-gcc"
+			CXX_CMD="arm-linux-gnueabihf-g++"
+			LD_CMD= "arm-linux-gnueabihf-g++"
+			AS_CMD= "arm-linux-gnueabihf-as"
 		Default
 			AR_CMD= "ar"
 			CC_CMD= "gcc"

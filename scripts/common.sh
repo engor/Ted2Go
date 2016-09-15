@@ -18,6 +18,18 @@ then
 	launcher="../Monkey2 (Linux)"
 	launcher_new="../src/launcher/launcher.buildv1.0.6/linux_release/launcher"
 	
+elif [ "$OSTYPE" = "linux-gnueabihf" ]
+then
+
+	mx2cc="../bin/mx2cc_raspbian"
+	mx2cc_new="../src/mx2cc/mx2cc.buildv1.0.6/raspbian_release/mx2cc"
+	
+	ted2="../bin/ted2_raspbian"
+	ted2_new="../src/ted2/ted2.buildv1.0.6/raspbian_release"
+	
+	launcher="../Monkey2 (Raspbian)"
+	launcher_new="../src/launcher/launcher.buildv1.0.6/raspbian_release/launcher"
+	
 else
 
 	mx2cc="../bin/mx2cc_macos"
