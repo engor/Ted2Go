@@ -414,6 +414,7 @@ Class Translator
 	
 		Local ctype:=TCast<ClassType>( type )
 		If ctype
+			If ctype.cdecl.IsExtern Uses( ctype.transFile ) ; return
 			If IsStruct( ctype ) Uses( ctype ) ; Return
 			If AddRef( ctype ) Return
 			_refsTypes.Push( ctype )
