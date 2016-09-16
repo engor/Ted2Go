@@ -330,6 +330,11 @@ Struct @String ="bbString"
 	
 	Function FromUtf8String:String( buf:Void Ptr )="bbString::fromUtf8String"
 	
+	
+	Function FromAsciiData:String( buf:Void Ptr,bufSize:Int )="bbString::fromAsciiData"
+
+	Function FromUtf8Data:String( buf:Void Ptr,bufSize:Int )="bbString::fromUtf8Data"
+	
 End
 
 #rem monkeydoc Primtive array type.
