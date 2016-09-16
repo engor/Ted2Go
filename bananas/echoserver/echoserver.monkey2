@@ -36,10 +36,10 @@ Class MyWindow Extends Window
 			
 				Repeat
 				
-					Local line:=ReadLine( socket )
+					Local line:=socket.ReadCString()
 					If Not line Exit
 					
-					WriteLine( socket,line )
+					socket.WriteCString( line )
 				Forever
 				
 				socket.Close()
@@ -67,9 +67,9 @@ Class MyWindow Extends Window
 
 		For Local i:=0 Until 100
 		
-			WriteLine( socket,"This is a number:"+i )
+			socket.WriteCString( "This is a number:"+i )
 			
-			Print "Reply:"+ReadLine( socket )
+			Print "Reply:"+socket.ReadCString()
 		Next
 		
 		Print "Client:Bye"
@@ -77,6 +77,7 @@ Class MyWindow Extends Window
 		socket.Close()
 	End
 	
+	#rem
 	'Returns empty line at EOF.
 	'
 	Method ReadLine:String( socket:Socket )
@@ -110,6 +111,7 @@ Class MyWindow Extends Window
 		buf.PokeByte( pos,10 )
 		socket.Write( buf,0,pos+1 )
 	End
+	#end
 	
 	Method OnRender( canvas:Canvas ) Override
 	
