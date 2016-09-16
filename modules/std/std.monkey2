@@ -56,6 +56,8 @@ Namespace std
 #Import "misc/jsonify"
 #Import "misc/zipfile"
 
+#Import "socket/socket"
+
 Private
 
 Function Main()
