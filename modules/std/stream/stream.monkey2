@@ -61,21 +61,8 @@ Class Stream
 	
 	#end
 	Method Write:Int( mem:Void Ptr,count:Int ) Abstract
-	
-	#rem monkeydoc Reads data from the filestream and throws it away.
 
-	@param count The number of bytes to skip.
-	
-	@return The number of bytes actually skipped.
-	
-	#end
-	Method Skip:Int( count:Int )
-		Local tmp:=libc.malloc( count )
-		Local n:=Read( tmp,count )
-		libc.free( tmp )
-		Return n
-	End
-	
+
 	#rem monkeydoc The byte order of the stream.
 	#end
 	Property ByteOrder:ByteOrder()
@@ -117,6 +104,76 @@ Class Stream
 
 		Return Write( buf.Data+offset,count )
 	End
+
+	#rem monkeydoc Reads as many bytes as possible from a stream into memory.
+	
+	@param buf memory to read bytes into.
+	
+	@param data data buffer to read bytes into.
+	
+	@param count number of bytes to read.
+	
+	#end
+	Method ReadAll:Int( buf:Void Ptr,count:Int )
+	
+		Local pos:=0
+		While pos<count
+			Local n:=Read( Cast<Byte Ptr>( buf )+pos,count-pos )
+			If n<=0 Exit
+			pos+=n
+		Wend
+		Return pos
+	End
+	
+	Method ReadAll:Int( data:DataBuffer,offset:Int,count:Int )
+	
+		Return ReadAll( data.Data+offset,count )
+	End
+	
+	Method ReadAll:DataBuffer( count:Int )
+	
+		Local data:=New DataBuffer( count )
+		Local n:=ReadAll( data,0,count )
+		If n<count Return data.Slice( 0,n )
+		Return data
+	End
+	
+	Method ReadAll:DataBuffer()
+
+		Local bufs:=New Stack<DataBuffer>
+		Local buf:=New DataBuffer( 4096 ),pos:=0
+		Repeat
+			pos=ReadAll( buf,0,4096 )
+			If pos<4096 Exit
+			bufs.Push( buf )
+			buf=New DataBuffer( 4096 )
+		Forever
+		Local len:=bufs.Length * 4096 + pos
+		Local data:=New DataBuffer( len )
+		pos=0
+		For Local buf:=Eachin bufs
+			buf.CopyTo( data,0,pos,4096 )
+			buf.Discard()
+			pos+=4096
+		Next
+		buf.CopyTo( data,0,pos,len-pos )
+		buf.Discard()
+		Return data
+	End
+	
+	#rem monkeydoc Reads data from the filestream and throws it away.
+
+	@param count The number of bytes to skip.
+	
+	@return The number of bytes actually skipped.
+	
+	#end
+	Method Skip:Int( count:Int )
+		Local tmp:=libc.malloc( count )
+		Local n:=Read( tmp,count )
+		libc.free( tmp )
+		Return n
+	End
 	
 	#rem monkeydoc Reads a byte from the stream.
 	
@@ -146,7 +203,7 @@ Class Stream
 	
 	#end
 	Method ReadShort:Short()
-		If Read( _tmpbuf.Data,2 )=2 Return _tmpbuf.PeekShort( 0 )
+		If ReadAll( _tmpbuf.Data,2 )=2 Return _tmpbuf.PeekShort( 0 )
 		
 		Return 0
 	End
@@ -157,7 +214,7 @@ Class Stream
 	
 	#end
 	Method ReadUShort:UShort()
-		If Read( _tmpbuf.Data,2 )=2 Return _tmpbuf.PeekUShort( 0 )
+		If ReadAll( _tmpbuf.Data,2 )=2 Return _tmpbuf.PeekUShort( 0 )
 		
 		Return 0
 	End
@@ -168,7 +225,7 @@ Class Stream
 	
 	#end
 	Method ReadInt:Int()
-		If Read( _tmpbuf.Data,4 )=4 Return _tmpbuf.PeekInt( 0 )
+		If ReadAll( _tmpbuf.Data,4 )=4 Return _tmpbuf.PeekInt( 0 )
 		
 		Return 0
 	End
@@ -179,7 +236,7 @@ Class Stream
 	
 	#end
 	Method ReadUInt:UInt()
-		If Read( _tmpbuf.Data,4 )=4 Return _tmpbuf.PeekUInt( 0 )
+		If ReadAll( _tmpbuf.Data,4 )=4 Return _tmpbuf.PeekUInt( 0 )
 		
 		Return 0
 	End
@@ -190,7 +247,7 @@ Class Stream
 	
 	#end
 	Method ReadLong:Long()
-		If Read( _tmpbuf.Data,8 )=8 Return _tmpbuf.PeekLong( 0 )
+		If ReadAll( _tmpbuf.Data,8 )=8 Return _tmpbuf.PeekLong( 0 )
 
 		Return 0
 	End
@@ -201,7 +258,7 @@ Class Stream
 	
 	#end
 	Method ReadULong:ULong()
-		If Read( _tmpbuf.Data,8 )=8 Return _tmpbuf.PeekULong( 0 )
+		If ReadAll( _tmpbuf.Data,8 )=8 Return _tmpbuf.PeekULong( 0 )
 
 		Return 0
 	End
@@ -212,7 +269,7 @@ Class Stream
 	
 	#end
 	Method ReadFloat:Float()
-		If Read( _tmpbuf.Data,4 )=4 Return _tmpbuf.PeekFloat( 0 )
+		If ReadAll( _tmpbuf.Data,4 )=4 Return _tmpbuf.PeekFloat( 0 )
 
 		Return 0
 	End
@@ -223,25 +280,34 @@ Class Stream
 	
 	#end
 	Method ReadDouble:Double()
-		If Read( _tmpbuf.Data,8 )=8 Return _tmpbuf.PeekDouble( 0 )
+		If ReadAll( _tmpbuf.Data,8 )=8 Return _tmpbuf.PeekDouble( 0 )
 
 		Return 0
 	End
 	
-	#rem monkeydoc Reads a null terminated cstring from the stream
+	#rem monkeydoc Reads the entire stream into a string.
+	#end
+	Method ReadString:String( encoding:String="utf8" )
+		Local data:=ReadAll()
+		Local str:=data.PeekString( 0,encoding )
+		data.Discard()
+		Return str
+	End
+	
+	#rem monkeydoc Reads a null terminated string from the stream.
 	
 	@return the string read.
 	
 	#end
-	Method ReadCString:String()
+	Method ReadCString:String( encoding:String="utf8" )
 		Local buf:=New Stack<Byte>
 		While Not Eof
 			Local chr:=ReadByte()
 			If Not chr Exit
 			buf.Push( chr )
 		Wend
-		buf.Push( 0 )
-		Return String.FromCString( buf.Data.Data )
+		If encoding="utf8" Return String.FromUtf8Data( buf.Data.Data,buf.Length )
+		Return String.FromAsciiData( buf.Data.Data,buf.Length )
 	End
 	
 	#rem monkeydoc Writes a byte to the stream.
@@ -344,19 +410,29 @@ Class Stream
 		Write( _tmpbuf.Data,8 )
 	End
 	
-	#rem monkeydoc Write a nullterminated CString to the stream.
-	
-	@param data The string to write.
+	#rem monkeydoc Writes a string to the stream (NOT null terminated).
+
+	@param str The string to write.
 	
 	#end
-	Method WriteCString:Void( data:String )
-		Local buf:=New Stack<UByte>
-		buf.Resize( data.Length+1 )
-		For Local i:=0 Until data.Length
-			buf[i]=data[i]
-		Next
-		buf[ data.Length ]=0
-		Write( buf.Data.Data,buf.Length )
+	Method WriteString( str:String,encoding:String="utf8" )
+		Local size:=(encoding="utf8" ? str.Utf8Length Else str.Length)
+		Local buf:=New DataBuffer( size )
+		buf.PokeString( 0,str,encoding )
+		Write( buf,0,size )
+	End
+	
+	#rem monkeydoc Writes a null terminated string to the stream.
+
+	@param str The string to write.
+	
+	#end
+	Method WriteCString( str:String,encoding:String="utf8" )
+		Local size:=(encoding="utf8" ? str.Utf8Length Else str.Length)+1
+		Local buf:=New DataBuffer( size )
+		buf.PokeString( 0,str,encoding )
+		buf.PokeByte( size-1,0 )
+		Write( buf,0,size )
 	End
 	
 	#rem monkeydoc Opens a stream
