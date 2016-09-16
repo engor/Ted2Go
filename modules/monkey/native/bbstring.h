@@ -450,6 +450,10 @@ class bbString{
 	
 	static bbString fromUtf8String( const void *data,int size=-1 );
 	
+	static bbString fromAsciiData( const void *data,int size );
+
+	static bbString fromUtf8Data( const void *data,int size );
+	
 	static bbString fromTString( const void *data,int size=-1 ){
 #if _WIN32
 		return fromCString( data,size );
