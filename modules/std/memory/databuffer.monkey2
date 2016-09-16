@@ -260,6 +260,22 @@ Class DataBuffer
 		Return t
 	End
 	
+	#rem monkeydoc Reads a utf8 string from the databuffer.
+	#end
+	Method PeekString:String( offset:Int,encoding:String="utf8" )
+		DebugAssert( offset>=0 And offset<=_length )
+		
+		Return PeekString( offset,_length-offset,encoding )
+	End
+	
+	Method PeekString:String( offset:Int,count:Int,encoding:String="utf8" )
+		DebugAssert( offset>=0 And count>=0 And offset+count<=_length )
+		
+		If encoding="utf8" Return String.FromUtf8Data( _data+offset,count )
+		
+		Return String.FromAsciiData( _data+offset,count )
+	End
+	
 	#rem monkeydoc Writes a byte to the databuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
@@ -396,6 +412,55 @@ Class DataBuffer
 	
 		If _swapEndian Swap8( Varptr value )
 		Cast<Double Ptr>( _data+offset )[0]=value
+	End
+
+	#rem monkeydoc Write a string to the databuffer in utf8 format.
+	
+	#end	
+	Method PokeString( offset:Int,value:String,encoding:String="utf8" )
+		DebugAssert( offset>=0 And offset<=_length )
+		
+		If encoding="utf8"
+			Local count:=value.Utf8Length
+			If offset+count>_length count=_length-offset
+			value.ToUtf8String( _data+offset,count )
+		Else
+			Local count:=value.Length
+			If offset+count>_length count=_length-offset
+			value.ToCString( _data+offset,count )
+		Endif
+	End
+
+	#rem monkeydoc Creates a slice of the databuffer.
+	#end
+	Method Slice:DataBuffer( from:Int=0 )
+	
+		Return Slice( from,_length )
+	End
+		
+	Method Slice:DataBuffer( from:Int,term:int )
+	
+		If from<0
+			from+=_length
+		Else If from>_length
+			from=_length
+		Endif
+		
+		If term<0
+			term+=_length
+			If term<from term=from
+		Else If term<from
+			term=from
+		Else If term>_length
+			term=_length
+		Endif
+		
+		Local newlen:=term-from
+		
+		Local data:=New DataBuffer( newlen )
+		CopyTo( data,from,0,newlen )
+		
+		Return data
 	End
 	
 	#rem monkeydoc Copies databuffer data.
