@@ -947,7 +947,7 @@ Class TextView Extends ScrollableView
 					
 			Endif
 				
-		Case Key.Enter
+		Case Key.Enter,Key.KeypadEnter
 			
 			ReplaceText( "~n" )
 				
@@ -1049,7 +1049,21 @@ Class TextView Extends ScrollableView
 	
 	Method OnKeyEvent( event:KeyEvent ) Override
 	
-		If _readOnly Return
+		If _readOnly
+			If _macosMode
+				If (event.Modifiers & Modifier.Gui) And event.Key=Key.C
+					''Copy'
+				Else
+					Return
+				Endif
+			Else			
+				If (event.Modifiers & Modifier.Control) And event.Key=Key.C
+					''Copy'
+				Else
+					Return
+				Endif
+			Endif
+		Endif
 	
 		Select event.Type
 		
