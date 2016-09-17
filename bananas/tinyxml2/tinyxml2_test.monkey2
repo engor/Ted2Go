@@ -1,46 +1,94 @@
 
-#Import "<tinyxml2>"
-#Import "<std>"
-
 #Import "dream.xml"
 
+#Import "<std>"
+#Import "<mojo>"
+#import "<mojox>"
+#Import "<tinyxml2>"
+ 
 Using std..
+Using mojo..
+Using mojox..
 Using tinyxml2..
-
-Function Dump( node:XMLNode,indent:String )
-
-	Print indent+node.Value()
-	
-	Local child:=node.FirstChild()
-	
-	While child
-	
-		Dump( child,indent+"  " )
-		
-		child=child.NextSibling()
-	Wend
-
-End
-
+ 
 Function Main()
-
-	Local xml:=LoadString( "asset::dream.xml" )
+ 
+	New AppInstance
 	
-	Local doc:=New XMLDocument
+	New MyWindow()
 	
-	If doc.Parse( xml )<>XMLError.XML_SUCCESS
-		Print "Failed to parse"
-		Return
-	Endif
+	App.Run()
+End
+ 
+Class MyWindow Extends Window
+ 
+	Field _tree:TreeView
+ 
+	Method New()
 	
-	Print "Parsed!"
+		Super.New("XML TreeView Test", 640, 480, WindowFlags.Resizable)
+ 
+		Local xml := LoadString( "asset::dream.xml" )
+		
+		Local doc := New XMLDocument()
+		
+		If doc.Parse(xml) <> XMLError.XML_SUCCESS
+			Print "Failed to parse embedded XML!"
+			Return
+		Endif
+				
+		Local _tree := New TreeView
+ 
+		_tree.RootNode.Text = "XML document"
+ 
+		AddXMLNodeToTree(doc, _tree.RootNode)
+		
+		ContentView = _tree
+		
+		doc.Destroy()
+	End
+ 
+	Method AddXMLNodeToTree(xmlNode:XMLNode, parent:TreeView.Node)
 	
-	doc.PrintDocument()
+		Local str := ""
 	
-'	Dump( doc,"" )	'Their's looks better!
+		Local xmlElement := xmlNode.ToElement()
+		
+		If xmlElement
+		
+			str += "<" + xmlNode.Value()
+			
+			Local attrib := xmlElement.FirstAttribute()
+			While attrib 
+				str += " " + attrib.Name() + "=~q" + attrib.Value() + "~q "
+				attrib=attrib.NextAttribute()
+			wend
+			
+			str += ">"
+		Else
+			str += xmlNode.Value()
+		Endif
+ 
+		Local treeNode:TreeView.Node
 	
-	doc.Destroy()
+		If str
+			treeNode = New TreeView.Node(str, parent)
+		Endif
+		
+		Local xmlChild := xmlNode.FirstChild()
 	
-	Print "Bye!"
+		While xmlChild
+		
+			If Not xmlChild.NoChildren()
+				If treeNode Then parent = treeNode
+			Endif
+		
+			AddXMLNodeToTree(xmlChild, parent)
+			
+			xmlChild = xmlChild.NextSibling()
 	
+		Wend
+	
+	End
+ 
 End
