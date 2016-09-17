@@ -1,22 +1,41 @@
 
-Namespace std.stream
+Namespace std.memory
 
 #rem monkeydoc DataStream class.
 #end
-Class DataStream Extends Stream
+Class DataStream Extends std.stream.Stream
 
 	#rem monkeydoc Creates a new datastream.
+	
+	A datastream wraps a databuffer so it can be used as if it were a stream.
+	
+	In debug mode, a RuntimeError will occur if `offset` or `count` are outside the range of the databuffer.
+	
+	@param data The databuffer to wrap.
+	
+	@param offset The starting offset.
+	
+	@param count The number of bytes.
+	
 	#end
-	Method New( buf:DataBuffer )
+	Method New( buf:DataBuffer,offset:Int=0 )
+		Self.New( buf,offset,buf.Length-offset )
+		
+	End
+
+	Method New( buf:DataBuffer,offset:Int,count:Int )
+		DebugAssert( offset>=0 And count>=0 And offset+count<=buf.Length )
+		
 		_buf=buf
+		_off=offset
+		_len=count
 		_pos=0
-		_end=_buf.Length
 	End
 	
 	#rem monkeydoc True if no more data can be read from or written to the stream.
 	#end
 	Property Eof:Bool() Override
-		Return _pos>=_end
+		Return _pos>=_len
 	End
 	
 	#rem monkeydoc Current datastream position.
@@ -28,19 +47,18 @@ Class DataStream Extends Stream
 	#rem monkeydoc Current datastream length.
 	#end
 	Property Length:Int() Override
-		Return _end
+		Return _len
 	End
 	
 	#rem monkeydoc Closes the datastream.
-	
-	Closing a datastream also sets its position and length to 0.
 	
 	#end
 	Method Close() Override
 		If Not _buf Return
 		_buf=Null
+		_off=0
 		_pos=0
-		_end=0
+		_len=0
 	End
 	
 	#rem monkeydoc Seeks to a position in the datastream.
@@ -49,9 +67,8 @@ Class DataStream Extends Stream
 	
 	#end
 	Method Seek( position:Int ) Override
-		DebugAssert( position>=0 And position<=_end )
-		
-		_pos=position
+
+		_pos=Clamp( position,0,_len )
 	End
 	
 	#rem monkeydoc Reads data from the datastream.
@@ -64,9 +81,13 @@ Class DataStream Extends Stream
 	
 	#end
 	Method Read:Int( buf:Void Ptr,count:Int ) Override
-		count=Clamp( count,0,_end-_pos )
-		libc.memcpy( buf,_buf.Data+_pos,count )
+	
+		count=Clamp( count,0,_len-_pos )
+		
+		libc.memcpy( buf,_buf.Data+_off+_pos,count )
+		
 		_pos+=count
+		
 		Return count
 	End
 	
@@ -80,16 +101,21 @@ Class DataStream Extends Stream
 	
 	#end
 	Method Write:Int( buf:Void Ptr,count:Int ) Override
-		count=Clamp( count,0,_end-_pos )
-		libc.memcpy( _buf.Data+_pos,buf,count )
+	
+		count=Clamp( count,0,_len-_pos )
+		
+		libc.memcpy( _buf.Data+_off+_pos,buf,count )
+		
 		_pos+=count
+		
 		Return count
 	End
 
 	Private
 	
 	Field _buf:DataBuffer
+	Field _off:Int
 	Field _pos:Int
-	Field _end:Int
+	Field _len:Int
 
 End

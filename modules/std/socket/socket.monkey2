@@ -49,6 +49,7 @@ Class Socket Extends std.stream.Stream
 	#rem monkeydoc True if socket has been closed.
 	#end
 	Property Eof:Bool() Override
+
 		Return _socket<0
 	End
 
@@ -59,11 +60,11 @@ Class Socket Extends std.stream.Stream
 		Return 0
 	End
 
-	#rem monkeydoc Always 0.
+	#rem monkeydoc Always -1.
 	#end
 	Property Length:Int() Override
 	
-		Return 0
+		Return -1
 	End
 
 	#rem monkeydoc Closes the socket.
@@ -87,6 +88,12 @@ Class Socket Extends std.stream.Stream
 	Returns 0 if the socket has been closed by the peer.
 	
 	Can return less than `count`, in which case you may have to read again if you know there's more data coming.
+	
+	@param buf The memory buffer to read data into.
+	
+	@param count The number of bytes to read from the socket.
+	
+	@return The number of bytes actually read.
 
 	#end
 	Method Read:Int( buf:Void Ptr,count:Int ) Override
@@ -99,8 +106,16 @@ Class Socket Extends std.stream.Stream
 	
 	Writes `count` bytes to the socket.
 	
+	Returns the number of bytes actually written.
+	
 	Can return less than `count` if the socket has been closed by the peer or if an error occured.
 	
+	@param buf The memory buffer to read data from.
+	
+	@param count The number of bytes to write to the socket.
+	
+	@return The number of bytes actually written.
+
 	#end
 	Method Write:Int( buf:Void Ptr,count:Int ) Override
 		If _socket<0 Return 0
@@ -136,6 +151,10 @@ Class Socket Extends std.stream.Stream
 	
 	`service` can be an integer port number.
 	
+	@param hostname The name of the host to connect to.
+	
+	@param service The service or port to connect to.
+	
 	#end	
 	Function Connect:Socket( hostname:String,service:String )
 	
@@ -166,6 +185,11 @@ Class SocketServer
 	End
 
 	#rem monkeydoc Accepts a new connection.
+	
+	Waits until a new incoming connection is available.
+	
+	@return A new connection, or null if there is a network error.
+	
 	#end
 	Method Accept:Socket()
 		If _socket<0 Return Null
@@ -176,11 +200,15 @@ Class SocketServer
 		Return New Socket( socket )
 	End
 
-	#rem monkeydoc Creates a server and starts it listening.
+	#rem monkeydoc Creates a server and starts listening.
 	
 	Returns a new server if successful, else null.
 	
 	`service` can be an integer port number.
+	
+	@param service The service or port to listen on.
+	
+	@param queue The number of incoming connections that can be queued.
 	
 	#end
 	Function Listen:SocketServer( service:String,queue:Int=128 )

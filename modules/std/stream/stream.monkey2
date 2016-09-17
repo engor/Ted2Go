@@ -40,30 +40,56 @@ Class Stream
 	#end
 	Method Seek( position:Int ) Abstract
 	
-	#rem monkeydoc Reads data from the filestream to memory.
+	#rem monkeydoc Reads data from the stream into memory.
 	
-	@param mem A pointer to the memory to read the data into.
+	Reads `count` bytes of data from the stream into either a raw memory pointer or a databuffer.
 	
-	@param count The number of bytes to read.
+	Returns the number of bytes actually read.
+	
+	@param buf A pointer to the memory to read the data into.
+	
+	@param data The databuffer to read the data into.
+	
+	@param count The number of bytes to read from the stream.
 	
 	@return The number of bytes actually read.
 	
 	#end
-	Method Read:Int( mem:Void Ptr,count:Int ) Abstract
+	Method Read:Int( buf:Void Ptr,count:Int ) Abstract
+	
+	Method Read:Int( data:DataBuffer,offset:Int,count:Int )
+		DebugAssert( offset>=0 And count>=0 And offset+count<=data.Length )
+		
+		Return Read( data.Data+offset,count )
+	End
 	
 	#rem monkeydoc Writes data to the stream from memory.
 	
-	@param mem A pointer to the memory to write the data from.
+	Writes `count` bytes of data to the stream from either a raw memory pointer or a databuffer.
 	
-	@param count The number of bytes to write.
+	Returns the number of bytes actually written
+	
+	@param buf A pointer to the memory to write the data from.
+
+	@param data The databuffer to write the data from.
+	
+	@param count The number of bytes to write to the stream.
 	
 	@return The number of bytes actually written.
 	
 	#end
-	Method Write:Int( mem:Void Ptr,count:Int ) Abstract
+	Method Write:Int( buf:Void Ptr,count:Int ) Abstract
 
+	Method Write:Int( data:DataBuffer,offset:Int,count:Int )
+		DebugAssert( offset>=0 And count>=0 And offset+count<=data.Length )
+
+		Return Write( data.Data+offset,count )
+	End
 
 	#rem monkeydoc The byte order of the stream.
+	
+	The default byte order is ByteOrder.BigEndian.
+	
 	#end
 	Property ByteOrder:ByteOrder()
 		Return _tmpbuf.ByteOrder
@@ -71,42 +97,12 @@ Class Stream
 		_tmpbuf.ByteOrder=byteOrder
 	End
 	
-	#rem monkeydoc Reads data from the stream into a databuffer.
-	
-	@param buf The databuffer to read the data into.
-	
-	@param offset The start offset in the databuffer.
-	
-	@param count The number of bytes to transfer.
-	
-	@return The number of bytes actually read.
-	
-	#end
-	Method Read:Int( buf:DataBuffer,offset:Int,count:Int )
-		DebugAssert( offset>=0 And count>=0 And offset+count<=buf.Length )
-		
-		Return Read( buf.Data+offset,count )
-	End
-	
-	#rem monkeydoc Writes data to a stream from a databuffer.
-	
-	@param buf The databuffer to write the data from.
-	
-	@param offset The start offset in the databuffer.
-	
-	@param count The number of bytes to transfer.
-	
-	@return The number of bytes actually written.
-	
-	#end
-	Method Write:Int( buf:DataBuffer,offset:Int,count:Int )
-		DebugAssert( offset>=0 And count>=0 And offset+count<=buf.Length )
-
-		Return Write( buf.Data+offset,count )
-	End
-
 	#rem monkeydoc Reads as many bytes as possible from a stream into memory.
 	
+	Continously reads data from a stream until either `count` bytes are read or the end of stream is reached.
+	
+	Returns the number of bytes read or the data read.
+
 	@param buf memory to read bytes into.
 	
 	@param data data buffer to read bytes into.
@@ -117,11 +113,13 @@ Class Stream
 	Method ReadAll:Int( buf:Void Ptr,count:Int )
 	
 		Local pos:=0
+		
 		While pos<count
 			Local n:=Read( Cast<Byte Ptr>( buf )+pos,count-pos )
 			If n<=0 Exit
 			pos+=n
 		Wend
+		
 		Return pos
 	End
 	
@@ -139,6 +137,8 @@ Class Stream
 	End
 	
 	Method ReadAll:DataBuffer()
+	
+		If Length>=0 Return ReadAll( Length-Position )
 
 		Local bufs:=New Stack<DataBuffer>
 		Local buf:=New DataBuffer( 4096 ),pos:=0
@@ -462,8 +462,14 @@ Class Stream
 	#end
 	Const OpenFuncs:=New StringMap<OpenFunc>
 	
+	Protected
+	
+	Method New()
+		_tmpbuf=New DataBuffer( 8,ByteOrder.LittleEndian )
+	End
+	
 	Private
 	
-	Field _tmpbuf:=New DataBuffer( 8 )
+	Field _tmpbuf:DataBuffer
 
 End

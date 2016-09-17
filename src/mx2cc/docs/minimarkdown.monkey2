@@ -109,16 +109,21 @@ Class MarkdownConvertor
 	
 	Method Find:Int( str:String,chr:String,index:Int=0 )
 
+		Local i0:=index
+
 		Repeat
-			Local i:=str.Find( chr,index )
-			If i=-1 Return str.Length
-			If i=0 Or str[i-1]<>CHAR_ESCAPE Return i
-			index=i+1
+		
+			Local i1:=str.Find( chr,i0 )
+			If i1=-1 Return str.Length
+			
+			If i1=0 Or str[i1-1]<>CHAR_ESCAPE Return i1
+			
+			i0=i1+1
 		Forever
 		
 		Return str.Length
 	End
-	
+
 	Method ReplaceAll:String( str:String,find:String,rep:String,index:Int )
 	
 		Local i0:=index
@@ -144,21 +149,30 @@ Class MarkdownConvertor
 		
 			Local i1:=str.Find( "&",i0 )
 			If i1=-1 Exit
-
-			Const tags:=New String[]( "nbsp;" )
-
-			For Local tag:=Eachin tags
-				If str.Slice( i1+1,i1+1+tag.Length )<>tag Continue
-				i0=i1+1+tag.Length
-				Exit
-			Next
-			If i0>i1 Continue
+			
+			Local i2:=str.Find( ";",i1+1 )
+			If i2<>-1 And i2-i1<8
+			
+				Local r:=str.Slice( i1+1,i2 )
+				
+				Const tags:=New String[]( "nbsp" )
+				
+				For Local tag:=Eachin tags
+					If r<>tag Continue
+					
+					i0=i2+1
+					Exit
+				Next
+				
+				If i0>i1 Continue
+			Endif
 			
 			Local r:="&amp;"
 			str=str.Slice( 0,i1 )+r+str.Slice( i1+1 )
 			i0=i1+r.Length
-		Forever
 		
+		Forever
+
 		'str=str.Replace( "<","&lt;" )
 		'str=str.Replace( ">","&gt;" )
 		i0=0
@@ -172,32 +186,38 @@ Class MarkdownConvertor
 			
 			Local i2:=str.Find( ">",i1+1 )
 			If i2=-1
-				str=ReplaceAll( str,"<","&lt;",i0 )
-				str=ReplaceAll( str,">","&gt;",i0 )
+				str=ReplaceAll( str,"<","&lt;",i1 )
 				Exit
 			Endif
+			
+			Local i3:=str.Find( "<",i1+1 )
+			If i3<>-1 And i3<i2
+				Local r:="&lt;"
+				str=str.Slice( 0,i1 )+r+str.Slice( i1+1 )
+				i0=i1+r.Length
+				Continue
+			Endif
+			
+			Local r:=str.Slice( i1+1,i2 )
 			
 			Const tags:=New String[]( "a href=","/a" )
 			
 			For Local tag:=Eachin tags
-				If str.Slice( i1+1,i1+1+tag.Length )<>tag Continue
+				If Not r.StartsWith( tag ) Continue
 				
-				Local r:=str.Slice( i1+1,i2 )
-
 				r=r.Replace( "\","\\" )
 				r=r.Replace( "*","\*" )
 				r=r.Replace( "_","\_" )
 				r=r.Replace( "`","\`" )
 				
 				r="<"+r+">"
-
 				str=str.Slice( 0,i1 )+r+str.Slice( i2+1 )
 				i0=i1+r.Length
 				Exit
 			Next
 			If i0>i1 Continue
 			
-			Local r:="&lt;"+str.Slice( i1+1,i2 )+"&gt;"
+			r="&lt;"+r+"&gt;"
 			str=str.Slice( 0,i1 )+r+str.Slice( i2+1 )
 			i0=i1+r.Length
 		Forever

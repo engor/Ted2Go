@@ -24,11 +24,18 @@ Function AppPath:String()="bbFileSystem::appPath"
 
 #rem monkeydoc Gets application command line arguments.
 
+The first argument is always the application name.
+
 @return The application command line arguments.
+
 #end
 Function AppArgs:String[]()="bbFileSystem::appArgs"
 
 #rem monkeydoc Copies a file.
+
+Copies a file from `srcPath` to `dstPath`, overwriting `dstpath` if it alreay exits.
+
+Returns true if successful.
 
 @return True if the file was successfully copied.
 
@@ -72,46 +79,46 @@ Const FILETYPE_DIR:=FileType.Directory
 #end
 Const FILETYPE_UNKNOWN:=FileType.Unknown
 
-#rem monkeydoc Gets the filesystem directory of the assets folder.
+#rem monkeydoc Gets the filesystem directory of the assets directory.
+
+Note that assets are only stored in the filesystem on the desktop and emscripten targets. Other targets will return an empty string.
 
 @return The directory app assets are stored in.
 
 #end
 Function AssetsDir:String()
-
 #If __TARGET__="macos"
-
 	Return AppDir()+"../Resources/"
-	
 #Else If __DESKTOP_TARGET__ Or __TARGET__="emscripten"
-
 	Return AppDir()+"assets/"
-	
 #Else
-
 	Return ""
-	
 #Endif
-
 End
 
+#rem monkeydoc Gets the filesystem directory of the desktop directory.
+
+Note that only the desktop targets have a desktop directory. Other targets will return an empty string.
+
+@return The desktop directory.
+
+#end
 Function DesktopDir:String()
-
 #If __TARGET__="windows"
-	
 	Return (String.FromCString( getenv( "HOMEDRIVE" ) )+String.FromCString( getenv( "HOMEPATH" ) )).Replace( "\","/" )+"/Desktop/"
-	
 #Else If __DESKTOP_TARGET__
-
 	Return String.FromCString( getenv( "HOME" ) )+"/Desktop/"
-
 #Endif
-
 	Return ""
-
 End
 
 #rem monkeydoc Extracts the root directory from a file system path.
+
+A root directory is a directory path that:
+
+* Starts with '//' or '/', or...
+
+* Starts with 'blah:/', 'blah://' or 'blah::'.
 
 @param path The filesystem path.
 
@@ -264,7 +271,7 @@ Function ExtractExt:String( path:String )
 	Return ""
 End
 
-#rem monkeydoc Strips the extension component from a filesystem path
+#rem monkeydoc Strips the extension component from a filesystem path.
 
 @param path The filesystem path.
 
@@ -403,6 +410,10 @@ End
 
 #rem monkeydoc Loads a directory.
 
+Loads the contents of directory into an array.
+
+Does not return any '.' or '..' entries in a directory.
+
 @param path The filesystem path of the directory to load.
 
 @return An array containing all filenames in the `path`, excluding '.' and '..' entries.
@@ -436,6 +447,8 @@ End
 
 Any existing file at the path will be overwritten.
 
+Returns true if successful.
+
 @param path The filesystem path of the file file to create.
 
 @param createDir If true, also creates the file directory if necessary.
@@ -460,10 +473,12 @@ End
 
 @param recursive If true, any required parent directories are also created.
 
+@param clean If true, any existing directory at `dir` is first deleted.
+
 @return True if a directory at `path` was successfully created or already existed.
 
 #end
-Function CreateDir:Bool( dir:String,recursive:Bool=True )
+Function CreateDir:Bool( dir:String,recursive:Bool=True,clean:Bool=False )
 
 	If recursive
 	
@@ -472,7 +487,7 @@ Function CreateDir:Bool( dir:String,recursive:Bool=True )
 		
 			Select GetFileType( parent )
 			Case FileType.None
-				If Not CreateDir( parent,True ) Return False
+				If Not CreateDir( parent,True,False ) Return False
 			Case FileType.File
 				Return False
 			End
@@ -480,12 +495,16 @@ Function CreateDir:Bool( dir:String,recursive:Bool=True )
 		Endif
 		
 	Endif
+	
+	If clean And Not DeleteDir( dir,True ) Return False
 
 	mkdir( StripSlashes( dir ),$1ff )
 	Return GetFileType( dir )=FileType.Directory
 End
 
 #rem monkeydoc Deletes a file at a filesystem path.
+
+Returns true if successful.
 
 @param path The filesystem path.
 
@@ -500,6 +519,10 @@ End
 
 #rem monkeydoc Deletes a directory at a filesystem path.
 
+If `recursive` is true, all subdirectories are also deleted.
+
+Returns true if successful.
+
 @param path The filesystem path.
 
 @param recursive True to delete subdirectories too.
@@ -509,19 +532,11 @@ End
 #end
 Function DeleteDir:Bool( dir:String,recursive:Bool=False )
 
-	Select GetFileType( dir )
-	Case FileType.None
-	
-		Return True
-		
-	Case FileType.Directory
-	
+	If GetFileType( dir )=FileType.Directory
+
 		If recursive
-		
 			For Local f:=Eachin LoadDir( dir )
-			
 				Local p:=dir+"/"+f
-				
 				Select GetFileType( p )
 				Case FileType.File
 					If Not DeleteFile( p ) Return False
@@ -529,17 +544,32 @@ Function DeleteDir:Bool( dir:String,recursive:Bool=False )
 					If Not DeleteDir( p,True ) Return false
 				End
 			Next
-			
 		Endif
 		
 		rmdir( StripSlashes( dir ) )
-		
-		Return GetFileType( dir )=FileType.None
-	End
+	Endif
 	
-	Return False
+	Return GetFileType( dir )=FileType.None
 End
 
+
+#rem monkeydoc Copies a directory.
+
+Copies a directory from `srcDir` to `dstDir`.
+
+If `recursive` is true, all subdirectories are also copied.
+
+Returns true if successful.
+
+@param srcDir Source directory.
+
+@param dstDir Destination directory.
+
+@param recursive Recursive flag.
+
+@return True if successful.
+
+#end
 Function CopyDir:Bool( srcDir:String,dstDir:String,recursive:Bool=True )
 
 	If GetFileType( srcDir )<>FileType.Directory Return False
@@ -563,4 +593,3 @@ Function CopyDir:Bool( srcDir:String,dstDir:String,recursive:Bool=True )
 	Return True
 
 End
-

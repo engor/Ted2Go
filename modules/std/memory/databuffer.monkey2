@@ -37,11 +37,13 @@ Class DataBuffer
 	
 	@param length The length of the databuffer to create, in bytes.
 	
+	@param byteOrder Initial byte order of the data.
+	
 	#end
-	Method New( length:Int )
+	Method New( length:Int,byteOrder:ByteOrder=std.memory.ByteOrder.LittleEndian )
 		_length=length
 		_data=Cast<UByte Ptr>( libc.malloc( length ) )
-		_byteOrder=ByteOrder.LittleEndian
+		_byteOrder=byteOrder
 		_swapEndian=False
 	End
 	
@@ -82,7 +84,7 @@ Class DataBuffer
 
 	#rem monkeydoc Resizes the databuffer.
 	
-	Note: This method reallocates the internal memory buffer and will cause the Data property to change.
+	Note: This method reallocates the internal memory buffer and will cause the [[Data]] property to change.
 	
 	@param length The new length of the databuffer.
 	
@@ -98,9 +100,9 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to read.
+	@param offset The offset to read.
 	
-	#return The byte read from `offset`.
+	@return The byte read from `offset`.
 	
 	#end
 	Method PeekByte:Byte( offset:Int )
@@ -113,9 +115,9 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to read.
+	@param offset The offset to read.
 	
-	#return The ubyte read from `offset`.
+	@return The ubyte read from `offset`.
 	
 	#end
 	Method PeekUByte:UByte( offset:Int )
@@ -128,9 +130,9 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to read.
+	@param offset The offset to read.
 	
-	#return The short read from `offset`.
+	@return The short read from `offset`.
 	
 	#end
 	Method PeekShort:Short( offset:Int )
@@ -145,9 +147,9 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to read.
+	@param offset The offset to read.
 	
-	#return The ushort read from `offset`.
+	@return The ushort read from `offset`.
 	
 	#end
 	Method PeekUShort:UShort( offset:Int )
@@ -162,9 +164,9 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to read.
+	@param offset The offset to read.
 	
-	#return The int read from `offset`.
+	@return The int read from `offset`.
 	
 	#end
 	Method PeekInt:Int( offset:Int )
@@ -179,9 +181,9 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to read.
+	@param offset The offset to read.
 	
-	#return The uint read from `offset`.
+	@return The uint read from `offset`.
 	
 	#end
 	Method PeekUInt:UInt( offset:Int )
@@ -196,9 +198,9 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to read.
+	@param offset The offset to read.
 	
-	#return The long read from `offset`.
+	@return The long read from `offset`.
 	
 	#end
 	Method PeekLong:Long( offset:Int )
@@ -213,9 +215,9 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to read.
+	@param offset The offset to read.
 	
-	#return The ulong read from `offset`.
+	@return The ulong read from `offset`.
 	
 	#end
 	Method PeekULong:ULong( offset:Int )
@@ -230,9 +232,9 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to read.
+	@param offset The offset to read.
 	
-	#return The float read from `offset`.
+	@return The float read from `offset`.
 	
 	#end
 	Method PeekFloat:Float( offset:Int )
@@ -247,9 +249,9 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to read.
+	@param offset The offset to read.
 	
-	#return The double read from `offset`.
+	@return The double read from `offset`.
 	
 	#end
 	Method PeekDouble:Double( offset:Int )
@@ -260,7 +262,18 @@ Class DataBuffer
 		Return t
 	End
 	
-	#rem monkeydoc Reads a utf8 string from the databuffer.
+	#rem monkeydoc Reads a string from the databuffer.
+	
+	If `count` is omitted, all bytes from `offset` until the end of the data buffer are read.
+	
+	`encoding` should be one of "utf8" or "ascii".
+
+	@param offset Byte offset to read the string.
+	
+	@param count Number of bytes to read.
+	
+	@param encoding The encoding to use.
+	
 	#end
 	Method PeekString:String( offset:Int,encoding:String="utf8" )
 		DebugAssert( offset>=0 And offset<=_length )
@@ -270,6 +283,7 @@ Class DataBuffer
 	
 	Method PeekString:String( offset:Int,count:Int,encoding:String="utf8" )
 		DebugAssert( offset>=0 And count>=0 And offset+count<=_length )
+		DebugAssert( encoding="utf8" Or encoding="ascii" )
 		
 		If encoding="utf8" Return String.FromUtf8Data( _data+offset,count )
 		
@@ -280,7 +294,7 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to write.
+	@param offset The offset to write.
 	
 	#end
 	Method PokeByte( offset:Int,value:Byte )
@@ -293,7 +307,7 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to write.
+	@param offset The offset to write.
 	
 	#end
 	Method PokeUByte( offset:Int,value:UByte )
@@ -306,7 +320,7 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to write.
+	@param offset The offset to write.
 	
 	#end
 	Method PokeShort( offset:Int,value:Short )
@@ -320,7 +334,7 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to write.
+	@param offset The offset to write.
 	
 	#end
 	Method PokeUShort( offset:Int,value:UShort )
@@ -334,7 +348,7 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to write.
+	@param offset The offset to write.
 	
 	#end
 	Method PokeInt( offset:Int,value:Int )
@@ -348,7 +362,7 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to write.
+	@param offset The offset to write.
 	
 	#end
 	Method PokeUInt( offset:Int,value:UInt )
@@ -362,7 +376,7 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to write.
+	@param offset The offset to write.
 	
 	#end
 	Method PokeLong( offset:Int,value:Long )
@@ -376,7 +390,7 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to write.
+	@param offset The offset to write.
 	
 	#end
 	Method PokeULong( offset:Int,value:ULong )
@@ -390,7 +404,7 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to write.
+	@param offset The offset to write.
 	
 	#end
 	Method PokeFloat( offset:Int,value:Float )
@@ -404,7 +418,7 @@ Class DataBuffer
 	
 	In debug builds, a runtime error will occur if `offset` is outside the range of the databuffer.
 	
-	#param offset The offset to write.
+	@param offset The offset to write.
 	
 	#end
 	Method PokeDouble( offset:Int,value:Double )
@@ -414,11 +428,23 @@ Class DataBuffer
 		Cast<Double Ptr>( _data+offset )[0]=value
 	End
 
-	#rem monkeydoc Write a string to the databuffer in utf8 format.
+	#rem monkeydoc Write a string to the databuffer.
+
+	`encoding` should be one of "utf8" or "ascii".
+	
+	If there is not enough room in the data buffer, the string data is truncated.
+	
+	@param offset Byte offset to write the string.
+	
+	@param value The string to write.
+	
+	@param encoding The encoding to use.
 	
 	#end	
 	Method PokeString( offset:Int,value:String,encoding:String="utf8" )
 		DebugAssert( offset>=0 And offset<=_length )
+		
+		DebugAssert( encoding="utf8" Or encoding="ascii" )
 		
 		If encoding="utf8"
 			Local count:=value.Utf8Length
@@ -429,6 +455,7 @@ Class DataBuffer
 			If offset+count>_length count=_length-offset
 			value.ToCString( _data+offset,count )
 		Endif
+
 	End
 
 	#rem monkeydoc Creates a slice of the databuffer.
@@ -463,7 +490,7 @@ Class DataBuffer
 		Return data
 	End
 	
-	#rem monkeydoc Copies databuffer data.
+	#rem monkeydoc Copies databuffer data to another databuffer.
 	
 	In debug builds, a runtime error while occur if an attempt it made to copy data outside the range of either databuffer.
 	
@@ -513,12 +540,11 @@ Class DataBuffer
 		Local stream:=Stream.Open( path,"r" )
 		If Not stream Return Null
 		
-		Local length:=stream.Length
-		Local buf:=New DataBuffer( length )
-		stream.Read( buf.Data,length )
+		Local data:=stream.ReadAll()
 		
 		stream.Close()
-		Return buf
+		
+		Return data
 	End
 
 	Private

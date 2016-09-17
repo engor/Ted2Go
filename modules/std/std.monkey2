@@ -5,6 +5,7 @@ Namespace std
 #Import "<stb-image>"
 #Import "<stb-image-write>"
 #import "<stb-vorbis>"
+#Import "<miniz>"
 
 #Import "collections/container"
 #Import "collections/stack"
@@ -12,13 +13,12 @@ Namespace std
 #Import "collections/map"
 #Import "collections/deque"
 
-#Import "memory/byteorder"
-#Import "memory/databuffer"
-
 #Import "stream/stream"
 #Import "stream/filestream"
-#Import "stream/datastream"
-#Import "stream/zipstream"
+
+#Import "memory/byteorder"
+#Import "memory/databuffer"
+#Import "memory/datastream"
 
 #Import "geom/vec2"
 #Import "geom/vec3"
@@ -66,20 +66,19 @@ Function Main()
 	'
 	std.time.Microsecs()
 
-	Stream.OpenFuncs["zip"]=Lambda:Stream( proto:String,path:String,mode:String )
-
-		Return ZipStream.Open( path,mode )
-	End
-
+	'Add 'file::' stream protocol
+	'
 	Stream.OpenFuncs["file"]=Lambda:Stream( proto:String,path:String,mode:String )
 
 		Return FileStream.Open( path,mode )
 	End
 	
-	'Note: "asset::" support for android/ios is in mojo, as it uses SDL_RWop and we don't want to std to be dependant on SDL2...
-	'	
 #If Not __MOBILE_TARGET__
-	
+
+	'Add 'asset::' stream protocol
+	'	
+	'Note: "asset::" support for android/ios is in mojo, as it uses SDL_RWop and we don't want std to be dependant on SDL2...
+	'	
 	Stream.OpenFuncs["asset"]=Lambda:Stream( proto:String,path:String,mode:String )
 
 		Return FileStream.Open( filesystem.AssetsDir()+path,mode )

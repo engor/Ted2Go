@@ -1,4 +1,6 @@
 
+'This is a MESS!!!!!
+
 Namespace mx2.docs
 
 Const PAGES_DIR:="docs/__PAGES__/"
@@ -348,7 +350,7 @@ Class DocsMaker
 	End
 	
 	Method SavePage( docs:String,page:String )
-
+	
 		page=page.Replace( ".","-" )
 		
 		docs=_pageTemplate.Replace( "${CONTENT}",docs )
@@ -641,7 +643,6 @@ Class DocsMaker
 		If id.StartsWith( "@" ) id=id.Slice( 1 ).Capitalize()	
 	
 		EmitNode( id,scope,page )
-
 	End
 	
 	Method EndNode()
@@ -733,9 +734,6 @@ Class DocsMaker
 		
 		_md.Emit( "_"+md+"_" )
 	
-'		_md.Emit( "_Module: &lt;"+_module.name+"&gt;_  " )
-'		_md.Emit( "_Namespace: "+nmspace.Name+"_" )
-		
 		EmitMembers( "alias",nmspace,DECL_PUBLIC,-1 )
 		EmitMembers( "enum",nmspace,DECL_PUBLIC,-1 )
 		EmitMembers( "struct",nmspace,DECL_PUBLIC,-1 )
@@ -971,6 +969,8 @@ Class DocsMaker
 			Local buf:StringStack
 					
 			For Local func:=Eachin flist.funcs
+				If func.IsMethod Or func.IsCtor And func.scope<>scope Continue
+				
 				Local decl:=func.fdecl
 				
 				If DocsHidden( decl,DECL_PUBLIC ) Continue
@@ -1018,6 +1018,7 @@ Class DocsMaker
 			Local docs:=_md.Flush()
 			
 			Local page:=DeclPath( flist.funcs[0].fdecl,flist.funcs[0].scope )
+
 			SavePage( docs,page )
 			
 			EmitLeaf( flist.funcs[0].fdecl,page )

@@ -9,13 +9,16 @@ Class JsonBuffer
 
 			_indent=_indent.Slice( 0,-2 )
 			_sep=False
-			
+
 			If _blks.Pop()=_buf.Length
+			
 				_buf.Resize( _buf.Length-1 )
+				
 				If _buf.Length
 					Local t:=_buf.Top
 					If Not (t.EndsWith( "{" ) Or t.EndsWith( "[" )) _sep=True
 				Endif
+				
 				Return
 			Endif
 
@@ -23,6 +26,7 @@ Class JsonBuffer
 	
 		If _sep json=","+json
 		_buf.Push( _indent+json )
+		_sep=True
 	
 		If json.EndsWith( "{" ) Or json.EndsWith( "[" ) 
 
@@ -30,11 +34,7 @@ Class JsonBuffer
 
 			_indent+="  "
 			_sep=False
-
-			Return
 		Endif
-
-		_sep=True
 	
 	End
 	

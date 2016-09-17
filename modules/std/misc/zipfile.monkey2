@@ -1,6 +1,8 @@
 
 Namespace std.zipfile
 
+Using miniz
+
 #rem monkeydoc @hidden
 #end
 Class ZipFile
