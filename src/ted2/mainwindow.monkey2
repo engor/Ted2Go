@@ -65,6 +65,7 @@ Class MainWindowInstance Extends Window
 		_tabMenu=New Menu
 		_tabMenu.AddAction( _fileActions.close )
 		_tabMenu.AddAction( _fileActions.closeOthers )
+		_tabMenu.AddAction( _fileActions.closeToRight )
 		_tabMenu.AddSeparator()
 		_tabMenu.AddAction( _fileActions.save )
 		_tabMenu.AddAction( _fileActions.saveAs )
@@ -109,6 +110,7 @@ Class MainWindowInstance Extends Window
 		_fileMenu.AddSeparator()
 		_fileMenu.AddAction( _fileActions.close )
 		_fileMenu.AddAction( _fileActions.closeOthers )
+		_fileMenu.AddAction( _fileActions.closeToRight )
 		_fileMenu.AddAction( _fileActions.closeAll )
 		_fileMenu.AddSeparator()
 		_fileMenu.AddAction( _fileActions.save )

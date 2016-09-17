@@ -7,6 +7,7 @@ Class FileActions
 	Field open:Action
 	Field close:Action
 	Field closeOthers:Action
+	Field closeToRight:Action
 	Field closeAll:Action
 	Field save:Action
 	Field saveAs:Action
@@ -37,9 +38,12 @@ Class FileActions
 #endif		
 		close.Triggered=OnClose
 		
-		closeOthers=New Action( "Close Others" )
+		closeOthers=New Action( "Close Other Tabs" )
 		closeOthers.Triggered=OnCloseOthers
-
+		
+		closeToRight=New Action( "Close Tabs To The Right" )
+		closeToRight.Triggered=OnCloseToRight
+		
 		closeAll=New Action( "Close All" )
 		closeAll.Triggered=OnCloseAll
 		
@@ -65,10 +69,12 @@ Class FileActions
 	End
 	
 	Method Update()
+	
+		Local docs:=_docs.OpenDocuments
 
 		Local n:=0
 		Local anyDirty:Bool
-		For Local doc:=Eachin _docs.OpenDocuments
+		For Local doc:=Eachin docs
 			If doc.Dirty anyDirty=True
 			n+=1
 		Next
@@ -77,6 +83,7 @@ Class FileActions
 
 		close.Enabled=doc
 		closeOthers.Enabled=n>1
+		closeToRight.Enabled=doc And doc<>docs[docs.Length-1]
 		closeAll.Enabled=n>0
 		save.Enabled=doc And doc.Dirty
 		saveAs.Enabled=doc
@@ -122,23 +129,6 @@ Class FileActions
 		Return doc
 	End
 	
-	Method CloseAll:Bool( except:Ted2Document )
-
-		For Local doc:=Eachin _docs.OpenDocuments
-			If doc=except Continue
-			
-			If Not CanClose( doc ) Return False
-		Next
-		
-		For Local doc:=Eachin _docs.OpenDocuments
-			If doc=except Continue
-			
-			doc.Close()
-		Next
-		
-		Return True
-	End
-	
 	Method OnNew()
 	
 		Local path:=MainWindow.AllocTmpPath( ".monkey2" )
@@ -175,12 +165,57 @@ Class FileActions
 	
 	Method OnCloseOthers()
 	
-		CloseAll( _docs.CurrentDocument )
+		If Not _docs.CurrentDocument Return
+	
+		Local docs:=_docs.OpenDocuments
+		
+		For Local doc:=Eachin docs
+			If doc<>_docs.CurrentDocument And Not CanClose( doc ) Return
+		Next
+		
+		For Local doc:=Eachin docs
+			If doc<>_docs.CurrentDocument doc.Close()
+		Next
+	End
+	
+	Method OnCloseToRight()
+	
+		If Not _docs.CurrentDocument Return
+	
+		Local docs:=_docs.OpenDocuments
+		
+		Local close:=False
+		For Local doc:=Eachin docs
+			If close
+				If Not CanClose( doc ) Return
+			Else
+				If doc=_docs.CurrentDocument close=True
+			Endif
+		Next
+		
+		close=False
+		For Local doc:=Eachin docs
+			If close
+				doc.Close()
+			Else
+				If doc=_docs.CurrentDocument close=True
+			Endif
+		Next
+		
 	End
 	
 	Method OnCloseAll()
-	
-		CloseAll( Null )
+
+		Local docs:=_docs.OpenDocuments
+		
+		For Local doc:=Eachin docs
+			If Not CanClose( doc ) Return
+		Next
+		
+		For Local doc:=Eachin docs
+			doc.Close()
+		Next
+		
 	End
 	
 	Method OnSave()
