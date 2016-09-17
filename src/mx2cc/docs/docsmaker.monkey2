@@ -969,7 +969,7 @@ Class DocsMaker
 			Local buf:StringStack
 					
 			For Local func:=Eachin flist.funcs
-				If func.IsMethod Or func.IsCtor And func.scope<>scope Continue
+				If (func.IsMethod Or func.IsCtor) And func.scope<>scope Continue
 				
 				Local decl:=func.fdecl
 				
