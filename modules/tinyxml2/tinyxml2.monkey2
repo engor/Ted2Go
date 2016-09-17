@@ -32,7 +32,7 @@ enum XMLError="tinyxml2::"
 
 End
 
-Class XMLAttribute Extends Void
+Class XMLAttribute Extends Void="tinyxml2::XMLAttribute"
 
 	Method Name:String() Extension="tinyxml2::bbAttributeName"
 

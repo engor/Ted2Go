@@ -1,5 +1,5 @@
 
-#ifndef BB_TIMYXML2_GLUE_H
+#ifndef BB_TINYXML2_GLUE_H
 #define BB_TINYXML2_GLUE_H
 
 #include "tinyxml2.h"
