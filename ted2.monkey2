@@ -6,6 +6,7 @@
 #Import "<std>"
 #Import "<mojo>"
 #Import "<mojox>"
+#Import "<tinyxml2>"
 
 #Import "mainwindow"
 #Import "documentmanager"
@@ -29,6 +30,7 @@
 #Import "imagedocument"
 #import "audiodocument"
 #import "jsondocument"
+#import "xmldocument"
 
 #import "textviewkeyeventfilter"
 
@@ -42,6 +44,7 @@ Namespace ted2
 Using std..
 Using mojo..
 Using mojox..
+Using tinyxml2..
 
 Function Main()
 
