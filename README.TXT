@@ -4,9 +4,6 @@
 W A R N I N G ! The master branch is super-volatile. Grabbing the most recently tagged version is
 recommended if you just want to give monkey2 a try.
 
-Only tagged releases include synced binaries of the compiler. If you pull from master,
-you may or may not have to 'updatemx2cc' before (or after) building everything else.
-
 
 ***** Building monkey2 on Windows *****
 
