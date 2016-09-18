@@ -8,44 +8,23 @@
 
 namespace tinyxml2{
 
-	bbString bbAttributeName( XMLAttribute *attribute ){
-		return bbString::fromUtf8String( attribute->Name() );
-	}
+	bbString bbAttributeName( XMLAttribute *attribute );
 	
-	bbString bbAttributeValue( XMLAttribute *attribute ){
-		return bbString::fromUtf8String( attribute->Value() );
-	}
+	bbString bbAttributeValue( XMLAttribute *attribute );
 	
-	XMLAttribute *bbAttributeNext( XMLAttribute *attribute ){
-		return const_cast<XMLAttribute*>( attribute->Next() );
-	}
+	XMLAttribute *bbAttributeNext( XMLAttribute *attribute );
 	
-	bbString bbNodeValue( XMLNode *node ){
-		return bbString::fromUtf8String( node->Value() );
-	}
+	bbString bbNodeValue( XMLNode *node );
 	
-	bbString bbElementName( XMLElement *element ){
-		return bbString::fromUtf8String( element->Name() );
-	}
+	bbString bbElementName( XMLElement *element );
 	
-	bbString bbElementAttribute( XMLElement *element,bbString name,bbString value ){
-		bbUtf8String cstr( value );
-		const char *p=0;
-		if( value.length() ) p=cstr;
-		return bbString::fromUtf8String( element->Attribute( bbUtf8String( name ),p ) );
-	}
+	bbString bbElementAttribute( XMLElement *element,bbString name,bbString value );
 	
-	XMLAttribute *bbElementFirstAttribute( XMLElement *element ){
-		return const_cast<XMLAttribute*>( element->FirstAttribute() );
-	}
+	XMLAttribute *bbElementFirstAttribute( XMLElement *element );
 	
-	bbString bbElementGetText( XMLElement *element ){
-		return bbString::fromUtf8String( element->GetText() );
-	}
+	bbString bbElementGetText( XMLElement *element );
 
-	void bbDocumentDestroy( XMLDocument *doc ){
-		delete doc;
-	}
+	void bbDocumentDestroy( XMLDocument *doc );
 }
 
 #endif

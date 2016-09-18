@@ -3,6 +3,7 @@ Namespace tinyxml2
 
 #Import "native/tinyxml2.cpp"
 #Import "native/tinyxml2.h"
+#Import "native/glue.cpp"
 #Import "native/glue.h"
 
 Extern
