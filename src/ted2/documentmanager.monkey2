@@ -196,7 +196,7 @@ Class DocumentManager
 		
 		If Not jobj.Contains( "openDocuments" ) Return
 		
-		For Local doc:=Eachin jobj["openDocuments"].ToArray()
+		For Local doc:=Eachin jobj.GetArray( "openDocuments" )
 		
 			Local path:=doc.ToString()
 			If GetFileType( path )<>FileType.File Continue
@@ -205,8 +205,8 @@ Class DocumentManager
 			If tdoc And MainWindow.IsTmpPath( path ) tdoc.Dirty=True
 		Next
 		
-		If jobj.Contains( "currentDocument" )
-			Local path:=jobj["currentDocument"].ToString()
+		Local path:=jobj.GetString( "currentDocument" )
+		If path
 			Local doc:=FindDocument( path )
 			If doc CurrentDocument=doc
 		Endif
