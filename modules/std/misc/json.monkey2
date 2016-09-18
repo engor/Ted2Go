@@ -24,55 +24,111 @@ End
 This is base class of all JsonValue types.
 
 #end
-Class JsonValue Abstract
+Class JsonValue
 
+	Const NullValue:=New JsonValue
+
+	#rem monkeydoc True if value is null.
+	#end
+	Property IsNull:Bool()
+		Return Self=NullValue
+	End
+
+	#rem monkeydoc True if value is a bool.
+	#end
+	Property IsBool:Bool() Virtual
+		Return False
+	End
+	
+	#rem monkeydoc True if value is a number.
+	#end
+	Property IsNumber:Bool() Virtual
+		Return False
+	End
+	
+	#rem monkeydoc True if value is a string.
+	#end
+	Property IsString:Bool() Virtual
+		Return False
+	End
+	
+	#rem monkeydoc True if value is an array.
+	#end
+	Property IsArray:Bool() Virtual
+		Return False
+	End
+	
+	#rem monkeydoc True if value is an object.
+	#end
+	Property IsObject:Bool() Virtual
+		Return False
+	End
+
+	#rem monkeydoc Gets bool value.
+	
+	If the value is a bool, returns its actual value.
+	
+	If the value is not a bool, false is returned by default.
+	
+	#end	
 	Method ToBool:Bool() Virtual
-		Assert( False )
-		Return Null
+		Return False
 	End
 	
+	#rem monkeydoc Gets number value.
+	
+	If the value is a number, returns its actual value.
+	
+	If the value is not a number, 0 is returned by default.
+	
+	#end	
 	Method ToNumber:Double() Virtual
-		Assert( False )
-		Return Null
-	End	
+		Return 0
+	End
 	
+	#rem monkeydoc Gets string value.
+	
+	If the value is a string, returns its actual value.
+	
+	If the value is not a string, "" is returned by default.
+	
+	#end	
 	Method ToString:String() Virtual
-		Assert( False )
-		Return Null
+		Return ""
 	End
 	
+	#rem monkeydoc Gets array value.
+	
+	If the value is an array, returns its actual value in the form of a Stack<JsonValue> object.
+	
+	If the value is not an array, null is returned by default.
+	
+	#end	
 	Method ToArray:Stack<JsonValue>() Virtual
-		Assert( False )
 		Return Null
 	End
 	
+	#rem monkeydoc Gets object value.
+	
+	If the value is an object, returns its actual value in the form of a StringMap<JsonValue> object.
+	
+	If the value is not an object, null is returned by default.
+	
+	#end	
 	Method ToObject:StringMap<JsonValue>() Virtual
-		Assert( False )
 		Return Null
 	End
 	
+	#rem monkeydoc Converts the value to a JSON string.
+	#end	
 	Method ToJson:String() Virtual
 		Local buf:=New StringStack
 		PushJson( buf )
 		Return buf.Join( "" )
 	End
-		
-	Method ToInt:Int()
-		Return Int( ToNumber() )
-	End
 	
-	Method ToLong:Long()
-		Return Long( ToNumber() )
-	End
-	
-	Method ToFloat:Float()
-		Return Float( ToNumber() )
-	End
-	
-	Method ToDouble:Double()
-		Return ToNumber()
-	End
-	
+	#rem monkeydoc Saves the value as a JSON string to a file.
+	#end
 	Method Save:Bool( path:String )
 	
 		Local buf:=New StringStack
@@ -82,6 +138,8 @@ Class JsonValue Abstract
 		Return stringio.SaveString( src,path )
 	End
 	
+	#rem monkeydoc Load the value from a JSON string stored in a file.
+	#end
 	Function Load:JsonValue( path:String,throwex:Bool=False )
 	
 		Local src:=stringio.LoadString( path )
@@ -90,6 +148,11 @@ Class JsonValue Abstract
 		Return Parse( src,throwex )
 	End
 	
+	#rem monkeydoc Creates a JSONValue from a JSON string.
+	
+	Returns null if the json could not be parsed.
+	
+	#end
 	Function Parse:JsonValue( src:String,throwex:Bool=False )
 		Try
 			Local parser:=New JsonParser( src )
@@ -103,6 +166,11 @@ Class JsonValue Abstract
 	Protected
 	
 	Global _indent:String
+	
+	#rem monkeydoc @hidden
+	#end
+	Method New()
+	End
 	
 	#rem monkeydoc @hidden
 	#end
@@ -124,20 +192,30 @@ Class JsonBool Extends JsonValue
 		_data=data
 	End
 	
+	#rem monkeydoc @hidden Deprecated!
+	#end
 	Property Data:Bool()
 		Return _data
 	Setter( data:Bool )
 		_data=data
 	End
 	
+	Property IsBool:Bool() Override
+		Return True
+	End
+	
 	Method ToBool:Bool() Override
 		Return _data
 	End
 	
+	#rem monkeydoc @hidden Deprecated!
+	#end
 	Method ToNumber:Double() Override
 		Return _data
 	End
 	
+	#rem monkeydoc @hidden Deprecated!
+	#end
 	Method ToString:String() Override
 		Return _data ? "true" Else "false"
 	End
@@ -160,20 +238,30 @@ Class JsonNumber Extends JsonValue
 		_data=data
 	End
 	
+	#rem monkeydoc @hidden Deprecated!
+	#end
 	Property Data:Double()
 		Return _data
 	Setter( data:Double )
 		_data=data
 	End
 	
-	Method ToBool:Bool() Override
-		Return _data
+	Property IsNumber:Bool() Override
+		Return True
 	End
 	
 	Method ToNumber:Double() Override
 		Return _data
 	End
 	
+	#rem monkeydoc @hidden Deprecated!
+	#end
+	Method ToBool:Bool() Override
+		Return _data
+	End
+	
+	#rem monkeydoc @hidden Deprecated!
+	#end
 	Method ToString:String() Override
 		Return _data
 	End
@@ -195,22 +283,32 @@ Class JsonString Extends JsonValue
 		_data=data
 	End
 	
+	#rem monkeydoc @hidden Deprecated!
+	#end
 	Property Data:String()
 		Return _data
 	Setter( data:String )
 		_data=data
 	End
+
+	Property IsString:Bool() Override
+		Return True
+	End
+		
+	Method ToString:String() Override
+		Return _data
+	End
 	
+	#rem monkeydoc @hidden Deprecated!
+	#end
 	Method ToBool:Bool() Override
 		Return _data
 	End
 	
+	#rem monkeydoc @hidden Deprecated!
+	#end
 	Method ToNumber:Double() Override
 		Return Double( _data )
-	End
-	
-	Method ToString:String() Override
-		Return _data
 	End
 	
 	Method ToJson:String() Override
@@ -238,40 +336,160 @@ Class JsonArray Extends JsonValue
 		_data=data
 	End
 	
+	#rem monkeydoc @hidden Deprecated!
+	#end
 	Property Data:Stack<JsonValue>()
 		Return _data
 	Setter( data:Stack<JsonValue> )
 		_data=data
 	End
 	
-	Property Length:Int()
-		Return _data.Length
+	#rem monkeydoc Returns true.
+	#end
+	Property IsArray:Bool() Override
+		Return True
 	End
 	
-	Operator[]:JsonValue( index:Int )
-		DebugAssert( index>=0 )
+	#rem monkeydoc Gets the internal stack used to store the array.
+	#end
+	Method ToArray:Stack<JsonValue>() Override
+		Return _data
+	End
 	
-		If index<_data.Length Return _data[index]
+	#rem monkeydoc Gets an array element.
+	
+	Returns the json value at `index`, or null if `index` is out of range.
+	
+	@param index Array index.
+	
+	#end
+	Method GetValue:JsonValue( index:int )
 		Return Null
 	End
 	
+	#rem monkeydoc Gets a bool array element.
+	
+	Returns the bool value at `index`, or false if `index` is out of range or the value at `index` is not a bool.
+	
+	@param index Array index.
+	
+	#end
+	Method GetBool:Bool( index:int )
+		Local value:=GetValue( index )
+		If value Return value.ToBool()
+		Return False
+	End
+	
+	#rem monkeydoc Gets a numeric array element.
+	
+	Returns the numeric value at `index`, or 0 if `index` is out of range or the value at `index` is not numeric.
+	
+	@param index Array index.
+	
+	#end
+	Method GetNumber:Double( index:int )
+		Local value:=GetValue( index )
+		If value Return value.ToNumber()
+		Return 0
+	End
+	
+	#rem monkeydoc Gets a string array element.
+
+	Returns the string value at `index`, or an empty string if `index` is out of range or the value at `index` is not a string.
+	
+	@param index Array index.
+	
+	#end
+	Method GetString:String( index:Int )
+		Local value:=GetValue( index )
+		If value Return value.ToString()
+		Return ""
+	End
+	
+	#rem monkeydoc Gets an array array element.
+	
+	Returns the array at `index`, or null if `index` is out of range or the value at `index` is not an array.
+	
+	@param index Array index.
+	
+	#end
+	Method GetArray:JsonArray( index:int )
+		Return Cast<JsonArray>( GetValue( index ) )
+	End
+	
+	#rem monkeydoc Gets an object array element.
+
+	Returns the object at `index`, or null if `index` is out of range or the value at `index` is not an object.
+	
+	@param index Array index.
+	
+	#end
+	Method GetObject:JsonObject( index:Int )
+		Return Cast<JsonObject>( GetValue( index ) )
+	End
+	
+	#rem monkeydoc True if array is empty.
+	#end
+	Property Empty:Bool()
+		Return _data.Empty
+	End
+	
+	#rem monkeydoc Length of the array.
+	#end
+	Property Length:Int()
+		Return _data.Length
+	End
+
+	#rem monkeydoc Gets the json value at an index.	
+	
+	Returns the json value at `index`, or null if `index` is out of range.
+	
+	@param index The index.
+	
+	@return The json value at `index`.
+	
+	#end
+	Operator[]:JsonValue( index:Int )
+		If index<0 Or index>=_data.Length Return null
+		Return _data[index]
+	End
+	
+	#rem monkeydoc Sets the json value at an index.	
+	
+	Sets the json value at `index` to `value`, or does nothing  if `index` is out of range.
+	
+	@param index The index.
+	
+	@param value The json value to store at `index`.
+	
+	#end
 	Operator[]=( index:Int,value:JsonValue )
+		If index<0 Or index>=_data.Length Return
 		DebugAssert( index>=0 )
 		
 		If index>=_data.Length _data.Resize( index+1 )
 		_data[index]=value
 	End
 	
+	#rem monkeydoc Gets an iterator to all json values in the array.
+	#end
+	Method All:Stack<JsonValue>.Iterator()
+		Return _data.All()
+	End
+
+	#rem monkeydoc Adds a json value to the array.
+	
+	@param value The json value to add.
+	
+	#end
 	Method Push( value:JsonValue )
 		_data.Push( value )
 	End
 	
+	#rem monkeydoc @hidden
+	#end
 	Method Add( value:JsonValue )
 		_data.Add( value )
-	End
-	
-	Method ToArray:Stack<JsonValue>() Override
-		Return _data
 	End
 	
 	Private
@@ -317,26 +535,160 @@ Class JsonObject Extends JsonValue
 		_data=data
 	End
 	
+	#rem monkeydoc @hidden Deprecated!
+	#end
 	Property Data:StringMap<JsonValue>()
 		Return _data
 	Setter( data:StringMap<JsonValue> )
 		_data=data
 	End
 	
+	#rem monkeydoc Returns True.
+	#end
+	Property IsObject:Bool() Override
+		Return True
+	End
+	
+	#rem monkeydoc Gets the internal string map used to store the object.
+	#end
+	Method ToObject:StringMap<JsonValue>() Override
+		Return _data
+	End
+	
+	#rem monkeydoc Gets the value associated with a key.
+	
+	Returns the json value associated with `key`, or null if `key` does not exist.
+	
+	@param index Object key.
+	
+	#end
+	Method GetValue:JsonValue( key:String )
+		Return _data[key]
+	End
+	
+	#rem monkeydoc Gets a bool from an object.
+	
+	Returns the bool value associated with `key`, or false if `key` does not exist or the value associated with `key` is not a bool.
+	
+	@param key Object key.
+	
+	#end
+	Method GetBool:Bool( key:String )
+		Local value:=GetValue( key )
+		If value Return value.ToBool()
+		Return False
+	End
+	
+	#rem monkeydoc Gets a number from an object.
+	
+	Returns the numeric value associated with `key`, or 0 if `key` does not exist or the value associated with `key` is not numeric.
+	
+	@param key Object key.
+	
+	#end
+	Method GetNumber:Double( key:String )
+		Local value:=GetValue( key )
+		If value Return value.ToNumber()
+		Return 0
+	End
+	
+	#rem monkeydoc Gets a string from an object.
+	
+	Returns the string value associated with `key`, or an empty string if `key` does not exist or the value associated with `key` is not a string.
+	
+	@param key Object key.
+	
+	#end
+	Method GetString:String( key:String )
+		Local value:=GetValue( key )
+		If value Return value.ToString()
+		Return ""
+	End
+	
+	#rem monkeydoc Gets an array from an object.
+	
+	Returns the json array associated with `key`, or null if `key` does not exist or the value associated with `key` is not an array.
+
+	@param key Object key.
+	
+	#end
+	Method GetArray:JsonArray( key:String )
+		Return Cast<JsonArray>( GetValue( key ) )
+	End
+	
+	#rem monkeydoc Gets an object from the object.
+	
+	Returns the json object associated with `key`, or null if `key` does not exist or the value associated with `key` is not an object.
+	
+	@param key Object key.
+	
+	@return A json object.
+
+	#end
+	Method GetObject:JsonObject( key:String )
+		Return Cast<JsonObject>( GetValue( key ) )
+	End
+	
+	#rem monkeydoc True if object is empty.
+	#end
+	Property Empty:Bool()
+		Return _data.Empty
+	End
+
+	#rem monkeydoc Counts the number of keys in the object.
+	
+	Returns the number of keys contained in the object.
+	
+	@return The number of keys.
+	
+	#end
+	Method Count:Int()
+		Return _data.Count()
+	End
+	
+	#rem monkeydoc Checks if the object contains a key.
+	
+	Returns true if object contains `key`.
+	
+	@param key Key to check for.
+	
+	@return True if object contains `key`.
+	
+	#end
 	Method Contains:Bool( key:String )
 		Return _data.Contains( key )
 	End
 	
+	#rem monkeydoc Gets an iterator to all json values in the object.
+	#end
+	Method All:StringMap<JsonValue>.Iterator()
+		Return _data.All()
+	End
+	
+	#rem monkeydoc Gets the json value associated with a key.
+	
+	Returns the json value associated with `key`, or null if `key` does not exist.
+	
+	@param key The key.
+	
+	@return The json value associated with `key`.
+	
+	#end
 	Operator[]:JsonValue( key:String )
 		Return _data[key]
 	End
 	
+	#rem monkeydoc Sets the json value in the object.
+	
+	Sets the json value associated with `key` to `value`.
+	
+	@param key The key.
+	
+	@param value The json value to associate with `key`.
+	
+	#end
 	Operator[]=( key:String,value:JsonValue )
 		_data[key]=value
-	End
-	
-	Method ToObject:StringMap<JsonValue>() Override
-		Return Data
 	End
 	
 	Function Load:JsonObject( path:String,throwex:Bool=False )
@@ -397,7 +749,7 @@ Class JsonParser
 		If Toke="[" Return New JsonArray( ParseArray() )
 		If CParse( "true" ) Return JsonBool.TrueValue
 		If CParse( "false" ) Return JsonBool.FalseValue
-		If CParse( "null" ) Return Null
+		If CParse( "null" ) Return JsonValue.NullValue
 		Return Null
 	End
 	
