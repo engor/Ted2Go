@@ -35,7 +35,7 @@ Class TextViewExt Extends TextView
 	
 	Method OnRenderContent( canvas:Canvas ) Override
 		
-		If _animatedCursor And Cursor = Anchor And Not ReadOnly And App.KeyView = Self
+		If _animatedCursor And Cursor = Anchor
 		
 			Local curColor := CursorColor
 			CursorColor = New Color(0,0,0,0)'transparent
@@ -149,7 +149,7 @@ Class TextViewExt Extends TextView
 								
 						Endif
 							
-					Case Key.Enter
+					Case Key.Enter, Key.KeypadEnter
 						
 						ReplaceText( "~n" )
 					

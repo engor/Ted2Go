@@ -110,7 +110,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				ShowAutocomplete("#")
 			Else
 				Local ident := IdentBeforeCursor()
-				'Print "ident "+ident
+				Print "ident "+ident
 				If ident.Length >= CharsToShowAutoComplete
 					ShowAutocomplete(ident)
 				Else

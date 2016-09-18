@@ -86,18 +86,38 @@ Class AutocompleteDialog Extends DialogExt
 			End
 		Next
 		
-		'add parsed words - from global scope
-		Local items := parser.Items
-		For Local i := Eachin items
-			Local txt := i.Ident.ToLower()
-			If txt.StartsWith(ident)
-				result.AddLast(New StringListViewItem(i.Ident)) 'call NEW everytime - not good
-			End
-		Next
+		Local idents := ident.Split(".")
+		Local items:List<ICodeItem>
 		
 		'check current scope
 		Local scope := parser.GetScope(filePath, docLine)
-		If scope <> Null Then Print "SCOPE: "+scope.Scope
+		If scope <> Null
+		
+			Print "SCOPE: "+scope.Scope
+			Local item := parser.ItemAtScope(scope, ident)
+			If item <> Null 
+				If item.Children <> Null
+					For Local i := Eachin item.Children
+						Local txt := i.Ident.ToLower()
+						Print "txt: "+txt
+						If txt.StartsWith(ident)
+							result.AddLast(New StringListViewItem(i.Ident)) 'call NEW everytime - not good
+						End
+					Next
+				Endif
+			
+			Else 'item is null - check all 'global' items
+				Print "global"
+				Local items := parser.Items
+				For Local i := Eachin items
+					Local txt := i.Ident.ToLower()
+					If txt.StartsWith(ident)
+						result.AddLast(New StringListViewItem(i.Ident)) 'call NEW everytime - not good
+					End
+				Next
+				
+			Endif
+		Endif
 		
 		If IsOpened Then Hide() 'hide to re-layout on open
 		
@@ -148,7 +168,7 @@ Class AutocompleteDialog Extends DialogExt
 			Case Key.KeyEnd
 				_view.SelectLast()
 				event.Eat()
-			Case Key.Enter
+			Case Key.Enter, Key.KeypadEnter
 				OnItemChoosen(_view.CurrentItem)
 				event.Eat()
 			Case Key.Backspace

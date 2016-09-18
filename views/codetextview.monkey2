@@ -38,14 +38,21 @@ Class CodeTextView Extends TextViewExt
 		Return text.Slice( start,ends )
 	End
 	
-	Method IdentBeforeCursor:String()
+	Method IdentBeforeCursor:String(withDots:Bool=True)
 	
 		Local text := Text
 		Local cur := Cursor
 		Local n := Cursor-1
 		Local start := Document.StartOfLine( Document.FindLine(Cursor) )
 		
-		While n >= start And (IsIdent(text[n]) Or text[n] = 35) '35 => #
+		While n >= start
+			
+			If text[n] = 46 'dot
+				If Not withDots Exit
+			ElseIf Not (IsIdent(text[n]) Or text[n] = 35) '35 => #
+				Exit
+			Endif
+			
 			n -= 1
 		Wend
 		n += 1
@@ -126,7 +133,7 @@ Class CodeTextView Extends TextViewExt
 							Return
 						Endif
 					
-					Case Key.Enter 'auto indent
+					Case Key.Enter, Key.KeypadEnter 'auto indent
 						
 						DoFormat()
 						

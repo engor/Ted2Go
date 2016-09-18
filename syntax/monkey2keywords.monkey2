@@ -34,7 +34,7 @@ Class Monkey2Keywords Extends KeywordsPlugin
 		s+="For;To;Step;Next;"
 		s+="Select;Case;Default;"
 		s+="Try;Catch;Throw;Throwable;"
-		s+="Return;Print;Static;Cast"
+		s+="Return;Print;Static;Cast;Extension"
 		Return s
 	End
 	

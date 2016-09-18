@@ -219,6 +219,7 @@ Interface ICodeParser
 	Method Parse(text:String, filePath:String)
 	Method IsPosInsideOfQuotes:Bool(text:String, pos:Int)
 	Method GetScope:ICodeItem(docPath:String, docLine:Int)
+	Method ItemAtScope:ICodeItem(scope:ICodeItem, idents:String[])
 	Property Items:List<ICodeItem>()
 	
 End
@@ -282,6 +283,9 @@ Class EmptyParser Implements ICodeParser
 		Return False
 	End	
 	Method GetScope:ICodeItem(docPath:String, docLine:Int)
+		Return Null
+	End
+	Method ItemAtScope:ICodeItem(scope:ICodeItem, idents:String[])
 		Return Null
 	End
 	
