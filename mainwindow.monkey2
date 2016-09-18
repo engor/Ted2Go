@@ -66,6 +66,7 @@ Class MainWindowInstance Extends Window
 		_tabMenu=New Menu
 		_tabMenu.AddAction( _fileActions.close )
 		_tabMenu.AddAction( _fileActions.closeOthers )
+		_tabMenu.AddAction( _fileActions.closeToRight )
 		_tabMenu.AddSeparator()
 		_tabMenu.AddAction( _fileActions.save )
 		_tabMenu.AddAction( _fileActions.saveAs )
@@ -110,6 +111,7 @@ Class MainWindowInstance Extends Window
 		_fileMenu.AddSeparator()
 		_fileMenu.AddAction( _fileActions.close )
 		_fileMenu.AddAction( _fileActions.closeOthers )
+		_fileMenu.AddAction( _fileActions.closeToRight )
 		_fileMenu.AddAction( _fileActions.closeAll )
 		_fileMenu.AddSeparator()
 		_fileMenu.AddAction( _fileActions.save )
@@ -354,18 +356,17 @@ Class MainWindowInstance Extends Window
 		'for 'reload' later...
 		_projectView.ProjectOpened-=UpdateCloseProjectMenu
 		
-'		If jobj.Contains( "windowRect" ) Frame=ToRecti( jobj["windowRect"] )
-		If jobj.Contains( "browserSize" ) _contentView.SetViewSize( _browsersTabView,jobj["browserSize"].ToNumber() )
-		If jobj.Contains( "consoleSize" ) _contentView.SetViewSize( _consolesTabView,jobj["consoleSize"].ToNumber() )
+		If jobj.Contains( "browserSize" ) _contentView.SetViewSize( _browsersTabView,jobj.GetNumber( "browserSize" ) )
+		If jobj.Contains( "consoleSize" ) _contentView.SetViewSize( _consolesTabView,jobj.GetNumber( "consoleSize" ) )
 			
 		If jobj.Contains( "recentFiles" )
-			For Local file:=Eachin jobj["recentFiles"].ToArray()
+			For Local file:=Eachin jobj.GetArray( "recentFiles" )
 				Local path:=file.ToString()
 				If GetFileType( path )<>FileType.File Continue
 				_recentFiles.Push( path )
 			Next
 		End
-			
+		
 		_docsManager.LoadState( jobj )
 		_buildActions.LoadState( jobj )
 		_projectView.LoadState( jobj )

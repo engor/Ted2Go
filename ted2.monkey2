@@ -6,6 +6,7 @@
 #Import "<std>"
 #Import "<mojo>"
 #Import "<mojox>"
+#Import "<tinyxml2>"
 
 #Import "mainwindow"
 #Import "documentmanager"
@@ -29,6 +30,7 @@
 #Import "imagedocument"
 #Import "audiodocument"
 #Import "jsondocument"
+#Import "xmldocument"
 
 #Import "eventfilters/textviewkeyeventfilter"
 
@@ -45,6 +47,7 @@ Namespace ted2go
 Using std..
 Using mojo..
 Using mojox..
+Using tinyxml2..
 
 
 Global AppTitle:String = "Ted2Go"
