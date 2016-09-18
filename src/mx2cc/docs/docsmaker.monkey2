@@ -362,10 +362,15 @@ Class DocsMaker
 	
 		Local xtype:=Cast<AliasType>( type )
 		If xtype
+			Local args:=""
+			For Local type:=Eachin xtype.types
+				args+=","+TypeName( type,prefix )
+			Next
+			If args args="\<"+args.Slice( 1 )+"\>"
 		
 			If xtype.instanceOf xtype=xtype.instanceOf
 			
-			Return MakeLink( Esc( xtype.adecl.ident ),xtype.adecl,xtype.scope )
+			Return MakeLink( Esc( xtype.adecl.ident ),xtype.adecl,xtype.scope )+args
 		Endif
 	
 		Local vtype:=TCast<VoidType>( type )
