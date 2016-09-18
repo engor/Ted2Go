@@ -411,6 +411,14 @@ Class MainWindowInstance Extends Window
 	
 	End
 	
+	Method OnRender( canvas:Canvas ) Override
+		
+		RequestRender()
+		Super.OnRender( canvas )
+		
+	End
+	
+	
 	Private
 	
 	Field _docsManager:DocumentManager

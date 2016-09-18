@@ -103,7 +103,8 @@ Private
 
 'redraw app to see flashing cursor
 Function StartRedrawTimer()
-	Local timer := New Timer(5, Lambda()
-		App.RequestRender()
-	End)
+	'Local timer := New Timer(5, Lambda()
+	'	App.RequestRender()
+	'	Print "redraw "+Rnd(100)
+	'End)
 End
