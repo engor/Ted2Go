@@ -40,7 +40,7 @@ Namespace std.fiber
 
 #Endif
 
-Extern
+Extern Private
 
 Alias fcontext_t:Void Ptr
 
