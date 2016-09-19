@@ -164,8 +164,6 @@ Public
 
 Function FindOverload:FuncValue( funcs:Stack<FuncValue>,ret:Type,args:Type[] )
 
-	If (ret And ret.IsGeneric) Or AnyTypeGeneric( args ) Print "FindOverload - generic types"
-
 	Local candidates:=New Stack<FuncValue>
 	
 	For Local func:=Eachin funcs
