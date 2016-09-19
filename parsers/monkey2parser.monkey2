@@ -10,7 +10,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Method OnCreate() Override
 		
-		'ParseModules()
+		ParseModules()
 		
 	End
 	
@@ -50,29 +50,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	'ident is like this: obj.inner.ident
 	Method ItemAtScope:ICodeItem(scope:ICodeItem, idents:String[])
 		
-		Local result:ICodeItem = Null
-		Local item := scope
-		
-		' first ident have to check in scope and global scope
-		
-		'and other - go recursively into scope
-		
-		For Local k := 0 Until idents.Length-1
-			Local s := idents[k]
-			'Local last := (k = arr.Length-1)
-			Local i := ItemAtScopeInternal(item, s, False)
-			If i = Null Return Null 'some part not found
-			item = i
-			result = i
-		Next
-		
-		'if result is null - check root items
-		'For Local i := Eachin Items
-		'	Local s := i.Ident.ToLower()
-		'	If s.StartsWith(ident) Return i
-		'Next
-		
-		Return result
+		Return Null
 		
 	End
 	
@@ -139,24 +117,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Method New()
 		Super.New()
 		_types = New String[](".monkey2")
-	End
-	
-	Method ItemAtScopeInternal:ICodeItem(scope:ICodeItem, ident:String, startsOnly:Bool)
-		
-		Local item := scope
-		While item <> Null
-			If (startsOnly And item.Ident.ToLower().StartsWith(ident)) Or (Not startsOnly And item.Ident = ident) Return item
-			Local items := item.Children
-			If items <> Null
-				For Local i := Eachin items
-					If (startsOnly And i.Ident.ToLower().StartsWith(ident)) Or (Not startsOnly And i.Ident = ident) Return i
-				Next
-			Endif
-			item = item.Parent
-		Wend
-		
-		Return Null
-		
 	End
 	
 	Method GetFileInfo:FileInfo(path:String)
