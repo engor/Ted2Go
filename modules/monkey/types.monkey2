@@ -374,6 +374,18 @@ Struct @Array<T>
 	
 	Method Slice:T[]( from:Int,term:Int )="slice" 
 	
+	
+	#rem monkeydoc Resizes an array.
+	
+	Returns a copy of the array resized to length `newLength'.
+	
+	@param newLength The length of the new array.
+	
+	@return A new array.
+	
+	#end
+	Method Resize:T[]( newLength:Int )="resize"
+	
 	#rem monkeydoc Gets the size of a single array dimension.
 	
 	@param dimensions The dimension.

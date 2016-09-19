@@ -86,6 +86,7 @@ template<class T,int D> class bbArray : public bbGCNode{
 	
 	int size( int q )const{
 		bbDebugAssert( q<D,"Array dimension out of range" );
+		
 		return this ? (q ? _sizes[q]/_sizes[q-1] : _sizes[0]) : 0;
 	}
 	
@@ -114,24 +115,23 @@ template<class T,int D> class bbArray : public bbGCNode{
 		for( int i=0;i<newlen;++i ) r->data()[i]=data()[from+i];
 		return r;
 	}
+
+	bbArray<T,1> *resize( int newLength )const{
+		bbDebugAssert( newLength>=0,
+			"Array Resize new length must not be negative" );
+			
+		if( newLength<=0 ) newLength=0;
+		int n=this->length();
+		if( n>newLength ) n=newLength;
+		bbArray<T,1> *r=create( newLength );
+		for( int i=0;i<n;++i ) r->data()[i]=data()[i];
+		return r;
+	}
 	
 	void copyTo( bbArray<T,1> *dst,int offset,int dstOffset,int count )const{
-		int length=this->length();
-		if( offset<0 ){
-			offset=0;
-		}else if( offset>length ){
-			offset=length;
-		}
-		int dstLength=dst->length();
-		if( dstOffset<0 ){
-			dstOffset=0;
-		}else if( dstOffset>dstLength ){
-			dstOffset=dstLength;
-		}
+		bbDebugAssert( offset>=0 && dstOffset>=0 && count>=0 && offset+count<=length() && dstOffset+count<=dst->length(),
+			"Array CopyTo parameters out of range" );
 
-		if( offset+count>length ) count=length-offset;
-		if( dstOffset+count>dstLength) count=dstLength-dstOffset;
-		
 		if( dst==this && dstOffset>offset ){
 			for( int i=count-1;i>=0;--i ) dst->data()[dstOffset+i]=data()[offset+i];
 		}else{
@@ -141,7 +141,9 @@ template<class T,int D> class bbArray : public bbGCNode{
 	
 	//fast 1D version	
 	T &at( int index ){
-		bbDebugAssert( index>=0 && index<length(),"Array index out of range" );
+		bbDebugAssert( index>=0 && index<length(),
+			"Array index out of range" );
+			
 		return data()[index];
 	}
 	
