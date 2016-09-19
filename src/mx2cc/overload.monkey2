@@ -35,10 +35,13 @@ Function IsCandidate:Bool( func:FuncValue,ret:Type,args:Type[],infered:Type[] )
 			
 			Local flist:=TCast<FuncListType>( arg )
 			If flist
+			
 				Local ftype:=TCast<FuncType>( argTypes[i] )
 				If Not ftype Return False
-				Local func:=flist.FindOverload( Null,ftype.argTypes )'ftype.retType,ftype.argTypes )
+				
+				Local func:=flist.FindOverload( Null,ftype.argTypes )
 				If Not func Return False
+				
 				arg=func.ftype
 			Endif
 			
@@ -160,6 +163,8 @@ End
 Public
 
 Function FindOverload:FuncValue( funcs:Stack<FuncValue>,ret:Type,args:Type[] )
+
+	If (ret And ret.IsGeneric) Or AnyTypeGeneric( args ) Print "FindOverload - generic types"
 
 	Local candidates:=New Stack<FuncValue>
 	

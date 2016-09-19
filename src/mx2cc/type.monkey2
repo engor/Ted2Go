@@ -88,8 +88,8 @@ Class Type Extends SNode
 		Return Null
 	End
 	
-	Method InferType:Type( type:Type,args:Type[] ) Virtual
-		If Equals( type ) Return type	
+	Method InferType:Type( type:Type,infered:Type[] ) Virtual
+		If Equals( type ) Return type
 		Return Null
 	End
 	

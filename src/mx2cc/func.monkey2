@@ -114,7 +114,7 @@ Class FuncValue Extends Value
 	Property IsGeneric:Bool()
 		If Not ftype SemantError( "FuncValue.IsGeneric()" )
 		
-		Return ftype.IsGeneric 'Or (types And Not instanceOf)
+		Return ftype.IsGeneric Or (types And Not instanceOf)
 	End
 	
 	Property IsCtor:Bool()

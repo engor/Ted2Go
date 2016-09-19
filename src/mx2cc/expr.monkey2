@@ -91,13 +91,13 @@ Class Expr Extends PNode
 			If generic
 				
 				If Not ctype Or Not ctype.types 'Or ctype.instanceOf
-					Throw New SemantEx( "Type '"+type.Name+"' must be a generic class type" )
+'					Throw New SemantEx( "Type '"+type.Name+"' must be a generic class type" )
 				Endif
 			
 			Else
 			
 				If ctype And ctype.types And Not ctype.instanceOf
-					Throw New SemantEx( "Generic class type '"+ctype.Name+"' is missing type arguments" )
+'					Throw New SemantEx( "Generic class type '"+ctype.Name+"' is missing type arguments" )
 				Endif
 
 			Endif
