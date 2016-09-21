@@ -16,6 +16,7 @@
 #Import "views/listview"
 #Import "views/dialogext"
 #Import "views/autocompleteview"
+#Import "views/codetreeview"
 
 #Import "parsers/parser"
 #Import "parsers/monkey2parser"

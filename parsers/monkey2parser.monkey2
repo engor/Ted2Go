@@ -10,7 +10,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Method OnCreate() Override
 		
-		ParseModules()
+		'ParseModules()
 		
 	End
 	
@@ -74,6 +74,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 		_fileDir = ExtractDir(filePath)
 		_stack.Clear()
 		
+		_innerItems = New List<ICodeItem>
+		
 		'parse line by line
 		
 		If text = Null
@@ -92,7 +94,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 		Next
 		
-
+		ItemsMap[filePath] = _innerItems
+		
 	End 	
 		
 	Private
@@ -105,13 +108,13 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Field _namespace:String
 	Field _filePath:String, _fileDir:String
 	Field _files := New StringMap<FileInfo>
-	Field _itemsMap := New StringMap<ICodeItem> 'for fast checking of duplicates
 	Field _insideRem := False 'is rem block opened
 	Field _insideEnum := False
 	Field _insideInterface := False
 	Field _params := New List<String>
 	Field _docLine:Int
-	Field _isImportEnabled := False
+	Field _isImportEnabled := True
+	Field _innerItems:List<ICodeItem>
 	
 	
 	Method New()
@@ -408,6 +411,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	End
 	
 	Method PushScope(item:ICodeItem)
+	
 		'Print "push scope"
 		If _scope <> Null
 			_stack.Push(_scope)
@@ -419,6 +423,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	End
 	
 	Method PopScope()
+	
 		'Print "pop scope"
 		If _scope <> Null Then _scope.ScopeEndLine = _docLine
 		If _stack.Length > 0
@@ -429,16 +434,16 @@ Class Monkey2Parser Extends CodeParserPlugin
 	End
 	
 	Method RemovePrevious(path:String)
-		Local list := New List<ICodeItem>
-		For Local i := Eachin Items
-			If i.FilePath = path
-				list.AddLast(i)
-			Endif
-		Next
-		If list.Empty Return
+	
+		Local list := ItemsMap[path]
+		If list = Null Return
+		
 		For Local i := Eachin list
-			RemoveItem(i)
+			Items.Remove(i)
 		Next
+		
+		ItemsMap.Remove(path)
+		
 	End
 	
 	Method ExtractIdent(word:String, line:String)
@@ -468,10 +473,13 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		'_itemsMap[key] = item
 		
+		item.ScopeStartLine = _docLine
+		
 		If _scope <> Null
 			_scope.AddChild(item)
 		Else
 			Items.AddLast(item)
+			_innerItems.AddLast(item)
 		Endif
 		
 	End
@@ -479,9 +487,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Method RemoveItem(item:ICodeItem)
 	
 		'Local key := item.Namespac+item.Ident
-		Local key := item.Ident
+		'Local key := item.Ident
 		
-		_itemsMap.Remove(key)
 		Items.Remove(item)
 	End
 		

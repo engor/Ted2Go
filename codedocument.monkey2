@@ -196,8 +196,57 @@ Class CodeDocument Extends Ted2Document
 			_errors.Resize( put )
 		End
 
+		_view = New DockingView
+		
+		_treeView = New CodeTreeView
+		_view.AddView( _treeView,"left",250,True )
+		
+		_codeView = New CodeDocumentView( Self )
+		_view.ContentView = _codeView
+		
+		FillTreeView()
+	End
 	
-		_view=New CodeDocumentView( Self )
+	Method FillTreeView()
+	
+		Local stack := New Stack<TreeView.Node>
+		Local parser := ParsersManager.Get(FileType)
+		Local node := _treeView.RootNode
+		_treeView.RootNodeVisible = False
+		_treeView.RootNode.Expanded = True
+		
+		Local list := parser.ItemsMap[Path]
+		If list = Null Return
+		
+		For Local i := Eachin list
+			AddTreeItem(i, node)
+		Next
+		
+		_treeView.NodeClicked = Lambda(node:TreeView.Node)
+			Local codeNode := Cast<CodeTreeNode>(node)
+			Local item := codeNode.CodeItem
+			_codeView.GotoLine( item.ScopeStartLine )
+		End
+		
+		#Rem
+		For Local file := Eachin parser.ItemsMap.Keys
+			Local n := New TreeView.Node( StripDir(file), node)
+			For Local i := Eachin parser.ItemsMap[file]
+				AddTreeItem(i, n)
+			Next
+		Next
+		#End
+	End
+	
+	Method AddTreeItem(item:ICodeItem, node:TreeView.Node)
+	
+		Local n := New CodeTreeNode(item, node)
+				
+		If item.Children <> Null
+			For Local i := Eachin item.Children
+				AddTreeItem(i, n)
+			End
+		Endif
 	End
 	
 	Property TextDocument:TextDocument()
@@ -215,7 +264,7 @@ Class CodeDocument Extends Ted2Document
 		_debugLine=debugLine
 		If _debugLine=-1 Return
 		
-		_view.GotoLine( _debugLine )
+		_codeView.GotoLine( _debugLine )
 	End
 	
 	Property Errors:Stack<BuildError>()
@@ -227,8 +276,10 @@ Class CodeDocument Extends Ted2Document
 
 	Field _doc:TextDocument
 
-	Field _view:CodeDocumentView
-
+	Field _view:DockingView
+	Field _codeView:CodeDocumentView
+	Field _treeView:CodeTreeView
+	
 	Field _errors:=New Stack<BuildError>
 
 	Field _debugLine:Int=-1

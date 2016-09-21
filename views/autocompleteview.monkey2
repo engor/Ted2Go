@@ -62,7 +62,7 @@ Class AutocompleteDialog Extends DialogExt
 	Method Show(ident:String, filePath:String, fileType:String, docLine:Int)
 		
 		'if typed ident starts with previous
-		'need to  simple filter items
+		'need to simple filter items
 		If IsOpened And ident.StartsWith(_ident)
 			
 		End
@@ -168,6 +168,7 @@ Class AutocompleteDialog Extends DialogExt
 				
 				If found <> Null
 					item = found
+					Print "found: "+found.Scope
 				Else
 					Exit
 				Endif

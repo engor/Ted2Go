@@ -171,7 +171,7 @@ Class CodeItem Implements ICodeItem
 	End
 	
 	Property ScopeEndLine:Int()
-		Return _scopeEndLine
+		Return (_scopeEndLine <> -1) ? _scopeEndLine Else _scopeStartLine
 	Setter(value:Int)
 		_scopeEndLine = value
 	End
@@ -202,7 +202,7 @@ Class CodeItem Implements ICodeItem
 	Field _children:List<ICodeItem>
 	Field _namespace:String
 	Field _filePath:String
-	Field _scopeStartLine:Int, _scopeEndLine:Int
+	Field _scopeStartLine:Int, _scopeEndLine:Int=-1
 	
 End
 
@@ -221,6 +221,7 @@ Interface ICodeParser
 	Method GetScope:ICodeItem(docPath:String, docLine:Int)
 	Method ItemAtScope:ICodeItem(scope:ICodeItem, idents:String[])
 	Property Items:List<ICodeItem>()
+	Property ItemsMap:StringMap<List<ICodeItem>>()
 	
 End
 
@@ -235,6 +236,10 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 		Return _items
 	End
 	
+	Property ItemsMap:StringMap<List<ICodeItem>>()
+		Return _itemsMap
+	End
+	
 	
 	Protected
 	
@@ -246,6 +251,7 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 	Private
 	
 	Field _items := New List<ICodeItem>
+	Field _itemsMap := New StringMap<List<ICodeItem>>
 	
 End
 
@@ -276,6 +282,10 @@ Class EmptyParser Implements ICodeParser
 		Return _items
 	End
 	
+	Property ItemsMap:StringMap<List<ICodeItem>>()
+		Return _itemsMap
+	End
+	
 	Method Parse(text:String, filePath:String)
 		'do nothing
 	End
@@ -292,5 +302,6 @@ Class EmptyParser Implements ICodeParser
 	Private
 	
 	Field _items := New List<ICodeItem>
+	Field _itemsMap := New StringMap<List<ICodeItem>>
 	
 End
