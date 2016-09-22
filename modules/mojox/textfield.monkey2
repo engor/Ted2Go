@@ -31,7 +31,7 @@ Class TextField Extends TextView
 		
 		ScrollBarsVisible=False
 		
-		MaxSize=New Vec2i( 512,0 )
+		MaxSize=New Vec2i( 160,0 )
 		
 		Document.TextChanged+=Lambda()
 			TextChanged()

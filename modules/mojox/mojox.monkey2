@@ -24,9 +24,12 @@ Namespace mojox
 #Import "scrollableview"
 
 #Import "textview"
-#Import "textfield"
 
 #Import "tableview"
+
+#Import "textfield"
+#Import "optionsfield"
+#Import "filepathfield"
 
 #Import "toolbar"
 #Import "menu"
