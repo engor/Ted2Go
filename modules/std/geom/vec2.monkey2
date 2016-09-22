@@ -26,9 +26,12 @@ Struct Vec2<T>
 	Method New()
 	End
 	
+	Method New( t:T )
+		x=t;y=t
+	End
+		
 	Method New( x:T,y:T )
-		Self.x=x
-		Self.y=y
+		Self.x=x;Self.y=y
 	End
 	
 	#rem monkeydoc Converts the vector to a vector of a different type.

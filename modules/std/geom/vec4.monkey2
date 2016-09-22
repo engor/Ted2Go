@@ -17,9 +17,9 @@ Struct Vec4<T>
 	Method New()
 	End
 	
-'	Method New( v:Vec4 )
-'		x=v.x;y=v.y;z=v.z;w=v.w
-'	End
+	Method New( t:T )
+		x=t;y=t;z=t;w=t
+	End
 	
 	Method New( x:T,y:T,z:T,w:T )
 		Self.x=x;Self.y=y;Self.z=z;Self.w=w

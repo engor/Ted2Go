@@ -16,9 +16,9 @@ Struct Vec3<T>
 	Method New()
 	End
 	
-'	Method New( v:Vec3 )
-'		x=v.x;y=v.y;z=v.z
-'	End
+	Method New( t:T )
+		x=t;y=t;z=t
+	End
 	
 	Method New( x:T,y:T,z:T )
 		Self.x=x;Self.y=y;Self.z=z
