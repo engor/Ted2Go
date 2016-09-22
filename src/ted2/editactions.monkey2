@@ -29,7 +29,7 @@ Class EditActions
 		paste=New Action( "Paste" )
 		paste.Triggered=OnPaste
 
-		selectAll=New Action( "Select All" )
+		selectAll=New Action( "Select all" )
 		selectAll.Triggered=OnSelectAll
 	End
 	

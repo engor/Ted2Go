@@ -21,8 +21,8 @@ Class MainWindowInstance Extends Window
 		_browsersTabView=New TabView( TabViewFlags.DraggableTabs )
 		_consolesTabView=New TabView( TabViewFlags.DraggableTabs )
 		
-		_recentFilesMenu=New Menu( "Recent Files..." )
-		_closeProjectMenu=New Menu( "Close Project..." )
+		_recentFilesMenu=New Menu( "Recent files..." )
+		_closeProjectMenu=New Menu( "Close project..." )
 		
 		_docsManager=New DocumentManager( _docsTabView )
 
