@@ -3,6 +3,15 @@ Namespace mx2.overload
 
 Private
 
+Const debug:=False
+
+Function dprint( txt:String )
+	Global tab:=""
+	If txt.StartsWith( "}" ) tab=tab.Slice( 0,2 )
+	Print tab+txt
+	If txt.EndsWith( "{" ) tab+="  "
+End
+
 Function IsCandidate:Bool( func:FuncValue,ret:Type,args:Type[],infered:Type[] )
 
 	Local ftype:=func.ftype
@@ -13,13 +22,20 @@ Function IsCandidate:Bool( func:FuncValue,ret:Type,args:Type[],infered:Type[] )
 	
 	If ret
 		If retType.IsGeneric
-			If Not retType.InferType( ret,infered ) Return False
-		Else If Not ret.IsGeneric
-			If Not retType.ExtendsType( ret ) Return False
+			retType=retType.InferType( ret,infered )
+			If Not retType Return False
 		Endif
+'		If Not retType.ExtendsType( ret ) Return False
+		If Not retType.Equals( ret ) Return False
+	#rem
+		If retType.IsGeneric
+			If Not retType.inferType( ret,infered ) return false
+		Else
+'			If Not retType.ExtendsType( ret ) Return False
+			If Not retType.Equals( ret ) Return False
+		Endif
+	#end
 	Endif
-
-	If ret And retType.IsGeneric And Not retType.InferType( ret,infered ) Return False
 	
 	For Local i:=0 Until argTypes.Length
 	
@@ -29,7 +45,10 @@ Function IsCandidate:Bool( func:FuncValue,ret:Type,args:Type[],infered:Type[] )
 			
 			If Not pdecl.init Return False
 			
-		Else If argTypes[i].IsGeneric
+			Continue
+		Endif
+			
+		If argTypes[i].IsGeneric
 		
 			Local arg:=args[i]
 			
@@ -164,6 +183,13 @@ Public
 
 Function FindOverload:FuncValue( funcs:Stack<FuncValue>,ret:Type,args:Type[] )
 
+	If debug
+		dprint( "{" )
+		dprint( "Funcs:"+Join( funcs.ToArray() ) )
+		dprint( "Args:"+Join( args ) )
+		If ret dprint( "Return:"+ret.ToString() ) Else dprint( "Return:?" )
+	Endif
+
 	Local candidates:=New Stack<FuncValue>
 	
 	For Local func:=Eachin funcs
@@ -180,11 +206,8 @@ Function FindOverload:FuncValue( funcs:Stack<FuncValue>,ret:Type,args:Type[] )
 		If IsCandidate( func,ret,args,infered ) Linearize( infered,func,candidates )
 		
 	Next
-
-'	Print "Funcs:"+Join( funcs.ToArray() )
-'	Print "Argtypes:"+Join( args )
-'	If ret Print "Return:"+ret.ToString()
-'	Print "Candidates:"+Join( candidates.ToArray() )
+	
+	If debug dprint( "Candidates:"+Join( candidates.ToArray() ) )
 	
 	Local best:FuncValue
 	
@@ -204,10 +227,18 @@ Function FindOverload:FuncValue( funcs:Stack<FuncValue>,ret:Type,args:Type[] )
 		
 		If Not better Continue
 		
-		If best Return Null
+		If best 
+			best=Null
+			Exit
+		Endif
 		
 		best=func
 	Next
+
+	If debug	
+		If best dprint( "Best match:"+best.ToString() ) Else dprint( "No match" )
+		dprint( "}" )
+	Endif
 	
 	Return best
 End
