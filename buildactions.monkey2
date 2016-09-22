@@ -58,40 +58,40 @@ Class BuildActions
 #Endif
 		_mx2cc=RealPath( _mx2cc )
 		
-		buildAndRun=New Action( "Build And Run" )
+		buildAndRun=New Action( "Build and run" )
 		buildAndRun.Triggered=OnBuildAndRun
 		buildAndRun.HotKey=Key.F5
 
-		build=New Action( "Build Only" )
+		build=New Action( "Build only" )
 		build.Triggered=OnBuild
 		build.HotKey=Key.F6
 		
-		buildSettings=New Action( "Build Settings" )
+		buildSettings=New Action( "Build settings" )
 		buildSettings.Triggered=OnBuildFileSettings
 		
-		nextError=New Action( "Next Error" )
+		nextError=New Action( "Next build error" )
 		nextError.Triggered=OnNextError
 		nextError.HotKey=Key.F4
 		
-		lockBuildFile=New Action( "Lock Build File" )
+		lockBuildFile=New Action( "Lock build file" )
 		lockBuildFile.Triggered=OnLockBuildFile
 		lockBuildFile.HotKey=Key.L
 		lockBuildFile.HotKeyModifiers=Modifier.Menu
 		
-		updateModules=New Action( "Update Modules" )
+		updateModules=New Action( "Update modules" )
 		updateModules.Triggered=OnUpdateModules
 		updateModules.HotKey=Key.U
 		updateModules.HotKeyModifiers=Modifier.Menu
 		
-		rebuildModules=New Action( "Rebuild Modules" )
+		rebuildModules=New Action( "Rebuild modules" )
 		rebuildModules.Triggered=OnRebuildModules
 		rebuildModules.HotKey=Key.U
 		rebuildModules.HotKeyModifiers=Modifier.Menu|Modifier.Shift
 		
-		moduleManager=New Action( "Module Manager" )
+		moduleManager=New Action( "Module manager" )
 		moduleManager.Triggered=OnModuleManager
 		
-		rebuildHelp=New Action( "Rebuild Documentation" )
+		rebuildHelp=New Action( "Rebuild documentation" )
 		rebuildHelp.Triggered=OnRebuildHelp
 		
 		local group:=New CheckGroup
@@ -121,7 +121,7 @@ Class BuildActions
 		_iosTarget=New CheckButton( "iOS",,group )
 		_iosTarget.Layout="fill-x"
 		
-		targetMenu=New Menu( "Build Target..." )
+		targetMenu=New Menu( "Build target..." )
 		targetMenu.AddView( _debugConfig )
 		targetMenu.AddView( _releaseConfig )
 		targetMenu.AddSeparator()
