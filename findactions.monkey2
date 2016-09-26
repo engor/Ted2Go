@@ -19,11 +19,11 @@ Class FindActions
 		find.HotKey=Key.F
 		find.HotKeyModifiers=Modifier.Menu
 		
-		findNext=New Action( "Find Next" )
+		findNext=New Action( "Find next" )
 		findNext.Triggered=OnFindNext
 		findNext.HotKey=Key.F3
 		
-		findPrevious=New Action( "Find Previous" )
+		findPrevious=New Action( "Find previous" )
 		findPrevious.Triggered=OnFindPrevious
 		findPrevious.HotKey=Key.F3
 		findPrevious.HotKeyModifiers=Modifier.Shift
@@ -31,7 +31,7 @@ Class FindActions
 		replace=New Action( "Replace" )
 		replace.Triggered=OnReplace
 		
-		replaceAll=New Action( "Replace All" )
+		replaceAll=New Action( "Replace all" )
 		replaceAll.Triggered=OnReplaceAll
 		
 		_findDialog=New FindDialog( Self )

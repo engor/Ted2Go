@@ -8,15 +8,46 @@ Class ImageDocumentView Extends View
 		_doc=doc
 		
 		Layout="fill"
+		
+		_label=New Label( " " )
+		_label.Style=App.Theme.GetStyle( "PushButton" )
+		_label.Layout="float"
+		_label.Gravity=New Vec2f( .5,1 )
+		
+		_doc.ImageChanged=Lambda()
+		
+			If Not _doc.Image 
+				_label.Text=""
+				Return
+			Endif
+			
+			Local format:="?????"
+			Select _doc.Image.Texture.Format
+			Case PixelFormat.I8 format="PixelFormat.I8"
+			Case PixelFormat.A8 format="PixelFormat.A8"
+			Case PixelFormat.IA16 format="PixelFormat.IA16"
+			Case PixelFormat.RGB24 format="PixelFormat.RGB24"
+			Case PixelFormat.RGBA32 format="PixelFormat.RGBA32"
+			End
+			
+			_label.Text="Width="+_doc.Image.Width+", Height="+_doc.Image.Height+", BytesPerPixel="+PixelFormatDepth( _doc.Image.Texture.Format )+", format="+format
+		End
+		
+		AddChildView( _label )
 	End
 	
 	Protected
+	
+	Method OnLayout() Override
+	
+		_label.Frame=Rect
+	End
 	
 	Method OnRender( canvas:Canvas ) Override
 	
 		For Local x:=0 Until Width Step 64
 			For Local y:=0 Until Height Step 64
-				canvas.Color=(x~y) & 64 ? New Color( .1,.1,.1 ) Else New Color( .2,.2,.2 )
+				canvas.Color=(x~y) & 64 ? New Color( .1,.1,.1 ) Else New Color( .05,.05,.05 )
 				canvas.DrawRect( x,y,64,64 )
 			Next
 		Next
@@ -51,9 +82,13 @@ Class ImageDocumentView Extends View
 	Field _zoom:Float=1
 		
 	Field _doc:ImageDocument
+	
+	Field _label:Label
 End
 
 Class ImageDocument Extends Ted2Document
+
+	Field ImageChanged:Void()
 
 	Method New( path:String )
 		Super.New( path )
@@ -74,6 +109,8 @@ Class ImageDocument Extends Ted2Document
 		If Not _image Return False
 		
 		_image.Handle=New Vec2f( .5,.5 )
+		
+		ImageChanged()
 		
 		Return True
 	End

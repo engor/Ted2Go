@@ -40,7 +40,7 @@ Class EditActions
 		paste.HotKey=Key.V
 		paste.HotKeyModifiers=Modifier.Menu
 		
-		selectAll=New Action( "Select All" )
+		selectAll=New Action( "Select all" )
 		selectAll.Triggered=OnSelectAll
 		selectAll.HotKey=Key.A
 		selectAll.HotKeyModifiers=Modifier.Menu

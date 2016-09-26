@@ -1,5 +1,29 @@
 
+*.bak
 *.buildv*
-*.products/
 
 /desktop.ini
+
+/bin/*.dll
+/bin/assets
+/bin/ted2.state.json
+/bin/ted2_*
+
+/devtools/*
+!/devtools/.gitignore
+
+/docs/modules.html
+/docs/manuals.html
+
+__PAGES__/
+__MANPAGES__/
+
+/tmp/*
+!/tmp/.gitignore
+
+/modules/module-manager/downloads/*.zip
+
+/modules/wdw-game2d
+/modules/portmidi
+
+Monkey2 (Windows).exe

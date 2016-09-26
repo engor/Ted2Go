@@ -39,13 +39,13 @@ Class FileActions
 #endif		
 		close.Triggered=OnClose
 		
-		closeOthers=New Action( "Close Other Tabs" )
+		closeOthers=New Action( "Close other tabs" )
 		closeOthers.Triggered=OnCloseOthers
 		
-		closeToRight=New Action( "Close Tabs To The Right" )
+		closeToRight=New Action( "Close tabs to the right" )
 		closeToRight.Triggered=OnCloseToRight
 		
-		closeAll=New Action( "Close All" )
+		closeAll=New Action( "Close all" )
 		closeAll.Triggered=OnCloseAll
 		
 		save=New Action( "Save" )
@@ -53,10 +53,10 @@ Class FileActions
 		save.HotKeyModifiers=Modifier.Menu
 		save.Triggered=OnSave
 
-		saveAs=New Action( "Save As..." )
+		saveAs=New Action( "Save as..." )
 		saveAs.Triggered=OnSaveAs
 
-		saveAll=New Action( "Save All" )
+		saveAll=New Action( "Save all" )
 		saveAll.HotKey=Key.S
 		saveAll.HotKeyModifiers=Modifier.Menu|Modifier.Shift
 		saveAll.Triggered=OnSaveAll
