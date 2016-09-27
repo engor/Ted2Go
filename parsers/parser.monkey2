@@ -3,17 +3,18 @@ Namespace ted2go
 
 
 Enum CodeItemKind
-	Undefined,
-	Classs,
-	Interfacee,
-	Enumm,
-	Structt,
-	Fieldd,
-	Globall,
-	Constt,
-	Methodd,
-	Functionn,
-	Param
+	Undefine_,
+	Class_,
+	Interface_,
+	Enum_,
+	Struct_,
+	Field_,
+	Global_,
+	Const_,
+	Method_,
+	Function_,
+	Property_,
+	Param_
 End
 
 Enum AccessMode
@@ -49,7 +50,7 @@ Interface ICodeItem
 	Setter(value:AccessMode)
 	
 	Property Text:String()
-	Setter(value:String)
+	'Setter(value:String)
 	
 	Property Parent:ICodeItem()
 	Setter(value:ICodeItem)
@@ -116,6 +117,7 @@ Class CodeItem Implements ICodeItem
 		Return _kindStr
 	Setter(value:String)
 		_kindStr = value
+		UpdateKind()
 	End
 	
 	Property Access:AccessMode()
@@ -125,9 +127,21 @@ Class CodeItem Implements ICodeItem
 	End
 	
 	Property Text:String()
+		If _text = Null
+			Local s := Ident
+			Select _kind
+				Case CodeItemKind.Function_, CodeItemKind.Method_, CodeItemKind.Property_
+					s += "()"
+				Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_, CodeItemKind.Enum_
+					'do nothing
+				Default
+					s += ":"+Type
+			End
+			_text = s
+		Endif
 		Return _text
-	Setter(value:String)
-		_text = value
+	'Setter(value:String)
+	'	_text = value
 	End
 	
 	Property Parent:ICodeItem()
@@ -203,6 +217,36 @@ Class CodeItem Implements ICodeItem
 	Field _namespace:String
 	Field _filePath:String
 	Field _scopeStartLine:Int, _scopeEndLine:Int=-1
+	
+	
+	Private
+	
+	Method UpdateKind()
+		Select _kindStr
+		Case "function"
+			_kind = CodeItemKind.Function_
+		Case "method"
+			_kind = CodeItemKind.Method_
+		Case "interface"
+			_kind = CodeItemKind.Interface_
+		Case "enum"
+			_kind = CodeItemKind.Enum_
+		Case "struct"
+			_kind = CodeItemKind.Struct_
+		Case "field"
+			_kind = CodeItemKind.Field_
+		Case "global"
+			_kind = CodeItemKind.Global_
+		Case "const"
+			_kind = CodeItemKind.Const_
+		Case "param"
+			_kind = CodeItemKind.Param_
+		Case "class"
+			_kind = CodeItemKind.Class_
+		Case "property"
+			_kind = CodeItemKind.Property_
+		End
+	End
 	
 End
 

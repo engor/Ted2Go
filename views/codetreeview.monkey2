@@ -10,7 +10,7 @@ End
 Class CodeTreeNode Extends TreeView.Node
 
 	Method New(item:ICodeItem, node:TreeView.Node)
-		Super.New(item.Ident, node)
+		Super.New(item.Text, node)
 		_code = item
 	End
 	

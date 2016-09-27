@@ -228,14 +228,6 @@ Class CodeDocument Extends Ted2Document
 			_codeView.GotoLine( item.ScopeStartLine )
 		End
 		
-		#Rem
-		For Local file := Eachin parser.ItemsMap.Keys
-			Local n := New TreeView.Node( StripDir(file), node)
-			For Local i := Eachin parser.ItemsMap[file]
-				AddTreeItem(i, n)
-			Next
-		Next
-		#End
 	End
 	
 	Method AddTreeItem(item:ICodeItem, node:TreeView.Node)

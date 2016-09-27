@@ -10,7 +10,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Method OnCreate() Override
 		
-		'ParseModules()
+		ParseModules()
 		
 	End
 	
@@ -62,7 +62,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local info := GetFileInfo(filePath)
 		
 		If time = info.lastModified
-			'Print "file already parsed: "+filePath
+			Print "file already parsed: "+filePath
 			Return
 		End
 		info.lastModified = time
@@ -72,9 +72,15 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		_filePath = filePath
 		_fileDir = ExtractDir(filePath)
-		_stack.Clear()
 		
+		'reset
+		_stack.Clear()
 		_innerItems = New List<ICodeItem>
+		_indent = 0
+		_insideInterface = False
+		_insideEnum = False
+		_insideRem = False
+		_scope = Null
 		
 		'parse line by line
 		
@@ -96,6 +102,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		ItemsMap[filePath] = _innerItems
 		
+		Print "parsed: "+filePath+", items: "+_innerItems.Count()
 	End 	
 		
 	Private
@@ -280,7 +287,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			Local ident := ParseIdent(postfix)
 			item = New CodeItem(ident)
-			'isScope = True
+			isScope = True
 			_insideEnum = True
 			
 			
@@ -304,7 +311,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			' read types and try to parse ':=' expr
 			For Local s := Eachin _params
 				
-				Print "s: "+s
+				'Print "s: "+s
 				's = s.Replace(" ","") 'remove spaces
 				
 				Local p0 := s.Find(":=")
@@ -381,7 +388,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				item.FilePath = _filePath
 				
 				AddItem(item)
-				Print "ident: '"+ident+"', type: '"+type+"'"
+				'Print "ident: '"+ident+"', type: '"+type+"'"
 				item = Null
 				
 				
