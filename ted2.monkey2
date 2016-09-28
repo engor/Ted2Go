@@ -52,8 +52,6 @@ Using tinyxml2..
 
 Global AppTitle:String = "Ted2Go"
 
-Global test1 : Float, test2 := True
-
 
 Function Main()
 
@@ -91,11 +89,10 @@ Function Main()
 	
 	New MainWindowInstance( AppTitle,rect,flags,jobj )
 	
-	StartRedrawTimer()	
+	'StartRedrawTimer()	
 	
 	App.Run()
-	
-	
+		
 End
 
 

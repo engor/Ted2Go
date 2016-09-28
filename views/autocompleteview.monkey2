@@ -61,6 +61,8 @@ Class AutocompleteDialog Extends DialogExt
 	
 	Method Show(ident:String, filePath:String, fileType:String, docLine:Int)
 		
+		'ident = ident.ToLower()
+		
 		'if typed ident starts with previous
 		'need to simple filter items
 		If IsOpened And ident.StartsWith(_ident)
@@ -86,9 +88,8 @@ Class AutocompleteDialog Extends DialogExt
 		
 		Local idents := ident.Split(".")
 		Local items:List<ICodeItem>
-		Local firstIdent := idents[0]
 		
-		ident = idents[idents.Length-1]
+		'ident = idents[idents.Length-1]
 		
 		'check current scope
 '		Local target := New List<ICodeItem>
@@ -96,122 +97,86 @@ Class AutocompleteDialog Extends DialogExt
 
 		' the first ident part
 		Local onlyOne := (idents.Length = 1)
-			
-		If onlyOne
-			
-			Print "onlyOne"
-			
-			Local item := scope				
-			While item <> Null
+		
+		'what the first ident is?	
+		Local firstIdent := idents[0]
+		Local item:ICodeItem = Null
+		
+		' check in this scope
+		If scope <> Null
 
-				If item.Ident.ToLower().StartsWith(firstIdent)
-					result.AddLast(New StringListViewItem(item.Ident))
-				Endif
-					
-				Local items := item.Children
-				If items <> Null
-					For Local i := Eachin items
-						If i.Ident.ToLower().StartsWith(firstIdent)
-							result.AddLast(New StringListViewItem(i.Ident))
+			Local items := scope.Children
+			If items <> Null
+				For Local i := Eachin items
+					If CheckIdent(i.Ident, firstIdent, onlyOne)
+						If Not onlyOne
+							item = i
+							Exit
+						Else
+							result.AddLast(New StringListViewItem(i.Text))
 						Endif
-					Next
-				Endif
+					Endif
+				Next
+			Endif
 
-				item = item.Parent
-			Wend
-			
+		Endif
+		
+		' and check in global scope
+		If item = Null Or onlyOne
 			For Local i := Eachin parser.Items
-				If i.Ident.ToLower().StartsWith(ident)
-					result.AddLast(New StringListViewItem(i.Ident))
+				If CheckIdent(i.Ident, firstIdent, onlyOne)
+					If Not onlyOne
+						item = i
+						Exit
+					Else
+						result.AddLast(New StringListViewItem(i.Text))
+					Endif
 				Endif
 			Next
+		Endif
+		
+		'If item <> Null Print "first: "+item.Text
+		
+		' var1.var2.var3...
+		If Not onlyOne And item <> Null
 			
-		Else
-			
-			Print "not onlyOne"
-			
-			Local item := scope
-			
-			For Local k := 0 Until idents.Length
+			' strt from the second ident part here
+			For Local k := 1 Until idents.Length
+				
+				' need to check by ident type
+				Local type := item.Type
+				'Print "idnt: "+item.Ident+" : "+type+" : "+item.KindStr
+				item = Null
+				For Local i := Eachin parser.Items
+					If i.Ident = type
+						item = i
+						Exit
+					Endif
+				Next
+				If item = Null Then Exit
 				
 				Local identPart := idents[k]
 				Local last := (k = idents.Length-1)
-				Local found:ICodeItem = Null
-								
-				While item <> Null
-	
-					If CheckIdent(item.Ident, identPart, last)
-						found = item
-						If last
-							result.AddLast(New StringListViewItem(found.Ident))
-						Else
-							Exit
-						Endif
-					Endif
-						
-					Local items := item.Children
-					If items <> Null
-						For Local i := Eachin items
-							If CheckIdent(i.Ident, identPart, last)
-								found = i
-								If last
-									result.AddLast(New StringListViewItem(found.Ident))
-								Else
-									Exit
-								Endif
+									
+				Local items := item.Children
+				If items <> Null
+					For Local i := Eachin items
+						If CheckIdent(i.Ident, identPart, last)
+							item = i
+							If last
+								result.AddLast(New StringListViewItem(i.Text))
+							Else
+								Exit
 							Endif
-						Next
-					Endif
-	
-					item = item.Parent
-				Wend
-				
-				If found <> Null
-					item = found
-					Print "found: "+found.Scope
-				Else
-					Exit
+						Endif
+					Next
 				Endif
 				
+				If item = Null Then Exit
 			Next
 			
 		Endif
 
-
-		If scope <> Null
-		
-			
-			
-			#rem
-			Print "SCOPE: "+scope.Scope
-			Local item := parser.ItemAtScope(scope, idents)
-			If item <> Null 
-				Local result:ICodeItem = Null
-				Local item := scope
-						
-				'and other - go recursively into scope
-				
-				For Local k := 0 Until idents.Length
-					Local s := idents[k]
-					Local first := (k = 0)
-					Local last := (k = idents.Length-1)					
-					ItemsAtScopeInternal(item, s, last, first, target)
-					If i = Null 'some part of ident not found
-						If k = 0
-							
-						Else
-							Exit 'first ident not found in this scope and in global scope
-						Endif
-					Endif
-					item = i
-					result = i
-				Next
-				If result <> Null Print "result: "+result.Ident		
-				Return result
-			Endif
-			
-			#end
-		Endif
 		
 		If IsOpened Then Hide() 'hide to re-layout on open
 		
@@ -226,8 +191,9 @@ Class AutocompleteDialog Extends DialogExt
 		_view.SetItems(result)
 		
 		Show()
-			
-		_ident = ident
+		
+		' store last ident part
+		_ident = idents[idents.Length-1]
 		
 	End
 	
@@ -246,7 +212,7 @@ Class AutocompleteDialog Extends DialogExt
 	Method CheckIdent:Bool(ident1:String, ident2:String, startsOnly:Bool)
 		If ident2 = "" Return True
 		If startsOnly
-			Return ident1.ToLower().StartsWith(ident2)
+			Return ident1.ToLower().StartsWith(ident2.ToLower())
 		Else
 			Return ident1 = ident2
 		Endif

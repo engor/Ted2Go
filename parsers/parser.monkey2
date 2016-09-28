@@ -130,9 +130,9 @@ Class CodeItem Implements ICodeItem
 		If _text = Null
 			Local s := Ident
 			Select _kind
-				Case CodeItemKind.Function_, CodeItemKind.Method_, CodeItemKind.Property_
+				Case CodeItemKind.Function_, CodeItemKind.Method_
 					s += "()"
-				Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_, CodeItemKind.Enum_
+				Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_, CodeItemKind.Enum_, CodeItemKind.Property_
 					'do nothing
 				Default
 					s += ":"+Type

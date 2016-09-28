@@ -413,8 +413,8 @@ Class MainWindowInstance Extends Window
 	
 	Method OnRender( canvas:Canvas ) Override
 		
-		'RequestRender()
 		Super.OnRender( canvas )
+		RequestRender()
 		
 	End
 	

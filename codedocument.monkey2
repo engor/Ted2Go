@@ -85,7 +85,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			Select event.Key
 			Case Key.Space
 				If event.Modifiers & Modifier.Control
-					ShowAutocomplete()
 					Return
 				Endif
 			Case Key.Backspace
@@ -99,8 +98,16 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Endif
 				Endif
 			End
+			
+		Elseif event.Type = EventType.KeyChar And event.Key = Key.Space And event.Modifiers & Modifier.Control
+			Print "ctrl+space"
+			ShowAutocomplete()
+			Return
 		Endif
 		
+		
+		If event.Eaten Return
+		'Print "super"
 		Super.OnKeyEvent( event )
 		
 		'show autocomplete list after some typed chars
@@ -110,7 +117,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				ShowAutocomplete("#")
 			Else
 				Local ident := IdentBeforeCursor()
-				Print "ident "+ident
 				If ident.Length >= CharsToShowAutoComplete
 					ShowAutocomplete(ident)
 				Else
@@ -203,42 +209,7 @@ Class CodeDocument Extends Ted2Document
 		
 		_codeView = New CodeDocumentView( Self )
 		_view.ContentView = _codeView
-		
-		FillTreeView()
-	End
-	
-	Method FillTreeView()
-	
-		Local stack := New Stack<TreeView.Node>
-		Local parser := ParsersManager.Get(FileType)
-		Local node := _treeView.RootNode
-		_treeView.RootNodeVisible = False
-		_treeView.RootNode.Expanded = True
-		
-		Local list := parser.ItemsMap[Path]
-		If list = Null Return
-		
-		For Local i := Eachin list
-			AddTreeItem(i, node)
-		Next
-		
-		_treeView.NodeClicked = Lambda(node:TreeView.Node)
-			Local codeNode := Cast<CodeTreeNode>(node)
-			Local item := codeNode.CodeItem
-			_codeView.GotoLine( item.ScopeStartLine )
-		End
-		
-	End
-	
-	Method AddTreeItem(item:ICodeItem, node:TreeView.Node)
-	
-		Local n := New CodeTreeNode(item, node)
 				
-		If item.Children <> Null
-			For Local i := Eachin item.Children
-				AddTreeItem(i, n)
-			End
-		Endif
 	End
 	
 	Property TextDocument:TextDocument()
@@ -283,7 +254,7 @@ Class CodeDocument Extends Ted2Document
 		_doc.Text=text
 		
 		'code parser
-		ParsersManager.Get(FileType).Parse(text, Path)
+		ParseSources()
 		
 		Return True
 	End
@@ -295,7 +266,7 @@ Class CodeDocument Extends Ted2Document
 		Local ok := stringio.SaveString( text,Path )
 	
 		'code parser - reparse
-		ParsersManager.Get(FileType).Parse(text, Path)
+		ParseSources()
 				
 		Return ok
 	End
@@ -303,6 +274,46 @@ Class CodeDocument Extends Ted2Document
 	Method OnCreateView:View() Override
 	
 		Return _view
+	End
+	
+	Method ParseSources()
+		ParsersManager.Get(FileType).Parse(_doc.Text, Path)
+		FillTreeView()
+	End
+	
+	Method FillTreeView()
+	
+		Local stack := New Stack<TreeView.Node>
+		Local parser := ParsersManager.Get(FileType)
+		Local node := _treeView.RootNode
+		_treeView.RootNodeVisible = False
+		node.Expanded = True
+		node.RemoveAllChildren()
+		
+		Local list := parser.ItemsMap[Path]
+		If list = Null Return
+		
+		For Local i := Eachin list
+			AddTreeItem(i, node)
+		Next
+		
+		_treeView.NodeClicked = Lambda(node:TreeView.Node)
+			Local codeNode := Cast<CodeTreeNode>(node)
+			Local item := codeNode.CodeItem
+			_codeView.GotoLine( item.ScopeStartLine )
+		End
+		
+	End
+	
+	Method AddTreeItem(item:ICodeItem, node:TreeView.Node)
+	
+		Local n := New CodeTreeNode(item, node)
+				
+		If item.Children <> Null
+			For Local i := Eachin item.Children
+				AddTreeItem(i, n)
+			End
+		Endif
 	End
 	
 End
