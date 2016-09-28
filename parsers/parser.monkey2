@@ -18,11 +18,9 @@ Enum CodeItemKind
 End
 
 Enum AccessMode
-	PrivateInClass,
-	ProtectedInClass,
-	PublicInClass,
-	PublicInFile,
-	PrivateInFile
+	Private_,
+	Protected_,
+	Public_
 End
 
 
@@ -135,7 +133,7 @@ Class CodeItem Implements ICodeItem
 				Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_, CodeItemKind.Enum_, CodeItemKind.Property_
 					'do nothing
 				Default
-					s += ":"+Type
+					s += " : "+Type
 			End
 			_text = s
 		Endif
@@ -250,12 +248,6 @@ Class CodeItem Implements ICodeItem
 	
 End
 
-
-Class ClassCodeItem
-
-	'Method New(ident:String, type:String, params:String[], kind:CodeItemKind, access:AccessMode,
-	
-End
 
 
 Interface ICodeParser

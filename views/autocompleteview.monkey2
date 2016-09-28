@@ -4,22 +4,25 @@ Namespace ted2go
 
 Class CodeListViewItem Implements ListViewItem
 	
-	Method New(ident:String)
-		_ident = ident
+	Method New(item:ICodeItem)
+		_item = item
 	End
 	
 	Method Draw(canvas:Canvas,x:Float,y:Float, handleX:Float=0, handleY:Float=0)
-		canvas.DrawText(_ident,x,y,handleX,handleY)
+		canvas.DrawText(Text,x,y,handleX,handleY)
 	End
 	
 	Property CodeItem:ICodeItem()
 		Return _item
 	End
 	
+	Property Text:String()
+		Return _item.Text
+	End
+	
 	
 	Private
 	
-	Field _ident:String
 	Field _item:ICodeItem
 	
 End
@@ -108,12 +111,12 @@ Class AutocompleteDialog Extends DialogExt
 			Local items := scope.Children
 			If items <> Null
 				For Local i := Eachin items
-					If CheckIdent(i.Ident, firstIdent, onlyOne)
+					If CheckAccess(i, filePath) And CheckIdent(i.Ident, firstIdent, onlyOne)
 						If Not onlyOne
 							item = i
 							Exit
 						Else
-							result.AddLast(New StringListViewItem(i.Text))
+							result.AddLast(New CodeListViewItem(i))
 						Endif
 					Endif
 				Next
@@ -124,12 +127,12 @@ Class AutocompleteDialog Extends DialogExt
 		' and check in global scope
 		If item = Null Or onlyOne
 			For Local i := Eachin parser.Items
-				If CheckIdent(i.Ident, firstIdent, onlyOne)
+				If CheckAccess(i, filePath) And CheckIdent(i.Ident, firstIdent, onlyOne)
 					If Not onlyOne
 						item = i
 						Exit
 					Else
-						result.AddLast(New StringListViewItem(i.Text))
+						result.AddLast(New CodeListViewItem(i))
 					Endif
 				Endif
 			Next
@@ -154,6 +157,7 @@ Class AutocompleteDialog Extends DialogExt
 					Endif
 				Next
 				If item = Null Then Exit
+				scope = item
 				
 				Local identPart := idents[k]
 				Local last := (k = idents.Length-1)
@@ -161,10 +165,10 @@ Class AutocompleteDialog Extends DialogExt
 				Local items := item.Children
 				If items <> Null
 					For Local i := Eachin items
-						If CheckIdent(i.Ident, identPart, last)
+						If CheckAccess(i, filePath) And CheckIdent(i.Ident, identPart, last)
 							item = i
 							If last
-								result.AddLast(New StringListViewItem(i.Text))
+								result.AddLast(New CodeListViewItem(i))
 							Else
 								Exit
 							Endif
@@ -207,6 +211,13 @@ Class AutocompleteDialog Extends DialogExt
 	
 	
 	Method New()
+	End
+	
+	Method CheckAccess:Bool(item:ICodeItem, filePath:String)
+		Local a := item.Access
+		If a = AccessMode.Public_ Return True
+		' need to extend logic for 'protected'
+		Return item.FilePath = filePath
 	End
 	
 	Method CheckIdent:Bool(ident1:String, ident2:String, startsOnly:Bool)
@@ -279,13 +290,15 @@ Class AutocompleteDialog Extends DialogExt
 	End
 	
 	Method OnItemChoosen(item:ListViewItem)
-		'Local si := Cast<StringItem>(item)
-		'Local t := ""
-		'If si <> Null
-		'	t = si.Text
-		'End
+		Local si := Cast<CodeListViewItem>(item)
+		Local t := ""
+		If si <> Null
+			t = si.CodeItem.Ident
+		Else
+			t = item.Text
+		End
 		
-		OnChoosen(item.Text)
+		OnChoosen(t)
 		Hide()
 	End
 	

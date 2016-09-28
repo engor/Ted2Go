@@ -81,6 +81,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 		_insideEnum = False
 		_insideRem = False
 		_scope = Null
+		_accessInFile = AccessMode.Public_
+		_accessInClass = AccessMode.Public_
 		
 		'parse line by line
 		
@@ -110,7 +112,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Global _instance := New Monkey2Parser
 	Field _stack := New Stack<ICodeItem>
 	Field _scope:ICodeItem
-	Field _access := AccessMode.PublicInFile
+	Field _accessInFile := AccessMode.Public_
+	Field _accessInClass := AccessMode.Public_
 	Field _indent:Int
 	Field _namespace:String
 	Field _filePath:String, _fileDir:String
@@ -196,7 +199,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 			For Local i := Eachin arr
 				i = i.Trim()
 				If i <> ""
-					AddItem(New CodeItem(i))
+					Local item := New CodeItem(i)
+					item.KindStr = "enum"
+					AddItem(item)
 				Endif
 			Next
 			Return
@@ -215,6 +220,26 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		Select word
 		
+		Case "private"
+		
+			If _scope = Null
+				_accessInFile = AccessMode.Private_
+			Else
+				_accessInClass = AccessMode.Private_
+			Endif
+			
+		Case "public"
+			
+			If _scope = Null
+				_accessInFile = AccessMode.Public_
+			Else
+				_accessInClass = AccessMode.Public_
+			Endif
+			
+		Case "protected"
+			
+			_accessInClass = AccessMode.Protected_
+			
 		Case "namespace"
 			
 			_namespace = postfix
@@ -240,10 +265,14 @@ Class Monkey2Parser Extends CodeParserPlugin
 					Local path := _filePath
 					Local dir := _fileDir
 					Local nspace := _namespace
+					Local accInFile := _accessInFile
+					Local accInClass := _accessInClass
 					Parse(Null,file)
 					_filePath = path
 					_fileDir = dir
 					_namespace = nspace
+					_accessInFile = accInFile
+					_accessInClass = accInClass
 				Endif
 			Endif
 			Return
@@ -277,6 +306,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Endif
 			item.Type = ident
 			
+			_accessInClass = AccessMode.Public_
+			
 		Case "interface"
 			
 			Local ident := ParseIdent(postfix)
@@ -285,6 +316,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 			_insideInterface = True
 			item.Type = ident
 			
+			_accessInClass = AccessMode.Public_
+			
 		Case "enum"
 			
 			Local ident := ParseIdent(postfix)
@@ -292,6 +325,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 			isScope = True
 			_insideEnum = True
 			item.Type = ident
+			
+			_accessInClass = AccessMode.Public_
 			
 		Case "method", "function", "property"
 			
@@ -523,11 +558,13 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		If _scope <> Null
 			_scope.AddChild(item)
+			item.Access = _accessInClass
 		Else
 			Items.AddLast(item)
 			_innerItems.AddLast(item)
+			item.Access = _accessInFile
 		Endif
-		
+				
 	End
 	
 	Method RemoveItem(item:ICodeItem)
