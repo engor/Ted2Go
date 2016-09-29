@@ -24,7 +24,8 @@ Class CodeListViewItem Implements ListViewItem
 	Private
 	
 	Field _item:ICodeItem
-	
+	'_it
+	a := _it
 End
 
 
@@ -62,6 +63,13 @@ Class AutocompleteDialog Extends DialogExt
 		Return _ident
 	End
 	
+	Method CanShow:Bool(line:String, posInLine:Int, fileType:String)
+	
+		Local parser := GetParser(fileType)
+		Return parser.CanShowAutocomplete(line, posInLine)
+		
+	End
+	
 	Method Show(ident:String, filePath:String, fileType:String, docLine:Int)
 		
 		'ident = ident.ToLower()
@@ -71,42 +79,44 @@ Class AutocompleteDialog Extends DialogExt
 		If IsOpened And ident.StartsWith(_ident)
 			
 		End
-		
-		
-		If _keywords[fileType] = Null Then UpdateKeywords(fileType)
-		If _parsers[fileType] = Null Then UpdateParsers(fileType)
-			
-		Local parser := _parsers[fileType]
+					
+		Local parser := GetParser(fileType)
 		
 		Local result := New List<ListViewItem>
-		
-		'add keywords
-		Local kw := _keywords[fileType]
-		For Local i := Eachin kw
-			Local txt := i.Text.ToLower()
-			If txt.StartsWith(ident)
-				result.AddLast(i)
-			End
-		Next
 		
 		Local idents := ident.Split(".")
 		Local items:List<ICodeItem>
 		
-		'ident = idents[idents.Length-1]
+		Local onlyOne := (idents.Length = 1)
+		
+		' using lowerCase for keywords
+		Local lastIdent := idents[idents.Length-1].ToLower()
+		
+		'-----------------------------
+		' add keywords
+		'-----------------------------
+		If onlyOne
+			Local kw := GetKeywords(fileType)
+			For Local i := Eachin kw
+				Local txt := i.Text.ToLower()
+				If txt.StartsWith(lastIdent)
+					result.AddLast(i)
+				End
+			Next
+		Endif
 		
 		'check current scope
 '		Local target := New List<ICodeItem>
 		Local scope := parser.GetScope(filePath, docLine)
 
-		' the first ident part
-		Local onlyOne := (idents.Length = 1)
-		
-		'what the first ident is?	
+		'-----------------------------
+		' what the first ident is?	
+		'-----------------------------
 		Local firstIdent := idents[0]
 		Local item:ICodeItem = Null
 		
-		' check in this scope
-		If scope <> Null
+		' check in 'this' scope
+		While scope <> Null
 
 			Local items := scope.Children
 			If items <> Null
@@ -121,8 +131,12 @@ Class AutocompleteDialog Extends DialogExt
 					Endif
 				Next
 			Endif
-
-		Endif
+			'found item
+			If item <> Null Exit
+			
+			scope = scope.Parent '￑if inside of func then go to class' scope
+			
+		Wend
 		
 		' and check in global scope
 		If item = Null Or onlyOne
@@ -197,7 +211,7 @@ Class AutocompleteDialog Extends DialogExt
 		Show()
 		
 		' store last ident part
-		_ident = idents[idents.Length-1]
+		_ident = lastIdent
 		
 	End
 	
@@ -211,6 +225,16 @@ Class AutocompleteDialog Extends DialogExt
 	
 	
 	Method New()
+	End
+	
+	Method GetParser:ICodeParser(fileType:String)
+		If _parsers[fileType] = Null Then UpdateParsers(fileType)
+		Return _parsers[fileType]
+	End
+	
+	Method GetKeywords:List<ListViewItem>(fileType:String)
+		If _keywords[fileType] = Null Then UpdateKeywords(fileType)
+		Return _keywords[fileType]
 	End
 	
 	Method CheckAccess:Bool(item:ICodeItem, filePath:String)

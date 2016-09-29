@@ -254,6 +254,7 @@ Interface ICodeParser
 
 	Method Parse(text:String, filePath:String)
 	Method IsPosInsideOfQuotes:Bool(text:String, pos:Int)
+	Method CanShowAutocomplete:Bool(line:String, posInLine:Int)
 	Method GetScope:ICodeItem(docPath:String, docLine:Int)
 	Method ItemAtScope:ICodeItem(scope:ICodeItem, idents:String[])
 	Property Items:List<ICodeItem>()
@@ -327,7 +328,10 @@ Class EmptyParser Implements ICodeParser
 	End
 	Method IsPosInsideOfQuotes:Bool(text:String, pos:Int)
 		Return False
-	End	
+	End
+	Method CanShowAutocomplete:Bool(line:String, posInLine:Int)
+		Return False
+	End
 	Method GetScope:ICodeItem(docPath:String, docLine:Int)
 		Return Null
 	End

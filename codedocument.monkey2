@@ -100,27 +100,27 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			End
 			
 		Elseif event.Type = EventType.KeyChar And event.Key = Key.Space And event.Modifiers & Modifier.Control
-			Print "ctrl+space"
-			ShowAutocomplete()
+			If CanShowAutocomplete()
+				ShowAutocomplete()
+			Endif
 			Return
 		Endif
-		
-		
-		If event.Eaten Return
-		'Print "super"
+				
 		Super.OnKeyEvent( event )
 		
 		'show autocomplete list after some typed chars
 		If event.Type = EventType.KeyChar
-			'preprocessor
-			If event.Text = "#"
-				ShowAutocomplete("#")
-			Else
-				Local ident := IdentBeforeCursor()
-				If ident.Length >= CharsToShowAutoComplete
-					ShowAutocomplete(ident)
+			If CanShowAutocomplete()
+				'preprocessor
+				If event.Text = "#"
+					ShowAutocomplete("#")
 				Else
-					HideAutocomplete()
+					Local ident := IdentBeforeCursor()
+					If ident.Length >= CharsToShowAutoComplete
+						ShowAutocomplete(ident)
+					Else
+						HideAutocomplete()
+					Endif
 				Endif
 			Endif
 		Endif
@@ -138,6 +138,20 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 	End
 	
+	
+	Private
+	
+	Method CanShowAutocomplete:Bool()
+		
+		Local line := Document.FindLine(Cursor)
+		Local text := Document.GetLine(line)
+		Local posInLine := Cursor-Document.StartOfLine(line)
+		
+		Local can := AutoComplete.CanShow(text, posInLine, FileType)
+		Return can
+		
+	End
+	
 	Method ShowAutocomplete(ident:String = "")
 		'check ident
 		If ident = "" Then ident = IdentBeforeCursor()
@@ -152,11 +166,16 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			Local w := frame.Width
 			Local h := frame.Height
 			
-			frame.Left = CursorRect.Left+100
-			frame.Top = CursorRect.Top - Scroll.y
+			frame.Left = Frame.Left+CursorRect.Left+100
 			frame.Right = frame.Left+w
+			frame.Top = CursorRect.Top - Scroll.y
 			frame.Bottom = frame.Top+h
-			
+			' fit dialog into window
+			If frame.Bottom > Self.Frame.Bottom
+				Local dy := frame.Bottom - Self.Frame.Bottom + 5
+				frame.Top -= dy
+				frame.Bottom -= dy
+			Endif
 			AutoComplete.Frame = frame
 		Endif
 		
@@ -166,8 +185,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		AutoComplete.Hide()
 	End
 	
-	
-	Private
 	
 	Field _doc:CodeDocument
 

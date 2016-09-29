@@ -54,6 +54,16 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
+	Method CanShowAutocomplete:Bool(line:String, posInLine:Int)
+		
+		Local comPos := IndexOfCommentChar(line)
+		' pos in comment
+		If comPos <> -1 And posInLine > comPos Return False
+		
+		Return Not IsPosInsideOfQuotes(line, posInLine)
+		
+	End
+	
 	Method Parse(text:String, filePath:String)
 			
 		'chech did we already parse this file
