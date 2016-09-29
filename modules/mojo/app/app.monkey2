@@ -85,6 +85,10 @@ Class AppInstance
 		_config=config
 
 		SDL_Init( SDL_INIT_VIDEO|SDL_INIT_JOYSTICK )
+
+		'possible fix for linux crashing at exit (can't reproduce myself).
+		'		
+		libc.atexit( SDL_Quit )
 		
 		AppInit()
 		
@@ -409,7 +413,7 @@ Class AppInstance
 	#rem monkeydoc Terminate the app.
 	#end
 	Method Terminate()
-
+	
 		libc.exit_( 0 )
 	End
 	
@@ -856,7 +860,7 @@ Class AppInstance
 				SendWindowEvent( EventType.WindowGainedFocus )
 				
 				If active<>_active Activated()
-			
+				
 			Case SDL_WINDOWEVENT_FOCUS_LOST
 			
 				Print "SDL_WINDOWEVENT_FOCUS_LOST"
@@ -912,10 +916,7 @@ Class AppInstance
 			Print "SDL_RENDER_DEVICE_RESET"
 		
 			mojo.graphics.glutil.glGraphicsSeq+=1
-'#rem
 
-		'Linux weirdness: These may or may not be necessary when/if I get mouse capture working again.
-			
 		Case SDL_WINDOWEVENT_MOVED
 			
 			SendWindowEvent( EventType.WindowMoved )
@@ -925,7 +926,10 @@ Class AppInstance
 			SendWindowEvent( EventType.WindowResized )
 				
 			UpdateWindows()
-'#end
+			
+		Case SDL_WINDOWEVENT_EXPOSED
+		
+			RequestRender()
 
 		Case SDL_DROPFILE
 		
