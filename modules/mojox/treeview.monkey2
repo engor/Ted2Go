@@ -442,7 +442,7 @@ Class TreeView Extends ScrollableView
 			
 			If node._icon
 				w+=_spcWidth+node._icon.Width
-				h=Max( h,node._icon.Height )
+				h=Max( h,Int( node._icon.Height ) )
 			Endif
 			
 			size=New Vec2i( w+_nodeSize,Max( h,_nodeSize )+_spacing )
