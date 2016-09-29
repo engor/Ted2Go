@@ -84,16 +84,18 @@ Class Monkey2Parser Extends CodeParserPlugin
 		_fileDir = ExtractDir(filePath)
 		
 		'reset
-		_stack.Clear()
-		_innerItems = New List<ICodeItem>
-		_indent = 0
 		_insideInterface = False
 		_insideEnum = False
 		_insideRem = False
-		_scope = Null
-		_accessInFile = AccessMode.Public_
-		_accessInClass = AccessMode.Public_
 		
+		info.indent = 0
+		info.stack.Clear()
+		info.items.Clear()
+		info.scope = Null
+		info.accessInFile = AccessMode.Public_
+		info.stackAccess.Clear()
+		
+				
 		'parse line by line
 		
 		If text = Null
@@ -108,11 +110,11 @@ Class Monkey2Parser Extends CodeParserPlugin
 		For Local k := 0 Until numLines
 			
 			Local txt := doc.GetLine(k)			
-			ParseLine(txt, k)
+			ParseLine(txt, k, info)
 			
 		Next
 		
-		ItemsMap[filePath] = _innerItems
+		ItemsMap[filePath] = info.items
 		
 		'Print "parsed: "+filePath+", items: "+_innerItems.Count()
 	End 	
@@ -120,11 +122,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Private
 	
 	Global _instance := New Monkey2Parser
-	Field _stack := New Stack<ICodeItem>
-	Field _scope:ICodeItem
-	Field _accessInFile := AccessMode.Public_
-	Field _accessInClass := AccessMode.Public_
-	Field _indent:Int
+	
 	Field _namespace:String
 	Field _filePath:String, _fileDir:String
 	Field _files := New StringMap<FileInfo>
@@ -134,8 +132,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Field _params := New List<String>
 	Field _docLine:Int
 	Field _isImportEnabled := True
-	Field _innerItems:List<ICodeItem>
-	
+		
 	
 	Method New()
 		Super.New()
@@ -151,7 +148,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return info
 	End
 	
-	Method ParseLine(text:String, line:Int)
+	Method ParseLine(text:String, line:Int, info:FileInfo)
 	
 		
 		Local n := 0
@@ -201,17 +198,18 @@ Class Monkey2Parser Extends CodeParserPlugin
 		If _insideEnum
 			If word = "end"
 				_insideEnum = False
-				PopScope()
+				PopScope(info)
 				Return
 			Endif
 			Local t := text.Trim()
 			Local arr := t.Split(",")
 			For Local i := Eachin arr
+				Local p := i.Find("=")
+				If p <> -1 Then i = i.Slice(0,p)
 				i = i.Trim()
 				If i <> ""
 					Local item := New CodeItem(i)
-					item.KindStr = "enum"
-					AddItem(item)
+					AddItem(item, "enum", False, info)
 				Endif
 			Next
 			Return
@@ -219,7 +217,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		Local postfix := text.Slice(p+1).Trim()
 		
-		_indent = indent
+		info.indent = indent
 		
 		'simple extract ident
 		'ExtractIdent(word, postfix)
@@ -232,23 +230,23 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		Case "private"
 		
-			If _scope = Null
-				_accessInFile = AccessMode.Private_
+			If info.scope = Null
+				info.accessInFile = AccessMode.Private_
 			Else
-				_accessInClass = AccessMode.Private_
+				PushAccess(info, AccessMode.Private_)
 			Endif
 			
 		Case "public"
 			
-			If _scope = Null
-				_accessInFile = AccessMode.Public_
+			If info.scope = Null
+				info.accessInFile = AccessMode.Public_
 			Else
-				_accessInClass = AccessMode.Public_
+				PushAccess(info, AccessMode.Public_)
 			Endif
 			
 		Case "protected"
 			
-			_accessInClass = AccessMode.Protected_
+			PushAccess(info, AccessMode.Protected_)
 			
 		Case "namespace"
 			
@@ -275,14 +273,14 @@ Class Monkey2Parser Extends CodeParserPlugin
 					Local path := _filePath
 					Local dir := _fileDir
 					Local nspace := _namespace
-					Local accInFile := _accessInFile
-					Local accInClass := _accessInClass
+					Local accInFile := info.accessInFile
+					'Local accInClass := info.accessInClass
 					Parse(Null,file)
 					_filePath = path
 					_fileDir = dir
 					_namespace = nspace
-					_accessInFile = accInFile
-					_accessInClass = accInClass
+					info.accessInFile = accInFile
+					'info.accessInClass = accInClass
 				Endif
 			Endif
 			Return
@@ -290,15 +288,17 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		Case "end"
 			
-			If _scope <> Null
+			If info.scope <> Null
 				'If _insideInterface And _scope._kind = CodeItemKind.Interfacee
 					_insideInterface = False
 				'Endif
 				'If _scope.Indent > indent
 				'	Print "scope: "+_scope.Scope+", "+ _scope.Indent+", "+ indent
 				'Endif
-				If _scope.Indent = indent
-					PopScope() 'go up 
+				If info.scope.Indent = indent
+					
+					PopScope(info) 'go up 
+										
 				Endif
 				
 			Endif
@@ -310,35 +310,41 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			Local ident := ParseIdent(postfix)
 			item = New CodeItem(ident)
-			isScope = True
-			If _scope <> Null
+			
+			If info.scope <> Null
 				'Print "inner class/struct: "+ident+", "+_scope.Ident
 			Endif
 			item.Type = ident
 			
-			_accessInClass = AccessMode.Public_
+			AddItem(item, word, True, info)
+			
+			PushAccess(info, AccessMode.Public_)
 			
 		Case "interface"
 			
 			Local ident := ParseIdent(postfix)
 			item = New CodeItem(ident)
-			isScope = True
+			
 			_insideInterface = True
 			item.Type = ident
 			
-			_accessInClass = AccessMode.Public_
+			AddItem(item, word, True, info)
+			
+			PushAccess(info, AccessMode.Public_)
 			
 		Case "enum"
 			
 			Local ident := ParseIdent(postfix)
 			item = New CodeItem(ident)
-			isScope = True
+			
 			_insideEnum = True
 			item.Type = ident
 			
-			_accessInClass = AccessMode.Public_
+			AddItem(item, word, True, info)
 			
-		Case "method", "function", "property"
+			PushAccess(info, AccessMode.Public_)
+			
+		Case "method", "function", "property" ', "setter"
 			
 			Local ident := ParseIdent(postfix)
 			item = New CodeItem(ident)
@@ -350,14 +356,48 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Endif
 			
 			Local p1 := postfix.Find(":")
-			If p1 = -1
+			Local p2 := postfix.Find("(")
+			If p1 = -1 Or p1 > p2
 				item.Type = "Void"
 			Else
-				Local p2 := postfix.Find("(")
 				item.Type = postfix.Slice(p1+1, p2).Trim()
 			Endif
 			
-		Case "field", "global", "local", "const", "param"
+			AddItem(item, word, True, info)
+			
+			Local p3 := postfix.FindLast(")",p2)
+			
+			Local params := postfix.Slice(p2+1, p3).Trim()
+			If params <> ""
+				
+				item.ParamsStr = params
+				
+				' here we try to split idents by comma
+				_params.Clear()
+				ExtractParams(params, _params)
+				
+				For Local s := Eachin _params
+					
+					' skip default value after '='
+					Local pos := s.Find("=")
+					If pos > 0 s = s.Slice(0,pos).Trim()
+					
+					pos = s.Find(":")
+					Local ident := s.Slice(0,pos).Trim()
+					Local type := s.Slice(pos+1,s.Length).Trim()
+					
+					Local i := New CodeItem(ident)
+					i.Type = type
+					
+					' also need to check arrays
+					' and types which requires refining after parsing all file
+									
+					AddItem(i, "param", False, info)
+									
+				Next
+			Endif
+			
+		Case "field", "global", "local", "const"
 			
 			' here we try to split idents by comma
 			_params.Clear()
@@ -447,57 +487,62 @@ Class Monkey2Parser Extends CodeParserPlugin
 				
 				' also need to check arrays
 				' and types which requires refining after parsing all file
-				
-				item.Namespac = _namespace
-				item.Indent = _indent
-				item.FilePath = _filePath
-				
-				AddItem(item)
-				'Print "ident: '"+ident+"', type: '"+type+"'"
-				item = Null
 								
+				AddItem(item, word, False, info)
+												
 			Next
 		
 		End 'Select word
 		
 		
-		If item <> Null
-
-			item.Namespac = _namespace
-			item.Indent = _indent
-			item.FilePath = _filePath
-			item.KindStr = word
-			
-			AddItem(item)
-			
-			If isScope
-				PushScope(item)
-			Endif
-			
-		Endif
-		
 	End
 	
-	Method PushScope(item:ICodeItem)
+	Method PushAccess(info:FileInfo, access:AccessMode)
+		info.stackAccess.Push(access)
+		'Print "push access: "+info.scope.Ident+", "+GetAccessStr(access)
+	End
 	
+	Method PopAccess(info:FileInfo)
+		info.stackAccess.Pop()
+		'Print "pop access: "+info.scope.Ident+", "+GetAccessStr(GetCurrentAccess(info))
+	End
+	
+	Method GetAccessStr:String(access:AccessMode)
+		Select access
+		Case AccessMode.Private_
+			Return "private"
+		Case AccessMode.Protected_
+			Return "protected"
+		End
+		Return "public"
+	End
+	
+	Method PushScope(item:ICodeItem, info:FileInfo)
+			
 		'Print "push scope"
-		If _scope <> Null
-			_stack.Push(_scope)
-			item.Parent = _scope
+		If info.scope <> Null
+			info.stack.Push(info.scope)
+			item.Parent = info.scope
 			'Print "push stack"
 		Endif
-		_scope = item
-		_scope.ScopeStartLine = _docLine
+		info.scope = item
+		info.scope.ScopeStartLine = _docLine
 	End
 	
-	Method PopScope()
+	Method PopScope(info:FileInfo)
 	
+		' flush access mode for current class-like item
+		Select info.scope.Kind
+		Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_, CodeItemKind.Enum_
+			PopAccess(info)
+		End
+		
 		'Print "pop scope"
-		If _scope <> Null Then _scope.ScopeEndLine = _docLine
-		If _stack.Length > 0
-			_scope = _stack.Pop()
+		If info.scope <> Null Then info.scope.ScopeEndLine = _docLine
+		If info.stack.Length > 0
+			info.scope = info.stack.Pop()
 		Else
-			_scope = Null
+			info.scope = Null
 		Endif
 	End
 	
@@ -537,44 +582,30 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return i>0 And i=n
 	End
 	
-	Method ExtractIdent(word:String, line:String)
-		
-		Select word
-		Case "class","interface","struct","enum","global","const","method","function","property"
-		Default
-			Return
-		End
-		
-		Local ident := ParseIdent(line, False)
-		
-		Local item := New CodeItem(ident)
-		item.Namespac = _namespace
-		
-		AddItem(item)
-		
-		'Print "add ident: "+ident
-		
-	End
+	Method AddItem(item:ICodeItem, kindStr:String, isScope:Bool, info:FileInfo)
 	
-	Method AddItem(item:ICodeItem)
-	
-		'Local key := item.Namespac+item.Ident
-		'Local key := item.Ident
-		'If _itemsMap[key] <> Null Return 'already in list
-		
-		'_itemsMap[key] = item
-		
 		item.ScopeStartLine = _docLine
+		item.Namespac = _namespace
+		item.Indent = info.indent
+		item.FilePath = _filePath
+		item.KindStr = kindStr
 		
-		If _scope <> Null
-			_scope.AddChild(item)
-			item.Access = _accessInClass
+		If info.scope <> Null
+			info.scope.AddChild(item)
+			item.Access = GetCurrentAccess(info)
 		Else
 			Items.AddLast(item)
-			_innerItems.AddLast(item)
-			item.Access = _accessInFile
+			GetFileInfo(_filePath).items.AddLast(item)
+			item.Access = info.accessInFile
 		Endif
+		
+		If isScope Then PushScope(item, info)
 				
+	End
+	
+	Method GetCurrentAccess:AccessMode(info:FileInfo)
+		If info.stackAccess.Empty Return AccessMode.Public_
+		Return info.stackAccess.Top
 	End
 	
 	Method RemoveItem(item:ICodeItem)
@@ -740,6 +771,21 @@ End
 
 Private
 
+Class FileInfo
+	
+	Field lastModified:Long
+	Field namespac:String
+	Field uses := New List<String>
+	Field items := New List<ICodeItem>
+	Field stack := New Stack<ICodeItem>
+	Field scope:ICodeItem
+	Field accessInFile := AccessMode.Public_
+	'Field accessInClass := AccessMode.Public_
+	Field indent:Int
+	Field stackAccess := New Stack<AccessMode>
+	
+End
+
 Const CHAR_SINGLE_QUOTE := 39
 Const CHAR_DOUBLE_QUOTE := 34
 Const CHAR_COMMA := 44
@@ -753,11 +799,3 @@ Const CHAR_OPENED_ROUND_BRACKET := 40
 Const CHAR_CLOSED_ROUND_BRACKET := 41
 Const CHAR_DIGIT_0 := 48
 Const CHAR_DIGIT_9 := 57
-
-Class FileInfo
-	
-	Field lastModified:Long
-	Field namespac:String
-	Field uses := New List<String>
-	
-End

@@ -38,6 +38,9 @@ Interface ICodeItem
 	Property Params:String[]()
 	Setter(value:String[])
 	
+	Property ParamsStr:String()
+	Setter(value:String)
+	
 	Property Kind:CodeItemKind()
 	Setter(value:CodeItemKind)
 	
@@ -105,6 +108,12 @@ Class CodeItem Implements ICodeItem
 		_params = value
 	End
 	
+	Property ParamsStr:String()
+		Return _paramsStr
+	Setter(value:String)
+		_paramsStr = value
+	End
+	
 	Property Kind:CodeItemKind()
 		Return _kind
 	Setter(value:CodeItemKind)
@@ -129,7 +138,7 @@ Class CodeItem Implements ICodeItem
 			Local s := Ident
 			Select _kind
 				Case CodeItemKind.Function_, CodeItemKind.Method_
-					s += "()"
+					s += (ParamsStr = Null) ? "()" Else "("+ParamsStr+")"
 				Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_, CodeItemKind.Enum_, CodeItemKind.Property_
 					'do nothing
 				Default
@@ -206,6 +215,7 @@ Class CodeItem Implements ICodeItem
 	Field _indent:Int
 	Field _type:String
 	Field _params:String[]
+	Field _paramsStr:String
 	Field _kind:CodeItemKind
 	Field _kindStr:String
 	Field _access:AccessMode

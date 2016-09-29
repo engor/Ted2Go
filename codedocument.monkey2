@@ -11,7 +11,7 @@ Function RegisterCodeExtensions(exts:String[])
 	If plugs = Null Return
 	Local p := plugs[0]
 	CodeDocumentTypeBridge.AddExtensions(p, exts)
-	
+	 
 End
 
 
@@ -362,9 +362,52 @@ Class CodeDocumentType Extends Ted2DocumentType
 End
 
 
+Class CodeItemIcons
+
+	Function GetIcon:Image(item:ICodeItem)
+	
+		If icons = Null
+			InitIcons()
+		Endif
+		
+		Local ic := icons[item.Kind]
+		If ic = Null Then ic = iconDefault
+		
+		Return ic
+		
+	End
+
+
+	Private
+
+	Global icons:Map<CodeItemKind,Image>
+	Global iconDefault:Image
+	
+	Function InitIcons()
+	
+		icons = New Map<CodeItemKind,Image>
+		icons[CodeItemKind.Function_] = Image.Load("asset::ic/function.png")
+		icons[CodeItemKind.Property_] = Image.Load("asset::ic/property.png")
+		icons[CodeItemKind.Method_] = Image.Load("asset::ic/method.png")
+		icons[CodeItemKind.Struct_] = Image.Load("asset::ic/class.png")
+		icons[CodeItemKind.Class_] = Image.Load("asset::ic/class.png")
+		icons[CodeItemKind.Enum_] = Image.Load("asset::ic/class.png")
+		icons[CodeItemKind.Interface_] = Image.Load("asset::ic/interface.png")
+		icons[CodeItemKind.Field_] = Image.Load("asset::ic/variable.png")
+		icons[CodeItemKind.Global_] = Image.Load("asset::ic/global.png")
+		icons[CodeItemKind.Const_] = Image.Load("asset::ic/const.png")
+		iconDefault = Image.Load("asset::ic/other.png")
+		
+	End
+	
+End
+
+
+
 Private
 
 Global AutoComplete:AutocompleteDialog
+
 
 
 Class CodeDocumentTypeBridge Extends CodeDocumentType

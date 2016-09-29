@@ -6,10 +6,16 @@ Class CodeListViewItem Implements ListViewItem
 	
 	Method New(item:ICodeItem)
 		_item = item
+		_icon = CodeItemIcons.GetIcon(item)
 	End
 	
 	Method Draw(canvas:Canvas,x:Float,y:Float, handleX:Float=0, handleY:Float=0)
-		canvas.DrawText(Text,x,y,handleX,handleY)
+		Local dx := 0.0
+		If _icon <> Null
+			canvas.DrawImage(_icon, x-_icon.Width*handleX, y-_icon.Height*handleY)
+			dx = _icon.Width+8
+		Endif
+		canvas.DrawText(Text, x+dx, y, handleX, handleY)
 	End
 	
 	Property CodeItem:ICodeItem()
@@ -24,8 +30,8 @@ Class CodeListViewItem Implements ListViewItem
 	Private
 	
 	Field _item:ICodeItem
-	'_it
-	a := _it
+	Field _icon:Image
+	
 End
 
 
@@ -107,8 +113,9 @@ Class AutocompleteDialog Extends DialogExt
 		
 		'check current scope
 '		Local target := New List<ICodeItem>
-		Local scope := parser.GetScope(filePath, docLine)
-
+		Local rootScope := parser.GetScope(filePath, docLine)
+		Local scope := rootScope
+		
 		'-----------------------------
 		' what the first ident is?	
 		'-----------------------------
@@ -121,13 +128,13 @@ Class AutocompleteDialog Extends DialogExt
 			Local items := scope.Children
 			If items <> Null
 				For Local i := Eachin items
-					If CheckAccess(i, filePath) And CheckIdent(i.Ident, firstIdent, onlyOne)
-						If Not onlyOne
-							item = i
-							Exit
-						Else
-							result.AddLast(New CodeListViewItem(i))
-						Endif
+					If Not CheckIdent(i.Ident, firstIdent, onlyOne) Continue
+					If Not CheckAccess(i, filePath, scope) Continue
+					If Not onlyOne
+						item = i
+						Exit
+					Else
+						result.AddLast(New CodeListViewItem(i))
 					Endif
 				Next
 			Endif
@@ -138,16 +145,18 @@ Class AutocompleteDialog Extends DialogExt
 			
 		Wend
 		
+		'If scope <> Null Print "found: "+scope.Text
+		
 		' and check in global scope
 		If item = Null Or onlyOne
 			For Local i := Eachin parser.Items
-				If CheckAccess(i, filePath) And CheckIdent(i.Ident, firstIdent, onlyOne)
-					If Not onlyOne
-						item = i
-						Exit
-					Else
-						result.AddLast(New CodeListViewItem(i))
-					Endif
+				If Not CheckIdent(i.Ident, firstIdent, onlyOne) Continue
+				If Not CheckAccess(i, filePath) Continue
+				If Not onlyOne
+					item = i
+					Exit
+				Else
+					result.AddLast(New CodeListViewItem(i))
 				Endif
 			Next
 		Endif
@@ -171,7 +180,7 @@ Class AutocompleteDialog Extends DialogExt
 					Endif
 				Next
 				If item = Null Then Exit
-				scope = item
+				'scope = item
 				
 				Local identPart := idents[k]
 				Local last := (k = idents.Length-1)
@@ -179,13 +188,13 @@ Class AutocompleteDialog Extends DialogExt
 				Local items := item.Children
 				If items <> Null
 					For Local i := Eachin items
-						If CheckAccess(i, filePath) And CheckIdent(i.Ident, identPart, last)
-							item = i
-							If last
-								result.AddLast(New CodeListViewItem(i))
-							Else
-								Exit
-							Endif
+						If Not CheckIdent(i.Ident, identPart, last) Continue
+						If Not CheckAccess(i, filePath, scope) Continue
+						item = i
+						If last
+							result.AddLast(New CodeListViewItem(i))
+						Else
+							Exit
 						Endif
 					Next
 				Endif
@@ -222,6 +231,7 @@ Class AutocompleteDialog Extends DialogExt
 	Field _keywords:StringMap<List<ListViewItem>>
 	Field _ident:String
 	Field _parsers:StringMap<ICodeParser>
+	'Field _parser:ICodeParser
 	
 	
 	Method New()
@@ -237,11 +247,46 @@ Class AutocompleteDialog Extends DialogExt
 		Return _keywords[fileType]
 	End
 	
-	Method CheckAccess:Bool(item:ICodeItem, filePath:String)
+	Method CheckAccess:Bool(item:ICodeItem, filePath:String, parent:ICodeItem=Null)
+		
 		Local a := item.Access
-		If a = AccessMode.Public_ Return True
-		' need to extend logic for 'protected'
-		Return item.FilePath = filePath
+		If a = AccessMode.Public_
+			'Print "is public: "+item.Text
+			Return True
+		Endif
+		
+		' if global scope
+		If item.Parent = Null
+			Return item.FilePath = filePath
+		Endif
+		
+		' if this item is exactly inside of this parent
+		If item.Parent = parent
+			'Print "if1"
+			Return True
+		Endif
+		
+		' for non public - item scope must be equals item type
+		Local type := item.Type
+		Local i := item.Parent
+		Local last:ICodeItem = Null
+		
+		While i <> Null
+			last = i
+			'Print "try: "+i.Ident+", "+type
+			If i.Ident = type
+				'Print "if2: "+type
+				' need to extend logic for 'protected'
+				Return True
+			Endif
+			i = i.Parent
+		Wend
+		
+		If last <> Null
+			Return last.Ident = type 'inside of the same class
+		Endif
+		
+		Return False
 	End
 	
 	Method CheckIdent:Bool(ident1:String, ident2:String, startsOnly:Bool)
