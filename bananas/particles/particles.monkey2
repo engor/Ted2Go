@@ -42,7 +42,7 @@ Public
 		Style.BackgroundColor=GetColor(2,2,2)
 		
 		'Load image
-		particleImage=Image.Load("asset::particle.png",TextureFlags.Filter)
+		particleImage=Image.Load("asset::particle.png")
 		particleImage.Handle=New Vec2f(0.5,0.5)
 		
 		'Initialise particles

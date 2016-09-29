@@ -22,10 +22,11 @@ Class MyWindow Extends mojo.app.Window
 		image.Handle=New Vec2f( .5,.5 )
 		
 		icanvas=New Canvas( image )
+		
 	End
 	
 	Method RenderImage()
-
+	
 		'render to image...
 		For Local x:=0 Until 16
 			For Local y:=0 Until 16
@@ -37,10 +38,12 @@ Class MyWindow Extends mojo.app.Window
 				icanvas.DrawRect( x*16,y*16,16,16 )
 			Next
 		Next
+		
 		icanvas.Color=Color.White
+		
 		icanvas.DrawText( "This way up!",icanvas.Viewport.Width/2,0,.5,0 )
+		
 		icanvas.Flush()
-
 	End
 	
 	Method OnRender( canvas:Canvas ) Override
@@ -48,8 +51,11 @@ Class MyWindow Extends mojo.app.Window
 		App.RequestRender()
 		
 		RenderImage()
-				
-		canvas.DrawImage( image,App.MouseLocation.x,App.MouseLocation.y )
+
+		Global rot:=0.0
+		rot+=.001
+		
+		canvas.DrawImage( image,App.MouseLocation.x,App.MouseLocation.y,rot )
 		
 		canvas.DrawText( "Here!",0,0 )
 	End

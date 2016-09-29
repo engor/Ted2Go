@@ -41,10 +41,7 @@ Class GameGraphics Abstract
 	'Loads an array of Images from a sprite sheet
 	Method LoadFrames:Image[] ( path:String, numFrames:Int, cellWidth:Int, cellHeight:Int, filter:Bool = True, padded:Bool = False )
 	
-		Local flags :TextureFlags = Null
-		If filter Then flags |= TextureFlags.Filter
-		
-		Local atlasTextture := Texture.Load( path, flags )
+		Local atlasTextture := Texture.Load( path, Null )
 		Assert( atlasTextture, " ~n ~nGameGraphics: Image " + path + " not found.~n ~n" )
 		
 		Local atlasImg := New Image( atlasTextture )

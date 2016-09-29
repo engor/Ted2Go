@@ -29,6 +29,10 @@ Class MyWindow Extends Window
 		'
 		Super.New( title,width,height )
 		
+'		Style.Border=New Recti( -16,-16,16,16 )
+'		Style.BorderColor=Color.Yellow
+
+'		Layout="fill"		
 		Layout="letterbox"
 
 		'Letterbox color
@@ -50,8 +54,9 @@ Class MyWindow Extends Window
 		'Note: Scaling image here is faster than scaling in DrawImage.
 		'
 		image=Image.Load( "asset::spaceship_32.png" )
-		image.Handle=New Vec2f( .5,.5 )
-'		image.Scale=New Vec2f( .125,.125 )
+		image.Handle=New Vec2f( .5 )
+
+'		image.TextureFilter=TextureFilter.Mipmap
 		
 		'Set initial image pos
 		'
@@ -158,7 +163,7 @@ Class MyWindow Extends Window
 	Field ms:=0
 
 	Method OnRender( canvas:Canvas ) Override
-
+	
 		Local e:=App.Millisecs-ms	'ideally, e should be 16,17,17,16,17,17 ie: 16.6666...
 '		If e<>16 And e<>17 Print "elapsed="+e	'show glitches
 		ms+=e
@@ -167,7 +172,7 @@ Class MyWindow Extends Window
 		
 		'Turn off texture filtering for a 'pixel art' look
 		'
-		canvas.TextureFilteringEnabled=filter
+		canvas.TextureFilter=filter ? TextureFilter.Mipmap Else TextureFilter.Nearest
 
 		canvas.DrawText( "FPS="+App.FPS,Width/2,0,.5,0 )
 		canvas.DrawText( "Arrow keys to fly",Width/2,16,.5,0 )

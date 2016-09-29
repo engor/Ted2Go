@@ -12,11 +12,14 @@ Using gles20..
 Class SdlWindow
 
 	Field sdlWindow:SDL_Window Ptr
+
 	Field sdlGLContext:SDL_GLContext
 	
 	Method New()
 	
 		SDL_Init( SDL_INIT_EVERYTHING )
+		
+		libc.atexit( SDL_Quit )
 		
 		sdlWindow=SDL_CreateWindow( "SDL2 OpenGL Window",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,640,480,SDL_WINDOW_OPENGL )
 		
@@ -54,6 +57,7 @@ Class SdlWindow
 			OnRender()
 			
 			SDL_GL_SwapWindow( sdlWindow )
+
 		Forever
 		
 	End

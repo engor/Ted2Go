@@ -46,8 +46,8 @@ Class Game Extends RenderWindow
 	
 		'Load sprites & font
 		canvas.Font = Font.Load( "asset::classic_sans.ttf", 10 )
-		bg = New Background( "asset::starfield.png", False )
-		bgGrid = New Background( "asset::grid.png", False )
+		bg = New Background( "asset::starfield.png" )
+		bgGrid = New Background( "asset::grid.png" )
 		
 		Local heroSprite := New Sprite( "asset::hero.png", 3, 32, 32, False )
 		heroSprite.AddAnimationClip( "idle", New Int[]( 0 ) )

@@ -119,9 +119,6 @@ Class RenderWindow Extends Window
 		ClearColor = borderColor
 		Style.BackgroundColor = bgColor
 		
-		_flags = Null
-		If filterTextures Then _flags|=TextureFlags.Filter
-		
 		Self.renderToTexture = renderToTexture
 		Self.filterTextures = filterTextures
 		

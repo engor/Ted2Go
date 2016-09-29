@@ -15,12 +15,12 @@ Class VPane Extends Image
 	Field pixmap:Pixmap
 
 	Method New(w:Int,h:Int,bg:Color)		
-		Super.New(w,h,TextureFlags.Dynamic|TextureFlags.Filter|TextureFlags.Mipmap)		
+		Super.New(w,h,TextureFlags.Dynamic)
 		canvas=New Canvas(Self)	
 		canvas.Clear(bg)
 		canvas.Alpha=0.8
 		canvas.Translate(w/2,h/2)
-		Handle=New Vec2f(0.5,0.5)		
+		Handle=New Vec2f(0.5,0.5)
 	End
 	
 	Method Draw(display:Canvas)	
