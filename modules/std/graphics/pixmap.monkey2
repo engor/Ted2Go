@@ -103,6 +103,16 @@ Class Pixmap
 		Return _depth
 	End
 	
+	#rem monkeydoc True if pixmap format includes alpha.
+	#end
+	Property HasAlpha:Bool()
+		Select _format
+		Case PixelFormat.A8,PixelFormat.IA16,PixelFormat.RGBA32
+			Return True
+		End
+		Return False
+	End
+	
 	#rem monkeydoc The raw pixmap data.
 	
 	#end
@@ -379,6 +389,20 @@ Class Pixmap
 				Next
 			Next
 		End
+	End
+	
+	#rem monkeydoc Flips the pixmap on the Y axis.
+	#end
+	Method FlipY()
+		Local sz:=Width*Depth
+		Local tmp:=New UByte[sz]
+		For Local y:=0 Until Height/2
+			Local p1:=PixelPtr( 0,y )
+			Local p2:=PixelPtr( 0,Height-1-y )
+			libc.memcpy( tmp.Data,p1,sz )
+			libc.memcpy( p1,p2,sz )
+			libc.memcpy( p2,tmp.Data,sz )
+		Next
 	End
 	
 	#rem monkeydoc Returns a rectangular window into the pixmap.
