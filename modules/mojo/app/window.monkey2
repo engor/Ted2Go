@@ -208,6 +208,9 @@ Class Window Extends View
 			
 		Case EventType.WindowGainedFocus
 		
+			'Need to do this for KDE on linux...
+			App.RequestRender()
+		
 		Case EventType.WindowLostFocus
 		
 		End
