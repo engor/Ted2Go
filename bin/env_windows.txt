@@ -63,7 +63,7 @@ MX2_CPP_OPTS_EMSCRIPTEN_RELEASE=-O3
 '
 'For android builds, you need to either set this correctly or make sure 'ndk-build' is in your system PATH.
 
-PATH=D:\devtools\Android\sdk\ndk-bundle;${PATH}
+'PATH=D:\devtools\Android\sdk\ndk-bundle;${PATH}
 
 
 '***** RASPBIAN *****
