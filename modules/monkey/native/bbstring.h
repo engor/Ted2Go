@@ -3,6 +3,7 @@
 #define BB_STRING_H
 
 #include "bbtypes.h"
+#include "bbassert.h"
 #include "bbmemory.h"
 
 class bbCString;
@@ -125,6 +126,7 @@ class bbString{
 	}
 	
 	bbChar operator[]( int index )const{
+		bbDebugAssert( index>=0 && index<length(),"String character index out of range" );
 		return data()[index];
 	}
 	
