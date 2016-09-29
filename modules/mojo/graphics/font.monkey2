@@ -92,7 +92,7 @@ Class Font
 		Return _glyphs[0]
 	End
 	
-	#rem monkedoc Measures the width of some text when rendered by the font.
+	#rem monkeydoc Measures the width of some text when rendered by the font.
 	#end
 	Method TextWidth:Float( text:String )
 		Local w:=0.0
@@ -120,11 +120,11 @@ Class Font
 	'Make this ALWAYS work!	
 	#rem monkeydoc Loads a font from a ttf file.
 	#end
-	Function Load:Font( path:String,height:Float,textureFlags:TextureFlags=Null,shader:Shader=Null )
+	Function Load:Font( path:String,height:Float,shader:Shader=Null )
 	
 		If Not shader shader=Shader.GetShader( "font" )
 		
-		Local font:=fontloader.LoadFont( path,height,textureFlags,shader )
+		Local font:=mojo.graphics.fontloader.LoadFont( path,height,shader )
 		
 		Return font
 	End
@@ -141,4 +141,3 @@ Class Font
 	Global _openFonts:=New StringMap<Font>
 
 End
-

@@ -48,6 +48,32 @@ End
 
 #rem monkeydoc @hidden
 #end
+Function glPushArrayBuffer( buf:Int )
+	glGetIntegerv( GL_ARRAY_BUFFER_BINDING,Varptr tmpi )
+	glBindBuffer( GL_ARRAY_BUFFER,buf )
+End
+
+#rem monkeydoc @hidden
+#end
+Function glPopArrayBuffer()
+	glBindBuffer( GL_ARRAY_BUFFER,tmpi )
+End
+
+#rem monkeydoc @hidden
+#end
+Function glPushElementArrayBuffer( buf:Int )
+	glGetIntegerv( GL_ELEMENT_ARRAY_BUFFER_BINDING,Varptr tmpi )
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER,buf )
+End
+
+#rem monkeydoc @hidden
+#end
+Function glPopElementArrayBuffer()
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER,tmpi )
+End
+
+#rem monkeydoc @hidden
+#end
 Function glPushFramebuffer:Void( framebuf:Int )
 	glGetIntegerv( GL_FRAMEBUFFER_BINDING,Varptr tmpi )
 	glBindFramebuffer( GL_FRAMEBUFFER,framebuf )
@@ -63,7 +89,7 @@ End
 #end
 Function glCompile:Int( type:Int,source:String )
 
-#If __TARGET__="windows" Or __TARGET__="raspbian" Or Not __DESKTOP_TARGET__
+#If __TARGET__="windows" Or Not __DESKTOP_TARGET__
 	source="precision mediump float;~n"+source
 #Endif
 	
@@ -72,12 +98,11 @@ Function glCompile:Int( type:Int,source:String )
 	glCompileShader( shader )
 	glGetShaderiv( shader,GL_COMPILE_STATUS,Varptr tmpi )
 	If Not tmpi
-		Print "Failed to compile fragment shader:"+glGetShaderInfoLogEx( shader )
 		Local lines:=source.Split( "~n" )
 		For Local i:=0 Until lines.Length
 			Print (i+1)+":~t"+lines[i]
 		Next
-		Assert( False,"Compile fragment shader failed" )
+		RuntimeError( "Failed to compile fragment shader:"+glGetShaderInfoLogEx( shader ) )
 	Endif
 	Return shader
 End
@@ -87,5 +112,5 @@ End
 Function glLink:Void( program:Int )
 	glLinkProgram( program )
 	glGetProgramiv( program,GL_LINK_STATUS,Varptr tmpi )
-	If Not tmpi Assert( False,"Failed to link program:"+glGetProgramInfoLogEx( program ) )
+	If Not tmpi RuntimeError( "Failed to link program:"+glGetProgramInfoLogEx( program ) )
 End

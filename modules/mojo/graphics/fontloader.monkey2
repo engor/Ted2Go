@@ -13,7 +13,7 @@ Public
 
 #rem monkeydoc @hidden
 #end
-Function LoadFont:Font( path:String,fheight:Float,textureFlags:TextureFlags,shader:Shader )
+Function LoadFont:Font( path:String,fheight:Float,shader:Shader )
 
 	If Not FreeType And FT_Init_FreeType( Varptr FreeType ) Return Null
 	
@@ -97,7 +97,9 @@ Function LoadFont:Font( path:String,fheight:Float,textureFlags:TextureFlags,shad
 	
 	data.Discard()
 	
-	Local image:=New Image( pixmap,textureFlags,shader )
+	Local texture:=New Texture( pixmap,Null )
+	
+	Local image:=New Image( texture,shader )
 	
 	Local font:=New Font( image,height,firstChar,glyphs )
 	

@@ -5,168 +5,133 @@ Namespace mojo.graphics
 
 An image is a rectangular array of pixels that can be drawn using one of the [[Canvas.DrawImage]] methods.
 
-You can load an image from a file using the [[Load]].
+You can load an image from a file using one of the [[Load]], [[LoadBump]] or [[LoadLight]] functions.
 
 #end
 Class Image
 
-	#rem monkeydoc @hidden
+	#rem monkeydoc Invoked after image has ben discarded.
 	#end
 	Field OnDiscarded:Void()
+	
+	#rem monkeydoc Creates a new Image.
+	
+	New( pixmap,... ) Creates an image from an existing pixmap.
+	
+	New( width,height,... ) Creates an image that can be rendered to using a canvas.
+	
+	New( image,... ) Creates an image from within an 'atlas' image.
+	
+	Note: `textureFlags` should be null for static images or TextureFlags.Dynamic for dynamic images.
 
-	#rem monkeydoc Creates a new image.
+	@param pixmap Source image.
 	
-	New( pixmap,... ) allows you to create a new image from an existing pixmap.
+	@param textureFlags Image texture flags. 
 	
-	New( width,height,... ) allows you to create a new image that can be rendered to using a canvas. For images that will be frequently updated, use `TextureFlags.Filter|TextureFlags.Dynamic' for the best performance.
+	@param shader Image shader.
 	
-	New( image,rect,... ) allows you to create an image from within an 'atlas' image.
+	@param image Source pixmap.
 	
-	@example
+	@param rect Source rect.
 	
-	Namespace myapp
+	@param x,y,width,height Source rect
 	
-	#Import "<std>"
-	#Import "<mojo>"
+	@param width,height Image size.
 	
-	Using std..
-	Using mojo..
-	
-	Class MyWindow Extends Window
-	
-		Field image1:Image
-		Field image2:Image
-		Field image3:Image
-			
-		Method New()
-	
-			'Create an image from a pixmap
-			Local pixmap:=New Pixmap( 16,16 )
-			pixmap.Clear( Color.Red )
-			image1=New Image( pixmap )
-			
-			'Create an image and render something to it
-			image2=New Image( 16,16 )
-			Local icanvas:=New Canvas( image2 )
-			icanvas.Color=Color.Yellow
-			icanvas.DrawRect( 0,0,8,8 )
-			icanvas.DrawRect( 8,8,8,8 )
-			icanvas.Color=Color.LightGrey
-			icanvas.DrawRect( 8,0,8,8 )
-			icanvas.DrawRect( 0,8,8,8 )
-			icanvas.Flush() 'Important!
-			
-			'Create a image from an atlas image
-			image3=New Image( image2,New Recti( 4,4,12,12 ) )
-			
-		End
-	
-		Method OnRender( canvas:Canvas ) Override
-		
-			canvas.DrawText( "Image1",0,0 )
-			canvas.DrawImage( image1,0,16 )
-			
-			canvas.DrawText( "Image2",0,40 )
-			canvas.DrawImage( image2,0,56 )
-	
-			canvas.DrawText( "Image3",0,80 )
-			canvas.DrawImage( image3,0,96 )
-			
-		End
-		
-	End
-	
-	Function Main()
-	
-		New AppInstance
-		
-		New MyWindow
-		
-		App.Run()
-	End
-	
-	@end
-	
-	#end
-	Method New( pixmap:Pixmap,textureFlags:TextureFlags=TextureFlags.Filter|TextureFlags.Mipmap,shader:Shader=Null )
+	#end	
+	Method New( pixmap:Pixmap,textureFlags:TextureFlags=Null,shader:Shader=Null )
 	
 		Local texture:=New Texture( pixmap,textureFlags )
 		
-		Init( Null,texture,texture.Rect,shader )
+		Init( texture,texture.Rect,shader )
 		
 		OnDiscarded+=Lambda()
 			texture.Discard()
 		End
 	End
-	
-	Method New( width:Int,height:Int,textureFlags:TextureFlags=TextureFlags.Filter|TextureFlags.Mipmap,shader:Shader=Null )
-	
-		Local textureFormat:PixelFormat=PixelFormat.RGBA32
-		
-		Local texture:=New Texture( width,height,textureFormat,textureFlags )
-		
-		Init( Null,texture,texture.Rect,shader )
 
+	Method New( width:Int,height:Int,textureFlags:TextureFlags=Null,shader:Shader=Null )
+	
+		Local texture:=New Texture( width,height,PixelFormat.RGBA32,textureFlags )
+		
+		Init( texture,texture.Rect,shader )
+		
 		OnDiscarded+=Lambda()
 			texture.Discard()
 		End
+	End
 
+	Method New( image:Image )
+	
+		Init( image._textures[0],image._rect,image._shader )
+		
+		For Local i:=1 Until 4
+			SetTexture( i,image.GetTexture( i ) )
+		Next
+		
+		BlendMode=image.BlendMode
+		TextureFilter=image.TextureFilter
+		LightDepth=image.LightDepth
+		Handle=image.Handle
+		Scale=image.Scale
+		Color=image.Color
 	End
 	
 	Method New( image:Image,rect:Recti )
 	
-		Init( image._material,image._texture,rect,Null )
+		Init( image._textures[0],rect+image._rect.Origin,image._shader )
+		
+		For Local i:=1 Until 4
+			SetTexture( i,image.GetTexture( i ) )
+		Next
+		
+		BlendMode=image.BlendMode
+		TextureFilter=image.TextureFilter
+		LightDepth=image.LightDepth
+		Handle=image.Handle
+		Scale=image.Scale
+		Color=image.Color
 	End
-
+	
+	Method New( image:Image,x:Int,y:Int,width:Int,height:Int )
+	
+		Self.New( image,New Recti( x,y,x+width,y+height ) )
+	End
+	
 	#rem monkeydoc @hidden
 	#end
 	Method New( texture:Texture,shader:Shader=Null )
-	
-		Init( Null,texture,texture.Rect,shader )
+
+		Init( texture,texture.Rect,shader )
 	End
 	
 	#rem monkeydoc @hidden
 	#end
-	Method New( material:Material,texture:Texture,rect:Recti )
-	
-		Init( material,texture,rect,Null )
+	Method New( texture:Texture,rect:Recti,shader:Shader=Null )
+		Init( texture,rect,shader )
 	End
 	
-	#rem monkeydoc @hidden
-	#end
-	Property Material:Material()
-	
-		Return _material
-	End
-	
-	#rem monkeydoc @hidden
-	#end
+	#rem monkeydoc The image's primary texture.
+	#end	
 	Property Texture:Texture()
 	
-		Return _texture
-	End
+		Return _textures[0]
 	
-	#rem monkeydoc @hidden The image's rect within its texture.
+	Setter( texture:Texture )
+	
+		SetTexture( 0,texture )
+	End
+
+	#rem monkeydoc The image's texture rect.
+	
+	Describes the rect the image occupies within its primary texture.
+	
 	#end
 	Property Rect:Recti()
 	
 		Return _rect
 	End
 	
-	#rem monkeydoc The width of the image's rect within its texture.
-	#end
-	Property Width:Int()
-	
-		Return _rect.Width
-	End
-	
-	#rem monkeydoc The height of the image's rect within its texture.
-	#end
-	Property Height:Int()
-	
-		Return _rect.Height
-	End
-
 	#rem monkeydoc The image handle.
 	
 	Image handle values are fractional, where 0,0 is the top-left of the image and 1,1 is the bottom-right.
@@ -187,7 +152,7 @@ Class Image
 	
 	The scale property provides a simple way to 'pre-scale' an image.
 	
-	Scaling an image this way is faster than using one of the 'scale' parameters of [[Canvas.DrawImage]].
+	For images with a constant scale, Scaling an image this way is faster than using one of the 'scale' parameters of [[Canvas.DrawImage]].
 	
 	#end
 	Property Scale:Vec2f()
@@ -200,7 +165,87 @@ Class Image
 		
 		UpdateVertices()
 	End
+
+	#rem monkeydoc The image blend mode.
 	
+	The blend mode used to draw the image.
+	
+	If set to BlendMode.None, the canvas blend mode is used instead.
+	
+	Defaults to BlendMode.None.
+	
+	#end	
+	Property BlendMode:BlendMode()
+	
+		Return _blendMode
+		
+	Setter( blendMode:BlendMode )
+	
+		_blendMode=blendMode
+	End
+	
+	#rem monkeydoc The image texture filter.
+	
+	The texture flags used to draw the image.
+	
+	If set to TextureFilter.None, the canvas texture filter is used instead.
+	
+	Defaults to TextureFilter.None
+	
+	#end	
+	Property TextureFilter:TextureFilter()
+	
+		Return _textureFilter
+		
+	Setter( filter:TextureFilter )
+	
+		_textureFilter=filter
+	End
+	
+	#rem monkeydoc The image color.
+	
+	The color used to draw the image.
+	
+	Image color is multiplied by canvas color to achieve the final rendering color.
+	
+	Defaults to white.
+	
+	#end	
+	Property Color:Color()
+	
+		Return _color
+	
+	Setter( color:Color )
+	
+		_color=color
+		
+		_material.SetVector( "mx2_ImageColor",_color )
+	End
+
+	#rem monkeydoc The image light depth.
+	#end
+	Property LightDepth:Float()
+	
+		Return _lightDepth
+	
+	Setter( depth:Float )
+	
+		_lightDepth=depth
+		
+		_material.SetScalar( "mx2_LightDepth",_lightDepth )
+	End
+
+	#rem monkeydoc Shadow caster attached to image.
+	#end	
+	Property ShadowCaster:ShadowCaster()
+	
+		Return _shadowCaster
+		
+	Setter( shadowCaster:ShadowCaster )
+	
+		_shadowCaster=shadowCaster
+	End
+
 	#rem monkeydoc The image bounds.
 	
 	The bounds rect represents the actual image vertices used when the image is drawn.
@@ -213,33 +258,75 @@ Class Image
 		Return _bounds
 	End
 
-	#rem monkeydoc Image radius.
+	#rem monkeydoc Image bounds width.
+	#end	
+	Property Width:Float()
 	
-	The radius property returns the radius of the [[Bounds]] rect.
+		Return _bounds.Width
+	End
 	
-	Image bounds are affected by [[Scale]] and [[Handle]], and can be used for simple collision detection.
+	#rem monkeydoc Image bounds height.
+	#end	
+	Property Height:Float()
 	
+		Return _bounds.Height
+	End
+
+	#rem monkeydoc Image bounds radius.
 	#end
 	Property Radius:Float()
 	
 		Return _radius
 	End
-	
-	#rem monkeydoc @hidden
+
+	#rem monkeydoc Image shader.
 	#end
+	Property Shader:Shader()
+	
+		Return _shader
+	End
+	
+	#rem monkeydoc Image material.
+	#end
+	Property Material:UniformBlock()
+	
+		Return _material
+	End
+
+	#rem monkeydoc @hidden Image vertices.
+	#end	
 	Property Vertices:Rectf()
 	
 		Return _vertices
 	End
 	
-	#rem monkeydoc @hidden
-	#end
+	#rem monkeydoc @hidden Image texture coorinates.
+	#end	
 	Property TexCoords:Rectf()
 	
 		Return _texCoords
 	End
+
+	#rem monkeydoc @hidden Sets an image texture.
+	#end	
+	Method SetTexture( index:Int,texture:Texture )
 	
-	#rem monkeydoc Releases the image and any resource it uses.
+		_textures[index]=texture
+		
+		_material.SetTexture( "mx2_ImageTexture"+index,texture )
+	End
+	
+	#rem monkeydoc @hidden gets an image texture.
+	#end	
+	Method GetTexture:Texture( index:Int )
+	
+		Return _textures[index]
+	End
+	
+	#rem monkeydoc Discards the image.
+	
+	Discards the image and releases any resources held by the image.
+	
 	#end
 	Method Discard()
 		If _discarded Return
@@ -247,73 +334,192 @@ Class Image
 		OnDiscarded()
 	End
 	
-	#rem monkeydoc Loads an image from a file.
+	#rem monkeydoc Loads an image from file.
 	#end
-	Function Load:Image( path:String,textureFlags:TextureFlags=TextureFlags.Filter|TextureFlags.Mipmap,shader:Shader=Null )
+	Function Load:Image( path:String,shader:Shader=Null )
 	
-		Local diffuse:=mojo.graphics.Texture.Load( path,textureFlags )
-		If Not diffuse Return Null
+		If Not shader shader=mojo.graphics.Shader.GetShader( "sprite" )
+	
+		Local texture:=mojo.graphics.Texture.Load( path,Null )
+		If Not texture Return Null
 		
-		Local file:=StripExt( path )
-		Local ext:=ExtractExt( path )
+		Return New Image( texture,shader )
+	End
+	
+	#rem monkeydoc Loads a bump image from file(s).
+	
+	`diffuse`, `normal` and `specular` are filepaths of the diffuse, normal and specular image files respectively.
+	
+	`specular` can be null, in which case `specularScale` is used for the specular component. Otherwise, `specularScale` is used to modulate the specular components of the 
+	specular texture.
+	
+	#end
+	Function LoadBump:Image( diffuse:String,normal:String,specular:String,specularScale:Float=1,flipNormalY:Bool=True,shader:Shader=Null )
+	
+		If Not shader shader=mojo.graphics.Shader.GetShader( "bump" )
+
+		Local pdiff:=Pixmap.Load( diffuse )
+		Local pnorm:=Pixmap.Load( normal )
+		Local pspec:=Pixmap.Load( specular )
 		
-		Local specular:=mojo.graphics.Texture.Load( file+"_SPECULAR"+ext,textureFlags )
-		Local normal:=mojo.graphics.Texture.Load( file+"_NORMALS"+ext,textureFlags )
-		
-		If specular Or normal
-			If Not specular specular=mojo.graphics.Texture.ColorTexture( Color.Black )
-			If Not normal normal=mojo.graphics.Texture.ColorTexture( New Color( .5,.5,.5 ) )
+		If pdiff
+			pdiff.PremultiplyAlpha()
+		Else
+			pdiff=New Pixmap( pnorm.Width,pnorm.Height,PixelFormat.I8 )
+			pdiff.Clear( std.graphics.Color.White )
 		Endif
 		
-		If Not shader
-			If specular Or normal
-				shader=Shader.GetShader( "phong" )
-			Else
-				shader=Shader.GetShader( "sprite" )
-			Endif
+		Local yxor:=flipNormalY ? $ff00 Else 0
+		
+		If pspec And pspec.Width=pnorm.Width And pspec.Height=pnorm.Height
+			For Local y:=0 Until pnorm.Height
+				For Local x:=0 Until pnorm.Width
+					Local n:=pnorm.GetPixelARGB( x,y ) ~ yxor
+					Local s:=(pspec.GetPixelARGB( x,y ) Shr 16) & $ff
+					n=n & $ffffff00 | Clamp( Int( specularScale * s ),1,255 )
+					pnorm.SetPixelARGB( x,y,n )
+				Next
+			Next
+			pspec.Discard()
+		Else
+			Local g:=Clamp( Int( specularScale * 255.0 ),1,255 )
+			For Local y:=0 Until pnorm.Height
+				For Local x:=0 Until pnorm.Width
+					Local n:=pnorm.GetPixelARGB( x,y ) ~ yxor
+					n=n & $ffffff00 | g
+					pnorm.SetPixelARGB( x,y,n )
+				Next
+			Next
+			If pspec pspec.Discard()
 		Endif
 		
-		Local material:=New Material( shader )
+		Local texture0:=New Texture( pdiff,Null )
+		Local texture1:=New Texture( pnorm,Null )
 		
-		If diffuse material.SetTexture( "DiffuseTexture",diffuse )
-		If specular material.SetTexture( "SpecularTexture",specular )
-		If normal material.SetTexture( "NormalTexture",normal )
-		
-		Local image:=New Image( material,diffuse,diffuse.Rect )
+		Local image:=New Image( texture0,texture0.Rect,shader )
+		image.SetTexture( 1,texture1 )
 		
 		image.OnDiscarded+=Lambda()
-			If diffuse diffuse.Discard()
-			If specular specular.Discard()
-			If normal normal.Discard()
+			texture0.Discard()
+			texture1.Discard()
+			pdiff.Discard()
+			pnorm.Discard()
+		End
+	
+		Return image
+	End
+	
+	#rem monkeydoc Loads a light image from file.
+	#end
+	Function LoadLight:Image( path:String,shader:Shader=Null )
+	
+		Local pixmap:=Pixmap.Load( path )
+		If Not pixmap Return Null
+		
+		If Not shader shader=mojo.graphics.Shader.GetShader( "light" )
+	
+		Select pixmap.Format
+		Case PixelFormat.IA16,PixelFormat.RGBA32
+		
+			pixmap.PremultiplyAlpha()
+			
+		Case PixelFormat.A8
+
+			Local tpixmap:=pixmap
+			pixmap=pixmap.Convert( PixelFormat.IA16 )
+			tpixmap.Discard()
+
+			'Copy A->I
+			For Local y:=0 Until pixmap.Height
+				Local p:=pixmap.PixelPtr( 0,y )
+				For Local x:=0 Until pixmap.Width
+					p[0]=p[1]
+					p+=2
+				Next
+			Next
+
+		Case PixelFormat.I8
+		
+			Local tpixmap:=pixmap
+			pixmap=pixmap.Convert( PixelFormat.IA16 )
+			tpixmap.Discard()
+			
+			'Copy I->A
+			For Local y:=0 Until pixmap.Height
+				Local p:=pixmap.PixelPtr( 0,y )
+				For Local x:=0 Until pixmap.Width
+					p[1]=p[0]
+					p+=2
+				Next
+			Next
+
+		Case PixelFormat.RGB24
+		
+			Local tpixmap:=pixmap
+			pixmap=pixmap.Convert( PixelFormat.RGBA32 )
+			tpixmap.Discard()
+			
+			'Copy R->A
+			For Local y:=0 Until pixmap.Height
+				Local p:=pixmap.PixelPtr( 0,y )
+				For Local x:=0 Until pixmap.Width
+					p[3]=p[0]
+					p+=4
+				Next
+			Next
+		
+		End
+		
+		Local texture:=New Texture( pixmap,Null )
+		
+		Local image:=New Image( texture,shader )
+		
+		image.OnDiscarded+=Lambda()
+			pixmap.Discard()
 		End
 		
 		Return image
 	End
-	
+
 	Private
 	
-	Field _material:Material
-	Field _texture:Texture
-	Field _rect:Recti
+	Field _shader:Shader
+	Field _material:UniformBlock
+
 	Field _discarded:Bool
-	Field _handle:=New Vec2f( 0,0 )
-	Field _scale:=New Vec2f( 1,1 )
+	
+	Field _textures:=New Texture[4]
+	Field _blendMode:BlendMode
+	Field _textureFilter:TextureFilter
+	Field _color:Color
+	Field _lightDepth:Float
+	Field _shadowCaster:ShadowCaster
+	
+	Field _rect:Recti
+	Field _handle:Vec2f
+	Field _scale:Vec2f
+	
 	Field _vertices:Rectf
 	Field _texCoords:Rectf
 	Field _bounds:Rectf
 	Field _radius:Float
 	
-	Method Init( material:Material,texture:Texture,rect:Recti,shader:Shader )
-		
-		If Not material
-			If Not shader shader=Shader.GetShader( "sprite" )
-			material=New Material( shader )
-			material.SetTexture( "DiffuseTexture",texture )
-		Endif
-		
-		_material=material
-		_texture=texture
+	Method Init( texture:Texture,rect:Recti,shader:Shader )
+	
+		If Not shader shader=Shader.GetShader( "sprite" )
+	
 		_rect=rect
+		_shader=shader
+		_material=New UniformBlock
+		
+		SetTexture( 0,texture )
+		
+		BlendMode=BlendMode.None
+		TextureFilter=TextureFilter.None
+		Color=Color.White
+		LightDepth=100
+		Handle=New Vec2f( 0 )
+		Scale=New Vec2f( 1 )
 		
 		UpdateVertices()
 		UpdateTexCoords()
@@ -336,10 +542,10 @@ Class Image
 	End
 	
 	Method UpdateTexCoords()
-		_texCoords.min.x=Float(_rect.min.x)/_texture.Width
-		_texCoords.min.y=Float(_rect.min.y)/_texture.Height
-		_texCoords.max.x=Float(_rect.max.x)/_texture.Width
-		_texCoords.max.y=Float(_rect.max.y)/_texture.Height
+		_texCoords.min.x=Float(_rect.min.x)/_textures[0].Width
+		_texCoords.min.y=Float(_rect.min.y)/_textures[0].Height
+		_texCoords.max.x=Float(_rect.max.x)/_textures[0].Width
+		_texCoords.max.y=Float(_rect.max.y)/_textures[0].Height
 	End
 	
 End

@@ -1,15 +1,6 @@
 
 Namespace mojo.graphics
 
-#rem monkeydoc @hidden
-#end	
-Class DrawOp
-	Field blendMode:BlendMode
-	Field material:Material
-	Field order:Int
-	Field count:Int
-End
-
 #rem monkeydoc The Canvas class.
 
 Canvas objects are used to perform rendering to either a mojo [[app.View]] or an 'off screen' [[mojo.graphics.Image]].
@@ -26,224 +17,51 @@ To draw to a canvas, use one of the 'Draw' methods. Drawing is affected by a num
 
 Drawing does not occur immediately. Drawing commands are 'buffered' to reduce the overhead of sending lots of draw calls to the lower level graphics API. You can force all drawing commands in the buffer to actually render using [[Flush]].
 
-
 #end
 Class Canvas
 
-	#rem monkeydoc Creates a new canvas.
-
-	@param image Canvas render target image.
-
+	#rem monkeydoc Creates a canvas that renders to an image.
 	#end
-	Method New( image:Image )
-	
-		Init( image.Texture,image.Texture.Rect.Size,image.Rect )
+	Method New( renderTarget:Image )
+		Init( renderTarget,New GraphicsDevice )
 		
-		BeginRender( New Recti( 0,0,image.Rect.Size ),New AffineMat3f )
+		Local texture:=renderTarget.Texture
+		
+		BeginRender( New Recti( 0,0,texture.Rect.Size ),AffineMat3f.Translation( texture.Rect.Origin ) )
 	End
 	
-	#rem monkeydoc @hidden
-	#End
-	Method New( texture:Texture )
-	
-		Init( texture,texture.Rect.Size,texture.Rect )
-		
-		BeginRender( texture.Rect,New AffineMat3f )
-	End
-
-	#rem monkeydoc @hidden
-	#end
+	#rem monkeydoc @hidden Creates a canvas that renders to the backbuffer.
+	#end	
 	Method New( width:Int,height:Int )
-	
-		Init( Null,New Vec2i( width,height ),New Recti( 0,0,width,height ) )
+		Init( Null,New GraphicsDevice( width,height ) )
 	End
 
-	#rem monkeydoc The current viewport.
-	
-	The viewport describes the rect within the render target that rendering occurs in.
-	
-	All rendering is relative to the top-left of the viewport, and is clipped to the intersection of the current viewport and scissor rects.
-		
-	#end
-	Property Viewport:Recti()
-	
-		Return _viewport
-		
-	Setter( viewport:Recti )
-	
-		Flush()
-		
-		_viewport=viewport
-		
-		_dirty|=Dirty.EnvParams|Dirty.Scissor
-	End
-
-	#rem monkeydoc The current scissor rect.
-	
-	The scissor rect is rect within the viewport that can be used for additional clipping.
-	
-	Scissor rect coorindates are relative to the current viewport viewport.
-	
-	#end
-	Property Scissor:Recti()
-	
-		Return _scissor
-	
-	Setter( scissor:Recti )
-	
-		Flush()
-		
-		_scissor=scissor
-		
-		_dirty|=Dirty.Scissor
-	End
-	
-	#rem monkeydoc @hidden
-	#end	
-	Property ViewMatrix:Mat4f()
-	
-		Return _viewMatrix
-	
-	Setter( viewMatrix:Mat4f )
-	
-		Flush()
-	
-		_viewMatrix=viewMatrix
-		
-		_dirty|=Dirty.EnvParams
-	End
-	
-	#rem monkeydoc @hidden
-	#end	
-	Property ModelMatrix:Mat4f()
-	
-		Return _modelMatrix
-	
-	Setter( modelMatrix:Mat4f )
-	
-		Flush()
-	
-		_modelMatrix=modelMatrix
-		
-		_dirty|=Dirty.EnvParams
-	End
-	
-	#rem monkeydoc @hidden
-	#end	
-	Property AmbientLight:Color()
-	
-		Return _ambientLight
-
-	Setter( ambientLight:Color )
-	
-		Flush()
-	
-		_ambientLight=ambientLight
-		
-		_dirty|=Dirty.EnvParams
-	End
-	
-	#rem monkeydoc @hidden
-	#end	
-	Property RenderColor:Color()
-	
-		Return _renderColor
-	
-	Setter( renderColor:Color )
-
-		Flush()
-			
-		_renderColor=renderColor
-		
-		_dirty|=Dirty.EnvParams
-	End
-	
-	#rem monkeydoc Texture filtering control.
-	
-	Set this to false to render cool 'pixel art' style graphics.
-	
-	#end
-	Property TextureFilteringEnabled:Bool()
-	
-		Return _filter
-	
-	Setter( enabled:Bool )
-	
-		Flush()
-		
-		_filter=enabled
-	End
-	
-	#rem monkeydoc @hidden
+	#rem monkeydoc @hidden Resizes a canvas that renders to the backbuffer.
 	#end	
 	Method Resize( size:Vec2i )
-	
-		Flush()
-		
-		_targetSize=size
-		_targetRect=New Recti( 0,0,size )
-		
-		_dirty|=Dirty.Target
+		_device.Resize( size )
 	End
-	
-	#rem monkeydoc Clears the viewport.
-	
-	Clears the viewport to `color`.
 
-	@param color Color to clear the viewport to.
-	
-	#end
-	Method Clear( color:Color )
-
-		Flush()
-		
-		Validate()
-		
-		_device.Clear( color )
-	End
-	
-	#rem monkeydoc Copies a pixmap from the rendertarget.
-
-	@param rect The rect to copy.
-
-	#end
-	Method CopyPixmap:Pixmap( rect:Recti )
-	
-		Flush()
-		
-		Validate()
-		
-		rect=TransformRecti( rect,_renderMatrix )
-			
-		rect=(rect & _renderBounds)+_targetRect.Origin
-		
-		Local pixmap:=_device.CopyPixmap( rect )
-		
-		Return pixmap
-	End
-	
 	#rem monkeydoc @hidden
 	#end	
 	Method BeginRender( bounds:Recti,matrix:AffineMat3f )
 	
 		Flush()
 		
-		_device.ShaderEnv=_ambientEnv
+		_rmatrixStack.Push( _rmatrix )
+		_rboundsStack.Push( _rbounds )
 		
-		_renderMatrixStack.Push( _renderMatrix )
-		_renderBoundsStack.Push( _renderBounds )
-		
-		_renderMatrix*=matrix
-		_renderBounds&=TransformRecti( bounds,_renderMatrix )
+		_rmatrix*=matrix
+		_rbounds&=TransformRecti( bounds,_rmatrix )
 
-		_dirty|=Dirty.EnvParams|Dirty.Scissor
-		
 		Viewport=bounds
 		Scissor=New Recti( 0,0,bounds.Size )
+		AmbientLight=Color.Black
+		BlendMode=BlendMode.Alpha
+		TextureFilter=graphics.TextureFilter.Mipmap
 		PointSize=1
 		LineWidth=1
-		BlendMode=BlendMode.Alpha
-		TextureFilteringEnabled=True
+		
 		ClearMatrix()
 	End
 	
@@ -251,29 +69,153 @@ Class Canvas
 	#end	
 	Method EndRender()
 	
+		If _lighting EndLighting() 
+		
 		Flush()
 		
-		_renderBounds=_renderBoundsStack.Pop()
-		_renderMatrix=_renderMatrixStack.Pop()
+		_rbounds=_rboundsStack.Pop()
+		_rmatrix=_rmatrixStack.Pop()
 	End
 	
-		
-	#rem monkeydoc Flushes drawing commands.
+	#rem monkeydoc @hidden
+	#end	
+	Property Device:GraphicsDevice()
 	
-	Flushes any outstanding drawing commands in the draw buffer.
-	
-	#end
-	Method Flush()
-	
-		Validate()
-		
-		RenderDrawOps()
-		
-		ClearDrawOps()
+		Return _device
 	End
-	
-	'***** DrawList *****
 
+	#rem monkeydoc The current render target.
+	#end	
+	Property RenderTarget:Image()
+	
+		Return _rtarget
+	End
+	
+	#rem monkeydoc The current viewport.
+	
+	The viewport describes the rect within the render target that rendering occurs in.
+	
+	All rendering is relative to the top-left of the viewport, and is clipped to the intersection of the viewport and scissor rects.
+	
+	This property must not be modified if the canvas is in lighting mode.
+		
+	#end
+	Property Viewport:Recti()
+	
+		Return _viewport
+	
+	Setter( viewport:Recti )
+		DebugAssert( Not _lighting,"Canvas.Viewport property cannot be modified while lighting" )
+		If _lighting return
+
+		Flush()
+			
+		_viewport=viewport
+		
+		_dirty|=Dirty.Viewport|Dirty.Scissor
+	End
+
+	#rem monkeydoc The current scissor rect.
+	
+	The scissor rect is a rect within the viewport that can be used for additional clipping.
+	
+	Scissor rect coordinates are relative to the current viewport rect, but are not affected by the current drawing matrix.
+	
+	This property must not be modified if the canvas is in lighting mode.
+		
+	#end
+	Property Scissor:Recti()
+	
+		Return _scissor
+	
+	Setter( scissor:Recti )
+		DebugAssert( Not _lighting,"Canvas.Scissor property cannot be modified while lighting" )
+		If _lighting return
+	
+		Flush()
+	
+		_scissor=scissor
+		
+		_dirty|=Dirty.Scissor
+	End
+	
+	#rem monkeydoc Ambient light color for lighting mode.
+	
+	Sets the ambient light color for lighting.
+	
+	This property cannot be modified if the canvas is already in lighting mode.
+		
+	#end
+	Property AmbientLight:Color()
+	
+		Return _ambientLight
+	
+	Setter( ambient:Color )
+		DebugAssert( Not _lighting,"Canvas.AmbientLight property cannot be modified while lighting" )
+		If _lighting return
+	
+		_ambientLight=ambient
+	End
+	
+	#rem monkeydoc The current drawing blend mode.
+	#end	
+	Property BlendMode:BlendMode()
+	
+		Return _blendMode
+	
+	Setter( blendMode:BlendMode )
+	
+		_blendMode=blendMode
+	End
+	
+	#rem monkeydoc The current texture filter.
+	#end
+	Property TextureFilter:TextureFilter()
+	
+		Return _textureFilter
+	
+	Setter( filter:TextureFilter )
+	
+		_textureFilter=filter
+	End
+
+	#rem monkeydoc Deprecated - use TextureFilter instead.
+	
+	Use TextureFilter instead.
+	
+	#end	
+	Property TextureFilteringEnabled:Bool()
+	
+		Return TextureFilter=TextureFilter.Mipmap
+	
+	Setter( enabled:Bool )
+	
+		TextureFilter=enabled ? TextureFilter.Mipmap Else TextureFilter.Nearest
+
+	End
+	
+	#rem monkeydoc The current point size for use with DrawPoint.
+	#end
+	Property PointSize:Float()
+	
+		Return _pointSize
+	
+	Setter( pointSize:Float )
+	
+		_pointSize=pointSize
+	End
+
+	#rem monkeydoc The current line width for use with DrawLine.
+	#end	
+	Property LineWidth:Float()
+
+		Return _lineWidth
+	
+	Setter( lineWidth:Float )
+	
+		_lineWidth=lineWidth
+	End
+	
 	#rem monkeydoc The current font for use with DrawText.
 	
 	Set font to null to use the default mojo font.
@@ -289,10 +231,12 @@ Class Canvas
 	
 		_font=font
 	End
-
+	
 	#rem monkeydoc The current drawing alpha level.
 	
-	Note that [[Alpha]] and the alpha component of [[Color]] are multiplied together to produce the final alpha value for rendering. This allows you to use [[Alpha]] as a 'master' alpha level.
+	Note that [[Alpha]] and the alpha component of [[Color]] are multiplied together to produce the final alpha value for rendering. 
+	
+	This allows you to use [[Alpha]] as a 'master' alpha level.
 
 	#end	
 	Property Alpha:Float()
@@ -309,7 +253,9 @@ Class Canvas
 	
 	#rem monkeydoc The current drawing color.
 	
-	Note that [[Alpha]] and the alpha component of [[Color]] are multiplied together to produce the final alpha value for rendering. This allows you to use [[Alpha]] as a 'master' alpha level.
+	Note that [[Alpha]] and the alpha component of [[Color]] are multiplied together to produce the final alpha value for rendering. 
+	
+	This allows you to use [[Alpha]] as a 'master' alpha level.
 
 	#end
 	Property Color:Color()
@@ -336,48 +282,8 @@ Class Canvas
 	Setter( matrix:AffineMat3f )
 	
 		_matrix=matrix
-	End
-
-	#rem monkeydoc The current blend mode.
-
-	#end	
-	Property BlendMode:BlendMode()
-	
-		Return _blendMode
-	
-	Setter( blendMode:BlendMode )
-	
-		_blendMode=blendMode
-	End
-	
-	#rem monkeydoc The current point size for use with DrawPoint.
-	#end
-	Property PointSize:Float()
-	
-		Return _pointSize
-	
-	Setter( pointSize:Float )
-	
-		_pointSize=pointSize
-	End
-
-	#rem monkeydoc The current line width for use with DrawLine.
-	
-	#end	
-	Property LineWidth:Float()
-
-		Return _lineWidth
-	
-	Setter( lineWidth:Float )
-	
-		_lineWidth=lineWidth
-	End
-
-	#rem monkeydoc @hidden The materials used to render primitives.
-	#end	
-	Property PrimitiveMaterials:Material[]()
-	
-		Return _materials
+		
+		_tanvec=_matrix.i.Normalize()
 	End
 	
 	#rem monkeydoc Pushes the drawing matrix onto the internal matrix stack.
@@ -385,7 +291,7 @@ Class Canvas
 	#end
 	Method PushMatrix()
 	
-		_matrixStack.Push( Matrix )
+		_matrixStack.Push( _matrix )
 	End
 	
 	#rem monkeydoc Pops the drawing matrix off the internal matrix stack.
@@ -393,23 +299,26 @@ Class Canvas
 	#end
 	Method PopMatrix()
 	
-		Matrix=_matrixStack.Pop()
+		_matrix=_matrixStack.Pop()
 	End
 	
-	
-	#rem monkeydoc Clears the internal matrix stack and sets matrix to the identitity matrix.
-	
+	#rem monkeydoc Clears the internal matrix stack and sets the drawing matrix to the identitity matrix.
 	#end
 	Method ClearMatrix()
 	
 		_matrixStack.Clear()
-		
-		Matrix=New AffineMat3f
+		_matrix=New AffineMat3f
 	End
 	
 	#rem monkeydoc Translates the drawing matrix.
 	
 	Translates the drawing matrix. This has the effect of translating all drawing coordinates by `tx` and `ty`.
+	
+	@param tx X translation.
+	
+	@param ty Y translation.
+	
+	@param tv X/Y translation.
 	
 	#end
 	Method Translate( tx:Float,ty:Float )
@@ -417,6 +326,11 @@ Class Canvas
 		Matrix=Matrix.Translate( tx,ty )
 	End
 	
+	Method Translate( tv:Vec2f )
+	
+		Matrix=Matrix.Translate( tv )
+	End
+
 	#rem monkeydoc Rotates the drawing matrix.
 	
 	Rotates the drawing matrix. This has the effect of rotating all drawing coordinates by the angle `rz'.
@@ -428,7 +342,7 @@ Class Canvas
 	
 		Matrix=Matrix.Rotate( rz )
 	End
-	
+
 	#rem monkeydoc Scales the drawing matrix.
 	
 	Scales the drawing matrix. This has the effect of scaling all drawing coordinates by `sx` and `sy`.
@@ -437,57 +351,56 @@ Class Canvas
 	
 	@param sy Y scale factor.
 	
+	@param sv X/Y scale factor.
+	
 	#end
 	Method Scale( sx:Float,sy:Float )
 	
 		Matrix=Matrix.Scale( sx,sy )
 	End
 	
+	Method Scale( sv:Vec2f )
+	
+		Matrix=Matrix.Scale( sv )
+	End
+	
 	#rem monkeydoc Draws a point.
 	
 	Draws a point in the current [[Color]] using the current [[BlendMode]].
 	
-	The point coordinates are also transform by the current [[Matrix]].
-	
-	The 
-	
-	@param v Point coordinates.
+	The point coordinates are transformed by the current [[Matrix]] and clipped to the current [[Viewport]] and [[Scissor]].
 	
 	@param x Point x coordinate.
 	
 	@param y Point y coordinate.
 	
+	@param v Point coordinates.
+	
 	#end
 	Method DrawPoint( x:Float,y:Float )
 		If _pointSize<=1
-			AddDrawOp( _materials[1],1,1 )
+			AddDrawOp( _shader,_material,_blendMode,_textureFilter,1,1 )
 			AddVertex( x+.5,y+.5,0,0 )
 			Return
 		Endif
 		
 		Local d:=_pointSize/2
-		AddDrawOp( _materials[1],4,1 )
+		AddDrawOp( _shader,_material,_blendMode,_textureFilter,4,1 )
 		AddVertex( x-d,y-d,0,0 )
 		AddVertex( x+d,y-d,1,0 )
 		AddVertex( x+d,y+d,1,1 )
 		AddVertex( x-d,y+d,0,1 )
-		
 	End
-
+	
 	Method DrawPoint( v:Vec2f )
-		AddDrawOp( _materials[1],1,1 )
-		AddVertex( v.x+.5,v.y+.5,0,0 )
+		DrawPoint( v.x,v.y )
 	End
 	
 	#rem monkeydoc Draws a line.
 
 	Draws a line in the current [[Color]] using the current [[BlendMode]].
 	
-	The line end coordinates are transform by the current [[Matrix]] and clipped to the current [[Viewport]] and [[Scissor]].
-	
-	@param v0 First endpoint of the line.
-	
-	@param v1 Second endpoint of the line.
+	The line coordinates are transformed by the current [[Matrix]] and clipped to the current [[Viewport]] and [[Scissor]].
 	
 	@param x0 X coordinate of first endpoint of the line.
 	
@@ -497,11 +410,15 @@ Class Canvas
 	
 	@param y1 Y coordinate of first endpoint of the line.
 	
+	@param v0 First endpoint of the line.
+	
+	@param v1 Second endpoint of the line.
+	
 	#end
 	Method DrawLine( x0:Float,y0:Float,x1:Float,y1:Float )
 
 		If _lineWidth<=1
-			AddDrawOp( _materials[2],2,1 )
+			AddDrawOp( _shader,_material,_blendMode,_textureFilter,2,1 )
 			AddVertex( x0+.5,y0+.5,0,0 )
 			AddVertex( x1+.5,y1+.5,1,1 )
 			Return
@@ -512,7 +429,7 @@ Class Canvas
 		dx*=sc;dy*=sc
 		
 		If _blendMode=BlendMode.Opaque
-			AddDrawOp( _materials[2],4,1 )
+			AddDrawOp( _shader,_material,_blendMode,_textureFilter,4,1 )
 			AddVertex( x0-dx,y0-dy,0,0 )
 			AddVertex( x0+dx,y0+dy,0,0 )
 			AddVertex( x1+dx,y1+dy,0,0 )
@@ -522,7 +439,7 @@ Class Canvas
 		
 		Local pmcolor:=_pmcolor
 		
-		AddDrawOp( _materials[2],4,2 )
+		AddDrawOp( _shader,_material,_blendMode,_textureFilter,4,2 )
 
 		AddVertex( x0,y0,0,0 )
 		AddVertex( x1,y1,0,0 )
@@ -535,7 +452,6 @@ Class Canvas
 		_pmcolor=pmcolor
 		AddVertex( x1,y1,0,0 )
 		AddVertex( x0,y0,0,0 )
-		
 	End
 	
 	Method DrawLine( v0:Vec2f,v1:Vec2f )
@@ -549,20 +465,17 @@ Class Canvas
 	The triangle vertex coordinates are also transform by the current [[Matrix]].
 
 	#End
-	Method DrawTriangle( v0:Vec2f,v1:Vec2f,v2:Vec2f )
-		AddDrawOp( _materials[3],3,1 )
-		AddVertex( v0.x,v0.y,.5,0 )
-		AddVertex( v1.x,v1.y,1,1 )
-		AddVertex( v2.x,v2.y,0,1 )
-	End
-	
 	Method DrawTriangle( x0:Float,y0:Float,x1:Float,y1:Float,x2:Float,y2:Float )
-		AddDrawOp( _materials[3],3,1 )
+		AddDrawOp( _shader,_material,_blendMode,_textureFilter,3,1 )
 		AddVertex( x0,y0,0,0 )
 		AddVertex( x1,y1,1,0 )
 		AddVertex( x2,y2,1,1 )
 	End
 	
+	Method DrawTriangle( v0:Vec2f,v1:Vec2f,v2:Vec2f )
+		DrawTriangle( v0.x,v0.y,v1.x,v1.y,v2.x,v2.y )
+	End
+
 	#rem monkeydoc Draws a quad.
 
 	Draws a quad in the current [[Color]] using the current [[BlendMode]].
@@ -571,13 +484,17 @@ Class Canvas
 
 	#end
 	Method DrawQuad( x0:Float,y0:Float,x1:Float,y1:Float,x2:Float,y2:Float,x3:Float,y3:Float )
-		AddDrawOp( _materials[4],4,1 )
+		AddDrawOp( _shader,_material,_blendMode,_textureFilter,4,1 )
 		AddVertex( x0,y0,0,0 )
 		AddVertex( x1,y1,1,0 )
 		AddVertex( x2,y2,1,1 )
 		AddVertex( x3,y3,0,1 )
 	End
-	
+
+	Method DrawQuad( v0:Vec2f,v1:Vec2f,v2:Vec2f,v3:Vec2f )
+		DrawQuad( v0.x,v0.y,v1.x,v1.y,v2.x,v2.y,v3.x,v3.y )
+	End
+
 	#rem monkeydoc Draws a rectangle.
 
 	Draws a rectangle in the current [[Color]] using the current [[BlendMode]].
@@ -585,21 +502,25 @@ Class Canvas
 	The rectangle vertex coordinates are also transform by the current [[Matrix]].
 
 	#end
-	Method DrawRect( rect:Rectf )
-		AddDrawOp( _materials[4],4,1 )
-		AddVertex( rect.min.x,rect.min.y,0,0 )
-		AddVertex( rect.max.x,rect.min.y,1,0 )
-		AddVertex( rect.max.x,rect.max.y,1,1 )
-		AddVertex( rect.min.x,rect.max.y,0,1 )
+	Method DrawRect( x:Float,y:Float,w:Float,h:Float )
+	
+		Local x0:=x,y0:=y,x1:=x+w,y1:=y+h
+		
+		AddDrawOp( _shader,_material,_blendMode,_textureFilter,4,1 )
+		
+		AddVertex( x0,y0,0,0 )
+		AddVertex( x1,y0,1,0 )
+		AddVertex( x1,y1,1,1 )
+		AddVertex( x0,y1,0,1 )
 	End
-
-	Method DrawRect( x:Float,y:Float,width:Float,height:Float )
-		DrawRect( New Rectf( x,y,x+width,y+height ) )
+	
+	Method DrawRect( rect:Rectf )
+		DrawRect( rect.X,rect.Y,rect.Width,rect.Height )
 	End
 	
 	Method DrawRect( rect:Rectf,srcImage:Image )
 		Local tc:=srcImage.TexCoords
-		AddDrawOp( srcImage.Material,4,1 )
+		AddDrawOp( srcImage.Shader,srcImage.Material,srcImage.BlendMode,srcImage.TextureFilter,4,1 )
 		AddVertex( rect.min.x,rect.min.y,tc.min.x,tc.min.y )
 		AddVertex( rect.max.x,rect.min.y,tc.max.x,tc.min.y )
 		AddVertex( rect.max.x,rect.max.y,tc.max.x,tc.max.y )
@@ -615,7 +536,7 @@ Class Canvas
 		Local t0:=Float(srcImage.Rect.min.y+srcRect.min.y)/srcImage.Texture.Height
 		Local s1:=Float(srcImage.Rect.min.x+srcRect.max.x)/srcImage.Texture.Width
 		Local t1:=Float(srcImage.Rect.min.y+srcRect.max.y)/srcImage.Texture.Height
-		AddDrawOp( srcImage.Material,4,1 )
+		AddDrawOp( srcImage.Shader,srcImage.Material,srcImage.BlendMode,srcImage.TextureFilter,4,1 )
 		AddVertex( rect.min.x,rect.min.y,s0,t0 )
 		AddVertex( rect.max.x,rect.min.y,s1,t0 )
 		AddVertex( rect.max.x,rect.max.y,s1,t1 )
@@ -623,12 +544,10 @@ Class Canvas
 	End
 	
 	Method DrawRect( x:Float,y:Float,width:Float,height:Float,srcImage:Image,srcX:Int,srcY:Int )
-
 		DrawRect( New Rectf( x,y,x+width,y+height ),srcImage,New Recti( srcX,srcY,srcX+width,srcY+height ) )
 	End
 	
 	Method DrawRect( x:Float,y:Float,width:Float,height:Float,srcImage:Image,srcX:Int,srcY:Int,srcWidth:Int,srcHeight:Int )
-
 		DrawRect( New Rectf( x,y,x+width,y+height ),srcImage,New Recti( srcX,srcY,srcX+srcWidth,srcY+srcHeight ) )
 	End
 	
@@ -661,7 +580,7 @@ Class Canvas
 		
 		Local x0:=x+xr,y0:=y+yr
 		
-		AddDrawOp( _materials[5],n,1 )
+		AddDrawOp( _shader,_material,_blendMode,_textureFilter,n,1 )
 		
 		For Local i:=0 Until n
 			Local th:=i*Pi*2/n
@@ -704,7 +623,7 @@ Class Canvas
 	Method DrawCircle( x:Float,y:Float,radius:Float )
 		DrawOval( x-radius,y-radius,radius*2,radius*2 )
 	End
-	
+
 	#rem monkeydoc Draws a polygon.
 
 	Draws a polygon using the current [[Color]], [[BlendMode]] and [[Matrix]].
@@ -713,13 +632,33 @@ Class Canvas
 
 	#end
 	Method DrawPoly( vertices:Float[] )
-		DebugAssert( vertices.Length>=6 And vertices.Length&1=0 )
+		Local order:=vertices.Length/2
+		DebugAssert( order>0,"Invalid polygon" )
 		
-		Local n:=vertices.Length/2
+		AddDrawOp( _shader,_material,_blendMode,_textureFilter,order,1 )
 		
-		AddDrawOp( _materials[5],n,1 )
+		For Local i:=0 Until order*2 Step 2
+			AddVertex( vertices[i],vertices[i+1],0,0 )
+		Next
+	End
+	
+	#rem monkeydoc Draws a sequence of polygons.
+
+	Draws a sequence of polygons using the current [[Color]], [[BlendMode]] and [[Matrix]].
+
+	@param order The type of polygon: 1=points, 2=lines, 3=triangles, 4=quads, >4=n-gons.
+
+	@param count The number of polygons.
+	
+	@param vertices Array of x/y vertex coordinate pairs.
+	
+	#end
+	Method DrawPolys( order:Int,count:Int,vertices:Float[] )
+		DebugAssert( order>0 And count>0 And order*count<=vertices.Length,"Invalid polyon" )
+
+		AddDrawOp( _shader,_material,_blendMode,_textureFilter,order,count )
 		
-		For Local i:=0 Until n*2 Step 2
+		For Local i:=0 Until order*count*2 Step 2
 			AddVertex( vertices[i],vertices[i+1],0,0 )
 		Next
 	End
@@ -734,57 +673,91 @@ Class Canvas
 	
 	@param vertices Pointer to the first vertex x,y pair.
 	
-	@param verticesPitch Number of bytes from one vertex x,y pair to the next - set to 8 for 'tightly packed' vertices.
+	@param verticesPitch Number of bytes from one vertex x,y pair to the next. Set to 8 for 'tightly packed' vertices.
 	
 	@param texCoords Pointer to the first texCoord s,t pair. This can be null.
 	
-	@param texCoordsPitch Number of bytes from one texCoord s,y to the next.
+	@param texCoordsPitch Number of bytes from one texCoord s,y to the next. Set to 8 for 'tightly packed' texCoords.
+	
+	@param colors Pointer to the first RGBA uint color value. This can be null.
+	
+	@param colorsPitch Number of bytes from one RGBA color to the next. Set to 4 for 'tightly packed' colors.
+	
+	@param image Source image for rendering. This can be null.
 	
 	@param indices Pointer to sequence of integer indices for indexed drawing. This can by null for non-indexed drawing.
 	
 	#end
-	Method DrawPrimitives( order:Int,count:Int,vertices:Float Ptr,verticesPitch:Int,texCoords:Float Ptr,texCoordsPitch:Int,indices:Int Ptr )
-		DebugAssert( order>0,"Illegal primtive type" )
-			
-		If Not texCoords
-			Global _texCoords:=New Stack<Float>
-			If _texCoords.Length<>order*2
-				_texCoords.Resize( order*2 )
-				For Local i:=0 Until order*2 Step 2
-					_texCoords[i]=0
-					_texCoords[i=1]=0
-				Next
-			Endif
-			texCoords=_texCoords.Data.Data
-			texCoordsPitch=8
+	Method DrawPrimitives( order:Int,count:Int,vertices:Float Ptr,verticesPitch:Int,texCoords:Float Ptr,texCoordsPitch:Int,colors:UInt Ptr,colorsPitch:Int,image:Image,indices:Int Ptr )
+		DebugAssert( order>0 And count>0,"Illegal primitive" )
+
+		If image
+			AddDrawOp( image.Shader,image.Material,image.BlendMode,image.TextureFilter,order,count )
+		Else		
+			AddDrawOp( _shader,_material,_blendMode,_textureFilter,order,count )
 		Endif
 		
-		AddDrawOp( _materials[ Min( order,5 ) ],order,count )
+		Local n:=order*count
 		
 		If indices
-		
-			For Local i:=0 Until count
-				For Local j:=0 Until order
-					Local k:=indices[j]
-					Local vp:=Cast<Float Ptr>( Cast<UByte Ptr>( vertices )+k*verticesPitch )
-					Local tp:=Cast<Float Ptr>( Cast<UByte Ptr>( texCoords )+k*texCoordsPitch )
+			If texCoords And colors
+				For Local i:=0 Until n
+					Local j:=indices[i]
+					Local vp:=Cast<Float Ptr>( Cast<UByte Ptr>( vertices )+j*verticesPitch )
+					Local tp:=Cast<Float Ptr>( Cast<UByte Ptr>( texCoords )+j*texCoordsPitch )
+					Local cp:=Cast<UInt Ptr>( Cast<UByte Ptr>( texCoords )+j*colorsPitch )
+					AddVertex( vp[0],vp[1],tp[0],tp[1],cp[0] )
+				Next
+			Else If texCoords
+				For Local i:=0 Until n
+					Local j:=indices[i]
+					Local vp:=Cast<Float Ptr>( Cast<UByte Ptr>( vertices )+j*verticesPitch )
+					Local tp:=Cast<Float Ptr>( Cast<UByte Ptr>( texCoords )+j*texCoordsPitch )
 					AddVertex( vp[0],vp[1],tp[0],tp[1] )
 				Next
-				indices=indices+order
-			Next
-		
-		Else
-		
-			For Local i:=0 Until count
-				For Local j:=0 Until order
-					AddVertex( vertices[0],vertices[1],texCoords[0],texCoords[1] )
-					vertices=Cast<Float Ptr>( Cast<UByte Ptr>( vertices )+verticesPitch )
-					texCoords=Cast<Float Ptr>( Cast<UByte Ptr>( texCoords )+texCoordsPitch )
+			Else If colors
+				For Local i:=0 Until n
+					Local j:=indices[i]
+					Local vp:=Cast<Float Ptr>( Cast<UByte Ptr>( vertices )+j*verticesPitch )
+					Local cp:=Cast<UInt Ptr>( Cast<UByte Ptr>( texCoords )+j*colorsPitch )
+					AddVertex( vp[0],vp[1],0,0,cp[0] )
 				Next
-			Next
-		End
+			Else
+				For Local i:=0 Until n
+					Local j:=indices[i]
+					Local vp:=Cast<Float Ptr>( Cast<UByte Ptr>( vertices )+j*verticesPitch )
+					AddVertex( vp[0],vp[1],0,0 )
+				Next
+			Endif
+		Else
+			If texCoords And colors
+				For Local i:=0 Until n
+					Local vp:=Cast<Float Ptr>( Cast<UByte Ptr>( vertices )+i*verticesPitch )
+					Local tp:=Cast<Float Ptr>( Cast<UByte Ptr>( texCoords )+i*texCoordsPitch )
+					Local cp:=Cast<UInt Ptr>( Cast<UByte Ptr>( texCoords )+i*colorsPitch )
+					AddVertex( vp[0],vp[1],tp[0],tp[1],cp[0] )
+				Next
+			Else If texCoords
+				For Local i:=0 Until n
+					Local vp:=Cast<Float Ptr>( Cast<UByte Ptr>( vertices )+i*verticesPitch )
+					Local tp:=Cast<Float Ptr>( Cast<UByte Ptr>( texCoords )+i*texCoordsPitch )
+					AddVertex( vp[0],vp[1],tp[0],tp[1] )
+				Next
+			Else If colors
+				For Local i:=0 Until n
+					Local vp:=Cast<Float Ptr>( Cast<UByte Ptr>( vertices )+i*verticesPitch )
+					Local cp:=Cast<UInt Ptr>( Cast<UByte Ptr>( texCoords )+i*colorsPitch )
+					AddVertex( vp[0],vp[1],0,0,cp[0] )
+				Next
+			Else
+				For Local i:=0 Until n
+					Local vp:=Cast<Float Ptr>( Cast<UByte Ptr>( vertices )+i*verticesPitch )
+					AddVertex( vp[0],vp[1],0,0 )
+				Next
+			Endif
+		Endif
 	End
-
+	
 	#rem monkeydoc Draws an image.
 
 	Draws an image using the current [[Color]], [[BlendMode]] and [[Matrix]].
@@ -793,7 +766,7 @@ Class Canvas
 
 	@param ty Y coordinate to draw image at.
 
-	@param translation X/Y coordinates to draw image at.
+	@param tv X/Y coordinates to draw image at.
 
 	@param rz Rotation angle, in radians, for drawing.
 
@@ -801,46 +774,50 @@ Class Canvas
 
 	@param sy Y axis scale factor for drawing.
 
-	@param scale X/Y scale factor for drawing.
+	@param sv X/Y scale factor for drawing.
  
 	#end	
 	Method DrawImage( image:Image,tx:Float,ty:Float )
+	
 		Local vs:=image.Vertices
-		Local tc:=image.TexCoords
-		AddDrawOp( image.Material,4,1 )
-		AddVertex( vs.min.x+tx,vs.min.y+ty,tc.min.x,tc.min.y )
-		AddVertex( vs.max.x+tx,vs.min.y+ty,tc.max.x,tc.min.y )
-		AddVertex( vs.max.x+tx,vs.max.y+ty,tc.max.x,tc.max.y )
-		AddVertex( vs.min.x+tx,vs.max.y+ty,tc.min.x,tc.max.y )
+		Local ts:=image.TexCoords
+		
+		AddDrawOp( image.Shader,image.Material,image.BlendMode,image.TextureFilter,4,1 )
+		
+		AddVertex( vs.min.x+tx,vs.min.y+ty,ts.min.x,ts.min.y )
+		AddVertex( vs.max.x+tx,vs.min.y+ty,ts.max.x,ts.min.y )
+		AddVertex( vs.max.x+tx,vs.max.y+ty,ts.max.x,ts.max.y )
+		AddVertex( vs.min.x+tx,vs.max.y+ty,ts.min.x,ts.max.y )
+		
+		If _lighting And image.ShadowCaster
+			AddShadowCaster( image.ShadowCaster,tx,ty )
+		Endif
 	End
 	
-	Method DrawImage( image:Image,translation:Vec2f )
-		DrawImage( image,translation.x,translation.y )
-	End
-
 	Method DrawImage( image:Image,tx:Float,ty:Float,rz:Float )
-		Local matrix:=_matrix
-		Translate( tx,ty )
-		Rotate( rz )
+		Local matrix:=Matrix
+		Matrix=matrix.Translate( tx,ty ).Rotate( rz )
 		DrawImage( image,0,0 )
-		_matrix=matrix
-	End
-
-	Method DrawImage( image:Image,translation:Vec2f,rz:Float )
-		DrawImage( image,translation.x,translation.y,rz )
+		Matrix=matrix
 	End
 
 	Method DrawImage( image:Image,tx:Float,ty:Float,rz:Float,sx:Float,sy:Float )
-		Local matrix:=_matrix
-		Translate( tx,ty )
-		Rotate( rz )
-		Scale( sx,sy )
+		Local matrix:=Matrix
+		Matrix=matrix.Translate( tx,ty ).Rotate( rz ).Scale( sx,sy )
 		DrawImage( image,0,0 )
-		_matrix=matrix
+		Matrix=matrix
 	End
 
-	Method DrawImage( image:Image,translation:Vec2f,rz:Float,scale:Vec2f )
-		DrawImage( image,translation.x,translation.y,rz,scale.x,scale.y )
+	Method DrawImage( image:Image,tv:Vec2f )
+		DrawImage( image,tv.x,tv.y )
+	End
+	
+	Method DrawImage( image:Image,tv:Vec2f,rz:Float )
+		DrawImage( image,tv.x,tv.y,rz )
+	End
+	
+	Method DrawImage( image:Image,tv:Vec2f,rz:Float,sv:Vec2f )
+		DrawImage( image,tv.x,tv.y,rz,sv.x,sv.y )
 	End
 	
 	#rem monkeydoc Draws text.
@@ -867,7 +844,7 @@ Class Canvas
 		Local sx:=image.Rect.min.x,sy:=image.Rect.min.y
 		Local tw:=image.Texture.Width,th:=image.Texture.Height
 		
-		AddDrawOp( image.Material,4,text.Length )
+		AddDrawOp( image.Shader,image.Material,image.BlendMode,image.TextureFilter,4,text.Length )
 		
 		For Local char:=Eachin text
 		
@@ -892,231 +869,651 @@ Class Canvas
 		Next
 	End
 	
-	#rem
-	Method AddLight( tx:Float,ty:Float,radius:Radius )
-		Local x:=_matrix.i.x * tx + _matrix.j.x * ty + _matrix.t.x
-		Local y:=_matrix.i.y * tx + _matrix.j.y * ty + _matrix.t.y
-		Local inst:=New LightInst
-		inst.position=New Vec2f( x,y )
-		inst.radius=radius
-		inst.color=_color
-		'_lights.Push( inst )
-	End
+	#rem monkeydoc Adds a light to the canvas.
+	
+	This method must only be called while the canvas is in lighting mode, ie: between calls to [[BeginLighting]] and [[EndLighting]].
+	
 	#end
+	Method AddLight( light:Image,tx:Float,ty:Float )
+		DebugAssert( _lighting,"Canvas.AddLight() can only be used while lighting" )
+		If Not _lighting Return
+		
+		_vp=_lightVB.AddVertices( 4 )
+		If Not _vp Return
+
+		Local op:=New LightOp
+		op.light=light
+		op.lightPos=New Vec2f( tx,ty )
+		op.textureFilter=light.TextureFilter<>TextureFilter.None ? light.TextureFilter Else _textureFilter
+		op.primOffset=_lightVB.Length-4
+		_lightOps.Push( op )
+		
+		Local vs:=light.Vertices
+		Local ts:=light.TexCoords
+		
+		AddVertex( vs.min.x+tx,vs.min.y+ty,ts.min.x,ts.min.y,tx,ty,_pmcolor )
+		AddVertex( vs.max.x+tx,vs.min.y+ty,ts.max.x,ts.min.y,tx,ty,_pmcolor )
+		AddVertex( vs.max.x+tx,vs.max.y+ty,ts.max.x,ts.max.y,tx,ty,_pmcolor )
+		AddVertex( vs.min.x+tx,vs.max.y+ty,ts.min.x,ts.max.y,tx,ty,_pmcolor )
+	End
+	
+	Method AddLight( light:Image,tx:Float,ty:Float,rz:Float )
+		Local matrix:=Matrix
+		Matrix=matrix.Translate( tx,ty ).Rotate( rz )
+		AddLight( light,0,0 )
+		Matrix=matrix
+	End
+	
+	Method AddLight( light:Image,tx:Float,ty:Float,rz:Float,sx:Float,sy:Float )
+		Local matrix:=Matrix
+		Matrix=matrix.Translate( tx,ty ).Rotate( rz ).Scale( sx,sy )
+		AddLight( light,0,0 )
+		Matrix=matrix
+	End
+	
+	Method AddLight( light:Image,tv:Vec2f )
+		AddLight( light,tv.x,tv.y )
+	End
+	
+	Method AddLight( light:Image,tv:Vec2f,rz:Float )
+		AddLight( light,tv.x,tv.y,rz )
+	End
+	
+	Method AddLight( light:Image,tv:Vec2f,rz:Float,sv:Vec2f )
+		AddLight( light,tv.x,tv.y,rz,sv.x,sv.y )
+	End
+	
+	#rem monkeydoc Adds a shadow caster to the canvas.
+	
+	This method must only be called while the canvas is in lighting mode, ie: between calls to [[BeginLighting]] and [[EndLighting]].
+	
+	#end
+	Method AddShadowCaster( caster:ShadowCaster,tx:Float,ty:Float )
+		DebugAssert( _lighting,"Canvas.AddShadowCaster() can only be used while lighting" )
+		If Not _lighting Return
+	
+		Local op:=New ShadowOp
+		op.caster=caster
+		op.firstVert=_shadowVerts.Length
+		_shadowOps.Push( op )
+		
+		Local tv:=New Vec2f( tx,ty )
+		
+		For Local sv:=Eachin caster.Vertices
+			_shadowVerts.Push( sv+tv )
+		Next
+	End
+	
+	Method AddShadowCaster( caster:ShadowCaster,tx:Float,ty:Float,rz:float )
+		Local matrix:=Matrix
+		Matrix=matrix.Translate( tx,ty ).Rotate( rz )
+		AddShadowCaster( caster,0,0 )
+		Matrix=matrix
+	End
+	
+	Method AddShadowCaster( caster:ShadowCaster,tx:Float,ty:Float,rz:Float,sx:Float,sy:Float )
+		Local matrix:=Matrix
+		Matrix=matrix.Translate( tx,ty ).Rotate( rz ).Scale( sx,sy )
+		AddShadowCaster( caster,0,0 )
+		Matrix=matrix
+	End
+	
+	Method AddShadowCaster( caster:ShadowCaster,tv:Vec2f )
+		AddShadowCaster( caster,tv.x,tv.y )
+	End
+
+	Method AddShadowCaster( caster:ShadowCaster,tv:Vec2f,rz:Float )
+		AddShadowCaster( caster,tv.x,tv.y,rz )
+	End
+
+	Method AddShadowCaster( caster:ShadowCaster,tv:Vec2f,rz:Float,sv:Vec2f )
+		AddShadowCaster( caster,tv.x,tv.y,rz,sv.x,sv.y )
+	End
+	
+	#rem monkeydoc Copies a pixmap from the rendertarget.
+
+	This method must not be called while the canvas is in lighting mode.
+
+	@param rect The rect to copy.
+
+	#end
+	Method CopyPixmap:Pixmap( rect:Recti )
+		DebugAssert( Not _lighting,"Canvas.CopyPixmap() cannot be used while lighting" )
+		If _lighting Return Null
+	
+		Flush()
+		
+		rect=TransformRecti( rect,_rmatrix ) & _rbounds
+		
+		Local pixmap:=_device.CopyPixmap( rect )
+		
+		Return pixmap
+	End
+	
+	#rem monkeydoc Clears the viewport.
+	
+	Clears the current viewport to `color`.
+	
+	This method must not be called while the canvas is in lighting mode.
+
+	@param color Color to clear the viewport to.
+	
+	#end
+	Method Clear( color:Color )
+		DebugAssert( Not _lighting,"Canvas.Clear() cannot be used while lighting" )
+		If _lighting Return
+		
+		Flush()
+			
+		_device.Clear( color )
+	End
+	
+	#rem monkeydoc Flushes drawing commands.
+	
+	Flushes any outstanding drawing commands in the draw buffer.
+	
+	This is only generally necessary if you are drawing to an image.
+	
+	#end
+	Method Flush()
+	
+		Validate()
+		
+		If _drawOps.Empty Return
+		
+		'Render ambient
+		'		
+		RenderDrawOps( 0 )
+		
+		If _lighting
+
+			'render diffuse gbuffer
+			'
+			_device.RenderTarget=_gbuffers[0]
+			
+			RenderDrawOps( 1 )
+			
+			'render normal gbuffer
+			'
+			_device.RenderTarget=_gbuffers[1]
+			
+			RenderDrawOps( 2 )
+
+			'back to rendertarget
+			'			
+			_device.RenderTarget=_rtarget ? _rtarget.Texture Else Null
+		
+		Endif
+		
+		_drawVB.Clear()
+		_drawOps.Clear()
+		_drawOp=New DrawOp
+	End
+	
+	#rem monkeydoc Puts the canvas into lighting mode.
+	
+	While in lighting mode, you can add lights and shadow casters to the cavas using [[AddLight]] and [[AddShadowCaster]]. Lights and shadows
+	are later rendered by calling [[EndLighting]].
+	
+	Each call to BeginLighting must be matched with a corresponding call to EndLighting.
+	
+	The following properties must not be modified while in lighting mode: [[Viewport]], [[Scissor]], [[AmbientLight]]. Attempting to
+	modify these properties while in lighting mode will result in a runtime error in debug builds.
+	
+	The following methods must not be called in lighting mode: [[Clear]], [[BeginLighting]]. Attepting to call these methods while in
+	lighting mode will result in a runtime error in debug builds.
+	
+	#end
+	Method BeginLighting()
+		DebugAssert( Not _lighting,"Already lighting" )
+		If _lighting Return
+		
+		_lighting=True
+		
+		If Not _gbuffers[0]
+
+			Local gbufferSize:=New Vec2i( 1920,1080 )
+			Local gbufferScale:=New Vec2f( 1 )/Cast<Vec2f>( gbufferSize )
+		
+			_gbuffers[0]=New Texture( gbufferSize.x,gbufferSize.y,PixelFormat.RGBA32,TextureFlags.Dynamic )
+			_gbuffers[1]=New Texture( gbufferSize.x,gbufferSize.y,PixelFormat.RGBA32,TextureFlags.Dynamic )
+
+			_uniforms.SetVector( "mx2_GBufferScale",gbufferScale )
+			_uniforms.SetTexture( "mx2_GBuffer0",_gbuffers[0] )
+			_uniforms.SetTexture( "mx2_GBuffer1",_gbuffers[1] )
+			
+		Endif
+		
+		Validate()
+		
+		_uniforms.SetVector( "mx2_AmbientLight",_ambientLight )
+		
+		_device.RenderTarget=_gbuffers[0]
+		_device.Clear( Color.Black )
+			
+		_device.RenderTarget=_gbuffers[1]
+		_device.Clear( Color.Black )
+		
+		_device.RenderTarget=_rtarget ? _rtarget.Texture Else Null
+	End
+	
+	#rem monkeydoc Renders lighting and ends lighting mode.
+	
+	Renders any lights and shadows casters added to the canvas through calls to [[AddLight]] and [[AddShadowCaster]] and ends lighting mode.
+	
+	Any lights and shadow casters added to the canvas are also removed and must be added again later if you want to render them again.
+	
+	This method must be called while the canvas is in lighting mode.
+	
+	#end
+	Method EndLighting()
+		DebugAssert( _lighting,"Not lighting" )
+		If Not _lighting Return
+		
+		Flush()
+		
+		RenderLighting()
+	
+		_lightVB.Clear()
+		_lightOps.Clear()
+		
+		_shadowOps.Clear()
+		_shadowVerts.Clear()
+	
+		_lighting=False
+	End
 	
 	Private
 	
-	Struct LightInst
-		Field position:Vec2f
-		Field radius:Float
-		Field color:Color
-	End
-	
 	Enum Dirty
-		Target=1
-		Scissor=2
-		EnvParams=4
-		All=7
+		GBuffer=1
+		Viewport=2
+		Scissor=4
 	End
 	
-	Global _inited:Bool
-	Global _ambientEnv:ShaderEnv
-	Global _nullShader:Shader
+	Class DrawOp
+		Field shader:Shader
+		Field material:UniformBlock
+		Field blendMode:BlendMode
+		Field textureFilter:TextureFilter
+		Field primOrder:Int
+		Field primCount:Int
+		Field primOffset:Int
+	End
+	
+	Class LightOp
+		Field light:Image
+		Field lightPos:Vec2f
+		Field textureFilter:TextureFilter
+		Field primOrder:Int
+		Field primOffset:Int
+	End
+	
+	Class ShadowOp
+		Field caster:ShadowCaster
+		Field firstVert:Int
+	End
+	
+	Global _quadIndices:IndexBuffer
 	Global _defaultFont:Font
+	Global _shadowVB:VertexBuffer
 
-	Field _dirty:Dirty
-	Field _target:Texture
-	Field _targetSize:Vec2i
-	Field _targetRect:Recti
-	Field _envParams:ParamBuffer
+	Global _lighting:Bool=False
+	Global _gbuffers:=New Texture[2]
+
+	Field _rtarget:Image
 	Field _device:GraphicsDevice
+	Field _uniforms:UniformBlock
+	
+	Field _shader:Shader
+	Field _material:UniformBlock
 	
 	Field _viewport:Recti
 	Field _scissor:Recti
-	Field _viewMatrix:Mat4f
-	Field _modelMatrix:Mat4f
 	Field _ambientLight:Color
-	Field _filter:Bool=True
-
-	Field _renderColor:Color
-	Field _renderMatrix:AffineMat3f
-	Field _renderMatrixStack:=New Stack<AffineMat3f>
-
-	Field _renderBounds:Recti
-	Field _renderBoundsStack:=New Stack<Recti>
 	
+	Field _blendMode:BlendMode
+	Field _textureFilter:TextureFilter
 	Field _font:Font
 	Field _alpha:Float
 	Field _color:Color
-	Field _pmcolor:UInt
-	Field _matrix:AffineMat3f
-	Field _blendMode:BlendMode
-	Field _pointSize:Float
-	Field _lineWidth:Float
+	Field _pmcolor:UInt=~0
+	Field _pointSize:Float=1
+	Field _lineWidth:Float=1
+	Field _matrix:=New AffineMat3f
+	Field _tanvec:Vec2f=New Vec2f( 1,0 )
 	Field _matrixStack:=New Stack<AffineMat3f>
 	
-	Field _ops:=New Stack<DrawOp>
-	Field _op:=New DrawOp
+	Field _rmatrix:=New AffineMat3f
+	Field _rbounds:=New Recti( 0,0,$40000000,$40000000 )
+	Field _rmatrixStack:=New Stack<AffineMat3f>
+	Field _rboundsStack:=New Stack<Recti>
 	
-	Field _vertices:=New Stack<Vertex2f>
-	Field _vertexData:Vertex2f[]
-	Field _vertex:Int
+	Field _dirty:Dirty
+	Field _projMatrix:Mat4f
+	Field _rviewport:Recti
+	Field _rviewportClip:Vec2i
+	Field _rscissor:Recti
 	
-	Field _materials:=New Material[6]
-	
-	Method Init( target:Texture,size:Vec2i,viewport:Recti )
-	
-		If Not _inited
-			_inited=True
-			Local env:=stringio.LoadString( "asset::mojo/shader_env.glsl" )
-			_ambientEnv=New ShaderEnv( "#define RENDERPASS_AMBIENT~n"+env )
-'			_ambientEnv=New ShaderEnv( "#define RENDERPASS_NORMAL~n"+env )
-			_defaultFont=Font.Load( "font::DejaVuSans.ttf",16 )
-			_nullShader=Shader.GetShader( "null" )
-		Endif
+	Field _vp:Vertex2f Ptr
 
-		_target=target
-		_targetSize=size
-		_targetRect=viewport
+	Field _drawVB:VertexBuffer
+	Field _drawOps:=New Stack<DrawOp>
+	Field _drawOp:=New DrawOp
+
+	Field _lightVB:VertexBuffer
+	Field _lightOps:=New Stack<LightOp>
+	
+	Field _shadowOps:=New Stack<ShadowOp>
+	Field _shadowVerts:=New Stack<Vec2f>
+	
+	Const MaxVertices:=16384
+	
+	Const MaxLights:=1024
+	
+	Const MaxShadowVertices:=65536
+	
+	Function Init2()
+		Global inited:=False
+		If inited Return
+		inited=True
+
+		Local nquads:=MaxVertices/4
+		_quadIndices=New IndexBuffer( nquads*6 )
+		Local ip:=_quadIndices.AddIndices( nquads*6 )
+		For Local i:=0 Until nquads*4 Step 4
+			ip[0]=i
+			ip[1]=i+1
+			ip[2]=i+2
+			ip[3]=i
+			ip[4]=i+2
+			ip[5]=i+3
+			ip+=6
+		Next
 		
-		_envParams=New ParamBuffer
-		_device=New GraphicsDevice
+		_shadowVB=New VertexBuffer( MaxShadowVertices )
+
+		_defaultFont=mojo.graphics.Font.Load( "font::DejaVuSans.ttf",16 )
+	End
+	
+	Method Init( rtarget:Image,device:GraphicsDevice )
+		Init2()
 		
-		_viewport=New Recti( 0,0,_targetRect.Width,_targetRect.Height )
-		_scissor=_viewport
-		_viewMatrix=New Mat4f
-		_modelMatrix=New Mat4f
+		_rtarget=rtarget
+		_device=device
+
+		_device.RenderTarget=_rtarget ? _rtarget.Texture Else Null
+		
+		_uniforms=New UniformBlock
+		_device.SetUniformBlock( 0,_uniforms )
+
+		_drawVB=New VertexBuffer( MaxVertices )
+		_lightVB=New VertexBuffer( MaxLights*4 )
+		_shadowVB=New VertexBuffer( 65536 )
+		
+		_device.IndexBuffer=_quadIndices
+
+		_shader=Shader.GetShader( "null" )
+		_material=New UniformBlock
+		
+		_viewport=New Recti( 0,0,640,480 )
 		_ambientLight=Color.Black
-		_filter=True
+		_blendMode=BlendMode.Alpha
 		
-		_renderColor=Color.White
-		_renderMatrix=New AffineMat3f
-		_renderBounds=New Recti( 0,0,$40000000,$40000000 )
+		_font=_defaultFont
 		
-		_dirty=Dirty.All
+		_alpha=1
+		_color=Color.White
+		_pmcolor=$ffffffff
 		
-		Font=Null
-		Alpha=1
-		Color=Color.White
-		Matrix=New AffineMat3f
-		BlendMode=BlendMode.Alpha
-		PointSize=1
-		LineWidth=1
-		For Local i:=0 Until _materials.Length
-			_materials[i]=New Material( _nullShader )
-		Next
+		_matrix=New AffineMat3f
 	End
-	
-	Method Validate()
 
-		If Not _dirty Return
-		
-		If _dirty & Dirty.Target
-
-			Local projMatrix:Mat4f
-			Local viewport:=_targetRect
-	
-			If _target
-				projMatrix=Mat4f.Ortho( 0,viewport.Width,0,viewport.Height,-1,1 )
-			Else
-				viewport.min.y=_targetSize.y-viewport.max.y
-				viewport.max.y=viewport.min.y+viewport.Height
-				projMatrix=Mat4f.Ortho( 0,viewport.Width,viewport.Height,0,-1,1 )
-			Endif
-		
-			_device.RenderTarget=_target
-			_device.Viewport=_targetRect
-			_envParams.SetMatrix( "mx2_ProjectionMatrix",projMatrix )
-			
-			_dirty|=Dirty.EnvParams
-			
-		Endif
-		
-		If _dirty & Dirty.EnvParams
-		
-			Local renderMatrix:=_renderMatrix.Translate( New Vec2f( _viewport.X,_viewport.Y ) )
-
-			Local modelViewMatrix:=_viewMatrix * _modelMatrix * New Mat4f( renderMatrix )
-			
-			_envParams.SetMatrix( "mx2_ModelViewMatrix",modelViewMatrix )
-			_envParams.SetColor( "mx2_AmbientLight",_ambientLight )
-			_envParams.SetColor( "mx2_RenderColor",_renderColor )
-
-			_device.EnvParams=_envParams
-
-		Endif
-		
-		If _dirty & Dirty.Scissor
-		
-			Local scissor:=TransformRecti( _viewport & (_scissor+_viewport.Origin),_renderMatrix )
-			
-			scissor=(scissor & _renderBounds)+_targetRect.Origin
-			
-			If Not _target
-				Local h:=scissor.Height
-				scissor.min.y=_targetSize.y-scissor.max.y
-				scissor.max.y=scissor.min.y+h
-			Endif
-
-			_device.Scissor=scissor
-		Endif
-		
-		_dirty=Null
+	'Vertices
+	'
+	Method AddVertex( x:Float,y:Float,s0:Float,t0:Float,s1:Float,t1:Float,color:UInt )
+		_vp->position.x=x
+		_vp->position.y=y
+		_vp->texCoord0.x=s0
+		_vp->texCoord0.y=t0
+		_vp->texCoord1.x=s1
+		_vp->texCoord1.y=t1
+		_vp->color=color
+		_vp+=1
 	End
-	
-	Method RenderDrawOps()
-	
-		Local p:=_vertexData.Data
-		
-		_device.FilteringEnabled=_filter
-	
-		For Local op:=Eachin _ops
-			_device.BlendMode=op.blendMode
-			_device.Shader=op.material.Shader
-			_device.Params=op.material.Params
-			_device.Render( p,op.order,op.count )
-			p=p+op.order*op.count
-		Next
-	
-	End
-	
-	Method ClearDrawOps()
-		_ops.Clear()
-		_vertices.Clear()
-		_vertexData=_vertices.Data
-		_op=New DrawOp
-		_vertex=0
-	End
-	
-	Method AddDrawOp( material:Material,order:Int,count:Int )
-	
-		_vertices.Resize( _vertex+order*count )
-		_vertexData=_vertices.Data
-		
-		If _blendMode=_op.blendMode And material=_op.material And order=_op.order
-			_op.count+=count
-			Return
-		End
-		
-		_op=New DrawOp
-		_op.blendMode=_blendMode
-		_op.material=material
-		_op.order=order
-		_op.count=count
-		_ops.Add( _op )
+
+	Method AddVertex( tx:Float,ty:Float,s0:Float,t0:Float,color:UInt )
+		_vp->position.x=_matrix.i.x * tx + _matrix.j.x * ty + _matrix.t.x
+		_vp->position.y=_matrix.i.y * tx + _matrix.j.y * ty + _matrix.t.y
+		_vp->texCoord0.x=s0
+		_vp->texCoord0.y=t0
+		_vp->texCoord1.x=_tanvec.x
+		_vp->texCoord1.y=_tanvec.y
+		_vp->color=color
+		_vp+=1
 	End
 	
 	Method AddVertex( tx:Float,ty:Float,s0:Float,t0:Float )
+		_vp->position.x=_matrix.i.x * tx + _matrix.j.x * ty + _matrix.t.x
+		_vp->position.y=_matrix.i.y * tx + _matrix.j.y * ty + _matrix.t.y
+		_vp->texCoord0.x=s0
+		_vp->texCoord0.y=t0
+		_vp->texCoord1.x=_tanvec.x
+		_vp->texCoord1.y=_tanvec.y
+		_vp->color=_pmcolor
+		_vp+=1
+	End
 	
-		_vertexData[_vertex].x=_matrix.i.x * tx + _matrix.j.x * ty + _matrix.t.x
-		_vertexData[_vertex].y=_matrix.i.y * tx + _matrix.j.y * ty + _matrix.t.y
-		_vertexData[_vertex].s0=s0
-		_vertexData[_vertex].t0=t0
-		_vertexData[_vertex].ix=_matrix.i.x
-		_vertexData[_vertex].iy=_matrix.i.y
-		_vertexData[_vertex].color=_pmcolor
+	'Drawing
+	'	
+	Method AddDrawOp( shader:Shader,material:UniformBlock,blendMode:BlendMode,textureFilter:TextureFilter,primOrder:int,primCount:Int )
+	
+		If _drawVB.Length+primCount*primOrder>_drawVB.Capacity
+			Print "Flush!"
+			Flush()
+		Endif
+		
+		If blendMode=BlendMode.None blendMode=_blendMode
+		
+		If textureFilter=TextureFilter.None textureFilter=_textureFilter
+		
+		If shader<>_drawOp.shader Or material<>_drawOp.material Or blendMode<>_drawOp.blendMode Or textureFilter<>_drawOp.textureFilter Or primOrder<>_drawOp.primOrder
+		
+			'pad quads so primOffset always on a 4 vert boundary
+			If primOrder=4 And _drawVB.Length & 3 _drawVB.AddVertices( 4-(_drawVB.Length&3) )
+			
+			_drawOp=New DrawOp
+			_drawOp.shader=shader
+			_drawOp.material=material
+			_drawOp.blendMode=blendMode
+			_drawOp.textureFilter=textureFilter
+			_drawOp.primOrder=primOrder
+			_drawOp.primCount=primCount
+			_drawOp.primOffset=_drawVB.Length
+			_drawOps.Push( _drawOp )
+		Else
+			_drawOp.primCount+=primCount
+		Endif
+		
+		_vp=_drawVB.AddVertices( primOrder*primCount )
+	End
+	
+	Method Validate()
+	
+		If _dirty & Dirty.Viewport
 
-		_vertex+=1
+			Local tviewport:=TransformRecti( _viewport,_rmatrix )
+			
+			_rviewport=tviewport & _rbounds
+			
+			_rviewportClip=tviewport.Origin-_rviewport.Origin
+	
+			Local rmatrix:=New Mat4f
+			rmatrix.i.x=_rmatrix.i.x
+			rmatrix.j.y=_rmatrix.j.y
+			rmatrix.t.x=_rviewportClip.x
+			rmatrix.t.y=_rviewportClip.y
+			
+			If _rtarget
+				_projMatrix=Mat4f.Ortho( 0,_rviewport.Width,0,_rviewport.Height,-1,1 ) * rmatrix
+			Else
+				_projMatrix=Mat4f.Ortho( 0,_rviewport.Width,_rviewport.Height,0,-1,1 ) * rmatrix
+			Endif
+			
+			_uniforms.SetMatrix( "mx2_ModelViewProjectionMatrix",_projMatrix )
+			
+			_uniforms.SetVector( "mx2_ViewportOrigin",_rviewport.Origin )
+			
+			_uniforms.SetVector( "mx2_ViewportSize",_rviewport.Size )
+	
+			_uniforms.SetVector( "mx2_ViewportClip",_rviewportClip )
+			
+			_device.Viewport=_rviewport
+		
+		Endif
+		
+		If _dirty & Dirty.Scissor
+
+			_rscissor=TransformRecti( _scissor+_viewport.Origin,_rmatrix ) & _rviewport
+			
+			_device.Scissor=_rscissor
+		Endif
+		
+		_dirty=Null
+		
+	End
+	
+	Method RenderDrawOps( rpass:Int )
+	
+		_device.RenderPass=rpass
+		
+		_device.VertexBuffer=_drawVB
+		
+		Local rpassMask:=1 Shl rpass
+		
+		For Local op:=Eachin _drawOps
+		
+			Local shader:=op.shader
+			If Not (shader.RenderPassMask & rpassMask) Continue
+		
+			_device.Shader=shader
+			_device.BlendMode=op.blendMode
+			_device.TextureFilter=op.textureFilter
+			_device.SetUniformBlock( 1,op.material )
+
+			Select op.primOrder
+			Case 4
+				_device.RenderIndexed( 3,op.primCount*2,op.primOffset/4*6 )
+			Default
+				_device.Render( op.primOrder,op.primCount,op.primOffset )
+			End
+
+'			_device.Render( op.primOrder,op.primCount,op.primOffset )
+
+		Next
+	End
+	
+	'Shadows
+	'
+	Method DrawShadows( lightOp:LightOp )
+	
+		Const EXTRUDE:=1024.0
+		
+		Local lv:=lightOp.lightPos
+
+		_shadowVB.Clear()
+		
+		For Local op:=Eachin _shadowOps
+		
+			Local vert0:=op.firstVert
+			Local nverts:=op.caster.Vertices.Length
+			
+			Local tv:=_shadowVerts[vert0+nverts-1]
+			
+			For Local iv:=0 Until nverts
+			
+				Local pv:=tv
+				tv=_shadowVerts[vert0+iv]
+				
+				Local dv:=tv-pv
+				Local nv:=dv.Normal.Normalize()
+				Local pd:=-pv.Dot( nv )
+				
+				Local d:=lv.Dot( nv )+pd
+				If d<0 Continue
+				
+				Local tp:=_shadowVB.AddVertices( 9 )
+				If Not tp Exit
+			
+				Local hv:=(pv+tv)/2
+				
+				Local pv2:=pv + (pv-lv).Normalize() * EXTRUDE
+				Local tv2:=tv + (tv-lv).Normalize() * EXTRUDE
+				Local hv2:=hv + (hv-lv).Normalize() * EXTRUDE
+				
+				tp[0].position=tv;tp[1].position=tv2;tp[2].position=hv2
+				tp[3].position=tv;tp[4].position=hv2;tp[5].position=pv
+				tp[6].position=hv2;tp[7].position=pv2;tp[8].position=pv
+				
+				tp+=9
+			Next
+			
+		Next
+		
+	End
+		
+	'Lighting
+	'
+	Method RenderLighting()
+	
+		_device.BlendMode=BlendMode.Additive
+		_device.VertexBuffer=_lightVB
+		
+		For Local op:=Eachin _lightOps
+		
+			DrawShadows( op )
+			
+			If _shadowVB.Length
+#rem
+				_device.RenderTarget=Null
+				_device.BlendMode=BlendMode.Opaque
+				_device.ColorMask=ColorMask.All
+				_device.VertexBuffer=_shadowVB
+				_device.Shader=Shader.GetShader( "shadow" )
+				_device.Clear( Color.Blue )
+				_device.Render( 3,_shadowVB.Length/3,0 )
+				Continue
+#end				
+				_device.RenderPass=4
+				_device.RenderTarget=_gbuffers[0]
+				_device.BlendMode=BlendMode.Opaque
+				_device.ColorMask=ColorMask.Alpha
+				_device.VertexBuffer=_shadowVB
+				_device.Shader=Shader.GetShader( "shadow" )
+
+				_device.Clear( Color.White )
+				_device.Render( 3,_shadowVB.Length/3,0 )
+				
+				_device.RenderPass=5				
+				_device.RenderTarget=_rtarget ? _rtarget.Texture Else Null
+				_device.BlendMode=BlendMode.Additive
+				_device.ColorMask=ColorMask.All
+				_device.VertexBuffer=_lightVB
+				
+			Else
+				_device.RenderPass=4
+			Endif
+			
+			Local light:=op.light
+			
+			_device.Shader=light.Shader
+			_device.TextureFilter=op.textureFilter
+			_device.SetUniformBlock( 1,light.Material )
+			
+			_device.Render( 4,1,op.primOffset )
+		
+		Next
+		
 	End
 
 End
