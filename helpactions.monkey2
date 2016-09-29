@@ -8,6 +8,7 @@ Class HelpActions
 	Field viewManuals:Action
 	Field uploadModules:Action
 	Field about:Action
+	Field aboutTed2go:Action
 
 	Method New()
 	
@@ -47,6 +48,22 @@ Class HelpActions
 			dialog.Open()
 		End
 
+		aboutTed2go=New Action( "About Ted2Go" )
+		aboutTed2go.Triggered=Lambda()
+		
+			Local htmlView:=New HtmlView
+			htmlView.Go( "asset::ted2/aboutTed2Go.html" )
+	
+			Local dialog:=New Dialog( "About Ted2Go" )
+			dialog.ContentView=htmlView
+
+			dialog.MinSize=New Vec2i( 520,480 )
+
+			dialog.AddAction( "Okay!" ).Triggered=dialog.Close
+			
+			dialog.Open()
+		End
+		
 	End
 
 End

@@ -4,6 +4,7 @@ Namespace ted2go
 
 #Import "assets/about.html@/ted2"
 #Import "assets/scripts.json@/ted2"
+#Import "assets/aboutTed2Go.html@/ted2"
 
 #Import "assets/newfiles/Simple_Console_App.monkey2@/ted2/newfiles"
 #Import "assets/newfiles/Simple_Mojo_App.monkey2@/ted2/newfiles"
@@ -178,6 +179,8 @@ Class MainWindowInstance Extends Window
 		_helpMenu.AddAction( _helpActions.uploadModules )
 		_helpMenu.AddSeparator()
 		_helpMenu.AddAction( _helpActions.about )
+		_helpMenu.AddSeparator()
+		_helpMenu.AddAction( _helpActions.aboutTed2go )
 		
 		_menuBar=New MenuBar
 		_menuBar.AddMenu( _fileMenu )
