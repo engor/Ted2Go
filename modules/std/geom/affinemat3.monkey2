@@ -100,12 +100,12 @@ Struct AffineMat3<T>
 	
 	#rem monkeydoc Applies a translation transformation to the matrix and returns the result.
 	#end
-	Method Translate:AffineMat3( v:Vec2<T> )
-		Return Transform( 1,0,0,1,v.x,v.y )
-	End
-	
 	Method Translate:AffineMat3( tx:T,ty:T )
 		Return Transform( 1,0,0,1,tx,ty )
+	End
+	
+	Method Translate:AffineMat3( tv:Vec2<T> )
+		Return Transform( 1,0,0,1,tv.x,tv.y )
 	End
 	
 	#rem monkeydoc Applies a rotation transformation to the matrix and returns the result.
@@ -116,12 +116,32 @@ Struct AffineMat3<T>
 	
 	#rem monkeydoc Applies a scale transformation to the matrix and returns the result.
 	#end
-	Method Scale:AffineMat3( v:Vec2<T> )
-		Return Transform( v.x,0,0,v.y,0,0 )
-	End
-	
 	Method Scale:AffineMat3( sx:T,sy:T )
 		Return Transform( sx,0,0,sy,0,0 )
+	End
+
+	Method Scale:AffineMat3( sv:Vec2<T> )
+		Return Transform( sv.x,0,0,sv.y,0,0 )
+	End
+	
+	Function Translation:AffineMat3( tx:T,ty:T )
+		Return New AffineMat3( 1,0,0,1,tx,ty )
+	End
+	
+	Function Translation:AffineMat3( tv:Vec2<T> )
+		Return New AffineMat3( 1,0,0,1,tv.x,tv.y )
+	End
+	
+	Function Rotation:AffineMat3( rz:Double )
+		Return New AffineMat3( Cos( rz ),-Sin( rz ),Sin( rz ),Cos( rz ),0,0 )
+	End
+	
+	Function Scaling:AffineMat3( sx:T,sy:T )
+		Return New AffineMat3( sx,0,0,sy,0,0 )
+	End
+
+	Function Scaling:AffineMat3( sv:Vec2<T> )
+		Return New AffineMat3( sv.x,0,0,sv.y,0,0 )
 	End
 
 	#rem monkeydoc @hidden

@@ -121,7 +121,13 @@ Struct Vec2<T>
 	Property Length:Double()
 		Return Sqrt( x*x+y*y )
 	End
-	
+
+	#rem monkeydoc The normal to the vector.
+	#end	
+	Property Normal:Vec2()
+		Return New Vec2( -y,x )
+	End
+
 	#rem monkeydoc Computes the dot product of the vector with another vector.
 	#end
 	Method Dot:Double( v:Vec2 )

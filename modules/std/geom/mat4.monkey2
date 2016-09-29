@@ -59,6 +59,18 @@ Struct Mat4<T>
 		Return r
 	End
 	
+	Function Translation:Mat4( tx:T,ty:T,tz:T )
+		Local r:=New Mat4
+		r.t.x=tx;r.t.y=ty;r.t.z=tz
+		Return r
+	End
+	
+	Function Scale:Mat4( sx:Float,sy:Float,sz:Float )
+		Local r:Mat4
+		r.i.x=sx;r.j.y=sy;r.k.z=sz;r.t.w=1
+		Return r
+	End
+	
 	Function Ortho:Mat4( left:Float,right:Float,bottom:Float,top:Float,near:Float,far:Float )
 
 		Local w:=right-left,h:=top-bottom,d:=far-near
