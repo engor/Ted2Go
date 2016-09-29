@@ -67,6 +67,7 @@ Function setenv:Int( name:CString,value:CString,overwrite:Int )="setenv_"
 Function getenv:char_t Ptr( name:CString )
 
 Function exit_:Void( status:Int )="exit"
+Function atexit:Int( func:Void() )="atexit" 
 Function abort:Void()
 
 '***** string.h *****
