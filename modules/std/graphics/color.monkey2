@@ -1,10 +1,107 @@
 
 Namespace std.graphics
 
-#rem monkeydoc The Color type provides support for manipulating red, green blue, alpha colors.
-#end
-Struct Color
+	#rem monkeydoc The Color type provides support for manipulating red, green blue, alpha colors.
+	#end
+	Struct Color
+		
+	#rem monkeydoc Transparent black.
+	#end
+	Const None:=New Color( 0,0,0,0 )
 	
+	#rem monkeydoc Black.
+	#end
+	Const Black:=New Color( 0,0,0 )
+	
+	#rem monkeydoc Grey.
+	#end
+	Const Grey:=New Color( .5,.5,.5 )
+	
+	#rem monkeydoc Light Grey.
+	#end
+	Const LightGrey:=New Color( .75,.75,.75 )
+	
+	#rem monkeydoc Dark Grey.
+	#end
+	Const DarkGrey:=New Color( .25,.25,.25 )
+	
+	#rem monkeydoc White.
+	#end
+	Const White:=New Color( 1,1,1 )
+	
+	#rem monkeydoc Red.
+	#end
+	Const Red:=New Color( 1,0,0 )
+	
+	#rem monkeydoc Green.
+	#end
+	Const Green:=New Color( 0,1,0 )
+	
+	#rem monkeydoc Blue.
+	#end
+	Const Blue:=New Color( 0,0,1 )
+	
+	#rem monkeydoc Brown.
+	#end
+	Const Brown:=New Color( .7,.4,.1 )
+	
+	#rem monkeydoc Orange.
+	#end
+	Const Orange:=New Color( 1,.5,0 )
+	
+	#rem monkeydoc Yellow.
+	#end
+	Const Yellow:=New Color( 1,1,0 )
+	
+	#rem monkeydoc Lime.
+	#end
+	Const Lime:=New Color( .7,1,0 )
+	
+	#rem monkeydoc Pine.
+	#end
+	Const Pine:=New Color( 0,.5,0 )
+	
+	#rem monkeydoc Aqua.
+	#end
+	Const Aqua:=New Color( 0,.9,.4 )
+	
+	#rem monkeydoc Cyan.
+	#end
+	Const Cyan:=New Color( 0,1,1 )
+	
+	#rem monkeydoc Sky.
+	#end
+	Const Sky:=New Color( 0,.5,1 )
+	
+	#rem monkeydoc Steel.
+	#end
+	Const Steel:=New Color( .2,.2,.7 )
+	
+	#rem monkeydoc Violet.
+	#end
+	Const Violet:=New Color( .7,0,1 )
+	
+	#rem monkeydoc Magenta.
+	#end
+	Const Magenta:=New Color( 1,0,1 )
+	
+	#rem monkeydoc Puce.
+	#end
+	Const Puce:=New Color( 1,0,.4 )
+	
+	#rem monkeydoc Skin.
+	#end
+	Const Skin:=New Color( .8,.5,.6 )
+	
+	#rem monkeydoc Pink.
+	#end
+	Const Pink:=New Color( 1,.75,.8 )
+	
+	#rem monkeydoc HotPink!
+	#end
+	Const HotPink:=New Color( 1,.41,.71 )
+	
+#rem
 	#rem monkeydoc Transparent black.
 	#end
 	Const None:=New Color( 0,0,0,0 )
@@ -52,6 +149,7 @@ Struct Color
 	#rem monkeydoc Dark Grey.
 	#end
 	Const DarkGrey:=New Color( .25,.25,.25 )
+#end
 	
 	#rem monkeydoc Red component of color.
 	#end
