@@ -209,7 +209,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				i = i.Trim()
 				If i <> ""
 					Local item := New CodeItem(i)
-					AddItem(item, "enum", False, info)
+					AddItem(item, "param", False, info)
 				Endif
 			Next
 			Return
@@ -219,11 +219,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		info.indent = indent
 		
-		'simple extract ident
-		'ExtractIdent(word, postfix)
-		
 		Local item:CodeItem = Null
-		Local isScope := False
 		
 		
 		Select word
@@ -344,11 +340,11 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			PushAccess(info, AccessMode.Public_)
 			
-		Case "method", "function", "property" ', "setter"
+		Case "method", "function", "property", "setter"
 			
 			Local ident := ParseIdent(postfix)
 			item = New CodeItem(ident)
-			isScope = Not _insideInterface
+			Local isScope := Not _insideInterface
 			
 			If Not isScope
 				item.ScopeStartLine = _docLine
@@ -362,8 +358,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Else
 				item.Type = postfix.Slice(p1+1, p2).Trim()
 			Endif
-			
-			AddItem(item, word, True, info)
+						
+			AddItem(item, word, isScope, info)
 			
 			Local p3 := postfix.FindLast(")",p2)
 			
