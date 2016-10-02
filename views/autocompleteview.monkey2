@@ -197,11 +197,14 @@ Class AutocompleteDialog Extends DialogExt
 		' var1.var2.var3...
 		If Not onlyOne And item <> Null
 			
+			Local staticOnly := (item.Kind = CodeItemKind.Class_)
+			
 			' strt from the second ident part here
 			For Local k := 1 Until idents.Length
 				
 				' need to check by ident type
 				Local type := item.Type
+				scope = item
 				'Print "idnt: "+item.Ident+" : "+type+" : "+item.KindStr
 				item = Null
 				For Local i := Eachin parser.Items
@@ -211,11 +214,10 @@ Class AutocompleteDialog Extends DialogExt
 					Endif
 				Next
 				If item = Null Then Exit
-				'scope = item
-				
+								
 				Local identPart := idents[k]
 				Local last := (k = idents.Length-1)
-									
+				
 				Local items := item.Children
 				If items <> Null
 					For Local i := Eachin items
@@ -223,7 +225,9 @@ Class AutocompleteDialog Extends DialogExt
 						If Not CheckAccess(i, filePath, scope) Continue
 						item = i
 						If last
-							result.AddLast(New CodeListViewItem(i))
+							If Not staticOnly Or IsStaticMember(i)
+								result.AddLast(New CodeListViewItem(i))
+							Endif
 						Else
 							Exit
 						Endif
@@ -266,7 +270,9 @@ Class AutocompleteDialog Extends DialogExt
 	Method New()
 	End
 	
-	
+	Method IsStaticMember:Bool(item:ICodeItem)
+		Return item.Kind = CodeItemKind.Function_ Or item.Kind = CodeItemKind.Global_ Or item.Kind = CodeItemKind.Const_
+	End
 	
 	Method SortResults(list:List<ListViewItem>)
 		
@@ -292,9 +298,14 @@ Class AutocompleteDialog Extends DialogExt
 	
 	Method CheckAccess:Bool(item:ICodeItem, filePath:String, parent:ICodeItem=Null)
 		
+		' if item is a class, need to show only static members - func, global and const
+		'If parent <> Null And parent.Kind = CodeItemKind.Class_
+		'	Return item.Kind = CodeItemKind.Function_ Or item.Kind = CodeItemKind.Global_ Or item.Kind = CodeItemKind.Const_
+		'Endif
+		
+		' always show public members of vars
 		Local a := item.Access
 		If a = AccessMode.Public_
-			'Print "is public: "+item.Text
 			Return True
 		Endif
 		
