@@ -68,6 +68,8 @@ Class TextViewExt Extends TextView
 					Case Key.Insert 'shift+insert - paste
 						If shift
 							Paste()
+						Elseif ctrl And CanCopy
+							Copy()
 						Endif
 					
 					Case Key.KeyDelete
