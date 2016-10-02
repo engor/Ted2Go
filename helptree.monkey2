@@ -31,7 +31,7 @@ End
 
 Public
 
-Class HelpTree Extends TreeView
+Class HelpTree Extends TreeViewExt
 
 	Field PageClicked:Void( page:String )
 	

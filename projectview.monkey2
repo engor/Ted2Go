@@ -16,7 +16,7 @@ Class ProjectView Extends ScrollView
 		
 		ContentView=_docker
 		
-		_docker.ContentView=New TreeView
+		_docker.ContentView=New TreeViewExt
 		
 		openProject=New Action( "Open project" )
 		openProject.Triggered=OnOpenProject

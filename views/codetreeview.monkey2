@@ -3,7 +3,7 @@ Namespace ted2go
 
 
 
-Class CodeTreeView Extends TreeView
+Class CodeTreeView Extends TreeViewExt
 
 End
 

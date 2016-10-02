@@ -323,7 +323,7 @@ Class CodeDocument Extends Ted2Document
 			AddTreeItem(i, node)
 		Next
 		
-		_treeView.NodeClicked = Lambda(node:TreeView.Node)
+		_treeView.NodeClicked += Lambda(node:TreeView.Node)
 			Local codeNode := Cast<CodeTreeNode>(node)
 			Local item := codeNode.CodeItem
 			_codeView.GotoLine( item.ScopeStartLine )

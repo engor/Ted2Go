@@ -98,11 +98,11 @@ Class DebugView Extends DockingView
 		
 		AddView( tools,"top" )
 		
-		_tree=New TreeView
+		_tree=New TreeViewExt
 		_tree.RootNodeVisible=False
 		_tree.RootNode.Expanded=True
 		
-		_tree.NodeClicked=Lambda( tnode:TreeView.Node )
+		_tree.NodeClicked += Lambda( tnode:TreeView.Node )
 		
 			Local node:=Cast<Node>( tnode )
 			If Not node Return
