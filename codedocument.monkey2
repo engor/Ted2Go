@@ -252,6 +252,15 @@ Class CodeDocument Extends Ted2Document
 		Return _errors
 	End
 	
+	
+	Protected
+	
+	Method OnGetTextView:TextView( view:View ) Override
+	
+		Return _codeView
+	End
+	
+	
 	Private
 
 	Field _doc:TextDocument
