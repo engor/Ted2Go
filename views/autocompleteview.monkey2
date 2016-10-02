@@ -172,6 +172,7 @@ Class AutocompleteDialog Extends DialogExt
 							item = i
 							Exit
 						Else
+							parser.RefineRawType(i)
 							result.AddLast(New CodeListViewItem(i))
 						Endif
 					Next
@@ -195,6 +196,7 @@ Class AutocompleteDialog Extends DialogExt
 					item = i
 					Exit
 				Else
+					parser.RefineRawType(i)
 					result.AddLast(New CodeListViewItem(i))
 				Endif
 			Next
@@ -207,8 +209,10 @@ Class AutocompleteDialog Extends DialogExt
 			
 			Local staticOnly := (Not isSelf And item.Kind = CodeItemKind.Class_)
 						
-			' strt from the second ident part here
+			' start from the second ident part here
 			For Local k := 1 Until idents.Length
+				
+				parser.RefineRawType(item)
 				
 				' need to check by ident type
 				Local type := item.Type
@@ -234,6 +238,7 @@ Class AutocompleteDialog Extends DialogExt
 						item = i
 						If last
 							If Not staticOnly Or IsStaticMember(i)
+								parser.RefineRawType(i)
 								result.AddLast(New CodeListViewItem(i))
 							Endif
 						Else

@@ -1,4 +1,8 @@
 
+Function FnLambda(p1:String, p2:Void(x:Int,y:Int), p3:Float)
+
+End
+
 Class TestClass
 	
 	Function MyFyncPub:String()
@@ -28,17 +32,23 @@ Class TestClass
 	Field _tst := .14
 	
 	Method MyMethodPriv(mymy:Int)
-		my
+		
+		FnLambda("", Lambda(xxx:Int,yyy:Int)
+		
+		End, 2.8)
+		 
+	End
+	
+	Method DVD()
+	
 	End
 	
 End
 
-dr
+
 Class Test2
 
 	Function Fff(ttt:TestClass, ccc:Canvas)
-		ttt.
-		cc
 	End
 	
 End

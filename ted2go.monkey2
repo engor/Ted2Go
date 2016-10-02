@@ -25,7 +25,7 @@
 #Import "utils/jsonutils"
 #Import "utils/utils"
 
-'#Import "analyzer/analyzer"
+#Import "test_files/parsertests"
 
 
 #Import "assets/codeicons/class.png@/ic"

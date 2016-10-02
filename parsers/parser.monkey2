@@ -35,6 +35,9 @@ Interface ICodeItem
 	Property Type:String()
 	Setter(value:String)
 	
+	Property RawType:String()
+	Setter(value:String)
+	
 	Property Params:String[]()
 	Setter(value:String[])
 	
@@ -102,6 +105,13 @@ Class CodeItem Implements ICodeItem
 		Return _type
 	Setter(value:String)
 		_type = value
+	End
+	
+	Property RawType:String()
+		Return _rawType
+	Setter(value:String)
+		_rawType = value
+		_text = Null 'reset
 	End
 	
 	Property Params:String[]()
@@ -230,7 +240,7 @@ Class CodeItem Implements ICodeItem
 	
 	Field _ident:String
 	Field _indent:Int
-	Field _type:String
+	Field _type:String, _rawType:String
 	Field _params:String[]
 	Field _paramsStr:String
 	Field _kind:CodeItemKind
@@ -279,6 +289,7 @@ End
 
 Interface ICodeParser
 
+	Method RefineRawType(item:ICodeItem)
 	Method Parse(text:String, filePath:String)
 	Method IsPosInsideOfQuotes:Bool(text:String, pos:Int)
 	Method CanShowAutocomplete:Bool(line:String, posInLine:Int)
@@ -365,6 +376,9 @@ Class EmptyParser Implements ICodeParser
 	Method ItemAtScope:ICodeItem(scope:ICodeItem, idents:String[])
 		Return Null
 	End
+	Method RefineRawType(item:ICodeItem)
+	End
+	
 	
 	Private
 	

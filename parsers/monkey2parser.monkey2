@@ -174,9 +174,16 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		text = text.TrimEnd()
 		
-		Local p := text.Find(" ")
-				
-		Local word := (p > 0) ? text.Slice(0,p) Else text 'first word
+		n = 0	
+		len = text.Length
+		While n < len And IsIdent(text[n])
+			n += 1
+		Wend
+		
+		Local word := (n < len) ? text.Slice(0,n) Else text 'first word
+		
+		'Local p := text.Find(" ")
+		'Local word := (p > 0) ? text.Slice(0,p) Else text 'first word
 		
 		If word = "" Return
 		
@@ -215,7 +222,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Return
 		Endif
 		
-		Local postfix := text.Slice(p+1).Trim()
+		Local postfix := text.Slice(n+1).Trim()
 		
 		info.indent = indent
 		
@@ -382,6 +389,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 				_params.Clear()
 				ExtractParams(params, _params)
 				
+				Local lmbd:ICodeItem
+				
 				For Local s := Eachin _params
 					
 					' skip default value after '='
@@ -427,6 +436,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				
 				Local ident:String
 				Local type:String
+				Local rawType := ""
 				
 				':= not in string
 				If p0 > 0 And p0 < p2
@@ -442,6 +452,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 							type = type.Slice(3).Trim()
 							Local typeIdent := ParseIdent(type)
 							
+							#Rem
 							If IsDigit(type[0]) Or type[0] = CHAR_DOT
 								If type.Contains(".")
 									type = "Float"
@@ -449,6 +460,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 									type = "Int"
 								Endif
 							Else
+							#End
 								Local p := typeIdent.Find("(")
 								If p <> -1
 									type = typeIdent.Slice(0,p)
@@ -456,7 +468,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 									'this is varname, need to refine it later
 									type = typeIdent
 								Endif
-							Endif
+							'Endif
 							
 						Else
 						
@@ -471,10 +483,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 							Else
 								Local p := typeIdent.Find("(")
 								If p <> -1
-									type = typeIdent.Slice(0,p)
+									rawType = typeIdent.Slice(0,p)
 								Else
 									'this is varname, need to refine it later
-									type = typeIdent
+									rawType = typeIdent
 								Endif
 							Endif
 								
@@ -492,6 +504,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 				
 				item = New CodeItem(ident)
 				item.Type = type
+				item.RawType = rawType
+				
+				info.hasRawTypes = info.hasRawTypes Or (rawType<>"")
 				
 				' also need to check arrays
 				' and types which requires refining after parsing all file
@@ -500,8 +515,165 @@ Class Monkey2Parser Extends CodeParserPlugin
 												
 			Next
 		
+		
+		'Default
+						
+			
 		End 'Select word
 		
+		
+		Local p := -1
+		
+		While True
+			p = text.Find("Lambda", p+1)
+			If p = -1 Exit
+			If Not IsIdent(text[p-1]) Exit
+		Wend
+		
+		If p > 0
+		
+			Local txt := text.Slice(p)
+			'Print "lmbd: "+txt
+			
+			item = New CodeItem("Lambda")
+			AddItem(item, "method", True, info)
+			
+			' some 'copy-paste' code...
+			
+			Local p1 := txt.Find(":")
+			Local p2 := txt.Find("(")
+			If p1 = -1 Or p1 > p2
+				item.Type = "Void"
+			Else
+				item.Type = txt.Slice(p1+1, p2).Trim()
+			Endif
+									
+			Local p3 := txt.Find(")",p2) 'this don't catch all cases
+			
+			Local params := txt.Slice(p2+1, p3).Trim()
+			
+			item.ParamsStr = params
+			
+			' if there is no scope then don't parse params
+			If params <> ""
+			
+				' here we try to split idents by comma
+				_params.Clear()
+				ExtractParams(params, _params)
+								
+				For Local s := Eachin _params
+					
+					' skip default value after '='
+					Local pos := s.Find("=")
+					If pos > 0 s = s.Slice(0,pos).Trim()
+					
+					pos = s.Find(":")
+					Local ident := s.Slice(0,pos).Trim()
+					Local type := s.Slice(pos+1,s.Length).Trim()
+					
+					Local i := New CodeItem(ident)
+					i.Type = type
+					
+					' also need to check arrays
+					' and types which requires refining after parsing all file
+									
+					AddItem(i, "param", False, info)
+									
+				Next
+				
+			Endif
+		Endif
+		
+	End
+	
+	Method RefineRawType(sourceItem:ICodeItem)
+	
+		Local rt := sourceItem.RawType
+		If rt = Null Or rt = "" Return
+		
+		Local scope := GetScope(sourceItem.FilePath, sourceItem.ScopeStartLine)
+		Local idents := rt.Split(".")
+		Local item:ICodeItem
+		Local firstIdent := idents[0]
+		
+		While scope <> Null
+	
+			Local items := scope.Children
+			If items <> Null
+				For Local i := Eachin items
+					If i.Ident = firstIdent
+						item = i
+						Exit
+					Endif
+				Next
+			Endif
+			'found item
+			If item <> Null Exit
+			
+			scope = scope.Parent '￑if inside of func then go to class' scope
+			
+		Wend
+		
+		' and check in global scope
+		If item = Null
+			For Local i := Eachin Items
+				If i.Ident = firstIdent
+					item = i
+					Exit
+				Endif
+			Next
+		Endif
+		
+		If item = Null Return
+		
+		'Print "found: "+item.Text
+		
+		If item.Kind = CodeItemKind.Enum_
+			sourceItem.Type = item.Ident
+			sourceItem.RawType = Null
+			Return
+		Endif
+		
+		' start from the second ident part here
+		For Local k := 1 Until idents.Length
+			
+			' need to check by ident type
+			
+			RefineRawType(item) 'try to refine all involved items
+			
+			Local type := item.Type
+			item = Null
+			For Local i := Eachin Items 'this don't check inner classes...
+				If i.Ident = type
+					item = i
+					Exit
+				Endif
+			Next
+			If item = Null Then Exit
+							
+			Local identPart := idents[k]
+			Local last := (k = idents.Length-1)
+			
+			Local items := item.Children
+			If items <> Null
+				For Local i := Eachin items
+					If i.Ident = identPart
+						item = i
+						Exit
+					Endif
+				Next
+			Endif
+			
+			If item = Null Then Exit
+		Next
+		
+		If item = Null Return
+		
+		Local t := item.Type
+		'Print "type: "+t
+		
+		sourceItem.Type = t
+		sourceItem.RawType = Null
 		
 	End
 	
@@ -794,9 +966,9 @@ Class FileInfo
 	Field stack := New Stack<ICodeItem>
 	Field scope:ICodeItem
 	Field accessInFile := AccessMode.Public_
-	'Field accessInClass := AccessMode.Public_
 	Field indent:Int
 	Field stackAccess := New Stack<AccessMode>
+	Field hasRawTypes := False
 	
 End
 
