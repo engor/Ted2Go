@@ -138,7 +138,7 @@ Class CodeItem Implements ICodeItem
 			Local s := Ident
 			Select _kind
 				Case CodeItemKind.Function_, CodeItemKind.Method_
-					s += (ParamsStr = Null) ? "()" Else "("+ParamsStr+")"
+					s += (ParamsStr = Null) ? "()" Else " ("+ParamsStr+")"
 				Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_, CodeItemKind.Enum_, CodeItemKind.Property_
 					'do nothing
 				Default

@@ -212,7 +212,8 @@ Class AutocompleteDialog Extends DialogExt
 			Return
 		Endif
 		
-		result.Sort(False)
+		
+		SortResults(result)
 		
 		_view.Reset()'reset selIndex
 		_view.SetItems(result)
@@ -231,10 +232,24 @@ Class AutocompleteDialog Extends DialogExt
 	Field _keywords:StringMap<List<ListViewItem>>
 	Field _ident:String
 	Field _parsers:StringMap<ICodeParser>
-	'Field _parser:ICodeParser
+	Field sorter:Int(lhs:ListViewItem, rhs:ListViewItem)
 	
 	
 	Method New()
+	End
+	
+	
+	
+	Method SortResults(list:List<ListViewItem>)
+		
+		If sorter = Null
+			sorter = Lambda:Int(lhs:ListViewItem, rhs:ListViewItem)
+				Return lhs.Text <=> rhs.Text
+			End
+		Endif
+		
+		list.Sort(sorter)
+		
 	End
 	
 	Method GetParser:ICodeParser(fileType:String)
