@@ -36,7 +36,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		If AutoComplete = Null Then AutoComplete = New AutocompleteDialog("")
 		AutoComplete.OnChoosen += Lambda(text:String)
 			If App.KeyView = Self
-				SelectText(Cursor,Cursor-AutoComplete.Ident.Length)
+				SelectText(Cursor,Cursor-AutoComplete.LastIdentPart.Length)
 				ReplaceText(text)
 			Endif
 		End

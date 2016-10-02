@@ -87,6 +87,10 @@ Class ListView Extends ScrollableView
 		RequestRender()
 	End
 	
+	Property Items:List<ListViewItem>.Iterator()
+		Return _items.All()
+	End
+	
 	
 	Protected
 	

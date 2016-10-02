@@ -65,8 +65,12 @@ Class AutocompleteDialog Extends DialogExt
 		
 	End
 	
-	Property Ident:String()
-		Return _ident
+	Property LastIdentPart:String()
+		Return _lastIdentPart
+	End
+	
+	Property FullIdent:String()
+		Return _fullIdent
 	End
 	
 	Method CanShow:Bool(line:String, posInLine:Int, fileType:String)
@@ -78,25 +82,52 @@ Class AutocompleteDialog Extends DialogExt
 	
 	Method Show(ident:String, filePath:String, fileType:String, docLine:Int)
 		
-		'ident = ident.ToLower()
+		Local result := New List<ListViewItem>
+		Local idents := ident.Split(".")
+				
+		' using lowerCase for keywords
+		Local lastIdent := idents[idents.Length-1].ToLower()
+		
+		Local starts := ident.ToLower().StartsWith(_fullIdent.ToLower())
 		
 		'if typed ident starts with previous
 		'need to simple filter items
-		If IsOpened And ident.StartsWith(_ident)
+		If IsOpened And starts 'And Not ident.EndsWith(".")
 			
+			Local items := _view.Items
+			For Local i := Eachin items
+				
+				If i.Text.ToLower().StartsWith(lastIdent)
+					result.AddLast(i)
+				Endif
+				
+			Next
+			
+			' some "copy/paste" code
+			_fullIdent = ident
+			_lastIdentPart = lastIdent
+			If IsOpened Then Hide() 'hide to re-layout on open
+			
+			'nothing to show
+			If result.Empty 
+				Return
+			Endif
+						
+			_view.Reset()'reset selIndex
+			_view.SetItems(result)
+			
+			Show()
+			
+			Return
 		End
-					
+		
+		
+		_fullIdent = ident
+		_lastIdentPart = lastIdent
+		
 		Local parser := GetParser(fileType)
-		
-		Local result := New List<ListViewItem>
-		
-		Local idents := ident.Split(".")
 		Local items:List<ICodeItem>
-		
 		Local onlyOne := (idents.Length = 1)
-		
-		' using lowerCase for keywords
-		Local lastIdent := idents[idents.Length-1].ToLower()
 		
 		'-----------------------------
 		' add keywords
@@ -219,10 +250,7 @@ Class AutocompleteDialog Extends DialogExt
 		_view.SetItems(result)
 		
 		Show()
-		
-		' store last ident part
-		_ident = lastIdent
-		
+				
 	End
 	
 		
@@ -230,7 +258,7 @@ Class AutocompleteDialog Extends DialogExt
 	
 	Field _view:ListView
 	Field _keywords:StringMap<List<ListViewItem>>
-	Field _ident:String
+	Field _lastIdentPart:String, _fullIdent:String
 	Field _parsers:StringMap<ICodeParser>
 	Field sorter:Int(lhs:ListViewItem, rhs:ListViewItem)
 	
@@ -367,7 +395,7 @@ Class AutocompleteDialog Extends DialogExt
 			Case Key.LeftAlt, Key.RightAlt
 				'do nothing, skip filtering
 			Default
-				Hide()
+				'Hide()
 			End
 			
 		Endif
@@ -408,30 +436,3 @@ Class AutocompleteDialog Extends DialogExt
 	End
 	
 End
-
-
-Private
-
-Class KeywordWrapper
-	
-	Method New(word:String, fileType:String)
-		_word = word
-		_fileType = fileType
-	End
-	
-	Property Word:String()
-		Return _word
-	End
-	
-	Property FileType:String()
-		Return _fileType
-	End
-	
-		
-	Private
-	
-	Field _word:String
-	Field _fileType:String
-	
-End
-
