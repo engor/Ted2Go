@@ -144,7 +144,10 @@ Class CodeItem Implements ICodeItem
 				Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_, CodeItemKind.Enum_, CodeItemKind.Property_
 					'do nothing
 				Default
-					s += " : "+Type
+					' for enums
+					If Parent = Null Or Parent.Kind <> CodeItemKind.Enum_
+						s += " : "+Type
+					Endif
 			End
 			_text = s
 		Endif

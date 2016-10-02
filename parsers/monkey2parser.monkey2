@@ -344,7 +344,15 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			Local ident := ParseIdent(postfix)
 			item = New CodeItem(ident)
+			
 			Local isScope := Not _insideInterface
+			
+			If isScope
+				' check for: Property Length:Int()="length"
+				Local p1 := postfix.FindLast(")")
+				Local p2 := postfix.FindLast("=",p1)
+				isScope = (p2 = -1) '= not found
+			Endif
 			
 			If Not isScope
 				item.ScopeStartLine = _docLine
@@ -364,10 +372,12 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Local p3 := postfix.FindLast(")",p2)
 			
 			Local params := postfix.Slice(p2+1, p3).Trim()
-			If params <> ""
-				
-				item.ParamsStr = params
-				
+			
+			item.ParamsStr = params
+			
+			' if there is no scope then don't parse params
+			If isScope And params <> ""
+			
 				' here we try to split idents by comma
 				_params.Clear()
 				ExtractParams(params, _params)
@@ -391,7 +401,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 					AddItem(i, "param", False, info)
 									
 				Next
+				
 			Endif
+			
 			
 		Case "field", "global", "local", "const"
 			
@@ -635,7 +647,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 		Local i := 0
 		Local n := text.Length
-		if pos = 0 Or pos >= n Return False
+		if pos = 0 Return False
 		Local quoteCounter := 0
 		While i < n
 			Local c := text[i]
@@ -651,7 +663,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Endif
 			i += 1
 		Wend
-		Return False
+		Return (quoteCounter Mod 2 <> 0)
 	End	
 	
 	Function ParseIdent:String(line:String, checkDotChar:Bool=False)
@@ -661,10 +673,16 @@ Class Monkey2Parser Extends CodeParserPlugin
 			i += 1
 		Wend
 		Local indent := i
-		While i < n And (IsIdent(line[i]) Or (checkDotChar And line[i] = CHAR_DOT))
+		While i < n And (IsIdent(line[i]) Or (checkDotChar And line[i] = CHAR_DOT) Or line[i] = CHAR_AT)
 			i += 1
 		Wend
-		Return (i > indent ? line.Slice(indent,i) Else "")
+		If i > indent
+			line = line.Slice(indent,i)
+			If line.StartsWith("@") Then line = line.Slice(1)
+		Else
+			line = ""
+		Endif
+		Return line
 	End
 	
 	' check if char(') is inside of string or not
@@ -795,3 +813,4 @@ Const CHAR_OPENED_ROUND_BRACKET := 40
 Const CHAR_CLOSED_ROUND_BRACKET := 41
 Const CHAR_DIGIT_0 := 48
 Const CHAR_DIGIT_9 := 57
+Const CHAR_AT := 64
