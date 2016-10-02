@@ -152,30 +152,38 @@ Class AutocompleteDialog Extends DialogExt
 		'-----------------------------
 		Local firstIdent := idents[0]
 		Local item:ICodeItem = Null
+		Local isSelf := (firstIdent.ToLower() = "self")
 		
-		' check in 'this' scope
-		While scope <> Null
-
-			Local items := scope.Children
-			If items <> Null
-				For Local i := Eachin items
-					If Not CheckIdent(i.Ident, firstIdent, onlyOne) Continue
-					If Not CheckAccess(i, filePath, scope) Continue
-					If Not onlyOne
-						item = i
-						Exit
-					Else
-						result.AddLast(New CodeListViewItem(i))
-					Endif
-				Next
-			Endif
-			'found item
-			If item <> Null Exit
-			
-			scope = scope.Parent '￑if inside of func then go to class' scope
-			
-		Wend
+		If isSelf
 		
+			item = scope.Root
+			
+		Else ' not 'self' ident
+			
+			' check in 'this' scope
+			While scope <> Null
+	
+				Local items := scope.Children
+				If items <> Null
+					For Local i := Eachin items
+						If Not CheckIdent(i.Ident, firstIdent, onlyOne) Continue
+						If Not CheckAccess(i, filePath, scope) Continue
+						If Not onlyOne
+							item = i
+							Exit
+						Else
+							result.AddLast(New CodeListViewItem(i))
+						Endif
+					Next
+				Endif
+				'found item
+				If item <> Null Exit
+				
+				scope = scope.Parent '￑if inside of func then go to class' scope
+				
+			Wend
+		
+		Endif
 		'If scope <> Null Print "found: "+scope.Text
 		
 		' and check in global scope
@@ -197,8 +205,8 @@ Class AutocompleteDialog Extends DialogExt
 		' var1.var2.var3...
 		If Not onlyOne And item <> Null
 			
-			Local staticOnly := (item.Kind = CodeItemKind.Class_)
-			
+			Local staticOnly := (Not isSelf And item.Kind = CodeItemKind.Class_)
+						
 			' strt from the second ident part here
 			For Local k := 1 Until idents.Length
 				

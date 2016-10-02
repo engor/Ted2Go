@@ -56,6 +56,8 @@ Interface ICodeItem
 	Property Parent:ICodeItem()
 	Setter(value:ICodeItem)
 	
+	Property Root:ICodeItem()
+	
 	Property Children:List<ICodeItem>()
 	Setter(value:List<ICodeItem>)
 	
@@ -155,6 +157,18 @@ Class CodeItem Implements ICodeItem
 		Return _parent
 	Setter(value:ICodeItem)
 		SetParent(value)
+	End
+	
+	Property Root:ICodeItem()
+		
+		Local par:ICodeItem = Null
+		Local i := Parent
+		While i <> Null
+			par = i
+			i = i.Parent
+		Wend
+		Return (par <> Null) ? par Else Self
+		
 	End
 	
 	Property Children:List<ICodeItem>()
