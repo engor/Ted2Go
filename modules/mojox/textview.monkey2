@@ -7,18 +7,18 @@ Alias TextHighlighter:Int( text:String,colors:Byte[],sol:Int,eol:Int,state:Int )
 #end
 Class TextDocument
 
-	#rem monkeydoc Invoked when text has changed.
+	#rem monkeydoc Invoked after text has changed.
 	#end
 	Field TextChanged:Void()
 
-	#rem monkeydoc Invoked when lines modified.
+	#rem monkeydoc Invoked after lines have been modified.
 	#end
 	Field LinesModified:Void( first:Int,removed:Int,inserted:Int )
 	
 	#rem monkeydoc Creates a new text document.
 	#end
 	Method New()
-	
+
 		_lines.Push( New Line )
 	End
 
@@ -117,6 +117,7 @@ Class TextDocument
 	#rem monkeydoc Gets line text.
 	#end
 	Method GetLine:String( line:Int )
+
 		Return _text.Slice( StartOfLine( line ),EndOfLine( line ) )
 	End
 
@@ -215,7 +216,8 @@ Class TextDocument
 			End
 		Endif
 		
-		LinesModified( line0,eols1+1,eols2+1 )
+'		LinesModified( line0,eols1+1,eols2+1 )
+		LinesModified( line0,eols1,eols2 )
 		
 		TextChanged()
 	End
@@ -233,7 +235,6 @@ Class TextDocument
 	Field _colors:=New Stack<Byte>
 	Field _highlighter:TextHighlighter
 	
-	
 End
 
 #rem monkeydoc The TextView class.
@@ -249,13 +250,15 @@ Class TextView Extends ScrollableView
 	Method New()
 		Style=GetStyle( "TextView" )
 
-		_doc=New TextDocument
-		
 		_textColors=New Color[8]
 		
 		For Local i:=0 Until 7
 			_textColors[i]=App.Theme.GetColor( "textview-color"+i )
 		Next
+		
+		_lines.Push( New Line )
+		
+		Document=New TextDocument
 	End
 
 	Method New( text:String )
@@ -266,8 +269,8 @@ Class TextView Extends ScrollableView
 	
 	Method New( doc:TextDocument )
 		Self.New()
-	
-		_doc=doc
+		
+		Document=doc
 	End
 
 	#rem monkeydoc Text document.
@@ -278,13 +281,19 @@ Class TextView Extends ScrollableView
 		
 	Setter( doc:TextDocument )
 	
+		If _doc _doc.LinesModified-=LinesModified
+	
 		_doc=doc
+		
+		_doc.LinesModified+=LinesModified
 		
 		_cursor=Clamp( _cursor,0,_doc.TextLength )
 		_anchor=_cursor
 		
 		UpdateCursor()
 	End
+	
+	Public
 	
 	#rem monkeydoc Text colors.
 	#end
@@ -327,6 +336,24 @@ Class TextView Extends ScrollableView
 	Setter( blockCursor:Bool )
 	
 		_blockCursor=blockCursor
+		
+		RequestRender()
+	End
+	
+	#rem monkeydoc Cursor blink rate.
+	
+	Set to 0 for non-blinking cursor.
+	
+	#end
+	Property CursorBlinkRate:Float()
+	
+		Return _blinkRate
+	
+	Setter( blinkRate:Float )
+	
+		_blinkRate=blinkRate
+		
+		RequestRender()
 	End
 
 	#rem monkeydoc Text.
@@ -340,7 +367,7 @@ Class TextView Extends ScrollableView
 		_doc.Text=text
 	End
 	
-	#rem monkeydoc Read only flags.
+	#rem monkeydoc Read only flag.
 	#end
 	Property ReadOnly:Bool()
 	
@@ -364,6 +391,19 @@ Class TextView Extends ScrollableView
 		InvalidateStyle()
 	End
 	
+	#rem monkeydoc WordWrap flag.
+	#end
+	Property WordWrap:Bool()
+	
+		Return _wordWrap
+	
+	Setter( wordWrap:Bool )
+	
+		_wordWrap=wordWrap
+		
+		InvalidateStyle()
+	End
+	
 	#rem monkeydoc Cursor character index.
 	#end
 	Property Cursor:Int()
@@ -377,19 +417,12 @@ Class TextView Extends ScrollableView
 	
 		Return _anchor
 	End
-
-	#rem monkeydoc Cursor column.
+	
+	#rem monkeydoc Line the cursor is on.
 	#end
-	Property CursorColumn:Int()
+	Property CursorLine:Int()
 	
-		Return Column( _cursor )
-	End
-	
-	#rem monkeydoc Cursor row.
-	#end
-	Property CursorRow:Int()
-	
-		Return Row( _cursor )
+		Return _doc.FindLine( _cursor )
 	End
 	
 	#rem monkeydoc Cursor rect.
@@ -406,13 +439,23 @@ Class TextView Extends ScrollableView
 		Return _charw
 	End
 	
-	#rem monkeydoc Line height.
+	#rem monkeydoc Approximate character height.
+	#end
+	Property CharHeight:Int()
+	
+		Return _charh
+	End
+	
+	#rem monkeydoc Approximate line height.
+	
+	Deprecated! Use [[LineRect]] instead to properly deal with word wrap.
+	
 	#end
 	Property LineHeight:Int()
 	
 		Return _charh
 	End
-
+	
 	#rem monkeydoc True if undo available.
 	#end	
 	Property CanUndo:Bool()
@@ -448,6 +491,119 @@ Class TextView Extends ScrollableView
 		Return Not _readOnly And Not App.ClipboardTextEmpty
 	End
 	
+	#rem monkeydoc Returns the rect containing a character at a given index.
+	#end
+	Method CharRect:Recti( index:Int )
+	
+		Local line:=_doc.FindLine( index )
+		Local text:=_doc.Text
+		
+		Local i0:=_doc.StartOfLine( line )
+		Local eol:=_doc.EndOfLine( line )
+		
+		Local x0:=0,y0:=_lines[line].rect.Top
+		
+		While i0<eol
+		
+			Local w:=WordWidth( text,i0,eol,x0 )
+			
+			If x0+w>_wrapw	'-_charw
+				y0+=_charh
+				x0=0
+			Endif
+			
+			Local l:=WordLength( text,i0,eol )
+
+			If index<i0+l
+				x0+=WordWidth( text,i0,index,x0 )
+				Exit
+			Endif
+			
+			x0+=w
+			i0+=l
+		
+		Wend
+		
+		Local w:=_charw
+		If i0<eol And text[i0]>32 w=_font.TextWidth( text.Slice( i0,i0+1 ) )
+		
+		Return New Recti( x0,y0,x0+w,y0+_charh )
+	End
+	
+	#rem monkeydoc Returns the index of the character nearest to a given point.
+	#end
+	Method CharAtPoint:Int( p:Vec2i )
+	
+		Local line:=LineAtPoint( p )
+		Local text:=_doc.Text
+
+		Local i0:=_doc.StartOfLine( line )
+		Local eol:=_doc.EndOfLine( line )
+		
+		Local x0:=0,y0:=_lines[line].rect.Top+_charh
+		
+		While i0<eol
+		
+			Local w:=WordWidth( text,i0,eol,x0 )
+			
+			If x0+w>_wrapw	'-_charw
+				If p.y<y0 Exit
+				y0+=_charh
+				x0=0
+			Endif
+			
+			Local l:=WordLength( text,i0,eol )
+			
+			If p.x<x0+w And p.y<y0 
+				For Local i:=0 Until l
+					x0+=WordWidth( text,i0,i0+1,x0 )
+					If p.x<x0 Exit
+					i0+=1
+				Next
+				Exit
+			Endif
+			
+			x0+=w
+			i0+=l
+			
+		Wend
+		
+		Return i0
+	
+	End
+	
+	#rem monkedoc Returns the index of the line nearest to a given point.
+	#end
+	Method LineAtPoint:Int( p:Vec2i )
+	
+		If p.y<=0 Return 0
+		If p.y>=_lines.Top.rect.Top Return _lines.Length-1
+		
+		Local min:=0,max:=_lines.Length-1
+		
+		Repeat
+			Local line:=(min+max)/2
+			If p.y>=_lines[line].rect.Bottom
+				min=line+1
+			Else If max-min>1
+				max=line
+			Else
+				Return min
+			Endif
+		Forever
+
+		Return 0		
+	End
+
+	#rem monkeydoc Gets the bounding rect for a line.
+	#end
+	Method LineRect:Recti( line:Int )
+	
+		If line>=0 And line<_lines.Length Return _lines[line].rect
+		
+		Return New Recti
+	End
+	
 	#rem monkeydoc Clears all text.
 	#end
 	Method Clear()
@@ -458,13 +614,11 @@ Class TextView Extends ScrollableView
 	#rem monkeydoc Move cursor to line.
 	#end
 	Method GotoLine( line:Int )
-	
 		_anchor=_doc.StartOfLine( line )
 		_cursor=_anchor
-		
 		UpdateCursor()
 	End
-	
+
 	#rem monkeydoc Selects text in a range.
 	#end
 	Method SelectText( anchor:Int,cursor:Int )
@@ -479,13 +633,8 @@ Class TextView Extends ScrollableView
 	#end
 	Method AppendText( text:String )
 	
-'		Local anchor:=_anchor
-'		Local cursor:=_cursor
-		
 		SelectText( _doc.TextLength,_doc.TextLength )
 		ReplaceText( text )
-		
-'		SelectText( anchor,cursor )
 	End
 	
 	#rem monkeydoc Replaces current selection.
@@ -603,169 +752,6 @@ Class TextView Extends ScrollableView
 		If text ReplaceText( text )
 	End
 	
-	Private
-	
-	Class UndoOp
-		Field text:String
-		Field anchor:Int
-		Field cursor:Int
-	End
-	
-	Field _doc:TextDocument
-	Field _tabStop:Int=4
-	Field _tabSpaces:String="    "
-	Field _cursorColor:Color=New Color( 0,.5,1,1 )
-	Field _selColor:Color=New Color( 1,1,1,.25 )
-	Field _blockCursor:Bool=True
-	
-#if __HOSTOS__="macos"	
-	Field _macosMode:Bool=True
-#else
-	Field _macosMode:Bool=False
-#endif
-	
-	Field _textColors:Color[]
-	
-	Field _anchor:Int
-	Field _cursor:Int
-	
-	Field _font:Font
-	Field _charw:Int
-	Field _charh:Int
-	Field _tabw:Int
-	
-	Field _cursorRect:Recti
-	Field _columnX:Int
-	
-	Field _undos:=New Stack<UndoOp>
-	Field _redos:=New Stack<UndoOp>
-	
-	Field _dragging:Bool
-	
-	Field _readOnly:Bool
-	
-	Method Row:Int( index:Int )
-		Return _doc.FindLine( index )
-	End
-	
-	Method Column:Int( index:Int )
-		Return index-_doc.StartOfLine( _doc.FindLine( index ) )
-	End
-	
-	Method UpdateCursor()
-	
-		ValidateStyle()
-	
-		Local rect:=MakeCursorRect( _cursor )
-		
-		EnsureVisible( rect )
-			
-		If rect<>_cursorRect
-		
-			_cursorRect=rect
-			_columnX=rect.X
-			
-			CursorMoved()
-		Endif
-		
-		RequestRender()
-	End
-	
-	Method MakeCursorRect:Recti( cursor:Int )
-	
-		ValidateStyle()
-		
-		Local line:=_doc.FindLine( cursor )
-		Local text:=_doc.GetLine( line )
-		
-		Local x:=0.0,i0:=0,e:=cursor-_doc.StartOfLine( line )
-		
-		While i0<e
-		
-			Local i1:=text.Find( "~t",i0 )
-			If i1=-1 i1=e
-			
-			If i1>i0
-				If i1>e i1=e
-				x+=_font.TextWidth( text.Slice( i0,i1 ) )
-				If i1=e Exit
-			Endif
-			
-			x=Int( (x+_tabw)/_tabw ) * _tabw
-			i0=i1+1
-			
-		Wend
-		
-		Local w:=_charw
-		
-		If e<text.Length
-			If text[e]=9
-'				w=Int( (x+_tabw)/_tabw ) * _tabw-x
-			Else
-				w=_font.TextWidth( text.Slice( e,e+1 ) )
-			Endif
-		Endif
-		
-		Local y:=line*_charh
-		
-		Return New Recti( x,y,x+w,y+_charh )
-	End
-	
-	Method PointXToIndex:Int( px:Int,line:Int )
-	
-		ValidateStyle()
-
-		Local text:=_doc.GetLine( line )
-		Local sol:=_doc.StartOfLine( line )
-		
-		Local x:=0.0,i0:=0,e:=text.Length
-		
-		While i0<e
-		
-			Local i1:=text.Find( "~t",i0 )
-			If i1=-1 i1=e
-			
-			If i1>i0
-				For Local i:=i0 Until i1
-					x+=_font.TextWidth( text.Slice( i,i+1 ) )
-					If px<x Return sol+i
-				Next
-				If i1=e Exit
-			Endif
-			
-			x=Int( (x+_tabw)/_tabw ) * _tabw
-			If px<x Return sol+i0
-			
-			i0=i1+1
-		Wend
-		
-		Return sol+e
-	
-	End
-	
-	Method PointToIndex:Int( p:Vec2i )
-	
-		If p.y<0 Return 0
-		
-		Local line:=p.y/_charh
-		If line>_doc.NumLines Return _doc.TextLength
-		
-		Return PointXToIndex( p.x,line )
-	End
-	
-	Method MoveLine( delta:Int )
-	
-		Local line:=Clamp( Row( _cursor )+delta,0,_doc.NumLines-1 )
-		
-		_cursor=PointXToIndex( _columnX,line )
-		
-		Local x:=_columnX
-		
-		UpdateCursor()
-		
-		_columnX=x
-	End
-	
 	Protected
 	
 	Method OnValidateStyle() Override
@@ -779,26 +765,46 @@ Class TextView Extends ScrollableView
 		
 		_tabw=_charw*_tabStop
 		
-		UpdateCursor()
+		UpdateLines()
 	End
 	
 	Method OnMeasureContent:Vec2i() Override
-
-		Return New Vec2i( 320*_charw,_doc.NumLines*_charh )
-'		Return New Vec2i( 160,_doc.NumLines*_charh )
+	
+		If _wordWrap Return New Vec2i( 0,0 )
+		
+		If _wrapw<>$7fffffff
+			_wrapw=$7fffffff
+			UpdateLines()
+		Endif
+		
+		Return New Vec2i( _lines.Top.maxWidth,_lines.Top.rect.Bottom )
 	End
 
-	Method OnRenderContent( canvas:Canvas ) Override
+	Method OnMeasureContent2:Vec2i( size:Vec2i ) Override
 	
+		If Not _wordWrap Return New Vec2i( 0,0 )
+		
+		If _wrapw<>size.x
+			_wrapw=size.x
+			UpdateLines()
+		Endif
+				
+		Return New Vec2i( _lines.Top.maxWidth,_lines.Top.rect.Bottom )
+	End
+	
+	Method OnRenderContent( canvas:Canvas ) Override
+
+		If App.KeyView=Self And Not _blinkTimer RestartBlinkTimer()
+		
 		Local clip:=VisibleRect
 		
-		Local firstVisLine:=Max( clip.Top/_charh,0 )
-		Local lastVisLine:=Min( (clip.Bottom-1)/_charh+1,_doc.NumLines )
+		Local firstLine:=LineAtPoint( New Vec2i( 0,clip.Top ) ) 
+		Local lastLine:=LineAtPoint( New Vec2i( 0,clip.Bottom-1 ) )+1
 		
 		If _cursor<>_anchor
 		
-			Local min:=MakeCursorRect( Min( _anchor,_cursor ) )
-			Local max:=MakeCursorRect( Max( _anchor,_cursor ) )
+			Local min:=CharRect( Min( _anchor,_cursor ) )
+			Local max:=CharRect( Max( _anchor,_cursor ) )
 			
 			canvas.Color=_selColor
 			
@@ -810,7 +816,7 @@ Class TextView Extends ScrollableView
 				canvas.DrawRect( 0,max.Top,max.Left,max.Height )
 			Endif
 			
-		Else If Not _readOnly And App.KeyView=Self
+		Else If Not _readOnly And App.KeyView=Self And _blinkOn
 		
 			canvas.Color=_cursorColor
 			
@@ -826,58 +832,9 @@ Class TextView Extends ScrollableView
 
 		_textColors[0]=RenderStyle.TextColor
 		
-		For Local line:=firstVisLine Until lastVisLine
+		For Local line:=firstLine Until lastLine
 		
-			Local sol:=_doc.StartOfLine( line )
-			Local eol:=_doc.EndOfLine( line )
-
-			Local text:=_doc.Text.Slice( sol,eol )
-			Local colors:=_doc.Colors
-			
-			Local x:=0,y:=line*_charh,i0:=0
-			
-			While i0<text.Length
-			
-				Local i1:=text.Find( "~t",i0 )
-				If i1=-1 i1=text.Length
-				
-				If i1>i0
-					
-					Local color:=colors[sol+i0]
-					Local start:=i0
-					
-					Repeat
-						
-						While i0<i1 And colors[sol+i0]=color
-							i0+=1
-						Wend
-						
-						If i0>start
-							If color<0 Or color>=_textColors.Length color=0
-							canvas.Color=_textColors[color]
-							
-							Local t:=text.Slice( start,i0 )
-							canvas.DrawText( t,x,y )
-							x+=Style.Font.TextWidth( t )
-						Endif
-						
-						If i0=i1 Exit
-						
-						color=colors[sol+i0]
-						start=i0
-						i0+=1
-						
-					Forever
-				
-					If i1=text.Length Exit
-					
-				Endif
-				
-				x=Int( (x+_tabw) / _tabw ) * _tabw
-				
-				i0=i1+1
-			
-			Wend
+			RenderLine( canvas,line )
 			
 		Next
 		
@@ -952,7 +909,7 @@ Class TextView Extends ScrollableView
 			ReplaceText( "~n" )
 				
 			'auto indent!
-			Local line:=CursorRow
+			Local line:=CursorLine
 			If line>0
 				
 				Local ptext:=_doc.GetLine( line-1 )
@@ -970,26 +927,22 @@ Class TextView Extends ScrollableView
 				
 		Case Key.Left
 			
-			If _cursor 
-				_cursor-=1
-				UpdateCursor()
-			Endif
+			If _cursor _cursor-=1
+			UpdateCursor()
 				
 		Case Key.Right
 			
-			If _cursor<_doc.Text.Length
-				_cursor+=1
-				UpdateCursor()
-			Endif
+			If _cursor<_doc.Text.Length _cursor+=1
+			UpdateCursor()
 				
 		Case Key.Home
 			
-			_cursor=_doc.StartOfLine( Row( _cursor ) )
+			_cursor=_doc.StartOfLine( CursorLine )
 			UpdateCursor()
 				
 		Case Key.KeyEnd
 			
-			_cursor=_doc.EndOfLine( Row( _cursor ) )
+			_cursor=_doc.EndOfLine( CursorLine )
 			UpdateCursor()
 
 		Case Key.Up
@@ -1018,7 +971,7 @@ Class TextView Extends ScrollableView
 		Return True
 	End
 	
-	Method OnControlKeyDown:bool( key:Key )
+	Method OnControlKeyDown:bool( key:Key ) Virtual
 
 		Select key
 		Case Key.A
@@ -1044,7 +997,6 @@ Class TextView Extends ScrollableView
 		End
 		
 		Return False
-		
 	End
 	
 	Method OnKeyEvent( event:KeyEvent ) Override
@@ -1095,9 +1047,9 @@ Class TextView Extends ScrollableView
 
 					Select event.Key
 					Case Key.Home
-					
+
 						OnControlKeyDown( Key.Home )
-						
+
 					Case Key.KeyEnd
 					
 						OnControlKeyDown( Key.KeyEnd )
@@ -1112,10 +1064,8 @@ Class TextView Extends ScrollableView
 			Else
 			
 				If event.Modifiers & Modifier.Control
-				
 					If Not OnControlKeyDown( event.Key ) Return
 				Else
-				
 					If Not OnKeyDown( event.Key,event.Modifiers ) Return
 				Endif
 			
@@ -1150,8 +1100,9 @@ Class TextView Extends ScrollableView
 			
 		Case EventType.MouseClick
 		
-			_cursor=PointToIndex( event.Location )
-			_anchor=_cursor
+			_cursor=CharAtPoint( event.Location )
+			
+			If Not (event.Modifiers & Modifier.Shift) _anchor=_cursor
 			
 			_dragging=True
 			
@@ -1167,7 +1118,7 @@ Class TextView Extends ScrollableView
 		
 			If _dragging
 			
-				_cursor=PointToIndex( event.Location )
+				_cursor=CharAtPoint( event.Location )
 
 				UpdateCursor()
 				
@@ -1181,10 +1132,321 @@ Class TextView Extends ScrollableView
 		event.Eat()
 	End
 	
-'	Method OnKeyViewChanged( oldKeyView:View,newKeyView:View ) Override
+	Private
 	
-'		If newKeyView=Self UpdateCursor()
+	Struct Line
+		Field rect:Recti
+		Field maxWidth:Int
+	End
+	
+	Class UndoOp
+		Field text:String
+		Field anchor:Int
+		Field cursor:Int
+	End
+	
+	Field _doc:TextDocument
+	Field _lines:=New Stack<Line>
+	Field _tabStop:Int=4
+	Field _tabSpaces:String="    "
+	Field _cursorColor:Color=New Color( 0,.5,1,1 )
+	Field _selColor:Color=New Color( 1,1,1,.25 )
+	Field _blockCursor:Bool=True
+	Field _blinkRate:Float=0
+	Field _blinkOn:Bool=True
+	Field _blinkTimer:Timer
+	
+#if __HOSTOS__="macos"	
+	Field _macosMode:Bool=True
+#else
+	Field _macosMode:Bool=False
+#endif
+	
+	Field _textColors:Color[]
+	
+	Field _anchor:Int
+	Field _cursor:Int
+	
+	Field _font:Font
+	Field _charw:Int
+	Field _charh:Int
+	Field _tabw:Int
+	
+	Field _wordWrap:Bool=False
+	Field _wrapw:Int=$7fffffff
+	
+	Field _cursorRect:Recti
+	Field _vcursor:Vec2i
+	
+	Field _undos:=New Stack<UndoOp>
+	Field _redos:=New Stack<UndoOp>
+	
+	Field _dragging:Bool
+	
+	Field _readOnly:Bool
+	
+	Method CancelBlinkTimer()
+		If Not _blinkTimer Return
+		_blinkTimer.Cancel()
+		_blinkTimer=Null
+		_blinkOn=True
+	End
+	
+	Method RestartBlinkTimer()
+		CancelBlinkTimer()
+		If Not _blinkRate Or App.KeyView<>Self Return
+		_blinkTimer=New Timer( _blinkRate,Lambda()
+			If App.KeyView<>Self Or Not _blinkRate
+				CancelBlinkTimer()
+				Return
+			Endif
+			_blinkOn=Not _blinkOn
+			RequestRender()
+		End )
+	End
+	
+	Method UpdateCursor()
+	
+		Local rect:=CharRect( _cursor )
+		
+		EnsureVisible( rect )
 
-'	End
+		_vcursor=rect.Origin
+			
+		If rect<>_cursorRect
+		
+			RestartBlinkTimer()
+		
+			_cursorRect=rect
+			
+			CursorMoved()
+		Endif
+		
+		RequestRender()
+	End
+	
+	Method WordLength:Int( text:String,i0:Int,eol:Int )
+
+		Local i1:=i0
+		
+		If text[i1]<=32
+			While i1<eol And text[i1]<=32
+				i1+=1
+			Wend
+		Else
+			While i1<eol And text[i1]>32
+				i1+=1
+			Wend
+		Endif
+		
+		Return i1-i0
+	End
+	
+	Method WordWidth:Int( text:String,i0:Int,eol:Int,x0:Int )
+	
+		Local i1:=i0,x1:=x0
+		
+		If text[i0]<=32
+
+			While i1<eol And text[i1]<=32
+
+				If text[i1]=9
+					x1=Int( (x1+_tabw)/_tabw ) * _tabw
+				Else
+					x1+=_charw
+				Endif
+
+				i1+=1
+			Wend
+		Else
+			While i1<eol And text[i1]>32
+				i1+=1
+			Wend
+			
+			x1+=_font.TextWidth( text.Slice( i0,i1 ) )
+		Endif
+		
+		Return x1-x0
+	End
+	
+	Method MeasureLine:Vec2i( line:Int )
+	
+		Local text:=_doc.Text
+		Local i0:=_doc.StartOfLine( line )
+		Local eol:=_doc.EndOfLine( line )
+		
+		Local x0:=0,y0:=_charh,maxw:=0
+
+		While i0<eol
+				
+			Local w:=WordWidth( text,i0,eol,x0 )
+			
+			If x0+w>_wrapw	'-_charw
+				maxw=Max( maxw,x0 )
+				y0+=_charh
+				x0=0
+			Endif
+			x0+=w
+			
+			i0+=WordLength( text,i0,eol )
+		Wend
+		
+		maxw=Max( maxw,x0 )
+
+		Return New Vec2i( maxw,y0 )
+	End
+	
+	Method MoveLine( delta:Int )
+	
+		Local vcursor:=_vcursor
+		
+		_vcursor.y+=delta * _charh
+		
+		_cursor=CharAtPoint( _vcursor )
+		
+		UpdateCursor()
+		
+		_vcursor.x=vcursor.x
+	End
+	
+	Method UpdateLines()
+	
+		Local liney:=0,maxWidth:=0
+			
+		For Local i:=0 Until _lines.Length
+			
+			Local size:=MeasureLine( i )
+				
+			maxWidth=Max( maxWidth,size.x )
+				
+			_lines.Data[i].maxWidth=maxWidth
+			_lines.Data[i].rect=New Recti( 0,liney,size.x,liney+size.y )
+				
+			liney+=size.y
+			
+		Next
+			
+		UpdateCursor()
+	End
+	
+	Method RenderLine( canvas:Canvas,line:Int )
+	
+		Local text:=_doc.Text
+		Local colors:=_doc.Colors
+		
+		Local i0:=_doc.StartOfLine( line )
+		Local eol:=_doc.EndOfLine( line )
+		
+		Local x0:=0,y0:=_lines[line].rect.Top
+		
+		While i0<eol
+		
+			Local w:=WordWidth( text,i0,eol,x0 )
+			Local l:=WordLength( text,i0,eol )
+				
+			If x0+w>_wrapw	'-_charw
+				y0+=_charh
+				x0=0
+			Endif
+			
+			If text[i0]<=32
+				x0+=w
+				i0+=l
+				Continue
+			Endif
+			
+			Local i1:=i0+l
+			
+			While i0<i1
+			
+				Local start:=i0
+				Local color:=colors[start]
+				i0+=1
+			
+				While i0<i1 And colors[i0]=color
+					i0+=1
+				Wend
+				
+				If color<0 Or color>=_textColors.Length color=0
+
+				canvas.Color=_textColors[color]
+				
+				Local str:=text.Slice( start,i0 )
+				
+				canvas.DrawText( str,x0,y0 )
+				
+				x0+=_font.TextWidth( str )
+			Wend
+			
+		Wend
+		
+	End
+	
+	Method LinesModified( first:Int,removed:Int,inserted:Int )
+	
+'		Print "Lines modified: first="+first+", removed="+removed+", inserted="+inserted+", _charh="+_charh
+
+		ValidateStyle()
+
+		Local last:=first+inserted+1
+		
+		Local dlines:=inserted-removed
+		
+		If dlines>=0
+		
+			_lines.Resize( _lines.Length+dlines )
+
+			Local i:=_lines.Length
+			While i>last
+				i-=1
+				_lines[i]=_lines[i-dlines]
+			Wend
+		
+		Endif
+
+		Local liney:=0,maxWidth:=0
+		If first
+			liney=_lines[first-1].rect.Bottom
+			maxWidth=_lines[first-1].maxWidth
+		Endif
+		
+		For Local i:=first Until last
+		
+			Local size:=MeasureLine( i )
+			
+			maxWidth=Max( maxWidth,size.x )
+			
+			_lines.Data[i].maxWidth=maxWidth
+			_lines.Data[i].rect=New Recti( 0,liney,size.x,liney+size.y )
+			
+			liney+=size.y
+		Next
+		
+		If dlines<0
+
+			Local i:=last
+			While i<_lines.Length+dlines
+				_lines[i]=_lines[i-dlines]
+				i+=1
+			Wend
+
+			_lines.Resize( _lines.Length+dlines )
+		Endif
+		
+		For Local i:=last Until _lines.Length
+		
+			Local size:=_lines[i].rect.Size
+			
+			maxWidth=Max( maxWidth,size.x )
+			
+			_lines.Data[i].maxWidth=maxWidth
+			_lines.Data[i].rect=New Recti( 0,liney,size.x,liney+size.y )
+			
+			liney+=size.y
+		Next
+		
+'		Print "Document width="+_lines.Top.maxWidth+", height="+_lines.Top.rect.Bottom
+		
+	End
 	
 End

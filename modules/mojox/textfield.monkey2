@@ -111,7 +111,7 @@ Class TextField Extends TextView
 
 	Method OnMeasureContent:Vec2i() Override
 	
-		Return New Vec2i( CharWidth*_maxLength,LineHeight )
+		Return New Vec2i( CharWidth*_maxLength,CharHeight )
 	End
 
 	Private
