@@ -25,11 +25,13 @@ __MANPAGES__/
 
 /modules/module-manager/downloads/*.zip
 
+/src/Ted2GO
 /modules/cmark
 /modules/lua
 /modules/wdw-game2d
 /modules/portmidi
 /modules/png2polygon
+/modules/linq
 
 /modules/module-manager/backups
 

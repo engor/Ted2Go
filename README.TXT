@@ -1,8 +1,7 @@
 
 ***** Welcome to Monkey2! *****
 
-W A R N I N G ! The master branch is super-volatile. Grabbing the most recently tagged version is
-recommended if you just want to give monkey2 a try.
+W A R N I N G ! The master branch is super-volatile. Grabbing the most recently tagged version is recommended if you just want to give monkey2 a try.
 
 
 ***** Building monkey2 on Windows *****
@@ -25,8 +24,7 @@ When installing, you should select 'i686' for 'architecture', 'posix' for 'threa
 
 4) If all went well, you should end up with a 'Monkey2 (Windows)' exe in the monkey2 directory.
 
-5) You should now be able to build and run monkey2 apps. There is a simple 'hello-world.monkey2' test in the monkey2 
-directory, and some simple demos in the '/bananas' directory.
+5) You should now be able to build and run monkey2 apps. There is a simple 'hello-world.monkey2' test in the monkey2 directory, and some simple demos in the '/bananas' directory.
 
 
 ***** Building monkey2 on MacOS/Linux *****
@@ -39,8 +37,7 @@ directory, and some simple demos in the '/bananas' directory.
 
 4) If all went well, you should end up with a 'Monkey2 (...)' app in the monkey2 directory.
 
-5) You should now be able to build and run monkey2 apps. There is a simple 'hello-world.monkey2' test in the monkey2
-directory, and some simple demos in the '/bananas' directory.
+5) You should now be able to build and run monkey2 apps. There is a simple 'hello-world.monkey2' test in the monkey2 directory, and some simple demos in the '/bananas' directory.
 
 
 ***** More information *****
