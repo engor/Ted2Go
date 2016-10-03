@@ -19,10 +19,9 @@ namespace bbFiber{
 		int id;
 				
 		unsigned char *stack;
-		bbGCFiber *gcFiber;
 		bbDBContext *dbContext;
+		bbGCFiber *gcFiber;
 		
-		Entry entry;
 		fcontext_t fcontext;
 		fcontext_t fcontext2;
 	};
@@ -130,7 +129,7 @@ namespace bbFiber{
 		
 		setCurrFiber( fiber );
 		
-		fiber->entry();
+		fiber->gcFiber->entry();
 		
 		fiber->gcFiber->unlink();
 		
@@ -139,15 +138,40 @@ namespace bbFiber{
 	
 	// ***** API *****
 
+	// Currently unsafe!
+	//
+	// gcFiber->entry will not be gc_marked until fiber is running...
+	//
 	int createFiber( Entry entry ){
 	
 		Fiber *fiber=allocFiber();
 		if( !fiber ) return 0;
 		
-		fiber->entry=entry;
+		fiber->gcFiber->entry=entry;
 		fiber->fcontext=make_fcontext( fiber->stack+STACK_SIZE,STACK_SIZE,fiberEntry );
 		
 		return fiber->id;
+	}
+	
+	// Safe!
+	//
+	int startFiber( Entry entry ){
+
+		Fiber *fiber=allocFiber();
+		if( !fiber ) return 0;
+
+		int id=fiber->id;
+		
+		fiber->gcFiber->entry=entry;
+		fiber->fcontext=make_fcontext( fiber->stack+STACK_SIZE,STACK_SIZE,fiberEntry );
+		
+		Fiber *curr=currFiber;
+
+		fiber->fcontext=jump_fcontext( fiber->fcontext,fiber ).fcontext;
+
+		setCurrFiber( curr );
+		
+		return id;
 	}
 	
 	void resumeFiber( int id ){
@@ -155,7 +179,7 @@ namespace bbFiber{
 		Fiber *fiber=getFiber( id );
 		if( !fiber ){
 			//
-			// could signal a semaphore...
+			// could signal a semaphore...?
 			//
 			bbDB::error( "Invalid fiber id" );
 			return;
@@ -172,7 +196,7 @@ namespace bbFiber{
 	
 		if( currFiber==mainFiber ){
 			//
-			// could wait on a semaphore...
+			// could wait on a semaphore...?
 			//
 			bbDB::error( "Can't suspend main fiber" );
 			return;
@@ -204,15 +228,6 @@ namespace bbFiber{
 		event.post( seconds );
 		
 		suspendCurrentFiber();
-	}
-	
-	int startFiber( bbFunction<void()> entry ){
-	
-		int id=createFiber( entry );
-		
-		if( id ) resumeFiber( id );
-		
-		return id;
 	}
 	
 	void terminateFiber( int id ){

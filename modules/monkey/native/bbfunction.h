@@ -3,7 +3,7 @@
 #define BB_FUNCTION_H
 
 #include "bbtypes.h"
-#include "bbgc.h"
+//#include "bbgc.h"
 #include "bbdebug.h"
 
 template<class T> class bbFunction;

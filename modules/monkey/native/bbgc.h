@@ -5,6 +5,7 @@
 #include "bbstd.h"
 #include "bbtypes.h"
 #include "bbmemory.h"
+#include "bbfunction.h"
 
 //how much to allocate before a sweep occurs
 //#define BBGC_TRIGGER 0
@@ -92,6 +93,7 @@ struct bbGCFiber{
 	bbGCFrame *frames;
 	bbGCNode *ctoring;
 	bbGCTmp *tmps;
+	bbFunction<void()> entry;
 	
 	bbGCFiber():succ( this ),pred( this ),frames( nullptr ),ctoring( nullptr ),tmps( nullptr ){
 	}

@@ -142,6 +142,8 @@ namespace bbGC{
 		bbGCFiber *fiber=fibers;
 		
 		for(;;){
+		
+			bbGCMark( fiber->entry );
 
 			for( bbGCFrame *frame=fiber->frames;frame;frame=frame->succ ){
 			
