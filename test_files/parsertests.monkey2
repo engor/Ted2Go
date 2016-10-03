@@ -43,7 +43,9 @@ Class TestClass
 		End, 2.8)
 		
 		LambdaFn("", Lambda( aaa:Int,bbb:Int)
-		
+			
+			Local d := 1.15
+			
 		End, 2.8)
 		
 	End

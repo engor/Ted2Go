@@ -307,11 +307,54 @@ Class CodeDocument Extends Ted2Document
 		FillTreeView()
 	End
 	
+	Field _expands := New StringMap<Bool>
+	Method StoreTreeExpands()
+	
+		_expands.Clear()
+		StoreNodeExpand( _treeView.RootNode )
+		
+	End
+	
+	Method StoreNodeExpand(node:TreeView.Node)
+	
+		Local key := GetNodePath(node)
+		_expands[key] = node.Expanded
+		
+		If node.Children = Null Return
+		
+		For Local i := Eachin node.Children
+			StoreNodeExpand(i)
+		Next
+		
+	End
+	
+	Method RestoreNodeExpand(node:TreeView.Node)
+	
+		Local key := GetNodePath(node)
+		node.Expanded = _expands[key]
+		
+	End
+	
+	Method GetNodePath:String(node:TreeView.Node)
+	
+		Local s := node.Text
+		Local i := node.Parent
+		While i <> Null
+			s = i.Text+"\"+s
+			i = i.Parent
+		Wend
+		Return s
+		
+	End
+	
 	Method FillTreeView()
 	
+		StoreTreeExpands()
+		
 		Local stack := New Stack<TreeView.Node>
 		Local parser := ParsersManager.Get(FileType)
 		Local node := _treeView.RootNode
+		
 		_treeView.RootNodeVisible = False
 		node.Expanded = True
 		node.RemoveAllChildren()
@@ -336,12 +379,16 @@ Class CodeDocument Extends Ted2Document
 		parser.RefineRawType(item) 'refine all visible items
 		
 		Local n := New CodeTreeNode(item, node)
-				
-		If item.Children <> Null
-			For Local i := Eachin item.Children
-				AddTreeItem(i, n, parser)
-			End
-		Endif
+		
+		' restore expand state
+		RestoreNodeExpand(n)
+		
+		If item.Children = Null Return
+		
+		For Local i := Eachin item.Children
+			AddTreeItem(i, n, parser)
+		End
+		
 	End
 	
 End

@@ -293,7 +293,14 @@ Class AutocompleteDialog Extends DialogExt
 	End
 	
 	Method IsStaticMember:Bool(item:ICodeItem, checkPublic:Bool=True)
-		Return (item.Kind = CodeItemKind.Function_ Or item.Kind = CodeItemKind.Global_ Or item.Kind = CodeItemKind.Const_) And item.Access = AccessMode.Public_
+		
+		If item.Access <> AccessMode.Public_ Return False
+		Select item.Kind
+		Case CodeItemKind.Function_, CodeItemKind.Global_, CodeItemKind.Const_, CodeItemKind.Class_, CodeItemKind.Enum_, CodeItemKind.Struct_
+			Return True
+		End
+		Return False
+		
 	End
 	
 	Method SortResults(list:List<ListViewItem>)
