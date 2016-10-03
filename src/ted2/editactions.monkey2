@@ -9,6 +9,7 @@ Class EditActions
 	Field copy:Action
 	Field paste:Action
 	Field selectAll:Action
+	Field wordWrap:Action
 	
 	Method New( docs:DocumentManager )
 	
@@ -31,6 +32,9 @@ Class EditActions
 
 		selectAll=New Action( "Select all" )
 		selectAll.Triggered=OnSelectAll
+		
+		wordWrap=New Action( "Toggle word wrap" )
+		wordWrap.Triggered=OnWordWrap
 	End
 	
 	Method Update()
@@ -89,6 +93,13 @@ Class EditActions
 		Local tv:=Cast<TextView>( App.KeyView )
 		
 		If tv tv.SelectAll()
+	End
+	
+	Method OnWordWrap()
+	
+		Local tv:=Cast<TextView>( App.KeyView )
+		
+		If tv tv.WordWrap=Not tv.WordWrap
 	End
 
 End

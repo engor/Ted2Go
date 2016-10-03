@@ -228,7 +228,10 @@ Class Monkey2DocumentView Extends Ted2TextView
 			canvas.Color=New Color( .5,0,0 )
 			
 			For Local err:=Eachin _doc._errors
-				canvas.DrawRect( 0,err.line*LineHeight,Width,LineHeight )
+				Local r:=LineRect( err.line )
+				r.min.x=0
+				r.max.x=Width
+				canvas.DrawRect( r )
 			Next
 			
 		Endif
@@ -239,8 +242,10 @@ Class Monkey2DocumentView Extends Ted2TextView
 			If line<0 Or line>=Document.NumLines Return
 			
 			canvas.Color=New Color( 0,.5,0 )
-			canvas.DrawRect( 0,line*LineHeight,Width,LineHeight )
-			
+			Local r:=LineRect( line )
+			r.min.x=0
+			r.max.x=Width
+			canvas.DrawRect( r )
 		Endif
 		
 		canvas.Color=color

@@ -91,15 +91,17 @@ Class EditProductDialog Extends Dialog
 		
 		ContentView=_table
 		
-		AddAction( "Okay" ).Triggered=Lambda()
-
+		Local okay:=AddAction( "Okay" )
+		okay.Triggered=Lambda()
 			_result.Set( True )
 		End
-		
-		AddAction( "Cancel"  ).Triggered=lambda()
-			
+		SetKeyAction( Key.Enter,okay )
+
+		Local cancel:=AddAction( "Cancel"  )
+		cancel.Triggered=lambda()
 			_result.Set( False )
 		End
+		SetKeyAction( Key.Escape,cancel )
 	End
 	
 	Method Run:Bool()
