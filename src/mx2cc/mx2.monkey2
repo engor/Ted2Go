@@ -39,10 +39,9 @@ Namespace mx2
 
 Using std
 Using std.stringio
-Using std.chartype
 Using std.filesystem
 Using std.collections
-Using lib.c
+Using libc
 
 ' Messy, but to update version:
 '

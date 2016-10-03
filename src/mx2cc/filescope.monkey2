@@ -24,7 +24,7 @@ Class FileScope Extends Scope
 		outer=nmspace
 		
 		For Local member:=Eachin fdecl.members
-
+		
 			Local node:=member.ToNode( Self )
 			
 			If member.IsExtension
@@ -66,10 +66,8 @@ Class FileScope Extends Scope
 		Next
 	End
 	
-	Method Semant()
+	Method SemantUsings()
 	
-'		Print "Semating:"+fdecl.path
-
 		If nmspace<>Builder.monkeyNamespace
 			UsingAll( Builder.monkeyNamespace )
 		Endif
@@ -82,20 +80,23 @@ Class FileScope Extends Scope
 			Endif
 		
 			If use.EndsWith( ".." )
-				Local nmspace:=Builder.GetNamespace( use.Slice( 0,-2 ) )
+				Local nmspace:=Builder.GetNamespace( use.Slice( 0,-2 ),True )
 				UsingAll( nmspace )
 				Continue
 			Endif
 		
 			If use.EndsWith( ".*" )
-				Local nmspace:=Builder.GetNamespace( use.Slice( 0,-2 ) )
+				Local nmspace:=Builder.GetNamespace( use.Slice( 0,-2 ),True )
 				UsingInner( nmspace )
 				Continue
 			Endif
 			
-			Local nmspace:=Builder.GetNamespace( use )
+			Local nmspace:=Builder.GetNamespace( use,True )
 			If nmspace UsingNamespace( nmspace )
 		Next
+	End
+
+	Method Semant()
 	
 		For Local node:=Eachin toSemant
 			Try			
@@ -125,7 +126,7 @@ Class FileScope Extends Scope
 	End
 	
 	Method FindType:Type( ident:String ) Override
-	
+
 		'Search in namespace hierarchy
 		'
 		Local type:=Super.FindType( ident )

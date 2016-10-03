@@ -277,6 +277,19 @@ Class BuilderInstance
 			
 			For Local fscope:=Eachin module.fileScopes
 			
+				PNode.semanting.Push( fscope.fdecl )
+				
+				Try
+					fscope.SemantUsings()
+				catch ex:SemantEx
+				End
+				
+				PNode.semanting.Pop()
+				
+			Next
+			
+			For Local fscope:=Eachin module.fileScopes
+			
 				If opts.verbose>0 Print "Semanting "+fscope.fdecl.path
 			
 				fscope.Semant()
@@ -435,7 +448,7 @@ Class BuilderInstance
 		
 	End
 	
-	Method GetNamespace:NamespaceScope( path:String )
+	Method GetNamespace:NamespaceScope( path:String,mustExist:Bool=False )
 	
 		Local nmspace:=rootNamespace,i0:=0
 		
@@ -448,6 +461,7 @@ Class BuilderInstance
 			
 			Local ntype:=TCast<NamespaceType>( nmspace.GetType( id ) )
 			If Not ntype
+				If mustExist New SemantEx( "Namespace '"+path+"' not found" )
 				ntype=New NamespaceType( id,nmspace )
 				nmspace.Insert( id,ntype )
 			Endif

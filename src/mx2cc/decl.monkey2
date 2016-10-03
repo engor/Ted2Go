@@ -119,6 +119,12 @@ Class FileDecl Extends Decl
 	Field globals:=New Stack<VarValue>
 	Field functions:=New Stack<FuncValue>
 	
+	Method New()
+		srcfile=Self
+		srcpos=1 Shl 12
+		endpos=1 Shl 12
+	End
+	
 	Method ToString:String() Override
 		Return "~q"+path+"~q"
 	End
