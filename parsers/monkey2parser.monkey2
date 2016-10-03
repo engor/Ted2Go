@@ -459,23 +459,21 @@ Class Monkey2Parser Extends CodeParserPlugin
 							type = type.Slice(3).Trim()
 							Local typeIdent := ParseIdent(type)
 							
-							#Rem
-							If IsDigit(type[0]) Or type[0] = CHAR_DOT
-								If type.Contains(".")
-									type = "Float"
-								Else
-									type = "Int"
-								Endif
+							Local p := typeIdent.Find("(")
+							If p <> -1
+								type = typeIdent.Slice(0,p)
 							Else
-							#End
-								Local p := typeIdent.Find("(")
-								If p <> -1
-									type = typeIdent.Slice(0,p)
-								Else
-									'this is varname, need to refine it later
-									type = typeIdent
-								Endif
-							'Endif
+								'this is varname, need to refine it later
+								type = typeIdent
+							Endif
+							
+						Elseif type.StartsWith("Cast") ' i := Cast<Type>(obj)
+						
+							Local i1 := type.Find("<")
+							Local i2 := IndexOfClosedBracket(type, CHAR_LESS_BRACKET, i1+1)
+							
+							type = type.Slice(i1+1,i2)
+							Print "type: "+type
 							
 						Else
 						
@@ -955,6 +953,36 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Local s := text.Slice(prev, n).Trim()
 			target.AddLast(s)
 		Endif
+		
+	End
+	
+	Function IndexOfClosedBracket:Int(text:String, sourceBracket:Int, findFrom:Int)
+	
+		Local pairChar:Int
+		If sourceBracket = CHAR_OPENED_ROUND_BRACKET
+			pairChar = CHAR_CLOSED_ROUND_BRACKET
+		Elseif sourceBracket = CHAR_OPENED_SQUARE_BRACKET
+			pairChar = CHAR_CLOSED_SQUARE_BRACKET
+		Elseif sourceBracket = CHAR_LESS_BRACKET
+			pairChar = CHAR_MORE_BRACKET
+		Else
+			Return -1
+		Endif
+		
+		Local len := text.Length
+		Local counter := 1 ' one must be already opened outside this func
+		
+		For Local k := findFrom Until len
+			Local c := text[k]
+			If c = sourceBracket
+				counter += 1
+			Elseif c = pairChar
+				counter -= 1
+				If counter = 0 Return k
+			Endif
+		Next
+		
+		Return -1
 		
 	End
 	

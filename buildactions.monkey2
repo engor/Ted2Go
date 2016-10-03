@@ -295,7 +295,7 @@ Class BuildActions
 		Local doc:=Cast<CodeDocument>( _docs.OpenDocument( err.path,True ) )
 		If Not doc Return
 		
-		Local tv:=Cast<TextView>( doc.View )
+		Local tv := doc.TextView
 		If Not tv Return
 		
 		MainWindow.UpdateWindow( False )
