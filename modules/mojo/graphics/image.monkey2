@@ -8,12 +8,8 @@ An image is a rectangular array of pixels that can be drawn using one of the [[C
 You can load an image from a file using one of the [[Load]], [[LoadBump]] or [[LoadLight]] functions.
 
 #end
-Class Image
+Class Image Extends std.resource.Resource
 
-	#rem monkeydoc Invoked after image has ben discarded.
-	#end
-	Field OnDiscarded:Void()
-	
 	#rem monkeydoc Creates a new Image.
 	
 	New( pixmap,... ) Creates an image from an existing pixmap.
@@ -108,6 +104,7 @@ Class Image
 	#rem monkeydoc @hidden
 	#end
 	Method New( texture:Texture,rect:Recti,shader:Shader=Null )
+
 		Init( texture,rect,shader )
 	End
 	
@@ -323,89 +320,91 @@ Class Image
 		Return _textures[index]
 	End
 	
-	#rem monkeydoc Discards the image.
-	
-	Discards the image and releases any resources held by the image.
-	
-	#end
-	Method Discard()
-		If _discarded Return
-		_discarded=True
-		OnDiscarded()
-	End
-	
 	#rem monkeydoc Loads an image from file.
 	#end
 	Function Load:Image( path:String,shader:Shader=Null )
 	
+		Local pixmap:=Pixmap.Load( path,Null,True )
+		If Not pixmap Return Null
+
 		If Not shader shader=mojo.graphics.Shader.GetShader( "sprite" )
-	
-		Local texture:=mojo.graphics.Texture.Load( path,Null )
-		If Not texture Return Null
 		
-		Return New Image( texture,shader )
+		Local image:=New Image( pixmap,Null,shader )
+			
+		image.OnDiscarded+=Lambda()
+			pixmap.Discard()
+		End
+		
+		Return image
+	End
+	
+	#rem monkeydoc @hidden experimental!
+	#end	
+	Function Open:Image( path:String,shader:Shader=Null )
+	
+		path=RealPath( path )
+		
+		Local slug:="Image:path="+path+"&shader="+(shader ? shader.Name Else "null")
+		
+		Local image:=Cast<Image>( OpenResource( slug ) )
+		If image Return image
+		
+		image=Load( path,shader )
+
+		AddResource( slug,image )
+		Return image
 	End
 	
 	#rem monkeydoc Loads a bump image from file(s).
 	
 	`diffuse`, `normal` and `specular` are filepaths of the diffuse, normal and specular image files respectively.
 	
-	`specular` can be null, in which case `specularScale` is used for the specular component. Otherwise, `specularScale` is used to modulate the specular components of the 
-	specular texture.
+	`specular` can be null, in which case `specularScale` is used for the specular component. Otherwise, `specularScale` is used to modulate the red component of the specular texture.
 	
 	#end
 	Function LoadBump:Image( diffuse:String,normal:String,specular:String,specularScale:Float=1,flipNormalY:Bool=True,shader:Shader=Null )
 	
-		If Not shader shader=mojo.graphics.Shader.GetShader( "bump" )
-
-		Local pdiff:=Pixmap.Load( diffuse )
-		Local pnorm:=Pixmap.Load( normal )
-		Local pspec:=Pixmap.Load( specular )
+		Local texture1:=graphics.Texture.LoadNormal( normal,Null,specular,specularScale,flipNormalY )
+		If Not texture1 Return Null
 		
-		If pdiff
-			pdiff.PremultiplyAlpha()
-		Else
-			pdiff=New Pixmap( pnorm.Width,pnorm.Height,PixelFormat.I8 )
+		Local texture0:=graphics.Texture.Load( diffuse,Null )
+		
+		If Not texture0
+			Local pdiff:=New Pixmap( texture1.Width,texture1.Height,PixelFormat.I8 )
 			pdiff.Clear( std.graphics.Color.White )
+			texture0=New graphics.Texture( pdiff,Null )
 		Endif
 		
-		Local yxor:=flipNormalY ? $ff00 Else 0
-		
-		If pspec And pspec.Width=pnorm.Width And pspec.Height=pnorm.Height
-			For Local y:=0 Until pnorm.Height
-				For Local x:=0 Until pnorm.Width
-					Local n:=pnorm.GetPixelARGB( x,y ) ~ yxor
-					Local s:=(pspec.GetPixelARGB( x,y ) Shr 16) & $ff
-					n=n & $ffffff00 | Clamp( Int( specularScale * s ),1,255 )
-					pnorm.SetPixelARGB( x,y,n )
-				Next
-			Next
-			pspec.Discard()
-		Else
-			Local g:=Clamp( Int( specularScale * 255.0 ),1,255 )
-			For Local y:=0 Until pnorm.Height
-				For Local x:=0 Until pnorm.Width
-					Local n:=pnorm.GetPixelARGB( x,y ) ~ yxor
-					n=n & $ffffff00 | g
-					pnorm.SetPixelARGB( x,y,n )
-				Next
-			Next
-			If pspec pspec.Discard()
-		Endif
-		
-		Local texture0:=New Texture( pdiff,Null )
-		Local texture1:=New Texture( pnorm,Null )
+		If Not shader shader=graphics.Shader.GetShader( "bump" )
 		
 		Local image:=New Image( texture0,texture0.Rect,shader )
 		image.SetTexture( 1,texture1 )
 		
 		image.OnDiscarded+=Lambda()
-			texture0.Discard()
-			texture1.Discard()
-			pdiff.Discard()
-			pnorm.Discard()
+			If texture0 texture0.Discard()
+			If texture1 texture1.Discard()
 		End
+		
+		Return image
+	End
+
+	#rem monkeydoc @hidden experimental!
+	#end	
+	Function OpenBump:Image( diffuse:String,normal:String,specular:String,specularScale:Float=1,flipNormalY:Bool=True,shader:Shader=Null )
 	
+		diffuse=RealPath( diffuse )
+		normal=RealPath( normal )
+		specular=RealPath( specular )
+
+		Local slug:="BumpImage:diffuse="+diffuse+"&normal="+normal+"&specular="+specular
+		slug+="&specularScale="+specularScale+"&flipNormalY="+Int( flipNormalY )+"&shader="+(shader ? shader.Name Else "")
+		
+		Local image:=Cast<Image>( OpenResource( slug ) )
+		If image Return image
+		
+		image=LoadBump( diffuse,normal,specular,specularScale,flipNormalY,shader )
+
+		AddResource( slug,image )	
 		Return image
 	End
 	
@@ -481,13 +480,28 @@ Class Image
 		Return image
 	End
 
+	#rem monkeydoc @hidden experimental!
+	#end
+	Function OpenLight:Image( path:String,shader:Shader=Null )
+	
+		path=RealPath( path )
+		
+		Local slug:="Light:path="+path+"&shader="+(shader ? shader.Name Else Null)
+		
+		Local light:=Cast<Image>( OpenResource( path ) )
+		If light Return light
+		
+		light=Load( path,shader )
+		
+		AddResource( slug,light )
+		Return light
+	End
+
 	Private
 	
 	Field _shader:Shader
 	Field _material:UniformBlock
 
-	Field _discarded:Bool
-	
 	Field _textures:=New Texture[4]
 	Field _blendMode:BlendMode
 	Field _textureFilter:TextureFilter

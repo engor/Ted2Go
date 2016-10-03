@@ -41,11 +41,7 @@ End
 
 #rem monkeydoc @hidden
 #end
-Class Texture
-
-	#rem monkeydoc @hidden
-	#end
-	Field OnDiscarded:Void()
+Class Texture Extends std.resource.Resource
 
 	Method New( pixmap:Pixmap,flags:TextureFlags )
 	
@@ -69,7 +65,7 @@ Class Texture
 	Method New( width:Int,height:Int,format:PixelFormat,flags:TextureFlags )
 	
 #If Not __DESKTOP_TARGET__
-		Local tw:=Log2( Width ),th:=Log2( Height )
+		Local tw:=Log2( width ),th:=Log2( height )
 		If tw<>Round( tw ) Or th<>Round( th ) flags|=TextureFlags.DisableMipmap
 #Endif
 		_rect=New Recti( 0,0,width,height )
@@ -108,16 +104,6 @@ Class Texture
 		Return _format
 	End
 	
-	Method Discard()
-		If _discarded Return
-		If _texSeq=glGraphicsSeq glDeleteTextures( 1,Varptr _glTexture )
-		If _fbSeq=glGraphicsSeq glDeleteFramebuffers( 1,Varptr _glFramebuffer )
-		_glTexture=0
-		_glFramebuffer=0
-		_discarded=True
-		OnDiscarded()
-	End
-	
 	Method PastePixmap( pixmap:Pixmap,x:Int,y:Int )
 	
 		If _managed
@@ -146,13 +132,11 @@ Class Texture
 		Endif
 	
 	End
-	
+
 	Function Load:Texture( path:String,flags:TextureFlags )
-	
-		Local pixmap:=Pixmap.Load( path )
+
+		Local pixmap:=Pixmap.Load( path,,True )
 		If Not pixmap Return Null
-		
-		pixmap.PremultiplyAlpha()
 		
 		Local texture:=New Texture( pixmap,flags )
 		
@@ -160,6 +144,82 @@ Class Texture
 			pixmap.Discard()
 		End
 		
+		Return texture
+	End
+	
+	#rem monkeydoc @hidden experimental!
+	#end
+	Function Open:Texture( path:String,textureFlags:TextureFlags )
+	
+		path=RealPath( path )
+		
+		Local slug:="Texture:path="+path+"&flags="+Int( textureFlags )
+		
+		Local texture:=Cast<Texture>( OpenResource( slug ) )
+		If texture Return texture
+		
+		texture=Load( path,textureFlags )
+		
+		AddResource( slug,texture )
+		Return texture
+	End
+	
+	Function LoadNormal:Texture( path:String,textureFlags:TextureFlags,specular:String,specularScale:Float=1,flipNormalY:Bool=True )
+
+		path=RealPath( path )
+		specular=specular ? RealPath( specular ) Else ""
+
+		Local pnorm:=Pixmap.Load( path,,True )
+		If Not pnorm Return Null
+		
+		Local pspec:=Pixmap.Load( specular )
+		
+		Local yxor:=flipNormalY ? $ff00 Else 0
+			
+		If pspec And pspec.Width=pnorm.Width And pspec.Height=pnorm.Height
+			For Local y:=0 Until pnorm.Height
+				For Local x:=0 Until pnorm.Width
+					Local n:=pnorm.GetPixelARGB( x,y ) ~ yxor
+					Local s:=(pspec.GetPixelARGB( x,y ) Shr 16) & $ff
+					n=n & $ffffff00 | Clamp( Int( specularScale * s ),1,255 )
+					pnorm.SetPixelARGB( x,y,n )
+				Next
+			Next
+		Else
+			Local g:=Clamp( Int( specularScale * 255.0 ),1,255 )
+			For Local y:=0 Until pnorm.Height
+				For Local x:=0 Until pnorm.Width
+					Local n:=pnorm.GetPixelARGB( x,y ) ~ yxor
+					n=n & $ffffff00 | g
+					pnorm.SetPixelARGB( x,y,n )
+				Next
+			Next
+		Endif
+			
+		If pspec pspec.Discard()
+			
+		Local texture:=New Texture( pnorm,Null )
+		Return texture
+		
+	End
+	
+	#rem monkeydoc @hidden experimental!
+	#end
+	Function OpenNormal:Texture( path:String,textureFlags:TextureFlags,specular:String,specularScale:Float=1,flipNormalY:Bool=True )
+	
+		path=RealPath( path )
+		
+		specular=specular ? RealPath( specular ) Else ""
+		
+		Local slug:="NormalTexture:path="+path+"?flags="+Int( textureFlags )
+		slug+="?specular="+specular+"&specularScale="+specularScale+"&flipNormalY="+Int( flipNormalY )
+		
+		Local texture:=Cast<Texture>( OpenResource( slug ) )
+		If texture Return texture
+		
+		texture=LoadNormal( path,textureFlags,specular,specularScale,flipNormalY )
+		
+		AddResource( slug,texture )
 		Return texture
 	End
 
@@ -280,7 +340,7 @@ Class Texture
 	#rem monkeydoc @hidden
 	#end	
 	Property GLFramebuffer:GLuint()
-		DebugAssert( Not _discarded,"texture has been discarded" )
+		If _discarded Return 0
 	
 		If _fbSeq=glGraphicsSeq Return _glFramebuffer
 		
@@ -339,6 +399,18 @@ Class Texture
 		Endif
 		
 		_dirty|=Dirty.Mipmaps
+	End
+	
+	Protected
+
+	#rem monkeydoc @hidden
+	#end	
+	Method OnDiscard() Override
+		If _texSeq=glGraphicsSeq glDeleteTextures( 1,Varptr _glTexture )
+		If _fbSeq=glGraphicsSeq glDeleteFramebuffers( 1,Varptr _glFramebuffer )
+		_glTexture=0
+		_glFramebuffer=0
+		_discarded=True
 	End
 	
 	Private

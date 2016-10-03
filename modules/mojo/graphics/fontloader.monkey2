@@ -15,13 +15,19 @@ Public
 #end
 Function LoadFont:Font( path:String,fheight:Float,shader:Shader )
 
+	Local ext:=ExtractExt( path )
+	If Not ext
+		Local font:=LoadFont( path+".otf",fheight,shader )
+		If Not font font=LoadFont( path+".ttf",fheight,shader )
+		Return font
+	Endif
+
 	If Not FreeType And FT_Init_FreeType( Varptr FreeType ) Return Null
 	
 	Local data:=DataBuffer.Load( path )
 	If Not data Return Null
 	
 	Local face:FT_Face
-	
 	If FT_New_Memory_Face( FreeType,data.Data,data.Length,0,Varptr face ) 
 		data.Discard()
 		Return Null
@@ -48,61 +54,91 @@ Function LoadFont:Font( path:String,fheight:Float,shader:Shader )
 '	Print face->size->metrics.descender/64.0
 
 	Local firstChar:=32,numChars:=96
-
 	Local glyphs:=New Glyph[numChars]
-	Local pixmap:=New Pixmap( 512,512,PixelFormat.A8 )
-	pixmap.Clear( Color.None )
-	
+
 	Local slot:=face->glyph
 	
-	Local x:=0,y:=0,h:=0
+	'Measure atlas first
+	'
+	'Would really rather not render glyphs here, but can't see how...
+	'
+	Local tx:=0,ty:=0,texw:=0,texh:=0,maxh:=0
+	
+	Const MaxTexWidth:=64'1024
+
+	For Local i:=0 Until numChars
+
+		If FT_Load_Char( face,firstChar+i,FT_LOAD_RENDER|FT_LOAD_FORCE_AUTOHINT )
+			Continue
+		Endif
+
+		Local gw:=Int( slot->bitmap.width )
+		Local gh:=Int( slot->bitmap.rows )
+		
+		If tx+gw+1>MaxTexWidth
+			texw=Max( texw,tx )
+			texh+=maxh
+			maxh=0
+			tx=0
+		Endif
+		
+		maxh=Max( maxh,gh+1 )
+		tx+=gw+1
+		
+	Next
+	
+	texw=Max( texw,tx )
+	If tx texh+=maxh
+	
+	'round up texw, texh to ^2 in case we're mipmapping on mobile/webgl.
+	texw=1 Shl Int( Ceil( Log2( texw ) ) )
+	texh=1 Shl Int( Ceil( Log2( texh ) ) )
+	
+	Print "path="+path+", height="+fheight+", texw="+texw+", texh="+texh
+	
+	Local pixmap:=New Pixmap( texw,texh,PixelFormat.A8 )
+	pixmap.Clear( Color.None )
+	
+	tx=0;ty=0;maxh=0
 	
 	For Local i:=0 Until numChars
 
-		'What to do?!?
-		'	
-'		If FT_Load_Char( face,firstChar+i,FT_LOAD_RENDER )
-'		If FT_Load_Char( face,firstChar+i,FT_LOAD_RENDER|FT_LOAD_TARGET_LIGHT )
-'		If FT_Load_Char( face,firstChar+i,FT_LOAD_RENDER|FT_LOAD_NO_HINTING )
 		If FT_Load_Char( face,firstChar+i,FT_LOAD_RENDER|FT_LOAD_FORCE_AUTOHINT )
 			Continue
 		Endif
 		
-		#rem
-		If FT_Render_Glyph( slot,FT_RENDER_MODE_NORMAL )
-			Continue
-		Endif
-		#end
-		
-		Local gw:=slot->bitmap.width
-		Local gh:=slot->bitmap.rows
-		
-		If x+gw+1>pixmap.Width
-			y+=h
-			h=0
-			x=0
-		Endif
-		
+		Local gw:=Int( slot->bitmap.width )
+		Local gh:=Int( slot->bitmap.rows )
+
 		Local tmp:=New Pixmap( gw,gh,PixelFormat.A8,slot->bitmap.buffer,slot->bitmap.pitch )
 		
-		pixmap.Paste( tmp,x,y )
+		If tx+gw+1>pixmap.Width
+			ty+=maxh
+			maxh=0
+			tx=0
+		Endif
 		
-		glyphs[i]=New Glyph( New Recti( x,y,x+gw,y+gh ),New Vec2f( slot->bitmap_left,ascent-slot->bitmap_top ),slot->advance.x Shr 6 )
+		pixmap.Paste( tmp,tx,ty )
+		
+		glyphs[i]=New Glyph( New Recti( tx,ty,tx+gw,ty+gh ),New Vec2f( slot->bitmap_left,ascent-slot->bitmap_top ),slot->advance.x Shr 6 )
 
-		h=Max( Int(h),Int(gh)+1 )
-		x+=gw+1
+		maxh=Max( maxh,gh+1 )
+		tx+=gw+1
+		
 	Next
 	
 	FT_Done_Face( face )
 	
 	data.Discard()
 	
-	Local texture:=New Texture( pixmap,Null )
-	
-	Local image:=New Image( texture,shader )
+	Local image:=New Image( pixmap,Null,shader )
 	
 	Local font:=New Font( image,height,firstChar,glyphs )
 	
+	font.OnDiscarded+=Lambda()
+		image.Discard()
+		pixmap.Discard()
+	End
+	
 	Return font
-
 End

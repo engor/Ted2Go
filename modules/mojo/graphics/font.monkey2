@@ -30,7 +30,7 @@ The glyph struct is used to store the location, size and advance for individual 
 All character image data for a font must A font must occupy a single image, 
 
 #end
-Class Font
+Class Font Extends std.resource.Resource
 
 	#rem monkeydoc Creates a new font.
 
@@ -102,21 +102,6 @@ Class Font
 		Return w
 	End
 	
-	#rem monkeydoc @hidden
-	#end
-	Function Open:Font( path:String,height:Float )
-	
-		Local tag:=RealPath( path )+":"+height
-		
-		Local font:=_openFonts[tag]
-		If Not font
-			font=Load( path,height )
-			_openFonts[tag]=font
-		Endif
-		
-		Return font
-	End
-
 	'Make this ALWAYS work!	
 	#rem monkeydoc Loads a font from a ttf file.
 	#end
@@ -124,20 +109,34 @@ Class Font
 	
 		If Not shader shader=Shader.GetShader( "font" )
 		
-		Local font:=mojo.graphics.fontloader.LoadFont( path,height,shader )
+		Local font:=fontloader.LoadFont( path,height,shader )
+		If Not font And Not ExtractRootDir( path ) font=fontloader.LoadFont( "font::"+path,height,shader )
 		
 		Return font
 	End
 
-	Private
+	#rem monkeydoc @hidden
+	#end
+	Function Open:Font( path:String,height:Float,shader:Shader=Null )
 	
+		path=RealPath( path )
+		
+		Local slug:="Font:path="+path+"&height="+height+"&shader="+(shader ? shader.Name Else "")
+		
+		Local font:=Cast<Font>( OpenResource( slug ) )
+		If font Return font
+		
+		font=Load( path,height )
+		
+		AddResource( slug,font )
+		Return font
+	End
+
 	Private
 	
 	Field _image:Image
 	Field _height:Float
 	Field _firstChar:Int
 	Field _glyphs:Glyph[]
-	
-	Global _openFonts:=New StringMap<Font>
 
 End

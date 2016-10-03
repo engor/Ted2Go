@@ -27,11 +27,9 @@ End
 
 #rem monkeydoc The AppInstance class.
 
-The AppInstance class is mainly reponsible for running the app 'event loop', but also provides several utility functions for managing
-the application.
+The AppInstance class is mainly reponsible for running the app 'event loop', but also provides several utility functions for managing the application.
 
-A global instance of the AppInstance class is stored in the [[App]] global variable, so you can use any member of the AppInstance simply
-by prefixing it with 'App.', eg: App.MilliSecs
+A global instance of the AppInstance class is stored in the [[App]] global variable, so you can use any member of the AppInstance simply by prefixing it with 'App.', eg: App.MilliSecs
 
 #end
 Class AppInstance
@@ -159,7 +157,7 @@ Class AppInstance
 		
 		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )
 #Endif
-		_defaultFont=Font.Open( "asset::fonts/DejaVuSans.ttf",16 )
+		_defaultFont=Font.Open( "DejaVuSans",16 )
 		
 		_theme=Theme.Load( GetConfig( "initialTheme","asset::themes/default.json" ) )
 	End

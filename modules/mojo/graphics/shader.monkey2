@@ -162,11 +162,20 @@ Class Shader
 	
 		Assert( Not _shaders.Contains( name ),"Shader with name '"+name+"' already exists" )
 		
-		_shaders[name]=Self
+		_name=name
 	
 		_source=source
 		
+		_shaders[name]=Self
+		
 		EnumPasses()
+	End
+	
+	#rem monkeydoc The shader name.
+	#end
+	Property Name:String()
+	
+		Return _name
 	End
 	
 	#rem monkeydoc The shader source code.
@@ -227,7 +236,8 @@ Class Shader
 	Private
 	
 	Global _shaders:=New StringMap<Shader>
-	
+
+	Field _name:String	
 	Field _source:String
 	Field _rpasses:Int[]
 	Field _rpassMask:Int
