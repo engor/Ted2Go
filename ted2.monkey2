@@ -48,7 +48,7 @@ Using tinyxml2..
 
 Function Main()
 
-#if __DESKTOP_TARGET__
+#If __DESKTOP_TARGET__
 		
 	ChangeDir( AppDir() )
 	
@@ -62,7 +62,7 @@ Function Main()
 		ChangeDir( ExtractDir( CurrentDir() ) )
 	Wend
 	
-#endif
+#Endif
 	
 	Local jobj:=JsonObject.Load( "bin/ted2.state.json" )
 	If Not jobj jobj=New JsonObject

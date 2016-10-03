@@ -4,7 +4,9 @@ Namespace ted2
 Class GutterView Extends View
 
 	Method New( textView:TextView )
+	
 		_textView=textView
+		
 		Style.Margin=New Recti( 0,0,8,0 )
 	End
 	
@@ -23,17 +25,18 @@ Class GutterView Extends View
 		
 		canvas.Color=Color.Grey
 		
-		Local lineh:=_textView.LineHeight
 		Local vrect:=_textView.VisibleRect
 		
-		Local firstLine:=vrect.Top/lineh
-		Local lastLine:=Min( (vrect.Bottom-1)/lineh+1,_textView.Document.NumLines )
+		Local firstLine:=_textView.LineAtPoint( vrect.TopLeft )
+		Local lastLine:=_textView.LineAtPoint( vrect.BottomLeft )+1
 		
 		canvas.Translate( 0,-vrect.Top )
 		
 		For Local i:=firstLine Until lastLine
 		
-			canvas.DrawText( i+1,Width,i*lineh,1,0 )
+			Local rect:=_textView.LineRect( i )
+		
+			canvas.DrawText( i+1,Width,rect.Top,1,0 )
 		Next
 		
 	End
