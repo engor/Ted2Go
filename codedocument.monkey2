@@ -320,7 +320,7 @@ Class CodeDocument Extends Ted2Document
 		If list = Null Return
 		
 		For Local i := Eachin list
-			AddTreeItem(i, node)
+			AddTreeItem(i, node, parser)
 		Next
 		
 		_treeView.NodeClicked += Lambda(node:TreeView.Node)
@@ -331,13 +331,15 @@ Class CodeDocument Extends Ted2Document
 		
 	End
 	
-	Method AddTreeItem(item:ICodeItem, node:TreeView.Node)
+	Method AddTreeItem(item:ICodeItem, node:TreeView.Node, parser:ICodeParser)
 	
+		parser.RefineRawType(item) 'refine all visible items
+		
 		Local n := New CodeTreeNode(item, node)
 				
 		If item.Children <> Null
 			For Local i := Eachin item.Children
-				AddTreeItem(i, n)
+				AddTreeItem(i, n, parser)
 			End
 		Endif
 	End
