@@ -1,9 +1,9 @@
 
+Namespace emscripten
+
 #If __TARGET__="emscripten"
 
 #Import "<emscripten.h>"
-
-Namespace emscripten
 
 Extern
 

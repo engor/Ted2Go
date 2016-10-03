@@ -1207,11 +1207,9 @@ Class Canvas
 	Field _shadowOps:=New Stack<ShadowOp>
 	Field _shadowVerts:=New Stack<Vec2f>
 	
-	Const MaxVertices:=16384
-	
+	Const MaxVertices:=65536
+	Const MaxShadowVertices:=16384
 	Const MaxLights:=1024
-	
-	Const MaxShadowVertices:=65536
 	
 	Function Init2()
 		Global inited:=False
@@ -1309,7 +1307,6 @@ Class Canvas
 	Method AddDrawOp( shader:Shader,material:UniformBlock,blendMode:BlendMode,textureFilter:TextureFilter,primOrder:int,primCount:Int )
 	
 		If _drawVB.Length+primCount*primOrder>_drawVB.Capacity
-			Print "Flush!"
 			Flush()
 		Endif
 		
