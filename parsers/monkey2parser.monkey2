@@ -473,7 +473,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 							Local i2 := IndexOfClosedBracket(type, CHAR_LESS_BRACKET, i1+1)
 							
 							type = type.Slice(i1+1,i2)
-							Print "type: "+type
 							
 						Else
 						

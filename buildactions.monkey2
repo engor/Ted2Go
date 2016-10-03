@@ -27,6 +27,7 @@ Class BuildActions
 
 	Field buildAndRun:Action
 	Field build:Action
+	Field check:Action
 	Field buildSettings:Action
 	Field nextError:Action
 	Field lockBuildFile:Action
@@ -66,6 +67,10 @@ Class BuildActions
 		build=New Action( "Build only" )
 		build.Triggered=OnBuild
 		build.HotKey=Key.F6
+		
+		check=New Action( "Check for errors" )
+		check.Triggered=OnCheck
+		check.HotKey=Key.F7
 		
 		buildSettings=New Action( "Build settings" )
 		buildSettings.Triggered=OnBuildFileSettings
@@ -303,7 +308,7 @@ Class BuildActions
 		tv.GotoLine( err.line )
 	End
 	
-	Method BuildMx2:Bool( cmd:String,progressText:String )
+	Method BuildMx2:Bool( cmd:String,progressText:String,checkOnly:Bool=False )
 	
 		ClearErrors()
 		
@@ -368,6 +373,14 @@ Class BuildActions
 						Endif
 						
 					Endif
+				Endif
+			Endif
+			
+			If checkOnly
+				Local i := stdout.Find( "Compiling..." )
+				If i<>-1
+					_console.Write( "~nDone." )
+					Exit
 				Endif
 			Endif
 			
@@ -440,7 +453,7 @@ Class BuildActions
 		Return BuildMx2( _mx2cc+" makedocs","Rebuilding documentation..." )
 	End
 	
-	Method BuildApp:Bool( config:String,target:String,run:bool )
+	Method BuildApp:Bool( config:String,target:String,run:Bool,checkOnly:Bool )
 	
 		Local buildDoc:=BuildDoc()
 		If Not buildDoc Return False
@@ -464,7 +477,7 @@ Class BuildActions
 		
 		Local msg:="Building "+StripDir( buildDoc.Path )+" for "+target+" "+config
 		
-		If Not BuildMx2( cmd,msg ) Return False
+		If Not BuildMx2( cmd,msg,checkOnly ) Return False
 		
 		If Not run Return True
 		
@@ -488,12 +501,17 @@ Class BuildActions
 	
 	Method OnBuildAndRun()
 
-		BuildApp( _buildConfig,_buildTarget,True )
+		BuildApp( _buildConfig,_buildTarget,True,False )
 	End
 	
 	Method OnBuild()
 	
-		BuildApp( _buildConfig,_buildTarget,False )
+		BuildApp( _buildConfig,_buildTarget,False,False )
+	End
+	
+	Method OnCheck()
+	
+		BuildApp( _buildConfig,_buildTarget,False,True )
 	End
 	
 	Method OnNextError()
