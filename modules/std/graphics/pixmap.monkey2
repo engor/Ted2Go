@@ -6,13 +6,11 @@ Namespace std.graphics
 A pixmap contains a block of memory used to store a rectangular array of pixels.
 
 #end
-Class Pixmap
-
-	#rem monkeydoc @hidden
-	#end
-	Field OnDiscarded:Void()
+Class Pixmap Extends std.resource.Resource
 
 	#rem monkeydoc Creates a new pixmap.
+	
+	When you have finished with the pixmap, you should call its inherited [[Resource.Discard]] method.
 
 	@param width The width of the pixmap in pixels.
 	
@@ -37,8 +35,10 @@ Class Pixmap
 		_depth=depth
 		_data=data
 		_pitch=pitch
+		
 		OnDiscarded=Lambda()
-			libc.free( data )
+			libc.free( _data )
+			_data=Null
 		End
 	End
 	
@@ -54,25 +54,6 @@ Class Pixmap
 		_pitch=pitch
 	End
 
-	#rem monkeydoc Releases the memory used by a pixmap.
-	
-	Memory is only released if the pixmap was created using New, Copy, Convert or Load.
-	
-	If the pixmap represents a 'window' into another pixmap (ie: it was created using Window) then memory is not released.
-	
-	Discarding a pixmap also sets its width, height, pitch and depth to 0.
-	
-	#end
-	Method Discard()
-		If Not _data Return
-		_width=0
-		_height=0
-		_pitch=0
-		_depth=0
-		_data=Null
-		OnDiscarded()
-	End
-	
 	#rem monkeydoc The pixmap width.
 	
 	#end
@@ -421,7 +402,13 @@ Class Pixmap
 	Method Window:Pixmap( x:Int,y:Int,width:Int,height:Int )
 		DebugAssert( x>=0 And y>=0 And width>=0 And height>=0 And x+width<=_width And y+height<=_height )
 		
-		Return New Pixmap( width,height,_format,PixelPtr( x,y ),_pitch )
+		Local pixmap:=New Pixmap( width,height,_format,PixelPtr( x,y ),_pitch )
+		
+		OnDiscarded+=Lambda()
+			pixmap.Discard()
+		End
+		
+		Return pixmap
 	End
 	
 	#rem monkeydoc Saves the pixmap to a file.
@@ -443,9 +430,31 @@ Class Pixmap
 	@return Null if the file could not be opened, or contained invalid image data.
 	
 	#end
-	Function Load:Pixmap( path:String,format:PixelFormat=PixelFormat.Unknown )
-	
-		Return LoadPixmap( path,format )
+	Function Load:Pixmap( path:String,format:PixelFormat=Null,pmAlpha:Bool=False )
+
+		Local pixmap:=pixmaploader.LoadPixmap( path,format )
+		If Not pixmap And Not ExtractRootDir( path ) pixmap=pixmaploader.LoadPixmap( "image::"+path,format )
+		
+		If pixmap And pmAlpha pixmap.PremultiplyAlpha()
+		
+		Return pixmap
+	End
+
+	#rem monkeydoc @hidden experimental!
+	#end	
+	Function Open:Pixmap( path:String,format:PixelFormat=Null,pmAlpha:Bool=False )
+
+		path=RealPath( path )
+		
+		Local slug:="Pixmap:path="+path+"&format="+Int( format )+"&pmAlpha="+Int( pmAlpha )
+		
+		Local pixmap:=Cast<Pixmap>( OpenResource( slug ) )
+		If pixmap Return pixmap
+		
+		pixmap=Load( path,format,pmAlpha )
+		
+		AddResource( slug,pixmap )
+		Return pixmap
 	End
 	
 	Private

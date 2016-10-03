@@ -5,11 +5,13 @@ Using std.stream
 
 #rem monkeydoc DataBuffer class.
 #end
-Class DataBuffer
+Class DataBuffer Extends std.resource.Resource
 
 	#rem monkeydoc Creates a new databuffer.
 	
 	The new databuffer initally uses little endian byte order. You can change this via the ByteOrder property.
+	
+	When you have finished with the data buffer, you should call its inherited [[Resource.Discard]] method.
 	
 	@example
 	
@@ -41,21 +43,16 @@ Class DataBuffer
 	
 	#end
 	Method New( length:Int,byteOrder:ByteOrder=std.memory.ByteOrder.LittleEndian )
+	
 		_length=length
 		_data=Cast<UByte Ptr>( libc.malloc( length ) )
 		_byteOrder=byteOrder
 		_swapEndian=False
-	End
-	
-	#rem monkeydoc Frees the databuffer's internal memory.
-	
-	Once discarded, a databuffer's length is set to 0.
-	
-	#end
-	Method Discard()
-		libc.free( _data )
-		_data=Null
-		_length=0
+		
+		OnDiscarded+=Lambda()
+			libc.free( _data )
+			_data=Null
+		End
 	End
 	
 	#rem monkeydoc A raw pointer to the databuffer's internal memory.

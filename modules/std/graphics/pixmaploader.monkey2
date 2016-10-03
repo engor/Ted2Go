@@ -1,5 +1,5 @@
 
-Namespace std.graphics
+Namespace std.graphics.pixmaploader
 
 Private
 
