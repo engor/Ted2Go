@@ -3,6 +3,11 @@ Function FnLambda(p1:String, p2:Void(x:Int,y:Int), p3:Float)
 
 End
 
+Function LambdaFn(p1:String, p2:Void(x:Int,y:Int), p3:Float)
+
+End
+
+
 Class TestClass
 	
 	Function MyFyncPub:String()
@@ -36,7 +41,11 @@ Class TestClass
 		FnLambda("", Lambda(xxx:Int,yyy:Int)
 		
 		End, 2.8)
-		 
+		
+		LambdaFn("", Lambda( aaa:Int,bbb:Int)
+		
+		End, 2.8)
+		
 	End
 	
 	Method DVD()

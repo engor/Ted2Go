@@ -398,9 +398,10 @@ Class CodeItemIcons
 		icons[CodeItemKind.Function_] = Image.Load("asset::ic/function.png")
 		icons[CodeItemKind.Property_] = Image.Load("asset::ic/property.png")
 		icons[CodeItemKind.Method_] = Image.Load("asset::ic/method.png")
-		icons[CodeItemKind.Struct_] = Image.Load("asset::ic/class.png")
+		icons[CodeItemKind.Lambda_] = icons[CodeItemKind.Method_]
 		icons[CodeItemKind.Class_] = Image.Load("asset::ic/class.png")
-		icons[CodeItemKind.Enum_] = Image.Load("asset::ic/class.png")
+		icons[CodeItemKind.Enum_] = icons[CodeItemKind.Class_]
+		icons[CodeItemKind.Struct_] = icons[CodeItemKind.Class_]
 		icons[CodeItemKind.Interface_] = Image.Load("asset::ic/interface.png")
 		icons[CodeItemKind.Field_] = Image.Load("asset::ic/variable.png")
 		icons[CodeItemKind.Global_] = Image.Load("asset::ic/global.png")

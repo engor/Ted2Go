@@ -147,6 +147,8 @@ Class AutocompleteDialog Extends DialogExt
 		Local rootScope := parser.GetScope(filePath, docLine)
 		Local scope := rootScope
 		
+		'If rootScope <> Null Print "cursor scope: "+rootScope.Text
+		
 		'-----------------------------
 		' what the first ident is?	
 		'-----------------------------
@@ -168,6 +170,8 @@ Class AutocompleteDialog Extends DialogExt
 					For Local i := Eachin items
 						If Not CheckIdent(i.Ident, firstIdent, onlyOne) Continue
 						If Not CheckAccess(i, filePath, scope) Continue
+						' additional checking for the first ident
+						If IsLocalMember(i) And i.ScopeStartLine > docLine Continue
 						If Not onlyOne
 							item = i
 							Exit
@@ -192,6 +196,7 @@ Class AutocompleteDialog Extends DialogExt
 			For Local i := Eachin parser.Items
 				If Not CheckIdent(i.Ident, firstIdent, onlyOne) Continue
 				If Not CheckAccess(i, filePath) Continue
+				If IsLocalMember(i) And i.ScopeStartLine > docLine Continue
 				If Not onlyOne
 					item = i
 					Exit
@@ -226,7 +231,7 @@ Class AutocompleteDialog Extends DialogExt
 					Endif
 				Next
 				If item = Null Then Exit
-								
+				
 				Local identPart := idents[k]
 				Local last := (k = idents.Length-1)
 				
@@ -283,8 +288,12 @@ Class AutocompleteDialog Extends DialogExt
 	Method New()
 	End
 	
-	Method IsStaticMember:Bool(item:ICodeItem)
-		Return item.Kind = CodeItemKind.Function_ Or item.Kind = CodeItemKind.Global_ Or item.Kind = CodeItemKind.Const_
+	Method IsLocalMember:Bool(item:ICodeItem)
+		Return item.Kind = CodeItemKind.Local_ Or item.Kind = CodeItemKind.Param_
+	End
+	
+	Method IsStaticMember:Bool(item:ICodeItem, checkPublic:Bool=True)
+		Return (item.Kind = CodeItemKind.Function_ Or item.Kind = CodeItemKind.Global_ Or item.Kind = CodeItemKind.Const_) And item.Access = AccessMode.Public_
 	End
 	
 	Method SortResults(list:List<ListViewItem>)

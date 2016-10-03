@@ -14,7 +14,10 @@ Enum CodeItemKind
 	Method_,
 	Function_,
 	Property_,
-	Param_
+	Param_,
+	Lambda_,
+	Local_,
+	Operator_
 End
 
 Enum AccessMode
@@ -149,8 +152,11 @@ Class CodeItem Implements ICodeItem
 		If _text = Null
 			Local s := Ident
 			Select _kind
-				Case CodeItemKind.Function_, CodeItemKind.Method_
-					s += (ParamsStr = Null) ? "()" Else " ("+ParamsStr+")"
+				Case CodeItemKind.Function_, CodeItemKind.Method_, CodeItemKind.Lambda_, CodeItemKind.Operator_
+					If Type <> Null And Type <> "" And Type <> "Void"
+						s += " : "+Type
+					Endif
+					s += (ParamsStr = Null) ? " ()" Else " ("+ParamsStr+")"
 				Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_, CodeItemKind.Enum_, CodeItemKind.Property_
 					'do nothing
 				Default
@@ -280,6 +286,12 @@ Class CodeItem Implements ICodeItem
 			_kind = CodeItemKind.Class_
 		Case "property"
 			_kind = CodeItemKind.Property_
+		Case "lambda"
+			_kind = CodeItemKind.Lambda_
+		Case "local"
+			_kind = CodeItemKind.Local_
+		Case "operator"
+			_kind = CodeItemKind.Operator_
 		End
 	End
 	

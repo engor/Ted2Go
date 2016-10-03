@@ -86,7 +86,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		'reset
 		_insideInterface = False
 		_insideEnum = False
-		_insideRem = False
+		_insideRem = 0
 		
 		info.indent = 0
 		info.stack.Clear()
@@ -126,7 +126,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Field _namespace:String
 	Field _filePath:String, _fileDir:String
 	Field _files := New StringMap<FileInfo>
-	Field _insideRem := False 'is rem block opened
+	Field _insideRem := 0 'if > 0 - rem block is opened
 	Field _insideEnum := False
 	Field _insideInterface := False
 	Field _params := New List<String>
@@ -176,7 +176,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		n = 0	
 		len = text.Length
-		While n < len And IsIdent(text[n])
+		While n < len And (IsIdent(text[n]) Or text[n] = CHAR_GRID) 'grid is #
 			n += 1
 		Wend
 		
@@ -194,9 +194,15 @@ Class Monkey2Parser Extends CodeParserPlugin
 		'Print "word: '"+word+"'"
 		
 		'commented block
-		If _insideRem
+		If word = "#rem"
+			_insideRem += 1
+			'Print "rem+1: "+_insideRem
+			Return
+		Endif
+		If _insideRem > 0
 			If word = "#end"
-				_insideRem = False
+				_insideRem -= 1
+				'Print "rem-1: "+_insideRem
 			Endif
 			Return
 		Endif
@@ -222,7 +228,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Return
 		Endif
 		
-		Local postfix := text.Slice(n+1).Trim()
+		Local postfix := text.Slice(n).Trim()
 		
 		info.indent = indent
 		
@@ -257,13 +263,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 			GetFileInfo(_filePath).namespac = _namespace
 			Return
 			
-						
-		Case "#rem"
-			
-			_insideRem = True
-			Return
-		
-		
 		Case "#import"
 		
 			If _isImportEnabled
@@ -299,7 +298,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				'	Print "scope: "+_scope.Scope+", "+ _scope.Indent+", "+ indent
 				'Endif
 				If info.scope.Indent = indent
-					
+										
 					PopScope(info) 'go up 
 										
 				Endif
@@ -347,9 +346,19 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			PushAccess(info, AccessMode.Public_)
 			
-		Case "method", "function", "property", "setter"
+		Case "method", "function", "property", "operator"
 			
-			Local ident := ParseIdent(postfix)
+			Local pBracketOpen := postfix.Find("(")
+			
+			Local ident:String
+			
+			If word = "operator"
+				Local p1 := postfix.Find(":")
+				ident = postfix.Slice(0,p1)
+			Else
+				ident = ParseIdent(postfix)
+			Endif
+			
 			item = New CodeItem(ident)
 			
 			Local isScope := Not _insideInterface
@@ -367,18 +376,18 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Endif
 			
 			Local p1 := postfix.Find(":")
-			Local p2 := postfix.Find("(")
-			If p1 = -1 Or p1 > p2
+			
+			If p1 = -1 Or p1 > pBracketOpen
 				item.Type = "Void"
 			Else
-				item.Type = postfix.Slice(p1+1, p2).Trim()
+				item.Type = postfix.Slice(p1+1, pBracketOpen).Trim()
 			Endif
 						
 			AddItem(item, word, isScope, info)
 			
-			Local p3 := postfix.FindLast(")",p2)
+			Local p3 := postfix.FindLast(")",pBracketOpen)
 			
-			Local params := postfix.Slice(p2+1, p3).Trim()
+			Local params := postfix.Slice(pBracketOpen+1, p3).Trim()
 			
 			item.ParamsStr = params
 			
@@ -388,9 +397,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				' here we try to split idents by comma
 				_params.Clear()
 				ExtractParams(params, _params)
-				
-				Local lmbd:ICodeItem
-				
+								
 				For Local s := Eachin _params
 					
 					' skip default value after '='
@@ -523,11 +530,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		
 		Local p := -1
-		
 		While True
 			p = text.Find("Lambda", p+1)
 			If p = -1 Exit
-			If Not IsIdent(text[p-1]) Exit
+			If Not IsIdent(text[p-1]) And Not IsIdent(text[p+6]) Exit
 		Wend
 		
 		If p > 0
@@ -536,7 +542,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			'Print "lmbd: "+txt
 			
 			item = New CodeItem("Lambda")
-			AddItem(item, "method", True, info)
+			AddItem(item, "lambda", True, info)
 			
 			' some 'copy-paste' code...
 			
@@ -986,3 +992,4 @@ Const CHAR_CLOSED_ROUND_BRACKET := 41
 Const CHAR_DIGIT_0 := 48
 Const CHAR_DIGIT_9 := 57
 Const CHAR_AT := 64
+Const CHAR_GRID := 35
