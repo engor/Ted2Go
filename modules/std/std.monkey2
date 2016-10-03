@@ -13,6 +13,8 @@ Namespace std
 #Import "collections/map"
 #Import "collections/deque"
 
+#Import "resource/resource"
+
 #Import "stream/stream"
 #Import "stream/filestream"
 
