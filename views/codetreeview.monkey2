@@ -20,6 +20,9 @@ Class CodeTreeView Extends TreeViewExt
 		Local list := parser.ItemsMap[path]
 		If list = Null Return
 		
+		' sorting
+		SortItems(list)
+		
 		For Local i := Eachin list
 			AddTreeItem(i, node, parser)
 		Next
@@ -82,10 +85,28 @@ Class CodeTreeView Extends TreeViewExt
 		
 		If item.Children = Null Return
 		
+		' sorting
+		SortItems(item.Children)
+		
 		For Local i := Eachin item.Children
 			AddTreeItem(i, n, parser)
 		End
-		
+				
+	End
+	
+	Field _sorterByName:Int(lhs:ICodeItem, rhs:ICodeItem)
+	Field _sorter:Int(lhs:ICodeItem, rhs:ICodeItem)
+	
+	Method SortItems(list:List<ICodeItem>)
+		If _sorterByName = Null
+			_sorterByName = Lambda:Int(lhs:ICodeItem, rhs:ICodeItem)
+				' here we can sort by name / access / and so on
+				Return lhs.Text <=> rhs.Text
+			End
+		Endif
+		_sorter = _sorterByName
+		' sorting
+		list.Sort(_sorter)
 	End
 	
 End
