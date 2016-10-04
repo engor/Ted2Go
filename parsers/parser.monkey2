@@ -17,7 +17,8 @@ Enum CodeItemKind
 	Param_,
 	Lambda_,
 	Local_,
-	Operator_
+	Operator_,
+	Inner_
 End
 
 Enum AccessMode
@@ -157,7 +158,7 @@ Class CodeItem Implements ICodeItem
 						s += " : "+Type
 					Endif
 					s += (ParamsStr = Null) ? " ()" Else " ("+ParamsStr+")"
-				Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_, CodeItemKind.Enum_, CodeItemKind.Property_
+				Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_, CodeItemKind.Enum_, CodeItemKind.Property_, CodeItemKind.Inner_
 					'do nothing
 				Default
 					' for enums
@@ -292,6 +293,8 @@ Class CodeItem Implements ICodeItem
 			_kind = CodeItemKind.Local_
 		Case "operator"
 			_kind = CodeItemKind.Operator_
+		Case "for","select","while"
+			_kind = CodeItemKind.Inner_
 		End
 	End
 	

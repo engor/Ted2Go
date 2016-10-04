@@ -227,6 +227,7 @@ Class CodeDocument Extends Ted2Document
 		_codeView = New CodeDocumentView( Self )
 		_view.ContentView = _codeView
 		
+		_treeView.SortEnabled = True
 		' goto item from tree view
 		_treeView.NodeClicked += Lambda(node:TreeView.Node)
 			Local codeNode := Cast<CodeTreeNode>(node)

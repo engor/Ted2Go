@@ -5,6 +5,8 @@ Namespace ted2go
 
 Class CodeTreeView Extends TreeViewExt
 	
+	Field SortEnabled:Bool
+	
 	Method Fill(fileType:String, path:String)
 	
 		StoreTreeExpands()
@@ -85,8 +87,11 @@ Class CodeTreeView Extends TreeViewExt
 		
 		If item.Children = Null Return
 		
-		' sorting
-		SortItems(item.Children)
+		' sorting only root class members
+		Select item.Kind
+			Case CodeItemKind.Class_, CodeItemKind.Struct_, CodeItemKind.Enum_
+				SortItems(item.Children)
+		End
 		
 		For Local i := Eachin item.Children
 			AddTreeItem(i, n, parser)
@@ -98,6 +103,9 @@ Class CodeTreeView Extends TreeViewExt
 	Field _sorter:Int(lhs:ICodeItem, rhs:ICodeItem)
 	
 	Method SortItems(list:List<ICodeItem>)
+	
+		If Not SortEnabled Return
+	
 		If _sorterByName = Null
 			_sorterByName = Lambda:Int(lhs:ICodeItem, rhs:ICodeItem)
 				' here we can sort by name / access / and so on

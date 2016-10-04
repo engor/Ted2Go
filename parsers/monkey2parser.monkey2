@@ -118,7 +118,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		'Print "parsed: "+filePath+", items: "+_innerItems.Count()
 	End 	
-		
+	
+	
 	Private
 	
 	Global _instance := New Monkey2Parser
@@ -290,22 +291,33 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		Case "end"
 			
-			If info.scope <> Null
-				'If _insideInterface And _scope._kind = CodeItemKind.Interfacee
-					_insideInterface = False
-				'Endif
-				'If _scope.Indent > indent
-				'	Print "scope: "+_scope.Scope+", "+ _scope.Indent+", "+ indent
-				'Endif
-				If info.scope.Indent = indent
-										
-					PopScope(info) 'go up 
-										
-				Endif
-				
-			Endif
-					
-			Return
+			CloseScope(info, indent)
+
+			
+		Case "for"
+			
+			' need to extract ident if has 'local'
+			item = New CodeItem("For")
+			
+			AddItem(item, word, True, info)
+		
+		
+		Case "select"
+			
+			item = New CodeItem("Select")
+			
+			AddItem(item, word, True, info)
+		
+		Case "while"
+			
+			item = New CodeItem("While")
+			
+			AddItem(item, word, True, info)
+			
+		
+		Case "next", "wend"
+		
+			CloseScope(info, indent)
 			
 			
 		Case "class", "struct"
@@ -530,7 +542,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		While True
 			p = text.Find("Lambda", p+1)
 			If p = -1 Exit
-			If Not IsIdent(text[p-1]) And Not IsIdent(text[p+6]) Exit
+			If Not IsIdent(text[p-1]) And Not IsIdent(text[p+6]) And Not IsPosInsideOfQuotes(text, p) Exit
 		Wend
 		
 		If p > 0
@@ -700,6 +712,17 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return "public"
 	End
 	
+	Method CloseScope(info:FileInfo, indent:Int)
+		
+		If info.scope <> Null
+			_insideInterface = False
+			If info.scope.Indent = indent
+				PopScope(info) 'go up 
+			Endif
+		Endif
+			
+	End
+		
 	Method PushScope(item:ICodeItem, info:FileInfo)
 			
 		'Print "push scope"
