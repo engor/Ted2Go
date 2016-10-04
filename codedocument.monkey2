@@ -226,7 +226,14 @@ Class CodeDocument Extends Ted2Document
 		
 		_codeView = New CodeDocumentView( Self )
 		_view.ContentView = _codeView
-				
+		
+		' goto item from tree view
+		_treeView.NodeClicked += Lambda(node:TreeView.Node)
+			Local codeNode := Cast<CodeTreeNode>(node)
+			Local item := codeNode.CodeItem
+			_codeView.GotoLine( item.ScopeStartLine )
+		End		
+		
 	End
 	
 	Property TextDocument:TextDocument()
@@ -304,94 +311,12 @@ Class CodeDocument Extends Ted2Document
 	
 	Method ParseSources()
 		ParsersManager.Get(FileType).Parse(_doc.Text, Path)
-		FillTreeView()
-	End
-	
-	Field _expands := New StringMap<Bool>
-	Method StoreTreeExpands()
-	
-		_expands.Clear()
-		StoreNodeExpand( _treeView.RootNode )
-		
-	End
-	
-	Method StoreNodeExpand(node:TreeView.Node)
-	
-		Local key := GetNodePath(node)
-		_expands[key] = node.Expanded
-		
-		If node.Children = Null Return
-		
-		For Local i := Eachin node.Children
-			StoreNodeExpand(i)
-		Next
-		
-	End
-	
-	Method RestoreNodeExpand(node:TreeView.Node)
-	
-		Local key := GetNodePath(node)
-		node.Expanded = _expands[key]
-		
-	End
-	
-	Method GetNodePath:String(node:TreeView.Node)
-	
-		Local s := node.Text
-		Local i := node.Parent
-		While i <> Null
-			s = i.Text+"\"+s
-			i = i.Parent
-		Wend
-		Return s
-		
-	End
-	
-	Method FillTreeView()
-	
-		StoreTreeExpands()
-		
-		Local stack := New Stack<TreeView.Node>
-		Local parser := ParsersManager.Get(FileType)
-		Local node := _treeView.RootNode
-		
-		_treeView.RootNodeVisible = False
-		node.Expanded = True
-		node.RemoveAllChildren()
-		
-		Local list := parser.ItemsMap[Path]
-		If list = Null Return
-		
-		For Local i := Eachin list
-			AddTreeItem(i, node, parser)
-		Next
-		
-		_treeView.NodeClicked += Lambda(node:TreeView.Node)
-			Local codeNode := Cast<CodeTreeNode>(node)
-			Local item := codeNode.CodeItem
-			_codeView.GotoLine( item.ScopeStartLine )
-		End
-		
-	End
-	
-	Method AddTreeItem(item:ICodeItem, node:TreeView.Node, parser:ICodeParser)
-	
-		parser.RefineRawType(item) 'refine all visible items
-		
-		Local n := New CodeTreeNode(item, node)
-		
-		' restore expand state
-		RestoreNodeExpand(n)
-		
-		If item.Children = Null Return
-		
-		For Local i := Eachin item.Children
-			AddTreeItem(i, n, parser)
-		End
-		
+		_treeView.Fill(FileType, Path)
 	End
 	
 End
+
+
 
 Class CodeDocumentType Extends Ted2DocumentType
 
@@ -408,7 +333,7 @@ Class CodeDocumentType Extends Ted2DocumentType
 	End
 	
 	Method OnCreateDocument:Ted2Document( path:String ) Override
-	
+
 		Return New CodeDocument( path )
 	End
 	
