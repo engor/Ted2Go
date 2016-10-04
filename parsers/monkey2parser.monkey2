@@ -293,14 +293,14 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			CloseScope(info, indent)
 
-			
+		#Rem	
 		Case "for"
 			
 			' need to extract ident if has 'local'
 			item = New CodeItem("For")
 			
 			AddItem(item, word, True, info)
-		
+		#End
 		
 		Case "select"
 			
@@ -433,7 +433,18 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Endif
 			
 			
-		Case "field", "global", "local", "const"
+		Case "field", "global", "local", "const", "for"
+			
+			Local isFor := (word = "for")
+			If isFor
+			
+				item = New CodeItem("For")
+				AddItem(item, word, True, info)
+				
+				Local p := postfix.ToLower().Find("local")
+				If p <> -1 Then postfix = postfix.Slice(p+5)
+				
+			Endif
 			
 			' here we try to split idents by comma
 			_params.Clear()
@@ -488,6 +499,13 @@ Class Monkey2Parser Extends CodeParserPlugin
 							
 						Else
 						
+							If isFor
+							
+								Local i1 := type.ToLower().Find("eachin")
+								If i1 <> -1 Then type = type.Slice(i1+6)
+								
+							Endif
+							
 							Local typeIdent := ParseIdent(type, True)
 							
 							If typeIdent = "True" Or typeIdent = "False"
@@ -505,6 +523,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 									rawType = typeIdent
 								Endif
 							Endif
+							
+							'If isFor Print "ident: "+ident+" , type: "+type+" , raw: "+rawType
 								
 						Endif
 					Endif
