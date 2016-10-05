@@ -348,7 +348,7 @@ End
 
 Class CodeItemIcons
 
-	Function GetIcon:Image(item:ICodeItem)
+	Function GetIcon:Image(item:CodeItem)
 	
 		If icons = Null
 			InitIcons()

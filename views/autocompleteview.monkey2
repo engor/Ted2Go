@@ -4,7 +4,7 @@ Namespace ted2go
 
 Class CodeListViewItem Implements ListViewItem
 	
-	Method New(item:ICodeItem)
+	Method New(item:CodeItem)
 		_item = item
 		_icon = CodeItemIcons.GetIcon(item)
 	End
@@ -18,7 +18,7 @@ Class CodeListViewItem Implements ListViewItem
 		canvas.DrawText(Text, x+dx, y, handleX, handleY)
 	End
 	
-	Property CodeItem:ICodeItem()
+	Property CodeItem:CodeItem()
 		Return _item
 	End
 	
@@ -29,7 +29,7 @@ Class CodeListViewItem Implements ListViewItem
 	
 	Private
 	
-	Field _item:ICodeItem
+	Field _item:CodeItem
 	Field _icon:Image
 	
 End
@@ -126,7 +126,7 @@ Class AutocompleteDialog Extends DialogExt
 		_lastIdentPart = lastIdent
 		
 		Local parser := GetParser(fileType)
-		Local items:List<ICodeItem>
+		Local items:List<CodeItem>
 		Local onlyOne := (idents.Length = 1)
 		
 		'-----------------------------
@@ -153,7 +153,7 @@ Class AutocompleteDialog Extends DialogExt
 		' what the first ident is?	
 		'-----------------------------
 		Local firstIdent := idents[0]
-		Local item:ICodeItem = Null
+		Local item:CodeItem = Null
 		Local isSelf := (firstIdent.ToLower() = "self")
 		
 		If isSelf
@@ -288,11 +288,11 @@ Class AutocompleteDialog Extends DialogExt
 	Method New()
 	End
 	
-	Method IsLocalMember:Bool(item:ICodeItem)
+	Method IsLocalMember:Bool(item:CodeItem)
 		Return item.Kind = CodeItemKind.Local_ Or item.Kind = CodeItemKind.Param_
 	End
 	
-	Method IsStaticMember:Bool(item:ICodeItem, checkPublic:Bool=True)
+	Method IsStaticMember:Bool(item:CodeItem, checkPublic:Bool=True)
 		
 		If item.Access <> AccessMode.Public_ Return False
 		Select item.Kind
@@ -325,7 +325,7 @@ Class AutocompleteDialog Extends DialogExt
 		Return _keywords[fileType]
 	End
 	
-	Method CheckAccess:Bool(item:ICodeItem, filePath:String, parent:ICodeItem=Null)
+	Method CheckAccess:Bool(item:CodeItem, filePath:String, parent:CodeItem=Null)
 		
 		' if item is a class, need to show only static members - func, global and const
 		'If parent <> Null And parent.Kind = CodeItemKind.Class_
@@ -352,7 +352,7 @@ Class AutocompleteDialog Extends DialogExt
 		' for non public - item scope must be equals item type
 		Local type := item.Type
 		Local i := item.Parent
-		Local last:ICodeItem = Null
+		Local last:CodeItem = Null
 		
 		While i <> Null
 			last = i
@@ -381,7 +381,7 @@ Class AutocompleteDialog Extends DialogExt
 		Endif
 	End
 	
-	Method ItemsAtScopeInternal(scope:ICodeItem, ident:String, startsOnly:Bool, findInParents:Bool, target:List<ICodeItem>)
+	Method ItemsAtScopeInternal(scope:CodeItem, ident:String, startsOnly:Bool, findInParents:Bool, target:List<CodeItem>)
 		
 		Local item := scope
 		While item <> Null

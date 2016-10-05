@@ -76,7 +76,7 @@ Class CodeTreeView Extends TreeViewExt
 		
 	End
 		
-	Method AddTreeItem(item:ICodeItem, node:TreeView.Node, parser:ICodeParser)
+	Method AddTreeItem(item:CodeItem, node:TreeView.Node, parser:ICodeParser)
 	
 		parser.RefineRawType(item) 'refine all visible items
 		
@@ -99,15 +99,15 @@ Class CodeTreeView Extends TreeViewExt
 				
 	End
 	
-	Field _sorterByName:Int(lhs:ICodeItem, rhs:ICodeItem)
-	Field _sorter:Int(lhs:ICodeItem, rhs:ICodeItem)
+	Field _sorterByName:Int(lhs:CodeItem, rhs:CodeItem)
+	Field _sorter:Int(lhs:CodeItem, rhs:CodeItem)
 	
-	Method SortItems(list:List<ICodeItem>)
+	Method SortItems(list:List<CodeItem>)
 	
 		If Not SortEnabled Return
 	
 		If _sorterByName = Null
-			_sorterByName = Lambda:Int(lhs:ICodeItem, rhs:ICodeItem)
+			_sorterByName = Lambda:Int(lhs:CodeItem, rhs:CodeItem)
 				' here we can sort by name / access / and so on
 				Return lhs.Text <=> rhs.Text
 			End
@@ -122,21 +122,21 @@ End
 
 Class CodeTreeNode Extends TreeView.Node
 
-	Method New(item:ICodeItem, node:TreeView.Node)
+	Method New(item:CodeItem, node:TreeView.Node)
 		Super.New(item.Text, node)
 		_code = item
 		Icon = CodeItemIcons.GetIcon(item)
 		
 	End
 	
-	Property CodeItem:ICodeItem()
+	Property CodeItem:CodeItem()
 		Return _code
 	End
 	
 	
 	Private
 	
-	Field _code:ICodeItem
+	Field _code:CodeItem
 	
 End
 

@@ -14,10 +14,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
-	Method GetScope:ICodeItem(docPath:String, docLine:Int)
+	Method GetScope:CodeItem(docPath:String, docLine:Int)
 		
 		'dummy check, need to store items lists by filePath
-		Local result:ICodeItem = Null
+		Local result:CodeItem = Null
 		For Local i := Eachin Items
 			If i.FilePath <> docPath Continue 'skip
 			If docLine > i.ScopeStartLine And docLine < i.ScopeEndLine
@@ -36,7 +36,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
-	Method GetInnerScope:ICodeItem(parent:ICodeItem, docLine:Int)
+	Method GetInnerScope:CodeItem(parent:CodeItem, docLine:Int)
 		
 		Local items := parent.Children
 		If items = Null Return Null
@@ -48,7 +48,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	End
 	
 	'ident is like this: obj.inner.ident
-	Method ItemAtScope:ICodeItem(scope:ICodeItem, idents:String[])
+	Method ItemAtScope:CodeItem(scope:CodeItem, idents:String[])
 		
 		Return Null
 		
@@ -621,14 +621,14 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
-	Method RefineRawType(sourceItem:ICodeItem)
+	Method RefineRawType(sourceItem:CodeItem)
 	
 		Local rt := sourceItem.RawType
 		If rt = Null Or rt = "" Return
 		
 		Local scope := GetScope(sourceItem.FilePath, sourceItem.ScopeStartLine)
 		Local idents := rt.Split(".")
-		Local item:ICodeItem
+		Local item:CodeItem
 		Local firstIdent := idents[0]
 		
 		While scope <> Null
@@ -743,7 +743,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 	End
 		
-	Method PushScope(item:ICodeItem, info:FileInfo)
+	Method PushScope(item:CodeItem, info:FileInfo)
 			
 		'Print "push scope"
 		If info.scope <> Null
@@ -808,7 +808,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return i>0 And i=n
 	End
 	
-	Method AddItem(item:ICodeItem, kindStr:String, isScope:Bool, info:FileInfo)
+	Method AddItem(item:CodeItem, kindStr:String, isScope:Bool, info:FileInfo)
 	
 		item.ScopeStartLine = _docLine
 		item.Namespac = _namespace
@@ -834,7 +834,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return info.stackAccess.Top
 	End
 	
-	Method RemoveItem(item:ICodeItem)
+	Method RemoveItem(item:CodeItem)
 	
 		'Local key := item.Namespac+item.Ident
 		'Local key := item.Ident
@@ -1038,9 +1038,9 @@ Class FileInfo
 	Field lastModified:Long
 	Field namespac:String
 	Field uses := New List<String>
-	Field items := New List<ICodeItem>
-	Field stack := New Stack<ICodeItem>
-	Field scope:ICodeItem
+	Field items := New List<CodeItem>
+	Field stack := New Stack<CodeItem>
+	Field scope:CodeItem
 	Field accessInFile := AccessMode.Public_
 	Field indent:Int
 	Field stackAccess := New Stack<AccessMode>

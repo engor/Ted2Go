@@ -21,6 +21,7 @@ Enum CodeItemKind
 	Inner_
 End
 
+
 Enum AccessMode
 	Private_,
 	Protected_,
@@ -28,66 +29,7 @@ Enum AccessMode
 End
 
 
-Interface ICodeItem
-	
-	Property Ident:String()
-	Setter(value:String)
-	
-	Property Indent:Int()
-	Setter(value:Int)
-	
-	Property Type:String()
-	Setter(value:String)
-	
-	Property RawType:String()
-	Setter(value:String)
-	
-	Property Params:String[]()
-	Setter(value:String[])
-	
-	Property ParamsStr:String()
-	Setter(value:String)
-	
-	Property Kind:CodeItemKind()
-	Setter(value:CodeItemKind)
-	
-	Property KindStr:String()
-	Setter(value:String)
-	
-	Property Access:AccessMode()
-	Setter(value:AccessMode)
-	
-	Property Text:String()
-	'Setter(value:String)
-	
-	Property Parent:ICodeItem()
-	Setter(value:ICodeItem)
-	
-	Property Root:ICodeItem()
-	
-	Property Children:List<ICodeItem>()
-	Setter(value:List<ICodeItem>)
-	
-	Property Namespac:String()
-	Setter(value:String)
-	
-	Property FilePath:String()
-	Setter(value:String)
-	
-	Property Scope:String()
-	
-	Property ScopeStartLine:Int()
-	Setter(value:Int)
-	
-	Property ScopeEndLine:Int()
-	Setter(value:Int)
-	
-	Method AddChild(item:ICodeItem)
-	
-End
-
-
-Class CodeItem Implements ICodeItem
+Class CodeItem
 	
 	Method New(ident:String)
 		_ident = ident
@@ -173,15 +115,15 @@ Class CodeItem Implements ICodeItem
 	'	_text = value
 	End
 	
-	Property Parent:ICodeItem()
+	Property Parent:CodeItem()
 		Return _parent
-	Setter(value:ICodeItem)
+	Setter(value:CodeItem)
 		SetParent(value)
 	End
 	
-	Property Root:ICodeItem()
+	Property Root:CodeItem()
 		
-		Local par:ICodeItem = Null
+		Local par:CodeItem = Null
 		Local i := Parent
 		While i <> Null
 			par = i
@@ -191,9 +133,9 @@ Class CodeItem Implements ICodeItem
 		
 	End
 	
-	Property Children:List<ICodeItem>()
+	Property Children:List<CodeItem>()
 		Return _children
-	Setter(value:List<ICodeItem>)
+	Setter(value:List<CodeItem>)
 		_children = value
 	End
 	
@@ -231,14 +173,14 @@ Class CodeItem Implements ICodeItem
 		_scopeEndLine = value
 	End
 	
-	Method SetParent(parent:ICodeItem)
+	Method SetParent(parent:CodeItem)
 		If Parent <> Null Then Parent.Children.Remove(Self)
 		_parent = parent
-		If _parent.Children = Null Then _parent.Children = New List<ICodeItem>
+		If _parent.Children = Null Then _parent.Children = New List<CodeItem>
 		_parent.Children.AddLast(Self)
 	End
 	
-	Method AddChild(item:ICodeItem)
+	Method AddChild(item:CodeItem)
 		item.Parent = Self
 	End
 	
@@ -254,8 +196,8 @@ Class CodeItem Implements ICodeItem
 	Field _kindStr:String
 	Field _access:AccessMode
 	Field _text:String
-	Field _parent:ICodeItem
-	Field _children:List<ICodeItem>
+	Field _parent:CodeItem
+	Field _children:List<CodeItem>
 	Field _namespace:String
 	Field _filePath:String
 	Field _scopeStartLine:Int, _scopeEndLine:Int=-1
@@ -304,14 +246,14 @@ End
 
 Interface ICodeParser
 
-	Method RefineRawType(item:ICodeItem)
+	Method RefineRawType(item:CodeItem)
 	Method Parse(text:String, filePath:String)
 	Method IsPosInsideOfQuotes:Bool(text:String, pos:Int)
 	Method CanShowAutocomplete:Bool(line:String, posInLine:Int)
-	Method GetScope:ICodeItem(docPath:String, docLine:Int)
-	Method ItemAtScope:ICodeItem(scope:ICodeItem, idents:String[])
-	Property Items:List<ICodeItem>()
-	Property ItemsMap:StringMap<List<ICodeItem>>()
+	Method GetScope:CodeItem(docPath:String, docLine:Int)
+	Method ItemAtScope:CodeItem(scope:CodeItem, idents:String[])
+	Property Items:List<CodeItem>()
+	Property ItemsMap:StringMap<List<CodeItem>>()
 	
 End
 
@@ -322,11 +264,11 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 		Return "CodeParserPlugin"
 	End
 	
-	Property Items:List<ICodeItem>()
+	Property Items:List<CodeItem>()
 		Return _items
 	End
 	
-	Property ItemsMap:StringMap<List<ICodeItem>>()
+	Property ItemsMap:StringMap<List<CodeItem>>()
 		Return _itemsMap
 	End
 	
@@ -340,8 +282,8 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 	
 	Private
 	
-	Field _items := New List<ICodeItem>
-	Field _itemsMap := New StringMap<List<ICodeItem>>
+	Field _items := New List<CodeItem>
+	Field _itemsMap := New StringMap<List<CodeItem>>
 	
 End
 
@@ -368,11 +310,11 @@ Private
 
 Class EmptyParser Implements ICodeParser
 
-	Property Items:List<ICodeItem>()
+	Property Items:List<CodeItem>()
 		Return _items
 	End
 	
-	Property ItemsMap:StringMap<List<ICodeItem>>()
+	Property ItemsMap:StringMap<List<CodeItem>>()
 		Return _itemsMap
 	End
 	
@@ -385,19 +327,19 @@ Class EmptyParser Implements ICodeParser
 	Method CanShowAutocomplete:Bool(line:String, posInLine:Int)
 		Return False
 	End
-	Method GetScope:ICodeItem(docPath:String, docLine:Int)
+	Method GetScope:CodeItem(docPath:String, docLine:Int)
 		Return Null
 	End
-	Method ItemAtScope:ICodeItem(scope:ICodeItem, idents:String[])
+	Method ItemAtScope:CodeItem(scope:CodeItem, idents:String[])
 		Return Null
 	End
-	Method RefineRawType(item:ICodeItem)
+	Method RefineRawType(item:CodeItem)
 	End
 	
 	
 	Private
 	
-	Field _items := New List<ICodeItem>
-	Field _itemsMap := New StringMap<List<ICodeItem>>
+	Field _items := New List<CodeItem>
+	Field _itemsMap := New StringMap<List<CodeItem>>
 	
 End
