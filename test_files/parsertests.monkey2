@@ -7,6 +7,16 @@ Function LambdaFn(p1:String, p2:Void(x:Int,y:Int), p3:Float)
 
 End
 
+#Rem
+Class Aa Extends Stream Implements IIntegral,IIterator
+
+End
+#End
+
+Class AAA Extends TestClass
+	
+End
+
 
 Class TestClass
 	

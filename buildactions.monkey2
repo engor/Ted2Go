@@ -380,6 +380,7 @@ Class BuildActions
 				Local i := stdout.Find( "Compiling..." )
 				If i<>-1
 					_console.Write( "~nDone." )
+					_console.Terminate()
 					Exit
 				Endif
 			Endif

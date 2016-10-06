@@ -126,7 +126,6 @@ Class AutocompleteDialog Extends DialogExt
 		_lastIdentPart = lastIdent
 		
 		Local parser := GetParser(fileType)
-		Local items:List<CodeItem>
 		Local onlyOne := (idents.Length = 1)
 		
 		'-----------------------------
@@ -155,6 +154,7 @@ Class AutocompleteDialog Extends DialogExt
 		Local firstIdent := idents[0]
 		Local item:CodeItem = Null
 		Local isSelf := (firstIdent.ToLower() = "self")
+		Local items := New List<CodeItem>
 		
 		If isSelf
 		
@@ -165,8 +165,9 @@ Class AutocompleteDialog Extends DialogExt
 			' check in 'this' scope
 			While scope <> Null
 	
-				Local items := scope.Children
-				If items <> Null
+				GetAllItems(scope, items, parser)
+				
+				If Not items.Empty
 					For Local i := Eachin items
 						If Not CheckIdent(i.Ident, firstIdent, onlyOne) Continue
 						If Not CheckAccess(i, filePath, scope) Continue
@@ -213,7 +214,7 @@ Class AutocompleteDialog Extends DialogExt
 		If Not onlyOne And item <> Null
 			
 			Local staticOnly := (Not isSelf And item.Kind = CodeItemKind.Class_)
-						
+					
 			' start from the second ident part here
 			For Local k := 1 Until idents.Length
 				
@@ -235,8 +236,10 @@ Class AutocompleteDialog Extends DialogExt
 				Local identPart := idents[k]
 				Local last := (k = idents.Length-1)
 				
-				Local items := item.Children
-				If items <> Null
+				' extract all items from item
+				GetAllItems(item, items, parser)
+				
+				If Not items.Empty
 					For Local i := Eachin items
 						If Not CheckIdent(i.Ident, identPart, last) Continue
 						If Not CheckAccess(i, filePath, scope) Continue
@@ -286,6 +289,47 @@ Class AutocompleteDialog Extends DialogExt
 	
 	
 	Method New()
+	End
+	
+	Method GetAllItems(item:CodeItem, target:List<CodeItem>, parser:ICodeParser)
+		
+		' add self children
+		If item.Children <> Null
+			target.AddAll(item.Children)
+		Endif
+		
+		' add from super classes / ifaces
+		If item.SuperTypes = Null Return
+		
+		For Local t := Eachin item.SuperTypes
+			' find class / iface
+			Local result:CodeItem = Null
+			For Local i := Eachin parser.Items
+				If i.Ident = t
+					result = i
+					Exit
+				Endif
+			Next
+			If result = Null Continue
+			Local items := result.Children
+			If items = Null Continue
+			For Local i := Eachin items
+				' need to add unique
+				Local s := i.Text
+				Local exists := False
+				For Local ii := Eachin target
+					If ii.Text = s
+						exists = True
+						Exit
+					Endif
+				End
+				If Not exists
+					target.AddLast(i)
+					'Print "add from super: "+i.Text
+				Endif
+			Next
+		Next
+		
 	End
 	
 	Method IsLocalMember:Bool(item:CodeItem)
@@ -366,7 +410,11 @@ Class AutocompleteDialog Extends DialogExt
 		Wend
 		
 		If last <> Null
-			Return last.Ident = type 'inside of the same class
+			 'inside of the same class
+			
+			Local has := last.HasSuchParent(type)
+			Print "has: "+Int(has)+", "+last.Ident+", "+item.Ident
+			Return has
 		Endif
 		
 		Return False

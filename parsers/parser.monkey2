@@ -184,6 +184,26 @@ Class CodeItem
 		item.Parent = Self
 	End
 	
+	Property SuperTypes:List<String>()
+		Return _superTypes
+	Setter(value:List<String>)
+		_superTypes = value
+	End
+	
+	Method AddSuperType(type:String)
+		If _superTypes = Null Then _superTypes = New List<String>
+		_superTypes.AddLast(type)
+	End
+	
+	Method HasSuchParent:Bool(parentIdent:String)
+		Local p := Parent
+		While p <> Null
+			If p.Ident = parentIdent Return True
+			p = p.Parent
+		Wend
+		Return False
+	End
+	
 	
 	Protected
 	
@@ -201,7 +221,7 @@ Class CodeItem
 	Field _namespace:String
 	Field _filePath:String
 	Field _scopeStartLine:Int, _scopeEndLine:Int=-1
-	
+	Field _superTypes:List<String>
 	
 	Private
 	

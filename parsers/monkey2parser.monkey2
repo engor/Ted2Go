@@ -320,31 +320,72 @@ Class Monkey2Parser Extends CodeParserPlugin
 			CloseScope(info, indent)
 			
 			
-		Case "class", "struct"
+		Case "class", "struct", "interface"
 			
-			Local ident := ParseIdent(postfix)
-			item = New CodeItem(ident)
+			' extract super classes / ifaces
+			Local txt := postfix.ToLower()
+			Local p1 := txt.Find("extends ")
+			Local p2 := txt.Find("implements ")
+			Local p3 := txt.Find("=")
 			
-			If info.scope <> Null
-				'Print "inner class/struct: "+ident+", "+_scope.Ident
+			Local p:Int
+			If p1 > 0
+				p = p1
+			Elseif p2 > 0
+				p = p2
+			Elseif p3 > 0
+				p = p3
+			Else
+				p = txt.Length
 			Endif
-			item.Type = ident
 			
-			AddItem(item, word, True, info)
+			Local ident := postfix.Slice(0,p).Trim()
+			If ident.StartsWith("@") Then ident = ident.Slice(1)
+			'Print "ident '"+ident+"'"
 			
-			PushAccess(info, AccessMode.Public_)
-			
-		Case "interface"
-			
-			Local ident := ParseIdent(postfix)
 			item = New CodeItem(ident)
-			
-			_insideInterface = True
 			item.Type = ident
+			
+			' extends
+			If p1 > 0
+				if p2 > 0
+					p = p2
+				Elseif p3 > 0
+					p = p3
+				Else
+					p = txt.Length
+				Endif
+				Local ext := postfix.Slice(p1+8,p).Trim()
+				'Print "ext: '"+ext+"'"
+				item.AddSuperType(ext)
+			Endif
+			
+			' implements
+			If p2 > 0
+				if p3 > 0
+					p = p3
+				Else
+					p = txt.Length
+				Endif
+				Local impl := postfix.Slice(p2+11,p).Trim()
+				'Print "impl: '"+impl+"'"
+				
+				' here we try to split idents by comma
+				_params.Clear()
+				ExtractParams(impl, _params)
+				
+				For Local i := Eachin _params
+					item.AddSuperType(i)
+				Next
+				
+			Endif
+			
+			_insideInterface = (word = "interface")
 			
 			AddItem(item, word, True, info)
 			
 			PushAccess(info, AccessMode.Public_)
+			
 			
 		Case "enum"
 			
