@@ -120,6 +120,133 @@ Class Monkey2Parser Extends CodeParserPlugin
 	End 	
 	
 	
+	Method GetItemsForAutocomplete(ident:String, filePath:String, docLine:Int, target:List<CodeItem>)
+		
+		Local idents := ident.Split(".")
+				
+		' using lowerCase for keywords
+		Local lastIdent := idents[idents.Length-1].ToLower()
+		Local onlyOne := (idents.Length = 1)
+				
+		'check current scope
+		Local rootScope := GetScope(filePath, docLine)
+		Local scope := rootScope
+		
+		
+		'-----------------------------
+		' what the first ident is?	
+		'-----------------------------
+		Local firstIdent := idents[0]
+		Local item:CodeItem = Null
+		Local isSelf := (firstIdent.ToLower() = "self")
+		Local items := New List<CodeItem>
+		
+		If isSelf
+		
+			item = scope.NearestClassScope
+			
+		Else ' not 'self' ident
+			
+			' check in 'this' scope
+			While scope <> Null
+	
+				GetAllItems(scope, items)
+				
+				If Not items.Empty
+					For Local i := Eachin items
+						If Not CheckIdent(i.Ident, firstIdent, onlyOne) Continue
+						If Not CheckAccessInScope(i, scope) Continue
+						' additional checking for the first ident
+						If IsLocalMember(i) And i.ScopeStartLine > docLine Continue
+						If Not onlyOne
+							item = i
+							Exit
+						Else
+							RefineRawType(i)
+							target.AddLast(i)
+						Endif
+					Next
+				Endif
+				'found item
+				If item <> Null Exit
+				
+				scope = scope.Parent '￑if inside of func then go to class' scope
+				
+			Wend
+		
+		Endif
+		
+		' and check in global scope
+		If item = Null Or onlyOne
+			For Local i := Eachin Items
+				If Not CheckIdent(i.Ident, firstIdent, onlyOne) Continue
+				If Not CheckAccessInGlobal(i, filePath) Continue
+				If IsLocalMember(i) And i.ScopeStartLine > docLine Continue
+				If Not onlyOne
+					item = i
+					Exit
+				Else
+					RefineRawType(i)
+					target.AddLast(i)
+				Endif
+			Next
+		Endif
+		
+		
+		' var1.var2.var3...
+		If Not onlyOne And item <> Null
+			
+			Local scopeClass := (rootScope <> Null) ? rootScope.NearestClassScope Else Null
+			
+			' start from the second ident part here
+			For Local k := 1 Until idents.Length
+				
+				RefineRawType(item)
+				
+				Local staticOnly := (Not isSelf And (item.Kind = CodeItemKind.Class_ Or item.Kind = CodeItemKind.Struct_))
+								
+				' need to check by ident type
+				Local type := item.Type
+				item = Null
+				For Local i := Eachin Items
+					If i.Ident = type
+						item = i
+						Exit
+					Endif
+				Next
+				If item = Null Then Exit
+				
+				Local identPart := idents[k]
+				Local last := (k = idents.Length-1)
+				
+				' extract all items from item
+				items.Clear()
+				GetAllItems(item, items)
+				
+				If Not items.Empty
+					For Local i := Eachin items
+						If Not CheckIdent(i.Ident, identPart, last) Continue
+						If Not CheckAccessInClassType(i, scopeClass) Continue
+						item = i
+						If last
+							If Not staticOnly Or IsStaticMember(i)
+								RefineRawType(i)
+								target.AddLast(i)
+							Endif
+						Else
+							Exit
+						Endif
+					Next
+				Endif
+				
+				If item = Null Then Exit
+			Next
+			
+		Endif
+		
+	End
+	
+	
 	Private
 	
 	Global _instance := New Monkey2Parser
@@ -138,6 +265,131 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Method New()
 		Super.New()
 		_types = New String[](".monkey2")
+	End
+	
+	Method GetAllItems(item:CodeItem, target:List<CodeItem>)
+		
+		' add self children
+		If item.Children <> Null
+			target.AddAll(item.Children)
+		Endif
+		
+		' add from super classes / ifaces
+		If item.SuperTypes = Null Return
+		
+		For Local t := Eachin item.SuperTypes
+			' find class / iface
+			Local result:CodeItem = Null
+			For Local i := Eachin Items
+				If i.Ident = t
+					result = i
+					Exit
+				Endif
+			Next
+			If result = Null Continue
+			Local items := result.Children
+			If items = Null Continue
+			For Local i := Eachin items
+				' need to add unique
+				Local s := i.Text
+				Local exists := False
+				For Local ii := Eachin target
+					If ii.Text = s
+						exists = True
+						Exit
+					Endif
+				End
+				If Not exists
+					target.AddLast(i)
+				Endif
+			Next
+		Next
+		
+	End
+	
+	Method IsLocalMember:Bool(item:CodeItem)
+		Return item.Kind = CodeItemKind.Local_ Or item.Kind = CodeItemKind.Param_
+	End
+	
+	Method IsStaticMember:Bool(item:CodeItem, checkPublic:Bool=True)
+		
+		If item.Access <> AccessMode.Public_ Return False
+		Select item.Kind
+		Case CodeItemKind.Function_, CodeItemKind.Global_, CodeItemKind.Const_, CodeItemKind.Class_, CodeItemKind.Enum_, CodeItemKind.Struct_
+			Return True
+		End
+		Return False
+		
+	End
+	
+	Method CheckAccessInScope:Bool(item:CodeItem, parent:CodeItem)
+		
+		' always show public members
+		Local a := item.Access
+		If a = AccessMode.Public_
+			Return True
+		Endif
+		
+		Local itemClass := item.NearestClassScope
+		
+		' if we are inside of scope-class
+		If itemClass = parent
+			Return True
+		Endif
+		
+		' not inside of scope-class
+		Return item.Access = AccessMode.Protected_
+
+	End
+	
+	Method CheckAccessInGlobal:Bool(item:CodeItem, filePath:String)
+		
+		' always show public classes
+		Local a := item.Access
+		If a = AccessMode.Public_
+			Return True
+		Endif
+		
+		' if not a public and we are inside of containing file
+		Return item.FilePath = filePath
+		
+	End
+	
+	Method CheckAccessInClassType:Bool(item:CodeItem, scopeClass:CodeItem)
+		
+		' always show public members of vars
+		Local a := item.Access
+		If a = AccessMode.Public_
+			Return True
+		Endif
+		
+		' not in class, so only public access here
+		If scopeClass = Null
+			Return False
+		Endif
+		
+		Local type := item.Parent.Type
+		
+		' it's own class
+		If type = scopeClass.Type
+			Return True
+		Else
+			' inherited
+			Local has := scopeClass.HasSuchSuperClass(type)
+			If has Return item.Access = AccessMode.Protected_
+		Endif
+		
+		Return False
+		
+	End
+	
+	Method CheckIdent:Bool(ident1:String, ident2:String, startsOnly:Bool)
+		If ident2 = "" Return True
+		If startsOnly
+			Return ident1.ToLower().StartsWith(ident2.ToLower())
+		Else
+			Return ident1 = ident2
+		Endif
 	End
 	
 	Method GetFileInfo:FileInfo(path:String)

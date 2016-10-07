@@ -100,8 +100,10 @@ Class CodeItem
 						s += " : "+Type
 					Endif
 					s += (ParamsStr = Null) ? " ()" Else " ("+ParamsStr+")"
-				Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_, CodeItemKind.Enum_, CodeItemKind.Property_, CodeItemKind.Inner_
+				Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_, CodeItemKind.Enum_, CodeItemKind.Inner_
 					'do nothing
+				Case CodeItemKind.Property_
+					s += " : "+Type
 				Default
 					' for enums
 					If Parent = Null Or Parent.Kind <> CodeItemKind.Enum_
@@ -195,13 +197,33 @@ Class CodeItem
 		_superTypes.AddLast(type)
 	End
 	
-	Method HasSuchParent:Bool(parentIdent:String)
+	Method FindParent:CodeItem(parentIdent:String)
 		Local p := Parent
 		While p <> Null
-			If p.Ident = parentIdent Return True
+			If p.Ident = parentIdent Return p
 			p = p.Parent
 		Wend
+		Return Null
+	End
+	
+	Method HasSuchSuperClass:Bool(type:String)
+		If _superTypes = Null Return False
+		For Local t := Eachin _superTypes
+			If t = type Return True
+		Next
 		Return False
+	End
+	
+	Property NearestClassScope:CodeItem()
+		Local p := Self
+		While p <> Null
+			Select p.Kind
+			Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_
+				Return p
+			End
+			p = p.Parent
+		Wend
+		Return Null
 	End
 	
 	
@@ -272,6 +294,9 @@ Interface ICodeParser
 	Method CanShowAutocomplete:Bool(line:String, posInLine:Int)
 	Method GetScope:CodeItem(docPath:String, docLine:Int)
 	Method ItemAtScope:CodeItem(scope:CodeItem, idents:String[])
+	
+	Method GetItemsForAutocomplete(ident:String, filePath:String, docLine:Int, target:List<CodeItem>)
+	
 	Property Items:List<CodeItem>()
 	Property ItemsMap:StringMap<List<CodeItem>>()
 	
@@ -355,7 +380,8 @@ Class EmptyParser Implements ICodeParser
 	End
 	Method RefineRawType(item:CodeItem)
 	End
-	
+	Method GetItemsForAutocomplete(ident:String, filePath:String, docLine:Int, target:List<CodeItem>)
+	End
 	
 	Private
 	

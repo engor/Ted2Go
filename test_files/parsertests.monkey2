@@ -15,10 +15,17 @@ End
 
 Class AAA Extends TestClass
 	
+	Field tt := New TestClass
+	
 End
+
+Global tc := New TestClass
 
 
 Class TestClass
+	
+	Const PI := 3.14
+	Global GlobalField:Bool
 	
 	Function MyFyncPub:String()
 		Return "func"
@@ -44,6 +51,7 @@ Class TestClass
 	
 	Private
 	
+	Field PrivField:String
 	Field _tst := .14
 	
 	Method MyMethodPriv(mymy:Int)
@@ -55,6 +63,7 @@ Class TestClass
 		LambdaFn("", Lambda( aaa:Int,bbb:Int)
 			
 			Local d := 1.15
+			Local tt := New TestClass
 			
 		End, 2.8)
 		
@@ -67,9 +76,11 @@ Class TestClass
 End
 
 
-Class Test2
+Class Test2 'Extends TestClass
 
-	Function Fff(ttt:TestClass, ccc:Canvas)
+	Function Fff(tt:TestClass, cc:Canvas)
+		tt.MyFyncPub()
+		
 	End
 	
 End
