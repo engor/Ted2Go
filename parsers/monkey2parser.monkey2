@@ -269,9 +269,29 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Method GetAllItems(item:CodeItem, target:List<CodeItem>)
 		
-		' add self children
-		If item.Children <> Null
-			target.AddAll(item.Children)
+		Local checkUnique := Not target.Empty
+		
+		' add children
+		Local items := item.Children
+		If items <> Null
+			If checkUnique' need to add unique
+				For Local i := Eachin items
+					
+					Local s := i.Text
+					Local exists := False
+					For Local ii := Eachin target
+						If ii.Text = s
+							exists = True
+							Exit
+						Endif
+					End
+					If Not exists
+						target.AddLast(i)
+					Endif
+				Next
+			Else
+				target.AddAll(items)
+			Endif
 		Endif
 		
 		' add from super classes / ifaces
@@ -286,23 +306,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 					Exit
 				Endif
 			Next
-			If result = Null Continue
-			Local items := result.Children
-			If items = Null Continue
-			For Local i := Eachin items
-				' need to add unique
-				Local s := i.Text
-				Local exists := False
-				For Local ii := Eachin target
-					If ii.Text = s
-						exists = True
-						Exit
-					Endif
-				End
-				If Not exists
-					target.AddLast(i)
-				Endif
-			Next
+			If result <> Null Then GetAllItems(result, target)
 		Next
 		
 	End
