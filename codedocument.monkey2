@@ -166,7 +166,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			Local w := frame.Width
 			Local h := frame.Height
 			
-			frame.Left = Frame.Left+CursorRect.Left+100
+			frame.Left = Frame.Left-Scroll.x+CursorRect.Left+100
 			frame.Right = frame.Left+w
 			frame.Top = CursorRect.Top - Scroll.y
 			frame.Bottom = frame.Top+h
