@@ -67,9 +67,7 @@ Function Main()
 
 	Stream.OpenFuncs["theme"]=Lambda:Stream( proto:String,path:String,mode:String )
 	
-		If Not App Or Not App.Theme Or Not App.Theme.Path Return Null
-
-		Return Stream.Open( ExtractDir( App.Theme.Path )+path,mode )
+		Return Stream.Open( "asset::themes/"+path,mode )
 	End
 	
 #if __TARGET__="android"
@@ -77,7 +75,6 @@ Function Main()
 	Stream.OpenFuncs["asset"]=Lambda:Stream( proto:String,path:String,mode:String )
 	
 		Return SDL_RWStream.Open( path,mode )
-
 	End
 
 #else if __TARGET__="ios"
@@ -85,7 +82,6 @@ Function Main()
 	Stream.OpenFuncs["asset"]=Lambda:Stream( proto:String,path:String,mode:String )
 	
 		Return SDL_RWStream.Open( "assets/"+path,mode )
-
 	End
 	
 #endif
