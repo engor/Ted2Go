@@ -29,7 +29,10 @@ Class Stream
 	
 	#rem monkeydoc Closes the stream.
 	#end
-	Method Close:Void() Abstract
+	Method Close:Void()
+		OnClose()
+		_tmpbuf.Discard()
+	End
 
 	#rem monkeydoc Seeks to a position in the stream.
 	
@@ -132,8 +135,10 @@ Class Stream
 	
 		Local data:=New DataBuffer( count )
 		Local n:=ReadAll( data,0,count )
-		If n<count Return data.Slice( 0,n )
-		Return data
+		If n>=count Return data
+		Local tmp:=data.Slice( 0,n )
+		data.Discard()
+		Return tmp
 	End
 	
 	Method ReadAll:DataBuffer()
@@ -467,6 +472,8 @@ Class Stream
 	Method New()
 		_tmpbuf=New DataBuffer( 8,ByteOrder.LittleEndian )
 	End
+	
+	Method OnClose() Abstract
 	
 	Private
 	

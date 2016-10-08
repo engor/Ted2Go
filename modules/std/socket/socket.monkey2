@@ -69,7 +69,7 @@ Class Socket Extends std.stream.Stream
 
 	#rem monkeydoc Closes the socket.
 	#end
-	Method Close:Void() Override
+	Method OnClose() Override
 		If _socket<0 Return
 	
 		socket_close( _socket )

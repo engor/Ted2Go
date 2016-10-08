@@ -53,7 +53,7 @@ Class DataStream Extends std.stream.Stream
 	#rem monkeydoc Closes the datastream.
 	
 	#end
-	Method Close() Override
+	Method OnClose() Override
 		If Not _buf Return
 		_buf=Null
 		_off=0

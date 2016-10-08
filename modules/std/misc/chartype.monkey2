@@ -3,6 +3,8 @@ Namespace std.stringio
 
 #rem monkeydoc Checks if a character is whitespace.
 
+Returns true if `char` is 32 or less.
+
 @param chr The character to check.
 
 @return True if `char` is 32 or less.
@@ -13,6 +15,8 @@ Function IsSpace:Bool( chr:Int )
 End
 
 #rem monkeydoc checks if a character is a decimal digit.
+
+Returns true if `ch` is '0'-'9'.
 
 @param chr The character to check.
 
@@ -25,6 +29,8 @@ End
 
 #rem monkeydoc Checks if a character is alphabetic.
 
+Returns true if `ch` is 'a'-'z' or 'A'-'Z'.
+
 @param chr The character to check.
 
 @return True if `ch` is 'a'-'z' or 'A'-'Z'.
@@ -36,6 +42,8 @@ End
 
 #rem monkeydoc Checks if a character is an identifier.
 
+Returns true if `ch` is '0'-'9', 'a'-'z', 'A'-'Z' or '_'.
+
 @param chr The character to check.
 
 @return True if `ch` is '0'-'9', 'a'-'z', 'A'-'Z' or '_'.
@@ -46,6 +54,8 @@ Function IsIdent:Bool( chr:Int )
 End
 
 #rem monkeydoc Checks if a character is a hexadecimal digit.
+
+Returns true if `ch` is '0'-'9', 'a'-'f', or 'A'-'F'.
 
 @param chr The character to check.
 

@@ -1,12 +1,14 @@
 
 Namespace std.graphics
 
+Using std.resource
+
 #rem monkeydoc Pixmaps allow you to store and manipulate rectangular blocks of pixel data.
 
 A pixmap contains a block of memory used to store a rectangular array of pixels.
 
 #end
-Class Pixmap Extends std.resource.Resource
+Class Pixmap Extends Resource
 
 	#rem monkeydoc Creates a new pixmap.
 	
@@ -24,6 +26,8 @@ Class Pixmap Extends std.resource.Resource
 	
 	#end
 	Method New( width:Int,height:Int,format:PixelFormat=PixelFormat.RGBA32 )
+	
+'		Print "New pixmap1, width="+width+", height="+height
 
 		Local depth:=PixelFormatDepth( format )
 		Local pitch:=width*depth
@@ -36,7 +40,7 @@ Class Pixmap Extends std.resource.Resource
 		_data=data
 		_pitch=pitch
 		
-		OnDiscarded=Lambda()
+		OnDiscarded+=Lambda()
 			libc.free( _data )
 			_data=Null
 		End
@@ -44,6 +48,8 @@ Class Pixmap Extends std.resource.Resource
 	
 	Method New( width:Int,height:Int,format:PixelFormat,data:UByte Ptr,pitch:Int )
 	
+'		Print "New pixmap2, width="+width+", height="+height
+
 		Local depth:=PixelFormatDepth( format )
 		
 		_width=width
@@ -299,6 +305,22 @@ Class Pixmap Extends std.resource.Resource
 			Next
 		next
 	End
+
+	#rem monkeydoc Creates a copy of the pixmap.
+
+	@return A new pixmap.
+	
+	#end
+	Method Copy:Pixmap()
+	
+		Local pitch:=Width * Depth
+		Local data:=Cast<UByte Ptr>( libc.malloc( pitch * Height ) )
+		For Local y:=0 Until Height
+			memcpy( data+y*pitch,PixelPtr( 0,y ),pitch )
+		Next
+		
+		Return New Pixmap( Width,Height,Format,data,pitch )
+	End
 	
 	#rem monkeydoc Paste a pixmap to the pixmap.
 	
@@ -321,17 +343,6 @@ Class Pixmap Extends std.resource.Resource
 				SetPixel( x+tx,y+ty,pixmap.GetPixel( tx,ty ) )
 			Next
 		Next
-	End
-
-	'Optimize!
-	'
-	#rem monkeydoc Creates a copy of the pixmap.
-	
-	@return A new pixmap.
-	
-	#end
-	Method Copy:Pixmap()
-		Return Convert( _format )
 	End
 
 	'Optimize!
@@ -404,9 +415,7 @@ Class Pixmap Extends std.resource.Resource
 		
 		Local pixmap:=New Pixmap( width,height,_format,PixelPtr( x,y ),_pitch )
 		
-		OnDiscarded+=Lambda()
-			pixmap.Discard()
-		End
+		AddDependancy( pixmap )
 		
 		Return pixmap
 	End
@@ -440,23 +449,6 @@ Class Pixmap Extends std.resource.Resource
 		Return pixmap
 	End
 
-	#rem monkeydoc @hidden experimental!
-	#end	
-	Function Open:Pixmap( path:String,format:PixelFormat=Null,pmAlpha:Bool=False )
-
-		path=RealPath( path )
-		
-		Local slug:="Pixmap:path="+path+"&format="+Int( format )+"&pmAlpha="+Int( pmAlpha )
-		
-		Local pixmap:=Cast<Pixmap>( OpenResource( slug ) )
-		If pixmap Return pixmap
-		
-		pixmap=Load( path,format,pmAlpha )
-		
-		AddResource( slug,pixmap )
-		Return pixmap
-	End
-	
 	Private
 	
 	Field _width:Int
@@ -466,4 +458,21 @@ Class Pixmap Extends std.resource.Resource
 	Field _data:UByte Ptr
 	Field _pitch:Int
 
+End
+
+Class ResourceManager Extension
+
+	Method OpenPixmap:Pixmap( path:String,format:PixelFormat=Null,pmAlpha:Bool=False )
+	
+		Local slug:="Pixmap:name="+StripDir( StripExt( path ) )+"&format="+Int( format )+"&pmAlpha="+Int( pmAlpha )
+
+		Local pixmap:=Cast<Pixmap>( OpenResource( slug ) )
+		If pixmap Return pixmap
+		
+		pixmap=Pixmap.Load( path,format,pmAlpha )
+		
+		AddResource( slug,pixmap )
+		Return pixmap
+	End
+	
 End

@@ -41,7 +41,7 @@ Class FileStream Extends Stream
 	Closing the filestream also sets its position and length to 0.
 	
 	#end
-	Method Close() Override
+	Method OnClose() Override
 		If Not _file Return	
 		fclose( _file )
 		_file=Null
