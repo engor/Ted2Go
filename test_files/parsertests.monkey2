@@ -27,7 +27,7 @@ Class TestClass
 	Const PI := 3.14
 	Global GlobalField:Bool
 	
-	Function MyFyncPub:String()
+	Function MyFuncPub:String()
 		Return "func"
 	End
 	
@@ -40,10 +40,10 @@ Class TestClass
 	End
 	
 	Field PubField:String
-	
+
 	Protected
 	
-	Function MyFyncProt:String()
+	Function MyFuncProt:String()
 		Return "func-prot"
 	End
 	
@@ -79,7 +79,7 @@ End
 Class Test2 'Extends TestClass
 
 	Function Fff(tt:TestClass, cc:Canvas)
-		tt.MyFyncPub()
+		tt.MyFuncPub()
 		
 	End
 	

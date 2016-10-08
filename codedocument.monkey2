@@ -354,33 +354,88 @@ Class CodeItemIcons
 			InitIcons()
 		Endif
 		
-		Local ic := icons[item.Kind]
+		Local key:String
+		Local kind := item.KindStr
+		
+		Select kind
+			Case "const", "interface", "lambda", "local"
+				key = kind
+			Case "param"
+				key = "*"
+			'Case "
+			Default
+				If item.Ident.ToLower() = "new"
+					kind = "constructor"
+				Endif
+				key = kind+"_"+item.AccessStr
+		End
+		
+		Local ic := icons[key]
 		If ic = Null Then ic = iconDefault
 		
 		Return ic
 		
 	End
 
+	Function GetKeywordsIcon:Image()
+		Return icons["keyword"]
+	End
+	
 
 	Private
 
-	Global icons:Map<CodeItemKind,Image>
+	Global icons:Map<String,Image>
 	Global iconDefault:Image
 	
 	Function InitIcons()
 	
-		icons = New Map<CodeItemKind,Image>
-		icons[CodeItemKind.Function_] = Image.Load("asset::ic/function.png")
-		icons[CodeItemKind.Property_] = Image.Load("asset::ic/property.png")
-		icons[CodeItemKind.Method_] = Image.Load("asset::ic/method.png")
-		icons[CodeItemKind.Lambda_] = icons[CodeItemKind.Method_]
-		icons[CodeItemKind.Class_] = Image.Load("asset::ic/class.png")
-		icons[CodeItemKind.Enum_] = icons[CodeItemKind.Class_]
-		icons[CodeItemKind.Struct_] = icons[CodeItemKind.Class_]
-		icons[CodeItemKind.Interface_] = Image.Load("asset::ic/interface.png")
-		icons[CodeItemKind.Field_] = Image.Load("asset::ic/variable.png")
-		icons[CodeItemKind.Global_] = Image.Load("asset::ic/global.png")
-		icons[CodeItemKind.Const_] = Image.Load("asset::ic/const.png")
+		icons = New Map<String,Image>
+		
+		icons["constructor_public"] = Image.Load("asset::ic/constructor.png")
+		icons["constructor_private"] = Image.Load("asset::ic/constructor_private.png")
+		icons["constructor_protected"] = Image.Load("asset::ic/constructor_protected.png")
+		
+		icons["function_public"] = Image.Load("asset::ic/method_static.png")
+		icons["function_private"] = Image.Load("asset::ic/method_static_private.png")
+		icons["function_protected"] = Image.Load("asset::ic/method_static_protected.png")
+		
+		icons["property_public"] = Image.Load("asset::ic/property.png")
+		icons["property_private"] = Image.Load("asset::ic/property_private.png")
+		icons["property_protected"] = Image.Load("asset::ic/property_protected.png")
+		
+		icons["method_public"] = Image.Load("asset::ic/method.png")
+		icons["method_private"] = Image.Load("asset::ic/method_private.png")
+		icons["method_protected"] = Image.Load("asset::ic/method_protected.png")
+		
+		icons["lambda"] = Image.Load("asset::ic/annotation.png")
+		
+		icons["class_public"] = Image.Load("asset::ic/class.png")
+		icons["class_private"] = Image.Load("asset::ic/class_private.png")
+		icons["class_protected"] = Image.Load("asset::ic/class_protected.png")
+		
+		icons["enum_public"] = Image.Load("asset::ic/enum.png")
+		icons["enum_private"] = Image.Load("asset::ic/enum_private.png")
+		icons["enum_protected"] = Image.Load("asset::ic/enum_protected.png")
+		
+		icons["struct_public"] = Image.Load("asset::ic/struct.png")
+		icons["struct_private"] = Image.Load("asset::ic/struct_private.png")
+		icons["struct_protected"] = Image.Load("asset::ic/struct_protected.png")
+		
+		icons["interface"] = Image.Load("asset::ic/interface.png")
+		
+		icons["field_public"] = Image.Load("asset::ic/field.png")
+		icons["field_private"] = Image.Load("asset::ic/field_private.png")
+		icons["field_protected"] = Image.Load("asset::ic/field_protected.png")
+		
+		icons["global_public"] = Image.Load("asset::ic/field_static.png")
+		icons["global_private"] = Image.Load("asset::ic/field_static_private.png")
+		icons["global_protected"] = Image.Load("asset::ic/field_static_protected.png")
+		
+		icons["const"] = Image.Load("asset::ic/const.png")
+		icons["local"] = Image.Load("asset::ic/local.png")
+		icons["keyword"] = Image.Load("asset::ic/keyword.png")
+		
+		
 		iconDefault = Image.Load("asset::ic/other.png")
 		
 	End

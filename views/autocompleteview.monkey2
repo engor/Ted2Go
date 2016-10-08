@@ -2,36 +2,23 @@
 Namespace ted2go
 
 
-Class CodeListViewItem Implements ListViewItem
+Class CodeListViewItem Extends StringListViewItem
 	
 	Method New(item:CodeItem)
+		Super.New(item.Text)
 		_item = item
-		_icon = CodeItemIcons.GetIcon(item)
+		Icon = CodeItemIcons.GetIcon(item)
 	End
-	
-	Method Draw(canvas:Canvas,x:Float,y:Float, handleX:Float=0, handleY:Float=0)
-		Local dx := 0.0
-		If _icon <> Null
-			canvas.DrawImage(_icon, x-_icon.Width*handleX, y-_icon.Height*handleY)
-			dx = _icon.Width+8
-		Endif
-		canvas.DrawText(Text, x+dx, y, handleX, handleY)
-	End
-	
+		
 	Property CodeItem:CodeItem()
 		Return _item
 	End
 	
-	Property Text:String()
-		Return _item.Text
-	End
-	
-	
+		
 	Private
 	
 	Field _item:CodeItem
-	Field _icon:Image
-	
+		
 End
 
 
@@ -266,8 +253,11 @@ Class AutocompleteDialog Extends DialogExt
 		'keywords
 		Local kw := KeywordsManager.Get(fileType)
 		Local list := New List<ListViewItem>
+		Local ic := CodeItemIcons.GetKeywordsIcon()
 		For Local i := Eachin kw.Values()
-			list.AddLast(New StringListViewItem(i))
+			Local si := New StringListViewItem(i)
+			si.Icon = ic
+			list.AddLast(si)
 		Next
 		'preprocessor
 		'need to load it like keywords

@@ -91,6 +91,16 @@ Class CodeItem
 		_access = value
 	End
 	
+	Property AccessStr:String()
+		If _access = AccessMode.Public_
+			Return "public"
+		Elseif _access = AccessMode.Protected_
+			Return "protected"
+		Else
+			Return "private"
+		Endif
+	End
+	
 	Property Text:String()
 		If _text = Null
 			Local s := Ident
@@ -236,7 +246,7 @@ Class CodeItem
 	Field _paramsStr:String
 	Field _kind:CodeItemKind
 	Field _kindStr:String
-	Field _access:AccessMode
+	Field _access := AccessMode.Public_
 	Field _text:String
 	Field _parent:CodeItem
 	Field _children:List<CodeItem>

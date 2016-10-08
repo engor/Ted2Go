@@ -14,6 +14,14 @@ Class StringListViewItem Implements ListViewItem
 	
 	Property Text:String()
 		Return _text
+	Setter(value:String)
+		_text = value
+	End
+	
+	Property Icon:Image()
+		Return _icon
+	Setter(value:Image)
+		_icon = value
 	End
 	
 	Method New(text:String)
@@ -21,12 +29,19 @@ Class StringListViewItem Implements ListViewItem
 	End
 	
 	Method Draw(canvas:Canvas,x:Float,y:Float, handleX:Float=0, handleY:Float=0)
-		canvas.DrawText(_text,x,y,handleX,handleY)
+		Local dx := 0.0
+		If _icon <> Null
+			canvas.DrawImage(_icon, x-_icon.Width*handleX, y-_icon.Height*handleY)
+			dx = _icon.Width+8
+		Endif
+		canvas.DrawText(_text, x+dx, y, handleX, handleY)
 	End
+	
 	
 	Private
 	
 	Field _text:String
+	Field _icon:Image
 	
 End
 
