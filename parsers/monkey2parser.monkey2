@@ -771,6 +771,21 @@ Class Monkey2Parser Extends CodeParserPlugin
 					ident = s.Slice(0,p0).Trim()
 					type = s.Slice(p0+2).Trim()
 					
+					' b := Not ...
+					If type.StartsWith("Not ") Or type.StartsWith("Not(")
+					
+						type = "True"
+					
+					Else
+						'b := val ? xx else yy
+						Local i1 := type.Find("?")
+						If i1 > 0
+							Local i2 := type.Find("Else", i1)
+							If i2 <> -1 Then type = type.Slice(i1+1,i2).Trim()
+						Endif
+					Endif
+					
+					
 					If IsString(type)
 						type = "String"
 					Else
@@ -804,7 +819,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 							Endif
 							
 							Local typeIdent := ParseIdent(type, True)
-							
+														
 							If typeIdent = "True" Or typeIdent = "False"
 								type = "Bool"
 							Elseif IsInt(typeIdent)
@@ -819,6 +834,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 									'this is varname, need to refine it later
 									rawType = typeIdent
 								Endif
+								
 							Endif
 							
 							'If isFor Print "ident: "+ident+" , type: "+type+" , raw: "+rawType
@@ -961,6 +977,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		'Print "found: "+item.Text
 		
 		If item.Kind = CodeItemKind.Enum_
+		Print "enum: "+item.Text+", src: "+sourceItem.Text
 			sourceItem.Type = item.Ident
 			sourceItem.RawType = Null
 			Return
@@ -1342,7 +1359,7 @@ Class FileInfo
 	Field indent:Int
 	Field stackAccess := New Stack<AccessMode>
 	Field hasRawTypes := False
-	
+
 End
 
 Const CHAR_SINGLE_QUOTE := 39

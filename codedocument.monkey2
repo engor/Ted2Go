@@ -222,7 +222,7 @@ Class CodeDocument Extends Ted2Document
 		_view = New DockingView
 		
 		_treeView = New CodeTreeView
-		_view.AddView( _treeView,"left",250,True )
+		_view.AddView( _treeView,"left",350,True )
 		
 		_codeView = New CodeDocumentView( Self )
 		_view.ContentView = _codeView
