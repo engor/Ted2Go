@@ -25,6 +25,7 @@ Class TextField Extends TextView
 	#end
 	Method New()
 		Style=GetStyle( "TextField" )
+		ContentView.Style=New Style
 		
 		Layout="fill-x"
 		Gravity=New Vec2f( .5 )
