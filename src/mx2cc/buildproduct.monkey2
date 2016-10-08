@@ -198,7 +198,7 @@ Class BuildProduct
 			
 			If CreateDir( ExtractDir( dst ) )
 			
-				If GetFileTime( dst )>=GetFileTime( src ) Continue
+				'If GetFileTime( dst )>=GetFileTime( src ) Continue
 				
 				If CopyFile( src,dst ) Continue
 
