@@ -4,7 +4,8 @@ Namespace ted2
 Class Ted2TextView Extends TextView
 
 	Method New()
-		CursorBlinkRate=2.75	'ha! faster than nerobot's!
+
+		CursorBlinkRate=2.5
 	End
 
 	Protected

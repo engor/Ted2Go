@@ -212,14 +212,11 @@ Class HelpTree Extends TreeView
 	End
 	
 	Method Init()
+
+		_highlight=GetStyle( "SelectedNodeStyle" )
 	
-		_highlight=New Style( Style )
-		_highlight.TextColor=App.Theme.GetColor( "text-highlight" )
-		
 		_textField=New TextField
-		_textField.Style=New Style( _textField.Style )
-		_textField.Style.SkinColor=App.Theme.GetColor( "panel" )
-'		_textField.MaxSize=New Vec2i( 320,0 )
+		_textField.Style=GetStyle( "HelpTextField" )
 		
 		_textField.Entered=Lambda()
 		
