@@ -80,7 +80,7 @@ Class EditProductDialog Extends Dialog
 		_table.AddColumn( "Setting" )
 		_table.AddColumn( "Value" )
 		
-		_table.AddRows( _vars.Length )
+		_table.Rows+=_vars.Length
 		
 		For Local i:=0 Until _vars.Length
 			Local pvar:=_vars[i]

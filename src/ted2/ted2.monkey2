@@ -64,9 +64,23 @@ Function Main()
 	
 #Endif
 	
+	'load ted2 state
+	'
 	Local jobj:=JsonObject.Load( "bin/ted2.state.json" )
 	If Not jobj jobj=New JsonObject
+
+	'initial theme
+	'	
+	If Not jobj.Contains( "theme" ) jobj["theme"]=New JsonString( "theme-classic-dark" )
+	If Not jobj.Contains( "themeScale" ) jobj["themeScale"]=New JsonNumber( 1 )
 	
+	Local config:=New StringMap<String>
+	
+	config["initialTheme"]=jobj.GetString( "theme" )
+	config["initialThemeScale"]=jobj.GetNumber( "themeScale" )
+	
+	'initial window state
+	'
 	Local flags:=WindowFlags.Resizable
 	
 	Local rect:Recti
@@ -77,8 +91,10 @@ Function Main()
 		rect=New Recti( 0,0,1024,768 )
 		flags|=WindowFlags.Center
 	Endif
-	
-	New AppInstance
+
+	'start the app!
+	'	
+	New AppInstance( config )
 	
 	New MainWindowInstance( "Ted2",rect,flags,jobj )
 	
