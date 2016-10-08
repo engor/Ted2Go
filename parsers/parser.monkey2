@@ -110,7 +110,9 @@ Class CodeItem
 						s += " : "+Type
 					Endif
 					s += (ParamsStr = Null) ? " ()" Else " ("+ParamsStr+")"
-				Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_, CodeItemKind.Enum_, CodeItemKind.Inner_
+				Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_, CodeItemKind.Enum_
+					's += "   ["+ScopeStartLine+"-"+ScopeEndLine+"]"
+				Case CodeItemKind.Inner_
 					'do nothing
 				Case CodeItemKind.Property_
 					s += " : "+Type

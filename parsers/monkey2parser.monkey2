@@ -405,6 +405,11 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return info
 	End
 	
+	Method GetShortText:String(text:String, len:Int)
+		If text.Length > len Then text = text.Slice(0,len)+"..."
+		Return text
+	End
+	
 	Method ParseLine(text:String, line:Int, info:FileInfo)
 	
 		
@@ -549,24 +554,18 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			CloseScope(info, indent)
 
-		#Rem	
-		Case "for"
-			
-			' need to extract ident if has 'local'
-			item = New CodeItem("For")
-			
-			AddItem(item, word, True, info)
-		#End
 		
 		Case "select"
 			
-			item = New CodeItem("Select")
+			item = New CodeItem("Select "+postfix)
 			
 			AddItem(item, word, True, info)
 		
 		Case "while"
 			
-			item = New CodeItem("While")
+			Local s := GetShortText(postfix, 20)
+			
+			item = New CodeItem("While "+s)
 			
 			AddItem(item, word, True, info)
 			
@@ -734,8 +733,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			Local isFor := (word = "for")
 			If isFor
+				
+				Local s := GetShortText(postfix,20)
 			
-				item = New CodeItem("For")
+				item = New CodeItem("For "+s)
 				AddItem(item, word, True, info)
 				
 				Local p := postfix.ToLower().Find("local")
@@ -819,7 +820,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 							Endif
 							
 							Local typeIdent := ParseIdent(type, True)
-														
+							If typeIdent = "" Then typeIdent = type
+							
 							If typeIdent = "True" Or typeIdent = "False"
 								type = "Bool"
 							Elseif IsInt(typeIdent)
@@ -977,7 +979,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 		'Print "found: "+item.Text
 		
 		If item.Kind = CodeItemKind.Enum_
-		Print "enum: "+item.Text+", src: "+sourceItem.Text
 			sourceItem.Type = item.Ident
 			sourceItem.RawType = Null
 			Return
@@ -1050,7 +1051,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		If info.scope <> Null
 			_insideInterface = False
-			If info.scope.Indent = indent
+			If info.scope.Indent >= indent
 				PopScope(info) 'go up 
 			Endif
 		Endif
@@ -1107,6 +1108,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Method IsFloat:Bool(text:String)
 		text = text.Trim()
 		Local n := text.Length, i := 0
+		If text.StartsWith("-") Then i = 1
 		While i < n And (text[i] = CHAR_DOT Or (text[i] >= CHAR_DIGIT_0 And text[i] <= CHAR_DIGIT_9))
 			i += 1
 		Wend
@@ -1115,7 +1117,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Method IsInt:Bool(text:String)
 		text = text.Trim()
+		If text.StartsWith("$") Return True
 		Local n := text.Length, i := 0
+		If text.StartsWith("-") Then i = 1
 		While i < n And text[i] >= CHAR_DIGIT_0 And text[i] <= CHAR_DIGIT_9
 			i += 1
 		Wend
