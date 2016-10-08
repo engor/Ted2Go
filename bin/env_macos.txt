@@ -6,18 +6,18 @@ MX2_APP_DIR_DYLIB=						'ie: dylibs go in app Contents/MacOS dir
 MX2_APP_DIR_FRAMEWORK=../Frameworks		'ie: frameworks go in app Contents/Frameworks dir
 
 'LD options
-MX2_LD_OPTS_MACOS=-Wl,-rpath,@executable_path -Wl,-rpath,@executable_path/../Frameworks
-MX2_LD_OPTS_MACOS_DEBUG=-O0 '-g
+MX2_LD_OPTS_MACOS=-mmacosx-version-min=10.9 -Wl,-rpath,@executable_path -Wl,-rpath,@executable_path/../Frameworks
+MX2_LD_OPTS_MACOS_DEBUG=
 MX2_LD_OPTS_MACOS_RELEASE=-O3
 
 'C compiler options
-MX2_CC_OPTS_MACOS=-std=gnu99 -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-undefined-bool-conversion -Wno-int-to-void-pointer-cast -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-parentheses-equality
-MX2_CC_OPTS_MACOS_DEBUG=-O0 '-g
+MX2_CC_OPTS_MACOS=-std=gnu99 -mmacosx-version-min=10.9 -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-undefined-bool-conversion -Wno-int-to-void-pointer-cast -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-parentheses-equality
+MX2_CC_OPTS_MACOS_DEBUG=
 MX2_CC_OPTS_MACOS_RELEASE=-O3 -DNDEBUG
 
 'C++ compiler options
-MX2_CPP_OPTS_MACOS=-std=c++11 -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-undefined-bool-conversion -Wno-int-to-void-pointer-cast -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-parentheses-equality
-MX2_CPP_OPTS_MACOS_DEBUG=-O0 '-g
+MX2_CPP_OPTS_MACOS=-std=c++11 -mmacosx-version-min=10.9 -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-undefined-bool-conversion -Wno-int-to-void-pointer-cast -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-parentheses-equality
+MX2_CPP_OPTS_MACOS_DEBUG=
 MX2_CPP_OPTS_MACOS_RELEASE=-O3 -DNDEBUG
 
 
@@ -37,18 +37,18 @@ PATH=/usr/local/bin:${PATH}
 MX2_MSERVER=open "${MX2_HOME}/devtools/mserver-v86c/mserver_macos.app" --args
 
 'LD options
-MX2_LD_OPTS_EMSCRIPTEN=-s USE_SDL=2 -s FULL_ES2=1 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1 ' -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1
-MX2_LD_OPTS_EMSCRIPTEN_DEBUG=-O0	'-O2
+MX2_LD_OPTS_EMSCRIPTEN=-s USE_SDL=2 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1
+MX2_LD_OPTS_EMSCRIPTEN_DEBUG=-O2
 MX2_LD_OPTS_EMSCRIPTEN_RELEASE=-O3
 
 'C compiler options
-MX2_CC_OPTS_EMSCRIPTEN=-std=gnu99 -s USE_SDL=2 -s FULL_ES2=1 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1 ' -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1 -Wno-undefined-bool-conversion -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-warn-absolute-paths 
-MX2_CC_OPTS_EMSCRIPTEN_DEBUG=-O0	'-O2
+MX2_CC_OPTS_EMSCRIPTEN=-std=gnu99 -s USE_SDL=2 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1
+MX2_CC_OPTS_EMSCRIPTEN_DEBUG=-O2
 MX2_CC_OPTS_EMSCRIPTEN_RELEASE=-O3
 
 'C++ compiler options
-MX2_CPP_OPTS_EMSCRIPTEN=-std=c++11 -s USE_SDL=2 -s FULL_ES2=1 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1 ' -s USE_PTHREADS=1 -s PTHREAD_POOL_SIZE=1 -Wno-undefined-bool-conversion
-MX2_CPP_OPTS_EMSCRIPTEN_DEBUG=-O0	'-O2
+MX2_CPP_OPTS_EMSCRIPTEN=-std=c++11 -s USE_SDL=2 -s TOTAL_MEMORY=67108864 -s DISABLE_EXCEPTION_CATCHING=1
+MX2_CPP_OPTS_EMSCRIPTEN_DEBUG=-O2
 MX2_CPP_OPTS_EMSCRIPTEN_RELEASE=-O3
 
 

@@ -8,36 +8,32 @@ launcher_new=""
 
 if [ "$OSTYPE" = "linux-gnu" ]
 then
-
 	mx2cc="../bin/mx2cc_linux"
-	mx2cc_new="../src/mx2cc/mx2cc.buildv1.0.7/linux_release/mx2cc"
+	mx2cc_new="../src/mx2cc/mx2cc.buildv1.0.8/linux_release/mx2cc"
 	
 	ted2="../bin/ted2_linux"
-	ted2_new="../src/ted2/ted2.buildv1.0.7/linux_release"
+	ted2_new="../src/ted2/ted2.buildv1.0.8/linux_release"
 	
 	launcher="../Monkey2 (Linux)"
-	launcher_new="../src/launcher/launcher.buildv1.0.7/linux_release/launcher"
+	launcher_new="../src/launcher/launcher.buildv1.0.8/linux_release/launcher"
 	
 elif [ "$OSTYPE" = "linux-gnueabihf" ]
 then
-
 	mx2cc="../bin/mx2cc_raspbian"
-	mx2cc_new="../src/mx2cc/mx2cc.buildv1.0.7/raspbian_release/mx2cc"
+	mx2cc_new="../src/mx2cc/mx2cc.buildv1.0.8/raspbian_release/mx2cc"
 	
 	ted2="../bin/ted2_raspbian"
-	ted2_new="../src/ted2/ted2.buildv1.0.7/raspbian_release"
+	ted2_new="../src/ted2/ted2.buildv1.0.8/raspbian_release"
 	
 	launcher="../Monkey2 (Raspbian)"
-	launcher_new="../src/launcher/launcher.buildv1.0.7/raspbian_release/launcher"
-	
+	launcher_new="../src/launcher/launcher.buildv1.0.8/raspbian_release/launcher"
 else
-
 	mx2cc="../bin/mx2cc_macos"
-	mx2cc_new="../src/mx2cc/mx2cc.buildv1.0.7/macos_release/mx2cc"
+	mx2cc_new="../src/mx2cc/mx2cc.buildv1.0.8/macos_release/mx2cc"
 	
 	ted2="../bin/ted2_macos.app"
-	ted2_new="../src/ted2/ted2.buildv1.0.7/macos_release/ted2.app"
+	ted2_new="../src/ted2/ted2.buildv1.0.8/macos_release/ted2.app"
 	
 	launcher="../Monkey2 (Macos).app"
-	launcher_new="../src/launcher/launcher.buildv1.0.7/macos_release/launcher.app"
+	launcher_new="../src/launcher/launcher.buildv1.0.8/macos_release/launcher.app"
 fi
