@@ -1,6 +1,8 @@
 
 Namespace mojo.graphics
 
+Using std.resource
+
 #rem monkeydoc The Glyph struct.
 
 Glyph are used to store the individual character data for fonts.
@@ -30,7 +32,7 @@ The glyph struct is used to store the location, size and advance for individual 
 All character image data for a font must A font must occupy a single image, 
 
 #end
-Class Font Extends std.resource.Resource
+Class Font Extends Resource
 
 	#rem monkeydoc Creates a new font.
 
@@ -115,23 +117,6 @@ Class Font Extends std.resource.Resource
 		Return font
 	End
 
-	#rem monkeydoc @hidden
-	#end
-	Function Open:Font( path:String,height:Float,shader:Shader=Null )
-	
-		path=RealPath( path )
-		
-		Local slug:="Font:path="+path+"&height="+height+"&shader="+(shader ? shader.Name Else "")
-		
-		Local font:=Cast<Font>( OpenResource( slug ) )
-		If font Return font
-		
-		font=Load( path,height )
-		
-		AddResource( slug,font )
-		Return font
-	End
-
 	Private
 	
 	Field _image:Image
@@ -140,3 +125,21 @@ Class Font Extends std.resource.Resource
 	Field _glyphs:Glyph[]
 
 End
+
+Class ResourceManager Extension
+
+	Method OpenFont:Font( path:String,height:Float,shader:Shader=Null )
+	
+		Local slug:="Font:name="+StripDir( StripExt( path ) )+"&height="+height+"&shader="+(shader ? shader.Name Else "")
+		
+		Local font:=Cast<Font>( OpenResource( slug ) )
+		If font Return font
+		
+		font=Font.Load( path,height )
+		
+		AddResource( slug,font )
+		Return font
+	End
+
+End
+

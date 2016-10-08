@@ -64,7 +64,7 @@ Function LoadFont:Font( path:String,fheight:Float,shader:Shader )
 	'
 	Local tx:=0,ty:=0,texw:=0,texh:=0,maxh:=0
 	
-	Const MaxTexWidth:=64'1024
+	Const MaxTexWidth:=1024
 
 	For Local i:=0 Until numChars
 
@@ -94,7 +94,7 @@ Function LoadFont:Font( path:String,fheight:Float,shader:Shader )
 	texw=1 Shl Int( Ceil( Log2( texw ) ) )
 	texh=1 Shl Int( Ceil( Log2( texh ) ) )
 	
-	Print "path="+path+", height="+fheight+", texw="+texw+", texh="+texh
+'	Print "path="+path+", height="+fheight+", texw="+texw+", texh="+texh
 	
 	Local pixmap:=New Pixmap( texw,texh,PixelFormat.A8 )
 	pixmap.Clear( Color.None )
@@ -120,6 +120,8 @@ Function LoadFont:Font( path:String,fheight:Float,shader:Shader )
 		
 		pixmap.Paste( tmp,tx,ty )
 		
+		tmp.Discard()
+		
 		glyphs[i]=New Glyph( New Recti( tx,ty,tx+gw,ty+gh ),New Vec2f( slot->bitmap_left,ascent-slot->bitmap_top ),slot->advance.x Shr 6 )
 
 		maxh=Max( maxh,gh+1 )
@@ -135,10 +137,9 @@ Function LoadFont:Font( path:String,fheight:Float,shader:Shader )
 	
 	Local font:=New Font( image,height,firstChar,glyphs )
 	
-	font.OnDiscarded+=Lambda()
-		image.Discard()
-		pixmap.Discard()
-	End
+	font.AddDependancy( image )
+	
+	pixmap.Discard()
 	
 	Return font
 End

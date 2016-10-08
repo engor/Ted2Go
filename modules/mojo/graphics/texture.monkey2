@@ -1,6 +1,8 @@
 
 Namespace mojo.graphics
 
+Using std.resource
+
 #rem monkeydoc Texture flags.
 
 | TextureFlags	| Description
@@ -41,7 +43,7 @@ End
 
 #rem monkeydoc @hidden
 #end
-Class Texture Extends std.resource.Resource
+Class Texture Extends Resource
 
 	Method New( pixmap:Pixmap,flags:TextureFlags )
 	
@@ -57,6 +59,7 @@ Class Texture Extends std.resource.Resource
 		If _flags & TextureFlags.Unmanaged
 			PastePixmap( pixmap,0,0 )
 		Else
+			AddDependancy( pixmap )
 			_managed=pixmap
 		Endif
 		
@@ -76,10 +79,7 @@ Class Texture Extends std.resource.Resource
 		If Not (_flags & TextureFlags.Unmanaged)
 			_managed=New Pixmap( width,height,format )
 			_managed.Clear( Color.Magenta )
-			OnDiscarded+=Lambda()
-				_managed.Discard()
-				_managed=Null
-			End
+			AddDependancy( _managed )
 		Endif
 		
 	End
@@ -147,23 +147,6 @@ Class Texture Extends std.resource.Resource
 		Return texture
 	End
 	
-	#rem monkeydoc @hidden experimental!
-	#end
-	Function Open:Texture( path:String,textureFlags:TextureFlags )
-	
-		path=RealPath( path )
-		
-		Local slug:="Texture:path="+path+"&flags="+Int( textureFlags )
-		
-		Local texture:=Cast<Texture>( OpenResource( slug ) )
-		If texture Return texture
-		
-		texture=Load( path,textureFlags )
-		
-		AddResource( slug,texture )
-		Return texture
-	End
-	
 	Function LoadNormal:Texture( path:String,textureFlags:TextureFlags,specular:String,specularScale:Float=1,flipNormalY:Bool=True )
 
 		path=RealPath( path )
@@ -203,26 +186,6 @@ Class Texture Extends std.resource.Resource
 		
 	End
 	
-	#rem monkeydoc @hidden experimental!
-	#end
-	Function OpenNormal:Texture( path:String,textureFlags:TextureFlags,specular:String,specularScale:Float=1,flipNormalY:Bool=True )
-	
-		path=RealPath( path )
-		
-		specular=specular ? RealPath( specular ) Else ""
-		
-		Local slug:="NormalTexture:path="+path+"?flags="+Int( textureFlags )
-		slug+="?specular="+specular+"&specularScale="+specularScale+"&flipNormalY="+Int( flipNormalY )
-		
-		Local texture:=Cast<Texture>( OpenResource( slug ) )
-		If texture Return texture
-		
-		texture=LoadNormal( path,textureFlags,specular,specularScale,flipNormalY )
-		
-		AddResource( slug,texture )
-		Return texture
-	End
-
 	Function ColorTexture:Texture( color:Color )
 		Local texture:=_colorTextures[color]
 		If Not texture
@@ -364,6 +327,8 @@ Class Texture Extends std.resource.Resource
 	#end	
 	Method Bind( unit:Int,filter:TextureFilter )
 	
+		If _discarded Print "Binding discarded texture!"
+	
 		If _boundSeq<>glGraphicsSeq
 			_boundSeq=glGraphicsSeq
 			For Local i:=0 Until 8
@@ -406,8 +371,20 @@ Class Texture Extends std.resource.Resource
 	#rem monkeydoc @hidden
 	#end	
 	Method OnDiscard() Override
-		If _texSeq=glGraphicsSeq glDeleteTextures( 1,Varptr _glTexture )
-		If _fbSeq=glGraphicsSeq glDeleteFramebuffers( 1,Varptr _glFramebuffer )
+	
+		If _texSeq=glGraphicsSeq
+			For Local i:=0 Until 8
+				If _bound[i]=_glTexture _bound[i]=0
+			Next
+			glDeleteTextures( 1,Varptr _glTexture )
+		Endif
+		
+		If _fbSeq=glGraphicsSeq
+			glDeleteFramebuffers( 1,Varptr _glFramebuffer )
+		Endif
+		
+		_texSeq=0
+		_fbSeq=0
 		_glTexture=0
 		_glFramebuffer=0
 		_discarded=True
@@ -442,4 +419,22 @@ Class Texture Extends std.resource.Resource
 	
 	Global _colorTextures:Map<Color,Texture>
 	
+End
+
+Class ResourceManager Extension
+
+	Method OpenTexture:Texture( path:String,flags:TextureFlags=Null )
+
+		Local slug:="Texture:name="+StripDir( StripExt( path ) )+"&flags="+Int( flags )
+		
+		Local texture:=Cast<Texture>( OpenResource( slug ) )
+		If texture Return texture
+		
+		Local pixmap:=OpenPixmap( path,Null,True )
+		If pixmap texture=New Texture( pixmap,flags )
+				
+		AddResource( slug,texture )
+		Return texture
+	End
+
 End

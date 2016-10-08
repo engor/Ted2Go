@@ -3,7 +3,7 @@ Namespace mojo.graphics
 
 #rem monkeydoc The UniformBlock class.
 #end
-Class UniformBlock
+Class UniformBlock Extends Resource
 
 	#rem monkeydoc Sets a scalar uniform.
 	#end
@@ -102,6 +102,8 @@ Class UniformBlock
 	#end	
 	Method SetTexture( uniform:String,texture:Texture )
 		Local id:=GetUniformId( uniform )
+		If texture texture.Retain()
+		If _textures[id] _textures[id].Release()
 		_textures[id]=texture
 		_seq=_gseq
 		_gseq+=1
@@ -148,6 +150,15 @@ Class UniformBlock
 	#end	
 	Function GetUniformBlockId:Int( uniform:String )
 		Return _blockIds[ GetUniformId( uniform ) ]
+	End
+	
+	Protected
+	
+	Method OnDiscard() Override
+	
+		For Local t:=Eachin _textures
+			If t t.Release()
+		Next
 	End
 	
 	Private

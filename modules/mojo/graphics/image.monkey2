@@ -1,6 +1,8 @@
 
 Namespace mojo.graphics
 
+Using std.resource
+
 #rem monkeydoc The Image class.
 
 An image is a rectangular array of pixels that can be drawn using one of the [[Canvas.DrawImage]] methods.
@@ -8,7 +10,7 @@ An image is a rectangular array of pixels that can be drawn using one of the [[C
 You can load an image from a file using one of the [[Load]], [[LoadBump]] or [[LoadLight]] functions.
 
 #end
-Class Image Extends std.resource.Resource
+Class Image Extends Resource
 
 	#rem monkeydoc Creates a new Image.
 	
@@ -41,9 +43,7 @@ Class Image Extends std.resource.Resource
 		
 		Init( texture,texture.Rect,shader )
 		
-		OnDiscarded+=Lambda()
-			texture.Discard()
-		End
+		AddDependancy( texture )
 	End
 
 	Method New( width:Int,height:Int,textureFlags:TextureFlags=Null,shader:Shader=Null )
@@ -52,14 +52,14 @@ Class Image Extends std.resource.Resource
 		
 		Init( texture,texture.Rect,shader )
 		
-		OnDiscarded+=Lambda()
-			texture.Discard()
-		End
+		AddDependancy( texture )
 	End
 
 	Method New( image:Image )
 	
 		Init( image._textures[0],image._rect,image._shader )
+		
+		image.AddDependancy( Self )
 		
 		For Local i:=1 Until 4
 			SetTexture( i,image.GetTexture( i ) )
@@ -76,6 +76,8 @@ Class Image Extends std.resource.Resource
 	Method New( image:Image,rect:Recti )
 	
 		Init( image._textures[0],rect+image._rect.Origin,image._shader )
+		
+		image.AddDependancy( Self )
 		
 		For Local i:=1 Until 4
 			SetTexture( i,image.GetTexture( i ) )
@@ -338,23 +340,6 @@ Class Image Extends std.resource.Resource
 		Return image
 	End
 	
-	#rem monkeydoc @hidden experimental!
-	#end	
-	Function Open:Image( path:String,shader:Shader=Null )
-	
-		path=RealPath( path )
-		
-		Local slug:="Image:path="+path+"&shader="+(shader ? shader.Name Else "null")
-		
-		Local image:=Cast<Image>( OpenResource( slug ) )
-		If image Return image
-		
-		image=Load( path,shader )
-
-		AddResource( slug,image )
-		Return image
-	End
-	
 	#rem monkeydoc Loads a bump image from file(s).
 	
 	`diffuse`, `normal` and `specular` are filepaths of the diffuse, normal and specular image files respectively.
@@ -388,26 +373,6 @@ Class Image Extends std.resource.Resource
 		Return image
 	End
 
-	#rem monkeydoc @hidden experimental!
-	#end	
-	Function OpenBump:Image( diffuse:String,normal:String,specular:String,specularScale:Float=1,flipNormalY:Bool=True,shader:Shader=Null )
-	
-		diffuse=RealPath( diffuse )
-		normal=RealPath( normal )
-		specular=RealPath( specular )
-
-		Local slug:="BumpImage:diffuse="+diffuse+"&normal="+normal+"&specular="+specular
-		slug+="&specularScale="+specularScale+"&flipNormalY="+Int( flipNormalY )+"&shader="+(shader ? shader.Name Else "")
-		
-		Local image:=Cast<Image>( OpenResource( slug ) )
-		If image Return image
-		
-		image=LoadBump( diffuse,normal,specular,specularScale,flipNormalY,shader )
-
-		AddResource( slug,image )	
-		Return image
-	End
-	
 	#rem monkeydoc Loads a light image from file.
 	#end
 	Function LoadLight:Image( path:String,shader:Shader=Null )
@@ -480,23 +445,6 @@ Class Image Extends std.resource.Resource
 		Return image
 	End
 
-	#rem monkeydoc @hidden experimental!
-	#end
-	Function OpenLight:Image( path:String,shader:Shader=Null )
-	
-		path=RealPath( path )
-		
-		Local slug:="Light:path="+path+"&shader="+(shader ? shader.Name Else Null)
-		
-		Local light:=Cast<Image>( OpenResource( path ) )
-		If light Return light
-		
-		light=Load( path,shader )
-		
-		AddResource( slug,light )
-		Return light
-	End
-
 	Private
 	
 	Field _shader:Shader
@@ -525,6 +473,8 @@ Class Image Extends std.resource.Resource
 		_rect=rect
 		_shader=shader
 		_material=New UniformBlock
+		
+		AddDependancy( _material )
 		
 		SetTexture( 0,texture )
 		
@@ -562,4 +512,22 @@ Class Image Extends std.resource.Resource
 		_texCoords.max.y=Float(_rect.max.y)/_textures[0].Height
 	End
 	
+End
+
+Class ResourceManager Extension
+
+	Method OpenImage:Image( path:String,shader:Shader=Null )
+
+		Local slug:="Image:name="+StripDir( StripExt( path ) )+"&shader="+(shader ? shader.Name Else "null")
+		
+		Local image:=Cast<Image>( OpenResource( slug ) )
+		If image Return image
+
+		Local texture:=OpenTexture( path,Null )
+		If texture image=New Image( texture,shader )
+		
+		AddResource( slug,image )
+		Return image
+	End
+
 End
