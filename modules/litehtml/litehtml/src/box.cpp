@@ -212,8 +212,15 @@ void litehtml::line_box::finish(bool last_box)
 		base_line += (line_height - m_height) / 2;
 	}
 
-	m_height = line_height;
+	m_height = std::max( m_height,line_height );
+/*
+	if(m_height)
+	{
+		base_line += (line_height - m_height) / 2;
+	}
 
+	m_height = line_height;
+*/
 	int y1	= 0;
 	int y2	= m_height;
 
