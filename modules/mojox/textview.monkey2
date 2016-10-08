@@ -249,14 +249,11 @@ Class TextView Extends ScrollableView
 	#end
 	Method New()
 		Style=GetStyle( "TextView" )
+		ContentView.Style=GetStyle( "TextViewContent" )
 
-		_textColors=New Color[8]
-		
-		For Local i:=0 Until 7
-			_textColors[i]=App.Theme.GetColor( "textview-color"+i )
-		Next
-		
 		_lines.Push( New Line )
+		
+		UpdateColors()
 		
 		Document=New TextDocument
 	End
@@ -306,6 +303,17 @@ Class TextView Extends ScrollableView
 		_textColors=textColors
 	End
 	
+	#rem monkeydoc Cursor color.
+	#end
+	Property CursorColor:Color()
+	
+		Return _cursorColor
+	
+	Setter( cursorColor:Color )
+	
+		_cursorColor=cursorColor
+	End
+	
 	#rem monkeydoc Selection color.
 	#end
 	Property SelectionColor:Color()
@@ -315,16 +323,6 @@ Class TextView Extends ScrollableView
 	Setter( selectionColor:Color )
 	
 		_selColor=selectionColor
-	End
-	
-	#rem monkeydoc Cursor color.
-	#end
-	Property CursorColor:Color()
-	
-		Return _cursorColor
-	
-	Setter( cursorColor:Color )
-		_cursorColor=cursorColor
 	End
 	
 	#rem monkeydoc Block cursor flag.
@@ -618,6 +616,12 @@ Class TextView Extends ScrollableView
 		_cursor=_anchor
 		UpdateCursor()
 	End
+	
+	#rem monkeydoc Selects a line.
+	#end
+	Method SelectLine( line:Int )
+		SelectText( _doc.StartOfLine( line ),_doc.EndOfLine( line ) )
+	End
 
 	#rem monkeydoc Selects text in a range.
 	#end
@@ -754,6 +758,11 @@ Class TextView Extends ScrollableView
 	
 	Protected
 	
+	Method OnThemeChanged() Override
+	
+		UpdateColors()
+	End
+	
 	Method OnValidateStyle() Override
 	
 		Local style:=RenderStyle
@@ -777,7 +786,7 @@ Class TextView Extends ScrollableView
 			UpdateLines()
 		Endif
 		
-		Return New Vec2i( _lines.Top.maxWidth,_lines.Top.rect.Bottom )
+		Return New Vec2i( _lines.Top.maxWidth+_charw,_lines.Top.rect.Bottom )
 	End
 
 	Method OnMeasureContent2:Vec2i( size:Vec2i ) Override
@@ -927,12 +936,20 @@ Class TextView Extends ScrollableView
 				
 		Case Key.Left
 			
-			If _cursor _cursor-=1
+			If _anchor<>_cursor And Not (modifiers & Modifier.Shift)
+				_cursor=Min( _anchor,_cursor )
+			Else If _cursor
+				_cursor-=1
+			Endif
 			UpdateCursor()
 				
 		Case Key.Right
-			
-			If _cursor<_doc.Text.Length _cursor+=1
+		
+			If _anchor<>_cursor And Not (modifiers & Modifier.Shift)
+				_cursor=Max( _anchor,_cursor )
+			Else If _cursor<_doc.Text.Length 
+				_cursor+=1
+			Endif
 			UpdateCursor()
 				
 		Case Key.Home
@@ -971,7 +988,7 @@ Class TextView Extends ScrollableView
 		Return True
 	End
 	
-	Method OnControlKeyDown:bool( key:Key ) Virtual
+	Method OnControlKeyDown:bool( key:Key,modifiers:Modifier=Null ) Virtual
 
 		Select key
 		Case Key.A
@@ -994,6 +1011,32 @@ Class TextView Extends ScrollableView
 			_cursor=_doc.TextLength
 			UpdateCursor()
 			Return True
+		Case Key.Left
+			If _anchor<>_cursor And Not (modifiers & Modifier.Shift)
+				_cursor=Min( _anchor,_cursor )
+			Endif
+			Local term:=New Int[1]
+			Local start:=FindWord( _cursor,term )
+			_cursor=Max( start-1,0 )
+			Local text:=Text
+			While _cursor And text[_cursor-1]<=32 And text[_cursor-1]<>10
+				_cursor-=1
+			Wend
+			UpdateCursor()
+			Return True
+		Case Key.Right
+			If _anchor<>_cursor And Not (modifiers & Modifier.Shift)
+				_cursor=Max( _anchor,_cursor )
+			Endif
+			Local term:=New Int[1]
+			Local start:=FindWord( _cursor,term )
+			_cursor=term[0]
+			Local text:=Text
+			While _cursor<text.Length And text[_cursor]<=32 And text[_cursor]<>10
+				_cursor+=1
+			Wend
+			UpdateCursor()
+			Return True
 		End
 		
 		Return False
@@ -1003,14 +1046,14 @@ Class TextView Extends ScrollableView
 	
 		If _readOnly
 			If _macosMode
-				If (event.Modifiers & Modifier.Gui) And event.Key=Key.C
-					''Copy'
+				If (event.Modifiers & Modifier.Gui) And (event.Key=Key.C Or event.Key=Key.A)
+					'Copy, Select All
 				Else
 					Return
 				Endif
 			Else			
-				If (event.Modifiers & Modifier.Control) And event.Key=Key.C
-					''Copy'
+				If (event.Modifiers & Modifier.Control) And (event.Key=Key.C Or event.Key=Key.A)
+					'Copy, Select All
 				Else
 					Return
 				Endif
@@ -1026,20 +1069,17 @@ Class TextView Extends ScrollableView
 				If event.Modifiers & Modifier.Gui
 				
 					Select event.Key
-					Case Key.A,Key.X,Key.C,Key.V,Key.Z,Key.Y
-					
-						If Not OnControlKeyDown( event.Key ) Return
+					Case Key.Home,Key.KeyEnd
+					Default
+						If Not OnControlKeyDown( event.Key,event.Modifiers ) Return
 					End
 					
 				Else If event.Modifiers & Modifier.Control
 				
 					Select event.Key
 					Case Key.A
-					
 						OnKeyDown( Key.Home )
-						
 					Case Key.E
-					
 						OnKeyDown( Key.KeyEnd )
 					End
 					
@@ -1047,15 +1087,10 @@ Class TextView Extends ScrollableView
 
 					Select event.Key
 					Case Key.Home
-
 						OnControlKeyDown( Key.Home )
-
 					Case Key.KeyEnd
-					
 						OnControlKeyDown( Key.KeyEnd )
-						
 					Default
-					
 						If Not OnKeyDown( event.Key,event.Modifiers ) Return
 					End
 
@@ -1064,7 +1099,7 @@ Class TextView Extends ScrollableView
 			Else
 			
 				If event.Modifiers & Modifier.Control
-					If Not OnControlKeyDown( event.Key ) Return
+					If Not OnControlKeyDown( event.Key,event.Modifiers ) Return
 				Else
 					If Not OnKeyDown( event.Key,event.Modifiers ) Return
 				Endif
@@ -1096,8 +1131,35 @@ Class TextView Extends ScrollableView
 		Select event.Type
 		Case EventType.MouseDown
 		
+			Select event.Clicks
+			Case 1
+
+				_cursor=CharAtPoint( event.Location )
+				
+				If Not (event.Modifiers & Modifier.Shift) _anchor=_cursor
+				
+				_dragging=True
+				
+				MakeKeyView()
+				
+				UpdateCursor()
+			
+			Case 2
+
+				Local term:=New Int[1]
+				Local start:=FindWord( CharAtPoint( event.Location ),term )
+				
+				SelectText( start,term[0] )
+				
+			Case 3
+			
+				SelectLine( LineAtPoint( event.Location ) )
+			
+			End
+		
 			Return
 			
+		#rem			
 		Case EventType.MouseClick
 		
 			_cursor=CharAtPoint( event.Location )
@@ -1109,7 +1171,15 @@ Class TextView Extends ScrollableView
 			MakeKeyView()
 			
 			UpdateCursor()
-
+			
+		Case EventType.MouseDoubleClick
+		
+			Local term:=New Int[1]
+			Local start:=FindWord( CharAtPoint( event.Location ),term )
+			
+			SelectText( start,term[0] )
+		#end
+		
 		Case EventType.MouseUp
 		
 			_dragging=False
@@ -1184,7 +1254,22 @@ Class TextView Extends ScrollableView
 	Field _dragging:Bool
 	
 	Field _readOnly:Bool
+
+	Method UpdateColors()
+		
+		CursorColor=App.Theme.GetColor( "textview-cursor" )
+		
+		SelectionColor=App.Theme.GetColor( "textview-selection" )
 	
+		Local colors:=New Color[8]
+		
+		For Local i:=0 Until 8
+			colors[i]=App.Theme.GetColor( "textview-color"+i )
+		Next
+		
+		TextColors=colors
+	End
+		
 	Method CancelBlinkTimer()
 		If Not _blinkTimer Return
 		_blinkTimer.Cancel()
@@ -1225,6 +1310,50 @@ Class TextView Extends ScrollableView
 		RequestRender()
 	End
 	
+	Method FindWord:Int( from:Int,term:Int[] )
+
+		Local text:=Text
+		
+		If from<0
+			term[0]=0
+			Return 0
+		Else If from>=text.Length
+			term[0]=text.Length
+			Return text.Length
+		Else If text[from]=10
+			term[0]=from+1
+			Return from
+		Endif
+	
+		Local start:=from,ends:=from+1
+		
+		If text[from]<=32
+			While start And text[start-1]<=32 And text[start-1]<>10
+				start-=1
+			Wend
+			While ends<text.Length And text[ends]<=32 And text[ends]<>10
+				ends+=1
+			Wend
+		Else if IsIdent( text[start] )
+			While start And IsIdent( text[start-1] )
+				start-=1
+			Wend
+			While ends<text.Length And IsIdent( text[ends] )
+				ends+=1
+			Wend
+		Else
+			While start And text[start-1]>32 And Not IsIdent( text[start-1] )
+				start-=1
+			Wend
+			While ends<text.Length And text[ends]>32 And Not IsIdent( text[ends] )
+				ends+=1
+			Wend
+		Endif
+
+		term[0]=ends
+		Return start
+	End
+	
 	Method WordLength:Int( text:String,i0:Int,eol:Int )
 
 		Local i1:=i0
@@ -1233,8 +1362,12 @@ Class TextView Extends ScrollableView
 			While i1<eol And text[i1]<=32
 				i1+=1
 			Wend
+		Else If IsIdent( text[i1] )
+			While i1<eol And IsIdent( text[i1] )
+				i1+=1
+			Wend
 		Else
-			While i1<eol And text[i1]>32
+			While i1<eol And text[i1]>32 And Not IsIdent( text[i1] )
 				i1+=1
 			Wend
 		Endif
@@ -1247,22 +1380,24 @@ Class TextView Extends ScrollableView
 		Local i1:=i0,x1:=x0
 		
 		If text[i0]<=32
-
 			While i1<eol And text[i1]<=32
-
 				If text[i1]=9
 					x1=Int( (x1+_tabw)/_tabw ) * _tabw
 				Else
 					x1+=_charw
 				Endif
-
 				i1+=1
 			Wend
-		Else
-			While i1<eol And text[i1]>32
-				i1+=1
-			Wend
-			
+		Else 
+			If IsIdent( text[i1] )
+				While i1<eol And IsIdent( text[i1] )
+					i1+=1
+				Wend
+			Else
+				While i1<eol And text[i1]>32 And Not IsIdent( text[i1] )
+					i1+=1
+				Wend
+			Endif
 			x1+=_font.TextWidth( text.Slice( i0,i1 ) )
 		Endif
 		
@@ -1446,7 +1581,6 @@ Class TextView Extends ScrollableView
 		Next
 		
 '		Print "Document width="+_lines.Top.maxWidth+", height="+_lines.Top.rect.Bottom
-		
 	End
 	
 End
