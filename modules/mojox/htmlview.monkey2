@@ -15,7 +15,7 @@ Class HtmlView Extends ScrollableView
 		Layout="fill"
 		
 		Style=GetStyle( "HtmlView" )
-		
+
 		_context=New litehtml.context
 		_context.load_master_stylesheet( stringio.LoadString( "theme::htmlview_master_css.css" ) )
 
@@ -45,8 +45,8 @@ Class HtmlView Extends ScrollableView
 	Setter( htmlSource:String )
 		_source=htmlSource
 		_document=New litehtml.document( _source,_container,_context )
-		_layoutSize=New Vec2i( 0,0 )
-		_renderSize=New Vec2i( 0,0 )
+		_layoutSize=Null
+		_renderSize=Null
 		RequestRender()
 	End
 	
@@ -97,6 +97,12 @@ Class HtmlView Extends ScrollableView
 	Field _document:litehtml.document
 	Field _layoutSize:Vec2i
 	Field _renderSize:Vec2i
+	
+	Method OnThemeChanged() Override
+		_document=New litehtml.document( _source,_container,_context )
+		_layoutSize=Null
+		_renderSize=Null
+	End
 
 	Method OnMeasureContent2:Vec2i( size:Vec2i ) Override
 	
@@ -169,8 +175,20 @@ Class document_container Extends litehtml.document_container
 
 	Field _view:HtmlView
 	
-	Global _fontScale:=1
-	Global _imageCache:=New StringMap<Image>
+	Method ToFont:Font( hfont:Object )
+	
+		Return Cast<Font>( hfont )
+	End
+	
+	Method ToCanvas:Canvas( hdc:Object )
+	
+		Return Cast<Canvas>( hdc )
+	End
+	
+	Method GetImage:Image( src:String )
+	
+		Return App.Theme.OpenImage( src )
+	End
 	
 	Method New( view:HtmlView )
 	
@@ -183,26 +201,25 @@ Class document_container Extends litehtml.document_container
 	End
 	
 	Method make_url:String( href:String )
+	
 		Return _view._baseUrl+href
 	End
 
 	Method create_font:Object( faceName:String,size:Int,weight:Int,style:litehtml.font_style,decoration:UInt,fm:litehtml.font_metrics Ptr ) Override
 	
-		Local font:Font
+		Local face:="DejaVuSans"
 		
-		If faceName.Contains( "monospace" )
-			font=Font.Open( "font::DejaVuSansMono.ttf",size )
-		Else
-			font=Font.Open( "font::DejaVuSans.ttf",size )
-		Endif
+		If faceName.Contains( "monospace" ) face+="Mono"
 		
-		Local height:=size
+		Local font:=App.Theme.OpenFont( face,size )
+		
+		Local height:=font.Height
 
-		fm[0].height=height
-		fm[0].ascent=height
-		fm[0].descent=0
-		fm[0].x_height=height
-		fm[0].draw_spaces=True
+		fm->height=height
+		fm->ascent=height
+		fm->descent=0
+		fm->x_height=height
+		fm->draw_spaces=True
 		
 		Return font
 	End
@@ -212,89 +229,86 @@ Class document_container Extends litehtml.document_container
 	
 	Method text_width:Int( text:String,hfont:Object ) Override
 	
-		Local font:=Cast<Font>( hfont )
+		Local font:=ToFont( hfont )
 		
-		Return font.TextWidth( text ) * _fontScale
+		Return font.TextWidth( text )
 	End
 	
 	Method draw_text( hdc:Object,text:String,hfont:Object,color:litehtml.web_color Ptr,pos:litehtml.position Ptr ) Override
 	
-		Local canvas:=Cast<Canvas>( hdc )
+		Local canvas:=ToCanvas( hdc )
 		
-		Local font:=Cast<Font>( hfont )
+		Local font:=ToFont( hfont )
 		
 		canvas.Font=font
 
 		set_color( canvas,color[0] )
 		
-		canvas.DrawText( text,pos[0].x,pos[0].y )
+		canvas.DrawText( text,pos->x,pos->y )
 		
 		Return
-#rem		
-		canvas.PushMatrix()
-		canvas.Translate( pos[0].x,pos[0].y )
-		canvas.Scale( _fontScale,1 )
-		canvas.DrawText( text,0,0 )
-		canvas.PopMatrix()
-#end
 	End
 	
 	Method pt_to_px:Int( pt:Int ) Override
+	
 		Return 0
 	End
 	
 	Method get_default_font_size:Int() Override
-		Return 16
+	
+		Return 16 * App.Theme.Scale.y
 	End
 	
 	Method get_default_font_name:String() Override
-		Return "mojo"
+	
+		Return "DejaVuSans"
 	End
 	
 	Method draw_list_marker( hdc:Object,marker:litehtml.list_marker Ptr ) Override
 	
-		If marker[0].marker_type=litehtml.list_style_type_none Return
+		If marker->marker_type=litehtml.list_style_type_none Return
 	
-		Local canvas:=Cast<Canvas>( hdc )
+		Local canvas:=ToCanvas( hdc )
 	
-		set_color( canvas,marker[0].color )
+		set_color( canvas,marker->color )
 		
-		Select marker[0].marker_type
+		Select marker->marker_type
 		Case litehtml.list_style_type_disc
-			canvas.DrawOval( marker[0].pos.x,marker[0].pos.y,marker[0].pos.width,marker[0].pos.height )
+			canvas.DrawOval( marker->pos.x,marker->pos.y,marker->pos.width,marker->pos.height )
 		Default
-			canvas.DrawRect( marker[0].pos.x,marker[0].pos.y,marker[0].pos.width,marker[0].pos.height )
+			canvas.DrawRect( marker->pos.x,marker->pos.y,marker->pos.width,marker->pos.height )
 		End
 	End
 	
 	Method load_image( src:String,baseurl:String,redraw_on_ready:Bool ) Override
-		If _imageCache.Contains( src ) Return
-		Local image:=Image.Load( make_url( src ) )
-		_imageCache.Set( src,image )
+	
+		GetImage( src )
 	End
 	
 	Method get_image_size( src:String,baseurl:String,sz:litehtml.size Ptr ) Override
-		Local image:=_imageCache.Get( src )
+	
+		Local image:=GetImage( src )
 		If Not image Return
-		sz[0].width=image.Width
-		sz[0].height=image.Height
+	
+		sz->width=image.Width
+		sz->height=image.Height
 	End
 
 	Method draw_background( hdc:Object,img_src:String,img_baseurl:String,bg:litehtml.background_paint Ptr ) Override
 	
-		Local canvas:=Cast<Canvas>( hdc )
+		Local canvas:=ToCanvas( hdc )
 		
-		Local image:=_imageCache.Get( img_src )
+		Local image:=GetImage( img_src )
 		If image
 			canvas.Color=Color.White
-			canvas.DrawImage( image,bg[0].position_x,bg[0].position_y )
+			canvas.DrawImage( image,bg->position_x,bg->position_y )
 			Return
 		Endif
 
-		set_color( canvas,bg[0].color )
+		set_color( canvas,bg->color )
 		
-'		canvas.DrawRect( bg[0].clip_box.x,bg[0].clip_box.y,bg[0].clip_box.width,bg[0].clip_box.height )
-		canvas.DrawRect( bg[0].border_box.x,bg[0].border_box.y,bg[0].border_box.width,bg[0].border_box.height )
+'		canvas.DrawRect( bg->clip_box.x,bg->clip_box.y,bg->clip_box.width,bg->clip_box.height )
+		canvas.DrawRect( bg->border_box.x,bg->border_box.y,bg->border_box.width,bg->border_box.height )
 
 	End
 	
@@ -309,19 +323,19 @@ Class document_container Extends litehtml.document_container
 	
 	Method draw_borders( hdc:Object,borders:litehtml.borders Ptr,pos:litehtml.position Ptr,root:Bool ) Override
 	
-		Local canvas:=Cast<Canvas>( hdc )
+		Local canvas:=ToCanvas( hdc )
 		
-		Local x:=pos[0].x,y:=pos[0].y
+		Local x:=pos->x,y:=pos->y
 		
-		Local w:=pos[0].width,h:=pos[0].height
+		Local w:=pos->width,h:=pos->height
 		
-		draw_border( canvas,borders[0].left,x,y,1,h )
+		draw_border( canvas,borders->left,x,y,1,h )
 		
-		draw_border( canvas,borders[0].top,x,y,w,1 )
+		draw_border( canvas,borders->top,x,y,w,1 )
 		
-		draw_border( canvas,borders[0].right,x+w-1,y,1,h )
+		draw_border( canvas,borders->right,x+w-1,y,1,h )
 		
-		draw_border( canvas,borders[0].bottom,x,y+h-1,w,1 )
+		draw_border( canvas,borders->bottom,x,y+h-1,w,1 )
 	End
 
 	Method set_caption( caption:String ) Override
@@ -331,6 +345,7 @@ Class document_container Extends litehtml.document_container
 	End
 	
 	Method on_anchor_click( url:String ) Override
+	
 		_view._anchorClicked=url
 	End
 		
@@ -338,6 +353,7 @@ Class document_container Extends litehtml.document_container
 	End
 	
 	Method import_css:String( url:String,baseurl:String ) Override
+	
 		Local css:=stringio.LoadString( make_url( url ) )
 		Return css
 	End
@@ -350,23 +366,23 @@ Class document_container Extends litehtml.document_container
 	
 	Method get_client_rect( client:litehtml.position Ptr ) Override
 '		If _view._rendering Print "get client rect"
-		client[0].x=0
-		client[0].y=0
-		client[0].width=_view._layoutSize.x
-		client[0].height=_view._layoutSize.y
+		client->x=0
+		client->y=0
+		client->width=_view._layoutSize.x
+		client->height=_view._layoutSize.y
 	End
 	
 	Method get_media_features( media:litehtml.media_features Ptr ) Override
 '		If _view._rendering Print "get media features"
-		media[0].type=litehtml.media_type_screen
-		media[0].width=_view._layoutSize.x
-		media[0].height=_view._layoutSize.y
-		media[0].device_width=1920
-		media[0].device_height=1080
-		media[0].color=8
-		media[0].color_index=0
-		media[0].monochrome=0
-		media[0].resolution=96
+		media->type=litehtml.media_type_screen
+		media->width=_view._layoutSize.x
+		media->height=_view._layoutSize.y
+		media->device_width=1920
+		media->device_height=1080
+		media->color=8
+		media->color_index=0
+		media->monochrome=0
+		media->resolution=96
 	End
 	
 	Method get_language:String() Override

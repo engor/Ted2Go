@@ -44,6 +44,8 @@ Class CheckButton Extends Label
 		_checkBox=New Button
 		_checkBox.Style=GetStyle( "CheckBox" )
 		_checkBox.Icon=_checkBox.RenderStyle.Icons[0]
+		_checkBox.Layout="float"
+		_checkBox.Gravity=New Vec2f( 1,.5 )
 		
 		Local clicked:=Lambda()
 		
@@ -121,6 +123,7 @@ Class CheckButton Extends Label
 	
 	Method SetChecked( checked:Bool )
 		_checked=checked
+
 		InvalidateStyle()
 	End
 

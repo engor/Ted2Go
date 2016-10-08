@@ -27,11 +27,11 @@ Class TextField Extends TextView
 		Style=GetStyle( "TextField" )
 		
 		Layout="fill-x"
-		Gravity=New Vec2f( 0,.5 )
+		Gravity=New Vec2f( .5 )
 		
 		ScrollBarsVisible=False
 		
-		MaxSize=New Vec2i( 160,0 )
+		MaxSize=New Vec2i( 320,0 )
 		
 		Document.TextChanged+=Lambda()
 			TextChanged()

@@ -58,7 +58,7 @@ Class Label Extends View
 	
 		_text=text
 		
-		App.RequestRender()
+		RequestRender()
 	End
 
 	#rem monkeydoc Label text gravity.
@@ -72,7 +72,7 @@ Class Label Extends View
 	
 		_textGravity=textGravity
 
-		App.RequestRender()
+		RequestRender()
 	End
 
 	#rem monkeydoc Label icon.
@@ -86,7 +86,7 @@ Class Label Extends View
 	
 		_icon=icon
 		
-		App.RequestRender()
+		RequestRender()
 	End
 	
 	#rem monkeydoc Adds a view to the right of the label.
@@ -150,13 +150,22 @@ Class Label Extends View
 		_textRect=New Recti( tx,ty,tx+tw,ty+th )
 		
 		Local x1:=Width
-		For Local view:=Eachin _views.Backwards()
 		
+		For Local i:=_views.Length-1 To 0 Step -1
+			Local view:=_views[i]
+			Local x0:=i ? Max( x1-view.LayoutSize.x,_textRect.Right ) Else _textRect.Right
+			view.Frame=New Recti( x0,0,x1,Height )
+			x1=x0
+		Next
+		
+		#rem
+		For Local view:=Eachin _views.Backwards()
 			Local x0:=Max( x1-view.LayoutSize.x,_textRect.Right )
 			view.Frame=New Recti( x0,0,x1,Height )
 			x1=x0
 		Next
 		_textRect.Right=x1
+		#end
 		
 		Return
 		

@@ -254,13 +254,14 @@ Class TreeView Extends ScrollableView
 				node=node._parent
 			Wend
 		End
-		
 	End
 
 	#rem monkeydoc Creates a new tree view.
 	#end	
 	Method New()
 		Style=GetStyle( "TreeView" )
+		ContentView.Style=GetStyle( "TreeViewContent" )
+		
 		Layout="fill"
 		
 		_rootNode=New Node( Null )
@@ -305,15 +306,20 @@ Class TreeView Extends ScrollableView
 	
 	Protected
 	
+	Method OnThemeChanged() Override
+	
+		_rootNode.Dirty()
+	End
+	
 	Method OnValidateStyle() Override
 	
 		Local style:=RenderStyle
 	
-		_collapsedIcon=style.Icons[0]
-		_expandedIcon=style.Icons[1]
-		
 		_nodeSize=style.Font.Height
 		_spcWidth=style.Font.TextWidth( " " )
+		
+		_collapsedIcon=style.Icons[0]
+		_expandedIcon=style.Icons[1]
 	End
 	
 	Method OnMeasureContent:Vec2i() Override

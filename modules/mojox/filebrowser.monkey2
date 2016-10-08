@@ -217,8 +217,16 @@ Class FileBrowser Extends TreeView
 			Local icon:=Image.Load( dir+type )
 			If Not icon Continue
 			
+			icon.Scale=App.Theme.Scale
+			
 			_fileTypeIcons[ "."+StripExt(type) ]=icon
 		Next
+		
+		App.ThemeChanged+=Lambda()
+			For Local image:=Eachin _fileTypeIcons.Values
+				image.Scale=App.Theme.Scale
+			Next
+		End
 		
 		Return _fileTypeIcons
 	End

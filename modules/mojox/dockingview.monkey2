@@ -11,12 +11,7 @@ Class DockKnob Extends View
 		Style=GetStyle( "DockKnob" )
 	End
 	
-	Private
-	
-	Field _org:Vec2i
-	
-	Field _drag:Bool
-	Field _hover:Bool
+	Protected
 	
 	Method OnMeasure:Vec2i() Override
 	
@@ -47,6 +42,13 @@ Class DockKnob Extends View
 			StyleState=""
 		Endif
 	End
+	
+	Private
+	
+	Field _org:Vec2i
+	
+	Field _drag:Bool
+	Field _hover:Bool
 	
 End
 

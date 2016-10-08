@@ -13,13 +13,11 @@ Class ScrollBar Extends View
 	#end
 	Method New( axis:Axis=std.geom.Axis.X )
 
+		Style=GetStyle( "ScrollBar" )
+
 		_axis=axis
 
 		Local taxis:=_axis=Axis.X ? "x" Else "y"
-		
-		Style=GetStyle( "ScrollBar" )
-		
-		_knobStyle=GetStyle( "ScrollKnob" )
 		
 '		Style=GetStyle( "ScrollBar:"+taxis )
 
@@ -121,6 +119,11 @@ Class ScrollBar Extends View
 	Field _hover:Bool
 	
 	Field _offset:Int
+	
+	Method OnValidateStyle() Override
+		
+		_knobStyle=GetStyle( "ScrollKnob" )
+	End
 	
 	Method OnMeasure:Vec2i() Override
 	
