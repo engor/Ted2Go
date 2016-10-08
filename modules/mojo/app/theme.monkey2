@@ -3,26 +3,28 @@ Namespace mojo.app
 
 Class Theme
 
-	Property Path:String()
+	Field ThemeChanged:Void()
 
-		Return _themePath
+	Method New()
+		_defaultStyle=New Style
+		_defaultStyle.Font=App.DefaultFont
+	End
+	
+	Property Scale:Vec2f()
+	
+		Return _themeScale
+	
+	Setter( scale:Vec2f )
+		If scale=_themeScale Return
+		
+		_themeScale=scale
+		
+		Reload()
 	End
 	
 	Property DefaultStyle:Style()
 	
 		Return _defaultStyle
-	End
-	
-	#rem monkeydoc Gets a color from the theme.
-	
-	If no color named `name` is found, [[Color.Grey]] is returned.
-	
-	#end
-	Method GetColor:Color( name:String )
-	
-		If _colors.Contains( name ) Return _colors[name]
-		
-		Return Color.Grey
 	End
 	
 	#rem monkeydoc Gets a font from the theme.
@@ -36,6 +38,18 @@ Class Theme
 		If font Return font
 		
 		Return App.DefaultFont
+	End
+	
+	#rem monkeydoc Gets a color from the theme.
+	
+	If no color named `name` is found, [[Color.Grey]] is returned.
+	
+	#end
+	Method GetColor:Color( name:String )
+	
+		If _colors.Contains( name ) Return _colors[name]
+		
+		Return Color.Grey
 	End
 	
 	#rem monkeydoc Gets a style from the theme.
@@ -62,24 +76,28 @@ Class Theme
 	* The asset::fonts/ directory.
 	
 	#end
-	Method LoadFont:Font( file:String,size:Int )
+	Method OpenFont:Font( path:String,size:Float )
 	
-		size*=_themeScale
-	
+		size*=_themeScale.y
+		
 		Local font:Font
-		
-		If ExtractRootDir( file )
-			font=Font.Open( file,size )
-		Else
-			font=Font.Open( _themeDir+file,size )
-			If Not font 
-				font=Font.Open( "asset::fonts/"+file,size )
-			Endif
-		Endif
-		
+		If Not ExtractRootDir( path ) font=_res.OpenFont( "theme::"+path,size )
+		If Not font font=_res.OpenFont( path,size )
 		If Not font Return App.DefaultFont
 		
 		Return font
+	End
+	
+	Method OpenImage:Image( path:String )
+	
+		Local image:Image
+		If Not ExtractRootDir( path ) image=_res.OpenImage( "theme::"+path )
+		If Not image image=_res.OpenImage( path )
+		If Not image Return null
+		
+		image.Scale=_themeScale
+		
+		Return image
 	End
 	
 	#rem monkeydoc Loads an array of icon images from a file.
@@ -92,41 +110,39 @@ Class Theme
 	
 	The number of icons loaded is the width of the image file divided by its height.
 	
-	If `file` is not an absolute path, the file is searched for in the following locations:
-	
-	* The theme's directory.
-	
-	* The asset::images/ directory.
-	
 	#end
-	Method LoadIcons:Image[]( file:String )
+	Method OpenIcons:Image[]( path:String )
 	
-		Local atlas:Image
+		Local slug:="Icons:"+StripDir( StripExt( path ) )
 		
-		If ExtractRootDir( file )
-			atlas=Image.Load( file )
-		Else
-			atlas=Image.Load( _themeDir+file )
-			If Not atlas
-				atlas=Image.Load( "asset::images/"+file )
-			Endif
-		Endif
+		Local icons:=Cast<Icons>( _res.OpenResource( slug ) )
+		If Not icons
 
-		If Not atlas Return Null
+			Local atlas:=OpenImage( path )
+			If Not atlas Return Null
 		
-		atlas.Scale=New Vec2f( _themeScale,_themeScale )
+			Local size:=atlas.Rect.Height
+			Local n:=atlas.Rect.Width/size
+	
+			icons=New Icons
+			icons.atlas=atlas
+			icons.images=New Image[n]
+			
+			For Local i:=0 Until n
+				Local image:=New Image( atlas,New Recti( i*size,0,i*size+size,size ) )
+				icons.images[i]=image
+			Next
+			
+			icons.AddDependancy( atlas )
+
+			_res.AddResource( slug,icons )
+		Endif
 		
-		Local size:=atlas.Height
-		
-		Local n:=atlas.Width/size
-		
-		Local icons:=New Image[n]
-		
-		For Local i:=0 Until n
-			icons[i]=New Image( atlas,New Recti( i*size,0,i*size+size,atlas.Height ) )
+		For Local image:=Eachin icons.images
+			image.Scale=_themeScale
 		Next
 		
-		Return icons
+		Return icons.images
 	End
 	
 	#rem monkeydoc Loads a skin from a file.
@@ -140,77 +156,80 @@ Class Theme
 	* The asset::images/ directory.
 	
 	#end
-	Method LoadSkin:Skin( file:String )
+	Method OpenSkin:Skin( path:String )
 	
 		Local skin:Skin
-
-		If ExtractRootDir( file )
-			skin=Skin.Load( file )
-		Else
-			skin=Skin.Load( _themeDir+file )
-			If Not skin skin=Skin.Load( "asset::images/"+file )
-		Endif
+		If Not ExtractRootDir( path ) skin=_res.OpenSkin( "theme::"+path )
+		If Not skin skin=_res.OpenSkin( path )
 		
 		If Not skin Return Null
 		
-		skin.Image.Scale=New Vec2f( _themeScale,_themeScale )
+		skin.Image.Scale=_themeScale
 		
 		Return skin
 	End
-
-	#rem monkeydoc Loads a theme from a file.
 	
-	#end
-	Function Load:Theme( path:String )
+	Method Load:Bool( path:String,scale:Vec2f=New Vec2f( 1 ) )
+	
+		If Not ExtractRootDir( path ) path="theme::"+path
+		
+		If Not ExtractExt( path ) path+=".json"
 	
 		Local jobj:=JsonObject.Load( path )
-		If Not jobj 
+		If Not jobj
 			Print "Failed to load theme:"+path
-			return New Theme
+			return False
 		Endif
 		
-		Return New Theme( path,jobj )
+		_jcolors=jobj["colors"].ToObject()
+		_jfonts=jobj["fonts"].ToObject()
+		_jstyles=jobj["styles"].ToObject()
+		
+		_themeScale=scale
+		
+		Reload()
+		
+		Return True
 	End
 
 	Private
 	
+	Class Icons Extends Resource
+		Field atlas:Image
+		Field images:Image[]
+	End
+	
 	Const _jdefault:=New JsonString( "default" )
-
-#if __TARGET__="android"	
-	Field _themeScale:Int=2
-#else
-	Field _themeScale:Int=1
-#endif
-
-	Field _themePath:String
-	Field _themeDir:String
 	
-	Field _defaultStyle:Style
-	
-	Field _colors:=New StringMap<Color>
-	Field _fonts:=New StringMap<Font>
-	Field _styles:=New StringMap<Style>
+	Field _res:ResourceManager
+
+	Field _themeScale:Vec2f=New Vec2f( 1,1 )
 	
 	Field _jcolors:StringMap<JsonValue>
 	Field _jfonts:StringMap<JsonValue>
 	Field _jstyles:StringMap<JsonValue>
 	
-	Method New()
-		_themePath=""
-		_themeDir=""
-		_defaultStyle=New Style
-		_defaultStyle.Font=App.DefaultFont
+	Field _defaultStyle:Style
+	
+	Field _fonts:=New StringMap<Font>
+	Field _colors:=New StringMap<Color>
+	Field _styles:=New StringMap<Style>
+	Field _cstyles:=New StringMap<Style>
+	
+	Method Unload()
+		_fonts.Clear()
+		_colors.Clear()
+		_styles.Clear()
+		_defaultStyle=Null
 	End
 	
-	Method New( path:String,jobj:JsonObject )
-		Self.New()
+	Method Reload()
 	
-		_themePath=path
-		_themeDir=ExtractDir( _themePath )
-	
-		_jcolors=jobj["colors"].ToObject()
-		_jfonts=jobj["fonts"].ToObject()
-		_jstyles=jobj["styles"].ToObject()
+		Unload()
+		
+		Local res:=_res
+		
+		_res=New ResourceManager
 		
 		_defaultStyle=LoadStyle( _jdefault )
 		
@@ -226,9 +245,9 @@ Class Theme
 			LoadStyle( New JsonString( it.Key ) )
 		Next
 		
-		_jcolors=Null
-		_jfonts=Null
-		_jstyles=Null
+		If res res.Discard()
+		
+		ThemeChanged()
 	End
 	
 	Method ToRect:Recti( jrect:JsonValue )
@@ -251,10 +270,10 @@ Class Theme
 			b=arr[3].ToNumber()
 		End
 		
-		l*=_themeScale
-		t*=_themeScale
-		r*=_themeScale
-		b*=_themeScale
+		l=l*_themeScale.x
+		t=t*_themeScale.y
+		r=r*_themeScale.x
+		b=b*_themeScale.y
 		
 		Return New Recti( -l,-t,r,b )
 	End
@@ -349,8 +368,8 @@ Class Theme
 			fname=fname.Slice( 0,i )
 		Endif
 
-		Local font:=LoadFont( fname,fsize )
-
+		Local font:=OpenFont( fname,fsize )
+		
 		_fonts[str]=font
 		
 		Return font
@@ -368,8 +387,8 @@ Class Theme
 		If jstyle.Contains( "border" ) style.Border=ToRect( jstyle["border"] )
 		If jstyle.Contains( "margin" ) style.Margin=ToRect( jstyle["margin"] )
 		
-		If jstyle.Contains( "icons" ) style.Icons=LoadIcons( jstyle["icons"].ToString() )
-		If jstyle.Contains( "skin" ) style.Skin=LoadSkin( jstyle["skin"].ToString() )
+		If jstyle.Contains( "icons" ) style.Icons=OpenIcons( jstyle["icons"].ToString() )
+		If jstyle.Contains( "skin" ) style.Skin=OpenSkin( jstyle["skin"].ToString() )
 
 		If jstyle.Contains( "font" ) style.Font=LoadFont( jstyle["font"] )
 	End
@@ -385,6 +404,8 @@ Class Theme
 		
 		Local jstyle:=jobj.ToObject()
 		
+		'get parent style
+		'
 		Local pstyle:Style
 		
 		If jstyle.Contains( "extends" )
@@ -392,9 +413,21 @@ Class Theme
 		Else
 			pstyle=_defaultStyle
 		Endif
+
+		'create new style
+		'		
+		Local style:Style
 		
-		Local style:=New Style( pstyle )
-		
+		Local cstyle:=_cstyles[str]
+		If cstyle
+			style=cstyle
+			style.Set( pstyle )
+		Else
+			style=New Style( str,pstyle )
+		Endif
+
+		'initialize
+		'		
 		SetStyle( style,jstyle )
 		
 		For Local it:=Eachin style.States
@@ -402,6 +435,8 @@ Class Theme
 			SetStyle( it.Value,jstyle )
 		Next
 		
+		'create states
+		'
 		If jstyle.Contains( "states" )
 		
 			local jstates:=jstyle["states"].ToObject()
@@ -414,7 +449,8 @@ Class Theme
 			Next
 		
 		Endif
-
+		
+		_cstyles[str]=style
 		_styles[str]=style
 		
 		Return style

@@ -188,6 +188,13 @@ Class Window Extends View
 	
 	Protected
 	
+	#rem monkeydoc @hidden
+	#end
+	Method OnThemeChanged() override
+	
+		_clearColor=App.Theme.GetColor( "windowClearColor" )
+	End
+	
 	#rem monkeydoc Window event handler.
 	
 	Called when the window is sent a window event.
@@ -358,6 +365,7 @@ Class Window Extends View
 	End
 	
 	Method Init( title:String,rect:Recti,flags:WindowFlags )
+		Style=GetStyle( "Window" )
 	
 		Local x:=(flags & WindowFlags.CenterX) ? SDL_WINDOWPOS_CENTERED Else rect.X
 		Local y:=(flags & WindowFlags.CenterY) ? SDL_WINDOWPOS_CENTERED Else rect.Y
@@ -400,9 +408,9 @@ Class Window Extends View
 		_frame=GetFrame()
 		Frame=_frame
 		
-		_canvas=New Canvas( _frame.Width,_frame.Height )
-		
 		_clearColor=App.Theme.GetColor( "windowClearColor" )
+		
+		_canvas=New Canvas( _frame.Width,_frame.Height )
 		
 		SetWindow( Self )
 		

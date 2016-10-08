@@ -157,9 +157,24 @@ Class AppInstance
 		
 		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )
 #Endif
-		_defaultFont=Font.Open( "DejaVuSans",16 )
+		_defaultFont=_res.OpenFont( "DejaVuSans",16 )
 		
-		_theme=Theme.Load( GetConfig( "initialTheme","asset::themes/default.json" ) )
+		_theme=New Theme
+		
+		Local themePath:=GetConfig( "initialTheme","default" )
+		
+		Local themeScale:=Float( GetConfig( "initialThemeScale",1 ) )
+		
+		_theme.Load( themePath,New Vec2f( themeScale ) )
+		
+		_theme.ThemeChanged+=Lambda()
+
+			ThemeChanged()
+			
+			RequestRender()
+			
+			UpdateWindows()
+		End
 	End
 	
 	#rem monkeydoc Fallback font.
@@ -174,12 +189,6 @@ Class AppInstance
 	Property Theme:Theme()
 	
 		Return _theme
-		
-	Setter( theme:Theme )
-	
-		_theme=theme
-		
-		ThemeChanged()
 	End
 	
 	#rem monkeydoc True if clipboard text is empty.
@@ -221,6 +230,8 @@ Class AppInstance
 
 	#end
 	Property KeyView:View()
+	
+		If Not _active Return Null
 	
 		If IsActive( _keyView ) Return _keyView
 		
@@ -528,6 +539,7 @@ Class AppInstance
 	Field _touchMouse:Bool=False		'Whether mouse is really touch
 	Field _captureMouse:Bool=False		'Whether to use SDL_CaptureMouse
 	
+	Field _res:=New ResourceManager
 	Field _defaultFont:Font
 	Field _theme:Theme
 

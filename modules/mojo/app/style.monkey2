@@ -12,8 +12,17 @@ Class Style
 		Init( style )
 	End
 	
+	Method New( name:String,style:Style )
+		_name=name
+		Init( style )
+	End
+	
 	Method Copy:Style()
 		Return New Style( Self )
+	End
+	
+	Method Set( style:Style )
+		Init( style )
 	End
 	
 	Method GetState:Style( name:String )
@@ -256,7 +265,7 @@ Class Style
 		Local bgcolor:=BackgroundColor
 		If bgcolor.a
 			canvas.Color=bgcolor
-			canvas.DrawRect( bounds.X,bounds.Y,bounds.Width,bounds.Height )
+			canvas.DrawRect( bounds )
 		Endif
 		
 		Local skin:=Skin
@@ -309,6 +318,7 @@ Class Style
 		_iconColor=style._iconColor
 		_icons=style._icons.Slice( 0 )
 		_font=style._font
+		_states.Clear()
 		If style._states
 			For Local it:=Eachin style._states
 				_states[it.Key]=New Style( it.Value )

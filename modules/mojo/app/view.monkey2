@@ -8,8 +8,8 @@ Class View
 	#rem monkeydoc Invoked when a view becomes visble and active.
 	#end
 	Field Activated:Void()
-	
-	#rem monkeydoc Invoked when a view becomes is not longer visble or active.
+
+	#rem monkeydoc Invoked when a view is no longer visble or active.
 	#end
 	Field Deactivated:Void()
 
@@ -19,11 +19,13 @@ Class View
 			_themeSeq=1
 			App.ThemeChanged+=Lambda()
 				_themeSeq+=1
-				If _themeSeq<0 _themeSeq=1
+				If _themeSeq=$40000000 _themeSeq=1
 			End
 		Endif
 		
 		_style=New Style( App.Theme.DefaultStyle )
+		
+		_styleSeq=_themeSeq
 		
 		InvalidateStyle()
 	End
@@ -144,7 +146,7 @@ Class View
 	| "float"			| View floats within its layout frame according to the view [[Gravity]].
 	| "fill-x"			| View is resized on the x axis and floats on the y axis.
 	| "fill-y"			| View is resized on the y axis and floats on the x axs.
-	| "stretch"			| View is stretched to fit its layout frame.
+	| "stretch"			| View is stretched non-uniformly to fit its layout frame.
 	| "letterbox"		| View is uniformly stretched on both axii and centered within its layout frame.
 	| "letterbox-int"	| View is uniformly stretched on both axii and centered within its layout frame. Scale factors are integrized.
 
@@ -328,11 +330,9 @@ Class View
 	
 	#rem monkeydoc Adds a child view to this view.
 	
-	AddChildView is normally used internally by 'layout' views. However you can also add a child view to any view
-	directly by calling this method.
+	AddChildView is normally used internally by 'layout' views. However you can also add a child view to any view directly by calling this method.
 	
-	If you use this method to add a child view to a view, it is your responsiblity to also manage the child view's frame using
-	the [[Frame]] property.
+	If you use this method to add a child view to a view, it is your responsiblity to also manage the child view's frame using the [[Frame]] property.
 
 	#end
 	Method AddChildView( view:View )
@@ -540,7 +540,7 @@ Class View
 	#end
 	Method InvalidateStyle()
 	
-		_styleSeq=-1
+		_styleSeq|=$40000000
 		
 		App.RequestRender()
 	End
@@ -551,15 +551,9 @@ Class View
 	
 		If _styleSeq=_themeSeq Return
 		
-		If _styleSeq<>-1
+		Local themeChanged:=(_styleSeq & $3fffffff<>_themeSeq)
 		
-			Local name:=_style.Name
-			If name
-				Local style:=App.Theme.GetStyle( name )
-				If style _style=style
-			Endif
-
-		Endif
+		_styleSeq=_themeSeq
 	
 		_rstyle=_style
 		
@@ -571,8 +565,8 @@ Class View
 		
 		_styleBounds=_rstyle.Bounds
 		
-		_styleSeq=_themeSeq
-				
+		If themeChanged OnThemeChanged()
+		
 		OnValidateStyle()
 	End
 	
@@ -599,10 +593,12 @@ Class View
 		
 		Local size:=OnMeasure()
 		
-		If _minSize.x size.x=Max( size.x,_minSize.x )
-		If _minSize.y size.y=Max( size.y,_minSize.y )
-		If _maxSize.x size.x=Min( size.x,_maxSize.x )
-		If _maxSize.y size.y=Min( size.y,_maxSize.y )
+		Local scale:=App.Theme.Scale
+		
+		If _minSize.x size.x=Max( size.x,Int( _minSize.x*scale.x ) )
+		If _minSize.y size.y=Max( size.y,Int( _minSize.y*scale.y ) )
+		If _maxSize.x size.x=Min( size.x,Int( _maxSize.x*scale.x ) )
+		If _maxSize.y size.y=Min( size.y,Int( _maxSize.y*scale.y ) )
 		
 		_measuredSize=size
 		
@@ -726,7 +722,7 @@ Class View
 	#rem monkeydoc @hidden
 	#end
 	Method Render( canvas:Canvas )
-
+	
 		If Not _visible Return
 		
 		canvas.BeginRender( _bounds,_matrix )
@@ -745,6 +741,14 @@ Class View
 	End
 
 	Protected
+	
+	#rem monkeydoc Called during layout if theme has changed.
+	
+	This is called immediately before [[OnValidateStyle]] if the theme has changed.
+
+	#end
+	Method OnThemeChanged() Virtual
+	End
 	
 	#rem monkeydoc Called during layout if [[Style]] or [[StyleState]] have changed.
 
@@ -883,7 +887,7 @@ Class View
 	
 	Global _themeSeq:Int
 	
-	Field _styleSeq:Int=-1
+	Field _styleSeq:Int=0
 	
 	Field _parent:View
 	Field _window:Window

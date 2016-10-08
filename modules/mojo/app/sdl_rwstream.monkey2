@@ -39,7 +39,7 @@ Class SDL_RWStream Extends Stream
 	Closing the filestream also sets its position and length to 0.
 	
 	#end
-	Method Close() Override
+	Method OnClose() Override
 		If Not _rwops Return
 		SDL_RWclose( _rwops )
 		_rwops=Null
