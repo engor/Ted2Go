@@ -6,6 +6,8 @@
 #include "bbdebug.h"
 #include "bbobject.h"
 
+extern void *bb_array_null;
+
 template<class T,int D> class bbArray : public bbGCNode{
 
 	int _sizes[D];
@@ -81,13 +83,25 @@ template<class T,int D> class bbArray : public bbGCNode{
 	}
 	
 	int length()const{
-		return this ? _sizes[D-1] : 0;
+//		return this ? _sizes[D-1] : 0;
+		return this!=bb_array_null ? _sizes[D-1] : 0;
 	}
 	
 	int size( int q )const{
 		bbDebugAssert( q<D,"Array dimension out of range" );
 		
-		return this ? (q ? _sizes[q]/_sizes[q-1] : _sizes[0]) : 0;
+//		return this ? (q ? _sizes[q]/_sizes[q-1] : _sizes[0]) : 0;
+		return this!=bb_array_null ? (q ? _sizes[q]/_sizes[q-1] : _sizes[0]) : 0;
+	}
+	
+	static int length( bbArray *array ){
+		return array ? array->_sizes[D-1] : 0;
+	}
+	
+	static int size( bbArray *array,int q ){
+		bbDebugAssert( q<D,"Array dimension out of range" );
+		
+		return array ? (q ? array->_sizes[q]/array->_sizes[q-1] : array->_sizes[0]) : 0;
 	}
 	
 	bbArray<T,1> *slice( int from )const{
