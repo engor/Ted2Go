@@ -140,7 +140,18 @@ Class AutocompleteDialog Extends DialogExt
 		parser.GetItemsForAutocomplete(ident, filePath, docLine, _listForExtract)
 		
 		For Local i := Eachin _listForExtract
-			result.AddLast(New CodeListViewItem(i))
+			' remove duplicates
+			Local s := i.Text
+			Local exists := False
+			For Local ii := Eachin result
+				If ii.Text = s
+					exists = True
+					Exit
+				Endif
+			End
+			If Not exists
+				result.AddLast(New CodeListViewItem(i))
+			Endif
 		End
 		
 		' hide to re-layout on open
@@ -150,7 +161,7 @@ Class AutocompleteDialog Extends DialogExt
 		If result.Empty 
 			Return
 		Endif
-				
+			
 		SortResults(result)
 		
 		_view.Reset()'reset selIndex
