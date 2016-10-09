@@ -31,6 +31,21 @@ Class TreeViewExt Extends TreeView
 		
 	End
 	
+	Method OnContentMouseEvent(event:MouseEvent) Override
+	
+		Select event.Type
+			
+			Case EventType.MouseWheel
+				' make scroll little faster
+				Scroll -= New Vec2i( 0,RenderStyle.Font.Height*event.Wheel.Y*2 )
+				Return
+		
+		End
+		
+		Super.OnContentMouseEvent(event)
+		
+	End
+	
 	
 	Private
 	
