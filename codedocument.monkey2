@@ -347,7 +347,7 @@ End
 
 
 Class CodeItemIcons
-
+	
 	Function GetIcon:Image(item:CodeItem)
 	
 		If icons = Null
@@ -358,7 +358,7 @@ Class CodeItemIcons
 		Local kind := item.KindStr
 		
 		Select kind
-			Case "const", "interface", "lambda", "local"
+			Case "const", "interface", "lambda", "local", "alias", "operator"
 				key = kind
 			Case "param"
 				key = "*"
@@ -434,6 +434,8 @@ Class CodeItemIcons
 		icons["const"] = Image.Load("asset::ic/const.png")
 		icons["local"] = Image.Load("asset::ic/local.png")
 		icons["keyword"] = Image.Load("asset::ic/keyword.png")
+		icons["alias"] = Image.Load("asset::ic/alias.png")
+		icons["operator"] = Image.Load("asset::ic/operator.png")
 		
 		
 		iconDefault = Image.Load("asset::ic/other.png")

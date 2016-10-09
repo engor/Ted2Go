@@ -204,9 +204,17 @@ Class Monkey2Parser Extends CodeParserPlugin
 				RefineRawType(item)
 				
 				Local staticOnly := (Not isSelf And (item.Kind = CodeItemKind.Class_ Or item.Kind = CodeItemKind.Struct_))
-								
+						
 				' need to check by ident type
 				Local type := item.Type
+				type = StripGenericType(type)
+				
+				'is it alias?
+				Local at := _aliases[type]
+				If at <> Null
+					type = StripGenericType(at)
+				Endif
+				
 				item = Null
 				For Local i := Eachin Items
 					If i.Ident = type
@@ -260,6 +268,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Field _params := New List<String>
 	Field _docLine:Int
 	Field _isImportEnabled := True
+	Field _aliases := New StringMap<String>
 		
 	
 	Method New()
@@ -555,6 +564,22 @@ Class Monkey2Parser Extends CodeParserPlugin
 			CloseScope(info, indent)
 
 		
+		Case "alias"
+		
+			Local i := postfix.Find(":")
+			Local key := postfix.Slice(0,i).Trim()
+			Local value := postfix.Slice(i+1).Trim()
+			
+			' add it as global item
+			item = New CodeItem(key)
+			item.Type = value
+			AddItem(item, "alias", False, info)
+			
+			' own list w/o generic yet
+			key = StripGenericType(key)
+			_aliases[key] = value
+						
+		
 		Case "select"
 			
 			item = New CodeItem("Select "+postfix)
@@ -596,7 +621,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			Local ident := postfix.Slice(0,p).Trim()
 			If ident.StartsWith("@") Then ident = ident.Slice(1)
+			
+			ident = StripGenericType(ident)
 			'Print "ident '"+ident+"'"
+			
 			
 			item = New CodeItem(ident)
 			item.Type = ident
@@ -611,6 +639,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 					p = txt.Length
 				Endif
 				Local ext := postfix.Slice(p1+8,p).Trim()
+				ext = StripGenericType(ext)
 				'Print "ext: '"+ext+"'"
 				item.AddSuperType(ext)
 			Endif
@@ -630,6 +659,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				ExtractParams(impl, _params)
 				
 				For Local i := Eachin _params
+					i = StripGenericType(i)
 					item.AddSuperType(i)
 				Next
 				

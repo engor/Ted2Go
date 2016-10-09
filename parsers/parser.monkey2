@@ -18,7 +18,8 @@ Enum CodeItemKind
 	Lambda_,
 	Local_,
 	Operator_,
-	Inner_
+	Inner_,
+	Alias_
 End
 
 
@@ -51,6 +52,7 @@ Class CodeItem
 		Return _type
 	Setter(value:String)
 		_type = value
+		'_type = StripGenericType(value)
 	End
 	
 	Property RawType:String()
@@ -291,6 +293,8 @@ Class CodeItem
 			_kind = CodeItemKind.Operator_
 		Case "for","select","while"
 			_kind = CodeItemKind.Inner_
+		Case "alias"
+			_kind = CodeItemKind.Alias_
 		End
 	End
 	
@@ -360,6 +364,13 @@ Class ParsersManager
 	
 	Global _empty := New EmptyParser
 	
+End
+
+
+Function StripGenericType:String(ident:String)
+	Local i := ident.Find("<")
+	If i > 0 Return ident.Slice(0,i)
+	Return ident
 End
 
 

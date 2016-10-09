@@ -17,6 +17,9 @@ Class AAA Extends TestClass
 	
 	Field tt := New TestClass
 	
+	Field generic := New Vec2f
+	Field map := New StringMap<Int>
+	
 End
 
 Global tc := New TestClass
