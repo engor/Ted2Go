@@ -692,6 +692,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			If word = "operator"
 				Local p1 := postfix.Find(":")
+				p1 = Min(p1, pBracketOpen)
 				ident = postfix.Slice(0,p1)
 			Else
 				ident = ParseIdent(postfix)

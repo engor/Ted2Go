@@ -27,6 +27,10 @@ Global tc := New TestClass
 
 Class TestClass
 	
+	Operator [](index:Int)
+	
+	End
+	 
 	Const PI := 3.14
 	Global GlobalField:Bool
 	
