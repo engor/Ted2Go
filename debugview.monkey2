@@ -2,14 +2,6 @@
 Namespace ted2go
 
 
-#Import "assets/debug_icons.png@/ted2"
-
-Private
-
-Global icons:Image[]
-
-Public
-
 Class DebugView Extends DockingView
 
 	Method New( docs:DocumentManager,console:Console )
@@ -17,22 +9,19 @@ Class DebugView Extends DockingView
 		_docs=docs
 		_console=console
 		
+		'FIXME: this will never get removed...
 		_console.Finished+=Lambda( exitCode:Int )
 			If Not _debugging Return
 			
 			If _stopped Resume()
 		End
-	
-		If Not icons icons=App.Theme.LoadIcons( "asset::ted2/debug_icons.png" )
-	
-		Local tools:=New ToolBar
-		
-		tools.Style=New Style( tools.Style )
-		tools.Style.Border=New Recti( -4,-4,4,4 )
-		tools.Style.BorderColor=App.Theme.GetColor( "content" )
+
+		_toolBar=New ToolBar
+		_toolBar.Style=GetStyle( "DebugToolBar" )
+		Local icons:=_toolBar.Style.Icons
 		
 		'run/pause
-		_run=tools.AddAction( "",icons[2] )
+		_run=_toolBar.AddAction( "",icons[2] )
 		_run.Triggered=Lambda()
 			If Not _debugging Return
 		
@@ -46,7 +35,7 @@ Class DebugView Extends DockingView
 		End
 
 		'step over		
-		_step=tools.AddAction( "",icons[3] )
+		_step=_toolBar.AddAction( "",icons[3] )
 		_step.Triggered=Lambda()
 			If Not _debugging Return
 			
@@ -58,7 +47,7 @@ Class DebugView Extends DockingView
 		End
 		
 		'step into
-		_enter=tools.AddAction( "",icons[4] )
+		_enter=_toolBar.AddAction( "",icons[4] )
 		_enter.Triggered=Lambda()
 			If Not _debugging Return
 		
@@ -70,7 +59,7 @@ Class DebugView Extends DockingView
 		End
 
 		'step out
-		_leave=tools.AddAction( "",icons[5] )
+		_leave=_toolBar.AddAction( "",icons[5] )
 		_leave.Triggered=Lambda()
 			If Not _debugging Return
 		
@@ -82,7 +71,7 @@ Class DebugView Extends DockingView
 		End
 		
 		'kill
-		_kill=tools.AddAction( "",icons[1] )
+		_kill=_toolBar.AddAction( "",icons[1] )
 		_kill.Triggered=Lambda()
 			If Not _debugging Return
 		
@@ -96,7 +85,7 @@ Class DebugView Extends DockingView
 		
 		End
 		
-		AddView( tools,"top" )
+		AddView( _toolBar,"top" )
 		
 		_tree=New TreeViewExt
 		_tree.RootNodeVisible=False
@@ -266,6 +255,8 @@ Class DebugView Extends DockingView
 	End
 	
 	Field _tree:TreeView
+	
+	Field _toolBar:ToolBar
 
 	Field _docs:DocumentManager	
 	Field _console:Console
@@ -457,6 +448,7 @@ Class DebugView Extends DockingView
 	End
 	
 	Method UpdateActions()
+		Local icons:=_toolBar.Style.Icons
 		_run.Icon=_stopped ? icons[0] Else icons[2]
 		_run.Enabled=_debugging
 		_step.Enabled=_stopped And _debugging

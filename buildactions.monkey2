@@ -72,7 +72,7 @@ Class BuildActions
 		check.Triggered=OnCheck
 		check.HotKey=Key.F7
 		
-		buildSettings=New Action( "Build settings" )
+		buildSettings=New Action( "Target settings" )
 		buildSettings.Triggered=OnBuildFileSettings
 		
 		nextError=New Action( "Next build error" )
@@ -135,6 +135,8 @@ Class BuildActions
 		targetMenu.AddView( _emscriptenTarget )
 		targetMenu.AddView( _androidTarget )
 		targetMenu.AddView( _iosTarget )
+		targetMenu.AddSeparator()
+		targetMenu.AddAction( buildSettings )
 		
 		'check valid targets...WIP...
 		
@@ -329,7 +331,9 @@ Class BuildActions
 		
 		progress.MinSize=New Vec2i( 320,0 )
 		
-		progress.AddAction( "Cancel" ).Triggered=Lambda()
+		Local cancel:=progress.AddAction( "Cancel" )
+		
+		cancel.Triggered=Lambda()
 			_console.Terminate()
 		End
 		

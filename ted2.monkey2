@@ -55,7 +55,7 @@ Global AppTitle := "Ted2Go"
 
 Function Main()
 
-#if __DESKTOP_TARGET__
+#If __DESKTOP_TARGET__
 		
 	ChangeDir( AppDir() )
 	
@@ -69,11 +69,25 @@ Function Main()
 		ChangeDir( ExtractDir( CurrentDir() ) )
 	Wend
 	
-#endif
+#Endif
 	
+	'load ted2 state
+	'
 	Local jobj:=JsonObject.Load( "bin/ted2.state.json" )
 	If Not jobj jobj=New JsonObject
+
+	'initial theme
+	'	
+	If Not jobj.Contains( "theme" ) jobj["theme"]=New JsonString( "theme-classic-dark" )
+	If Not jobj.Contains( "themeScale" ) jobj["themeScale"]=New JsonNumber( 1 )
 	
+	Local config:=New StringMap<String>
+	
+	config["initialTheme"]=jobj.GetString( "theme" )
+	config["initialThemeScale"]=jobj.GetNumber( "themeScale" )
+	
+	'initial window state
+	'
 	Local flags:=WindowFlags.Resizable
 	
 	Local rect:Recti
@@ -84,26 +98,14 @@ Function Main()
 		rect=New Recti( 0,0,1024,768 )
 		flags|=WindowFlags.Center
 	Endif
-	
-	New AppInstance
+
+	'start the app!
+	'	
+	New AppInstance( config )
 	
 	New MainWindowInstance( AppTitle,rect,flags,jobj )
-	
-	'StartRedrawTimer()	
-	
+		
 	App.Run()
 		
 End
 
-
-Private
-
-'redraw app to see flashing cursor
-Function StartRedrawTimer()
-	
-	Local timer := New Timer(5, Lambda()
-		App.RequestRender()
-		'Print "redraw "+Rnd(100)
-	End)
-	
-End

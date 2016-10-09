@@ -204,17 +204,11 @@ Public
 Class Monkey2DocumentView Extends Ted2TextView
 
 	Method New( doc:Monkey2Document )
-	
 		_doc=doc
 		
 		Document=_doc.TextDocument
 		
-		ContentView.Style.Border=New Recti( -4,-4,4,4 )
-		
 		AddView( New GutterView( Self ),"left" )
-
-		CursorColor=New Color( 0,.5,1 )
-		SelectionColor=New Color( .4,.4,.4 )
 	End
 	
 	Protected
@@ -228,7 +222,10 @@ Class Monkey2DocumentView Extends Ted2TextView
 			canvas.Color=New Color( .5,0,0 )
 			
 			For Local err:=Eachin _doc._errors
-				canvas.DrawRect( 0,err.line*LineHeight,Width,LineHeight )
+				Local r:=LineRect( err.line )
+				r.min.x=0
+				r.max.x=Width
+				canvas.DrawRect( r )
 			Next
 			
 		Endif
@@ -239,8 +236,10 @@ Class Monkey2DocumentView Extends Ted2TextView
 			If line<0 Or line>=Document.NumLines Return
 			
 			canvas.Color=New Color( 0,.5,0 )
-			canvas.DrawRect( 0,line*LineHeight,Width,LineHeight )
-			
+			Local r:=LineRect( line )
+			r.min.x=0
+			r.max.x=Width
+			canvas.DrawRect( r )
 		Endif
 		
 		canvas.Color=color
@@ -252,46 +251,87 @@ Class Monkey2DocumentView Extends Ted2TextView
 	
 	Field _doc:Monkey2Document
 	
-	Method Capitalize()
+	Field _typing:Bool
+	
+	Method Capitalize( all:Bool )
+	
+		_typing=False
 	
 		Local cursor:=Cursor
 		
+		'ignore comments...
+		'
 		Local state:=Document.LineState( Document.FindLine( cursor ) )
 		If state & 255 <> 255 Return
 		
 		Local text:=Text
 		Local start:=cursor
+		Local term:=all ? text.Length Else start
+
+		'find start of ident
+		'		
 		While start And IsIdent( text[start-1] )
 			start-=1
 		Wend
-		While start<text.Length And IsDigit( text[start] )
+		While start<cursor And IsDigit( text[start] )
 			start+=1
 		Wend
+		If start>=term Or Not IsIdent( text[start] ) Return
 		
-		If start<text.Length 
-			Local color:=Document.Colors[start]
-			If color<>COLOR_KEYWORD And color<>COLOR_IDENT Return
+		'only capitalize keywords and idents
+		'
+		Local color:=Document.Colors[start]
+		If color<>COLOR_KEYWORD And color<>COLOR_IDENT
+			'
+			If color<>COLOR_PREPROC Return
+			'
+			'only do first ident on preproc line
+			'
+			Local i:=start
+			While i And text[i-1]<=32
+				i-=1
+			Wend
+			If Not i Or text[i-1]<>35 Return
+			i-=1
+			While i And text[i-1]<>10
+				i-=1
+				If text[i]>32 Return
+			Wend
+			'
 		Endif
-		
-		Local ident:=text.Slice( start,cursor )
-		If Not ident Return
-		
+
+		'find end of ident
+		Local ends:=start
+		'
+		While ends<term And IsIdent( text[ends] ) And text[ends]<>10
+			ends+=1
+		Wend
+		If ends=start return
+
+		Local ident:=text.Slice( start,ends )
+
 		Local kw:=Keywords[ident.ToLower()]
-		If kw And kw<>ident Document.ReplaceText( Cursor-ident.Length,Cursor,kw )
+		If Not kw Or kw=ident Return
+		
+		Document.ReplaceText( start,ends,kw )
 		
 	End
 	
-	Method IdentAtCursor:String()
+	Method IdentNearestCursor:String()
 	
 		Local text:=Text
 		Local start:=Cursor
 		
+		If start And start=text.Length start-=1
+		
 		While start And Not IsIdent( text[start] ) And text[start-1]<>10
 			start-=1
 		Wend
+		
 		While start And IsIdent( text[start-1] ) And text[start-1]<>10
 			start-=1
 		Wend
+		
 		While start<text.Length And IsDigit( text[start] ) And text[start]<>10
 			start+=1
 		Wend
@@ -305,6 +345,7 @@ Class Monkey2DocumentView Extends Ted2TextView
 		Return text.Slice( start,ends )
 	End
 	
+	
 	Method OnKeyEvent( event:KeyEvent ) Override
 	
 		Select event.Type
@@ -313,20 +354,45 @@ Class Monkey2DocumentView Extends Ted2TextView
 			Select event.Key
 			Case Key.F1
 			
-				Local ident:=IdentAtCursor()
+				Local ident:=IdentNearestCursor()
 				
 				If ident MainWindow.ShowQuickHelp( ident )
 				
 			Case Key.Tab,Key.Enter
-				Capitalize()
+			
+				If _typing Capitalize( False )
+				
+			Case Key.Left
+			
+				If _typing
+					Local text:=Text
+					Local cursor:=Cursor
+					If cursor And Not IsIdent( text[cursor-1] )
+						Capitalize( True )
+					Endif
+				Endif
+				
+			Case Key.Right
+			
+				If _typing
+					Local text:=Text
+					Local cursor:=Cursor
+					If cursor<text.Length And Not IsIdent( text[cursor] )
+						Capitalize( True )
+					Endif
+				Endif
+				
 			Case Key.Up,Key.Down
-				Capitalize()
+			
+				Capitalize( True )	'in cased we missed anything...
 			End
 		
 		Case EventType.KeyChar
 		
-			If Not IsIdent( event.Text[0] )
-				Capitalize()
+			If IsIdent( event.Text[0] )
+				_typing=True
+			Else
+				If _typing Capitalize( False )
 			Endif
 		End
 

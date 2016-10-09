@@ -3,12 +3,11 @@ Namespace ted2go
 
 
 #Import "assets/about.html@/ted2"
-#Import "assets/scripts.json@/ted2"
 #Import "assets/aboutTed2Go.html@/ted2"
 
-#Import "assets/newfiles/Simple_Console_App.monkey2@/ted2/newfiles"
-#Import "assets/newfiles/Simple_Mojo_App.monkey2@/ted2/newfiles"
-#Import "assets/newfiles/Letterboxed_Mojo_App.monkey2@/ted2/newfiles"
+#Import "assets/themes/@/themes"
+
+#Import "assets/newfiles/@/ted2/newfiles"
 
 Global MainWindow:MainWindowInstance
 
@@ -73,7 +72,6 @@ Class MainWindowInstance Extends Window
 		_tabMenu.AddAction( _fileActions.saveAs )
 		_tabMenu.AddSeparator()
 		_tabMenu.AddAction( _buildActions.lockBuildFile )
-		_tabMenu.AddAction( _buildActions.buildSettings )
 		
 		_docsTabView.RightClicked+=Lambda()
 			_tabMenu.Open()
@@ -92,6 +90,8 @@ Class MainWindowInstance Extends Window
 
 		_tmp=RealPath( "tmp/" )
 		
+		'File menu
+		'
 		_newFiles=New Menu( "New..." )
 		Local p:=AssetsDir()+"ted2/newfiles/"
 		For Local f:=Eachin LoadDir( p )
@@ -127,6 +127,8 @@ Class MainWindowInstance Extends Window
 		_fileMenu.AddSeparator()
 		_fileMenu.AddAction( _fileActions.quit )
 		
+		'Edit menu
+		'
 		_editMenu=New Menu( "Edit" )
 		_editMenu.AddAction( _editActions.undo )
 		_editMenu.AddAction( _editActions.redo )
@@ -134,8 +136,9 @@ Class MainWindowInstance Extends Window
 		_editMenu.AddAction( _editActions.cut )
 		_editMenu.AddAction( _editActions.copy )
 		_editMenu.AddAction( _editActions.paste )
-		_editMenu.AddSeparator()
 		_editMenu.AddAction( _editActions.selectAll )
+		_editMenu.AddSeparator()
+		_editMenu.AddAction( _editActions.wordWrap )
 		_editMenu.AddSeparator()
 		_editMenu.AddAction( _findActions.find )
 		_editMenu.AddAction( _findActions.findNext )
@@ -143,6 +146,8 @@ Class MainWindowInstance Extends Window
 		_editMenu.AddAction( _findActions.replace )
 		_editMenu.AddAction( _findActions.replaceAll )
 		
+		'Build menu
+		'
 		_forceStop=New Action( "Force Stop" )
 		_forceStop.Triggered=Lambda()
 			If _buildConsole.Running
@@ -173,6 +178,17 @@ Class MainWindowInstance Extends Window
 		_buildMenu.AddSeparator()
 		_buildMenu.AddAction( _buildActions.moduleManager )
 		
+		'View menu
+		'
+		_themesMenu=CreateThemesMenu( "Themes..." )
+		
+		_viewMenu=New Menu( "View" )
+		AddZoomActions( _viewMenu )
+		_viewMenu.AddSeparator()
+		_viewMenu.AddSubMenu( _themesMenu )
+		
+		'Help menu
+		'
 		_helpMenu=New Menu( "Help" )
 		_helpMenu.AddAction( _helpActions.onlineHelp )
 		_helpMenu.AddAction( _helpActions.viewManuals )
@@ -183,10 +199,13 @@ Class MainWindowInstance Extends Window
 		_helpMenu.AddSeparator()
 		_helpMenu.AddAction( _helpActions.aboutTed2go )
 		
+		'Menu bar
+		'
 		_menuBar=New MenuBar
 		_menuBar.AddMenu( _fileMenu )
 		_menuBar.AddMenu( _editMenu )
 		_menuBar.AddMenu( _buildMenu )
+		_menuBar.AddMenu( _viewMenu )
 		_menuBar.AddMenu( _helpMenu )
 		
 		_browsersTabView.AddTab( "Files",_projectView,True )
@@ -208,6 +227,10 @@ Class MainWindowInstance Extends Window
 		OnCreatePlugins() 'init plugins before loadstate, to register doctypes before open last opened files
 		
 		LoadState( jobj )
+		
+		App.MouseEventFilter+=ThemeScaleMouseFilter
+		
+		OnCreatePlugins()
 		
 		App.Idle+=OnAppIdle
 		
@@ -346,6 +369,10 @@ Class MainWindowInstance Extends Window
 		End
 		jobj["recentFiles"]=recent
 		
+		jobj["theme"]=New JsonString( _theme )
+		
+		jobj["themeScale"]=New JsonNumber( App.Theme.Scale.y )
+		
 		_docsManager.SaveState( jobj )
 		_buildActions.SaveState( jobj )
 		_projectView.SaveState( jobj )
@@ -357,10 +384,8 @@ Class MainWindowInstance Extends Window
 	
 	Method LoadState( jobj:JsonObject )
 	
-		'for 'reload' later...
-		_projectView.ProjectOpened-=UpdateCloseProjectMenu
-		
 		If jobj.Contains( "browserSize" ) _contentView.SetViewSize( _browsersTabView,jobj.GetNumber( "browserSize" ) )
+
 		If jobj.Contains( "consoleSize" ) _contentView.SetViewSize( _consolesTabView,jobj.GetNumber( "consoleSize" ) )
 			
 		If jobj.Contains( "recentFiles" )
@@ -370,6 +395,13 @@ Class MainWindowInstance Extends Window
 				_recentFiles.Push( path )
 			Next
 		End
+		
+		If jobj.Contains( "theme" ) _theme=jobj.GetString( "theme" )
+		
+		If jobj.Contains( "themeScale" )
+			_themeScale=jobj.GetNumber( "themeScale" )
+			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
+		Endif
 		
 		_docsManager.LoadState( jobj )
 		_buildActions.LoadState( jobj )
@@ -399,6 +431,7 @@ Class MainWindowInstance Extends Window
 				Else
 					_consolesTabView.Visible=Not _consolesTabView.Visible
 				Endif
+			Case Key.Keypad1
 			End
 		End
 	End
@@ -413,13 +446,6 @@ Class MainWindowInstance Extends Window
 			Super.OnWindowEvent( event )
 		End
 	
-	End
-	
-	Method OnRender( canvas:Canvas ) Override
-		
-		Super.OnRender( canvas )
-		RequestRender()
-		
 	End
 	
 	
@@ -451,9 +477,15 @@ Class MainWindowInstance Extends Window
 	Field _newFiles:Menu
 	Field _fileMenu:Menu
 	Field _editMenu:Menu
+	Field _viewMenu:Menu
 	Field _buildMenu:Menu
 	Field _helpMenu:Menu
 	Field _menuBar:MenuBar
+	
+	Field _themesMenu:Menu
+	
+	Field _theme:String="default"
+	Field _themeScale:Float=1
 	
 	Field _contentView:DockingView
 
@@ -514,6 +546,79 @@ Class MainWindowInstance Extends Window
 		Next
 	End
 	
+	Method AddZoomActions( menu:Menu )
+		
+		menu.AddAction( "Zoom in" ).Triggered=Lambda()
+			If _themeScale>=4 Return
+			
+			_themeScale+=.125
+
+			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
+		End
+		
+		menu.AddAction( "Zoom out" ).Triggered=Lambda()
+			If _themeScale<=.5 Return
+			
+			_themeScale-=.125
+
+			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
+		End
+		
+		menu.AddAction( "Reset zoom" ).Triggered=Lambda()
+		
+			_themeScale=1
+			
+			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
+		End
+	End
+
+	Method ThemeScaleMouseFilter( event:MouseEvent )
+	
+		If event.Eaten Return
+			
+		If event.Type=EventType.MouseWheel And event.Modifiers & Modifier.Menu
+			
+			If event.Wheel.y>0
+				If _themeScale<4 _themeScale+=0.125
+			Else
+				If _themeScale>.5 _themeScale-=0.125
+			Endif
+				
+			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
+
+			event.Eat()
+				
+		Else If event.Type=EventType.MouseDown And event.Button=MouseButton.Middle And event.Modifiers & Modifier.Menu
+			
+			_themeScale=1
+
+			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
+			
+			event.Eat()
+		Endif
+		
+	End
+	
+	Method CreateThemesMenu:Menu( text:String )
+	
+		Local menu:=New Menu( text )
+		
+		Local themes:=JsonObject.Load( "theme::themes.json" )
+		If Not themes Return menu
+		
+		For Local it:=Eachin themes
+			Local name:=it.Key
+			Local value:=it.Value.ToString()
+			menu.AddAction( name ).Triggered=Lambda()
+				_theme=value
+				App.Theme.Load( _theme,New Vec2f( _themeScale ) )
+				SaveState()
+			End
+		Next
+		
+		Return menu
+	End
+		
 	Method OnAppIdle()
 	
 		_docsManager.Update()

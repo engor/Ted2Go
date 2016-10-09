@@ -555,7 +555,7 @@ Class ModuleManager Extends Dialog
 			Local module:=it.Value
 			If Not _filters[module.status].Checked Continue
 			
-			_table.AddRows( 1 )
+			_table.Rows+=1
 			
 			Local about:=module.about
 			

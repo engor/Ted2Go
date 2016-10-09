@@ -81,7 +81,7 @@ Class EditProductDialog Extends Dialog
 		_table.AddColumn( "Setting" )
 		_table.AddColumn( "Value" )
 		
-		_table.AddRows( _vars.Length )
+		_table.Rows+=_vars.Length
 		
 		For Local i:=0 Until _vars.Length
 			Local pvar:=_vars[i]
@@ -92,15 +92,17 @@ Class EditProductDialog Extends Dialog
 		
 		ContentView=_table
 		
-		AddAction( "Okay" ).Triggered=Lambda()
-
+		Local okay:=AddAction( "Okay" )
+		okay.Triggered=Lambda()
 			_result.Set( True )
 		End
-		
-		AddAction( "Cancel"  ).Triggered=lambda()
-			
+		SetKeyAction( Key.Enter,okay )
+
+		Local cancel:=AddAction( "Cancel"  )
+		cancel.Triggered=lambda()
 			_result.Set( False )
 		End
+		SetKeyAction( Key.Escape,cancel )
 	End
 	
 	Method Run:Bool()

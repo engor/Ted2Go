@@ -17,6 +17,8 @@ Class PlainTextDocumentView Extends TextView
 		CursorColor=New Color( 0,.5,1 )
 
 		SelectionColor=New Color( .4,.4,.4 )
+		
+		WordWrap=True
 	End
 	
 	Private

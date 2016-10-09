@@ -10,6 +10,7 @@ Class EditActions
 	Field copy:Action
 	Field paste:Action
 	Field selectAll:Action
+	Field wordWrap:Action
 	
 	Method New( docs:DocumentManager )
 	
@@ -44,6 +45,9 @@ Class EditActions
 		selectAll.Triggered=OnSelectAll
 		selectAll.HotKey=Key.A
 		selectAll.HotKeyModifiers=Modifier.Menu
+		
+		wordWrap=New Action( "Toggle word wrap" )
+		wordWrap.Triggered=OnWordWrap
 		
 	End
 	
@@ -103,6 +107,13 @@ Class EditActions
 		Local tv:=Cast<TextView>( App.KeyView )
 		
 		If tv tv.SelectAll()
+	End
+	
+	Method OnWordWrap()
+	
+		Local tv:=Cast<TextView>( App.KeyView )
+		
+		If tv tv.WordWrap=Not tv.WordWrap
 	End
 
 End

@@ -22,18 +22,15 @@ Class FindDialog Extends Dialog
 		_caseSensitive.Layout="float"
 		
 '		_escapedText=New CheckButton( "Escaped text" )
-		
-		Local find:=New DockingView
-		find.AddView( New Label( "Find" ),"left",80,False )
-		find.ContentView=_findField
-		
-		Local replace:=New DockingView
-		replace.AddView( New Label( "Replace" ),"left",80,False )
-		replace.ContentView=_replaceField
+
+		Local table:=New TableView( 2,2 )
+		table[0,0]=New Label( "Find" )
+		table[1,0]=_findField
+		table[0,1]=New Label( "Replace" )
+		table[1,1]=_replaceField 
 		
 		_docker=New DockingView
-		_docker.AddView( find,"top" )
-		_docker.AddView( replace,"top" )
+		_docker.AddView( table,"top" )
 		_docker.AddView( _caseSensitive,"top" )
 '		_docker.AddView( _escapedText,"top" )
 		_docker.AddView( New Label( " " ),"top" )

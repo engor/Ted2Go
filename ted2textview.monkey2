@@ -42,6 +42,11 @@ End
 
 Class Ted2TextView Extends TextView
 
+	Method New()
+
+		CursorBlinkRate=2.5
+	End
+
 	Protected
 	
 	Method OnKeyEvent( event:KeyEvent ) Override

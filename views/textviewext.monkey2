@@ -7,23 +7,11 @@ Class TextViewExt Extends TextView
 	Method New()
 		Super.New()
 		
-		CursorColor=New Color( 1,1,1,0.8 )
+		CursorColor=New Color( 1,1,1, 0.6 )
 		SelectionColor=New Color( .4,.4,.4 )
-		AnimatedCursor=True
-
-	End
+		CursorBlinkRate = 2.5
+		BlockCursor = False
 		
-	#rem monkeydoc Animated cursor flag - default flashing cursor.
-	#end
-	Property AnimatedCursor:Bool()
-	
-		Return _animatedCursor
-	
-	Setter( value:Bool )
-		
-		If _animatedCursor = value Return
-		_animatedCursor=value
-	
 	End
 	
 	
@@ -32,29 +20,7 @@ Class TextViewExt Extends TextView
 	Property CurrentTextLine:TextLine()
 		Return GetTextLine(Cursor,True,False)
 	End
-	
-	Method OnRenderContent( canvas:Canvas ) Override
-		
-		If _animatedCursor And Cursor = Anchor
-		
-			Local curColor := CursorColor
-			CursorColor = New Color(0,0,0,0)'transparent
 			
-			Super.OnRenderContent(canvas)
-			
-			CursorColor = curColor
-			
-			canvas.Color = CursorColor
-			
-			If Millisecs() Mod 800 > 400
-				canvas.DrawRect( CursorRect.X-1,CursorRect.Y,2,CursorRect.Height )
-			Endif
-		Else
-			Super.OnRenderContent(canvas)
-		Endif
-		
-	End
-		
 	Method OnKeyEvent(event:KeyEvent) Override
 		
 		Select event.Type
@@ -191,31 +157,19 @@ Class TextViewExt Extends TextView
 	Method OnContentMouseEvent( event:MouseEvent ) Override
 		
 		Select event.Type
-			Case EventType.MouseClick
-		
-				'shift+click - select area between anchor and new cursor
-				If event.Modifiers & Modifier.Shift
-					Local anc := Anchor
-					'need to get new Cursor pos from Super
-					Super.OnContentMouseEvent(event)
-					SelectText(anc,Cursor)
-					Return
-				Endif
-				
-			
-			Case EventType.MouseDoubleClick
-				SelectWordUnderCursor()
-				Return
 			
 			Case EventType.MouseWheel 'little faster scroll
 		
 				Scroll -= New Vec2i( 0,RenderStyle.Font.Height*event.Wheel.Y*3 )
+				Return
+				
 		End
 
 		Super.OnContentMouseEvent(event)
 					
 	End
 	
+	#Rem
 	Method SelectWordUnderCursor()
 		Local text := Text
 		Local n := Cursor
@@ -235,6 +189,7 @@ Class TextViewExt Extends TextView
 		Local ends := n
 		SelectText(start, ends)
 	End
+	#End
 	
 	Method GetTextLine:TextLine(cursor:Int, getText:Bool=False, useCached:Bool=True)
 		If useCached
