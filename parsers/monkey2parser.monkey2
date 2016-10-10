@@ -908,7 +908,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 		While True
 			p = text.Find("Lambda", p+1)
 			If p = -1 Exit
-			If Not IsIdent(text[p-1]) And Not IsIdent(text[p+6]) And Not IsPosInsideOfQuotes(text, p) Exit
+			Local okBefore := (p = 0 Or Not IsIdent(text[p-1]))
+			Local okAfter := (p+6 >= text.Length Or Not IsIdent(text[p+6]))
+			If okBefore And okAfter And Not IsPosInsideOfQuotes(text, p) Exit
 		Wend
 		
 		If p > 0
