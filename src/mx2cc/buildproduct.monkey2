@@ -255,10 +255,11 @@ Class GccBuildProduct Extends BuildProduct
 			LD_CMD= "arm-linux-gnueabihf-g++"
 			AS_CMD= "arm-linux-gnueabihf-as"
 		Default
+			Local suffix:=GetEnv( "MX2_GCC_SUFFIX" )
 			AR_CMD= "ar"
-			CC_CMD= "gcc"
-			CXX_CMD="g++"
-			LD_CMD= "g++"
+			CC_CMD= "gcc"+suffix
+			CXX_CMD="g++"+suffix
+			LD_CMD= "g++"+suffix
 			AS_CMD= "as"
 			If opts.target="ios" AS_CMD+=" -arch armv7"
 		End
