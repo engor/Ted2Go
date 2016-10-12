@@ -43,7 +43,7 @@ Class XMLAttribute Extends Void="tinyxml2::XMLAttribute"
 
 End
 
-Class XMLNode Extends Void="tinyxml2::XMLNode"
+Class XMLNode Extends Void Abstract="tinyxml2::XMLNode"
 
 	Method GetDocument:XMLDocument()
 	
