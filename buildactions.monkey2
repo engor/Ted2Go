@@ -48,17 +48,6 @@ Class BuildActions
 
 			If doc=_locked _locked=Null
 		End
-	
-#If __TARGET__="macos"
-		_mx2cc="bin/mx2cc_macos"
-#Else If __TARGET__="windows"
-		_mx2cc="bin/mx2cc_windows.exe"
-#Else If __TARGET__="raspbian"
-		_mx2cc="bin/mx2cc_raspbian"
-#Else
-		_mx2cc="bin/mx2cc_linux"
-#Endif
-		_mx2cc=RealPath( _mx2cc )
 		
 		buildAndRun=New Action( "Build and run" )
 		buildAndRun.Triggered=OnBuildAndRun
@@ -227,6 +216,7 @@ Class BuildActions
 			Endif
 			
 		Endif
+		
 	End
 	
 	Method Update()
@@ -251,8 +241,6 @@ Class BuildActions
 	Field _docs:DocumentManager
 	Field _console:Console
 	Field _debugView:DebugView
-
-	Field _mx2cc:String
 	
 	Field _locked:CodeDocument
 	
@@ -406,7 +394,7 @@ Class BuildActions
 		
 			Local cfg:=(config ? "debug" Else "release")
 			
-			Local cmd:=_mx2cc+" makemods -target="+target
+			Local cmd:=MainWindow.Mx2ccPath+" makemods -target="+target
 			If clean cmd+=" -clean"
 			cmd+=" -config="+cfg
 			
@@ -455,7 +443,7 @@ Class BuildActions
 	
 	Method MakeDocs:Bool()
 	
-		Return BuildMx2( _mx2cc+" makedocs","Rebuilding documentation..." )
+		Return BuildMx2( MainWindow.Mx2ccPath+" makedocs","Rebuilding documentation..." )
 	End
 	
 	Method BuildApp:Bool( config:String,target:String,run:Bool,checkOnly:Bool )
@@ -474,7 +462,7 @@ Class BuildActions
 			target="desktop"
 		End
 
-		Local cmd:=_mx2cc+" makeapp -build "+opts
+		Local cmd:=MainWindow.Mx2ccPath+" makeapp -build "+opts
 		cmd+=" -apptype="+appType+" "
 		cmd+=" -config="+config
 		cmd+=" -target="+target
@@ -569,7 +557,7 @@ Class BuildActions
 	
 	Method OnModuleManager()
 	
-		Local modman:=New ModuleManager( _mx2cc,_console )
+		Local modman:=New ModuleManager( _console )
 		
 		modman.Open()
 	End

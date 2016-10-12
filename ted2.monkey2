@@ -21,6 +21,7 @@
 #Import "helptree"
 #Import "modulemanager"
 #Import "ted2textview"
+#Import "jsontreeview"
 #Import "gutterview"
 
 #Import "plugin"
