@@ -127,6 +127,8 @@ Class MarkdownBuffer
 				
 			Case "deprecated"
 			
+				_buf.Push( "(Deprecated: "+arg+")" )
+			
 			Case "include"
 			
 				If arg.Length>1 And arg.StartsWith( "~q" ) And arg.EndsWith( "~q" ) arg=arg.Slice( 1,-1 )

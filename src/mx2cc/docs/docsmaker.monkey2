@@ -342,10 +342,21 @@ Class DocsMaker
 	End
 	
 	Method DeclDesc:String( decl:Decl )
+	
 		Local desc:=decl.docs
+		
 		Local i:=desc.Find( "~n" )
+		
 		If i<>-1 desc=desc.Slice( 0,i )
-'		desc=Esc( desc )
+		
+		If desc.StartsWith( "@deprecated" )
+		
+			Local arg:=desc.Slice( 11 ).Trim()
+			
+			desc="(Deprecated: "+arg+")"
+		
+		Endif
+		
 		Return desc
 	End
 	
