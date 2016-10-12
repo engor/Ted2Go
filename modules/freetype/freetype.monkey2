@@ -210,6 +210,9 @@ Function FT_Request_Size:FT_Error( face:FT_Face,req:FT_Size_RequestRec Ptr )
 
 Function FT_Get_Char_Index:FT_UInt( face:FT_Face,charcode:FT_ULong )
 
+Function FT_Get_First_Char:FT_ULong( face:FT_Face,agindex:FT_UInt Ptr )
+Function FT_Get_Next_Char:FT_ULong( face:FT_Face,char_code:FT_ULong,agindex:FT_UInt Ptr )
+
 Function FT_Load_Char:FT_Error( face:FT_Face,char_code:FT_ULong,load_flags:Int )
 Function FT_Load_Glyph:FT_Error( face:FT_Face,glyph_index:FT_UInt,load_flags:Int )
 Function FT_Render_Glyph:FT_Error( slot:FT_GlyphSlot,render_mode:Int )
