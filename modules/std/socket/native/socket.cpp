@@ -309,7 +309,7 @@ namespace bbSocket{
 			if( !n ) return sent;
 			
 			if( n<0 ){
-				printf( "socket_send error!\n" );fflush( stdout );
+				printf( "socket_send error! socket=%i, data=%p, size=%i\n",socket,data,size );fflush( stdout );
 				return sent;
 			}
 			
@@ -347,7 +347,7 @@ namespace bbSocket{
 		if( !n ) return 0;
 		
 		if( n<0 ){
-			printf( "socket_recv error!\n" );fflush( stdout );
+			printf( "socket_recv error! socket=%i, data=%p, size=%i\n",socket,data,size );fflush( stdout );
 			return 0;
 		}
 		
