@@ -13,15 +13,22 @@ Using mx2.docs
 #Import "docs/markdownbuffer"
 #Import "docs/manpage"
 
+#Import "geninfo/geninfo"
+
 Using libc..
 Using std..
 Using mx2..
 
 Global StartDir:String
 
-Const TestArgs:="mx2cc makedocs mojo"
+'Const TestArgs:="mcx2cc makedocs"
 
-'Const TestArgs:="mx2cc makeapp -clean -config=debug -target=desktop src/mx2cc/test.monkey2"
+'Const TestArgs:="mx2cc makemods -clean -config=release monkey libc miniz stb-image stb-image-write stb-vorbis std"
+
+'Const TestArgs:="mx2cc makeapp -clean -config=release src/ted2/ted2.monkey2"
+
+'Const TestArgs:="mx2cc makeapp -apptype=console -clean -config=debug -target=desktop -semant -geninfo src/mx2cc/test.monkey2"
+Const TestArgs:="mx2cc makeapp -apptype=console -clean -config=debug -target=desktop -parse -geninfo src/mx2cc/translator_cpp.monkey2"
 
 'Const TestArgs:="mx2cc makeapp -clean -config=debug -target=desktop -product=D:/test_app/test.exe -assets=D:/test_app/assets -dlls=D:/test_app/ src/mx2cc/test.monkey2"
 
@@ -31,6 +38,10 @@ Const TestArgs:="mx2cc makedocs mojo"
 
 'Const TestArgs:="mx2cc makeapp -verbose -target=desktop -config=release src/mx2cc/mx2cc"
 
+'To build mx2cc...
+'
+'Const TestArgs:="mx2cc makeapp -build -clean -apptype=console -config=release src/mx2cc/mx2cc.monkey2"
+
 'To build rasbian mx2cc...
 '
 'Const TestArgs:="mx2cc makemods -clean -config=release -target=raspbian monkey libc miniz stb-image stb-image-write stb-vorbis std"
@@ -39,7 +50,7 @@ Const TestArgs:="mx2cc makedocs mojo"
 Function Main()
 
 	Print "mx2cc version "+MX2CC_VERSION
-
+	
 	StartDir=CurrentDir()
 	
 	ChangeDir( AppDir() )
@@ -56,7 +67,7 @@ Function Main()
 	LoadEnv( env )
 	
 	Local args:=AppArgs()
-	
+
 	If args.Length<2
 
 		Print "Usage: mx2cc makeapp|makemods|makedocs [-build|-run] [-clean] [-verbose[=1|2|3]] [-target=desktop|emscripten] [-config=debug|release] [-apptype=gui|console] source|modules..."
@@ -127,15 +138,26 @@ Function MakeApp:Bool( args:String[] )
 	
 	Builder.Parse()
 	If Builder.errors.Length Return False
-	If opts.passes=1 Return True
+	If opts.passes=1 
+		If opts.geninfo
+			Local gen:=New ParseInfoGenerator
+			Local jobj:=gen.GenParseInfo( Builder.mainModule.fileDecls[0] )
+			Print jobj.ToJson()
+		Endif
+		Return True
+	Endif
 	
 	Builder.Semant()
 	If Builder.errors.Length Return False
-	If opts.passes=2 Return True
+	If opts.passes=2
+		Return True
+	Endif
 	
 	Builder.Translate()
 	If Builder.errors.Length Return False
-	If opts.passes=3 Return True
+	If opts.passes=3 
+		Return True
+	Endif
 	
 	Builder.product.Build()
 	If Builder.errors.Length Return False
@@ -293,6 +315,8 @@ Function ParseOpts:String[]( opts:BuildOpts,args:String[] )
 				opts.clean=True
 			Case "-verbose"
 				opts.verbose=1
+			Case "-geninfo"
+				opts.geninfo=True
 			Default
 				Return args.Slice( i )
 			End
