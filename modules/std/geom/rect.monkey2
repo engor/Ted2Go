@@ -311,8 +311,8 @@ Struct Rect<T>
 	#rem monkeydoc Gets the rect centered within another rect.
 	#end 
 	Method Centered:Rect( r:Rect )
-		Local x:=(r.Width-Width)/2+min.x
-		Local y:=(r.Height-Height)/2+min.y
+		Local x:=(r.Width-Width)/2+r.min.x
+		Local y:=(r.Height-Height)/2+r.min.y
 		Return New Rect( x,y,x+Width,y+Height )
 	End
 	
