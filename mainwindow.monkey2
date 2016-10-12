@@ -16,6 +16,19 @@ Class MainWindowInstance Extends Window
 		
 		MainWindow=Self
 		
+		_tmp=RealPath( "tmp/" )
+		
+#If __TARGET__="macos"
+		_mx2cc="bin/mx2cc_macos"
+#Else If __TARGET__="windows"
+		_mx2cc="bin/mx2cc_windows.exe"
+#Else If __TARGET__="raspbian"
+		_mx2cc="bin/mx2cc_raspbian"
+#Else
+		_mx2cc="bin/mx2cc_linux"
+#Endif
+		_mx2cc=RealPath( _mx2cc )
+		
 		_docsTabView=New TabView( TabViewFlags.DraggableTabs|TabViewFlags.ClosableTabs )
 		_browsersTabView=New TabView( TabViewFlags.DraggableTabs )
 		_consolesTabView=New TabView( TabViewFlags.DraggableTabs )
@@ -86,7 +99,6 @@ Class MainWindowInstance Extends Window
 			_fileActions.close.Trigger()
 		End
 
-		_tmp=RealPath( "tmp/" )
 		
 		'File menu
 		'
@@ -229,6 +241,11 @@ Class MainWindowInstance Extends Window
 		If GetFileType( "bin/ted2.state.json" )=FileType.None _helpActions.about.Trigger()
 	End
 	
+	Property Mx2ccPath:String()
+	
+		Return _mx2cc
+	End
+	
 	Method Terminate()
 	
 		SaveState()
@@ -364,6 +381,8 @@ Class MainWindowInstance Extends Window
 		
 		jobj["themeScale"]=New JsonNumber( App.Theme.Scale.y )
 		
+		If _mx2ccDir jobj["mx2ccDir"]=New JsonString( _mx2ccDir )
+		
 		_docsManager.SaveState( jobj )
 		_buildActions.SaveState( jobj )
 		_projectView.SaveState( jobj )
@@ -392,6 +411,12 @@ Class MainWindowInstance Extends Window
 		If jobj.Contains( "themeScale" )
 			_themeScale=jobj.GetNumber( "themeScale" )
 			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
+		Endif
+		
+		If jobj.Contains( "mx2ccDir" )
+			_mx2ccDir=jobj.GetString( "mx2ccDir" )
+			If Not _mx2ccDir.EndsWith( "/" ) _mx2ccDir+="/"
+			_mx2cc=_mx2ccDir+StripDir( _mx2cc )
 		Endif
 		
 		_docsManager.LoadState( jobj )
@@ -440,6 +465,10 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Private
+
+	Field _tmp:String
+	Field _mx2cc:String
+	Field _mx2ccDir:String
 	
 	Field _docsManager:DocumentManager
 	Field _fileActions:FileActions
@@ -460,7 +489,6 @@ Class MainWindowInstance Extends Window
 	Field _consolesTabView:TabView
 	Field _browsersTabView:TabView
 	
-	Field _tmp:String
 	Field _forceStop:Action
 
 	Field _tabMenu:Menu

@@ -17,10 +17,9 @@ Public
 
 Class ModuleManager Extends Dialog
 
-	Method New( mx2cc:String,console:Console )
+	Method New( console:Console )
 		Super.New( "Module Manager" )
 		
-		_mx2cc=mx2cc
 		_console=console
 		
 		_table=New TableView
@@ -102,7 +101,6 @@ Class ModuleManager Extends Dialog
 	Const downloadDir:="modules/module-manager/downloads/"
 	Const backupDir:="modules/module-manager/backups/"
 	
-	Field _mx2cc:String
 	Field _console:Console
 	Field _docker:DockingView
 	Field _modules:=New StringMap<Module>
@@ -253,7 +251,7 @@ Class ModuleManager Extends Dialog
 	
 		For Local config:=0 Until 2
 			
-			Local cmd:=_mx2cc+" makemods -config="+(config ? "debug" Else "release")
+			Local cmd:=MainWindow.Mx2ccPath+" makemods -config="+(config ? "debug" Else "release")
 				
 			If Not _console.Run( cmd ) Return False
 			
@@ -264,7 +262,7 @@ Class ModuleManager Extends Dialog
 			
 		Next
 		
-		Local cmd:=_mx2cc+" makedocs"
+		Local cmd:=MainWindow.Mx2ccPath+" makedocs"
 		
 		For Local module:=Eachin _procmods
 			cmd+=" "+module.name
