@@ -78,12 +78,12 @@ Function MungArg:String( type:Type )
 	
 	Local ctype:=TCast<ClassType>( type )
 	If ctype
-		Return "T"+ClassName( ctype )+"_2"
+		Return "T"+ClassName( ctype ).Replace( "::","_3" )+"_2"
 	Endif
 	
 	Local etype:=TCast<EnumType>( type )
 	If etype
-		Return "T"+EnumName( etype )+"_2"
+		Return "T"+EnumName( etype ).Replace( "::","_3" )+"_2"
 	Endif
 
 	Local qtype:=TCast<PointerType>( type )
