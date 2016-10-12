@@ -3,52 +3,80 @@ Namespace std.stringio
 
 Using libc
 
-'These will eventually be string extensions, eg: Function String.Load() and Method String.Save()
-
-#rem monkeydoc Loads a utf8 encoded string from a file.
+#rem monkeydoc Loads a string from a file.
 
 An empty string will be returned if the file could not be opened.
 
 @param path The path of the file.
 
+@param encoding The string encoding to use, "utf8" or "ansi".
+
+@param fixeols If true, converts eols to UNIX "~n" eols.
+
 @return A String containing the contents of the file. 
 
 #end
-Function LoadString:String( path:String )
+Function LoadString:String( path:String,encoding:String="utf8",fixeols:Bool=False )
 
 	Local data:=DataBuffer.Load( path )
 	If Not data Return ""
 
-	Local str:=String.FromUtf8String( data.Data,data.Length )
-
+	Local str:=""
+	
+	If encoding="ansi" Or encoding="ascii"
+		 str=String.FromAsciiData( data.Data,data.Length )
+	Else
+		 str=String.FromUtf8Data( data.Data,data.Length )
+	End
+	
 	data.Discard()
+	
+	If fixeols
+		str=str.Replace( "~r~n","~n" )
+		str=str.Replace( "~r","~n" )
+	Endif
 	
 	Return str
 End
 
-#rem monkeydoc Saves a string to a file in utf8 encoding.
+#rem monkeydoc Saves a string to a file.
+
+@param str The string to save.
 
 @param path The path of the file.
 
-@param str The string to save.
+@param encoding The string encoding to use, "utf8" or "ansi".
+
+@param fixeols If true, converts eols to UNIX "~n" eols.
 
 @return False if the file could not be opened.
 
 #end
-Function SaveString:Bool( str:String,path:String )
+Function SaveString:Bool( str:String,path:String,encoding:String="utf8",fixeols:Bool=False )
 
-	Local data:=New DataBuffer( str.Utf8Length )
-
-	str.ToUtf8String( data.Data,data.Length )
-
+	If fixeols
+		str=str.Replace( "~r~n","~n" )
+		str=str.Replace( "~r","~n" )
+	Endif
+	
+	Local data:DataBuffer
+	
+	If encoding="ansi" Or encoding="ascii"
+		data=New DataBuffer( str.Length )
+		str.ToCString( data.Data,data.Length )
+	Else
+		data=New DataBuffer( str.Utf8Length )
+		str.ToUtf8String( data.Data,data.Length )
+	End
+	
 	Local ok:=data.Save( path )
-
+	
 	data.Discard()
 	
 	Return ok
 End
 
-#rem monkeydoc @hidden Use ULongToString
+#rem monkeydoc @deprecated Use [[ULongToString]] instead.
 #end
 Function Hex:String( value:ULong )
 
@@ -63,7 +91,7 @@ Function Hex:String( value:ULong )
 	Return str ? str Else "0"
 End
 
-#rem monkeydoc @hidden Use StringToULong
+#rem monkeydoc @deprecated Use [[StringToULong]] instead.
 #end
 Function FromHex:ULong( hex:String )
 
