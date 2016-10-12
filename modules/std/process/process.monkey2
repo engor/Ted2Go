@@ -1,11 +1,11 @@
 
+Namespace std.process
+
 #If __TARGET__<>"emscripten"
 
 #Import "native/process.cpp"
 #Import "native/procutil.cpp"
 #Import "native/process.h"
-
-Namespace std.process
 
 Extern
 
@@ -35,10 +35,12 @@ Class Process="bbProcess"
 
 	Method WriteStdin( str:String )="writeStdin"
 	
+	Method WriteStdin:Int( buf:Void Ptr,count:Int )="writeStdin"
+	
 	Method SendBreak()="sendBreak"
 	
 	Method Terminate:Void()="terminate"
 
 End
 
-#endif
+#Endif

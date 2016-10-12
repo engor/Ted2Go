@@ -26,7 +26,9 @@ public:
 	
 	bbInt readStdout( void *buf,bbInt count );
 	
-	void writeStdin( bbString str );
+	bbInt writeStdin( bbString str );
+	
+	bbInt writeStdin( void *buf,bbInt count );
 	
 	void sendBreak();
 	

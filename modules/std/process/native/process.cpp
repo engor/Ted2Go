@@ -302,15 +302,30 @@ bbInt bbProcess::readStdout( void *buf,int count ){
 	return count;
 }
 
-void bbProcess::writeStdin( bbString str ){
+int bbProcess::writeStdin( bbString str ){
 
-	if( !_rep ) return;
+	if( !_rep ) return 0;
 
 #if _WIN32	
-	WriteFile( _rep->in,str.c_str(),str.length(),0,0 );
+	int n=WriteFile( _rep->in,str.c_str(),str.length(),0,0 );
 #else
-	write( _rep->in,str.c_str(),str.length() );
+	int n=write( _rep->in,str.c_str(),str.length() );
 #endif
+
+	return n>=0 ? n : 0;
+}
+
+int bbProcess::writeStdin( void *buf,int count ){
+
+	if( !_rep ) return 0;
+	
+#if _WIN32
+	int n=WriteFile( _rep->in,buf,count,0,0 );
+#else
+	int n=write( _rep->in,buf,count );
+#endif	
+
+	return n>=0 ? n : 0;
 }
 
 void bbProcess::sendBreak(){
