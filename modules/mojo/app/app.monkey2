@@ -714,7 +714,7 @@ Class AppInstance
 			_window=Window.WindowForID( tevent->windowID )
 			If Not _window Return
 			
-			_keyChar=String.FromChar( tevent->text[0] )
+			_keyChar=String.FromUtf8String( tevent->text )
 			
 			SendKeyEvent( EventType.KeyChar )
 			

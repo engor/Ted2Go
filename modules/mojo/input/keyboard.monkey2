@@ -132,6 +132,29 @@ Class KeyboardDevice Extends InputDevice
 		Return KeyPressed( key )
 	End
 	
+	#rem monkeydoc Peeks at the next character in the character queue.
+	#end
+	Method PeekChar:Int()
+		If _charPut=_charGet Return 0
+		Return _charQueue[_charGet & CHAR_QUEUE_MASK]
+	End
+	
+	#rem monkeydoc Gets the next character from the character queue.
+	#end
+	Method GetChar:Int()
+		If _charPut=_charGet Return 0
+		Local char:=_charQueue[_charGet & CHAR_QUEUE_MASK]
+		_charGet+=1
+		Return char
+	End
+	
+	#rem monkeydoc Flushes the character queue.
+	#end
+	Method FlushChars()
+		_charPut=0
+		_charGet=0
+	End
+	
 	'***** Internal *****
 	
 	#rem monkeydoc @hidden
@@ -176,7 +199,7 @@ Class KeyboardDevice Extends InputDevice
 #Else
 			_key2scan[key]=SDL_GetScancodeFromKey( Cast<SDL_Keycode>( keyCode ) )
 #Endif
-			_scan2key[_key2scan[key]]=scanCode
+			_scan2key[_key2scan[key]]=key
 			
 			p=p+1
 		Wend
@@ -209,22 +232,27 @@ Class KeyboardDevice Extends InputDevice
 			
 			Local scode:=kevent->keysym.scancode
 			
-			If _down[scode] Return
+			If Not _down[scode]
 			
-			_down[scode]=True
-			_pressed[scode]=True
-			_pressedKeys.Push( scode )
-				
-			Select kevent->keysym.sym
-			Case $400000e0 _modifiers|=Modifier.LeftControl
-			Case $400000e1 _modifiers|=Modifier.LeftShift
-			Case $400000e2 _modifiers|=Modifier.LeftAlt
-			Case $400000e3 _modifiers|=Modifier.LeftGui
-			Case $400000e4 _modifiers|=Modifier.RightControl
-			Case $400000e5 _modifiers|=Modifier.RightShift
-			Case $400000e6 _modifiers|=Modifier.RightAlt
-			Case $400000e7 _modifiers|=Modifier.RightGui
-			End
+				_down[scode]=True
+				_pressed[scode]=True
+				_pressedKeys.Push( scode )
+					
+				Select kevent->keysym.sym
+				Case $400000e0 _modifiers|=Modifier.LeftControl
+				Case $400000e1 _modifiers|=Modifier.LeftShift
+				Case $400000e2 _modifiers|=Modifier.LeftAlt
+				Case $400000e3 _modifiers|=Modifier.LeftGui
+				Case $400000e4 _modifiers|=Modifier.RightControl
+				Case $400000e5 _modifiers|=Modifier.RightShift
+				Case $400000e6 _modifiers|=Modifier.RightAlt
+				Case $400000e7 _modifiers|=Modifier.RightGui
+				End
+			
+			Endif
+			
+			Local char:=KeyToChar( _scan2key[scode] )
+			If char PushChar( char )
 
 		Case SDL_KEYUP
 		
@@ -248,12 +276,20 @@ Class KeyboardDevice Extends InputDevice
 			Case $400000e6 _modifiers&=~Modifier.RightAlt
 			Case $400000e7 _modifiers&=~Modifier.RightGui
 			End
-
+			
+		Case SDL_TEXTINPUT
+		
+			Local tevent:=Cast<SDL_TextInputEvent Ptr>( event )
+			Local char:=tevent->text[0]
+			If char PushChar( char )
 		End
 
 	End
 
 	Private
+	
+	Const CHAR_QUEUE_SIZE:=32
+	Const CHAR_QUEUE_MASK:=31
 	
 	Field _modifiers:Modifier
 	Field _down:=New Bool[512]
@@ -266,8 +302,27 @@ Class KeyboardDevice Extends InputDevice
 	Field _scan2raw:=New Key[512]	'no translate
 	Field _key2scan:=New Int[512]	'translate
 	Field _scan2key:=New Int[512]	'translate
+	Field _charQueue:=New Int[CHAR_QUEUE_SIZE]
+	Field _charPut:Int
+	Field _charGet:Int
 	
 	Method New()
+	End
+
+	Function KeyToChar:Int( key:Int )
+		Select key
+		Case Key.Backspace,Key.Tab,Key.Enter,Key.Escape,Key.KeyDelete
+			Return key
+		Case Key.PageUp,Key.PageDown,Key.KeyEnd,Key.Home,Key.Left,Key.Up,Key.Right,Key.Down,Key.Insert
+			Return key | $10000
+		End
+		Return 0
+	End
+	
+	Method PushChar( char:Int )
+		If _charPut-_charGet=CHAR_QUEUE_SIZE Return
+		_charQueue[ _charPut & CHAR_QUEUE_MASK ]=char
+		_charPut+=1
 	End
 	
 End
