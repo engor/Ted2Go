@@ -25,7 +25,7 @@ MX2_CPP_OPTS_MACOS_RELEASE=-O3 -DNDEBUG
 
 'For emscripten builds, you need emcc, em++ and emar in your PATH.
 '
-'Alas, modern macos apps no longer inherit PATH settings so we need to harccode in some in.
+'Alas, modern macos apps no longer inherit PATH settings so we need to harccode some in.
 'These may need to be changed depending on where you install emscripten.
 EMSCRIPTEN=${HOME}/emsdk/emscripten/1.35.0
 PATH=${HOME}/emsdk:${HOME}/emsdk/clang/e1.35.0_64bit:${HOME}/emsdk/node/0.12.2_64bit/bin:${HOME}/emsdk/emscripten/1.35.0:${PATH}

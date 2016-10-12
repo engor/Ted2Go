@@ -1,26 +1,31 @@
 
 '***** LINUX *****
 
+'This will enable g++-6 builds (if g++-6 is installed and it's not already the default).
+'MX2_GCC_SUFFIX=-6
+
 'LD options
 MX2_LD_OPTS_LINUX=
 MX2_LD_OPTS_LINUX_DEBUG=
-MX2_LD_OPTS_LINUX_RELEASE=-s -O3
+MX2_LD_OPTS_LINUX_RELEASE=-g -O3
+'MX2_LD_OPTS_LINUX_RELEASE=-s
 
 'C compiler options
 MX2_CC_OPTS_LINUX=-std=gnu99
 MX2_CC_OPTS_LINUX_DEBUG=
-MX2_CC_OPTS_LINUX_RELEASE=-O3 -DNDEBUG
+MX2_CC_OPTS_LINUX_RELEASE=-g -O3 -DNDEBUG
 
 'C++ compiler options
 MX2_CPP_OPTS_LINUX=-std=c++11
 MX2_CPP_OPTS_LINUX_DEBUG=
-MX2_CPP_OPTS_LINUX_RELEASE=-O3 -DNDEBUG
+MX2_CPP_OPTS_LINUX_RELEASE=-g -O3 -DNDEBUG
 
 
 '***** EMSCRIPTEN *****
 
 'For emscripten builds, you need emcc, em++ and emar in your PATH.
 'To run emscripten apps, you'll need MonkeyXFree86c in your devtools dir.
+'
 MX2_MSERVER="${MX2_HOME}/devtools/MonkeyXFree86c/bin/mserver_linux"
 
 'LD options
