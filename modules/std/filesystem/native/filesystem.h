@@ -10,7 +10,7 @@ namespace bbFileSystem{
 	
 	bbString appPath();
 	
-	bbArray<bbString> *appArgs();
+	bbArray<bbString> appArgs();
 	
 	bbBool copyFile( bbString srcPath,bbString dstPath );
 }

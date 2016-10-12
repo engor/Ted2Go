@@ -1,4 +1,4 @@
 
 #include "bbarray.h"
 
-void *bb_array_null;
+void *bb_array_kludge;

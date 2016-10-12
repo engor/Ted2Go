@@ -126,13 +126,33 @@ Class Translator_CPP Extends Translator
 	
 	'***** Decls *****
 	
+	Method HeapVarType:String( type:Type )
+	
+		If IsGCPtrType( type ) Return "bbGCVar<"+ClassName( TCast<ClassType>( type ) )+">"
+		
+		Return TransType( type )
+	End
+	
+	Method VarType:String( vvar:VarValue )
+	
+		Local type:=vvar.type
+		
+		Select vvar.vdecl.kind
+		Case "const","global","field"
+			Return HeapVarType( type )
+		End
+		
+		Return TransType( type )
+	End
+
+#rem		
 	Method GCVarTypeName:String( type:Type )
 	
 		Local ctype:=TCast<ClassType>( type )
 		If ctype And Not ctype.ExtendsVoid And (ctype.cdecl.kind="class" Or ctype.cdecl.kind="interface") Return ClassName( ctype )
 		
-		Local atype:=TCast<ArrayType>( type )
-		If atype Return ArrayName( atype )
+'		Local atype:=TCast<ArrayType>( type )
+'		If atype Return ArrayName( atype )
 		
 		Return ""
 	End
@@ -158,12 +178,14 @@ Class Translator_CPP Extends Translator
 		Case "field"
 			Return "bbGCVar<"+name+">"
 		Case "global","const"
-			Return "bbGCRootVar<"+name+">"
+			Return "bbGCVar<"+name+">"
+'			Return "bbGCRootVar<"+name+">"
 		End
 		
 		TransError( "Translator.VarType()" )
 		Return ""
 	End
+#end
 
 	Method VarProto:String( vvar:VarValue ) Override
 	
@@ -220,21 +242,35 @@ Class Translator_CPP Extends Translator
 	Method EmitGlobalInits( fdecl:FileDecl )
 	
 		EmitBr()
-		Emit( "void mx2_"+fdecl.ident+"_init(){" )
+		Emit( "void mx2_"+fdecl.ident+"_init_f(){" )
 		BeginGCFrame()
+		
 		Emit( "static bool done;" )
 		Emit( "if(done) return;" )
 		Emit( "done=true;")
 		
+		Local gc:=False
 		For Local vvar:=Eachin fdecl.globals
 			If vvar.init Emit( Trans( vvar )+"="+Trans( vvar.init )+";" )
+			If IsGCType( vvar.type ) gc=True
 		Next
 		
 		EndGCFrame()
 		Emit( "}" )
 		
+		If gc
+			EmitBr()
+			Emit( "struct mx2_"+fdecl.ident+"_roots_t : bbGCRoot{" )
+			Emit( "void gcMark(){" )
+			For Local vvar:=Eachin fdecl.globals
+				If IsGCType( vvar.type ) Emit( "bbGCMark("+Trans(vvar)+");" )
+			Next
+			Emit( "}" )
+			Emit( "}mx2_"+fdecl.ident+"_roots;" )
+		Endif
+		
 		EmitBr()
-		Emit( "bbInit mx2_"+fdecl.ident+"_init_v(~q"+fdecl.ident+"~q,&mx2_"+fdecl.ident+"_init);" )
+		Emit( "bbInit mx2_"+fdecl.ident+"_init(~q"+fdecl.ident+"~q,&mx2_"+fdecl.ident+"_init_f);" )
 	
 	End
 	
@@ -439,13 +475,12 @@ Class Translator_CPP Extends Translator
 		
 		If debug
 			Local tname:=cname
-			If Not IsStruct( ctype ) tname+="*"
+			If Not ctype.IsStruct tname+="*"
 			Emit( "bbString bbDBType("+tname+"*);" )
 			Emit( "bbString bbDBValue("+tname+"*);" )
 		Endif
 		
-		If IsStruct( ctype )
-
+		If ctype.IsStruct
 			EmitBr()
 			If hasCmp
 				Emit( "inline int bbCompare(const "+cname+"&x,const "+cname+"&y){return x.m__cmp(y);}" )
@@ -581,7 +616,7 @@ Class Translator_CPP Extends Translator
 		
 		If debug
 			Local tname:=cname
-			If Not IsStruct( ctype ) tname+="*"
+			If Not ctype.IsStruct tname+="*"
 			
 			Emit( "bbString bbDBType("+tname+"*){" )
 			Emit( "return ~q"+ctype.Name+"~q;" )
@@ -613,8 +648,7 @@ Class Translator_CPP Extends Translator
 
 		'Emit static struct methods
 		'
-		If IsStruct( ctype ) 
-
+		If ctype.IsStruct
 			If Not hasCmp
 				EmitBr()
 				Emit( "int bbCompare(const "+cname+"&x,const "+cname+"&y){" )
@@ -946,6 +980,12 @@ Class Translator_CPP Extends Translator
 			
 			Emit( type+" "+tvar+init+";" )
 			
+			If (vdecl.kind="global" Or vdecl.kind="const") And IsGCType( vvar.type )
+				Emit( "static struct _"+tvar+"_t:bbGCRoot{" )
+				Emit( "void gcMark(){ bbGCMark("+tvar+");}" )
+				Emit( "}_"+tvar+";" )
+			Endif
+			
 		Endif
 		
 		If debug And vdecl.kind="local" Emit( "bbDBLocal(~q"+vvar.vdecl.ident+"~q,&"+tvar+");" )
@@ -1205,7 +1245,7 @@ Class Translator_CPP Extends Translator
 
 		Local t:="("+Trans( value.value )+")"
 		
-		If IsValue( value.type ) Return TransType( value.type )+t
+		If IsCValueType( value.type ) Return TransType( value.type )+t
 
 		Return "(("+TransType( value.type )+")"+t+")"
 	End
@@ -1222,7 +1262,7 @@ Class Translator_CPP Extends Translator
 		
 		Local t:="("+Trans( value.value )+")"
 		
-		If IsValue( value.type ) Return TransType( value.type )+t
+		If IsCValueType( value.type ) Return TransType( value.type )+t
 
 		Return "(("+TransType( value.type )+")"+t+")"
 	End
@@ -1242,7 +1282,10 @@ Class Translator_CPP Extends Translator
 		Local etype:=TCast<EnumType>( type )
 		If etype Return EnumName( etype )+"(0)"
 
-		If IsValue( type ) Return TransType( type )+"{}"
+		If IsCValueType( type ) 
+			Uses( type )
+			Return TransType( type )+"{}"
+		Endif
 		
 		Return "(("+TransType( type )+")0)"
 	End
@@ -1287,7 +1330,7 @@ Class Translator_CPP Extends Translator
 		
 		Local cname:=ClassName( value.ctype )
 		
-		If IsStruct( value.ctype ) Return "(*static_cast<"+cname+"*>(this))"
+		If value.ctype.IsStruct Return "(*static_cast<"+cname+"*>(this))"
 		
 		Return "static_cast<"+cname+"*>(this)"
 	End
@@ -1301,12 +1344,17 @@ Class Translator_CPP Extends Translator
 		
 		Local tinst:=Trans( instance )
 		Local tmember:=Trans( member )
-
-		If IsValue( instance.type ) Return tinst+"."+tmember
 		
 		If Cast<FuncValue>( member ) And IsVolatile( instance ) tinst="("+AllocGCTmp( instance.type )+"="+tinst+")"
+
+		If IsCValueType( instance.type ) Return tinst+"."+tmember
 		
 		Return tinst+"->"+tmember
+		
+		'have to do this for arrays too?
+'		If Cast<FuncValue>( member ) And IsVolatile( instance ) tinst="("+AllocGCTmp( instance.type )+"="+tinst+")"
+		
+'		Return tinst+"->"+tmember
 	End
 	
 	Method TransInvokeMember:String( instance:Value,member:FuncValue,args:Value[] )
@@ -1367,7 +1415,7 @@ Class Translator_CPP Extends Translator
 			Return "new "+cname+"("+TransArgs( value.args )+")"
 		Endif
 		
-		If IsStruct( ctype )
+		If ctype.IsStruct
 			If Not value.args Return cname+"(bbNullCtor)"
 			If value.args[0].type.Equals( ctype ) Return cname+"("+TransArgs( value.args )+",bbNullCtor)"
 			Return cname+"("+TransArgs( value.args )+")"
@@ -1380,14 +1428,21 @@ Class Translator_CPP Extends Translator
 	
 		Local atype:=value.atype
 		Uses( atype )
-	
-		If value.inits Return ArrayName( atype )+"::create({"+TransArgs( value.inits )+"},"+value.inits.Length+")"
 		
-		Return ArrayName( atype )+"::create("+TransArgs( value.sizes )+")"
+		If value.inits Return ArrayName( atype )+"({"+TransArgs( value.inits )+"},"+value.inits.Length+")"
+		
+		Return ArrayName( atype )+"("+TransArgs( value.sizes )+")"
+	
+'		If value.inits Return ArrayName( atype )+"::create({"+TransArgs( value.inits )+"},"+value.inits.Length+")"
+		
+'		Return ArrayName( atype )+"::create("+TransArgs( value.sizes )+")"
 	End
 	
 	Method Trans:String( value:ArrayIndexValue )
-		Return Trans( value.value )+"->at("+TransArgs( value.args )+")"
+		If value.args.Length=1 Return Trans( value.value )+"["+TransArgs( value.args )+"]"
+		Return Trans( value.value )+".at("+TransArgs( value.args )+")"
+		
+'		Return Trans( value.value )+"->at("+TransArgs( value.args )+")"
 	End
 	
 	Method Trans:String( value:StringIndexValue )
@@ -1428,7 +1483,11 @@ Class Translator_CPP Extends Translator
 		
 			If op="=" op="==" Else If op="<>" op="!="
 			
-			If IsStruct( value.lhs.type ) Or (TCast<FuncType>( value.lhs.type ) And op<>"==" And op<>"!=" )
+			Local ctype:=TCast<ClassType>( value.lhs.type )
+			Local ftype:=TCast<FuncType>( value.lhs.type )
+			
+			If (ctype And ctype.IsStruct) Or (ftype And op<>"==" And op<>"!=" )
+'			If IsStruct( value.lhs.type ) Or (TCast<FuncType>( value.lhs.type ) And op<>"==" And op<>"!=" )
 				Return "(bbCompare("+Trans( value.lhs )+","+Trans( value.rhs )+")"+op+"0)"
 			Endif
 			
@@ -1554,7 +1613,7 @@ Class Translator_CPP Extends Translator
 	End
 	
 	Method TransType:String( type:ClassType )
-		If IsStruct( type ) Return ClassName( type )
+		If type.IsStruct Return ClassName( type )
 		Return ClassName( type )+"*"
 	End
 	
@@ -1571,7 +1630,7 @@ Class Translator_CPP Extends Translator
 	End
 	
 	Method TransType:String( type:ArrayType )
-		Return ArrayName( type )+"*"
+		Return ArrayName( type )
 	End
 	
 	Method TransType:String( type:PointerType )
@@ -1583,9 +1642,9 @@ Class Translator_CPP Extends Translator
 	End
 	
 	Method ArrayName:String( type:ArrayType )
-		Refs( type )
-		If type.rank=1 Return "bbArray<"+ElementType( type.elemType )+">"
-		Return "bbArray<"+ElementType( type.elemType )+","+type.rank+">"
+'		Refs( type )
+		If type.rank=1 Return "bbArray<"+HeapVarType( type.elemType )+">"
+		Return "bbArray<"+HeapVarType( type.elemType )+","+type.rank+">"
 	End
 	
 End

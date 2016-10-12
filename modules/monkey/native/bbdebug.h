@@ -100,7 +100,7 @@ namespace bbDB{
 	
 	void error( bbString err );
 	
-	bbArray<bbString> *stack();
+	bbArray<bbString> stack();
 	
 	void emitStack();
 }

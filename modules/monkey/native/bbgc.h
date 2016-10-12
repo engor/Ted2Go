@@ -258,41 +258,29 @@ template<class T> struct bbGCVar{
 	}
 };
 
+/*
 template<class T> struct bbGCRootVar : public bbGCVar<T>,public bbGCRoot{
 	
-	using bbGCVar<T>::_ptr;
-	using bbGCVar<T>::enqueue;
+	using bbGCVar<T>::operator=;
 
 	bbGCRootVar(){
 	}
 	
 	bbGCRootVar( T *p ){
-		_ptr=p;
+		this->_ptr=p;
 		enqueue();
 	}
 	
 	bbGCRootVar( const bbGCVar<T> &p ){
-		_ptr=p._ptr;
+		this->_ptr=p._ptr;
 		enqueue();
 	}
-	
 
-	bbGCRootVar &operator=( T *p ){
-		_ptr=p;
-		enqueue();
-		return *this;
-	}
-	
-	bbGCRootVar &operator=( const bbGCVar<T> &p ){
-		_ptr=p._ptr;
-		enqueue();
-		return *this;
-	}
-	
-	virtual void gcMark(){
+	void gcMark(){
 		bbGC::enqueue( dynamic_cast<bbGCNode*>( _ptr ) );
 	}
 };
+*/
 
 template<class T> void bbGCMark( const T &t ){}
 

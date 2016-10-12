@@ -28,16 +28,11 @@ Function IsGCType:Bool( type:Type )
 	Return False
 End
 
-
 Function IsGCPtrType:Bool( type:Type )
 
 	Local ctype:=TCast<ClassType>( type )
-	If ctype Return Not ctype.ExtendsVoid And Not ctype.IsStruct
 	
-	Local atype:=TCast<ArrayType>( type )
-	If atype Return True
-	
-	Return False
+	Return ctype And Not ctype.ExtendsVoid And (ctype.IsClass Or ctype.IsInterface)
 End
 
 'Visitor that looks for gc params on LHS of an assignment.
@@ -212,7 +207,6 @@ Class Translator
 				Else
 					Emit( "bbGCMark("+VarName( vvar )+");" )
 				Endif
-'				Emit( "bbGCMark("+VarName( vvar )+");" )
 			Next
 			
 			For Local tmp:=Eachin _gcframe.tmps
@@ -222,7 +216,6 @@ Class Translator
 				Else
 					Emit( "bbGCMark("+tmp.ident+");" )
 				Endif
-'				Emit( "bbGCMark("+tmp.ident+");" )
 			Next
 			
 			Emit( "}" )
@@ -326,7 +319,7 @@ Class Translator
 				
 				If debug And Not ctype.cdecl.IsExtern
 					Local tname:=cname
-					If Not IsStruct( ctype ) tname+="*"
+					If Not ctype.IsStruct tname+="*"
 					Emit( "bbString bbDBType("+tname+"*);" )
 					Emit( "bbString bbDBValue("+tname+"*);" )
 				Endif
@@ -415,7 +408,7 @@ Class Translator
 		Local ctype:=TCast<ClassType>( type )
 		If ctype
 			If ctype.cdecl.IsExtern Uses( ctype.transFile ) ; return
-			If IsStruct( ctype ) Uses( ctype ) ; Return
+			If ctype.IsStruct Uses( ctype ) ; Return
 			If AddRef( ctype ) Return
 			_refsTypes.Push( ctype )
 			Return
@@ -479,15 +472,12 @@ Class Translator
 	
 	'***** MISC *****
 
-	Method IsStruct:Bool( type:Type )
-
+	Method IsCValueType:Bool( type:Type )
+	
 		Local ctype:=TCast<ClassType>( type )
-		Return ctype And ctype.cdecl.kind="struct"
-	End
+		If ctype And ctype.IsStruct Return True
 	
-	Method IsValue:Bool( type:Type )
-	
-		Return TCast<PrimType>( type ) Or TCast<FuncType>( type ) Or IsStruct( type )
+		Return TCast<PrimType>( type ) Or TCast<FuncType>( type ) Or TCast<ArrayType>( type )
 	End
 	
 	Method CFuncType:String( type:FuncType )

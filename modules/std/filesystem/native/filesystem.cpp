@@ -39,7 +39,7 @@ namespace bbFileSystem{
 
 	bbString _appDir;
 	bbString _appPath;
-	bbArray<bbString> *_appArgs;
+	bbArray<bbString> _appArgs;
 	
 	struct GCRoot : public bbGCRoot{
 		void gcMark(){
@@ -55,9 +55,9 @@ namespace bbFileSystem{
 		if( done ) return;
 		done=true;
 		
-		_appArgs=bbArray<bbString>::create( bb_argc );
+		_appArgs=bbArray<bbString>( bb_argc );
 		
-		for( int i=0;i<bb_argc;++i ) _appArgs->at(i)=bbString( bb_argv[i] );
+		for( int i=0;i<bb_argc;++i ) _appArgs[i]=bbString( bb_argv[i] );
 		
 		#if _WIN32
 	
@@ -117,7 +117,7 @@ namespace bbFileSystem{
 		return _appPath;
 	}
 	
-	bbArray<bbString> *appArgs(){
+	bbArray<bbString> appArgs(){
 		init();
 		return _appArgs;
 	}

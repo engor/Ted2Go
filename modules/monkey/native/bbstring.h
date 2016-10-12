@@ -350,9 +350,9 @@ class bbString{
 		return rep;
 	}
 	
-	bbArray<bbString> *split( bbString sep )const;
+	bbArray<bbString> split( bbString sep )const;
 	
-	bbString join( bbArray<bbString> *bits )const;
+	bbString join( bbArray<bbString> bits )const;
 	
 	int compare( const bbString &t )const{
 		int len=length()<t.length() ? length() : t.length();

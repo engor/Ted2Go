@@ -218,12 +218,12 @@ bbString bbString::fromUtf8Data( const void *data,int size ){
 }
 
 
-bbArray<bbString> *bbString::split( bbString sep )const{
+bbArray<bbString> bbString::split( bbString sep )const{
 
 	if( !sep.length() ){
-		bbArray<bbString> *bits=bbArray<bbString>::create( length() );
+		bbArray<bbString> bits=bbArray<bbString>( length() );
 		for( int i=0;i<length();++i ){
-			bits->at(i)=bbString( &data()[i],1 );
+			bits[i]=bbString( &data()[i],1 );
 		}
 		return bits;
 	}
@@ -233,36 +233,36 @@ bbArray<bbString> *bbString::split( bbString sep )const{
 		++n;
 		i=i2+sep.length();
 	}
-	bbArray<bbString> *bits=bbArray<bbString>::create( n );
+	bbArray<bbString> bits=bbArray<bbString>( n );
 	if( n==1 ){
-		bits->at(0)=*this;
+		bits[0]=*this;
 		return bits;
 	}
 	i=0;n=0;
 	while( (i2=find( sep,i ))!=-1 ){
-		bits->at(n++)=slice( i,i2 );
+		bits[n++]=slice( i,i2 );
 		i=i2+sep.length();
 	}
-	bits->at(n)=slice( i );
+	bits[n]=slice( i );
 	return bits;
 }
 
-bbString bbString::join( bbArray<bbString> *bits )const{
+bbString bbString::join( bbArray<bbString> bits )const{
 
-	if( bits->length()==0 ) return bbString();
-	if( bits->length()==1 ) return bits->at(0);
+	if( bits.length()==0 ) return bbString();
+	if( bits.length()==1 ) return bits[0];
 	
-	int len=length() * (bits->length()-1);
-	for( int i=0;i<bits->length();++i ) len+=bits->at(i).length();
+	int len=length() * (bits.length()-1);
+	for( int i=0;i<bits.length();++i ) len+=bits[i].length();
 	
 	Rep *rep=Rep::alloc( len );
 	bbChar *p=rep->data;
 
-	p=t_memcpy( p,bits->at(0).data(),bits->at(0).length() );
+	p=t_memcpy( p,bits[0].data(),bits[0].length() );
 	
-	for( int i=1;i<bits->length();++i ){
+	for( int i=1;i<bits.length();++i ){
 		p=t_memcpy( p,data(),length() );
-		p=t_memcpy( p,bits->at(i).data(),bits->at(i).length() );
+		p=t_memcpy( p,bits[i].data(),bits[i].length() );
 	}
 	
 	return rep;
