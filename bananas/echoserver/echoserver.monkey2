@@ -22,7 +22,7 @@ Class MyWindow Extends Window
 	
 		Local server:=SocketServer.Listen( 12345 )
 		If Not server print "Server:Failed to create server" ; Return
-
+		
 		Print "Server:Listening"
 		
 		Repeat
@@ -58,9 +58,9 @@ Class MyWindow Extends Window
 	
 	Method Client()
 	
-		Fiber.Sleep( .1 )	'wait a bit for server to start!
+		Fiber.Sleep( .5 )	'wait a bit for server to start
 		
-		Local socket:=Socket.Connect( "localhost",12345 )
+		Local socket:=SocketStream.Connect( "localhost",12345 )
 		If Not socket Print "Client:Couldn't connect to server" ; Return
 		
 		Print "Client:Connected"
@@ -76,42 +76,6 @@ Class MyWindow Extends Window
 		
 		socket.Close()
 	End
-	
-	#rem
-	'Returns empty line at EOF.
-	'
-	Method ReadLine:String( socket:Socket )
-	
-		Local buf:=New DataBuffer( 1024 )
-		
-		Local pos:=0
-		Repeat
-			Assert( pos<1024 )
-			Local n:=socket.Read( buf,pos,1024-pos )
-			If Not n Exit
-			pos+=n
-			If buf.PeekByte( pos-1 )=10 Exit
-		Forever
-		
-		Return String.FromCString( buf.Data,pos )
-	End
-	
-	Method WriteLine( socket:Socket,line:String )
-	
-		Assert( line.Length<1024 )
-	
-		Local buf:=New DataBuffer( 1024 )
-		
-		Local pos:=0
-		For pos=0 Until line.Length
-			If line[pos]=10 Exit
-			buf.PokeByte( pos,line[pos] )
-		Next
-		
-		buf.PokeByte( pos,10 )
-		socket.Write( buf,0,pos+1 )
-	End
-	#end
 	
 	Method OnRender( canvas:Canvas ) Override
 	
