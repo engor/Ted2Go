@@ -358,13 +358,15 @@ Class JsonArray Extends JsonValue
 	
 	#rem monkeydoc Gets an array element.
 	
-	Returns the json value at `index`, or null if `index` is out of range.
+	Returns the json value at `index`.
 	
 	@param index Array index.
 	
 	#end
 	Method GetValue:JsonValue( index:int )
-		Return Null
+		Assert( index>=0 And index<_data.Length )
+		
+		Return _data[index]
 	End
 	
 	#rem monkeydoc Gets a bool array element.
@@ -426,6 +428,90 @@ Class JsonArray Extends JsonValue
 	#end
 	Method GetObject:JsonObject( index:Int )
 		Return Cast<JsonObject>( GetValue( index ) )
+	End
+	
+	#rem monkeydoc Sets an array element.
+	
+	Sets the json value at `index` to `value`.
+	
+	@param index Array index.
+	
+	@param value Value to set.
+	
+	#end
+	Method SetValue( index:Int,value:JsonValue )
+		Assert( index>=0 And index<_data.Length )
+		
+		_data[index]=value
+	End
+	
+	#rem monkeydoc Sets an array element.
+	
+	Sets the json value at `index` to `value`.
+	
+	@param index Array index.
+	
+	@param value Value to set.
+	
+	#end
+	Method SetBool( index:Int,value:Bool )
+		SetValue( index,value ? JsonBool.TrueValue Else JsonBool.FalseValue )
+	End
+	
+	#rem monkeydoc Sets an array element.
+	
+	Sets the json value at `index` to `value`.
+	
+	@param index Array index.
+	
+	@param value Value to set.
+	
+	#end
+	Method SetNumber( index:int,value:Double )
+		SetValue( index,New JsonNumber( value ) )
+	End
+	
+	#rem monkeydoc Sets an array element.
+	
+	Sets the json value at `index` to `value`.
+	
+	@param index Array index.
+	
+	@param value Value to set.
+	
+	#end
+	Method SetString( index:Int,value:String )
+		SetValue( index,New JsonString( value ) )
+	End
+	
+	#rem monkeydoc Sets an array element.
+	
+	Sets the json value at `index` to `value`.
+	
+	@param index Array index.
+	
+	@param value Value to set.
+	
+	#end
+	Method SetArray( index:int,value:JsonValue[] )
+		SetValue( index,New JsonArray( value ) )
+	End
+	
+	Method SetArray( index:int,value:Stack<JsonValue> )
+		SetValue( index,New JsonArray( value ) )
+	End
+	
+	#rem monkeydoc Sets an array element.
+	
+	Sets the json value at `index` to `value`.
+	
+	@param index Array index.
+	
+	@param value Value to set.
+	
+	#end
+	Method SetObject( index:Int,value:StringMap<JsonValue> )
+		SetValue( index,New JsonObject( value ) )
 	End
 	
 	#rem monkeydoc True if array is empty.
@@ -627,6 +713,100 @@ Class JsonObject Extends JsonValue
 	#end
 	Method GetObject:JsonObject( key:String )
 		Return Cast<JsonObject>( GetValue( key ) )
+	End
+	
+	#rem monkeydoc Sets a key to a value.
+	
+	Sets the value associated with `key` in the object.
+	
+	Any previous value associated with `key` is overwritten.
+	
+	@param key Object key.
+	
+	@param value Value to set.
+
+	#end
+	Method SetValue( key:String,value:JsonValue )
+		_data[key]=value
+	End
+	
+	#rem monkeydoc Sets a key to a value.
+	
+	Sets the value associated with `key` in the object.
+	
+	Any previous value associated with `key` is overwritten.
+	
+	@param key Object key.
+	
+	@param value Value to set.
+
+	#end
+	Method SetBool( key:String,value:Bool )
+		_data[key]=value ? JsonBool.TrueValue Else JsonBool.FalseValue
+	End
+	
+	#rem monkeydoc Sets a key to a value.
+	
+	Sets the value associated with `key` in the object.
+	
+	Any previous value associated with `key` is overwritten.
+	
+	@param key Object key.
+	
+	@param value Value to set.
+
+	#end
+	Method SetNumber( key:String,value:Double )
+		_data[key]=New JsonNumber( value )
+	End
+	
+	#rem monkeydoc Sets a key to a value.
+	
+	Sets the value associated with `key` in the object.
+	
+	Any previous value associated with `key` is overwritten.
+	
+	@param key Object key.
+	
+	@param value Value to set.
+
+	#end
+	Method SetString( key:String,value:String )
+		_data[key]=New JsonString( value )
+	End
+	
+	#rem monkeydoc Sets a key to a value.
+	
+	Sets the value associated with `key` in the object.
+	
+	Any previous value associated with `key` is overwritten.
+	
+	@param key Object key.
+	
+	@param value Value to set.
+
+	#end
+	Method SetArray( key:String,value:JsonValue[] )
+		_data[key]=New JsonArray( value )
+	End
+
+	Method SetArray( key:String,value:Stack<JsonValue> )
+		_data[key]=New JsonArray( value )
+	End
+	
+	#rem monkeydoc Sets a key to a value.
+	
+	Sets the value associated with `key` in the object.
+	
+	Any previous value associated with `key` is overwritten.
+	
+	@param key Object key.
+	
+	@param value Value to set.
+
+	#end
+	Method SetObject( key:String,value:StringMap<JsonValue> )
+		_data[key]=New JsonObject( value )
 	End
 	
 	#rem monkeydoc True if object is empty.
