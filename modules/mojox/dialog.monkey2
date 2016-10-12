@@ -79,10 +79,12 @@ Class Dialog Extends View
 		AddChildView( _docker )
 	End
 	
-	Method New( title:String )
+	Method New( title:String,contentView:View=Null )
 		Self.New()
 		
 		Title=title
+		
+		If contentView ContentView=contentView
 	End
 	
 	#rem monkeydoc Dialog title.

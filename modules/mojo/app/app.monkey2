@@ -98,22 +98,26 @@ Class AppInstance
 		
 		SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER,1 )
 		
+#If __TARGET__="windows" Or __TARGET__="macos" Or __TARGET__="emscripten"
+
+		_captureMouse=True
+#Endif
+
 #if __MOBILE_TARGET__
 
 		_touchMouse=True
 
     	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_ES )
 		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION,2 )
-    	
-#endif
+		
+#Else If __TARGET__="emscripten"
 
-#If __TARGET__="windows" Or __TARGET__="macos" Or __TARGET__="emscripten"
+		
+#Else If __TARGET__="raspbian"
 
-		_captureMouse=True
-#Endif
 
-#If __DESKTOP_TARGET__
-    
+#Else If __DESKTOP_TARGET__
+
 #if __TARGET__="windows"
 
 		Local gl_major:=Int( GetConfig( "GL_context_major_version",-1 ) )
@@ -137,12 +141,8 @@ Class AppInstance
 		If gl_major<>-1 SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION,gl_major )
 		If gl_minor<>-1 SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION,gl_minor )
 
-#Elseif __TARGET__="raspbian"
-
-   		SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_ES )
-		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION,2 )
-
 #Endif
+
 		SDL_GL_SetAttribute( SDL_GL_SHARE_WITH_CURRENT_CONTEXT,1 )
 		
 		SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE,Int( GetConfig( "GL_depth_buffer_enabled",0 ) ) )
@@ -156,6 +156,7 @@ Class AppInstance
 		Assert( _sdlGLContext,"FATAL ERROR: SDL_GL_CreateContext failed" )
 		
 		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )
+
 #Endif
 		_defaultFont=_res.OpenFont( "DejaVuSans",16 )
 		
