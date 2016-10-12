@@ -5,7 +5,10 @@ Class Ted2TextView Extends TextView
 
 	Method New()
 
-		CursorBlinkRate=2.5
+#If __TARGET__<>"raspbian"
+		CursorBlinkRate=2.5	'crashing on Pi?
+#Endif
+
 	End
 
 	Protected
