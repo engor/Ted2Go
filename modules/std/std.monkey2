@@ -49,6 +49,7 @@ Namespace std
 #Import "fiber/fiber"
 #Import "fiber/future"
 #Import "process/process"
+#Import "process/processstream"
 #Import "filesystem/filesystem"
 
 #Import "misc/random"
@@ -59,6 +60,7 @@ Namespace std
 #Import "misc/zipfile"
 
 #Import "socket/socket"
+#Import "socket/socketstream"
 
 Private
 
@@ -74,6 +76,17 @@ Function Main()
 
 		Return FileStream.Open( path,mode )
 	End
+	
+#If __DESKTOP_TARGET__
+
+	'Add 'process::' stream protocol
+	'
+	Stream.OpenFuncs["process"]=Lambda:Stream( proto:String,path:String,mode:String )
+
+		Return std.process.ProcessStream.Open( path,mode )
+	End
+	
+#Endif
 	
 #If Not __MOBILE_TARGET__
 

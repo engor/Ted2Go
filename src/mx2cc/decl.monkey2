@@ -120,6 +120,7 @@ Class FileDecl Extends Decl
 	Field functions:=New Stack<FuncValue>
 	
 	Method New()
+		kind="file"
 		srcfile=Self
 		srcpos=1 Shl 12
 		endpos=1 Shl 12
