@@ -93,7 +93,7 @@ const char *bbString::c_str()const{
 
 bbString bbString::fromChar( int chr ){
 	bbChar buf[]={(bbChar)chr,0};
-	return buf;
+	return bbString( buf,1 );
 }
 
 bbString bbString::fromCString( const void *data,int size ){
