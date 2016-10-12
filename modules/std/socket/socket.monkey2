@@ -150,7 +150,7 @@ Struct Socket
 	
 	Returns a closed socket upon failue.
 	
-	@Return A new socket.
+	@return A new socket.
 	
 	#end	
 	Function Connect:Socket( hostname:String,service:String )

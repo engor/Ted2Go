@@ -263,7 +263,7 @@ Class DataBuffer Extends std.resource.Resource
 	
 	If `count` is omitted, all bytes from `offset` until the end of the data buffer are read.
 	
-	`encoding` should be one of "utf8" or "ascii".
+	`encoding` should be one of "utf8" or "ansi".
 
 	@param offset Byte offset to read the string.
 	
@@ -280,11 +280,10 @@ Class DataBuffer Extends std.resource.Resource
 	
 	Method PeekString:String( offset:Int,count:Int,encoding:String="utf8" )
 		DebugAssert( offset>=0 And count>=0 And offset+count<=_length )
-		DebugAssert( encoding="utf8" Or encoding="ascii" )
+
+		If encoding="ansi" Or encoding="ascii" Return String.FromAsciiData( _data+offset,count )
 		
-		If encoding="utf8" Return String.FromUtf8Data( _data+offset,count )
-		
-		Return String.FromAsciiData( _data+offset,count )
+		Return String.FromUtf8Data( _data+offset,count )
 	End
 	
 	#rem monkeydoc Writes a byte to the databuffer
@@ -427,7 +426,7 @@ Class DataBuffer Extends std.resource.Resource
 
 	#rem monkeydoc Write a string to the databuffer.
 
-	`encoding` should be one of "utf8" or "ascii".
+	`encoding` should be one of "utf8" or "ansi".
 	
 	If there is not enough room in the data buffer, the string data is truncated.
 	
@@ -443,14 +442,14 @@ Class DataBuffer Extends std.resource.Resource
 		
 		DebugAssert( encoding="utf8" Or encoding="ascii" )
 		
-		If encoding="utf8"
-			Local count:=value.Utf8Length
-			If offset+count>_length count=_length-offset
-			value.ToUtf8String( _data+offset,count )
-		Else
+		If encoding="ansi" Or encoding="ascii"
 			Local count:=value.Length
 			If offset+count>_length count=_length-offset
 			value.ToCString( _data+offset,count )
+		Else
+			Local count:=value.Utf8Length
+			If offset+count>_length count=_length-offset
+			value.ToUtf8String( _data+offset,count )
 		Endif
 
 	End

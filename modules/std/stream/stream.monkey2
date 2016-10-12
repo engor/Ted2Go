@@ -301,6 +301,8 @@ Class Stream
 	
 	#rem monkeydoc Reads a null terminated string from the stream.
 	
+	@param encoding The string encoding, "utf8" or "ansi".
+	
 	@return the string read.
 	
 	#end
@@ -311,8 +313,10 @@ Class Stream
 			If Not chr Exit
 			buf.Push( chr )
 		Wend
-		If encoding="utf8" Return String.FromUtf8Data( buf.Data.Data,buf.Length )
-		Return String.FromAsciiData( buf.Data.Data,buf.Length )
+		
+		If encoding="ansi" Or encoding="ascii" Return String.FromAsciiData( buf.Data.Data,buf.Length )
+		
+		Return String.FromUtf8Data( buf.Data.Data,buf.Length )
 	End
 	
 	#rem monkeydoc Writes a byte to the stream.
