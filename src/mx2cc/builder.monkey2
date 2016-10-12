@@ -29,6 +29,8 @@ Class BuildOpts
 
 	Field passes:Int	'1=parse, 2=semant, 3=translate, 4=build, 5=run
 	
+	Field geninfo:Bool
+	
 End
 
 Class BuilderInstance
