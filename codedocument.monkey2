@@ -97,8 +97,11 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						HideAutocomplete()
 					Endif
 				Endif
+			Case Key.F2
+				ShowCodeStructureDialog()
+				
 			End
-			
+				
 		Elseif event.Type = EventType.KeyChar And event.Key = Key.Space And event.Modifiers & Modifier.Control
 			If CanShowAutocomplete()
 				ShowAutocomplete()
@@ -140,6 +143,38 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	
 	
 	Private
+	
+	Method ShowCodeStructureDialog()
+	
+		New Fiber( Lambda()
+				
+			Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+_doc.Path+"~q"
+			
+			Local str:=LoadString( "process::"+cmd )
+			
+			
+			Local i:=str.Find( "{" )
+			Local jstr := (i <> -1) ? str.Slice( i ) Else "{}"
+			
+			Local jobj:=JsonObject.Parse( jstr )
+			'If Not jobj Return
+			
+			Local view := New DockingView
+			Local jsonTree:=New JsonTreeView( jobj )
+			view.ContentView = jsonTree
+			
+			Local textView := New TextView
+			textView.Text = str
+			view.AddView(textView,"bottom",200,True)
+			
+			Local dialog:=New Dialog( "ParseInfo",view )
+			dialog.AddAction( "Close" ).Triggered=dialog.Close
+			dialog.MinSize=New Vec2i( 640,800 )
+			
+			dialog.Open()
+		
+		End )
+	End
 	
 	Method CanShowAutocomplete:Bool()
 		
