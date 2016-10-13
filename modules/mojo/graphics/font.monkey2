@@ -24,74 +24,20 @@ Struct Glyph
 
 End
 
-#rem monkeydoc The Font class.
+Class GlyphPage
 
-Mojo fonts use an image atlas system for storing font data.
+	Field image:Image
+	Field glyphs:Glyph[]
 
-The glyph struct is used to store the location, size and advance for individual characters within a font.
-All character image data for a font must A font must occupy a single image, 
+End
 
-#end
 Class Font Extends Resource
 
-	#rem monkeydoc Creates a new font.
-
-	@param image The image atlas.
-
-	@param height The height of the font in pixels.
-
-	@param firstChar The first character contained in the font.
-
-	@param glyphs An array of glyph structs describing the characters in the font.
-
-	#end
-	Method New( image:Image,height:Float,firstChar:Int,glyphs:Glyph[] )
-		_image=image
-		_height=height
-		_firstChar=firstChar
-		_glyphs=glyphs
-	End
-	
-	#rem monkeydoc The font image atlas.
-	#end
-	Property Image:Image()
-	
-		Return _image
-	End
-	
 	#rem monkeydoc The font height in pixels.
 	#end
 	Property Height:Float()
 	
 		Return _height
-	End
-	
-	#rem monkeydoc The first character contained in the font.
-	#end
-	Property FirstChar:Int()
-	
-		Return _firstChar
-	End
-	
-	#rem monkeydoc The number of characters in the font.
-	#end
-	Property NumChars:Int()
-	
-		Return _glyphs.Length
-	End
-	
-	#rem monkeydoc @hidden
-	#end
-	Property Glyphs:Glyph[]()
-	
-		Return _glyphs
-	End
-	
-	#rem monkeydoc Gets a glyph from the font.
-	#end
-	Method GetGlyph:Glyph( char:Int )
-		If char>=_firstChar And char<_firstChar+_glyphs.Length Return _glyphs[ char-_firstChar ]
-		Return _glyphs[0]
 	End
 	
 	#rem monkeydoc Measures the width of some text when rendered by the font.
@@ -103,26 +49,99 @@ Class Font Extends Resource
 		Next
 		Return w
 	End
+
+	#rem monkeydoc @hidden
 	
-	'Make this ALWAYS work!	
-	#rem monkeydoc Loads a font from a ttf file.
+	Gets the glyph page for a given char.
+	
+	Returns null if char does not have a glyph.
+	
+	#end	
+	Method GetGlyphPage:GlyphPage( char:Int )
+		Local page:=char Shr 8
+		If page<0 Or page>=_pages.Length Return Null
+		
+		Local gpage:=_pages[page]
+		If Not gpage Return Null
+		
+		If Not gpage.image LoadGlyphPage( page )
+				
+		Local index:=char & 255
+		If index>=gpage.glyphs.Length Return Null
+		
+		Return gpage
+	End
+	
+	#rem monkeydoc @hidden
+	
+	Gets the glyph for a given char.
+
+	#end
+	Method GetGlyph:Glyph( char:Int )
+		Local page:=char Shr 8
+		If page<0 Or page>=_pages.Length Return _nullGlyph
+
+		Local gpage:=_pages[page]
+		If Not gpage Return _nullGlyph
+
+		If Not gpage.image LoadGlyphPage( page )
+				
+		Local index:=char & 255
+		If index>=gpage.glyphs.Length Return _nullGlyph
+		
+		Return gpage.glyphs[index]
+	End
+	
+	#rem monkeydoc Loads a font from a file.
 	#end
 	Function Load:Font( path:String,height:Float,shader:Shader=Null )
 	
 		If Not shader shader=Shader.GetShader( "font" )
 		
-		Local font:=fontloader.LoadFont( path,height,shader )
-		If Not font And Not ExtractRootDir( path ) font=fontloader.LoadFont( "font::"+path,height,shader )
+		Local font:=FreeTypeFont.Load( path,height,shader )
+		If Not font And Not ExtractRootDir( path ) font=FreeTypeFont.Load( "font::"+path,height,shader )
 		
 		Return font
 	End
-
+	
+	Protected
+	
+	Method OnLoadGlyphPage( page:Int,gpage:GlyphPage ) Abstract
+	
+	Method InitFont( height:Float,pages:GlyphPage[] )
+	
+		_height=height
+		_pages=pages
+		
+		LoadGlyphPage( 0 )
+		
+		_nullGlyph=GetGlyph( 0 )
+	End
+	
+	Method OnDiscard() Override
+	
+		For Local page:=Eachin _pages
+			If page And page.image page.image.Discard()
+		Next
+		
+		_pages=Null
+		
+	End
+	
 	Private
 	
-	Field _image:Image
 	Field _height:Float
-	Field _firstChar:Int
-	Field _glyphs:Glyph[]
+
+	Field _pages:GlyphPage[]
+	
+	Field _nullGlyph:Glyph
+	
+	Method LoadGlyphPage( page:Int )
+	
+		Local gpage:=_pages[page]
+		
+		If Not gpage.image OnLoadGlyphPage( page,gpage )
+	End
 
 End
 

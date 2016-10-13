@@ -837,36 +837,64 @@ Class Canvas
 	#end
 	Method DrawText( text:String,tx:Float,ty:Float,handleX:Float=0,handleY:Float=0 )
 	
+		If Not text.Length Return
+	
 		tx-=_font.TextWidth( text ) * handleX
 		ty-=_font.Height * handleY
 		
-		Local image:=_font.Image
-		Local sx:=image.Rect.min.x,sy:=image.Rect.min.y
-		Local tw:=image.Texture.Width,th:=image.Texture.Height
-		
-		AddDrawOp( image.Shader,image.Material,image.BlendMode,image.TextureFilter,4,text.Length )
-		
-		For Local char:=Eachin text
-		
-			Local g:=_font.GetGlyph( char )
-			
-			Local s0:=Float(g.rect.min.x+sx)/tw
-			Local t0:=Float(g.rect.min.y+sy)/th
-			Local s1:=Float(g.rect.max.x+sx)/tw
-			Local t1:=Float(g.rect.max.y+sy)/th
-			
-			Local x0:=Round( tx+g.offset.x )
-			Local y0:=Round( ty+g.offset.y )
-			Local x1:=x0+g.rect.Width
-			Local y1:=y0+g.rect.Height
+		Local gpage:=_font.GetGlyphPage( text[0] )
+		If Not gpage gpage=_font.GetGlyphPage( 0 )
 
-			AddVertex( x0,y0,s0,t0 )
-			AddVertex( x1,y0,s1,t0 )
-			AddVertex( x1,y1,s1,t1 )
-			AddVertex( x0,y1,s0,t1 )
+		Local sx:Float,sy:Float
+		Local tw:Float,th:Float
+		
+		Local i0:=0
+		
+		while i0<text.Length
+		
+			Local i1:=i0+1
+			Local page:GlyphPage
 			
-			tx+=g.advance
-		Next
+			While i1<text.Length
+			
+				page=_font.GetGlyphPage( text[i1] )
+				If page And page<>gpage Exit
+				
+				i1+=1
+			Wend
+
+			Local image:=gpage.image
+			sx=image.Rect.min.x;sy=image.Rect.min.y
+			tw=image.Texture.Width;th=image.Texture.Height
+			AddDrawOp( image.Shader,image.Material,image.BlendMode,image.TextureFilter,4,i1-i0 )
+			
+			For Local i:=i0 Until i1
+			
+				Local g:=_font.GetGlyph( text[i] )
+			
+				Local s0:=Float(g.rect.min.x+sx)/tw
+				Local t0:=Float(g.rect.min.y+sy)/th
+				Local s1:=Float(g.rect.max.x+sx)/tw
+				Local t1:=Float(g.rect.max.y+sy)/th
+				
+				Local x0:=Round( tx+g.offset.x )
+				Local y0:=Round( ty+g.offset.y )
+				Local x1:=x0+g.rect.Width
+				Local y1:=y0+g.rect.Height
+	
+				AddVertex( x0,y0,s0,t0 )
+				AddVertex( x1,y0,s1,t0 )
+				AddVertex( x1,y1,s1,t1 )
+				AddVertex( x0,y1,s0,t1 )
+				
+				tx+=g.advance
+			Next
+			
+			gpage=page
+			
+			i0=i1
+		Wend
+
 	End
 	
 	#rem monkeydoc Adds a light to the canvas.

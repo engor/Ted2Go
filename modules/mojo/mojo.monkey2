@@ -8,6 +8,7 @@ Namespace mojo
 #Import "<sdl2>"
 #Import "<gles20>"
 #Import "<openal>"
+#Import "<freetype>"
 
 #Import "app/app"
 #Import "app/event"
@@ -23,7 +24,7 @@ Namespace mojo
 
 #Import "graphics/canvas"
 #Import "graphics/font"
-#Import "graphics/fontloader"
+#Import "graphics/freetypefont"
 #Import "graphics/glutil"
 #Import "graphics/graphicsdevice"
 #Import "graphics/image"
