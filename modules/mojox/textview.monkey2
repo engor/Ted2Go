@@ -237,6 +237,23 @@ Class TextDocument
 	
 End
 
+#rem monkeydoc Cursor type for textviews.
+
+Supported cursor types are:
+
+| CursorType	| Description
+|:--------------|:-----------
+| Block			| Block cursor
+| Line			| Single pixel vertical line
+| IBeam			| IBeam cursor
+
+#end
+Enum CursorType
+	Block
+	Line
+	IBeam
+End
+
 #rem monkeydoc The TextView class.
 #end
 Class TextView Extends ScrollableView
@@ -324,18 +341,27 @@ Class TextView Extends ScrollableView
 	
 		_selColor=selectionColor
 	End
+
+	#rem monkeydoc Cursor type.
+	#end	
+	Property CursorType:CursorType()
 	
-	#rem monkeydoc Block cursor flag.
-	#end
+		Return _cursorType
+
+	Setter( type:CursorType )
+	
+		_cursorType=type
+	End
+
+	#rem monkeydoc @deprecated Use [[CursorType]].
+	#end	
 	Property BlockCursor:Bool()
 	
-		Return _blockCursor
+		Return _cursorType=CursorType.Block
 	
-	Setter( blockCursor:Bool )
+	Setter( block:Bool )
 	
-		_blockCursor=blockCursor
-		
-		RequestRender()
+		_cursorType=block ? CursorType.Block Else CursorType.Line
 	End
 	
 	#rem monkeydoc Cursor blink rate.
@@ -829,13 +855,16 @@ Class TextView Extends ScrollableView
 		
 			canvas.Color=_cursorColor
 			
-			If _blockCursor
-				canvas.DrawRect( _cursorRect.X,_cursorRect.Y,_cursorRect.Width,_cursorRect.Height )
-			Else
-				canvas.DrawRect( _cursorRect.X-0,_cursorRect.Y,2,_cursorRect.Height )
-				canvas.DrawRect( _cursorRect.X-2,_cursorRect.Y,6,2 )
-				canvas.DrawRect( _cursorRect.X-2,_cursorRect.Y+_cursorRect.Height-2,6,2 )
-			Endif
+			Select _cursorType
+			Case CursorType.Block
+				canvas.DrawRect( _cursorRect )
+			Case CursorType.IBeam
+				canvas.DrawRect( _cursorRect.X,_cursorRect.Y,1,_cursorRect.Height )
+				canvas.DrawRect( _cursorRect.X-2,_cursorRect.Y,5,1 )
+				canvas.DrawRect( _cursorRect.X-2,_cursorRect.Y+_cursorRect.Height-1,5,1 )
+			Default
+				canvas.DrawRect( _cursorRect.X,_cursorRect.Y,1,_cursorRect.Height )
+			End
 			
 		Endif
 
@@ -1221,7 +1250,7 @@ Class TextView Extends ScrollableView
 	Field _tabSpaces:String="    "
 	Field _cursorColor:Color=New Color( 0,.5,1,1 )
 	Field _selColor:Color=New Color( 1,1,1,.25 )
-	Field _blockCursor:Bool=True
+	Field _cursorType:CursorType
 	Field _blinkRate:Float=0
 	Field _blinkOn:Bool=True
 	Field _blinkTimer:Timer
