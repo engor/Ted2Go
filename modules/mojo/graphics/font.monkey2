@@ -3,7 +3,7 @@ Namespace mojo.graphics
 
 Using std.resource
 
-#rem monkeydoc The Glyph struct.
+#rem monkeydoc @hidden The Glyph struct.
 
 Glyph are used to store the individual character data for fonts.
 
@@ -24,6 +24,8 @@ Struct Glyph
 
 End
 
+#rem monkeydoc @hidden
+#end
 Class GlyphPage
 
 	Field image:Image
@@ -31,6 +33,8 @@ Class GlyphPage
 
 End
 
+#rem monkeydoc The Font class.
+#end
 Class Font Extends Resource
 
 	#rem monkeydoc The font height in pixels.
