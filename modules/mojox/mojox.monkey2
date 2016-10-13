@@ -31,10 +31,13 @@ Namespace mojox
 #Import "optionsfield"
 #Import "filepathfield"
 
+#Import "viewcell"
+
 #Import "toolbar"
 #Import "menu"
 #Import "tabview"
 #Import "treeview"
+#Import "listview"
 #Import "filebrowser"
 #Import "htmlview"
 #Import "console"

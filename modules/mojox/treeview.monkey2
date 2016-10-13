@@ -25,12 +25,12 @@ Class TreeView Extends ScrollableView
 	#end
 	Field NodeCollapsed:Void( node:Node )
 
-	Class Node
+	Class Node Extends ViewCell
 
 		#rem monkeydoc Creates a new node.
 		#end
 		Method New( text:String,parent:Node=Null,index:Int=-1 )
-		
+			
 			If parent parent.AddChild( Self,index )
 			
 			Text=text
@@ -48,34 +48,6 @@ Class TreeView Extends ScrollableView
 		Setter( style:Style )
 		
 			_style=style
-			
-			Dirty()
-		End
-
-		#rem monkeydoc Node text.
-		#end		
-		Property Text:String()
-		
-			Return _text
-			
-		Setter( text:String )
-			If text=_text Return
-		
-			_text=text
-			
-			Dirty()
-		End
-		
-		#rem monkeydoc Node icon.
-		#end		
-		Property Icon:Image()
-		
-			Return _icon
-		
-		Setter( icon:Image )
-			If icon=_icon Return
-		
-			_icon=icon
 			
 			Dirty()
 		End
@@ -234,13 +206,18 @@ Class TreeView Extends ScrollableView
 			Return Null
 		End
 		
+		Protected
+		
+		Method OnModified() Override
+		
+			Dirty()
+		End
+		
 		Private
 		
 		Field _parent:Node
 		Field _children:=New Stack<Node>	'should make on demand...
 		Field _style:Style
-		Field _text:String
-		Field _icon:Image
 		Field _expanded:Bool
 		Field _bounds:Recti
 		Field _rect:Recti
@@ -436,22 +413,16 @@ Class TreeView Extends ScrollableView
 
 		node._dirty=False
 		
-		Local style:=node.Style
-		If Not style style=RenderStyle
-	
 		Local size:Vec2i,nodeSize:=0
 		
 		If node<>_rootNode Or _rootNodeVisible
+
+			Local style:=node._style ? node._style Else RenderStyle
 		
-			Local w:=Int( style.Font.TextWidth( node._text ) )
-			Local h:=Int( style.Font.Height )
+			size=node.Measure( style )
 			
-			If node._icon
-				w+=_spcWidth+node._icon.Width
-				h=Max( h,Int( node._icon.Height ) )
-			Endif
-			
-			size=New Vec2i( w+_nodeSize,Max( h,_nodeSize )+_spacing )
+			size.x+=_nodeSize
+			size.y=Max( size.y,_nodeSize )+_spacing
 			
 			nodeSize=_nodeSize
 		Endif
@@ -486,33 +457,23 @@ Class TreeView Extends ScrollableView
 		
 		If _rootNodeVisible Or node<>_rootNode
 		
+			Local rect:=node._rect
+		
 			If node._children.Length
 			
-				Local icon:=_collapsedIcon
-				If node._expanded icon=_expandedIcon
+				Local icon:=node._expanded ? _expandedIcon Else _collapsedIcon
 				
 				Local x:=(_nodeSize-icon.Width)/2
-				Local y:=(node._rect.Height-icon.Height)/2
+				Local y:=(rect.Height-icon.Height)/2
 				
-				RenderStyle.DrawIcon( canvas,icon,node._rect.X+x,node._rect.Y+y )
+				RenderStyle.DrawIcon( canvas,icon,rect.min.x+x,rect.min.y+y )
 			Endif
 			
-			Local x:=node._rect.X+_nodeSize
+			rect.min.x+=_nodeSize
 			
-			Local style:=node.Style
-			If Not style style=RenderStyle
-	
-			If node._icon
-				Local y:=(node._rect.Height-node._icon.Height)/2
-				
-				style.DrawIcon( canvas,node._icon,x,node._rect.Y+y )
-				
-				x+=node._icon.Width+_spcWidth
-			Endif
+			Local style:=node._style ? node._style Else RenderStyle
 			
-			Local y:=(node._rect.Height-RenderStyle.Font.Height)/2
-			
-			style.DrawText( canvas,node._text,x,node._rect.Y+y )
+			node.Render( canvas,rect,style,New Vec2f( 0,.5 ) )
 		Endif
 			
 		If node._expanded

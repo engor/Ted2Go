@@ -264,6 +264,14 @@
 			"padding":[2]
 		},
 		
+		"ListView":{
+			"backgroundColor":"content"
+		},
+		
+		"ListViewContent":{
+			"padding":[2]
+		},
+		
 		"FileBrowser":{
 			"extends":"TreeView"
 		},
