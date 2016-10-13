@@ -600,8 +600,8 @@ template<class C> bbString operator+( const C *str,const bbString &str2 ){
 	return bbString( str )+str2;
 }
 
-template<class C> bbString BB_T( const C *p ){
-	return bbString( p );
+inline bbString BB_T( const char *p ){
+	return bbString::fromUtf8String( p );
 }
 
 inline void bbGCMark( const bbString &t ){
