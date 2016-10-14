@@ -85,9 +85,21 @@ const char *bbString::c_str()const{
 		free( _tmp );
 		_tmp=(char*)malloc( _sz=sz );
 	}
+	toCString( _tmp,sz );
+	return _tmp;
+}
+
+const char *bbString::utf8_str()const{
+
+	static int _sz;
+	static char *_tmp;
 	
-	for( int i=0;i<length();++i ) _tmp[i]=data()[i];
-	_tmp[length()]=0;
+	int sz=utf8Length()+1;
+	if( sz>_sz ){
+		free( _tmp );
+		_tmp=(char*)malloc( _sz=sz );
+	}
+	toUtf8String( _tmp,sz );
 	return _tmp;
 }
 

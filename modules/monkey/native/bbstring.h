@@ -64,6 +64,8 @@ class bbString{
 	
 	const char *c_str()const;
 	
+	const char *utf8_str()const;
+	
 	bbString():_rep( &_nullRep ){
 	}
 	

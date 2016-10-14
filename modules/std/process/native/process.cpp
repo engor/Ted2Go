@@ -276,7 +276,7 @@ bbString bbProcess::readStdout(){
 
 	if( !_rep || !_rep->stdoutAvail ) return "";
 
-	bbString str=bbString::fromCString( _rep->stdoutGet,_rep->stdoutAvail );
+	bbString str=bbString::fromUtf8String( _rep->stdoutGet,_rep->stdoutAvail );
 	
 	_rep->stdoutAvail=0;
 	

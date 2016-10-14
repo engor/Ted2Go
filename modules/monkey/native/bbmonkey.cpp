@@ -15,7 +15,7 @@ void bbMain();
 #include <android/log.h>
 
 void bb_print( bbString str ){
-	__android_log_print( ANDROID_LOG_INFO,"MX2","%s",str.c_str() );
+	__android_log_print( ANDROID_LOG_INFO,"MX2","%s",str.utf8_str() );
 }
 
 void bb_printf( const char *fmt,... ){
@@ -28,7 +28,7 @@ void bb_printf( const char *fmt,... ){
 #else
 
 void bb_print( bbString str ){
-	puts( str.c_str() );fflush( stdout );
+	puts( str.utf8_str() );fflush( stdout );
 }
 
 void bb_printf( const char *fmt,... ){
