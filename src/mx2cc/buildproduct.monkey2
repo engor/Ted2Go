@@ -459,6 +459,7 @@ Class GccBuildProduct Extends BuildProduct
 					plist+="~t<string>"+appName+"</string>~n"
 					plist+="~t<key>CFBundlePackageType</key>~n"
 					plist+="~t<string>APPL</string>~n"
+					plist+="~t<key>NSHighResolutionCapable</key> <true/>~n"
 					plist+="</dict>~n"
 					plist+="</plist>~n"
 					
