@@ -28,7 +28,7 @@ Class MyWindow Extends Window
 
 	Method New( title:String="Simple mojo app",width:Int=640,height:Int=480,flags:WindowFlags=Null )
 
-		Super.New( title,width,height,flags )
+		Super.New( title,width,height,flags|WindowFlags.HighDPI )
 	End
 
 	Method OnRender( canvas:Canvas ) Override
