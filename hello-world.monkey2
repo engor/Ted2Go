@@ -5,7 +5,7 @@ Hello World!
 
 A minimal monkey2 graphical app.
 
-See: modules/mojo/bananas for more mojo examples.
+See /bananas directory for more examples.
 
 #end
 
