@@ -260,41 +260,53 @@ Class Window Extends View
 	Global _visibleWindows:=New Stack<Window>
 	Global _windowsByID:=New Map<UInt,Window>
 	
-	Method GetMinSize:Vec2i()
-		Local w:Int,h:Int
-		SDL_GetWindowMinimumSize( _sdlWindow,Varptr w,Varptr h )
-		Return New Vec2i( w,h )
-	End
+	Method UpdateMouseScale()
 	
-	Method GetMaxSize:Vec2i()
-		Local w:Int,h:Int
-		SDL_GetWindowMaximumSize( _sdlWindow,Varptr w,Varptr h )
-		Return New Vec2i( w,h )
-	End
-	
-	Method GetFrame:Recti()
-	
-#If __DESKTOP_TARGET__
-
-		Local x:Int,y:Int,w:Int,h:Int
-		SDL_GetWindowPosition( _sdlWindow,Varptr x,Varptr y )
-		SDL_GetWindowSize( _sdlWindow,Varptr w,Varptr h )
-		Return New Recti( x,y,x+w,y+h )
-		
-#Else
-		
 		Local w:Int,h:Int,dw:Int,dh:Int
+		
 		SDL_GetWindowSize( _sdlWindow,Varptr w,Varptr h )
+		
 #If __TARGET__="emscripten"
 		emscripten_get_canvas_size( Varptr dw,Varptr dh,Null )'Varptr fs )
 #Else
 		SDL_GL_GetDrawableSize( _sdlWindow,Varptr dw,Varptr dh )
 #Endif
 		_mouseScale=New Vec2f( Float(dw)/w,Float(dh)/h )
-		Return New Recti( 0,0,dw,dh )
+	End
+	
+	Method SetMinSize( size:Vec2i )
+		size/=_mouseScale
+		SDL_SetWindowMinimumSize( _sdlWindow,size.x,size.y )
+	End
 
-#Endif
+	Method SetMaxSize( size:Vec2i )
+		size/=_mouseScale
+		SDL_SetWindowMaximumSize( _sdlWindow,size.x,size.y )
+	End
+	
+	Method SetFrame( rect:Recti )
+		rect/=_mouseScale
+		SDL_SetWindowPosition( _sdlWindow,rect.X,rect.Y )
+		SDL_SetWindowSize( _sdlWindow,rect.Width,rect.Height )
+	End
+	
+	Method GetMinSize:Vec2i()
+		Local w:Int,h:Int
+		SDL_GetWindowMinimumSize( _sdlWindow,Varptr w,Varptr h )
+		Return New Vec2i( w,h ) * _mouseScale
+	End
+	
+	Method GetMaxSize:Vec2i()
+		Local w:Int,h:Int
+		SDL_GetWindowMaximumSize( _sdlWindow,Varptr w,Varptr h )
+		Return New Vec2i( w,h ) * _mouseScale
+	End
 
+	Method GetFrame:Recti()
+		Local x:Int,y:Int,w:Int,h:Int
+		SDL_GetWindowPosition( _sdlWindow,Varptr x,Varptr y )
+		SDL_GetWindowSize( _sdlWindow,Varptr w,Varptr h )
+		Return New Recti( x,y,x+w,y+h ) * _mouseScale
 	End
 	
 	Method LayoutWindow()
@@ -304,29 +316,26 @@ Class Window Extends View
 #If __DESKTOP_TARGET__
 
 		If MinSize<>_minSize
-			SDL_SetWindowMinimumSize( _sdlWindow,MinSize.x,MinSize.y )
-			_minSize=GetMinSize()
-			MinSize=_minSize
+			SetMinSize( MinSize )
+			MinSize=GetMinSize()
+			_minSize=MinSize
 		Endif
 		
-		If MaxSize<>_maxSize 
-			SDL_SetWindowMaximumSize( _sdlWindow,MaxSize.x,MaxSize.y )
-			_maxSize=GetMaxSize()
-			MaxSize=_maxSize
+		If MaxSize<>_maxSize
+			SetMaxSize( MaxSize )
+			MaxSize=GetMaxSize()
+			_maxSize=MaxSize
 		Endif
 
 		If Frame<>_frame
-			SDL_SetWindowPosition( _sdlWindow,Frame.X,Frame.Y )
-			SDL_SetWindowSize( _sdlWindow,Frame.Width,Frame.Height )
-			_frame=GetFrame()
-			Frame=_frame
+			SetFrame( Frame )
+			Frame=GetFrame()
+			_frame=Frame
 			_weirdHack=True
 		Endif
 #Else
-
 		_frame=GetFrame()
 		Frame=_frame
-
 #Endif
 		Measure()
 		
@@ -393,20 +402,33 @@ Class Window Extends View
 			Print "SDL_GetError="+String.FromCString( SDL_GetError() )
 			Assert( _sdlGLContext,"FATAL ERROR: SDL_GL_CreateContext failed" )
 		Endif
-		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )	
+		SDL_GL_MakeCurrent( _sdlWindow,_sdlGLContext )
 		
 		_allWindows.Push( Self )
 		_windowsByID[SDL_GetWindowID( _sdlWindow )]=Self
 		If Not (flags & WindowFlags.Hidden) _visibleWindows.Push( Self )
 		
-		_minSize=GetMinSize()
-		MinSize=_minSize
+		'Would much rather know this *before* we open the window!
+		UpdateMouseScale()
+
+		'UGLY!!!!!
+		If _mouseScale.x<>1 Or _mouseScale.y<>1
+			Local x:=(flags & WindowFlags.CenterX) ? SDL_WINDOWPOS_CENTERED Else rect.X/_mouseScale.x
+			Local y:=(flags & WindowFlags.CenterY) ? SDL_WINDOWPOS_CENTERED Else rect.Y/_mouseScale.y
+			Local w:=rect.Width/_mouseScale.x
+			Local h:=rect.Height/_mouseScale.y
+			SDL_SetWindowPosition( _sdlWindow,x,y )
+			SDL_SetWindowSize( _sdlWindow,w,h )
+		Endif
 		
-		_maxSize=GetMaxSize()
-		MaxSize=_maxSize
+		MinSize=GetMinSize()
+		_minSize=MinSize
 		
-		_frame=GetFrame()
-		Frame=_frame
+		MaxSize=GetMaxSize()
+		_maxSize=MaxSize
+		
+		Frame=GetFrame()
+		_frame=Frame
 		
 		_clearColor=App.Theme.GetColor( "windowClearColor" )
 		
