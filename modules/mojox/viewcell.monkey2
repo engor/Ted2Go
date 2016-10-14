@@ -42,10 +42,16 @@ Class ViewCell
 			size.y=Max( size.y,Int( _icon.Height ) )
 		Endif
 		
+		size+=style.Bounds.Size
+		
 		Return size
 	End
 	
 	Method Render( canvas:Canvas,rect:Recti,style:Style,textGravity:Vec2f ) Virtual
+	
+		style.Render( canvas,rect )
+		
+		rect-=style.Bounds
 	
 		If _icon
 			Local y:=(rect.Height-_icon.Height)/2

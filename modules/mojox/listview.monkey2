@@ -11,6 +11,10 @@ Class ListView Extends ScrollableView
 	#end
 	Field ItemDoubleClicked:Void( item:Item )
 
+	#rem monkeydoc Invoked when an item is right clicked.
+	#end
+	Field ItemRightClicked:Void( item:Item )
+
 	Class Item Extends ViewCell
 	
 		Method New( text:String,icon:Image,list:ListView )
@@ -30,6 +34,21 @@ Class ListView Extends ScrollableView
 	Method New()	
 		Style=GetStyle( "ListView" )
 		ContentView.Style=GetStyle( "ListViewContent" )
+		_itemStyle=GetStyle( "ListViewItem" )
+	End
+
+	#rem monkeydoc Currently selected item.
+	#end	
+	Property Selected:Item()
+	
+		Return _selected
+	
+	Setter( selected:Item )
+		If selected=_selected Return
+	
+		_selected=selected
+		
+		RequestRender()
 	End
 
 	#rem monkeydoc Adds an item to the list view.
@@ -54,10 +73,8 @@ Class ListView Extends ScrollableView
 	#rem monkeydoc Removes an item from the list view.
 	#end
 	Method RemoveItem( index:Int )
-		
-		_items.Erase( index )
-		
-		RequestRender()
+	
+		RemoveItems( index,index+1 )
 	End
 	
 	#rem monkeydoc Removes an item from the list view.
@@ -71,6 +88,12 @@ Class ListView Extends ScrollableView
 	#end	
 	Method RemoveItems( index1:Int,index2:Int )
 	
+		For Local i:=index1 Until index2
+			If _items[i]<>_selected Continue
+			Selected=Null
+			Exit
+		Next
+	
 		_items.Erase( index1,index2 )
 		
 		RequestRender()
@@ -81,6 +104,10 @@ Class ListView Extends ScrollableView
 	Method RemoveAllItems()
 	
 		_items.Clear()
+		
+		_selected=Null
+		
+		_hover=null
 		
 		RequestRender()
 	End
@@ -99,12 +126,14 @@ Class ListView Extends ScrollableView
 	#rem monkeydoc Returns the item at a point in the list view.
 	#end
 	Method ItemAtPoint:Item( point:Vec2i )
-
-		For Local item:=Eachin _items
-			If item._rect.Contains( point ) Return item
-		Next
+	
+		Local i:=IndexOfItemAtPoint( point )
+		If i=-1 Return null
 		
-		Return Null
+		Local item:=_items[i]
+		If Not item._rect.Contains( point ) Return Null
+		
+		Return item
 	End
 	
 	Protected
@@ -117,7 +146,9 @@ Class ListView Extends ScrollableView
 		
 		For Local item:=Eachin _items
 		
-			Local size:=item.Measure( RenderStyle )
+			Local style:=ItemStyle( item )
+		
+			Local size:=item.Measure( style )
 			
 			item._rect=New Recti( 0,h,size.x,h+size.y )
 			
@@ -133,30 +164,125 @@ Class ListView Extends ScrollableView
 	#end
 	Method OnRenderContent( canvas:Canvas ) Override
 	
-		Local x:=0,y:=0
+		If _items.Empty Return
 	
-		For Local item:=Eachin _items
+		Local clip:=VisibleRect
 		
-			item.Render( canvas,item._rect,RenderStyle,New Vec2f( 0,.5 ) )
-		Next			
+		Local first:=IndexOfItemAtPoint( New Vec2i( 0,clip.Top ) ) 
+		If first=-1 first=0
+		
+		Local last:=IndexOfItemAtPoint( New Vec2i( 0,clip.Bottom-1 ) )+1
+		If Not last last=_items.Length
+		
+		For Local i:=first Until last
+		
+			Local item:=_items[i]
+		
+			Local style:=ItemStyle( item )
+		
+			item.Render( canvas,item._rect,style,New Vec2f( 0,.5 ) )
+		Next
+		
 	End
 	
 	#rem monkeydoc @hidden
 	#end
-	Method OnMouseEvent( event:MouseEvent ) Override
+	Method OnContentMouseEvent( event:MouseEvent ) Override
 	
 		Select event.Type
+		
+		Case EventType.MouseDown,EventType.MouseWheel
+		
+			Return
+
 		Case EventType.MouseClick
+		
 			Local item:=ItemAtPoint( event.Location )
-			If item ItemClicked( item )
+			If item
+				Selected=item
+				ItemClicked( item )
+			Endif
+			
+		Case EventType.MouseRightClick
+		
+			Local item:=ItemAtPoint( event.Location )
+			If item
+				Selected=item
+				ItemRightClicked( item )
+			Endif
+			
 		Case EventType.MouseDoubleClick
+		
 			Local item:=ItemAtPoint( event.Location )
 			If item ItemDoubleClicked( item )
-		End
-	
-	End
+			
+		Case EventType.MouseMove,EventType.MouseMove
+		
+			Local item:=ItemAtPoint( event.Location )
+			If item<>_hover
+				_hover=item
+				RequestRender()
+			Endif
+			
+		Case EventType.MouseLeave
+		
+			If _hover
+				_hover=Null
+				RequestRender()
+			Endif
 
+		End
+		
+		event.Eat()
+	End
+	
+	Protected
+	
+	Method OnValidateStyle() Override
+		_hoverStyle=_itemStyle.GetState( "hover" )
+		_selectedStyle=_itemStyle.GetState( "selected" )
+	End
+	
 	Private
 	
 	Field _items:=New Stack<Item>
+	
+	Field _itemStyle:Style
+	Field _hoverStyle:Style
+	Field _selectedStyle:Style
+	
+	Field _hover:Item
+	Field _selected:Item
+	
+	Field _dirty:Bool
+
+	Method ItemStyle:Style( item:Item )
+	
+		If item=_selected Return _selectedStyle
+		
+		If item=_hover Return _hoverStyle
+		
+		Return _itemStyle
+	End
+	
+	Method IndexOfItemAtPoint:Int( p:Vec2i )
+
+		If _items.Empty Or p.y<_items[0]._rect.Top Or p.y>=_items.Top._rect.Bottom Return -1
+		
+		Local min:=0,max:=_items.Length-1
+		
+		Repeat
+			Local i:=(min+max)/2
+			If p.y>=_items[i]._rect.Bottom
+				min=i+1
+			Else If max-min>1
+				max=i
+			Else
+				Return i
+			Endif
+		Forever
+		
+		Return -1
+	End
+	
 End

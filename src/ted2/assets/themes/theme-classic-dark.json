@@ -263,6 +263,19 @@
 		"TreeViewContent":{
 			"padding":[2]
 		},
+
+		"TreeViewNode":{
+			"padding":[1],
+			"states":{
+				"hover":{
+					"backgroundColor":"panel"
+				},
+				"selected":{
+					"backgroundColor":"panel",
+					"textColor":"text-highlight"
+				}
+			}
+		},
 		
 		"ListView":{
 			"backgroundColor":"content"
@@ -270,6 +283,19 @@
 		
 		"ListViewContent":{
 			"padding":[2]
+		},
+		
+		"ListViewItem":{
+			"padding":[1],
+			"states":{
+				"hover":{
+					"backgroundColor":"panel"
+				},
+				"selected":{
+					"backgroundColor":"panel",
+					"textColor":"text-highlight"
+				}
+			}
 		},
 		
 		"FileBrowser":{
@@ -319,10 +345,6 @@
 		"HelpTextField":{
 			"extends":"TextField",
 			"skinColor":"panel"
-		},
-		
-		"SelectedNodeStyle":{
-			"textColor":"text-highlight"
 		}
 	}
 }

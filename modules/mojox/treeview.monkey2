@@ -36,20 +36,15 @@ Class TreeView Extends ScrollableView
 			Text=text
 		End
 		
-		#rem monkeydoc Node style.
-		
-		If null, the node uses the tree view's style.
-		
+		#rem monkeydoc True if node is selected.
 		#end
-		Property Style:Style()
+		Property Selected:Bool()
 		
-			Return _style
+			Return _selected
 		
-		Setter( style:Style )
+		Setter( selected:Bool )
 		
-			_style=style
-			
-			Dirty()
+			_selected=selected
 		End
 
 		#rem monkeydoc Node parent.
@@ -217,8 +212,8 @@ Class TreeView Extends ScrollableView
 		
 		Field _parent:Node
 		Field _children:=New Stack<Node>	'should make on demand...
-		Field _style:Style
 		Field _expanded:Bool
+		Field _selected:Bool
 		Field _bounds:Recti
 		Field _rect:Recti
 		Field _dirty:Bool
@@ -238,6 +233,7 @@ Class TreeView Extends ScrollableView
 	Method New()
 		Style=GetStyle( "TreeView" )
 		ContentView.Style=GetStyle( "TreeViewContent" )
+		_nodeStyle=GetStyle( "TreeViewNode" )
 		
 		Layout="fill"
 		
@@ -283,20 +279,19 @@ Class TreeView Extends ScrollableView
 	
 	Protected
 	
-	Method OnThemeChanged() Override
-	
-		_rootNode.Dirty()
-	End
-	
 	Method OnValidateStyle() Override
 	
-		Local style:=RenderStyle
+		_hoverStyle=_nodeStyle.GetState( "hover" )
+		_selectedStyle=_nodeStyle.GetState( "selected" )
 	
+		Local style:=RenderStyle
+		
 		_nodeSize=style.Font.Height
-		_spcWidth=style.Font.TextWidth( " " )
 		
 		_collapsedIcon=style.Icons[0]
 		_expandedIcon=style.Icons[1]
+		
+		_rootNode.Dirty()
 	End
 	
 	Method OnMeasureContent:Vec2i() Override
@@ -322,9 +317,9 @@ Class TreeView Extends ScrollableView
 	Method OnContentMouseEvent( event:MouseEvent ) Override
 	
 		Local p:=event.Location
-	
+		
 		Select event.Type
-		Case EventType.MouseDown
+		Case EventType.MouseDown,EventType.MouseWheel
 		
 			Return
 			
@@ -334,13 +329,15 @@ Class TreeView Extends ScrollableView
 
 			If node
 			
-				p-=node._rect.Origin
+				If p.x>=node._rect.min.x+_nodeSize
 				
-				If p.x<_nodeSize And p.y<node.Rect.Height
+					NodeClicked( node )
+				
+				Else
 				
 					node.Expanded=Not node.Expanded
 					
-					App.RequestRender()
+					RequestRender()
 					
 					If node.Expanded
 						NodeExpanded( node )
@@ -348,14 +345,10 @@ Class TreeView Extends ScrollableView
 						NodeCollapsed( node )
 					Endif
 					
-				Else
-				
-					NodeClicked( node )
-					
 				Endif
 				
 			Endif
-		
+			
 		Case EventType.MouseRightClick
 		
 			Local node:=FindNodeAtPoint( _rootNode,p )
@@ -368,9 +361,27 @@ Class TreeView Extends ScrollableView
 			
 			If node NodeDoubleClicked( node )
 			
-		Case EventType.MouseWheel
+		Case EventType.MouseEnter,EventType.MouseMove
 		
-			Return
+			Local node:=FindNodeAtPoint( _rootNode,p )
+
+			If node And p.x>=node._rect.min.x+_nodeSize
+				If node<>_hover
+					_hover=node
+					RequestRender()
+				Endif
+			Else If _hover
+				_hover=null
+				RequestRender()
+			Endif
+			
+		Case EventType.MouseLeave
+		
+			If _hover
+				_hover=Null
+				RequestRender()
+			Endif
+		
 		End
 		
 		event.Eat()
@@ -379,16 +390,19 @@ Class TreeView Extends ScrollableView
 	
 	Private
 	
-	Field _spacing:=2
-	
 	Field _rootNode:Node
 	Field _rootNodeVisible:=True
 	
 	Field _expandedIcon:Image
 	Field _collapsedIcon:Image
 	Field _nodeSize:Int
-	Field _spcWidth:Int
-		
+	
+	Field _nodeStyle:Style
+	Field _hoverStyle:Style
+	Field _selectedStyle:Style
+	
+	Field _hover:Node
+	
 	Method FindNodeAtPoint:Node( node:Node,point:Vec2i )
 	
 		If node._rect.Contains( point ) Return node
@@ -416,13 +430,13 @@ Class TreeView Extends ScrollableView
 		Local size:Vec2i,nodeSize:=0
 		
 		If node<>_rootNode Or _rootNodeVisible
-
-			Local style:=node._style ? node._style Else RenderStyle
+		
+			Local style:=NodeStyle( node )
 		
 			size=node.Measure( style )
 			
 			size.x+=_nodeSize
-			size.y=Max( size.y,_nodeSize )+_spacing
+			size.y=Max( size.y,_nodeSize )
 			
 			nodeSize=_nodeSize
 		Endif
@@ -471,7 +485,7 @@ Class TreeView Extends ScrollableView
 			
 			rect.min.x+=_nodeSize
 			
-			Local style:=node._style ? node._style Else RenderStyle
+			Local style:=NodeStyle( node )
 			
 			node.Render( canvas,rect,style,New Vec2f( 0,.5 ) )
 		Endif
@@ -483,8 +497,18 @@ Class TreeView Extends ScrollableView
 				RenderNode( canvas,child )
 				
 			Next
+
 		Endif
 		
+	End
+	
+	Method NodeStyle:Style( node:Node )
+	
+		If node._selected Return _selectedStyle
+		
+		If node=_hover Return _hoverStyle
+		
+		Return _nodeStyle
 	End
 	
 End
