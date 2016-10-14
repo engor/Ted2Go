@@ -38,6 +38,10 @@ Function sizeof<T>:Int( t:T )="(int)sizeof"
 Struct FILE
 End
 
+Const stdin:FILE Ptr
+Const stdout:FILE Ptr
+Const stderr:FILE Ptr
+
 Const SEEK_SET:Int
 Const SEEK_CUR:Int
 Const SEEK_END:Int
@@ -50,7 +54,9 @@ Function fseek:Int( stream:FILE Ptr,offset:Int,whence:Int )
 
 Function fread:Int( buf:Void Ptr,size:Int,count:Int,stream:FILE Ptr )
 Function fwrite:Int( buf:Void Ptr,size:Int,count:Int,stream:FILE Ptr )
+Function fflush:Int( stream:FILE Ptr )
 Function fclose:Int( stream:FILE Ptr )
+Function fputs:Int( str:CString,stream:FILE Ptr )
 
 Function remove:Int( path:CString )
 Function rename:Int( oldPath:CString,newPath:CString )
