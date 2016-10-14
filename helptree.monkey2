@@ -162,7 +162,7 @@ Class HelpTree Extends TreeViewExt
 			
 		_matches.Clear()
 			
-		Local highlighted:=New Map<Node,Bool>
+		Local selected:=New Map<Node,Bool>
 			
 		For Local it:=Eachin _index
 			
@@ -172,9 +172,9 @@ Class HelpTree Extends TreeViewExt
 				
 			_matches.Push( node )
 				
-			node.Style=_highlight
+			node.Selected=True
 				
-			highlighted[node]=True
+			selected[node]=True
 				
 			While node
 				node.Expanded=True
@@ -183,12 +183,13 @@ Class HelpTree Extends TreeViewExt
 
 		Next
 						
-		For Local node:=Eachin _highlighted.Keys
+		For Local node:=Eachin _selected.Keys
 			
-			If Not highlighted.Contains( node ) node.Style=Null
+			If Not selected.Contains( node ) node.Selected=False
+
 		Next
 			
-		_highlighted=highlighted
+		_selected=selected
 			
 		RootNode.Expanded=True
 			
@@ -214,8 +215,6 @@ Class HelpTree Extends TreeViewExt
 	
 	Method Init()
 
-		_highlight=GetStyle( "SelectedNodeStyle" )
-	
 		_textField=New TextField
 		_textField.Style=GetStyle( "HelpTextField" )
 		
@@ -249,13 +248,11 @@ Class HelpTree Extends TreeViewExt
 	
 	Field _textField:TextField
 	
-	Field _highlight:Style
-	
 	Field _matchid:Int
 		
 	Field _matches:=New Stack<Node>
 	
-	Field _highlighted:=New Map<Node,Bool>
+	Field _selected:=New Map<Node,Bool>
 	
 	Field _index:=New Map<String,Node>
 	

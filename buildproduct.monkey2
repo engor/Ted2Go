@@ -390,6 +390,7 @@ Class MacosProduct Extends DesktopProduct
 		plist+="~t<string>"+AppName+"</string>~n"
 		plist+="~t<key>CFBundlePackageType</key>~n"
 		plist+="~t<string>APPL</string>~n"
+		plist+="~t<key>NSHighResolutionCapable</key> <true/>~n"
 		plist+="</dict>~n"
 		plist+="</plist>~n"
 					

@@ -89,8 +89,8 @@ Function Main()
 	
 	'initial window state
 	'
-	Local flags:=WindowFlags.Resizable
-	
+	Local flags:=WindowFlags.Resizable|WindowFlags.HighDPI
+
 	Local rect:Recti
 	
 	If jobj.Contains( "windowRect" ) 
