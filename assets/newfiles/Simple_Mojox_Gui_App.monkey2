@@ -10,7 +10,7 @@ Using mojox..
 Class MyWindow Extends Window
 
 	Method New()
-		Super.New( "Simple Mojo Gui App",640,480,WindowFlags.Window.Resizable )
+		Super.New( "Simple Mojo Gui App",640,480,WindowFlags.Resizable )
 	End
 
 End
