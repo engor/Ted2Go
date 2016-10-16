@@ -172,6 +172,7 @@ Class MainWindowInstance Extends Window
 		_buildMenu=New Menu( "Build" )
 		_buildMenu.AddAction( _buildActions.buildAndRun )
 		_buildMenu.AddAction( _buildActions.build )
+		_buildMenu.AddAction( _buildActions.semant )
 		_buildMenu.AddSubMenu( _buildActions.targetMenu )
 		_buildMenu.AddSeparator()
 		_buildMenu.AddAction( _buildActions.nextError )
