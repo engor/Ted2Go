@@ -11,7 +11,20 @@ Function RegisterCodeExtensions(exts:String[])
 	If plugs = Null Return
 	Local p := plugs[0]
 	CodeDocumentTypeBridge.AddExtensions(p, exts)
-	 
+	
+End
+
+
+Function DrawCurvedLine(canvas:Canvas,x1:Float,x2:Float,y:Float)
+	
+	Local i := 0
+	Local dx := 3, dy := 1
+	For Local xx := x1 Until x2 Step dx*2
+		'Local dy := (i Mod 2 = 0) ? -1 Else 1
+		canvas.DrawLine(xx, y+dy, xx+dx, y-dy)
+		canvas.DrawLine(xx+dx, y-dy, xx+dx*2, y+dy)
+	Next
+	
 End
 
 
@@ -25,7 +38,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		ContentView.Style.Border=New Recti( -4,-4,4,4 )
 		
-		AddView( New GutterView( Self ),"left" )
+		AddView( New CodeGutterView( _doc ),"left" )
 
 		'very important to set FileType for init
 		'formatter, highlighter and keywords
@@ -40,7 +53,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				ReplaceText(text)
 			Endif
 		End
-			
+				
 	End
 	
 	Property CharsToShowAutoComplete:Int()
@@ -52,16 +65,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	Method OnRenderContent( canvas:Canvas ) Override
 	
 		Local color:=canvas.Color
-		
-		If _doc._errors.Length
-		
-			canvas.Color=New Color( .5,0,0 )
-			
-			For Local err:=Eachin _doc._errors
-				canvas.DrawRect( 0,err.line*LineHeight,Width,LineHeight )
-			Next
-			
-		Endif
 		
 		If _doc._debugLine<>-1
 
@@ -76,9 +79,28 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		canvas.Color=color
 		
 		Super.OnRenderContent( canvas )
+		
+		If _doc._errors.Length
+		
+			canvas.Color=New Color( 1,0,0 )
+			
+			For Local err:=Eachin _doc._errors
+				Local s := Document.GetLine(err.line)
+				Local indent := Utils.GetIndent(s)
+				Local indentStr := (indent > 0) ? s.Slice(0, indent) Else ""
+				If indent > 0 Then s = s.Slice(indent)
+				Local x := RenderStyle.Font.TextWidth(indentStr)*TabStop
+				Local w := RenderStyle.Font.TextWidth( s )
+				DrawCurvedLine(canvas, x, x+w, (err.line+1)*LineHeight)
+			Next
+			
+		Endif
+		
 	End
 	
 	Method OnKeyEvent( event:KeyEvent ) Override
+		
+		_doc.HideHint()
 		
 		'ctrl+space - show autocomplete list
 		If event.Type = EventType.KeyDown
@@ -92,19 +114,19 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Local ident := IdentBeforeCursor()
 					ident = ident.Slice(0,ident.Length-1)
 					If ident.Length > 0
-						ShowAutocomplete(ident)
+						_doc.ShowAutocomplete(ident)
 					Else
-						HideAutocomplete()
+						_doc.HideAutocomplete()
 					Endif
 				Endif
 			Case Key.F2
-				ShowCodeStructureDialog()
-				
+				_doc.ShowCodeStructureDialog()
+							
 			End
 				
 		Elseif event.Type = EventType.KeyChar And event.Key = Key.Space And event.Modifiers & Modifier.Control
-			If CanShowAutocomplete()
-				ShowAutocomplete()
+			If _doc.CanShowAutocomplete()
+				_doc.ShowAutocomplete()
 			Endif
 			Return
 		Endif
@@ -113,16 +135,17 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		'show autocomplete list after some typed chars
 		If event.Type = EventType.KeyChar
-			If CanShowAutocomplete()
+		
+			If _doc.CanShowAutocomplete()
 				'preprocessor
 				If event.Text = "#"
-					ShowAutocomplete("#")
+					_doc.ShowAutocomplete("#")
 				Else
 					Local ident := IdentBeforeCursor()
 					If ident.Length >= CharsToShowAutoComplete
-						ShowAutocomplete(ident)
+						_doc.ShowAutocomplete(ident)
 					Else
-						HideAutocomplete()
+						_doc.HideAutocomplete()
 					Endif
 				Endif
 			Endif
@@ -133,8 +156,35 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	Method OnContentMouseEvent( event:MouseEvent ) Override
 		
 		Select event.Type
+			
 			Case EventType.MouseClick
-				HideAutocomplete()
+				
+				_doc.HideAutocomplete()
+			
+			Case EventType.MouseMove
+				
+				'Print "mouse: "+event.Location
+				
+				If _doc.HasErrors
+					Local line := LineAtPoint(event.Location)
+					Local s := Document.GetLine(line)
+					Local indent := Utils.GetIndent(s)
+					Local indentStr := (indent > 0) ? s.Slice(0, indent) Else ""
+					If indent > 0 Then s = s.Slice(indent)
+					Local x := RenderStyle.Font.TextWidth(indentStr)*TabStop
+					Local w := RenderStyle.Font.TextWidth( s )
+					If event.Location.x >= x And event.Location.x <= x+w
+						Local s := _doc.GetStringError(line)
+						If s <> Null
+							_doc.ShowHint(s, event.Location)
+						Else
+							_doc.HideHint()
+						Endif
+					Else
+						_doc.HideHint()
+					Endif
+				Endif
+				
 		End
 		
 		Super.OnContentMouseEvent(event)
@@ -144,85 +194,9 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	
 	Private
 	
-	Method ShowCodeStructureDialog()
-	
-		New Fiber( Lambda()
-				
-			Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+_doc.Path+"~q"
-			
-			Local str:=LoadString( "process::"+cmd )
-			
-			
-			Local i:=str.Find( "{" )
-			Local jstr := (i <> -1) ? str.Slice( i ) Else "{}"
-			
-			Local jobj:=JsonObject.Parse( jstr )
-			'If Not jobj Return
-			
-			Local view := New DockingView
-			Local jsonTree:=New JsonTreeView( jobj )
-			view.ContentView = jsonTree
-			
-			Local textView := New TextView
-			textView.Text = str
-			view.AddView(textView,"bottom",200,True)
-			
-			Local dialog:=New Dialog( "ParseInfo",view )
-			dialog.AddAction( "Close" ).Triggered=dialog.Close
-			dialog.MinSize=New Vec2i( 640,800 )
-			
-			dialog.Open()
-		
-		End )
-	End
-	
-	Method CanShowAutocomplete:Bool()
-		
-		Local line := Document.FindLine(Cursor)
-		Local text := Document.GetLine(line)
-		Local posInLine := Cursor-Document.StartOfLine(line)
-		
-		Local can := AutoComplete.CanShow(text, posInLine, FileType)
-		Return can
-		
-	End
-	
-	Method ShowAutocomplete(ident:String = "")
-		'check ident
-		If ident = "" Then ident = IdentBeforeCursor()
-		
-		'show
-		Local line := Document.FindLine(Cursor)
-		AutoComplete.Show(ident, FilePath, FileType, line)
-		
-		If AutoComplete.IsOpened
-			Local frame := AutoComplete.Frame
-			
-			Local w := frame.Width
-			Local h := frame.Height
-			
-			frame.Left = Frame.Left-Scroll.x+CursorRect.Left+100
-			frame.Right = frame.Left+w
-			frame.Top = CursorRect.Top - Scroll.y
-			frame.Bottom = frame.Top+h
-			' fit dialog into window
-			If frame.Bottom > Self.Frame.Bottom
-				Local dy := frame.Bottom - Self.Frame.Bottom + 5
-				frame.Top -= dy
-				frame.Bottom -= dy
-			Endif
-			AutoComplete.Frame = frame
-		Endif
-		
-	End
-	
-	Method HideAutocomplete()
-		AutoComplete.Hide()
-	End
-	
-	
 	Field _doc:CodeDocument
-
+	Field _prevErrorLine:Int
+	
 End
 
 
@@ -233,11 +207,12 @@ Class CodeDocument Extends Ted2Document
 	
 		_doc=New TextDocument
 		
-		_doc.TextChanged=Lambda()
+		_doc.TextChanged += Lambda()
 			Dirty=True
+			OnTextChanged()
 		End
 		
-		_doc.LinesModified=Lambda( first:Int,removed:Int,inserted:Int )
+		_doc.LinesModified += Lambda( first:Int,removed:Int,inserted:Int )
 			Local put:=0
 			For Local get:=0 Until _errors.Length
 				Local err:=_errors[get]
@@ -295,6 +270,171 @@ Class CodeDocument Extends Ted2Document
 		Return _errors
 	End
 	
+	Property HasErrors:Bool()
+		Return Not _errors.Empty
+	End
+	
+	Method HasErrorAt:Bool(line:Int)
+		Return _errMap.Contains(line)
+	End
+	
+	Method AddError(error:BuildError)
+		_errors.Push(error)
+		Local s := _errMap[error.line]
+		s = (s <> Null) ? s+error.msg Else error.msg
+		_errMap[error.line] = s
+	End
+	
+	Method GetStringError:String(line:Int)
+		Return _errMap[line]
+	End
+	
+	Method ResetErrors()
+		_errors.Clear()
+		_errMap.Clear()
+	End
+	
+	Method ShowHint(text:String, position:Vec2i)
+	
+		If _hintDialog = Null
+			_hintDialog = New DialogExt
+			Local tv := New TextView
+			tv.ReadOnly = True
+			_hintDialog.ContentView = tv
+		Endif
+		
+		Local tv := Cast<TextView>(_hintDialog.ContentView)
+		'tv.WordWrap = False
+		tv.Document.Text = text
+		
+		_hintDialog.Show()
+		
+		position += TextView.Frame.TopLeft + New Vec2i(50,70)
+		position -= TextView.Scroll
+		Local frame := _hintDialog.Frame
+		'Local w := Min(600, frame.Width)
+		'tv.MinSize = New Vec2i(w,50)
+		'tv.WordWrap = True
+		Local size := New Vec2i(frame.Width, frame.Height)
+		frame.TopLeft = position
+		frame.BottomRight = position+size
+		_hintDialog.Frame = frame
+		
+	End
+	
+	Method HideHint()
+		If _hintDialog <> Null Then _hintDialog.Hide()
+	End
+	
+	Global _timeCharPressed:Long
+	Global _charTimer:Timer
+	Global _docForCheck:CodeDocument
+	Global _bgWorking:Bool
+	
+	Method OnTextChanged()
+		
+		_timeCharPressed = Millisecs()
+		_docForCheck = Self
+		
+		App.Idle += OnCheckingBg
+		
+	End
+	
+	Function OnCheckingBg()
+		If _timeCharPressed > 0 And Millisecs() >= _timeCharPressed+3000
+			'Print "BgParsing()"
+			_timeCharPressed = 0
+			Try
+				BgParsing(_docForCheck)
+			Catch ex:Throwable
+				' bg parse error
+			End
+			_bgWorking = False
+		Else
+			App.Idle += OnCheckingBg
+		Endif
+	End
+	
+	Method ShowCodeStructureDialog()
+	
+		New Fiber( Lambda()
+				
+			Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+Path+"~q"
+			
+			Local str:=LoadString( "process::"+cmd )
+			
+			
+			Local i:=str.Find( "{" )
+			Local jstr := (i <> -1) ? str.Slice( i ) Else "{}"
+			
+			Local jobj:=JsonObject.Parse( jstr )
+			'If Not jobj Return
+			
+			Local view := New DockingView
+			Local jsonTree:=New JsonTreeView( jobj )
+			view.ContentView = jsonTree
+			
+			Local scroller := New ScrollView
+			Local textView := New TextView
+			textView.Text = str
+			scroller.ContentView = textView
+			view.AddView(scroller,"bottom",200,True)
+			
+			Local dialog:=New Dialog( "ParseInfo",view )
+			dialog.AddAction( "Close" ).Triggered=dialog.Close
+			dialog.MinSize=New Vec2i( 640,800 )
+			
+			dialog.Open()
+		
+		End )
+	End
+	
+	Method CanShowAutocomplete:Bool()
+		
+		Local line := TextDocument.FindLine(_codeView.Cursor)
+		Local text := TextDocument.GetLine(line)
+		Local posInLine := _codeView.Cursor-TextDocument.StartOfLine(line)
+		
+		Local can := AutoComplete.CanShow(text, posInLine, FileType)
+		Return can
+		
+	End
+	
+	Method ShowAutocomplete(ident:String = "")
+		'check ident
+		If ident = "" Then ident = _codeView.IdentBeforeCursor()
+		
+		'show
+		Local line := TextDocument.FindLine(_codeView.Cursor)
+		AutoComplete.Show(ident, Path, FileType, line)
+		
+		If AutoComplete.IsOpened
+			Local frame := AutoComplete.Frame
+			
+			Local w := frame.Width
+			Local h := frame.Height
+			
+			Local cursorRect := _codeView.CursorRect
+			Local scroll := _codeView.Scroll
+			Local tvFrame := _codeView.Frame
+			frame.Left = tvFrame.Left-scroll.x+cursorRect.Left+100
+			frame.Right = frame.Left+w
+			frame.Top = cursorRect.Top - scroll.y
+			frame.Bottom = frame.Top+h
+			' fit dialog into window
+			If frame.Bottom > tvFrame.Bottom
+				Local dy := frame.Bottom - tvFrame.Bottom + 5
+				frame.Top -= dy
+				frame.Bottom -= dy
+			Endif
+			AutoComplete.Frame = frame
+		Endif
+		
+	End
+	
+	Method HideAutocomplete()
+		AutoComplete.Hide()
+	End
 	
 	Protected
 	
@@ -313,8 +453,11 @@ Class CodeDocument Extends Ted2Document
 	Field _treeView:CodeTreeView
 	
 	Field _errors:=New Stack<BuildError>
-
+	Field _errMap:=New IntMap<String>
+	
 	Field _debugLine:Int=-1
+	Field _hintDialog:DialogExt
+	
 	
 	Method OnLoad:Bool() Override
 	
@@ -330,13 +473,15 @@ Class CodeDocument Extends Ted2Document
 	
 	Method OnSave:Bool() Override
 	
+		ResetErrors()
+		
 		Local text:=_doc.Text
 		
 		Local ok := stringio.SaveString( text,Path )
 	
 		'code parser - reparse
 		ParseSources()
-				
+		
 		Return ok
 	End
 	
@@ -346,8 +491,59 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Method ParseSources()
+		
 		ParsersManager.Get(FileType).Parse(_doc.Text, Path)
 		_treeView.Fill(FileType, Path)
+		
+	End
+	
+	Function BgParsing(doc:CodeDocument)
+		
+		New Fiber( Lambda()
+			
+			Local result := 0
+			
+			doc.ResetErrors()
+			
+			Local path := doc.Path
+			If doc.Dirty
+				Local tmp := AppDir()+"/tmp"
+				CreateDir(tmp)
+				If GetFileType(tmp) <> FILETYPE_DIR Return
+				path = tmp+"/tmp"
+				SaveString(doc.TextDocument.Text,path)
+			Endif
+			
+			Print "path: "+path
+			
+			'Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+path+"~q"
+			Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse ~q"+path+"~q"
+			
+			Local str:=LoadString( "process::"+cmd )
+			
+			If str.Find("] : Error : ") > 0
+				
+				Local arr := str.Split("~n")
+				For Local s := Eachin arr
+					Local i:=s.Find( "] : Error : " )
+					If i<>-1
+						Local j:=s.Find( " [" )
+						If j<>-1
+							Local path:=s.Slice( 0,j )
+							Local line:=Int( s.Slice( j+2,i ) )-1
+							Local msg:=s.Slice( i+12 )
+							
+							Local err:=New BuildError( path,line,msg )
+						
+							doc.AddError( err )
+							
+						Endif
+					Endif
+				Next
+			Endif
+			
+		End)
+		
 	End
 	
 End
@@ -416,6 +612,9 @@ Class CodeItemIcons
 		Return _icons["keyword"]
 	End
 	
+	Function GetIcon:Image(key:String)
+		Return _icons[key]
+	End
 
 	Private
 
@@ -471,6 +670,7 @@ Class CodeItemIcons
 		_icons["keyword"] = Image.Load("asset::ic/keyword.png")
 		_icons["alias"] = Image.Load("asset::ic/alias.png")
 		_icons["operator"] = Image.Load("asset::ic/operator.png")
+		_icons["error"] = Image.Load("asset::ic/code_template.png")
 				
 		_iconDefault = Image.Load("asset::ic/other.png")
 		

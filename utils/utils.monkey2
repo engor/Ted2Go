@@ -27,6 +27,20 @@ Class Utils
 		Next
 	End
 	
+	Function GetIndent:Int(line:String)
+		Local len := line.Length, n := 0
+		While n < len And line[n] <= 32
+			n += 1
+		Wend
+		Return n
+	End
+		
+	Function GetIndentStr:String(line:String)
+		Local n := GetIndent(line)
+		Return  (n > 0) ? line.Slice(0,n) Else ""
+	End
+	
+	
 	Private
 	
 	Method New()

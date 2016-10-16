@@ -315,7 +315,8 @@ Class BuildActions
 			Return False
 		Endif
 		
-		Local progress:=New ProgressDialog( "Building",progressText )
+		Local title := checkOnly ? "Checking" Else "Building"
+		Local progress:=New ProgressDialog( title,progressText )
 		
 		progress.MinSize=New Vec2i( 320,0 )
 		
@@ -356,7 +357,7 @@ Class BuildActions
 						Local doc:=Cast<CodeDocument>( _docs.OpenDocument( path,False ) )
 						
 						If doc
-							doc.Errors.Add( err )
+							doc.AddError( err )
 							If _errors.Empty 
 								MainWindow.ShowBuildConsole( True )
 								GotoError( err )
@@ -368,6 +369,7 @@ Class BuildActions
 				Endif
 			Endif
 			
+			#Rem
 			If checkOnly
 				Local i := stdout.Find( "Compiling..." )
 				If i<>-1
@@ -376,6 +378,7 @@ Class BuildActions
 					Exit
 				Endif
 			Endif
+			#End
 			
 			_console.Write( stdout )
 		
@@ -462,15 +465,19 @@ Class BuildActions
 			target="desktop"
 		End
 
-		Local cmd:=MainWindow.Mx2ccPath+" makeapp -build "+opts
+		Local action := checkOnly ? "-semant" Else "-build"
+		Local cmd:=MainWindow.Mx2ccPath+" makeapp "+action+" "+opts
 		cmd+=" -apptype="+appType+" "
 		cmd+=" -config="+config
 		cmd+=" -target="+target
 		cmd+=" ~q"+buildDoc.Path+"~q"
 		
-		Local msg:="Building "+StripDir( buildDoc.Path )+" for "+target+" "+config
+		Local title := checkOnly ? "Checking" Else "Building"
+		Local msg:=title+" "+StripDir( buildDoc.Path )+" for "+target+" "+config
 		
 		If Not BuildMx2( cmd,msg,checkOnly ) Return False
+		
+		_console.Write("~nDone.")
 		
 		If Not run Return True
 		

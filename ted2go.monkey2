@@ -18,6 +18,7 @@
 #Import "views/autocompleteview"
 #Import "views/codetreeview"
 #Import "views/treeviewext"
+#Import "views/codegutterview"
 
 #Import "parsers/parser"
 #Import "parsers/monkey2parser"

@@ -10,7 +10,11 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Method OnCreate() Override
 		
-		ParseModules()
+		New Fiber(Lambda()
+		
+			ParseModules()
+			
+		End)
 		
 	End
 	
