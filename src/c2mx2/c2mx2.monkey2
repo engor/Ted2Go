@@ -22,6 +22,7 @@ Only tested on Windows.
 
 Using libc..
 Using std..
+
 Using libclang..
 
 Global tab:String
@@ -284,6 +285,7 @@ Function SetFile( file:String )
 	If file=CurrentFile Return
 	CurrentFile=file
 	buf.Push( "~n'***** File: "+CurrentFile+" *****~n" )
+	Print "Processing:"+file
 End
 
 Function VisitMembers:CXChildVisitResult( cursor:CXCursor,parent:CXCursor,client_data:CXClientData )
@@ -442,34 +444,52 @@ End
 
 Function Main()
 
-	ChangeDir( AppDir() )
+	Local path:=RequestFile( "Select c2mx2.json file...","Json files:json" )
+	If Not path 
+		Print "No path selected"
+		Return
+	Endif
 	
-	While GetFileType( "bin" )<>FileType.Directory Or GetFileType( "modules" )<>FileType.Directory
+	Local config:=JsonObject.Load( path )
+	If Not config
+		Notify( "c2mx2","Failed to load JSON object from "+path,True )
+		Return
+	Endif
 
-		If IsRootDir( CurrentDir() )
-			Print "Error initializing c2mx2 - can't find working dir!"
-			libc.exit_( 1 )
-		Endif
-		
-		ChangeDir( ExtractDir( CurrentDir() ) )
-	Wend
+	If Not config.Contains( "inputFile" )
+		Notify( "c2mx2","No inputFile specified",True )
+		Return
+	Endif
+	
+	If Not config.Contains( "outputFile" )
+		Notify( "c2mx2","No outputFile specified",True )
+		Return
+	Endif
 
-	Local config:=JsonObject.Load( "src/c2mx2/chipmunk_c2mx2.json" )
-
+	If Not config.Contains( "clangArgs" )
+		Notify( "c2mx2","No clangArgs specified",True )
+		Return
+	Endif
+	
 	'change to working dir
+	ChangeDir( ExtractDir( path ) )
+	
 	If config.Contains( "workingDir" ) 
 		ChangeDir( config.GetString( "workingDir" ) )
 	Endif
 	
+	'input file
+	Local input:=config.GetString( "inputFile" )
+	
+	'outfile file
+	Local output:=config.GetString( "outputFile" )
+
 	'clang args
 	Local cargs:=config.GetArray( "clangArgs" )
-	Local args:=New const_char_t Ptr[ cargs.Length]
+	Local args:=New const_char_t Ptr[cargs.Length]
 	For Local i:=0 Until args.Length
 		args[i]=ToCString( cargs[i].ToString() )
 	Next
-
-	'input file
-	Local file:=config.GetString( "inputFile" )
 
 	'include/exclude files
 	If config.Contains( "includeFiles" )
@@ -492,14 +512,16 @@ Function Main()
 	'start clang	
 	Local index:=clang_createIndex( 1,1 )
 	
-	Local tu:=clang_createTranslationUnitFromSourceFile( index,file,2,args.Data,0,Null )
+	Local tu:=clang_createTranslationUnitFromSourceFile( index,input,args.Length,args.Data,0,Null )
 	Assert( tu,"Failed to create translation unit from source file" )
 	
 	'emit header
-	Local header:=config.GetArray( "header" )
-	For Local line:=Eachin header
-		buf.Push( line.ToString() )
-	Next
+	If config.Contains( "header" )
+		Local header:=config.GetArray( "header" )
+		For Local line:=Eachin header
+			buf.Push( line.ToString() )
+		Next
+	Endif
 	
 	'Let's GO!
 	InitKeywords()
@@ -526,11 +548,10 @@ Function Main()
 	Endif
 
 	'emit output	
-	Local output:=config.GetString( "outputFile" )
-	If output
-		SaveString( buf.Join( "~n" ),output )
+	If SaveString( buf.Join( "~n" ),output )
+		Notify( "c2mx2","Finished generating '"+output+"'!" )
 	Else
-		Print buf.Join( "~n" )
+		Notify( "c2mx2","Failed to generat output file",true )
 	Endif
 
 End
