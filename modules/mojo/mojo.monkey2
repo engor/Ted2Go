@@ -42,7 +42,6 @@ Namespace mojo
 #Import "input/joystick"
 #Import "input/keycodes"
 
-#Import "requesters/requesters"
 #Import "audio/audio"
 
 Using emscripten..

@@ -16,7 +16,9 @@ Class GLWindow Extends Window
 		Super.New( title,rect,flags )
 		Init()
 	End
-	
+
+	#rem monkeydoc Switches from shared GL context to private GL context.
+	#end
 	Method BeginGL()
 	
 #If __HOSTOS__="macos"
@@ -26,6 +28,8 @@ Class GLWindow Extends Window
 		SDL_GL_MakeCurrent( SDLWindow,_sdlGLContext )
 	End
 	
+	#rem monkeydoc Switches from private GL back to shared GL context.
+	#end
 	Method EndGL()
 
 #If __HOSTOS__="macos"
@@ -36,7 +40,12 @@ Class GLWindow Extends Window
 	End
 	
 	Protected
+
+	#rem monkeydoc Override this method with your mojo rendering code.
 	
+	Note: If you override this method, you must call Super.OnRender() at some point for [[OnRenderGL]] to be called.
+
+	#end
 	Method OnRender( canvas:Canvas ) Override
 	
 		BeginGL()
@@ -46,8 +55,9 @@ Class GLWindow Extends Window
 		EndGL()
 	End
 	
+	#rem monkeydoc Override this method with your custom GL rendering code.
+	#end
 	Method OnRenderGL() Virtual
-	
 	End
 	
 	Private

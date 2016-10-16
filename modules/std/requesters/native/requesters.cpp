@@ -91,7 +91,7 @@ bbString bbRequesters::RequestFile( bbString title,bbString exts,bbBool save,bbS
 	int i=path.findLast( "\\" );
 	if( i!=-1 ){
 		dir=path.slice( 0,i );
-		file=path.slice( 1+1 );
+		file=path.slice( i+1 );
 	}else{
 		file=path;
 	}

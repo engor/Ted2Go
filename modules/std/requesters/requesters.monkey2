@@ -1,5 +1,5 @@
 
-Namespace mojo.requesters
+Namespace std.requesters
 
 #If __DESKTOP_TARGET__
 
@@ -8,14 +8,14 @@ Namespace mojo.requesters
 #If __TARGET__="macos"
 
 	#Import "native/requesters.mm"
-	
+
 #Else
 
 	#Import "native/requesters.cpp"
 	
 	#if __TARGET__="windows"
 
-		#Import "<libcomdlg32.a>"
+		#Import "<libole32.a>"
 
 	#endif
 	
