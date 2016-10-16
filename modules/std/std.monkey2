@@ -62,6 +62,8 @@ Namespace std
 #Import "socket/socket"
 #Import "socket/socketstream"
 
+#Import "requesters/requesters"
+
 Private
 
 Function Main()
