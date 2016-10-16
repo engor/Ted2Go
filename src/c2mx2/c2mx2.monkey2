@@ -1,4 +1,20 @@
 
+#rem
+
+A very much WIP C->MX2 'Extern' generator based on 'libclang'. However, it did libclang itself and chipmunk nicely.
+
+This wont work 'as is' - you'll need to copy LLVM binaries to this dir (inside a LLVM dir). LLVM binaries are here:
+
+http://llvm.org/releases/download.html
+
+You'll probably also need mingw-64 in your system PATH.
+
+Use 32 bit binaries for Windows.
+
+Only tested on Windows.
+
+#end
+
 #Import "<libc>"
 #Import "<std>"
 
