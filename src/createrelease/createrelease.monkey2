@@ -5,7 +5,7 @@
 Using libc..
 Using std..
 
-Const MX2CC_VERSION:="1.0.5"
+Const MX2CC_VERSION:="1.0.8"
 
 Const OUTPUT:="Monkey2-v"+MX2CC_VERSION
 
