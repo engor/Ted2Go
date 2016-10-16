@@ -11,6 +11,11 @@ Extern
 Struct char_t="char"
 End
 
+#rem monkeydoc C/C++ 'const char' type.
+#end
+Struct const_char_t="const char"
+End
+
 #rem monkeydoc C/C++ 'signed char' type.
 #end
 Struct signed_char_t="signed char"
