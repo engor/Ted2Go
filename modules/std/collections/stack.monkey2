@@ -483,7 +483,7 @@ Class Stack<T> Implements IContainer<T>
 		_seq+=1
 	End
 	
-	#rem monkeydoc Adds the values in an array to the end of the stack.
+	#rem monkeydoc Adds the values in an array or container to the end of the stack.
 	
 	@param values The values to add.
 	
@@ -494,18 +494,14 @@ Class Stack<T> Implements IContainer<T>
 		Resize( _length+values.Length )
 	End
 
-	#rem monkeydoc Adds the values in a container to the end of the stack.
-	
-	@param values The values to add.
-	
-	#end
 	Method AddAll<C>( values:C ) Where C Implements IContainer<T>
 		For Local value:=Eachin values
 			Add( value )
 		Next
 	End
 
-	'TODO: KILLME! DON'T USE THIS!
+	#rem monkeydoc @deprecated Use [[AddAll]].
+	#End
 	Method Append<C>( values:C ) Where C Implements IContainer<T>
 		For Local value:=Eachin values
 			Add( value )
@@ -620,38 +616,26 @@ Class Stack<T> Implements IContainer<T>
 		Return n
 	End
 	
-	#rem monkeydoc Returns a range of elements from the stack
+	#rem monkeydoc Returns a range of elements from the stack.
 	
-	Returns a slice of the stack consisting of all elements from `index` to the end of the stack.
+	Returns a slice of the stack consisting of all elements from `index1` until `index2` or the end of the stack.
 	
-	If `index` is negative, then it represents an offset from the end of the stack.
+	If either index is negative, then it represents an offset from the end of the stack.
 
-	'index' is clamped to the length of the stack, so Slice will never cause a runtime error.
+	Indices are clamped to the length of the stack, so Slice will never cause a runtime error.
 	
-	@param index1 the index of the first element.
+	@param index1 the index of the first element (inclusive).
+
+	@param index2 the index of the last element (exclusive).
 	
 	@return A new stack.
 	
 	#end
 	Method Slice:Stack( index:Int )
+
 		Return Slice( index,_length )
 	End
 
-	#rem monkeydoc Returns a range of elements from the stack.
-	
-	Returns a slice of the stack consisting of all elements from `index1` up to but not including `index2`.
-
-	If either index is negative, then it represents an offset from the end of the stack.
-	
-	'index' and `index2` are clamped to the length of the stack, so Slice will never cause a runtime error.
-	
-	@param index1 The index of the first element.
-	
-	@param index2 The index of the last+1 element.
-	
-	@return A new stack.
-	
-	#end	
 	Method Slice:Stack( index1:Int,index2:Int )
 
 		If index1<0
@@ -796,7 +780,7 @@ Class Stack<T> Implements IContainer<T>
 		Add( value )
 	End
 
-	#rem monkeydoc Joins the values in the string list.
+	#rem monkeydoc Joins the values in a string stack.
 	
 	@param sepeator The separator to be used when joining values.
 	
