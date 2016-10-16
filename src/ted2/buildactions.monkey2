@@ -26,6 +26,7 @@ Class BuildActions
 
 	Field buildAndRun:Action
 	Field build:Action
+	Field semant:Action
 	Field buildSettings:Action
 	Field nextError:Action
 	Field lockBuildFile:Action
@@ -54,6 +55,10 @@ Class BuildActions
 		build=New Action( "Build only" )
 		build.Triggered=OnBuild
 		build.HotKey=Key.F6
+		
+		semant=New Action( "Check app" )
+		semant.Triggered=OnSemant
+		semant.HotKey=Key.F7
 		
 		buildSettings=New Action( "Target settings" )
 		buildSettings.Triggered=OnBuildFileSettings
@@ -424,7 +429,7 @@ Class BuildActions
 		Return BuildMx2( MainWindow.Mx2ccPath+" makedocs","Rebuilding documentation..." )
 	End
 	
-	Method BuildApp:Bool( config:String,target:String,run:bool )
+	Method BuildApp:Bool( config:String,target:String,action:String )
 	
 		Local buildDoc:=BuildDoc()
 		If Not buildDoc Return False
@@ -439,8 +444,11 @@ Class BuildActions
 			appType="console"
 			target="desktop"
 		End
+		
+		Local run:=(action="run")
+		If run action="build"
 
-		Local cmd:=MainWindow.Mx2ccPath+" makeapp -build "+opts
+		Local cmd:=MainWindow.Mx2ccPath+" makeapp -"+action+" "+opts
 		cmd+=" -apptype="+appType+" "
 		cmd+=" -config="+config
 		cmd+=" -target="+target
@@ -472,12 +480,17 @@ Class BuildActions
 	
 	Method OnBuildAndRun()
 
-		BuildApp( _buildConfig,_buildTarget,True )
+		BuildApp( _buildConfig,_buildTarget,"run" )
 	End
 	
 	Method OnBuild()
 	
-		BuildApp( _buildConfig,_buildTarget,False )
+		BuildApp( _buildConfig,_buildTarget,"build" )
+	End
+	
+	Method OnSemant()
+	
+		BuildApp( _buildConfig,_buildTarget,"semant" )
 	End
 	
 	Method OnNextError()
