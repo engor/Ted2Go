@@ -1,0 +1,30 @@
+
+{
+	"inputFile":"SDL/include/SDL.h",
+	
+	"outputFile":"sdl2.monkey2",
+	
+	"excludeFiles":[
+		"SDL_atomic.h",
+		"SDL_stdinc.h",
+		"SDL_assert.h",
+		"SDL_platform.h"
+	],
+
+	"clangArgs":[
+		"-Xclang",
+		"-ISDL/include"
+	],
+	
+	"anonEnumType":"Uint32",
+	
+	"header":[
+		"Namespace sdl2",
+		"Import \"<libc>\"",
+		"Alias size_t:int"
+	],
+	
+	"footer":[
+	]
+}
+		
