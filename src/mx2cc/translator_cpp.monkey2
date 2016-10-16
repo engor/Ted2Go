@@ -229,7 +229,7 @@ Class Translator_CPP Extends Translator
 		
 		Local proto:=retType+ident+"("+params+")"
 		
-		If header And func.IsMember
+		If header And func.IsMethod	'Member
 			If fdecl.IsAbstract Or fdecl.IsVirtual Or ctype.IsVirtual
 				proto="virtual "+proto
 				If fdecl.IsAbstract proto+="=0"
@@ -1350,11 +1350,6 @@ Class Translator_CPP Extends Translator
 		If IsCValueType( instance.type ) Return tinst+"."+tmember
 		
 		Return tinst+"->"+tmember
-		
-		'have to do this for arrays too?
-'		If Cast<FuncValue>( member ) And IsVolatile( instance ) tinst="("+AllocGCTmp( instance.type )+"="+tinst+")"
-		
-'		Return tinst+"->"+tmember
 	End
 	
 	Method TransInvokeMember:String( instance:Value,member:FuncValue,args:Value[] )
