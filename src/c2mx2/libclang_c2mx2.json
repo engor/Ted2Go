@@ -24,10 +24,6 @@
 		"#Import \"<clang-c/Index.h>\"",
 		"",
 		"Extern"
-	],
-	
-	"footer":[
-		"Public"
 	]
 	
 }

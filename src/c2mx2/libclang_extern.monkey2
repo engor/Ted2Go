@@ -32,7 +32,7 @@ Struct CXStringSet
 	Field Strings:CXString Ptr
 	Field Count:UInt
 End
-Function clang_getCString:libc.const_char_t Ptr( string_:CXString )
+Function clang_getCString:CString( string_:CXString )
 Function clang_disposeString:Void( string_:CXString )
 Function clang_disposeStringSet:Void( set:CXStringSet Ptr )
 
@@ -59,8 +59,8 @@ Alias CXIndex:Void Ptr
 Alias CXTranslationUnit:CXTranslationUnitImpl Ptr
 Alias CXClientData:Void Ptr
 Struct CXUnsavedFile
-	Field Filename:libc.const_char_t Ptr
-	Field Contents:libc.const_char_t Ptr
+	Field Filename:CString
+	Field Contents:CString
 	Field Length:ULong
 End
 Enum CXAvailabilityKind
@@ -229,7 +229,7 @@ Const CXTUResourceUsage_MEMORY_IN_BYTES_BEGIN:CXTUResourceUsageKind
 Const CXTUResourceUsage_MEMORY_IN_BYTES_END:CXTUResourceUsageKind
 Const CXTUResourceUsage_First:CXTUResourceUsageKind
 Const CXTUResourceUsage_Last:CXTUResourceUsageKind
-Function clang_getTUResourceUsageName:libc.const_char_t Ptr( kind:CXTUResourceUsageKind )
+Function clang_getTUResourceUsageName:CString( kind:CXTUResourceUsageKind )
 Struct CXTUResourceUsageEntry
 	Field kind:CXTUResourceUsageKind
 	Field amount:ULong
@@ -709,7 +709,7 @@ End
 Const CXChildVisit_Break:CXChildVisitResult
 Const CXChildVisit_Continue:CXChildVisitResult
 Const CXChildVisit_Recurse:CXChildVisitResult
-Alias CXCursorVisitor:CXChildVisitResult( CXCursor, CXCursor, CXClientData ) 
+Alias CXCursorVisitor:CXChildVisitResult( CXCursor, CXCursor, CXClientData )
 Function clang_visitChildren:UInt( parent:CXCursor, visitor:CXCursorVisitor, client_data:CXClientData )
 Function clang_getCursorUSR:CXString( CXCursor )
 Function clang_constructUSR_ObjCClass:CXString( class_name:CString )
@@ -811,7 +811,7 @@ Function clang_disposeTokens:Void( TU:CXTranslationUnit, Tokens:CXToken Ptr, Num
 Function clang_getCursorKindSpelling:CXString( Kind:CXCursorKind )
 Function clang_getDefinitionSpellingAndExtent:Void( CXCursor, startBuf:libc.const_char_t Ptr Ptr, endBuf:libc.const_char_t Ptr Ptr, startLine:UInt Ptr, startColumn:UInt Ptr, endLine:UInt Ptr, endColumn:UInt Ptr )
 Function clang_enableStackTraces:Void(  )
-Function clang_executeOnThread:Void( fn:Void( Void Ptr ) , user_data:Void Ptr, stack_size:UInt )
+Function clang_executeOnThread:Void( fn:Void( Void Ptr ), user_data:Void Ptr, stack_size:UInt )
 Alias CXCompletionString:Void Ptr
 Struct CXCompletionResult
 	Field CursorKind:CXCursorKind
@@ -898,7 +898,7 @@ Function clang_codeCompleteGetContainerUSR:CXString( Results:CXCodeCompleteResul
 Function clang_codeCompleteGetObjCSelector:CXString( Results:CXCodeCompleteResults Ptr )
 Function clang_getClangVersion:CXString(  )
 Function clang_toggleCrashRecovery:Void( isEnabled:UInt )
-Alias CXInclusionVisitor:Void( CXFile, CXSourceLocation Ptr, UInt, CXClientData ) 
+Alias CXInclusionVisitor:Void( CXFile, CXSourceLocation Ptr, UInt, CXClientData )
 Function clang_getInclusions:Void( tu:CXTranslationUnit, visitor:CXInclusionVisitor, client_data:CXClientData )
 Enum CXEvalResultKind
 End
@@ -914,7 +914,7 @@ Function clang_Cursor_Evaluate:CXEvalResult( C:CXCursor )
 Function clang_EvalResult_getKind:CXEvalResultKind( E:CXEvalResult )
 Function clang_EvalResult_getAsInt:Int( E:CXEvalResult )
 Function clang_EvalResult_getAsDouble:Double( E:CXEvalResult )
-Function clang_EvalResult_getAsStr:libc.const_char_t Ptr( E:CXEvalResult )
+Function clang_EvalResult_getAsStr:CString( E:CXEvalResult )
 Function clang_EvalResult_dispose:Void( E:CXEvalResult )
 Alias CXRemapping:Void Ptr
 Function clang_getRemappings:CXRemapping( path:CString )
@@ -928,7 +928,7 @@ Const CXVisit_Break:CXVisitorResult
 Const CXVisit_Continue:CXVisitorResult
 Struct CXCursorAndRangeVisitor
 	Field context:Void Ptr
-	Field visit:CXVisitorResult( Void Ptr, CXCursor, CXSourceRange ) 
+	Field visit:CXVisitorResult( Void Ptr, CXCursor, CXSourceRange )
 End
 Enum CXResult
 End
@@ -947,7 +947,7 @@ Struct CXIdxLoc
 End
 Struct CXIdxIncludedFileInfo
 	Field hashLoc:CXIdxLoc
-	Field filename:libc.const_char_t Ptr
+	Field filename:CString
 	Field file:CXFile
 	Field isImport:Int
 	Field isAngled:Int
@@ -1015,8 +1015,8 @@ Struct CXIdxEntityInfo
 	Field kind:CXIdxEntityKind
 	Field templateKind:CXIdxEntityCXXTemplateKind
 	Field lang:CXIdxEntityLanguage
-	Field name:libc.const_char_t Ptr
-	Field USR:libc.const_char_t Ptr
+	Field name:CString
+	Field USR:CString
 	Field cursor:CXCursor
 	Field attributes:CXIdxAttrInfo Ptr Ptr
 	Field numAttributes:UInt
@@ -1106,14 +1106,14 @@ Struct CXIdxEntityRefInfo
 	Field container:CXIdxContainerInfo Ptr
 End
 Struct IndexerCallbacks
-	Field abortQuery:Int( CXClientData, Void Ptr ) 
-	Field diagnostic:Void( CXClientData, CXDiagnosticSet, Void Ptr ) 
-	Field enteredMainFile:Void Ptr( CXClientData, CXFile, Void Ptr ) 
-	Field ppIncludedFile:Void Ptr( CXClientData, CXIdxIncludedFileInfo Ptr ) 
-	Field importedASTFile:Void Ptr( CXClientData, CXIdxImportedASTFileInfo Ptr ) 
-	Field startedTranslationUnit:Void Ptr( CXClientData, Void Ptr ) 
-	Field indexDeclaration:Void( CXClientData, CXIdxDeclInfo Ptr ) 
-	Field indexEntityReference:Void( CXClientData, CXIdxEntityRefInfo Ptr ) 
+	Field abortQuery:Int( CXClientData, Void Ptr )
+	Field diagnostic:Void( CXClientData, CXDiagnosticSet, Void Ptr )
+	Field enteredMainFile:CXIdxClientFile( CXClientData, CXFile, Void Ptr )
+	Field ppIncludedFile:CXIdxClientFile( CXClientData, CXIdxIncludedFileInfo Ptr )
+	Field importedASTFile:CXIdxClientASTFile( CXClientData, CXIdxImportedASTFileInfo Ptr )
+	Field startedTranslationUnit:CXIdxClientContainer( CXClientData, Void Ptr )
+	Field indexDeclaration:Void( CXClientData, CXIdxDeclInfo Ptr )
+	Field indexEntityReference:Void( CXClientData, CXIdxEntityRefInfo Ptr )
 End
 Function clang_index_isEntityObjCContainerKind:Int( CXIdxEntityKind )
 Function clang_index_getObjCContainerDeclInfo:CXIdxObjCContainerDeclInfo Ptr( CXIdxDeclInfo Ptr )
@@ -1143,7 +1143,7 @@ Function clang_indexSourceFileFullArgv:Int( CXIndexAction, client_data:CXClientD
 Function clang_indexTranslationUnit:Int( CXIndexAction, client_data:CXClientData, index_callbacks:IndexerCallbacks Ptr, index_callbacks_size:UInt, index_options:UInt, CXTranslationUnit )
 Function clang_indexLoc_getFileLocation:Void( loc:CXIdxLoc, indexFile:CXIdxClientFile Ptr, file:CXFile Ptr, line:UInt Ptr, column:UInt Ptr, offset:UInt Ptr )
 Function clang_indexLoc_getCXSourceLocation:CXSourceLocation( loc:CXIdxLoc )
-Alias CXFieldVisitor:CXVisitorResult( CXCursor, CXClientData ) 
+Alias CXFieldVisitor:CXVisitorResult( CXCursor, CXClientData )
 Function clang_Type_visitFields:UInt( T:CXType, visitor:CXFieldVisitor, client_data:CXClientData )
 
 '***** Extern Structs *****
@@ -1156,4 +1156,3 @@ Struct CXTranslationUnitImpl
 End
 Struct CXVirtualFileOverlayImpl
 End
-Public

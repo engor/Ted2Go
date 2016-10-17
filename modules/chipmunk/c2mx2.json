@@ -3,9 +3,6 @@
 	
 	"outputFile":"chipmunk_extern.monkey2",
 	
-	"excludeFiles":[
-	],
-
 	"clangArgs":[
 		"-Xclang",
 		"-IChipmunk7/include"

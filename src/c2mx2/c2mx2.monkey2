@@ -1,17 +1,7 @@
 
 #rem
 
-A very much WIP C->MX2 'Extern' generator based on 'libclang'. However, it did libclang itself and chipmunk nicely.
-
-This wont work 'as is' - you'll need to copy LLVM binaries to this dir (inside a LLVM dir). LLVM binaries are here:
-
-http://llvm.org/releases/download.html
-
-You'll probably also need mingw-64 in your system PATH.
-
-Use 32 bit binaries for Windows.
-
-Only tested on Windows.
+See README.TXT
 
 #end
 
@@ -44,6 +34,7 @@ Global ExcludeFiles:StringMap<Bool>
 
 Global ext_structs:=New StringMap<Bool>
 Global def_structs:=New StringMap<Bool>
+Global cstring_types:=New StringMap<Bool>
 
 Global Keywords:StringMap<String>
 
@@ -75,6 +66,13 @@ Function InitKeywords()
 	Next
 End
 
+Function SetFile( file:String )
+	If file=CurrentFile Return
+	CurrentFile=file
+	buf.Push( "~n'***** File: "+CurrentFile+" *****~n" )
+	Print "Processing:"+file
+End
+
 Struct CXString Extension
 	Method To:String()
 		Return ToString( Self )
@@ -82,10 +80,9 @@ Struct CXString Extension
 End
 
 Function ToString:String( str:CXString )
-	Local p:=clang_getCString( str )
-	Local t:=String.FromCString( p )
+	Local cstr:=clang_getCString( str )
 	clang_disposeString( str )
-	Return t
+	Return cstr
 End
 
 Function ToCString:const_char_t Ptr( str:String )
@@ -107,42 +104,77 @@ Function Err( err:String,cursor:CXCursor )
 	Print ErrInfo( cursor )+" : "+err
 End
 
-Function TypeName:String( type:CXType )
+Function CursorSpelling:String( cursor:CXCursor )
 
-	Local ctype:=String( clang_getTypeSpelling( type ) )
-	If ctype.Contains( "(anonymous" ) Return ""
+	Local id:=String( clang_getCursorSpelling( cursor ) )
 	
-	If ctype.StartsWith( "const " ) 
+	If Keywords.Contains( id ) id+="_"
 	
-		ctype=ctype.Slice( 6 )
-		If ctype.EndsWith( " &" ) ctype=ctype.Slice( 0,-2 )
-		
-	Else If ctype.EndsWith( " &" )
-	
-		Print "Error: non-const reference type"
-		Return ""
-	Endif
-	
-	If ctype.StartsWith( "struct " )
-		ctype=ctype.Slice( 7 )
-	Else If ctype.StartsWith( "union " )
-		ctype=ctype.Slice( 6 )
-	Else If ctype.StartsWith( "enum " )
-		ctype=ctype.Slice( 5 )
-	Endif
-
-	If Keywords.Contains( ctype ) ctype+="_"
-	
-	Return ctype
+	Return id
 End
 
-Function TransType:String( type:CXType )
+Function TypeSpelling:String( type:CXType )
+
+	Local id:=String( clang_getTypeSpelling( type ) )
+	
+	If id.Contains( "(anonymous" ) Return ""
+	
+	If id.StartsWith( "const " ) id=id.Slice( 6 )
+	
+	If id.StartsWith( "struct " )
+		id=id.Slice( 7 )
+	Else If id.StartsWith( "union " )
+		id=id.Slice( 6 )
+	Else If id.StartsWith( "enum " )
+		id=id.Slice( 5 )
+	Endif
+
+	If Keywords.Contains( id ) id+="_"
+	
+	Return id
+End
+
+Function IsCStringType:Bool( type:CXType )
+
+	Local ptype:CXType
+	
+	Select type.kind
+	Case CXType_Pointer
+		ptype=clang_getPointeeType( type )
+	Case CXType_ConstantArray,CXType_IncompleteArray 
+		ptype=clang_getElementType( type )
+	Default
+		Return False
+	End
+	
+	If clang_isConstQualifiedType( ptype )
+		Select ptype.kind
+		Case CXType_Char_S,CXType_Char_U 
+			Return cstring_types["const char *"]
+		Case CXType_SChar
+			Return cstring_types["const signed char *"]
+		Case CXType_UChar
+			Return cstring_types["const unsigned char *"]
+		End
+	Else
+		Select ptype.kind
+		Case CXType_Char_S,CXType_Char_U 
+			Return cstring_types["char *"]
+		Case CXType_SChar
+			Return cstring_types["signed char *"]
+		Case CXType_UChar
+			Return cstring_types["unsigned char *"]
+		End
+	Endif
+	
+	Return False
+End
+
+Function TransType:String( type:CXType,scope:String="" )
 
 	Select type.kind
 	
 	Case CXType_Void Return "Void"
-	
-	Case CXType_Char_S,CXType_Char_U Return clang_isConstQualifiedType( type ) ? "libc.const_char_t" Else "libc.char_t"
 	
 	Case CXType_SChar Return "Byte"
 	
@@ -170,78 +202,86 @@ Function TransType:String( type:CXType )
 	
 	Case CXType_ULongLong Return ULongLongType
 	
-	Case CXType_Typedef return TypeName( type )
+	Case CXType_Typedef Return TypeSpelling( type )
+
+	Case CXType_Enum Return TypeSpelling( type )
 	
-	Case CXType_Enum Return TypeName( type )
-	
-	Case CXType_Record Return TypeName( type )
+	Case CXType_Record Return TypeSpelling( type )
 	
 	Case CXType_Elaborated Return TransType( clang_Type_getNamedType( type ) )
 	
-	Case CXType_Pointer 
+	Case CXType_Char_S,CXType_Char_U 
+	
+		Return clang_isConstQualifiedType( type ) ? "libc.const_char_t" Else "libc.char_t"
+	
+	Case CXType_Pointer
+	
+		If scope And IsCStringType( type ) Return "CString"
+		
+		'can't return const pointers...
+		If scope="return" And clang_isConstQualifiedType( type ) Return ""
 	
 		Local ptype:=TransType( clang_getPointeeType( type ) )
 		If ptype
-			If ptype.EndsWith( ")" ) ptype+=" " Else ptype+=" Ptr"
-			Return ptype
+			If ptype.EndsWith( ")" ) Return ptype
+			Return ptype+" Ptr"
 		Endif
 	
 	Case CXType_ConstantArray	'naughty!
+	
+		If scope And IsCStringType( type ) Return "CString"
 	
 		Local ptype:=TransType( clang_getElementType( type ) )
 		If ptype Return ptype+" Ptr"
 	
 	Case CXType_IncompleteArray 
+
+		If scope And IsCStringType( type ) Return "CString"
 	
 		Local ptype:=TransType( clang_getElementType( type ) )
 		If ptype Return ptype+" Ptr"
 	
-'	Case CXType_LValueReference		'C++ time!
-	
-'		If clang_isConstQualifiedType( type ) Return TypeName( type )
-
 	Case CXType_Unexposed
 	
 		Local ctype:=clang_getCanonicalType( type )
 		
 		If ctype.kind=CXType_FunctionProto
 		
-			Local retType:=TransType( clang_getResultType( ctype ) )
-			
-			Local n:=clang_getNumArgTypes( type ),args:=""
-
-			For Local i:=0 Until n
-				If i args+=", "
-				args+=TransType( clang_getArgType( type,i ) )
-			Next
-			
-			Return retType+"( "+args+" )"
+			'Note: we use 'type' here because 'ctype' loses typedefs or something...
+			'
+			Local retType:=TransType( clang_getResultType( type ),"return" )
+				
+			If retType
+					
+				Local n:=clang_getNumArgTypes( type ),args:=""
+		
+				For Local i:=0 Until n
+					Local arg:=TransType( clang_getArgType( type,i ),"param" )
+					If Not arg Return ""
+					If i args+=", "
+					args+=arg
+				Next
+					
+				Return retType+"( "+args+" )"
+					
+			Endif
+		
 		Endif
 		
-	End
+		'Return TransType( ctype )
+
+'	Case CXType_LValueReference		'C++ time!
 	
-'	Print "Unknown CXType:"+clang_getTypeSpelling( type )+", CXTypeKind="+Int( type.kind )
+'		If clang_isConstQualifiedType( type ) Return TypeName( type )
+
+	End
 	
 	Return ""
 End
 
-Function TransType:String( cursor:CXCursor )
+Function TransType:String( cursor:CXCursor,scope:String="" )
 
-	Return TransType( clang_getCursorType( cursor ) )
-End
-
-Function DeclName:String( cursor:CXCursor )
-
-	Local id:=String( clang_getCursorSpelling( cursor ) )
-	
-	If Keywords.Contains( id ) id+="_"
-	
-	Return id
-End
-
-Function TypeName:String( cursor:CXCursor )
-
-	Return TypeName( clang_getCursorType( cursor ) )
+	Return TransType( clang_getCursorType( cursor ),scope )
 End
 
 Function VisitFunc:CXChildVisitResult( cursor:CXCursor,parent:CXCursor,client_data:CXClientData )
@@ -250,45 +290,56 @@ Function VisitFunc:CXChildVisitResult( cursor:CXCursor,parent:CXCursor,client_da
 
 	Case CXCursor_ParmDecl
 
-		Local id:=DeclName( cursor )
+		Local id:=CursorSpelling( cursor )
 
-		Local type:=TransType( cursor )
+		Local type:=TransType( cursor,"param" )
 
 		If Not type
 			params="?"
 			Return CXChildVisit_Break
 		Endif
 
-		If type="libc.char_t Ptr" Or type="libc.const_char_t Ptr" type="CString"
-
 		If params params+=", "
+		
 		If id params+=id+":"+type Else params+=type
 	End
 	
 	Return CXChildVisit_Continue
 End
 
+Function VisitStruct:CXChildVisitResult( cursor:CXCursor,parent:CXCursor,client_data:CXClientData )
+
+	Select cursor.kind
+
+	Case CXCursor_FieldDecl
+
+		Local id:=CursorSpelling( cursor )
+		
+		Local type:=TransType( cursor,"var" )
+		
+		If type
+			buf.Push( tab+"Field "+id+":"+type )
+		Else
+			Err( "Failed to convert type of field: "+id,cursor )
+		Endif
+	End
+
+	Return CXChildVisit_Continue
+End
+
 Function VisitEnum:CXChildVisitResult( cursor:CXCursor,parent:CXCursor,client_data:CXClientData )
 
-	Select clang_getCursorKind( cursor )
+	Select cursor.kind
 
 	Case CXCursor_EnumConstantDecl
 	
-		buf.Push( tab+"Const "+DeclName( cursor )+":"+enumid )
-	
+		buf.Push( tab+"Const "+CursorSpelling( cursor )+":"+enumid )
 	End
 	
 	Return CXChildVisit_Continue
 End
 
-Function SetFile( file:String )
-	If file=CurrentFile Return
-	CurrentFile=file
-	buf.Push( "~n'***** File: "+CurrentFile+" *****~n" )
-	Print "Processing:"+file
-End
-
-Function VisitMembers:CXChildVisitResult( cursor:CXCursor,parent:CXCursor,client_data:CXClientData )
+Function VisitUnit:CXChildVisitResult( cursor:CXCursor,parent:CXCursor,client_data:CXClientData )
 
 	Local srcloc:=clang_getCursorLocation( cursor )
 	Local cfile:CXFile,line:UInt
@@ -306,6 +357,7 @@ Function VisitMembers:CXChildVisitResult( cursor:CXCursor,parent:CXCursor,client
 	Case CXCursor_EnumDecl
 
 		Local id:=TransType( cursor )
+		
 		If id
 			SetFile( file )
 			buf.Push( tab+"Enum "+id+"~nEnd" )
@@ -328,7 +380,7 @@ Function VisitMembers:CXChildVisitResult( cursor:CXCursor,parent:CXCursor,client
 				buf.Push( tab+"Struct "+id )
 			
 				tab+="~t"
-				clang_visitChildren( cursor,VisitMembers,Null )
+				clang_visitChildren( cursor,VisitStruct,Null )
 				tab=tab.Slice( 0,-1 )
 					
 				buf.Push( tab+"End" )
@@ -364,7 +416,7 @@ Function VisitMembers:CXChildVisitResult( cursor:CXCursor,parent:CXCursor,client
 	
 	Case CXCursor_TypedefDecl
 	
-		Local id:=DeclName( cursor )
+		Local id:=CursorSpelling( cursor )
 
 		Local type:=TransType( clang_getTypedefDeclUnderlyingType( cursor ) )
 		
@@ -379,11 +431,11 @@ Function VisitMembers:CXChildVisitResult( cursor:CXCursor,parent:CXCursor,client
 	
 	Case CXCursor_FunctionDecl
 
-		Local id:=DeclName( cursor )
+		Local id:=CursorSpelling( cursor )
 	
 		Local ftype:=clang_getCursorType( cursor )
 		
-		Local retType:=TransType( clang_getResultType( ftype ) )
+		Local retType:=TransType( clang_getResultType( ftype ),"return" )
 		
 		If retType
 
@@ -402,41 +454,38 @@ Function VisitMembers:CXChildVisitResult( cursor:CXCursor,parent:CXCursor,client
 		
 	Case CXCursor_VarDecl
 	
-		Local id:=DeclName( cursor )
+		Local id:=CursorSpelling( cursor )
 		
-		Local type:=TransType( cursor )
+		Local type:=clang_getCursorType( cursor )
 		
-		If type
+		Local ptype:=TransType( type,"global" )
+		
+		If ptype
+		
 			SetFile( file )
-			buf.Push( "Global "+id+":"+type )
+			
+			If clang_isConstQualifiedType( type )
+				buf.Push( "Const "+id+":"+ptype )
+			Else
+				buf.Push( "Global "+id+":"+ptype )
+			Endif
 		Else
 			Err( "Failed to convert type for var: "+id,cursor )
 		Endif
 		
-	Case CXCursor_FieldDecl
-
-		Local id:=DeclName( cursor )
-		Local type:=TransType( cursor )
-		
-		If type
-			buf.Push( tab+"Field "+id+":"+type )
-		Else
-			Err( "Failed to convert type of field: "+id,cursor )
-		Endif
-	
 	End
 	
 	Return CXChildVisit_Continue
 End
 
-Function VisitAll:CXChildVisitResult( cursor:CXCursor,parent:CXCursor,client_data:CXClientData )
+Function VisitDebug:CXChildVisitResult( cursor:CXCursor,parent:CXCursor,client_data:CXClientData )
 
 	Local ctype:=clang_getCursorType( cursor )
 
 	Print tab+clang_getCursorSpelling( cursor )+":"+clang_getTypeSpelling( ctype )+", cursor kind="+Int( cursor.kind )+", type kind="+Int( ctype.kind )
 	
 	tab+="~t"
-	clang_visitChildren( cursor,VisitAll,Null )
+	clang_visitChildren( cursor,VisitDebug,Null )
 	tab=tab.Slice( 0,-1 )
 
 	Return CXChildVisit_Continue
@@ -445,29 +494,26 @@ End
 Function Main()
 
 	Local path:=RequestFile( "Select c2mx2.json file...","Json files:json" )
-	If Not path 
-		Print "No path selected"
-		Return
-	Endif
+	If Not path Return
 	
 	Local config:=JsonObject.Load( path )
 	If Not config
-		Notify( "c2mx2","Failed to load JSON object from "+path,True )
+		Print "C2mx2: Failed to load JSON object from "+path
 		Return
 	Endif
 
 	If Not config.Contains( "inputFile" )
-		Notify( "c2mx2","No inputFile specified",True )
+		Print "C2mx2: No inputFile specified"
 		Return
 	Endif
 	
 	If Not config.Contains( "outputFile" )
-		Notify( "c2mx2","No outputFile specified",True )
+		Print "C2mx2: No outputFile specified"
 		Return
 	Endif
 
 	If Not config.Contains( "clangArgs" )
-		Notify( "c2mx2","No clangArgs specified",True )
+		Print "C2mx2: No clangArgs specified"
 		Return
 	Endif
 	
@@ -490,7 +536,7 @@ Function Main()
 	For Local i:=0 Until args.Length
 		args[i]=ToCString( cargs[i].ToString() )
 	Next
-
+	
 	'include/exclude files
 	If config.Contains( "includeFiles" )
 		IncludeFiles=New StringMap<Bool>
@@ -502,6 +548,22 @@ Function Main()
 		For Local file:=Eachin config.GetArray( "excludeFiles" )
 			ExcludeFiles[file.ToString()]=True
 		Next
+	Endif
+
+	'extern structs
+	If config.Contains( "externStructs" )
+		For Local it:=Eachin config.GetArray( "externStructs" )
+			ext_structs[it.ToString()]=True
+		Next
+	Endif
+	
+	'CString compatible types
+	If config.Contains( "cstringTypes" )
+		For Local it:=Eachin config.GetArray( "cstringTypes" )
+			cstring_types[it.ToString()]=True
+		Next
+	Else
+		cstring_types["const char *"]=True
 	Endif
 	
 	'anonymous enum type
@@ -528,7 +590,7 @@ Function Main()
 	
 	Local cursor:=clang_getTranslationUnitCursor( tu )
 	
-	clang_visitChildren( cursor,VisitMembers,Null )
+	clang_visitChildren( cursor,VisitUnit,Null )
 
 	'emit extern structs	
 	buf.Push( "~n'***** Extern Structs *****~n" )
@@ -547,11 +609,14 @@ Function Main()
 		Next
 	Endif
 
-	'emit output	
+	'Done!
+	buf.Push( "" )	
+	
+	'emit output
 	If SaveString( buf.Join( "~n" ),output )
-		Notify( "c2mx2","Finished generating '"+output+"'!" )
+		Print "~nc2mx2: **** Success ***** - output saved to "+output
 	Else
-		Notify( "c2mx2","Failed to generat output file",true )
+		Print "~nc2mx2: Error saving output to "+output
 	Endif
 
 End

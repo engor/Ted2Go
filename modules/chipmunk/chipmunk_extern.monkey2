@@ -56,7 +56,7 @@ End
 
 '***** File: Chipmunk7/include/chipmunk/cpVect.h *****
 
-Global cpvzero:cpVect
+Const cpvzero:cpVect
 Function cpv:cpVect( x:cpFloat, y:cpFloat )
 Function cpveql:cpBool( v1:cpVect, v2:cpVect )
 Function cpvadd:cpVect( v1:cpVect, v2:cpVect )
@@ -113,7 +113,7 @@ Function cpBBOffset:cpBB( bb:cpBB, v:cpVect )
 
 '***** File: Chipmunk7/include/chipmunk/cpTransform.h *****
 
-Global cpTransformIdentity:cpTransform
+Const cpTransformIdentity:cpTransform
 Function cpTransformNew:cpTransform( a:cpFloat, b:cpFloat, c:cpFloat, d:cpFloat, tx:cpFloat, ty:cpFloat )
 Function cpTransformNewTranspose:cpTransform( a:cpFloat, c:cpFloat, tx:cpFloat, b:cpFloat, d:cpFloat, ty:cpFloat )
 Function cpTransformInverse:cpTransform( t:cpTransform )
@@ -134,10 +134,10 @@ Function cpTransformAxialScale:cpTransform( axis:cpVect, pivot:cpVect, scale:cpF
 
 '***** File: Chipmunk7/include/chipmunk/cpSpatialIndex.h *****
 
-Alias cpSpatialIndexBBFunc:cpBB( Void Ptr ) 
-Alias cpSpatialIndexIteratorFunc:Void( Void Ptr, Void Ptr ) 
-Alias cpSpatialIndexQueryFunc:Int( Void Ptr, Void Ptr, cpCollisionID, Void Ptr ) 
-Alias cpSpatialIndexSegmentQueryFunc:Double( Void Ptr, Void Ptr, Void Ptr ) 
+Alias cpSpatialIndexBBFunc:cpBB( Void Ptr )
+Alias cpSpatialIndexIteratorFunc:Void( Void Ptr, Void Ptr )
+Alias cpSpatialIndexQueryFunc:cpCollisionID( Void Ptr, Void Ptr, cpCollisionID, Void Ptr )
+Alias cpSpatialIndexSegmentQueryFunc:cpFloat( Void Ptr, Void Ptr, Void Ptr )
 Struct cpSpatialIndex
 	Field klass:cpSpatialIndexClass Ptr
 	Field bbfunc:cpSpatialIndexBBFunc
@@ -152,22 +152,22 @@ Function cpBBTreeAlloc:cpBBTree Ptr(  )
 Function cpBBTreeInit:cpSpatialIndex Ptr( tree:cpBBTree Ptr, bbfunc:cpSpatialIndexBBFunc, staticIndex:cpSpatialIndex Ptr )
 Function cpBBTreeNew:cpSpatialIndex Ptr( bbfunc:cpSpatialIndexBBFunc, staticIndex:cpSpatialIndex Ptr )
 Function cpBBTreeOptimize:Void( index:cpSpatialIndex Ptr )
-Alias cpBBTreeVelocityFunc:cpVect( Void Ptr ) 
+Alias cpBBTreeVelocityFunc:cpVect( Void Ptr )
 Function cpBBTreeSetVelocityFunc:Void( index:cpSpatialIndex Ptr, func:cpBBTreeVelocityFunc )
 Function cpSweep1DAlloc:cpSweep1D Ptr(  )
 Function cpSweep1DInit:cpSpatialIndex Ptr( sweep:cpSweep1D Ptr, bbfunc:cpSpatialIndexBBFunc, staticIndex:cpSpatialIndex Ptr )
 Function cpSweep1DNew:cpSpatialIndex Ptr( bbfunc:cpSpatialIndexBBFunc, staticIndex:cpSpatialIndex Ptr )
-Alias cpSpatialIndexDestroyImpl:Void( cpSpatialIndex Ptr ) 
-Alias cpSpatialIndexCountImpl:Int( cpSpatialIndex Ptr ) 
-Alias cpSpatialIndexEachImpl:Void( cpSpatialIndex Ptr, cpSpatialIndexIteratorFunc, Void Ptr ) 
-Alias cpSpatialIndexContainsImpl:UByte( cpSpatialIndex Ptr, Void Ptr, cpHashValue ) 
-Alias cpSpatialIndexInsertImpl:Void( cpSpatialIndex Ptr, Void Ptr, cpHashValue ) 
-Alias cpSpatialIndexRemoveImpl:Void( cpSpatialIndex Ptr, Void Ptr, cpHashValue ) 
-Alias cpSpatialIndexReindexImpl:Void( cpSpatialIndex Ptr ) 
-Alias cpSpatialIndexReindexObjectImpl:Void( cpSpatialIndex Ptr, Void Ptr, cpHashValue ) 
-Alias cpSpatialIndexReindexQueryImpl:Void( cpSpatialIndex Ptr, cpSpatialIndexQueryFunc, Void Ptr ) 
-Alias cpSpatialIndexQueryImpl:Void( cpSpatialIndex Ptr, Void Ptr, cpBB, cpSpatialIndexQueryFunc, Void Ptr ) 
-Alias cpSpatialIndexSegmentQueryImpl:Void( cpSpatialIndex Ptr, Void Ptr, cpVect, cpVect, cpFloat, cpSpatialIndexSegmentQueryFunc, Void Ptr ) 
+Alias cpSpatialIndexDestroyImpl:Void( cpSpatialIndex Ptr )
+Alias cpSpatialIndexCountImpl:Int( cpSpatialIndex Ptr )
+Alias cpSpatialIndexEachImpl:Void( cpSpatialIndex Ptr, cpSpatialIndexIteratorFunc, Void Ptr )
+Alias cpSpatialIndexContainsImpl:cpBool( cpSpatialIndex Ptr, Void Ptr, cpHashValue )
+Alias cpSpatialIndexInsertImpl:Void( cpSpatialIndex Ptr, Void Ptr, cpHashValue )
+Alias cpSpatialIndexRemoveImpl:Void( cpSpatialIndex Ptr, Void Ptr, cpHashValue )
+Alias cpSpatialIndexReindexImpl:Void( cpSpatialIndex Ptr )
+Alias cpSpatialIndexReindexObjectImpl:Void( cpSpatialIndex Ptr, Void Ptr, cpHashValue )
+Alias cpSpatialIndexReindexQueryImpl:Void( cpSpatialIndex Ptr, cpSpatialIndexQueryFunc, Void Ptr )
+Alias cpSpatialIndexQueryImpl:Void( cpSpatialIndex Ptr, Void Ptr, cpBB, cpSpatialIndexQueryFunc, Void Ptr )
+Alias cpSpatialIndexSegmentQueryImpl:Void( cpSpatialIndex Ptr, Void Ptr, cpVect, cpVect, cpFloat, cpSpatialIndexSegmentQueryFunc, Void Ptr )
 Struct cpSpatialIndexClass
 	Field destroy:cpSpatialIndexDestroyImpl
 	Field count:cpSpatialIndexCountImpl
@@ -239,8 +239,8 @@ End
 Const CP_BODY_TYPE_DYNAMIC:cpBodyType
 Const CP_BODY_TYPE_KINEMATIC:cpBodyType
 Const CP_BODY_TYPE_STATIC:cpBodyType
-Alias cpBodyVelocityFunc:Void( cpBody Ptr, cpVect, cpFloat, cpFloat ) 
-Alias cpBodyPositionFunc:Void( cpBody Ptr, cpFloat ) 
+Alias cpBodyVelocityFunc:Void( cpBody Ptr, cpVect, cpFloat, cpFloat )
+Alias cpBodyPositionFunc:Void( cpBody Ptr, cpFloat )
 Function cpBodyAlloc:cpBody Ptr(  )
 Function cpBodyInit:cpBody Ptr( body:cpBody Ptr, mass:cpFloat, moment:cpFloat )
 Function cpBodyNew:cpBody Ptr( mass:cpFloat, moment:cpFloat )
@@ -290,11 +290,11 @@ Function cpBodyApplyImpulseAtLocalPoint:Void( body:cpBody Ptr, impulse:cpVect, p
 Function cpBodyGetVelocityAtWorldPoint:cpVect( body:cpBody Ptr, point:cpVect )
 Function cpBodyGetVelocityAtLocalPoint:cpVect( body:cpBody Ptr, point:cpVect )
 Function cpBodyKineticEnergy:cpFloat( body:cpBody Ptr )
-Alias cpBodyShapeIteratorFunc:Void( cpBody Ptr, cpShape Ptr, Void Ptr ) 
+Alias cpBodyShapeIteratorFunc:Void( cpBody Ptr, cpShape Ptr, Void Ptr )
 Function cpBodyEachShape:Void( body:cpBody Ptr, func:cpBodyShapeIteratorFunc, data:Void Ptr )
-Alias cpBodyConstraintIteratorFunc:Void( cpBody Ptr, cpConstraint Ptr, Void Ptr ) 
+Alias cpBodyConstraintIteratorFunc:Void( cpBody Ptr, cpConstraint Ptr, Void Ptr )
 Function cpBodyEachConstraint:Void( body:cpBody Ptr, func:cpBodyConstraintIteratorFunc, data:Void Ptr )
-Alias cpBodyArbiterIteratorFunc:Void( cpBody Ptr, cpArbiter Ptr, Void Ptr ) 
+Alias cpBodyArbiterIteratorFunc:Void( cpBody Ptr, cpArbiter Ptr, Void Ptr )
 Function cpBodyEachArbiter:Void( body:cpBody Ptr, func:cpBodyArbiterIteratorFunc, data:Void Ptr )
 
 '***** File: Chipmunk7/include/chipmunk/cpShape.h *****
@@ -316,8 +316,8 @@ Struct cpShapeFilter
 	Field categories:cpBitmask
 	Field mask:cpBitmask
 End
-Global CP_SHAPE_FILTER_ALL:cpShapeFilter
-Global CP_SHAPE_FILTER_NONE:cpShapeFilter
+Const CP_SHAPE_FILTER_ALL:cpShapeFilter
+Const CP_SHAPE_FILTER_NONE:cpShapeFilter
 Function cpShapeFilterNew:cpShapeFilter( group:cpGroup, categories:cpBitmask, mask:cpBitmask )
 Function cpShapeDestroy:Void( shape:cpShape Ptr )
 Function cpShapeFree:Void( shape:cpShape Ptr )
@@ -382,8 +382,8 @@ Function cpPolyShapeGetRadius:cpFloat( shape:cpShape Ptr )
 
 '***** File: Chipmunk7/include/chipmunk/cpConstraint.h *****
 
-Alias cpConstraintPreSolveFunc:Void( cpConstraint Ptr, cpSpace Ptr ) 
-Alias cpConstraintPostSolveFunc:Void( cpConstraint Ptr, cpSpace Ptr ) 
+Alias cpConstraintPreSolveFunc:Void( cpConstraint Ptr, cpSpace Ptr )
+Alias cpConstraintPostSolveFunc:Void( cpConstraint Ptr, cpSpace Ptr )
 Function cpConstraintDestroy:Void( constraint:cpConstraint Ptr )
 Function cpConstraintFree:Void( constraint:cpConstraint Ptr )
 Function cpConstraintGetSpace:cpSpace Ptr( constraint:cpConstraint Ptr )
@@ -461,7 +461,7 @@ Function cpGrooveJointSetAnchorB:Void( constraint:cpConstraint Ptr, anchorB:cpVe
 '***** File: Chipmunk7/include/chipmunk/cpDampedSpring.h *****
 
 Function cpConstraintIsDampedSpring:cpBool( constraint:cpConstraint Ptr )
-Alias cpDampedSpringForceFunc:Double( cpConstraint Ptr, cpFloat ) 
+Alias cpDampedSpringForceFunc:cpFloat( cpConstraint Ptr, cpFloat )
 Function cpDampedSpringAlloc:cpDampedSpring Ptr(  )
 Function cpDampedSpringInit:cpDampedSpring Ptr( joint:cpDampedSpring Ptr, a:cpBody Ptr, b:cpBody Ptr, anchorA:cpVect, anchorB:cpVect, restLength:cpFloat, stiffness:cpFloat, damping:cpFloat )
 Function cpDampedSpringNew:cpConstraint Ptr( a:cpBody Ptr, b:cpBody Ptr, anchorA:cpVect, anchorB:cpVect, restLength:cpFloat, stiffness:cpFloat, damping:cpFloat )
@@ -481,7 +481,7 @@ Function cpDampedSpringSetSpringForceFunc:Void( constraint:cpConstraint Ptr, spr
 '***** File: Chipmunk7/include/chipmunk/cpDampedRotarySpring.h *****
 
 Function cpConstraintIsDampedRotarySpring:cpBool( constraint:cpConstraint Ptr )
-Alias cpDampedRotarySpringTorqueFunc:Double( cpConstraint Ptr, cpFloat ) 
+Alias cpDampedRotarySpringTorqueFunc:cpFloat( cpConstraint Ptr, cpFloat )
 Function cpDampedRotarySpringAlloc:cpDampedRotarySpring Ptr(  )
 Function cpDampedRotarySpringInit:cpDampedRotarySpring Ptr( joint:cpDampedRotarySpring Ptr, a:cpBody Ptr, b:cpBody Ptr, restAngle:cpFloat, stiffness:cpFloat, damping:cpFloat )
 Function cpDampedRotarySpringNew:cpConstraint Ptr( a:cpBody Ptr, b:cpBody Ptr, restAngle:cpFloat, stiffness:cpFloat, damping:cpFloat )
@@ -540,10 +540,10 @@ Function cpSimpleMotorSetRate:Void( constraint:cpConstraint Ptr, rate:cpFloat )
 
 '***** File: Chipmunk7/include/chipmunk/cpSpace.h *****
 
-Alias cpCollisionBeginFunc:UByte( cpArbiter Ptr, cpSpace Ptr, cpDataPointer ) 
-Alias cpCollisionPreSolveFunc:UByte( cpArbiter Ptr, cpSpace Ptr, cpDataPointer ) 
-Alias cpCollisionPostSolveFunc:Void( cpArbiter Ptr, cpSpace Ptr, cpDataPointer ) 
-Alias cpCollisionSeparateFunc:Void( cpArbiter Ptr, cpSpace Ptr, cpDataPointer ) 
+Alias cpCollisionBeginFunc:cpBool( cpArbiter Ptr, cpSpace Ptr, cpDataPointer )
+Alias cpCollisionPreSolveFunc:cpBool( cpArbiter Ptr, cpSpace Ptr, cpDataPointer )
+Alias cpCollisionPostSolveFunc:Void( cpArbiter Ptr, cpSpace Ptr, cpDataPointer )
+Alias cpCollisionSeparateFunc:Void( cpArbiter Ptr, cpSpace Ptr, cpDataPointer )
 Struct cpCollisionHandler
 	Field typeA:cpCollisionType
 	Field typeB:cpCollisionType
@@ -591,23 +591,23 @@ Function cpSpaceRemoveConstraint:Void( space:cpSpace Ptr, constraint:cpConstrain
 Function cpSpaceContainsShape:cpBool( space:cpSpace Ptr, shape:cpShape Ptr )
 Function cpSpaceContainsBody:cpBool( space:cpSpace Ptr, body:cpBody Ptr )
 Function cpSpaceContainsConstraint:cpBool( space:cpSpace Ptr, constraint:cpConstraint Ptr )
-Alias cpPostStepFunc:Void( cpSpace Ptr, Void Ptr, Void Ptr ) 
+Alias cpPostStepFunc:Void( cpSpace Ptr, Void Ptr, Void Ptr )
 Function cpSpaceAddPostStepCallback:cpBool( space:cpSpace Ptr, func:cpPostStepFunc, key:Void Ptr, data:Void Ptr )
-Alias cpSpacePointQueryFunc:Void( cpShape Ptr, cpVect, cpFloat, cpVect, Void Ptr ) 
+Alias cpSpacePointQueryFunc:Void( cpShape Ptr, cpVect, cpFloat, cpVect, Void Ptr )
 Function cpSpacePointQuery:Void( space:cpSpace Ptr, point:cpVect, maxDistance:cpFloat, filter:cpShapeFilter, func:cpSpacePointQueryFunc, data:Void Ptr )
 Function cpSpacePointQueryNearest:cpShape Ptr( space:cpSpace Ptr, point:cpVect, maxDistance:cpFloat, filter:cpShapeFilter, out:cpPointQueryInfo Ptr )
-Alias cpSpaceSegmentQueryFunc:Void( cpShape Ptr, cpVect, cpVect, cpFloat, Void Ptr ) 
+Alias cpSpaceSegmentQueryFunc:Void( cpShape Ptr, cpVect, cpVect, cpFloat, Void Ptr )
 Function cpSpaceSegmentQuery:Void( space:cpSpace Ptr, start:cpVect, end_:cpVect, radius:cpFloat, filter:cpShapeFilter, func:cpSpaceSegmentQueryFunc, data:Void Ptr )
 Function cpSpaceSegmentQueryFirst:cpShape Ptr( space:cpSpace Ptr, start:cpVect, end_:cpVect, radius:cpFloat, filter:cpShapeFilter, out:cpSegmentQueryInfo Ptr )
-Alias cpSpaceBBQueryFunc:Void( cpShape Ptr, Void Ptr ) 
+Alias cpSpaceBBQueryFunc:Void( cpShape Ptr, Void Ptr )
 Function cpSpaceBBQuery:Void( space:cpSpace Ptr, bb:cpBB, filter:cpShapeFilter, func:cpSpaceBBQueryFunc, data:Void Ptr )
-Alias cpSpaceShapeQueryFunc:Void( cpShape Ptr, cpContactPointSet Ptr, Void Ptr ) 
+Alias cpSpaceShapeQueryFunc:Void( cpShape Ptr, cpContactPointSet Ptr, Void Ptr )
 Function cpSpaceShapeQuery:cpBool( space:cpSpace Ptr, shape:cpShape Ptr, func:cpSpaceShapeQueryFunc, data:Void Ptr )
-Alias cpSpaceBodyIteratorFunc:Void( cpBody Ptr, Void Ptr ) 
+Alias cpSpaceBodyIteratorFunc:Void( cpBody Ptr, Void Ptr )
 Function cpSpaceEachBody:Void( space:cpSpace Ptr, func:cpSpaceBodyIteratorFunc, data:Void Ptr )
-Alias cpSpaceShapeIteratorFunc:Void( cpShape Ptr, Void Ptr ) 
+Alias cpSpaceShapeIteratorFunc:Void( cpShape Ptr, Void Ptr )
 Function cpSpaceEachShape:Void( space:cpSpace Ptr, func:cpSpaceShapeIteratorFunc, data:Void Ptr )
-Alias cpSpaceConstraintIteratorFunc:Void( cpConstraint Ptr, Void Ptr ) 
+Alias cpSpaceConstraintIteratorFunc:Void( cpConstraint Ptr, Void Ptr )
 Function cpSpaceEachConstraint:Void( space:cpSpace Ptr, func:cpSpaceConstraintIteratorFunc, data:Void Ptr )
 Function cpSpaceReindexStatic:Void( space:cpSpace Ptr )
 Function cpSpaceReindexShape:Void( space:cpSpace Ptr, shape:cpShape Ptr )
@@ -620,12 +620,12 @@ Struct cpSpaceDebugColor
 	Field b:Float
 	Field a:Float
 End
-Alias cpSpaceDebugDrawCircleImpl:Void( cpVect, cpFloat, cpFloat, cpSpaceDebugColor, cpSpaceDebugColor, cpDataPointer ) 
-Alias cpSpaceDebugDrawSegmentImpl:Void( cpVect, cpVect, cpSpaceDebugColor, cpDataPointer ) 
-Alias cpSpaceDebugDrawFatSegmentImpl:Void( cpVect, cpVect, cpFloat, cpSpaceDebugColor, cpSpaceDebugColor, cpDataPointer ) 
-Alias cpSpaceDebugDrawPolygonImpl:Void( Int, cpVect Ptr, cpFloat, cpSpaceDebugColor, cpSpaceDebugColor, cpDataPointer ) 
-Alias cpSpaceDebugDrawDotImpl:Void( cpFloat, cpVect, cpSpaceDebugColor, cpDataPointer ) 
-Alias cpSpaceDebugDrawColorForShapeImpl:cpSpaceDebugColor( cpShape Ptr, cpDataPointer ) 
+Alias cpSpaceDebugDrawCircleImpl:Void( cpVect, cpFloat, cpFloat, cpSpaceDebugColor, cpSpaceDebugColor, cpDataPointer )
+Alias cpSpaceDebugDrawSegmentImpl:Void( cpVect, cpVect, cpSpaceDebugColor, cpDataPointer )
+Alias cpSpaceDebugDrawFatSegmentImpl:Void( cpVect, cpVect, cpFloat, cpSpaceDebugColor, cpSpaceDebugColor, cpDataPointer )
+Alias cpSpaceDebugDrawPolygonImpl:Void( Int, cpVect Ptr, cpFloat, cpSpaceDebugColor, cpSpaceDebugColor, cpDataPointer )
+Alias cpSpaceDebugDrawDotImpl:Void( cpFloat, cpVect, cpSpaceDebugColor, cpDataPointer )
+Alias cpSpaceDebugDrawColorForShapeImpl:cpSpaceDebugColor( cpShape Ptr, cpDataPointer )
 Enum cpSpaceDebugDrawFlags
 End
 Const CP_SPACE_DEBUG_DRAW_SHAPES:cpSpaceDebugDrawFlags
@@ -648,7 +648,7 @@ Function cpSpaceDebugDraw:Void( space:cpSpace Ptr, options:cpSpaceDebugDrawOptio
 
 '***** File: Chipmunk7/include/chipmunk/chipmunk.h *****
 
-Global cpVersionString:libc.const_char_t Ptr
+Global cpVersionString:CString
 Function cpMomentForCircle:cpFloat( m:cpFloat, r1:cpFloat, r2:cpFloat, offset:cpVect )
 Function cpAreaForCircle:cpFloat( r1:cpFloat, r2:cpFloat )
 Function cpMomentForSegment:cpFloat( m:cpFloat, a:cpVect, b:cpVect, radius:cpFloat )
