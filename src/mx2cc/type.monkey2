@@ -552,7 +552,14 @@ Class FuncType Extends Type
 			args[i]=args[i].UpCast( argTypes[i] )
 		Next
 		
-		Return New InvokeValue( value,args )
+		Local r:Value=New InvokeValue( value,args )
+		
+		'Autocast CString to String
+		If r.type.Equals( Type.CStringClass )
+			r=New UpCastValue( Type.StringType,r )
+		Endif
+		
+		Return r
 	End
 	
 	Method Equals:Bool( type:Type ) Override

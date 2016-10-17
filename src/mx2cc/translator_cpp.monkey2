@@ -1240,9 +1240,6 @@ Class Translator_CPP Extends Translator
 	
 		Uses( value.type )
 	
-'		Local ctype:=TCast<ClassType>( value.value.type )
-'		If ctype Uses( ctype )
-
 		Local t:="("+Trans( value.value )+")"
 		
 		If IsCValueType( value.type ) Return TransType( value.type )+t
@@ -1297,12 +1294,18 @@ Class Translator_CPP Extends Translator
 		Local ptype:=TCast<PrimType>( value.type )
 		Select ptype
 		Case Type.FloatType,Type.DoubleType
+		
 			Local t:=value.value
 			If t.Find( "." )=-1 And t.Find( "e" )=-1 And t.Find( "E" )=-1 t+=".0"
+			
 			If ptype=Type.FloatType Return t+"f"
 			Return t
+			
 		Case Type.StringType
-			Return "BB_T("+EnquoteCppString( value.value )+")"
+		
+			Local str:=value.value
+			If str.Length Return "bbString(L"+EnquoteCppString( str )+","+str.Length+")"
+			Return "bbString()"
 		End
 		
 		Refs( value.type )
@@ -1427,17 +1430,13 @@ Class Translator_CPP Extends Translator
 		If value.inits Return ArrayName( atype )+"({"+TransArgs( value.inits )+"},"+value.inits.Length+")"
 		
 		Return ArrayName( atype )+"("+TransArgs( value.sizes )+")"
-	
-'		If value.inits Return ArrayName( atype )+"::create({"+TransArgs( value.inits )+"},"+value.inits.Length+")"
-		
-'		Return ArrayName( atype )+"::create("+TransArgs( value.sizes )+")"
 	End
 	
 	Method Trans:String( value:ArrayIndexValue )
+
 		If value.args.Length=1 Return Trans( value.value )+"["+TransArgs( value.args )+"]"
+
 		Return Trans( value.value )+".at("+TransArgs( value.args )+")"
-		
-'		Return Trans( value.value )+"->at("+TransArgs( value.args )+")"
 	End
 	
 	Method Trans:String( value:StringIndexValue )

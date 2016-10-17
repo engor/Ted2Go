@@ -111,6 +111,8 @@ Class VarValue Extends Value
 	
 	Method ToValue:Value( instance:Value ) Override
 	
+		Local r:Value=Self
+	
 		If vdecl.kind="field"
 		
 			If Not instance Throw New SemantEx( "Field '"+vdecl.ident+"' cannot be accessed without an instance" )
@@ -118,12 +120,17 @@ Class VarValue Extends Value
 			If Not instance.type.ExtendsType( cscope.ctype )
 				Throw New SemantEx( "Field '"+vdecl.ident+"' cannot be accessed from an instance of a different class" )
 			Endif
-
-			Return New MemberVarValue( instance,Self )
+			
+			r=New MemberVarValue( instance,Self )
 			
 		Endif
 		
-		Return Self
+		'Autocast CString to String
+		If r.type.Equals( Type.CStringClass )
+			r=New UpCastValue( Type.StringType,r )
+		Endif
+		
+		Return r
 	End
 	
 	Method CheckAccess( tscope:Scope ) Override
@@ -145,7 +152,6 @@ Class MemberVarValue Extends Value
 		If member.vdecl.kind="field"
 			If member.cscope.ctype.IsStruct
 				If instance.IsLValue flags|=VALUE_LVALUE|VALUE_ASSIGNABLE
-'				If instance.IsAssignable flags|=VALUE_ASSIGNABLE
 			Else
 				flags|=VALUE_LVALUE|VALUE_ASSIGNABLE
 			Endif
