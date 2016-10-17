@@ -27,18 +27,3 @@
 #Import "utils/utils"
 
 #Import "test_files/parsertests"
-
-
-#Import "assets/codeicons/@/ic"
-#Rem
-#Import "assets/codeicons/const.png@/ic"
-#Import "assets/codeicons/folder.png@/ic"
-#Import "assets/codeicons/function.png@/ic"
-#Import "assets/codeicons/global.png@/ic"
-#Import "assets/codeicons/interface.png@/ic"
-#Import "assets/codeicons/keyword.png@/ic"
-#Import "assets/codeicons/method.png@/ic"
-#Import "assets/codeicons/other.png@/ic"
-#Import "assets/codeicons/property.png@/ic"
-#Import "assets/codeicons/variable.png@/ic"
-#End
