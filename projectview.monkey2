@@ -120,7 +120,7 @@ Class ProjectView Extends ScrollView
 			
 				menu.AddAction( "Open On Desktop" ).Triggered=Lambda()
 				
-					mojo.requesters.OpenUrl( path )
+					requesters.OpenUrl( path )
 				End
 				
 				menu.AddSeparator()

@@ -27,7 +27,7 @@ Class BuildActions
 
 	Field buildAndRun:Action
 	Field build:Action
-	Field check:Action
+	Field semant:Action
 	Field buildSettings:Action
 	Field nextError:Action
 	Field lockBuildFile:Action
@@ -57,9 +57,9 @@ Class BuildActions
 		build.Triggered=OnBuild
 		build.HotKey=Key.F6
 		
-		check=New Action( "Check for errors" )
-		check.Triggered=OnCheck
-		check.HotKey=Key.F7
+		semant=New Action( "Check app" )
+		semant.Triggered=OnSemant
+		semant.HotKey=Key.F7
 		
 		buildSettings=New Action( "Target settings" )
 		buildSettings.Triggered=OnBuildFileSettings
@@ -298,7 +298,7 @@ Class BuildActions
 		tv.GotoLine( err.line )
 	End
 	
-	Method BuildMx2:Bool( cmd:String,progressText:String,checkOnly:Bool=False )
+	Method BuildMx2:Bool( cmd:String,progressText:String,run:Bool=True )
 	
 		ClearErrors()
 		
@@ -315,7 +315,7 @@ Class BuildActions
 			Return False
 		Endif
 		
-		Local title := checkOnly ? "Checking" Else "Building"
+		Local title := run ? "Building" Else "Checking"
 		Local progress:=New ProgressDialog( title,progressText )
 		
 		progress.MinSize=New Vec2i( 320,0 )
@@ -368,18 +368,7 @@ Class BuildActions
 					Endif
 				Endif
 			Endif
-			
-			#Rem
-			If checkOnly
-				Local i := stdout.Find( "Compiling..." )
-				If i<>-1
-					_console.Write( "~nDone." )
-					_console.Terminate()
-					Exit
-				Endif
-			Endif
-			#End
-			
+						
 			_console.Write( stdout )
 		
 		Forever
@@ -449,7 +438,7 @@ Class BuildActions
 		Return BuildMx2( MainWindow.Mx2ccPath+" makedocs","Rebuilding documentation..." )
 	End
 	
-	Method BuildApp:Bool( config:String,target:String,run:Bool,checkOnly:Bool )
+	Method BuildApp:Bool( config:String,target:String,action:String )
 	
 		Local buildDoc:=BuildDoc()
 		If Not buildDoc Return False
@@ -464,18 +453,20 @@ Class BuildActions
 			appType="console"
 			target="desktop"
 		End
+		
+		Local run:=(action="run")
+		If run action="build"
 
-		Local action := checkOnly ? "-semant" Else "-build"
-		Local cmd:=MainWindow.Mx2ccPath+" makeapp "+action+" "+opts
+		Local cmd:=MainWindow.Mx2ccPath+" makeapp -"+action+" "+opts
 		cmd+=" -apptype="+appType+" "
 		cmd+=" -config="+config
 		cmd+=" -target="+target
 		cmd+=" ~q"+buildDoc.Path+"~q"
 		
-		Local title := checkOnly ? "Checking" Else "Building"
+		Local title := run ? "Building" Else "Checking"
 		Local msg:=title+" "+StripDir( buildDoc.Path )+" for "+target+" "+config
 		
-		If Not BuildMx2( cmd,msg,checkOnly ) Return False
+		If Not BuildMx2( cmd,msg,run ) Return False
 		
 		_console.Write("~nDone.")
 		
@@ -501,17 +492,17 @@ Class BuildActions
 	
 	Method OnBuildAndRun()
 
-		BuildApp( _buildConfig,_buildTarget,True,False )
+		BuildApp( _buildConfig,_buildTarget,"run" )
 	End
 	
 	Method OnBuild()
 	
-		BuildApp( _buildConfig,_buildTarget,False,False )
+		BuildApp( _buildConfig,_buildTarget,"build" )
 	End
 	
-	Method OnCheck()
+	Method OnSemant()
 	
-		BuildApp( _buildConfig,_buildTarget,False,True )
+		BuildApp( _buildConfig,_buildTarget,"semant" )
 	End
 	
 	Method OnNextError()

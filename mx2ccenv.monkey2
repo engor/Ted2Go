@@ -92,9 +92,9 @@ Function EnumValidTargets:StringStack( console:Console )
 	targets.Push( "desktop" )
 	targets.Push( "emscripten" )
 	targets.Push( "android" )
-#if __TARGET__="ios"	
+#If __TARGET__="macos"
 	targets.Push( "ios" )
-#endif
+#Endif
 
 	Return targets
 	
