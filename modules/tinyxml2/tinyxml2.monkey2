@@ -84,7 +84,7 @@ End
 
 Class XMLDocument Extends XMLNode="tinyxml2::XMLDocument"
 
-	Method Parse:XMLError( xml:Utf8String )
+	Method Parse:XMLError( xml:CString )
 	
 	Method PrintDocument()="Print"
 	
@@ -101,27 +101,27 @@ Class XMLElement Extends XMLNode="tinyxml2::XMLElement"
 	
 	Method Attribute:String( name:String,value:String="" ) Extension="tinyxml2::bbElementAttribute"
 	
-	Method IntAttribute:Int( name:Utf8String )
+	Method IntAttribute:Int( name:CString )
 	
-	Method UnsignedAttribute:UInt( name:Utf8String )
+	Method UnsignedAttribute:UInt( name:CString )
 	
-	Method BoolAttribute:Bool( name:Utf8String )
+	Method BoolAttribute:Bool( name:CString )
 	
-	Method DoubleAttribute:Double( name:Utf8String )
+	Method DoubleAttribute:Double( name:CString )
 	
-	Method FloatAttribute:Float( name:Utf8String )
+	Method FloatAttribute:Float( name:CString )
 	
-	Method QueryIntAttribute:XMLError( name:Utf8String,value:Int Ptr )
+	Method QueryIntAttribute:XMLError( name:CString,value:Int Ptr )
 	
-	Method QueryUnsignedAttribute:XMLError( name:Utf8String,value:UInt Ptr )
+	Method QueryUnsignedAttribute:XMLError( name:CString,value:UInt Ptr )
 	
-	Method QueryBoolAttribute:XMLError( name:Utf8String,value:Bool Ptr )
+	Method QueryBoolAttribute:XMLError( name:CString,value:Bool Ptr )
 	
-	Method QueryDoubleAttribute:XMLError( name:Utf8String,value:Double Ptr )
+	Method QueryDoubleAttribute:XMLError( name:CString,value:Double Ptr )
 	
-	Method QueryFloatAttribute:XMLError( name:Utf8String,value:Float Ptr )
+	Method QueryFloatAttribute:XMLError( name:CString,value:Float Ptr )
 	
-	Method QueryAttribute:Int( name:Utf8String,value:Int Ptr )
+	Method QueryAttribute:Int( name:CString,value:Int Ptr )
 	
 	Method FirstAttribute:XMLAttribute() Extension="tinyxml2::bbElementFirstAttribute"
 

@@ -126,11 +126,11 @@ namespace bbFileSystem{
 	
 #if _WIN32
 
-		return CopyFileA( bbTString( srcPath ),bbTString( dstPath ),FALSE );
+		return CopyFileW( bbWString( srcPath ),bbWString( dstPath ),FALSE );
 		
 #elif __APPLE__
 
-		int ret=copyfile( bbTString( srcPath ),bbTString( dstPath ),0,COPYFILE_ALL );
+		int ret=copyfile( bbCString( srcPath ),bbCString( dstPath ),0,COPYFILE_ALL );
 		
 		if( ret>=0 ) return true;
 		
@@ -144,9 +144,9 @@ namespace bbFileSystem{
 		//TODO: use sendfile() here?
 		//
 		int err=-1;
-		if( FILE *srcp=fopen( bbTString( srcPath ),"rb" ) ){
+		if( FILE *srcp=fopen( bbCString( srcPath ),"rb" ) ){
 			err=-2;
-			if( FILE *dstp=fopen( bbTString( dstPath ),"wb" ) ){
+			if( FILE *dstp=fopen( bbCString( dstPath ),"wb" ) ){
 				err=0;
 				char buf[1024];
 				while( int n=fread( buf,1,1024,srcp ) ){

@@ -64,8 +64,6 @@ class bbString{
 	
 	const char *c_str()const;
 	
-	const char *utf8_str()const;
-	
 	bbString():_rep( &_nullRep ){
 	}
 	
@@ -73,12 +71,22 @@ class bbString{
 		retain();
 	}
 	
-	template<class C> bbString( const C *data ):_rep( Rep::create( data ) ){
-	}
-
-	template<class C> bbString( const C *data,int length ):_rep( Rep::create( data,length ) ){
+	bbString( const void *data );
+	
+	bbString( const void *data,int length );
+	
+	bbString( const bbChar *data ):_rep( Rep::create( data ) ){
 	}
 	
+	bbString( const bbChar *data,int length ):_rep( Rep::create( data,length ) ){
+	}
+
+	bbString( const wchar_t *data ):_rep( Rep::create( data ) ){
+	}
+	
+	bbString( const wchar_t *data,int length ):_rep( Rep::create( data,length ) ){
+	}
+
 	bbString( bbInt n ){
 		char data[64];
 		sprintf( data,"%i",n );
@@ -444,166 +452,71 @@ class bbString{
 
 	void toWString( void *buf,int size )const;
 	
-	void toUtf8String( void *buf,int size )const;
-	
 	static bbString fromChar( int chr );
 	
-	static bbString fromCString( const void *data,int size=-1 );
-
-	static bbString fromWString( const void *data,int size=-1 );
+	static bbString fromCString( const void *data ){ return bbString( data ); }
 	
-	static bbString fromUtf8String( const void *data,int size=-1 );
+	static bbString fromCString( const void *data,int size ){ return bbString( data,size ); }
 	
-	static bbString fromAsciiData( const void *data,int size );
-
-	static bbString fromUtf8Data( const void *data,int size );
+	static bbString fromWString( const void *data ){ return bbString( (const wchar_t*)data ); }
 	
-	static bbString fromTString( const void *data,int size=-1 ){
-#if _WIN32
-		return fromCString( data,size );
-#else
-		return fromUtf8String( data,size );
-#endif
-	}
-
+	static bbString fromWString( const void *data,int size ){ return bbString( (const wchar_t*)data,size ); }
 };
 
 class bbCString{
-	bbString _str;
-	mutable char *_data=nullptr;
+	char *_data;
 	
 	public:
-	
-	bbCString( const bbString &str ):_str( str ){
-	}
-	
-	bbCString( const bbCString &str ):_str( str._str ){
+
+	bbCString( const bbString &str ){
+		int size=str.utf8Length()+1;
+		_data=(char*)malloc( size );
+		str.toCString( _data,size );
 	}
 	
 	~bbCString(){
 		free( _data );
 	}
 	
-	operator bbString()const{
-		return _str;
-	}
-	
-	bbCString &operator=( const bbCString &str ){
-		free( _data );
-		_data=nullptr;
-		_str=str._str;
-		return *this;
-	}
-	
-	char *data()const{
-		if( _data ) return _data;
-		int size=_str.length()+1;
-		_data=(char*)malloc( size );
-		_str.toCString( _data,size );
+	operator char*()const{
 		return _data;
 	}
 	
-	operator char*()const{
-		return data();
+	operator signed char*()const{
+		return (signed char*)_data;
+	}
+	
+	operator unsigned char*()const{
+		return (unsigned char*)_data;
 	}
 };
 
 class bbWString{
-	bbString _str;
-	mutable wchar_t *_data=nullptr;
+	wchar_t *_data;
 	
 	public:
 	
-	bbWString( const bbString &str ):_str( str ){
-	}
-	
-	bbWString( const bbWString &str ):_str( str._str ){
+	bbWString( const bbString &str ){
+		int size=(str.length()+1)*sizeof(wchar_t);
+		_data=(wchar_t*)malloc( size );
+		str.toWString( _data,size );
 	}
 	
 	~bbWString(){
 		free( _data );
 	}
 	
-	operator bbString()const{
-		return _str;
-	}
-	
-	bbWString &operator=( const bbWString &str ){
-		free( _data );
-		_data=nullptr;
-		_str=str._str;
-		return *this;
-	}
-	
-	wchar_t *data()const{
-		if( _data ) return _data;
-		int size=(_str.length()+1)*sizeof(wchar_t);
-		_data=(wchar_t*)malloc( size );
-		_str.toWString( _data,size );
-		return _data;
-	}
-	
 	operator wchar_t*()const{
-		return data();
-	}
-};
-
-class bbUtf8String{
-	bbString _str;
-	mutable unsigned char *_data=nullptr;
-	
-	public:
-	
-	bbUtf8String( const bbString &str ):_str( str ){
-	}
-	
-	bbUtf8String( const bbUtf8String &str ):_str( str._str ){
-	}
-	
-	~bbUtf8String(){
-		free( _data );
-	}
-	
-	bbUtf8String &operator=( const bbUtf8String &str ){
-		free( _data );
-		_data=nullptr;
-		_str=str._str;
-		return *this;
-	}
-	
-	operator bbString()const{
-		return _str;
-	}
-	
-	unsigned char *data()const{
-		if( _data ) return _data;
-		int size=_str.utf8Length()+1;
-		_data=(unsigned char*)malloc( size );
-		_str.toUtf8String( _data,size );
 		return _data;
 	}
-	
-	operator char*()const{
-		return (char*)data();
-	}
-	
-	operator unsigned char*()const{
-		return data();
-	}
 };
-
-#if _WIN32
-typedef bbCString bbTString;
-#else
-typedef bbUtf8String bbTString;
-#endif
 
 template<class C> bbString operator+( const C *str,const bbString &str2 ){
-	return bbString( str )+str2;
+	return bbString::fromCString( str )+str2;
 }
 
 inline bbString BB_T( const char *p ){
-	return bbString::fromUtf8String( p );
+	return bbString::fromCString( p );
 }
 
 inline void bbGCMark( const bbString &t ){

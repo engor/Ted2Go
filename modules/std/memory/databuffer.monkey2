@@ -263,27 +263,21 @@ Class DataBuffer Extends std.resource.Resource
 	
 	If `count` is omitted, all bytes from `offset` until the end of the data buffer are read.
 	
-	`encoding` should be one of "utf8" or "ansi".
-
 	@param offset Byte offset to read the string.
 	
 	@param count Number of bytes to read.
 	
-	@param encoding The encoding to use.
-	
 	#end
-	Method PeekString:String( offset:Int,encoding:String="utf8" )
+	Method PeekString:String( offset:Int )
 		DebugAssert( offset>=0 And offset<=_length )
 		
-		Return PeekString( offset,_length-offset,encoding )
+		Return PeekString( offset,_length-offset )
 	End
 	
-	Method PeekString:String( offset:Int,count:Int,encoding:String="utf8" )
+	Method PeekString:String( offset:Int,count:Int )
 		DebugAssert( offset>=0 And count>=0 And offset+count<=_length )
 
-		If encoding="ansi" Or encoding="ascii" Return String.FromAsciiData( _data+offset,count )
-		
-		Return String.FromUtf8Data( _data+offset,count )
+		Return String.FromCString( _data+offset,count )
 	End
 	
 	#rem monkeydoc Writes a byte to the databuffer
@@ -426,32 +420,19 @@ Class DataBuffer Extends std.resource.Resource
 
 	#rem monkeydoc Write a string to the databuffer.
 
-	`encoding` should be one of "utf8" or "ansi".
-	
 	If there is not enough room in the data buffer, the string data is truncated.
 	
 	@param offset Byte offset to write the string.
 	
 	@param value The string to write.
 	
-	@param encoding The encoding to use.
-	
 	#end	
-	Method PokeString( offset:Int,value:String,encoding:String="utf8" )
+	Method PokeString( offset:Int,value:String )
 		DebugAssert( offset>=0 And offset<=_length )
 		
-		DebugAssert( encoding="utf8" Or encoding="ascii" )
-		
-		If encoding="ansi" Or encoding="ascii"
-			Local count:=value.Length
-			If offset+count>_length count=_length-offset
-			value.ToCString( _data+offset,count )
-		Else
-			Local count:=value.Utf8Length
-			If offset+count>_length count=_length-offset
-			value.ToUtf8String( _data+offset,count )
-		Endif
-
+		Local count:=value.Length
+		If offset+count>_length count=_length-offset
+		value.ToCString( _data+offset,count )
 	End
 
 	#rem monkeydoc Creates a slice of the databuffer.

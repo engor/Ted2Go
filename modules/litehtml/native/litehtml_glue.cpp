@@ -153,16 +153,7 @@ void bb_litehtml_context::load_master_stylesheet( bbString master_css ){
 
 bb_litehtml_document::bb_litehtml_document( bbString source,bb_litehtml_document_container *container,bb_litehtml_context *context ){
 
-	_document=litehtml::document::createFromUTF8( bbUtf8String( source ),container,context );
-	
-//	const char *utf8=source.toUtf8String();
-//	_document=litehtml::document::createFromUTF8( utf8,container,context );
-	
-//	char *utf8=new char[source.utf8Length()+1];
-//	source.toUtf8( (bbByte*)utf8 );
-//	utf8[source.utf8Length()]=0;
-//	_document=litehtml::document::createFromUTF8( utf8,container,context );
-//	delete[] utf8;
+	_document=litehtml::document::createFromUTF8( bbCString( source ),container,context );
 	
 	_container=container;
 	_context=context;

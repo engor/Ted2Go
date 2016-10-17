@@ -44,7 +44,7 @@ Class Window Extends View
 	#end
 	Property Title:String()
 	
-		Return String.FromUtf8String( SDL_GetWindowTitle( _sdlWindow ) )
+		Return String.FromCString( SDL_GetWindowTitle( _sdlWindow ) )
 	
 	Setter( title:String )
 	

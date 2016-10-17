@@ -292,31 +292,29 @@ Class Stream
 	
 	#rem monkeydoc Reads the entire stream into a string.
 	#end
-	Method ReadString:String( encoding:String="utf8" )
+	Method ReadString:String()
 		Local data:=ReadAll()
-		Local str:=data.PeekString( 0,encoding )
+		Local str:=data.PeekString( 0 )
 		data.Discard()
 		Return str
 	End
 	
 	#rem monkeydoc Reads a null terminated string from the stream.
 	
-	@param encoding The string encoding, "utf8" or "ansi".
-	
 	@return the string read.
 	
 	#end
-	Method ReadCString:String( encoding:String="utf8" )
+	Method ReadNullTerminatedString:String()
+	
 		Local buf:=New Stack<Byte>
+		
 		While Not Eof
 			Local chr:=ReadByte()
 			If Not chr Exit
 			buf.Push( chr )
 		Wend
 		
-		If encoding="ansi" Or encoding="ascii" Return String.FromAsciiData( buf.Data.Data,buf.Length )
-		
-		Return String.FromUtf8Data( buf.Data.Data,buf.Length )
+		Return String.FromCString( buf.Data.Data,buf.Length )
 	End
 	
 	#rem monkeydoc Writes a byte to the stream.
@@ -424,24 +422,11 @@ Class Stream
 	@param str The string to write.
 	
 	#end
-	Method WriteString( str:String,encoding:String="utf8" )
-		Local size:=(encoding="utf8" ? str.Utf8Length Else str.Length)
-		Local buf:=New DataBuffer( size )
-		buf.PokeString( 0,str,encoding )
-		Write( buf,0,size )
-	End
-	
-	#rem monkeydoc Writes a null terminated string to the stream.
-
-	@param str The string to write.
-	
-	#end
-	Method WriteCString( str:String,encoding:String="utf8" )
-		Local size:=(encoding="utf8" ? str.Utf8Length Else str.Length)+1
-		Local buf:=New DataBuffer( size )
-		buf.PokeString( 0,str,encoding )
-		buf.PokeByte( size-1,0 )
-		Write( buf,0,size )
+	Method WriteString( str:String )
+		Local buf:=New DataBuffer( str.CStringLength )
+		buf.PokeString( 0,str )
+		Write( buf,0,buf.Length )
+		buf.Discard()
 	End
 	
 	#rem monkeydoc Opens a stream

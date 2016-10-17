@@ -4,6 +4,103 @@
 
 bbString::Rep bbString::_nullRep;
 
+namespace{
+
+	int countUtf8Chars( const char *p,int sz ){
+	
+		const char *e=p+sz;
+	
+		int n=0;
+	
+		while( p!=e ){
+			int c=*p++;
+			
+			if( c & 0x80 ){
+				if( (c & 0xe0)==0xc0 ){
+					if( p==e || (p[0] & 0xc0)!=0x80 ) return -1;
+					p+=1;
+				}else if( (c & 0xf0)==0xe0 ){
+					if( p==e || p+1==e || (p[0] & 0xc0)!=0x80 || (p[1] & 0xc0)!=0x80 ) return -1;
+					p+=2;
+				}else{
+					return -1;
+				}
+			}
+			n+=1;
+		}
+		return n;
+	}
+	
+	int countNullTerminatedUtf8Chars( const char *p,int sz ){
+	
+		const char *e=p+sz;
+	
+		int n=0;
+	
+		while( p!=e && *p ){
+			int c=*p++;
+			
+			if( c & 0x80 ){
+				if( (c & 0xe0)==0xc0 ){
+					if( p==e || (p[0] & 0xc0)!=0x80 ) return -1;
+					p+=1;
+				}else if( (c & 0xf0)==0xe0 ){
+					if( p==e || p+1==e || (p[0] & 0xc0)!=0x80 || (p[1] & 0xc0)!=0x80 ) return -1;
+					p+=2;
+				}else{
+					return -1;
+				}
+			}
+			n+=1;
+		}
+		return n;
+	}
+	
+	void charsToUtf8( const bbChar *p,int n,char *dst,int size ){
+	
+		char *end=dst+size;
+		
+		const bbChar *e=p+n;
+		
+		while( p<e && dst<end ){
+			bbChar c=*p++;
+			if( c<0x80 ){
+				*dst++=c;
+			}else if( c<0x800 ){
+				if( dst+2>end ) break;
+				*dst++=0xc0 | (c>>6);
+				*dst++=0x80 | (c & 0x3f);
+			}else{
+				if( dst+3>end ) break;
+				*dst++=0xe0 | (c>>12);
+				*dst++=0x80 | ((c>>6) & 0x3f);
+				*dst++=0x80 | (c & 0x3f);
+			}
+		}
+		if( dst<end ) *dst++=0;
+	}
+	
+	void utf8ToChars( const char *p,bbChar *dst,int n ){
+	
+		while( n-- ){
+			int c=*p++;
+			
+			if( c & 0x80 ){
+				if( (c & 0xe0)==0xc0 ){
+					c=((c & 0x1f)<<6) | (p[0] & 0x3f);
+					p+=1;
+				}else if( (c & 0xf0)==0xe0 ){
+					c=((c & 0x0f)<<12) | ((p[0] & 0x3f)<<6) | (p[1] & 0x3f);
+					p+=2;
+				}
+			}
+			*dst++=c;
+		}
+
+	}
+	
+}
+
 int bbString::utf8Length()const{
 
 	const bbChar *p=data();
@@ -25,15 +122,49 @@ int bbString::utf8Length()const{
 	return n;
 }
 
+bbString::bbString( const void *p ){
+
+	const char *cp=(const char*)p;
+
+	if( !cp ){
+		_rep=&_nullRep;
+		return;
+	}
+
+	int sz=strlen( cp );
+
+	int n=countNullTerminatedUtf8Chars( cp,sz );
+
+	if( n==-1 || n==sz ){
+		_rep=Rep::create( cp,sz );
+		return;
+	}
+	_rep=Rep::alloc( n );
+	utf8ToChars( cp,_rep->data,n );
+}
+
+bbString::bbString( const void *p,int sz ){
+
+	const char *cp=(const char*)p;
+
+	if( !cp ){
+		_rep=&_nullRep;
+		return;
+	}
+
+	int n=countUtf8Chars( cp,sz );
+
+	if( n==-1 || n==sz ){
+		_rep=Rep::create( cp,sz );
+		return;
+	}
+	_rep=Rep::alloc( n );
+	utf8ToChars( cp,_rep->data,n );
+}
+
 void bbString::toCString( void *buf,int size )const{
-	if( size<=0 ) return;
-	
-	int sz=length();
-	if( sz>size ) sz=size;
-	
-	for( int i=0;i<sz;++i ) ((char*)buf)[i]=data()[i];
-	
-	if( sz<size ) ((char*)buf)[sz]=0;
+
+	charsToUtf8( _rep->data,_rep->length,(char*)buf,size );
 }
 
 void bbString::toWString( void *buf,int size )const{
@@ -49,47 +180,7 @@ void bbString::toWString( void *buf,int size )const{
 	if( sz<size ) ((wchar_t*)buf)[sz]=0;
 }
 
-void bbString::toUtf8String( void *buf,int size )const{
-
-	char *dst=(char*)buf;
-	char *end=dst+size;
-	
-	const bbChar *p=data();
-	const bbChar *e=p+length();
-	
-	while( p<e && dst<end ){
-		bbChar c=*p++;
-		if( c<0x80 ){
-			*dst++=c;
-		}else if( c<0x800 ){
-			if( dst+2>end ) break;
-			*dst++=0xc0 | (c>>6);
-			*dst++=0x80 | (c & 0x3f);
-		}else{
-			if( dst+3>end ) break;
-			*dst++=0xe0 | (c>>12);
-			*dst++=0x80 | ((c>>6) & 0x3f);
-			*dst++=0x80 | (c & 0x3f);
-		}
-	}
-	if( dst<end ) *dst++=0;
-}
-
 const char *bbString::c_str()const{
-
-	static int _sz;
-	static char *_tmp;
-	
-	int sz=length()+1;
-	if( sz>_sz ){
-		free( _tmp );
-		_tmp=(char*)malloc( _sz=sz );
-	}
-	toCString( _tmp,sz );
-	return _tmp;
-}
-
-const char *bbString::utf8_str()const{
 
 	static int _sz;
 	static char *_tmp;
@@ -99,136 +190,14 @@ const char *bbString::utf8_str()const{
 		free( _tmp );
 		_tmp=(char*)malloc( _sz=sz );
 	}
-	toUtf8String( _tmp,sz );
+	toCString( _tmp,sz );
 	return _tmp;
 }
 
 bbString bbString::fromChar( int chr ){
-	bbChar buf[]={(bbChar)chr,0};
-	return bbString( buf,1 );
+	wchar_t chrs[]={ chr };
+	return bbString( chrs,1 );
 }
-
-bbString bbString::fromCString( const void *data,int size ){
-	if( !data ) return bbString();
-	const char *p=(const char*)data;
-	const char *e=p;
-	while( e!=p+size && *e ) ++e;
-	return bbString( p,e-p );
-}
-
-bbString bbString::fromWString( const void *data,int size ){
-	if( !data ) return bbString();
-	size/=sizeof(wchar_t);
-	const wchar_t *p=(const wchar_t*)data;
-	const wchar_t *e=p;
-	while( e!=p+size && *e ) ++e;
-	return bbString( p,e-p );
-}
-
-bbString bbString::fromUtf8String( const void *data,int size ){
-	if( !data ) return bbString();
-
-	const char *p=(const char*)data;
-	const char *e=p+size;
-
-	int len=0;
-		
-	while( p!=e && *p ){
-		int c=*p++;
-		
-		if( c & 0x80 ){
-			if( (c & 0xe0)==0xc0 ){
-				if( p==e || (p[0] & 0xc0)!=0x80 ) break;
-				p+=1;
-			}else if( (c & 0xf0)==0xe0 ){
-				if( p==e || p+1==e || (p[0] & 0xc0)!=0x80 || (p[1] & 0xc0)!=0x80 ) break;
-				p+=2;
-			}else{
-				break;
-			}
-		}
-		len+=1;
-	}
-	
-	p=(const char*)data;
-	
-	Rep *rep=Rep::alloc( len );
-	bbChar *d=rep->data;
-	
-	while( len-- ){
-		int c=*p++;
-		
-		if( c & 0x80 ){
-			if( (c & 0xe0)==0xc0 ){
-				c=((c & 0x1f)<<6) | (p[0] & 0x3f);
-				p+=1;
-			}else if( (c & 0xf0)==0xe0 ){
-				c=((c & 0x0f)<<12) | ((p[0] & 0x3f)<<6) | (p[1] & 0x3f);
-				p+=2;
-			}
-		}
-		*d++=c;
-	}
-	
-	return rep;
-}
-
-bbString bbString::fromAsciiData( const void *data,int size ){
-
-	if( !data || size<=0 ) return bbString();
-	
-	return bbString( (const char*)data,size );
-}
-
-bbString bbString::fromUtf8Data( const void *data,int size ){
-
-	if( !data || size<=0 ) return bbString();
-
-	const char *p=(const char*)data;
-	const char *e=p+size;
-
-	int len=0;
-		
-	while( p!=e ){
-		int c=*p++;
-		
-		if( c & 0x80 ){
-			if( (c & 0xe0)==0xc0 ){
-				if( p==e || (p[0] & 0xc0)!=0x80 ) break;
-				p+=1;
-			}else if( (c & 0xf0)==0xe0 ){
-				if( p==e || p+1==e || (p[0] & 0xc0)!=0x80 || (p[1] & 0xc0)!=0x80 ) break;
-				p+=2;
-			}else{
-				break;
-			}
-		}
-		len+=1;
-	}
-	
-	p=(const char*)data;
-	
-	Rep *rep=Rep::alloc( len );
-	bbChar *d=rep->data;
-	
-	while( len-- ){
-		int c=*p++;
-		
-		if( c & 0x80 ){
-			if( (c & 0xe0)==0xc0 ){
-				c=((c & 0x1f)<<6) | (p[0] & 0x3f);
-				p+=1;
-			}else if( (c & 0xf0)==0xe0 ){
-				c=((c & 0x0f)<<12) | ((p[0] & 0x3f)<<6) | (p[1] & 0x3f);
-				p+=2;
-			}
-		}
-		*d++=c;
-	}
-	
-	return rep;
-}
-
 
 bbArray<bbString> bbString::split( bbString sep )const{
 

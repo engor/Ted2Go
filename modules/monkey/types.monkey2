@@ -3,18 +3,24 @@ Namespace monkey.types
 
 Extern
 
+#rem monkeydoc Implemented by numeric types.
+#end
 Interface INumeric
 End
 
+#rem monkeydoc Implemented by integral numeric types.
+#end
 Interface IIntegral Extends INumeric
 End
 
+#rem monkeydoc Implemented by real numeric types.
+#end
 Interface IReal Extends INumeric
 End
 
 #rem monkeydoc Primitive bool type.
 #end
-Struct @Bool Implements IIntegral ="bbBool"
+Struct @Bool ="bbBool"
 End
 
 #rem monkeydoc Primitive 8 bit byte type.
@@ -78,12 +84,22 @@ Struct @String ="bbString"
 	#end
 	Property Length:Int()="length"
 	
+	
 	#rem monkeydoc Gets the utf8 length of the string.
 	
 	@return The size of the buffer required to store a utf8 representation of the string.
 	
 	#end
 	Property Utf8Length:Int()="utf8Length"
+
+	
+	#rem monkeydoc Gets the CString length of the string.
+	
+	@return The size of the buffer required to store a cstring representation of the string.
+	
+	#end
+	Property CStringLength:Int()="utf8Length"
+
 	
 	#rem monkeydoc Finds a substring in the string.
 	
@@ -156,13 +172,56 @@ Struct @String ="bbString"
 	
 	Method Slice:String( from:Int,tail:Int )="slice"
 	
+	#rem monkeydoc Gets a substring from the start of the string.
+	
+	Returns a string consisting of the first `count` characters of this string.
+	
+	If `count` is less than or equal to 0, an empty string is returned.
+	
+	If `count` is greater than the length of this string, this string is returned.
+	
+	@param count The number of characters to return.
+
+	@return A string consisting of the first `count` characters of this string.
+	
+	#end
 	Method Left:String( count:Int )="left"
 	
+	#rem monkeydoc Gets a substring from the end of the string.
+
+	Returns a string consisting of the last `count` characters of this string.
+
+	If `count` is less than or equal to 0, an empty string is returned.
+	
+	If `count` is greater than the length of this string, this string is returned.
+	
+	@param count The number of characters to return.
+
+	@return A string consisting of the last `count` characters of this string.
+	
+	#end
 	Method Right:String( count:Int )="right"
 	
+	#rem monkeydoc Gets a substring from the middle of the string.
+	
+	Returns a string consisting of `count` characters starting from index `from`.
+	
+	If `count` is less than or equal to 0, an empty string is returned.
+	
+	If `from`+`count` is greater than the length of the string, the returned string is truncated.
+
+	@param from The index of the first character to return.
+
+	@param count The number of characters to return.
+
+	@return A string consisting of `count` characters starting from index `from`.
+	
+	#end
 	Method Mid:String( from:Int,count:Int )="mid"
 	
 	#rem monkeydoc Convert the string to uppercase.
+	
+	Return the string converted to uppercase.
 	
 	@return The string converted to uppercase.
 	
@@ -171,6 +230,8 @@ Struct @String ="bbString"
 	
 	#rem monkeydoc Convert the string to lowercase.
 	
+	Returns the string converted to lowercase.
+	
 	@return The string converted to lowercase.
 	
 	#end
@@ -178,12 +239,16 @@ Struct @String ="bbString"
 
 	#rem monkeydoc Capitalizes the string.
 	
+	Returns the string with the first character converted to uppercase and the remaining characters unmodified.
+
 	@return The string with the first character converted to uppercase and the remaining characters unmodified.
 	
 	#end	
 	Method Capitalize:String()="capitalize"
 	
 	#rem monkeydoc Trim whitespace from a string.
+	
+	Returns the string with leading and trailing whitespace removed.
 	
 	@return The string with leading and trailing whitespace removed.
 	
@@ -192,6 +257,8 @@ Struct @String ="bbString"
 	
 	#rem monkeydoc Trim whitespace from the start a string.
 	
+	Returns the string with any leading whitespace removed.
+	
 	@return The string with any leading whitespace removed.
 	
 	#end
@@ -199,6 +266,8 @@ Struct @String ="bbString"
 	
 	#rem monkeydoc Trim whitespace from the end of a string.
 	
+	Returns the string with any trailing whitespace removed.
+
 	@return The string with any trailing whitespace removed.
 	
 	#end
@@ -206,18 +275,22 @@ Struct @String ="bbString"
 	
 	#rem monkeydoc Duplicates a string.
 	
+	Returns the string duplicated `count` times.
+	
 	@return The string duplicated `count` times.
 	
 	#end
 	Method Dup:String( count:Int )="dup"
 	
 	#rem monkeydoc Replace all occurances of a substring with another string.
+
+	Returns the string with all occurances of `find` replaced with `replace`.
 	
 	@param find The string to search for.
 	
 	@param replace The string to replace with.
 	
-	@return The string with `find` replaced with `replace`.
+	@return The string with all occurances of `find` replaced with `replace`.
 	
 	#end
 	Method Replace:String( find:String,replace:String )="replace"
@@ -244,6 +317,7 @@ Struct @String ="bbString"
 	#end
 	Method Join:String( bits:String[] )="join"
 	
+
 	#rem monkeydoc Converts the string to a CString.
 	
 	If there is enough room in the memory buffer, a null terminating '0' is appended to the CString.
@@ -255,7 +329,8 @@ Struct @String ="bbString"
 	#end
 	Method ToCString( buf:Void Ptr,bufSize:Int )="toCString"
 
-	#rem monkeydoc Converts the string to a WString
+
+	#rem monkeydoc Converts the string to a WString.
 	
 	If there is enough room in the memory buffer, a null terminating '0' is appended to the WString.
 	
@@ -266,17 +341,7 @@ Struct @String ="bbString"
 	#end
 	Method ToWString( buf:Void Ptr,bufSize:Int )="toWString"
 	
-	#rem monkeydoc Converts the string to a Utf8String
-	
-	If there is enough room in the memory buffer, a null terminating '0' is appended to the Utf8String.
-	
-	@param buf Memory buffer to write the Utf8String to.
-	
-	@param bufSize Size of the memory buffer in bytes.
-	
-	#end
-	Method ToUtf8String( buf:Void Ptr,bufSize:Int )="toUtf8String"
-	
+
 	#rem monkeydoc Creates a string containing a single character.
 	
 	@param chr The character.
@@ -284,9 +349,10 @@ Struct @String ="bbString"
 	#end
 	Function FromChar:String( chr:Int )="bbString::fromChar"
 	
-	#rem monkeydoc Creates a string from a null terminated CString.
 	
-	If `bufSize` is specified, only `bufsize` bytes at most bytes will be read.
+	#rem monkeydoc Creates a string from a CString.
+	
+	If `bufSize` is specified, the CString may contain null characters which will be included in the string.
 	
 	If `bufsize` is not specified, the CString must be correctly null terminated or Bad Things Will Happen.
 	
@@ -298,10 +364,11 @@ Struct @String ="bbString"
 	Function FromCString:String( buf:Void Ptr,bufSize:Int )="bbString::fromCString"
 
 	Function FromCString:String( buf:Void Ptr )="bbString::fromCString"
+
 	
 	#rem monkeydoc Creates a string from a null terminated WString.
 	
-	If `bufSize` is specified, only `bufsize` bytes at most bytes will be read.
+	If `bufSize` is specified, the WString may contain null characters which will be included in the string.
 	
 	If `bufsize` is not specified, the WString must be correctly null terminated or Bad Things Will Happen.
 	
@@ -313,27 +380,6 @@ Struct @String ="bbString"
 	Function FromWString:String( buf:Void Ptr,bufSize:Int )="bbString::fromWString"
 	
 	Function FromWString:String( buf:Void Ptr )="bbString::fromWString"
-	
-
-	#rem monkeydoc Creates a string from a null terminated Utf8String.
-	
-	If `bufSize` is specified, only `bufsize` bytes at most bytes will be read.
-	
-	If `bufsize` is not specified, the Utf8String must be correctly null terminated or Bad Things Will Happen.
-	
-	@param buf The memory buffer containing the Utf8String.
-	
-	@param bufSize The size of the memory buffer in bytes.
-	
-	#end	
-	Function FromUtf8String:String( buf:Void Ptr,bufSize:Int )="bbString::fromUtf8String"
-	
-	Function FromUtf8String:String( buf:Void Ptr )="bbString::fromUtf8String"
-	
-	
-	Function FromAsciiData:String( buf:Void Ptr,bufSize:Int )="bbString::fromAsciiData"
-
-	Function FromUtf8Data:String( buf:Void Ptr,bufSize:Int )="bbString::fromUtf8Data"
 	
 End
 
@@ -358,8 +404,7 @@ Struct @Array<T>
 	
 	#rem monkeydoc Extracts a subarray from the array.
 	
-	Returns an array consisting of all elements from `from` until (but not including) `tail`, or until the end of the string
-	if `tail` is not specified.
+	Returns an array consisting of all elements from `from` until (but not including) `tail`, or until the end of the string if `tail` is not specified.
 	
 	If either `from` or `tail` is negative, it represents an offset from the end of the array.
 	
@@ -377,7 +422,9 @@ Struct @Array<T>
 	
 	#rem monkeydoc Resizes an array.
 	
-	Returns a copy of the array resized to length `newLength'.
+	Returns a copy of the array resized to length `newLength`.
+	
+	Note that this method does not modify this array in any way.
 	
 	@param newLength The length of the new array.
 	
@@ -388,13 +435,28 @@ Struct @Array<T>
 	
 	#rem monkeydoc Gets the size of a single array dimension.
 	
+	Returns The size of the array in the given dimension.
+	
 	@param dimensions The dimension.
 	
-	@return The size of array in the given dimension.
+	@return The size of the array in the given dimension.
 	
 	#end
 	Method GetSize:Int( dimension:Int )="size"
 	
+	#rem monkeydoc Copies a range of elements from this array to another.
+	
+	In debug mode, a runtime error will occur if the copy is outside the range of the array.
+	
+	@param dstArray destination of the copy.
+	
+	@param srcOffset First element to copy from this array.
+	
+	@param dstOffset First element to copy to in destination array.
+	
+	@param count Number of elements to copy.
+	
+	#end
 	Method CopyTo( dstArray:T[],srcOffset:Int,dstOffset:Int,count:Int )="copyTo"
 
 End
@@ -410,26 +472,11 @@ Class @Object="bbObject"
 End
 
 #rem monkeydoc Base class of all throwable objects.
+
 #end
 Class @Throwable="bbThrowable"
 
 End
-
-#rem
-#rem monkeydoc Base class of all exception objects.
-#end
-Class @Exception Extends Throwable="bbException"
-
-	Method New()
-	
-	Method New( message:String )
-
-	Property Message:String()="message"
-
-	Property DebugStack:String[]()="debugStack"
-	
-End
-#end
 
 #rem monkeydoc @hidden
 #end
@@ -449,12 +496,4 @@ This type should only be used when declaring parameters for extern functions.
 
 #end
 Struct WString="bbWString"
-End
-
-#rem monkeydoc String wrapper type for native utf8 'unsigned char*' strings.
-
-This type should only be used when declaring parameters for extern functions.
-
-#end
-Struct Utf8String="bbUtf8String"
 End

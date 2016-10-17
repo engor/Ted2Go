@@ -210,7 +210,7 @@ Class AppInstance
 	
 		Local p:=SDL_GetClipboardText()
 		
-		Local str:=String.FromUtf8String( p )
+		Local str:=String.FromCString( p )
 
 		'fix windows eols		
 		str=str.Replace( "~r~n","~n" )
@@ -714,7 +714,7 @@ Class AppInstance
 			_window=Window.WindowForID( tevent->windowID )
 			If Not _window Return
 			
-			_keyChar=String.FromUtf8String( tevent->text )
+			_keyChar=String.FromCString( tevent->text )
 			
 			SendKeyEvent( EventType.KeyChar )
 			

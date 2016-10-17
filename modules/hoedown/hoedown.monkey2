@@ -105,9 +105,9 @@ End
 
 Function hoedown_document_new:hoedown_document Ptr( renderer:hoedown_renderer Ptr,extensions:hoedown_extensions,max_nesting:Int )
 
-Function hoedown_document_render( doc:hoedown_document Ptr,ob:hoedown_buffer Ptr,data:Utf8String,size:Int )
+Function hoedown_document_render( doc:hoedown_document Ptr,ob:hoedown_buffer Ptr,data:CString,size:Int )
 
-Function hoedown_document_render_inline( doc:hoedown_document Ptr,ob:hoedown_buffer Ptr,data:Utf8String,size:Int )
+Function hoedown_document_render_inline( doc:hoedown_document Ptr,ob:hoedown_buffer Ptr,data:CString,size:Int )
 
 Function hoedown_document_free( doc:hoedown_document Ptr )
 

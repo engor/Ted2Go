@@ -9,25 +9,17 @@ An empty string will be returned if the file could not be opened.
 
 @param path The path of the file.
 
-@param encoding The string encoding to use, "utf8" or "ansi".
-
-@param fixeols If true, converts eols to UNIX "~n" eols.
+@param fixeols If true, converts eols to UNIX "~n" eols after loading.
 
 @return A String containing the contents of the file. 
 
 #end
-Function LoadString:String( path:String,encoding:String="utf8",fixeols:Bool=False )
+Function LoadString:String( path:String,fixeols:Bool=False )
 
 	Local data:=DataBuffer.Load( path )
 	If Not data Return ""
-
-	Local str:=""
 	
-	If encoding="ansi" Or encoding="ascii"
-		 str=String.FromAsciiData( data.Data,data.Length )
-	Else
-		 str=String.FromUtf8Data( data.Data,data.Length )
-	End
+	Local str:=String.FromCString( data.Data,data.Length )
 	
 	data.Discard()
 	
@@ -45,29 +37,20 @@ End
 
 @param path The path of the file.
 
-@param encoding The string encoding to use, "utf8" or "ansi".
-
-@param fixeols If true, converts eols to UNIX "~n" eols.
+@param fixeols If true, converts eols to UNIX "~n" eols before saving.
 
 @return False if the file could not be opened.
 
 #end
-Function SaveString:Bool( str:String,path:String,encoding:String="utf8",fixeols:Bool=False )
+Function SaveString:Bool( str:String,path:String,fixeols:Bool=False )
 
 	If fixeols
 		str=str.Replace( "~r~n","~n" )
 		str=str.Replace( "~r","~n" )
 	Endif
 	
-	Local data:DataBuffer
-	
-	If encoding="ansi" Or encoding="ascii"
-		data=New DataBuffer( str.Length )
-		str.ToCString( data.Data,data.Length )
-	Else
-		data=New DataBuffer( str.Utf8Length )
-		str.ToUtf8String( data.Data,data.Length )
-	End
+	Local data:=New DataBuffer( str.CStringLength )
+	str.ToCString( data.Data,data.Length )
 	
 	Local ok:=data.Save( path )
 	
