@@ -15,7 +15,7 @@ Extern
 #end
 Function Now:Double()="bbTime::now"
 
-#rem monkeydoc Puts app to sleep.
+#rem monkeydoc Puts thread to sleep.
 
 Note: this will also cause all fibers to sleep.
 

@@ -3,14 +3,14 @@
 
 namespace bbAsync{
 
-	typedef std::chrono::duration<double> secs_t;
-	typedef std::chrono::high_resolution_clock clock_t;
-	typedef std::chrono::time_point<clock_t,secs_t> time_t;
+	typedef std::chrono::duration<double> Duration;
+	typedef std::chrono::high_resolution_clock Clock;
+	typedef std::chrono::time_point<Clock,Duration> TimePoint;
 
 	struct DelayedEvent{
 		DelayedEvent *succ;
 		Event *event;
-		time_t time;
+		TimePoint time;
 	};
 
 	DelayedEvent *que;
@@ -31,21 +31,18 @@ namespace bbAsync{
 			for(;;){
 			
 				if( que ){
-					que_condvar.wait_for( lock,que->time-clock_t::now() );
+					que_condvar.wait_until( lock,que->time );
 				}else{
 					que_condvar.wait( lock );
 				}
 
-				//prevent spamming...?				
-				time_t now=clock_t::now();
-				
-				while( que && que->time<=now ){
+				while( que && que->time<=Clock::now() ){
 					
 					DelayedEvent *devent=que;
 	
-					devent->event->post();
-					
 					que=devent->succ;
+					
+					devent->event->post();
 					
 					devent->succ=free_que;
 					
@@ -70,14 +67,15 @@ namespace bbAsync{
 	
 	void Event::post( double delay ){
 	
-		time_t now=clock_t::now();
+		TimePoint time=Clock::now()+Duration( delay );
 		
 		initQue();
 		
 		{
-			std::unique_lock<std::mutex> lock( que_mutex );
+			std::lock_guard<std::mutex> lock( que_mutex );
 			
 			DelayedEvent *devent=free_que;
+			
 			if( devent ){
 				free_que=devent->succ;
 			}else{
@@ -85,7 +83,7 @@ namespace bbAsync{
 			}
 			
 			devent->event=this;
-			devent->time=now+secs_t( delay );
+			devent->time=time;
 	
 			DelayedEvent *succ,**pred=&que;
 			
@@ -95,6 +93,7 @@ namespace bbAsync{
 			}
 			
 			devent->succ=succ;
+
 			*pred=devent;
 		}
 		
