@@ -88,10 +88,14 @@ Class List<T> Implements IContainer<T>
 		
 		Warning! No error checking is performed!
 		
-		This method should not be used while iterating over the list containing `node`.
+		This method should not be used while iterating over the list containing this node or `node`.
 		
 		#end
 		Method InsertBefore( node:Node )
+			'remove
+			_succ._pred=_pred
+			_pred._succ=_succ
+			'insert
 			_succ=node
 			_pred=node._pred
 			_pred._succ=Self
@@ -102,10 +106,14 @@ Class List<T> Implements IContainer<T>
 		
 		Warning! No error checking is performed! 
 		
-		This method should not be used while iterating over the list containing `node`.
+		This method should not be used while iterating over the list containing this node or `node`.
 		
 		#end
 		Method InsertAfter( node:Node )
+			'remove
+			_succ._pred=_pred
+			_pred._succ=_succ
+			'insert
 			_pred=node
 			_succ=node._succ
 			_succ._pred=Self
@@ -122,6 +130,8 @@ Class List<T> Implements IContainer<T>
 		Method Remove()
 			_succ._pred=_pred
 			_pred._succ=_succ
+			_succ=Self
+			_pred=Self
 		End
 		
 	End
