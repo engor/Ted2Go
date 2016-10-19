@@ -216,7 +216,6 @@ Class TextDocument
 			End
 		Endif
 		
-'		LinesModified( line0,eols1+1,eols2+1 )
 		LinesModified( line0,eols1,eols2 )
 		
 		TextChanged()
@@ -1608,6 +1607,15 @@ Class TextView Extends ScrollableView
 			
 			liney+=size.y
 		Next
+		
+		If _cursor>_doc.TextLength
+			_cursor=_doc.TextLength
+			_anchor=_cursor
+			UpdateCursor()
+			RequestRender()
+		Else
+			_anchor=Min( _anchor,_doc.TextLength )
+		Endif
 		
 '		Print "Document width="+_lines.Top.maxWidth+", height="+_lines.Top.rect.Bottom
 	End

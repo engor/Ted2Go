@@ -61,7 +61,7 @@ Class TextField Extends TextView
 	
 		_maxLength=maxLength
 		
-		App.RequestRender()
+		RequestRender()
 	End
 	
 	Protected
