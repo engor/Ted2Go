@@ -151,13 +151,13 @@
 		
 		"ToolBar":{
 			"padding":[ 2 ],
-			"backgroundColor":"panel"
+			"backgroundColor":"content"
 		},
 		
 		"ToolButton":{
 			"extends":"Button",
 			"padding":[2,0],
-			"margin":[6,0]
+			"margin":[2,0]
 		},
 		
 		"Menu":{

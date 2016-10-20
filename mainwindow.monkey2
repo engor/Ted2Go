@@ -219,6 +219,27 @@ Class MainWindowInstance Extends Window
 		_menuBar.AddMenu( _viewMenu )
 		_menuBar.AddMenu( _helpMenu )
 		
+		'Tool Bar
+		'
+		_toolBar = New ToolBar
+		_toolBar.Style.BackgroundColor = New Color(50.0/255.0,50.0/255.0,50.0/255.0)
+		_toolBar.MinSize = New Vec2i(0,42)
+		Local act:Action
+		
+		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/new_file.png"))
+		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/open_file.png"))
+		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/open_project.png"))
+		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/save_all.png"))
+		_toolBar.AddSeparator()
+		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/undo.png"))
+		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/redo.png"))
+		_toolBar.AddSeparator()
+		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/check.png"))
+		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/build.png"))
+		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/run.png"))
+		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/debug.png"))
+		
+				
 		_browsersTabView.AddTab( "Files",_projectView,True )
 		_browsersTabView.AddTab( "Debug",_debugView,False )
 		_browsersTabView.AddTab( "Help",_helpTree,False )
@@ -229,6 +250,7 @@ Class MainWindowInstance Extends Window
 		
 		_contentView=New DockingView
 		_contentView.AddView( _menuBar,"top" )
+		_contentView.AddView( _toolBar,"top" )
 		_contentView.AddView( _browsersTabView,"right",250,True )
 		_contentView.AddView( _consolesTabView,"bottom",200,True )
 		_contentView.ContentView=_docsTabView
@@ -479,6 +501,7 @@ Class MainWindowInstance Extends Window
 	Field _mx2cc:String
 	Field _mx2ccDir:String
 	
+	Field _toolBar:ToolBar
 	Field _docsManager:DocumentManager
 	Field _fileActions:FileActions
 	Field _editActions:EditActions

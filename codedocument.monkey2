@@ -691,6 +691,7 @@ Class CodeItemIcons
 		For Local image := Eachin _icons.Values
 			image.Scale = App.Theme.Scale
 		Next
+		_iconDefault.Scale = App.Theme.Scale
 	End
 	
 End

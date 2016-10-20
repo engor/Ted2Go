@@ -27,3 +27,5 @@
 #Import "utils/utils"
 
 #Import "test_files/parsertests"
+
+#Import "themeimages"
