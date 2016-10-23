@@ -14,5 +14,6 @@ Note: This documentation is currently WIP.
 @import functions.md
 @import expressions.md
 @import user-types.md
+@import reflection.md
 @import native-code.md
 @import build-system.md

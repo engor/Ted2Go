@@ -3,7 +3,9 @@
 
 #### Classes
 
-To declare a class:
+A class is a kind of 'blueprint' for creating objects at runtime.
+
+The syntax for declaring a class is:
 
 <div class=syntax>
 `Class` _Identifier_ [ `<` _GenericTypeIdents_ `>` ] [ `Extends` _SuperClass_ ] [ `Implements` _Interfaces_ ] [ _Modifier_ ]  
@@ -20,9 +22,24 @@ _Modifier_ can be one of:
 * `Abstract` - class cannot be instantiated with 'New', it must be extended.
 * `Final` - class cannot be extended.
 
-Classes can contain consts, globals, fields, methods, functions and other user defined types.
+Classes can contain const, global, field, method and function declarations, as well as other user defined types.
+
+Once you have declared a class, you can create objects (or 'instances') of that class at runtime using the `New` operator.
+
+Classes are 'reference types', meaning that class instances are really just a 'handle' or 'pointer' to the actual class data.
+
 
 #### Structs
+
+Structs are similar classes, but differ in several important ways:
+
+* A struct is a 'value type', whereas a class is a 'reference type'. This means that when you assign a struct to a variable, pass a struct to a function or return a struct from a function, the entire struct is copied in the process.
+
+* Stucts are statically typed, whereas classes are dynamically typed.
+
+* Struct methods cannot be virtual.
+
+* A struct cannot extend anything.
 
 To declare a struct:
 
@@ -32,17 +49,8 @@ To declare a struct:
 `End`
 </div>
 
-A struct can contain consts, globals, fields, methods, functions and other user defined types.
+A struct can contain const, global, field, method and function declaratins, as well as other user defined types.
 
-Structs are similar to classes, but differ in several important ways:
-
-* A struct is a 'value type', whereas a class is a 'reference type'. This means that when you assign a struct to a variable, pass a struct to a function or return a struct from a function, the entire struct is copied in the process.
-
-* Stucts are statically typed, whereas classes are dynamically typed.
-
-* Struct methods cannot be virtual.
-
-* A struct cannot extend anything.
 
 #### Interfaces
 
