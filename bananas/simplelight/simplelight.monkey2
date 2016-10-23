@@ -7,7 +7,7 @@ Namespace myapp
 #Import "Slate Tiles II_D.png"
 #Import "Slate Tiles II_N.png"
 #Import "Slate Tiles II_S.png"
-#Import "pointlight_light.png"
+#Import "cone_orange.png"
 #Import "Monkey2-logo-48.png"
 
 Using std..
@@ -25,23 +25,36 @@ Class MyWindow Extends Window
 	
 		ClearColor=Color.Black
 	
-		_floor=Image.LoadBump( "asset::Slate Tiles II_D.png","asset::Slate Tiles II_N.png","asset::Slate Tiles II_S.png",.5,True )
+		_floor=Image.LoadBump( "asset::Slate Tiles II_D.png","asset::Slate Tiles II_N.png","asset::Slate Tiles II_S.png",.75,True )
 		
-		_light=Image.LoadLight( "asset::pointlight_light.png" )
+		_light=Image.LoadLight( "asset::cone_orange.png" )
 		
-		_light.Handle=New Vec2f( .5 )
+		_light.Handle=New Vec2f( .5,0 )
+		
+		_light.Scale=New Vec2f( .5,.5 )
 	
-		_light.Scale=New Vec2f( 3 )
-		
 		_logo=Image.Load( "asset::Monkey2-logo-48.png" )
 		
 		_logo.Handle=New Vec2f( .5 )
 		
 		_logo.ShadowCaster=New ShadowCaster( _logo.Width/2,20 )
-		
+
 	End
 	
 	Method OnRender( canvas:Canvas ) Override
+	
+		Global viewRot:=0.0
+		
+		viewRot+=.001
+		canvas.Translate( Width/2,Height/2 )
+		canvas.Scale( Sin( viewRot*3 )*.25+1.25,Cos( viewRot*5 )*.25+1.25 )
+		canvas.Rotate( viewRot )
+		canvas.Translate( -Width/2,-Height/2 )
+		
+		Local rmouse:=-canvas.Matrix * Mouse.Location
+		
+		Global lightRot:=0.0
+		lightRot+=.02
 	
 		App.RequestRender()
 		
@@ -49,7 +62,10 @@ Class MyWindow Extends Window
 		
 		canvas.BeginLighting()
 		
-		canvas.AddLight( _light,Mouse.X,Mouse.Y )
+		canvas.AddLight( _light,rmouse.X,rmouse.Y,lightRot )
+		canvas.AddLight( _light,rmouse.X,rmouse.Y,lightRot+Pi )
+		canvas.AddLight( _light,rmouse.X,rmouse.Y,lightRot+Pi/2 )
+		canvas.AddLight( _light,rmouse.X,rmouse.Y,lightRot+Pi+Pi/2 )
 		
 		For Local x:=0 Until Width Step _floor.Width
 
@@ -69,7 +85,7 @@ Class MyWindow Extends Window
 		
 		canvas.EndLighting()
 		
-		canvas.DrawText( App.FPS,Width/2,0,.5,0 )
+		canvas.DrawText( Floor( App.FPS+.5 ),Width/2,0,.5,0 )
 	End
 	
 End
