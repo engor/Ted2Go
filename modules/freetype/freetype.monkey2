@@ -25,7 +25,9 @@ Namespace freetype
 #Import "freetype-2.6.3/src/base/ftsystem.c"
 #Import "freetype-2.6.3/src/base/fttype1.c"
 #Import "freetype-2.6.3/src/base/ftwinfnt.c"
+
 '#Import "freetype-2.6.3/src/base/ftxf86.c"
+
 #Import "freetype-2.6.3/src/base/ftpatent.c"
 #Import "freetype-2.6.3/src/autofit/autofit.c"
 #Import "freetype-2.6.3/src/bdf/bdf.c"
@@ -39,8 +41,11 @@ Namespace freetype
 #Import "freetype-2.6.3/src/pfr/pfr.c"
 #Import "freetype-2.6.3/src/psaux/psaux.c"
 #Import "freetype-2.6.3/src/pshinter/pshinter.c"
+
 #Import "freetype-2.6.3/src/psnames/psmodule.c"
-#Import "freetype-2.6.3/src/psnames/psnames.c"
+
+'#Import "freetype-2.6.3/src/psnames/psnames.c"	'#included by psmodule.c!
+
 #Import "freetype-2.6.3/src/raster/raster.c"
 #Import "freetype-2.6.3/src/sfnt/sfnt.c"
 #Import "freetype-2.6.3/src/smooth/smooth.c"
