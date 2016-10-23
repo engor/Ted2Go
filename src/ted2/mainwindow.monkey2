@@ -369,8 +369,8 @@ Class MainWindowInstance Extends Window
 		Local jobj:=New JsonObject
 		
 		jobj["windowRect"]=ToJson( Frame )
-		jobj["browserSize"]=New JsonNumber( _contentView.GetViewSize( _browsersTabView ) )
-		jobj["consoleSize"]=New JsonNumber( _contentView.GetViewSize( _consolesTabView ) )
+		jobj["browserSize"]=New JsonNumber( Int( _contentView.GetViewSize( _browsersTabView ) ) )
+		jobj["consoleSize"]=New JsonNumber( Int( _contentView.GetViewSize( _consolesTabView ) ) )
 		
 		Local recent:=New JsonArray
 		For Local path:=Eachin _recentFiles
