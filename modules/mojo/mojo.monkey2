@@ -53,7 +53,12 @@ Using mojo..
 
 Private
 
+Function Use( type:TypeInfo )
+End
+
 Function Main()
+
+	Use( Typeof(app.App) )
 
 	Stream.OpenFuncs["font"]=Lambda:Stream( proto:String,path:String,mode:String )
 	
