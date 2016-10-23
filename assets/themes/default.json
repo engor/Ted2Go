@@ -344,6 +344,12 @@
 		"HelpTextField":{
 			"extends":"TextField",
 			"skinColor":"panel"
+		},
+		
+		"Hint":{
+			"backgroundColor":"#afaf00",
+			"borderColor":"clear",
+			"border":[ 1,1,1,1 ]
 		}
 	}
 }

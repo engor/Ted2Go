@@ -100,7 +100,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	
 	Method OnKeyEvent( event:KeyEvent ) Override
 		
-		_doc.HideHint()
+		_doc.HideHint_()
 		
 		'ctrl+space - show autocomplete list
 		If event.Type = EventType.KeyDown
@@ -176,12 +176,12 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					If event.Location.x >= x And event.Location.x <= x+w
 						Local s := _doc.GetStringError(line)
 						If s <> Null
-							_doc.ShowHint(s, event.Location)
+							_doc.ShowHint_(s, event.Location)
 						Else
-							_doc.HideHint()
+							_doc.HideHint_()
 						Endif
 					Else
-						_doc.HideHint()
+						_doc.HideHint_()
 					Endif
 				Endif
 				
@@ -294,36 +294,16 @@ Class CodeDocument Extends Ted2Document
 		_errMap.Clear()
 	End
 	
-	Method ShowHint(text:String, position:Vec2i)
+	Method ShowHint_( text:String, position:Vec2i )
 	
-		If _hintDialog = Null
-			_hintDialog = New DialogExt
-			Local tv := New TextView
-			tv.ReadOnly = True
-			_hintDialog.ContentView = tv
-		Endif
+		position+=New Vec2i(10,10)-TextView.Scroll
 		
-		Local tv := Cast<TextView>(_hintDialog.ContentView)
-		'tv.WordWrap = False
-		tv.Document.Text = text
-		
-		_hintDialog.Show()
-		
-		position += TextView.Frame.TopLeft + New Vec2i(50,70)
-		position -= TextView.Scroll
-		Local frame := _hintDialog.Frame
-		'Local w := Min(600, frame.Width)
-		'tv.MinSize = New Vec2i(w,50)
-		'tv.WordWrap = True
-		Local size := New Vec2i(frame.Width, frame.Height)
-		frame.TopLeft = position
-		frame.BottomRight = position+size
-		_hintDialog.Frame = frame
-		
+		ShowHint( text,position,TextView )
 	End
 	
-	Method HideHint()
-		If _hintDialog <> Null Then _hintDialog.Hide()
+	Method HideHint_()
+		
+		HideHint()
 	End
 	
 	Global _timeCharPressed:Long
@@ -456,7 +436,6 @@ Class CodeDocument Extends Ted2Document
 	Field _errMap:=New IntMap<String>
 	
 	Field _debugLine:Int=-1
-	Field _hintDialog:DialogExt
 	
 	
 	Method OnLoad:Bool() Override
@@ -675,7 +654,8 @@ Class CodeItemIcons
 		_icons["keyword"] = Load("keyword.png")
 		_icons["alias"] = Load("alias.png")
 		_icons["operator"] = Load("operator.png")
-		_icons["error"] = Load("code_template.png")
+		_icons["error"] = Load("error.png")
+		_icons["warning"] = Load("warning.png")
 				
 		_iconDefault = Load("other.png")
 		

@@ -19,6 +19,8 @@
 #Import "views/codetreeview"
 #Import "views/treeviewext"
 #Import "views/codegutterview"
+#Import "views/toolbarext"
+#Import "views/hint"
 
 #Import "parsers/parser"
 #Import "parsers/monkey2parser"

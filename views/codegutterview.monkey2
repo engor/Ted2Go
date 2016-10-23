@@ -34,7 +34,7 @@ Class CodeGutterView Extends View
 		
 		canvas.DrawRect( Rect.X,Rect.Y,Rect.Width,Rect.Height )
 		
-		canvas.Color=RenderStyle.TextColor
+		Local textColor:=RenderStyle.TextColor
 		
 		Local vrect:=_textView.VisibleRect
 		
@@ -44,7 +44,9 @@ Class CodeGutterView Extends View
 		
 		canvas.Translate( 0,-vrect.Top )
 		
-		If _errorIcon = Null Then _errorIcon = CodeItemIcons.GetIcon("error")
+		If _errorIcon = Null Then _errorIcon = CodeItemIcons.GetIcon("warning")
+		
+		canvas.Color=textColor
 		
 		For Local i:=firstLine Until lastLine
 		
@@ -53,7 +55,11 @@ Class CodeGutterView Extends View
 			' show error bubble
 			
 			If _doc.HasErrors And _doc.HasErrorAt(i)
-				If _errorIcon <> Null Then canvas.DrawImage( _errorIcon,_width-_errorIcon.Width,rect.Top )
+				If _errorIcon <> Null
+					canvas.Color=Color.White
+					canvas.DrawImage( _errorIcon,_width-_errorIcon.Width,rect.Top )
+					canvas.Color=textColor
+				Endif
 			Else
 				canvas.DrawText( i+1,_width,rect.Top,1,0 )
 			Endif

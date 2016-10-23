@@ -40,6 +40,16 @@ Class Utils
 		Return  (n > 0) ? line.Slice(0,n) Else ""
 	End
 	
+	Function DrawRect( canvas:Canvas,rect:Rectf,fill:Bool )
+		If fill
+			canvas.DrawRect( rect )
+		Else
+			canvas.DrawLine( rect.Left,rect.Top,rect.Right,rect.Top )
+			canvas.DrawLine( rect.Right,rect.Top,rect.Right,rect.Bottom )
+			canvas.DrawLine( rect.Left,rect.Bottom,rect.Right,rect.Bottom )
+			canvas.DrawLine( rect.Left,rect.Top,rect.Left,rect.Bottom )
+		End
+	End
 	
 	Private
 	

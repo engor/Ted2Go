@@ -222,36 +222,20 @@ Class MainWindowInstance Extends Window
 		
 		'Tool Bar
 		'
-		_toolBar = New ToolBar
-		_toolBar.Style.BackgroundColor = New Color(50.0/255.0,50.0/255.0,50.0/255.0)
-		_toolBar.MinSize = New Vec2i(0,42)
-		_menuBar.Style.Border = New Recti(0,0,0,1)
-		'_toolBar.Style.Margin = New Recti(0,0,0,5)
-		Local act:Action
-		
-		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/new_file.png"))
-		act.Triggered = _fileActions.new_.Triggered
-		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/open_file.png"))
-		act.Triggered = _fileActions.open.Triggered
-		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/open_project.png"))
-		act.Triggered = _projectView.openProject.Triggered
-		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/save_all.png"))
-		act.Triggered = _fileActions.saveAll.Triggered
+		_toolBar = New ToolBarExt
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/new_file.png" ),_fileActions.new_.Triggered,"New file" )
+		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/open_file.png"),_fileActions.open.Triggered,"Open file..." )
+		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/open_project.png"),_projectView.openProject.Triggered,"Open project..." )
+		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/save_all.png"),_fileActions.saveAll.Triggered,"Save all" )
 		_toolBar.AddSeparator()
-		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/undo.png"))
-		act.Triggered = _editActions.undo.Triggered
-		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/redo.png"))
-		act.Triggered = _editActions.redo.Triggered
+		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/undo.png"),_editActions.undo.Triggered,"Undo" )
+		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/redo.png"),_editActions.redo.Triggered,"Redo" )
 		_toolBar.AddSeparator()
-		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/check.png"))
-		act.Triggered = _buildActions.semant.Triggered
-		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/build.png"))
-		act.Triggered = _buildActions.build.Triggered
-		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/run.png"))
-		act.Triggered = _buildActions.buildAndRun.Triggered
+		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/check.png"),_buildActions.semant.Triggered,"Check errors" )
+		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/build.png"),_buildActions.build.Triggered,"Build" )
+		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/run.png"),_buildActions.buildAndRun.Triggered,"Run" )
 		_toolBar.AddSeparator()
-		act = _toolBar.AddAction("", ThemeImages.Get("toolbar/options.png"))
-		act.Triggered = _buildActions.buildSettings.Triggered
+		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/options.png"),_buildActions.buildSettings.Triggered,"Target settings" )
 		
 		
 		_browsersTabView.AddTab( "Files",_projectView,True )
@@ -515,7 +499,7 @@ Class MainWindowInstance Extends Window
 	Field _mx2cc:String
 	Field _mx2ccDir:String
 	
-	Field _toolBar:ToolBar
+	Field _toolBar:ToolBarExt
 	Field _docsManager:DocumentManager
 	Field _fileActions:FileActions
 	Field _editActions:EditActions
