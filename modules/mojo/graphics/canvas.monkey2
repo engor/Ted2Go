@@ -906,12 +906,15 @@ Class Canvas
 		DebugAssert( _lighting,"Canvas.AddLight() can only be used while lighting" )
 		If Not _lighting Return
 		
+		Local lx:=_matrix.i.x * tx + _matrix.j.x * ty + _matrix.t.x
+		Local ly:=_matrix.i.y * tx + _matrix.j.y * ty + _matrix.t.y
+		
 		_vp=_lightVB.AddVertices( 4 )
 		If Not _vp Return
 
 		Local op:=New LightOp
 		op.light=light
-		op.lightPos=New Vec2f( tx,ty )
+		op.lightPos=New Vec2f( lx,ly )
 		op.textureFilter=light.TextureFilter<>TextureFilter.None ? light.TextureFilter Else _textureFilter
 		op.primOffset=_lightVB.Length-4
 		_lightOps.Push( op )
@@ -919,10 +922,10 @@ Class Canvas
 		Local vs:=light.Vertices
 		Local ts:=light.TexCoords
 		
-		AddVertex( vs.min.x+tx,vs.min.y+ty,ts.min.x,ts.min.y,tx,ty,_pmcolor )
-		AddVertex( vs.max.x+tx,vs.min.y+ty,ts.max.x,ts.min.y,tx,ty,_pmcolor )
-		AddVertex( vs.max.x+tx,vs.max.y+ty,ts.max.x,ts.max.y,tx,ty,_pmcolor )
-		AddVertex( vs.min.x+tx,vs.max.y+ty,ts.min.x,ts.max.y,tx,ty,_pmcolor )
+		AddVertex( vs.min.x+tx,vs.min.y+ty,ts.min.x,ts.min.y,lx,ly,_pmcolor )
+		AddVertex( vs.max.x+tx,vs.min.y+ty,ts.max.x,ts.min.y,lx,ly,_pmcolor )
+		AddVertex( vs.max.x+tx,vs.max.y+ty,ts.max.x,ts.max.y,lx,ly,_pmcolor )
+		AddVertex( vs.min.x+tx,vs.max.y+ty,ts.min.x,ts.max.y,lx,ly,_pmcolor )
 	End
 	
 	Method AddLight( light:Image,tx:Float,ty:Float,rz:Float )
@@ -968,7 +971,11 @@ Class Canvas
 		Local tv:=New Vec2f( tx,ty )
 		
 		For Local sv:=Eachin caster.Vertices
-			_shadowVerts.Push( sv+tv )
+			sv+=tv
+			Local lv:=New Vec2f(
+			_matrix.i.x * sv.x + _matrix.j.x * sv.y + _matrix.t.x,
+			_matrix.i.y * sv.x + _matrix.j.y * sv.y + _matrix.t.y )
+			_shadowVerts.Push( lv )
 		Next
 	End
 	
@@ -1076,6 +1083,13 @@ Class Canvas
 		_drawVB.Clear()
 		_drawOps.Clear()
 		_drawOp=New DrawOp
+	End
+	
+	#rem monkeydoc True if canvas is in lighting mode.
+	#end
+	Property IsLighting:Bool()
+	
+		Return _lighting
 	End
 	
 	#rem monkeydoc Puts the canvas into lighting mode.
@@ -1297,9 +1311,22 @@ Class Canvas
 
 	'Vertices
 	'
+	#rem
 	Method AddVertex( x:Float,y:Float,s0:Float,t0:Float,s1:Float,t1:Float,color:UInt )
 		_vp->position.x=x
 		_vp->position.y=y
+		_vp->texCoord0.x=s0
+		_vp->texCoord0.y=t0
+		_vp->texCoord1.x=s1
+		_vp->texCoord1.y=t1
+		_vp->color=color
+		_vp+=1
+	End
+	#end
+
+	Method AddVertex( tx:Float,ty:Float,s0:Float,t0:Float,s1:Float,t1:Float,color:UInt )
+		_vp->position.x=_matrix.i.x * tx + _matrix.j.x * ty + _matrix.t.x
+		_vp->position.y=_matrix.i.y * tx + _matrix.j.y * ty + _matrix.t.y
 		_vp->texCoord0.x=s0
 		_vp->texCoord0.y=t0
 		_vp->texCoord1.x=s1
