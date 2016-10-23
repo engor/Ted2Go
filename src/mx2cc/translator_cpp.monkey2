@@ -77,6 +77,7 @@ Class Translator_CPP Extends Translator
 		EmitBr()
 		For Local ctype:=Eachin fdecl.classes
 			If emitted[ClassName( ctype )] Continue
+			
 			EmitClassProto( ctype,fdecl,emitted )
 		Next
 		
@@ -112,8 +113,13 @@ Class Translator_CPP Extends Translator
 		Next
 		
 		For Local ctype:=Eachin fdecl.classes
+		
 			EmitClassMembers( ctype )
+			
+			EmitTypeInfo( ctype )
 		Next
+		
+		EmitTypeInfo( fdecl )
 		
 		EmitGlobalInits( fdecl )
 
@@ -249,6 +255,7 @@ Class Translator_CPP Extends Translator
 		Emit( "if(done) return;" )
 		Emit( "done=true;")
 		
+		'initalize globals
 		Local gc:=False
 		For Local vvar:=Eachin fdecl.globals
 			If vvar.init Emit( Trans( vvar )+"="+Trans( vvar.init )+";" )
@@ -348,6 +355,14 @@ Class Translator_CPP Extends Translator
 		EmitBr()
 		Emit( "struct "+cname+xtends+"{" )
 		
+		If ctype.IsClass
+			Emit( "typedef "+cname+" *bb_object_type;" )
+		Else If ctype.IsInterface
+			Emit( "typedef "+cname+" *bb_object_type;" )
+		Else If ctype.IsStruct
+			Emit( "typedef "+cname+" bb_struct_type;" )
+		Endif
+		
 		If ctype.superType
 		
 			Local done:=New StringMap<Bool>
@@ -367,6 +382,8 @@ Class Translator_CPP Extends Translator
 				Next
 			Next
 		Endif
+		
+		If GenTypeInfo( ctype ) Emit( "bbTypeInfo *typeof()const;" )
 		
 		Emit( "const char *typeName()const{return ~q"+cname+"~q;}" )
 		
@@ -472,6 +489,8 @@ Class Translator_CPP Extends Translator
 		Endif
 
 		Emit( "};" )
+		
+		If GenTypeInfo( ctype ) Emit( "bbTypeInfo *bbGetType( "+cname+"* const& );" )
 		
 		If debug
 			Local tname:=cname
@@ -684,6 +703,171 @@ Class Translator_CPP Extends Translator
 
 	End
 	
+	Method EmitTypeInfo( fdecl:FileDecl )
+	
+		Local decls:=New Stack<String>
+	
+		For Local vvar:=Eachin fdecl.globals
+			If Not GenTypeInfo( vvar ) continue
+			Local fscope:=vvar.scope.FindFile()
+			If fscope.fdecl<>fdecl Continue
+			If vvar.scope<>fscope Continue
+			
+			Local id:=vvar.vdecl.ident
+			Local vname:=VarName( vvar )
+			decls.Push( "bbGlobalDecl(~q"+id+"~q,&"+vname+")" )
+		Next
+		
+		For Local func:=Eachin fdecl.functions
+			If Not GenTypeInfo( func ) Continue
+			Local fscope:=func.scope.FindFile()
+			If fscope.fdecl<>fdecl Continue
+			If func.scope<>fscope Continue
+
+			Local id:=func.fdecl.ident
+			Local fname:=FuncName( func )
+			Local args:=TransType( func.ftype.retType )
+			For Local arg:=Eachin func.ftype.argTypes
+				args+=","+TransType( arg )
+			Next
+			decls.Push( "bbFunctionDecl<"+args+">(~q"+id+"~q,&"+fname+")" )
+		Next
+		
+		If decls.Empty Return
+
+		Local tname:="mx2_"+fdecl.ident+"_typeinfo"
+	
+		Emit( "static struct "+tname+" : public bbClassDecls{" )
+		
+		Emit( tname+"():bbClassDecls(bbClassTypeInfo::getNamespace(~q"+fdecl.nmspace+"~q)){" )
+		Emit( "}" )
+		
+		Emit( "bbDeclInfo **initDecls(){" )
+		Emit( "return bbMembers("+decls.Join( "," )+");" )
+		Emit( "}" )
+		
+		Emit( "}_"+tname+";" )
+	End
+
+	Method EmitTypeInfo( ctype:ClassType )
+	
+		If Not GenTypeInfo( ctype ) Return
+	
+		Local fdecl:=ctype.scope.FindFile().fdecl
+
+		Local cdecl:=ctype.cdecl
+		Local cname:=ClassName( ctype )
+		Local rcname:="r"+cname
+
+		EmitBr()
+		Emit( "struct "+rcname+" : public bbClassTypeInfo{" )
+		
+		Emit( "static "+rcname+" instance;" )
+		
+		'struct decls_t
+		Emit( "static struct decls_t : public bbClassDecls{" )
+		
+		Emit( "decls_t():bbClassDecls(&instance){}" )
+		
+		'initDecls()
+		Emit( "bbDeclInfo **initDecls(){" )
+		
+		Local decls:=New StringStack
+		
+		If Not ctype.IsAbstract
+			If ctype.ctors.Length
+				For Local ctor:=Eachin ctype.ctors
+					Local args:=cname
+					For Local arg:=Eachin ctor.ftype.argTypes
+						If args args+=","
+						args+=TransType( arg )
+					Next
+					decls.Push( "bbCtorDecl<"+args+">()" )
+				Next
+			Else
+				'default ctor!
+				decls.Push( "bbCtorDecl<"+cname+">()" )
+			Endif
+		Endif
+		
+		For Local vvar:=Eachin ctype.fields
+			If Not GenTypeInfo( vvar ) Continue
+			
+			Local id:=vvar.vdecl.ident
+			Local vname:=VarName( vvar )
+			decls.Push( "bbFieldDecl(~q"+id+"~q,&"+cname+"::"+vname+")" )
+		Next
+
+		For Local func:=Eachin ctype.methods
+			If Not GenTypeInfo( func ) Continue
+			
+			Local id:=func.fdecl.ident
+			Local fname:=FuncName( func )
+			Local args:=cname+","+TransType( func.ftype.retType )
+			For Local arg:=Eachin func.ftype.argTypes
+				args+=","+TransType( arg )
+			Next
+			decls.Push( "bbMethodDecl<"+args+">(~q"+id+"~q,&"+cname+"::"+fname+")" )
+		Next
+		
+		For Local vvar:=Eachin fdecl.globals
+			If Not GenTypeInfo( vvar ) Continue
+			If vvar.scope<>ctype.scope Continue
+			
+			Local id:=vvar.vdecl.ident
+			Local vname:=VarName( vvar )
+			decls.Push( "bbGlobalDecl(~q"+id+"~q,&"+vname+")" )
+		Next
+		
+		For Local func:=Eachin fdecl.functions
+			If Not GenTypeInfo( func ) Continue
+			If func.scope<>ctype.scope Continue
+			
+			Local id:=func.fdecl.ident
+			Local fname:=FuncName( func )
+			Local args:=TransType( func.ftype.retType )
+			For Local arg:=Eachin func.ftype.argTypes
+				args+=","+TransType( arg )
+			Next
+			decls.Push( "bbFunctionDecl<"+args+">(~q"+id+"~q,&"+fname+")" )
+		Next
+		
+		Emit( "return bbMembers("+decls.Join( "," )+");" )
+		
+		Emit( "}" )
+		
+		Emit( "}decls;" )
+
+		'Ctor		
+		Emit( rcname+"():bbClassTypeInfo(~q"+ctype.Name+"~q,~q"+cdecl.kind.Capitalize()+"~q){" )
+		Emit( "}" )
+
+		'superType		
+		Emit( "bbTypeInfo *superType(){" )
+		If ctype.superType
+			Emit( "return bbGetType<"+ClassName( ctype.superType )+"*>();" )
+		Else
+			Emit( "return 0;" )
+		Endif		
+		Emit( "}" )
+		
+		Emit( "};" )
+		
+		Emit( rcname+" "+rcname+"::instance;" )
+		
+		Emit( rcname+"::decls_t "+rcname+"::decls;" )
+		
+		EmitBr()
+		Emit( "bbTypeInfo *"+cname+"::typeof()const{" )
+		Emit( "return &"+rcname+"::instance;" )
+		Emit( "}" )
+		
+		EmitBr()
+		Emit( "bbTypeInfo *bbGetType( "+cname+"* const& ){" )
+		Emit( "return &"+rcname+"::instance;" )
+		Emit( "}" )
+	End
+
 	Method EmitFunc( func:FuncValue,init:Bool=False )
 	
 		If func.fdecl.IsAbstract Return
@@ -792,7 +976,7 @@ Class Translator_CPP Extends Translator
 			If Not IsGCType( vvar.type ) Continue
 			Uses( vvar.type )
 			If IsGCPtrType( vvar.type )
-				Emit( "bbGCMarkPtr("+VarName( vvar )+");" )
+				Emit( "bbGCMark("+VarName( vvar )+");" )
 			Else
 				Emit( "bbGCMark("+VarName( vvar )+");" )
 			Endif
@@ -1233,35 +1417,44 @@ Class Translator_CPP Extends Translator
 		Local varValue:=Cast<VarValue>( value )
 		If varValue Return Trans( varValue )
 		
+		Local typeofValue:=Cast<TypeofValue>( value )
+		If typeofValue Return Trans( typeofValue )
+
+		Local typeofTypeValue:=Cast<TypeofTypeValue>( value )
+		If typeofTypeValue Return Trans( typeofTypeValue )
+		
 		Return "{* "+value.ToString()+" "+String.FromCString( value.typeName() )+" *}"
 	End
 	
 	Method Trans:String( value:UpCastValue )
 	
-		Uses( value.type )
+		Local src:="("+Trans( value.value )+")"
 	
-		Local t:="("+Trans( value.value )+")"
+		If value.type.Equals( value.value.type ) Return src
+	
+		Uses( value.type )
 		
-		If IsCValueType( value.type ) Return TransType( value.type )+t
+		If IsCValueType( value.type ) Return TransType( value.type )+src
 
-		Return "(("+TransType( value.type )+")"+t+")"
+		Return "(("+TransType( value.type )+")"+src+")"
 	End
 	
 	Method Trans:String( value:ExplicitCastValue )
 	
-		Uses( value.type )
-	
-		Local ctype:=TCast<ClassType>( value.type )
-		If ctype 
-'			Uses( ctype )
-			Return "bb_object_cast<"+ClassName( ctype )+"*>("+Trans( value.value )+")"
-		Endif
-		
-		Local t:="("+Trans( value.value )+")"
-		
-		If IsCValueType( value.type ) Return TransType( value.type )+t
+		Local src:="("+Trans( value.value )+")"
 
-		Return "(("+TransType( value.type )+")"+t+")"
+		If value.type.Equals( value.value.type ) Return src
+	
+		Uses( value.type )
+		
+		If value.value.type=Type.VariantType Return src+".get<"+TransType( value.type )+">()"
+		
+		If IsCValueType( value.type ) Return TransType( value.type )+src
+		
+		Local ctype:=TCast<ClassType>( value.type )
+		If ctype Return "bb_object_cast<"+ClassName( ctype )+"*>"+src
+		
+		Return "(("+TransType( value.type )+")"+src+")"
 	End
 	
 	Method TransNull:String( type:Type )
@@ -1402,6 +1595,17 @@ Class Translator_CPP Extends Translator
 		Return "bbMethod(("+cname+"*)("+Trans( value.instance )+"),&"+cname+"::"+Trans( value.member )+")"
 	End
 	
+	Method Trans:String( value:FuncValue )
+	
+		Refs( value )
+	
+		If value.fdecl.kind="lambda" 
+			Return EmitLambda( value )
+		Endif
+		
+		Return FuncName( value )
+	End
+	
 	Method Trans:String( value:NewObjectValue )
 	
 		Local ctype:=value.ctype
@@ -1521,17 +1725,6 @@ Class Translator_CPP Extends Translator
 		Return "&"+Trans( value.value )
 	End
 	
-	Method Trans:String( value:FuncValue )
-	
-		Refs( value )
-	
-		If value.fdecl.kind="lambda" 
-			Return EmitLambda( value )
-		Endif
-		
-		Return FuncName( value )
-	End
-	
 	Method Trans:String( value:VarValue )
 	
 		Refs( value )
@@ -1543,6 +1736,18 @@ Class Translator_CPP Extends Translator
 		Endif
 
 		Return VarName( value )
+	End
+	
+	Method Trans:String( value:TypeofValue )
+	
+		Return "bbGetType("+Trans( value.value )+")"
+	End
+	
+	Method Trans:String( value:TypeofTypeValue )
+	
+		Refs( value.ttype )
+	
+		Return "bbGetType<"+TransType( value.ttype )+">()"
 	End
 	
 	'***** Args *****
@@ -1641,4 +1846,53 @@ Class Translator_CPP Extends Translator
 		Return "bbArray<"+HeapVarType( type.elemType )+","+type.rank+">"
 	End
 	
+	'***** MISC *****
+
+	Method IsCValueType:Bool( type:Type )
+	
+		Local ctype:=TCast<ClassType>( type )
+		If ctype And ctype.IsStruct Return True
+	
+		Return TCast<PrimType>( type ) Or TCast<FuncType>( type ) Or TCast<ArrayType>( type )
+	End
+	
+	Method CFuncType:String( type:FuncType )
+	
+		Local retType:=TransType( type.retType )
+		
+		Local argTypes:=""
+		For Local i:=0 Until type.argTypes.Length
+			If argTypes argTypes+=","
+			argTypes+=TransType( type.argTypes[i] )
+		Next
+		
+		Return retType+"("+argTypes+")"
+	End
+
+End
+
+Function GenTypeInfo:Bool( vvar:VarValue )
+
+	Return vvar.vdecl.kind="field" Or vvar.vdecl.kind="global"
+End
+
+Function GenTypeInfo:Bool( func:FuncValue )
+
+	If func.fdecl.kind<>"method" And func.fdecl.kind<>"function" Return False
+
+	If func.IsExtension Return Null
+	
+	Return True
+End
+
+Function GenTypeInfo:Bool( ctype:ClassType )
+
+	If Not ctype.IsClass Return False
+
+	'This 'sort of' works, but no generics just yet!
+	If ctype.types Or ctype.scope.IsInstanceOf Return False
+	
+	If ctype.cdecl.IsExtension Return False
+	
+	Return True
 End

@@ -7,6 +7,8 @@ Namespace mx2
 '
 Function IsGCType:Bool( type:Type )
 
+	If type=Type.VariantType Return true
+	
 	If TCast<FuncType>( type ) Return True
 	
 	If TCast<ArrayType>( type ) Return True
@@ -203,7 +205,7 @@ Class Translator
 			For Local vvar:=Eachin _gcframe.vars.Values
 				Uses( vvar.type )
 				If IsGCPtrType( vvar.type )
-					Emit( "bbGCMarkPtr("+VarName( vvar )+");" )
+					Emit( "bbGCMark("+VarName( vvar )+");" )
 				Else
 					Emit( "bbGCMark("+VarName( vvar )+");" )
 				Endif
@@ -212,7 +214,7 @@ Class Translator
 			For Local tmp:=Eachin _gcframe.tmps
 				Uses( tmp.type )
 				If IsGCPtrType( tmp.type )
-					Emit( "bbGCMarkPtr("+tmp.ident+");" )
+					Emit( "bbGCMark("+tmp.ident+");" )
 				Else
 					Emit( "bbGCMark("+tmp.ident+");" )
 				Endif
@@ -316,6 +318,7 @@ Class Translator
 				
 				Local cname:=ClassName( ctype )
 				Emit( "struct "+ClassName( ctype )+";" )
+				If GenTypeInfo( ctype ) Emit( "bbTypeInfo *bbGetType( "+cname+"* const& );" )
 				
 				If debug And Not ctype.cdecl.IsExtern
 					Local tname:=cname
@@ -470,27 +473,4 @@ Class Translator
 		_usesFiles[ fdecl.ident ]=fdecl
 	End
 	
-	'***** MISC *****
-
-	Method IsCValueType:Bool( type:Type )
-	
-		Local ctype:=TCast<ClassType>( type )
-		If ctype And ctype.IsStruct Return True
-	
-		Return TCast<PrimType>( type ) Or TCast<FuncType>( type ) Or TCast<ArrayType>( type )
-	End
-	
-	Method CFuncType:String( type:FuncType )
-	
-		Local retType:=TransType( type.retType )
-		
-		Local argTypes:=""
-		For Local i:=0 Until type.argTypes.Length
-			If argTypes argTypes+=","
-			argTypes+=TransType( type.argTypes[i] )
-		Next
-		
-		Return retType+"("+argTypes+")"
-	End
-
 End

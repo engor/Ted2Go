@@ -126,6 +126,11 @@ Class TypeValue Extends Value
 		Return "<"+ttype.ToString()+">"
 	End
 	
+'	Method ToRValue:Value() Override
+'		Throw New SemantEx( "Type '"+ttype.ToString()+"' cannot be converted to a value" )
+'		Return Null
+'	End
+	
 	Method FindValue:Value( ident:String ) Override
 		Local node:=ttype.FindNode( ident )
 		If node Return node.ToValue( Null )
@@ -282,6 +287,8 @@ Class LiteralValue Extends Value
 			Endif
 		Else If ptype=Type.StringType
 			result=value
+		Else If ptype=Type.VariantType
+			Return New UpCastValue( Type.VariantType,Self )
 		Else
 			SemantError( "LiteralValue.UpCast()" )
 		End
@@ -597,3 +604,34 @@ Class PointerValue Extends Value
 	End
 
 End
+
+Class TypeofValue Extends Value
+
+	Field value:Value
+	
+	Method New( value:Value )
+		Self.type=Type.TypeInfoClass
+		Self.value=value
+	End
+	
+	Method ToString:String() Override
+		Return "Typeof("+value.ToString()+")"
+	End
+	
+End
+
+Class TypeofTypeValue Extends Value
+
+	Field ttype:Type
+	
+	Method New( ttype:Type )
+		Self.type=Type.TypeInfoClass
+		Self.ttype=ttype
+	End
+
+	Method ToString:String() Override
+		Return "Typeof<"+ttype.ToString()+">"
+	End
+		
+End
+

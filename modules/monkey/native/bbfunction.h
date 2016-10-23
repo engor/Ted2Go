@@ -250,6 +250,10 @@ template<class C,class R,class...A> bbFunction<R(A...)> bbMethod( const bbGCVar<
 	return bbFunction<R(A...)>( c.get(),p );
 }
 
+template<class R,class...A> bbFunction<R(A...)> bbMakefunc( R(*p)(A...) ){
+	return bbFunction<R(A...)>( p );
+}
+
 template<class R,class...A> void bbGCMark( const bbFunction<R(A...)> &t ){
 	t._rep->gcMark();
 }

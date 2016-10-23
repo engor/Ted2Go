@@ -195,7 +195,7 @@ const char *bbString::c_str()const{
 }
 
 bbString bbString::fromChar( int chr ){
-	wchar_t chrs[]={ chr };
+	wchar_t chrs[]={ wchar_t(chr) };
 	return bbString( chrs,1 );
 }
 

@@ -36,6 +36,13 @@ Class Scope
 		Return ""
 	End
 	
+	Property IsInstanceOf:Bool() Virtual
+	
+		If outer Return outer.IsInstanceOf
+		
+		Return False
+	End
+	
 	'Is generic scope? ie: does scope have access to any generic types?
 	'
 	Property IsGeneric:Bool() Virtual

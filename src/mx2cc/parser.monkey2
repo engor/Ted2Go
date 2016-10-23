@@ -430,6 +430,7 @@ Class Parser
 			Default
 			
 				ident=ParseIdent()
+				If ident="@typeof" ident="Typeof"
 			End
 	
 			genArgs=ParseGenArgs()
@@ -1138,7 +1139,7 @@ Class Parser
 	
 	Method IsTypeIdent:Bool( ident:String )
 		Select ident
-		Case "void","bool","byte","ubyte","short","ushort","int","uint","long","ulong","float","double","string","object","throwable"
+		Case "void","bool","byte","ubyte","short","ushort","int","uint","long","ulong","float","double","string","object","throwable","variant","cstring","typeinfo"
 			Return True
 		End
 		Return False
@@ -1434,6 +1435,21 @@ Class Parser
 			Parse( ")" )
 			Return New CastExpr( type,expr,srcpos,EndPos )
 			
+		Case "typeof"
+		
+			Bump()
+			If CParse( "<" )
+				Local expr:=ParseType()
+				Parse( ">" )
+				Return New TypeofExpr( expr,True,srcpos,EndPos )
+			Else If CParse( "(" )
+				Local expr:=ParseExpr()
+				Parse( ")" )
+				Return New TypeofExpr( expr,False,srcpos,EndPos )
+			Endif
+			
+			Error( "Expecting 'Typeof' argument" )
+			
 		Case "true","false"
 		
 			Local value:=Parse()
@@ -1503,9 +1519,14 @@ Class Parser
 			Select Toke
 			Case "."
 				Bump()
-				Local ident:=CParseIdent()
-				If Not ident And Toke="new" ident=Parse()
-				If Not ident Error( "Expecting member identifier" )
+				Local ident:String
+				If CParse( "new" )
+					ident="new"
+				Else If CParse( "typeof" )
+					ident="Typeof"
+				Else
+					ident=ParseIdent()
+				Endif
 				expr=New MemberExpr( expr,ident,srcpos,EndPos )
 			Case "->"
 				Bump()

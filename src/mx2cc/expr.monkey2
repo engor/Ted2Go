@@ -979,3 +979,27 @@ Class PointerTypeExpr Extends Expr
 		Return type.ToString()+" Ptr"
 	End
 End
+
+Class TypeofExpr Extends Expr
+
+	Field expr:Expr
+	Field istype:Bool
+	
+	Method New( expr:Expr,istype:Bool,srcpos:Int,endpos:Int )
+		Super.New( srcpos,endpos )
+		
+		Self.expr=expr
+		Self.istype=istype
+	End
+	
+	Method OnSemant:Value( scope:Scope ) Override
+	
+		If istype Return New TypeofTypeValue( expr.SemantType( scope ) )
+		
+		Local rvalue:=expr.SemantRValue( scope )
+		If rvalue.type=Type.VoidType Throw New SemantEx( "Invalid Typeof expression" )
+		
+		Return New TypeofValue( rvalue )
+	End
+	
+End

@@ -14,7 +14,7 @@ Class BuildProduct
 
 	Field SRC_FILES:=New StringStack
 	Field OBJ_FILES:=New StringStack
-	Field LD_LIBS:=New StringStack
+	Field MOD_LIBS:=New StringStack
 	Field LD_SYSLIBS:=New StringStack
 	Field ASSET_FILES:=New StringStack
 	Field DLL_FILES:=New StringStack
@@ -292,6 +292,9 @@ Class GccBuildProduct Extends BuildProduct
 		Case ".asm",".s"
 			
 			cmd=AS_CMD
+			Local opts:=GetEnv( "MX2_AS_OPTS" )
+			If opts cmd+=" "+opts
+			
 			isasm=True
 		End
 			
@@ -488,13 +491,30 @@ Class GccBuildProduct Extends BuildProduct
 			lnkFiles+=" ~q"+obj+"~q"
 		Next
 		
-		For Local lib:=Eachin LD_LIBS
+		If opts.wholeArchive 
+#If __TARGET__="macos"
+			lnkFiles+=" -Wl,-all_load"
+#Else
+			lnkFiles+=" -Wl,--whole-archive"
+#Endif
+		Endif
+		
+		For Local lib:=Eachin MOD_LIBS
 			lnkFiles+=" ~q"+lib+"~q"
 		Next
-	
+
+		If opts.wholeArchive 
+#If __TARGET__="macos"
+'			lnkFiles+=" -Wl,-all_load"
+#Else
+			lnkFiles+=" -Wl,--no-whole-archive"
+#Endif
+		Endif
+		
 		lnkFiles+=" "+LD_SYSLIBS.Join( " " )
 		
 		If opts.target="windows"
+			lnkFiles=lnkFiles.Replace( " -Wl,"," " )
 			Local tmp:=AllocTmpFile( "lnkFiles" )
 			SaveString( lnkFiles,tmp )
 			cmd+=" -Wl,@"+tmp
@@ -680,9 +700,13 @@ Class IosBuildProduct Extends GccBuildProduct
 		
 		Local cmd:="libtool -static -o ~q"+outputFile+"~q ~q"+arc+"~q"
 		
-		For Local lib:=Eachin LD_LIBS
+		If opts.wholeArchive cmd+=" -Wl,--whole-archive"
+		
+		For Local lib:=Eachin MOD_LIBS
 			cmd+=" ~q"+lib+"~q"
 		Next
+
+		If opts.wholeArchive cmd+=" -Wl,--no-whole-archive"
 		
 		For Local lib:=Eachin LD_SYSLIBS
 			If lib.ToLower().EndsWith( ".a~q" ) cmd+=" "+lib

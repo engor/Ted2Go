@@ -3,6 +3,7 @@
 #define BB_MONKEY_H
 
 #include "bbstd.h"
+#include "bbinit.h"
 #include "bbtypes.h"
 #include "bbassert.h"
 #include "bbmemory.h"
@@ -12,7 +13,9 @@
 #include "bbarray.h"
 #include "bbfunction.h"
 #include "bbobject.h"
-#include "bbinit.h"
+#include "bbvariant.h"
+#include "bbtypeinfo.h"
+#include "bbdeclinfo.h"
 
 extern int bb_argc;
 extern char **bb_argv;

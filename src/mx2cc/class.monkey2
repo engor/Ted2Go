@@ -485,17 +485,16 @@ Class ClassType Extends Type
 	Method DistanceToType:Int( type:Type ) Override
 	
 		If type=Self Return 0
+		
+		'no struct->bool as yet.
+		If type=BoolType Return (IsClass Or IsInterface) ? MAX_DISTANCE Else -1
+		
+		If type=VariantType Return MAX_DISTANCE
 
 		'Cast to super class
 		Local dist:=DistanceToBase( type )
 		If dist>=0 Return dist
 		
-		'Cast to bool
-		If type=BoolType
-			If IsClass Or IsInterface Return MAX_DISTANCE
-			Return -1
-		Endif
-
 		'Operator To:
 		Local func:=FindToFunc( type )
 		If func Return MAX_DISTANCE
@@ -514,11 +513,16 @@ Class ClassType Extends Type
 	
 	Method UpCast:Value( rvalue:Value,type:Type ) Override
 	
+		If type.Equals( rvalue.type ) Return rvalue
+
 		'Cast to superclass
 		Local dist:=DistanceToBase( type )
 		If dist>=0 Return New UpCastValue( type,rvalue )
 		
-		'Cast to bool
+		'instance->variant
+		If type=VariantType Return New UpCastValue( type,rvalue )
+	
+		'instance->bool
 		If type=BoolType
 			If IsClass Or IsInterface Return New UpCastValue( type,rvalue )
 		Else
@@ -528,6 +532,7 @@ Class ClassType Extends Type
 		Endif
 
 		Throw New SemantEx( "Unable to convert value from type '"+rvalue.type.ToString()+"' to type '"+type.ToString()+"'" )
+		
 		Return Null
 	End
 
@@ -708,6 +713,13 @@ Class ClassScope Extends Scope
 		If args args="_1"+args+"E"
 		
 		Return "T"+outer.TypeId+"_"+ctype.cdecl.ident.Replace( "_","_0" )+args+"_2"
+	End
+	
+	Property IsInstanceOf:Bool() Override
+	
+		If ctype.instanceOf Return True
+		
+		Return Super.IsInstanceOf
 	End
 	
 	Property IsGeneric:Bool() Override

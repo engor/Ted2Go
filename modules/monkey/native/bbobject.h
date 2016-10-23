@@ -8,12 +8,18 @@
 
 struct bbObject : public bbGCNode{
 
+	typedef bbObject *bb_object_type;
+
 	bbObject(){
 		bbGC::beginCtor( this );
 	}
 	
 	virtual ~bbObject(){
 	}
+
+	//implemented in bbtypeinfo.h
+	//	
+	virtual bbTypeInfo *typeof()const;
 	
 	virtual const char *typeName()const{
 		return "monkey.Object";
@@ -35,6 +41,8 @@ struct bbThrowable : public bbObject{
 
 struct bbInterface{
 
+	typedef bbInterface *bb_object_type;
+
 	virtual ~bbInterface(){
 	}
 };
@@ -48,6 +56,10 @@ template<class T,class...A> T *bbGCNew( A...a ){
 	T *p=new T( a... );
 	bbGC::endCtor( p );
 	return p;
+}
+
+template<class T,class R=typename T::bb_object_type> void bbGCMark( T *p ){
+	bbGC::enqueue( dynamic_cast<bbObject*>( p ) );
 }
 
 template<class T,class C> T bb_object_cast( const bbGCVar<C> &p ){

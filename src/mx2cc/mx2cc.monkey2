@@ -21,26 +21,14 @@ Using mx2..
 
 Global StartDir:String
 
-'Const TestArgs:="mcx2cc makedocs"
+Const TestArgs:="mx2cc makeapp -apptype=console -clean -verbose=3 src/mx2cc/test.monkey2"
 
-'Const TestArgs:="mx2cc makemods -clean -config=release monkey libc miniz stb-image stb-image-write stb-vorbis std"
-
-'Const TestArgs:="mx2cc makeapp -clean -config=release src/ted2/ted2.monkey2"
-
-'Const TestArgs:="mx2cc makeapp -apptype=console -clean -config=debug -target=desktop -semant -geninfo src/mx2cc/test.monkey2"
-Const TestArgs:="mx2cc makeapp -apptype=console -clean -config=debug -target=desktop -parse -geninfo src/mx2cc/translator_cpp.monkey2"
-
-'Const TestArgs:="mx2cc makeapp -clean -config=debug -target=desktop -product=D:/test_app/test.exe -assets=D:/test_app/assets -dlls=D:/test_app/ src/mx2cc/test.monkey2"
-
-'Const TestArgs:="mx2cc makeapp -clean src/ted2/ted2"
-
-'Const TestArgs:="mx2cc makemods -clean -config=release monkey libc miniz stb-image hoedown std"
-
-'Const TestArgs:="mx2cc makeapp -verbose -target=desktop -config=release src/mx2cc/mx2cc"
-
-'To build mx2cc...
+'To build with old mx2cc...
 '
-'Const TestArgs:="mx2cc makeapp -build -clean -apptype=console -config=release src/mx2cc/mx2cc.monkey2"
+'Creates: src/mx2cc/mx2cc.buildv.VERSION/windows_release/mx2cc.exe
+'
+'Const TestArgs:="mx2cc makemods -clean -config=release monkey libc miniz stb-image stb-image-write stb-vorbis std"
+'Const TestArgs:="mx2cc makeapp -build -apptype=console -clean -config=release src/mx2cc/mx2cc.monkey2"
 
 'To build rasbian mx2cc...
 '

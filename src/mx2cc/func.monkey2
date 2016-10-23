@@ -570,6 +570,8 @@ Class FuncListValue Extends Value
 	
 	Method UpCast:Value( type:Type ) Override
 	
+		If type.Equals( Type.VariantType ) Return New UpCastValue( Type.VariantType,ToRValue() )
+	
 		Local ftype:=TCast<FuncType>( type )
 		If Not ftype Throw New UpCastEx( Self,type )
 		
@@ -630,6 +632,8 @@ Class FuncListType Extends Type
 	End
 	
 	Method DistanceToType:Int( type:Type ) Override
+	
+		If type.Equals( Type.VariantType ) Return funcs.Length=1 ? MAX_DISTANCE Else -1
 
 		Local ftype:=TCast<FuncType>( type )
 		If Not ftype Return -1

@@ -41,7 +41,7 @@ template<class T,int D> struct bbArray{
 	bbArray(){
 	}
 		
-	template<class...Args> bbArray( Args...args ){
+	template<class...Args> explicit bbArray( Args...args ){
 		
 		int sizes[]{ args... };
 		for( int i=1;i<D;++i ) sizes[i]*=sizes[i-1];
@@ -55,7 +55,7 @@ template<class T,int D> struct bbArray{
 		bbGC::endCtor( _rep );
 	}
 		
-	template<class...Args> bbArray( std::initializer_list<T> init,Args...args ){
+	template<class...Args> explicit bbArray( std::initializer_list<T> init,Args...args ){
 		
 		int sizes[]{ args... };
 		for( int i=1;i<D;++i ) sizes[i]*=sizes[i-1];

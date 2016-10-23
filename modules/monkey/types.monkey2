@@ -383,6 +383,204 @@ Struct @String ="bbString"
 	
 End
 
+#rem monkeydoc String wrapper type for native 'char *' strings.
+
+This type should only be used when declaring parameters for extern functions.
+
+#end
+Struct @CString="bbCString"
+End
+
+#rem monkeydoc Variant type.
+
+The 'Variant' type is a primitive type that can be used to 'box' values of any type.
+
+An uninitialized variant will contain a 'null' value (of type Void) until you assign something to it.
+
+A variant is 'true' if it contains any value with a non-void type (including a bool false value!) and 'false' if it is uninitialized and has no (void) type.
+
+Any type of value can be implicitly converted to a variant.
+
+To retrieve the value contained in a variant, you must explicitly cast the variant to the desired type. Note that the cast must specify the exact type of the value already contained in the variant, or a runtime error will occur.
+
+The one exception to this is if the variant contains a class object, in which case you can cast the variant to any valid base class of the object.
+
+#end
+Struct @Variant="bbVariant"
+
+	#rem monkeydoc Type of the variant value.
+	#end
+	Property Type:TypeInfo()="getType"
+	
+End
+
+#rem monkeydoc Runtime type information.
+#End
+Class @TypeInfo Extends Void="bbTypeInfo"
+
+	#rem monkeydoc Type name.
+	#end
+	Property Name:String()="getName"
+	
+	#rem monkeydoc Type kind.
+	
+	Will be one of: Unknown, Primitve, Pointer, Array, Function, Class, Namespace.
+	
+	#end
+	Property Kind:String()="getKind"
+	
+	#rem monkeydoc Pointer pointee type.
+	
+	If the type is a pointer type, returns the type of what it's pointing at.
+	
+	If the type is not a pointer type a runtime exception occurs.
+	
+	#end
+	Property PointeeType:TypeInfo()="pointeeType"
+
+	#rem monkeydoc Array element type.
+	
+	If the type is an array type, returns the array element type.
+	
+	If the type is not an array type a runtime exception occurs.
+	
+	#end
+	Property ElementType:TypeInfo()="elementType"
+	
+	#rem monkeydoc Array rank.
+	
+	If the type is an array type, returns rank of the array.
+	
+	If the type is not an array type a runtime exception occurs.
+	
+	#end
+	Property ArrayRank:Int()="arrayRank"
+	
+	#rem monkeydoc Function return type.
+	
+	If the type is a function type, returns the return type of the functions.
+	
+	If the type is not a function type a runtime exception occurs.
+	
+	#end
+	Property ReturnType:TypeInfo()="returnType"
+	
+	#rem monkeydoc Function parameter types.
+	
+	If the type is a function type, returns the types of the function parameters.
+	
+	If the type is not a function type a runtime exception occurs.
+	
+	#end
+	Property ParamTypes:TypeInfo[]()="paramTypes"
+	
+	#rem monkeydoc class super type.
+	
+	If the type is a class type, returns the type of the super class.
+	
+	If the type is not a class type a runtime exception occurs.
+	
+	#end
+	Property SuperType:TypeInfo()="superType"
+	
+	#rem monkeydoc Gets string representation of type.
+	#end
+	Method To:String()="toString"
+	
+	#rem monkeydoc class or namespace member decls.
+	
+	If the type is a class or namespace type, returns the members of the type.
+	
+	If the type is not a class or namespace type a runtime exception occurs.
+	
+	#end
+	Method GetDecls:DeclInfo[]()="getDecls"
+	
+	#rem monkeydoc Gets the unique member decl with the given name.
+	
+	If there are multiple members with the same name, null is returned.
+	
+	#end
+	Method GetDecl:DeclInfo( name:String )="getDecl"
+	
+	#rem monkeydoc Gets the member decl with the given name and type.
+	#end
+	Method GetDecl:DeclInfo( name:String,type:TypeInfo )="getDecl"
+	
+	#rem monkeydoc Gets the member decls with the given name.
+	#end
+	Method GetDecls:DeclInfo[]( name:String )="getDecls"
+	
+	#rem monkeydoc Checks whether a class extends a class.
+	#end
+	Method ExtendsType:Bool( type:TypeInfo )="extendsType"
+
+	#rem monkeydoc Gets a user defined type by name.
+	
+	Only user defined types are returned by this function.
+	
+	#end
+	Function GetType:TypeInfo( name:String )="bbTypeInfo::getType"
+	
+	#rem monkeydoc Gets all user defined types.
+	
+	Only user defined types are returned by this function.
+	
+	#end
+	Function GetTypes:TypeInfo[]()="bbTypeInfo::getTypes"
+End
+
+#rem monkeydoc Runtime declaration information.
+#end
+Class DeclInfo Extends Void="bbDeclInfo"
+
+	#rem monkeydoc Declaration name.
+	#end
+	Property Name:String()="getName"
+	
+	#rem monkeydoc Declaration kind.
+	
+	This will be one of: Field, Global, Method, Function.
+	
+	#end
+	Property Kind:String()="getKind"
+	
+	#rem monkeydoc Declaration type.
+	#end
+	Property Type:TypeInfo()="getType"
+	
+	#rem monkeydoc Gets string representation of decl.
+	#end
+	Method To:String()="toString"
+	
+	#rem monkeydoc Sets field or global value.
+
+	If the declaration kind is 'Global', the `instance` parameter is ignored.
+	
+	A runtime error will occur if the declaration kind is not 'Field' or 'Global'.
+	
+	#end
+	Method Set( instance:Variant,value:Variant )="set"
+	
+	#rem monkeydoc Gets field or global value.
+	
+	If the declaration kind is 'Global', the `instance` parameter is ignored.
+	
+	A runtime error will occur if the declaration kind is not 'Field' or 'Global'.
+
+	#end
+	Method Get:Variant( instance:Variant )="get"
+	
+	#rem monkeydoc Invokes method or function.
+
+	If the declaration kind is 'Function', the `instance` parameter is ignored.
+
+	A runtime error will occur if the declaration kind is not 'Method' or 'Function'.
+	
+	#end
+	Method Invoke:Variant( instance:Variant,params:Variant[] )="invoke"
+End
+
 #rem monkeydoc Primtive array type.
 
 This is a 'pseduo type' extended by all array types.
@@ -465,6 +663,10 @@ End
 #end
 Class @Object="bbObject"
 
+	#rem monkeydoc The runtime typ eof the object
+	#end
+	Property InstanceType:TypeInfo()="typeof"
+	
 	#rem monkeydoc @hidden
 	#end
 	Method typeName:Void Ptr()="typeName"
@@ -476,24 +678,4 @@ End
 #end
 Class @Throwable="bbThrowable"
 
-End
-
-#rem monkeydoc @hidden
-#end
-Function TypeName:String( type:CString )="bbTypeName"
-
-#rem monkeydoc String wrapper type for native 'char *' strings.
-
-This type should only be used when declaring parameters for extern functions.
-
-#end
-Struct CString="bbCString"
-End
-
-#rem monkeydoc String wrapper type for native 'wchar_t *' strings.
-
-This type should only be used when declaring parameters for extern functions.
-
-#end
-Struct WString="bbWString"
 End

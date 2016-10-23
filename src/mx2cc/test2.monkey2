@@ -1,8 +1,5 @@
 
-Enum EntityState
-	ENTERING
-	UPDATING
-	EXPLODING
-	ENDING
-	DONE
-End Enum
+Namespace test
+
+Class Socket
+End

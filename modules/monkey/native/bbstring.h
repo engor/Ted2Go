@@ -67,7 +67,7 @@ class bbString{
 	bbString():_rep( &_nullRep ){
 	}
 	
-	bbString( const bbString &str ):_rep( str._rep ){
+	bbString( const bbString &s ):_rep( s._rep ){
 		retain();
 	}
 	
@@ -87,37 +87,37 @@ class bbString{
 	bbString( const wchar_t *data,int length ):_rep( Rep::create( data,length ) ){
 	}
 
-	bbString( bbInt n ){
+	explicit bbString( bbInt n ){
 		char data[64];
 		sprintf( data,"%i",n );
 		_rep=Rep::create( data );
 	}
 	
-	bbString( bbUInt n ){
+	explicit bbString( bbUInt n ){
 		char data[64];
 		sprintf( data,"%u",n );
 		_rep=Rep::create( data );
 	}
 	
-	bbString( bbLong n ){
+	explicit bbString( bbLong n ){
 		char data[64];
 		sprintf( data,"%lld",n );
 		_rep=Rep::create( data );
 	}
 	
-	bbString( bbULong n ){
+	explicit bbString( bbULong n ){
 		char data[64];
 		sprintf( data,"%llu",n );
 		_rep=Rep::create( data );
 	}
 	
-	bbString( float n ){
+	explicit bbString( float n ){
 		char data[64];
 		sprintf( data,"%.9g",n );
 		_rep=Rep::create( data );
 	}
 	
-	bbString( double n ){
+	explicit bbString( double n ){
 		char data[64];
 		sprintf( data,"%.17g",n );
 		_rep=Rep::create( data );
@@ -517,9 +517,6 @@ template<class C> bbString operator+( const C *str,const bbString &str2 ){
 
 inline bbString BB_T( const char *p ){
 	return bbString::fromCString( p );
-}
-
-inline void bbGCMark( const bbString &t ){
 }
 
 #endif

@@ -31,6 +31,8 @@ Class BuildOpts
 	
 	Field geninfo:Bool
 	
+	Field wholeArchive:Bool
+	
 End
 
 Class BuilderInstance
@@ -77,6 +79,8 @@ Class BuilderInstance
 		
 		Builder=self
 
+		If Int( GetEnv( "MX2_WHOLE_ARCHIVE" ) ) opts.wholeArchive=True
+		
 		If opts.target="desktop"
 		
 			opts.target=HostOS
@@ -246,7 +250,7 @@ Class BuilderInstance
 		
 			Local module:=modules[modules.Length-i-1]
 
-			If module<>mainModule product.LD_LIBS.Push( module.outputDir+module.name+".a" )
+			If module<>mainModule product.MOD_LIBS.Push( module.outputDir+module.name+".a" )
 			
 		Next
 		
@@ -489,6 +493,7 @@ Class BuilderInstance
 		Type.FloatType=Null
 		Type.DoubleType=Null
 		Type.StringType=Null
+		Type.VariantType=Null
 		Type.ArrayClass=Null
 		Type.ObjectClass=Null
 		Type.ThrowableClass=Null
@@ -518,16 +523,14 @@ Class BuilderInstance
 		Type.FloatType=New PrimType( TCast<ClassType>( types.nodes["@float"] ) )
 		Type.DoubleType=New PrimType( TCast<ClassType>( types.nodes["@double"] ) )
 		Type.StringType=New PrimType( TCast<ClassType>( types.nodes["@string"] ) )
+		Type.VariantType=New PrimType( TCast<ClassType>( types.nodes["@variant"] ) )
 		
 		Type.ArrayClass=TCast<ClassType>( types.nodes["@Array"] )
 		Type.ObjectClass=TCast<ClassType>( types.nodes["@object"] )
 		Type.ThrowableClass=TCast<ClassType>( types.nodes["@throwable"] )
-		
-		Type.CStringClass=TCast<ClassType>( types.nodes["CString"] )
-		Type.WStringClass=TCast<ClassType>( types.nodes["WString"] )
-		Type.Utf8StringClass=TCast<ClassType>( types.nodes["Utf8String"] )
 
-		Type.ExceptionClass=TCast<ClassType>( types.nodes["@Exception"] )
+		Type.CStringClass=TCast<ClassType>( types.nodes["@cstring"] )
+		Type.TypeInfoClass=TCast<ClassType>( types.nodes["@typeinfo"] )
 
 		rootNamespace.Insert( "void",Type.VoidType )
 		rootNamespace.Insert( "bool",Type.BoolType )
@@ -542,14 +545,13 @@ Class BuilderInstance
 		rootNamespace.Insert( "float",Type.FloatType )
 		rootNamespace.Insert( "double",Type.DoubleType )
 		rootNamespace.Insert( "string",Type.StringType )
+		rootNamespace.Insert( "variant",Type.VariantType )
+		
 		rootNamespace.Insert( "object",Type.ObjectClass )
 		rootNamespace.Insert( "throwable",Type.ThrowableClass )
-		
-		rootNamespace.Insert( "CString",Type.CStringClass )
-		rootNamespace.Insert( "WString",Type.WStringClass )
-		rootNamespace.Insert( "Utf8String",Type.Utf8StringClass )
-		
-		rootNamespace.Insert( "Exception",Type.ExceptionClass )
+
+		rootNamespace.Insert( "cstring",Type.CStringClass )
+		rootNamespace.Insert( "typeinfo",Type.TypeInfoClass )
 		
 		Type.BoolType.Semant()
 		Type.ByteType.Semant()
@@ -563,9 +565,12 @@ Class BuilderInstance
 		Type.FloatType.Semant()
 		Type.DoubleType.Semant()
 		Type.StringType.Semant()
+		Type.VariantType.Semant()
 		Type.ArrayClass.Semant()
 		Type.ObjectClass.Semant()
 		Type.ThrowableClass.Semant()
+		Type.CStringClass.Semant()
+		Type.TypeInfoClass.Semant()
 	End
 	
 	Method ImportFile:Void( path:String )

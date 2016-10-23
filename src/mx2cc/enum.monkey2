@@ -94,12 +94,11 @@ Class EnumType Extends Type
 	
 		If type=Self Return 0
 		
+		If type=Type.VariantType Return MAX_DISTANCE
+
+		'enum->integral/bool.		
 		Local ptype:=TCast<PrimType>( type )
-		If ptype
-			If ptype=Type.BoolType Return MAX_DISTANCE
-			If ptype.IsIntegral Return MAX_DISTANCE
-			Return -1
-		Endif
+		If ptype And (ptype=Type.BoolType Or ptype.IsIntegral) Return MAX_DISTANCE
 		
 		Return -1
 	End

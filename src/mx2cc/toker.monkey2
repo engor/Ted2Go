@@ -22,7 +22,7 @@ Global tokerInited:Bool
 Function InitToker:Void()
 	If tokerInited Return
 	tokerInited=True
-
+	
 	Local keyWords:="Namespace;Using;Import;Extern;"
 	keyWords+="Public;Private;Protected;Internal;Friend;"
 	keyWords+="Void;Bool;Byte;UByte;Short;UShort;Int;UInt;Long;ULong;Float;Double;String;Object;Continue;Exit;"
@@ -36,7 +36,7 @@ Function InitToker:Void()
 	keyWords+="Repeat;Until;Forever;"
 	keyWords+="For;To;Step;Next;"
 	keyWords+="Select;Case;Default;"
-	keyWords+="Try;Catch;Throw;Throwable;"
+	keyWords+="Try;Catch;Throw;Throwable;Variant;CString;TypeInfo;Typeof;"
 	keyWords+="Return;Print;Static;Cast;"
 	keyWords+="Extension;Protocol;Delete"
 

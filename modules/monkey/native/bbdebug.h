@@ -25,16 +25,16 @@ inline bbString bbDBType( bbString *p ){ return "String"; }
 
 inline bbString bbDBValue( void *p ){ return "?????"; }
 inline bbString bbDBValue( bbBool *p ){ return *p ? "True" : "False"; }
-inline bbString bbDBValue( bbByte *p ){ return *p; }
-inline bbString bbDBValue( bbUByte *p ){ return *p; }
-inline bbString bbDBValue( bbShort *p ){ return *p; }
-inline bbString bbDBValue( bbUShort *p ){ return *p; }
-inline bbString bbDBValue( bbInt *p ){ return *p; }
-inline bbString bbDBValue( bbUInt *p ){ return *p; }
-inline bbString bbDBValue( bbLong *p ){ return *p; }
-inline bbString bbDBValue( bbULong *p ){ return *p; }
-inline bbString bbDBValue( bbFloat *p ){ return *p; }
-inline bbString bbDBValue( bbDouble *p ){ return *p; }
+inline bbString bbDBValue( bbByte *p ){ return bbString(*p); }
+inline bbString bbDBValue( bbUByte *p ){ return bbString(*p); }
+inline bbString bbDBValue( bbShort *p ){ return bbString(*p); }
+inline bbString bbDBValue( bbUShort *p ){ return bbString(*p); }
+inline bbString bbDBValue( bbInt *p ){ return bbString(*p); }
+inline bbString bbDBValue( bbUInt *p ){ return bbString(*p); }
+inline bbString bbDBValue( bbLong *p ){ return bbString(*p); }
+inline bbString bbDBValue( bbULong *p ){ return bbString(*p); }
+inline bbString bbDBValue( bbFloat *p ){ return bbString(*p); }
+inline bbString bbDBValue( bbDouble *p ){ return bbString(*p); }
 extern bbString bbDBValue( bbString *p );
 
 template<class T> bbString bbDBType(){

@@ -22,16 +22,14 @@ Class Type Extends SNode
 	Global FloatType:PrimType
 	Global DoubleType:PrimType
 	Global StringType:PrimType
+	Global VariantType:PrimType
 	
 	Global ArrayClass:ClassType
 	Global ObjectClass:ClassType
 	Global ThrowableClass:ClassType
 	
 	Global CStringClass:ClassType
-	Global WStringClass:ClassType
-	Global Utf8StringClass:ClassType
-	
-	Global ExceptionClass:ClassType
+	Global TypeInfoClass:ClassType
 	
 	Field _alias:Type
 	
@@ -218,7 +216,7 @@ Class PrimType Extends Type
 	End
 	
 	Method ToString:String() Override
-		Return ctype.cdecl.ident.Slice( 1 )	'slice off '@' prefix
+		Return ctype.cdecl.ident'.Slice( 1 )	'slice off '@' prefix
 	End
 	
 	Property Name:String() Override
@@ -258,20 +256,28 @@ Class PrimType Extends Type
 	
 	Method DistanceToType:Int( type:Type ) Override
 	
-		If type=Self Return 0
+		If type.Equals( Self ) Return 0
+		If type.Equals( BoolType ) Return MAX_DISTANCE
+		If type.Equals( VariantType ) Return MAX_DISTANCE
 		
 		Select type
 		Case StringType
 
+			'numeric->string
 			If IsNumeric Return MAX_DISTANCE
 
-		Case CStringClass,WStringClass,Utf8StringClass
+		Case CStringClass
 		
+			'numeric,string->cstring.
 			If Self=StringType Or IsNumeric Return MAX_DISTANCE
 			
 		Default
 		
-			If TCast<PrimType>( type ) Return MAX_DISTANCE
+			'numeric,bool->numeric
+			If IsNumeric Or Self=BoolType
+				Local ptype:=TCast<PrimType>( type )
+				If ptype And ptype.IsNumeric Return MAX_DISTANCE
+			Endif
 		
 		End
 		
@@ -286,6 +292,15 @@ Class PrimType Extends Type
 	Method CanCastToType:Bool( type:Type ) Override
 	
 		If DistanceToType( type )>=0 Return True
+		
+		'variant->any
+		If Self=VariantType Return true
+		
+		'string->numeric
+		If Self=StringType
+			Local ptype:=Cast<PrimType>( type )
+			If ptype And ptype.IsNumeric Return True
+		Endif
 		
 		'integral->enum
 		If IsIntegral And TCast<EnumType>( type ) Return True
@@ -405,9 +420,9 @@ Class ArrayType Extends Type
 	
 	Method DistanceToType:Int( type:Type ) Override
 	
-		If Equals( type ) Return 0
-		
-		If TCast<PrimType>( type )=BoolType Return MAX_DISTANCE
+		If type.Equals( Self ) Return 0
+		If type.Equals( BoolType ) Return MAX_DISTANCE
+		If type.Equals( VariantType ) Return MAX_DISTANCE
 		
 		Return -1
 	End
@@ -467,9 +482,11 @@ Class PointerType Extends Type
 	
 	Method DistanceToType:Int( type:Type ) Override
 	
-		If type=Self Return 0
+		If type.Equals( Self ) Return 0
+		If type.Equals( BoolType ) Return MAX_DISTANCE
+		If type.Equals( VariantType ) Return MAX_DISTANCE
 		
-		If type.Dealias=BoolType Return MAX_DISTANCE
+'		If type.Dealias=BoolType Return MAX_DISTANCE
 		
 		Local ptype:=TCast<PointerType>( type )
 		If Not ptype Return -1
@@ -574,7 +591,9 @@ Class FuncType Extends Type
 	
 	Method DistanceToType:Int( type:Type ) Override
 
-		If Equals( type ) Return 0
+		If type.Equals( Self ) Return 0
+'		If type.Equals( BoolType ) Return MAX_DISTANCE			'NO func->bool yet!
+		If type.Equals( VariantType ) Return MAX_DISTANCE
 		
 '		If type.Dealias Return MAX_DISTANCE
 		
