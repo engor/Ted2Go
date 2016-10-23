@@ -1,5 +1,13 @@
 
-'If you change anything in this file, you should rebuild all!
+'Hack: prevent code stripping for reflection based apps.
+'
+MX2_WHOLE_ARCHIVE=0
+
+
+'If you change anything below, you should rebuild all!
+
+
+'***** MACOS TARGET *****
 
 'Hacks for dylibs in app
 MX2_APP_DIR_DYLIB=						'ie: dylibs go in app Contents/MacOS dir
@@ -19,6 +27,9 @@ MX2_CC_OPTS_MACOS_RELEASE=-O3 -DNDEBUG
 MX2_CPP_OPTS_MACOS=-std=c++11 -mmacosx-version-min=10.9 -Wno-deprecated-declarations -Wno-tautological-pointer-compare -Wno-undefined-bool-conversion -Wno-int-to-void-pointer-cast -Wno-inconsistent-missing-override -Wno-logical-op-parentheses -Wno-parentheses-equality
 MX2_CPP_OPTS_MACOS_DEBUG=
 MX2_CPP_OPTS_MACOS_RELEASE=-O3 -DNDEBUG
+
+'AS options
+MX2_AS_OPTS=
 
 
 '***** EMSCRIPTEN *****

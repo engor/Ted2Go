@@ -1,5 +1,13 @@
 
-'***** RASPBIAN *****
+'Hack: prevent code stripping for reflection based apps.
+'
+MX2_WHOLE_ARCHIVE=0
+
+
+'If you change anything below, you should rebuild all!
+
+
+'***** RASPBIAN TARGET *****
 
 'LD options
 MX2_LD_OPTS_RASPBIAN=-L/opt/vc/lib -lbcm_host -lvcos -lvchiq_arm 

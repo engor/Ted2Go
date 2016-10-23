@@ -1,5 +1,10 @@
 
-'If you change anything in this file, you should rebuild all!
+'Hack: prevent code stripping for reflection based apps.
+'
+MX2_WHOLE_ARCHIVE=0
+
+
+'If you change anything below, you should rebuild all!
 
 
 '***** WINDOWS TARGET *****
@@ -19,17 +24,17 @@ MX2_GCC_TOOLS_WINDOWS=${MX2_HOME}\devtools\i686-5.3.0-posix-dwarf-rt_v4-rev0\min
 
 'Linker options
 MX2_LD_OPTS_WINDOWS=-static -m32
-MX2_LD_OPTS_WINDOWS_DEBUG=
+MX2_LD_OPTS_WINDOWS_DEBUG='-g
 MX2_LD_OPTS_WINDOWS_RELEASE=-s ' -Wl,--gc-sections 
 
 'C Compiler options
 MX2_CC_OPTS_WINDOWS=-std=gnu99 -m32
-MX2_CC_OPTS_WINDOWS_DEBUG=
+MX2_CC_OPTS_WINDOWS_DEBUG='-g
 MX2_CC_OPTS_WINDOWS_RELEASE=-O3 -DNDEBUG ' -fdata-sections -ffunction-sections
 
 'C++ Compiler options
 MX2_CPP_OPTS_WINDOWS=-std=c++11 -m32
-MX2_CPP_OPTS_WINDOWS_DEBUG=
+MX2_CPP_OPTS_WINDOWS_DEBUG='-g
 MX2_CPP_OPTS_WINDOWS_RELEASE=-O3 -DNDEBUG ' -fvtable-gc -fdata-sections -ffunction-sections
 
 

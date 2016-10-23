@@ -1,5 +1,13 @@
 
-'***** LINUX *****
+'Hack: prevent code stripping for reflection based apps.
+'
+MX2_WHOLE_ARCHIVE=0
+
+
+'If you change anything below, you should rebuild all!
+
+
+'***** LINUX TARGET *****
 
 'This will enable g++-6 builds (if g++-6 is installed and it's not already the default).
 'MX2_GCC_SUFFIX=-6
@@ -13,12 +21,12 @@ MX2_LD_OPTS_LINUX_RELEASE=-g -O3
 'C compiler options
 MX2_CC_OPTS_LINUX=-std=gnu99
 MX2_CC_OPTS_LINUX_DEBUG=
-MX2_CC_OPTS_LINUX_RELEASE=-g -O3 -DNDEBUG
+MX2_CC_OPTS_LINUX_RELEASE=-O3 -DNDEBUG
 
 'C++ compiler options
 MX2_CPP_OPTS_LINUX=-std=c++11
 MX2_CPP_OPTS_LINUX_DEBUG=
-MX2_CPP_OPTS_LINUX_RELEASE=-g -O3 -DNDEBUG
+MX2_CPP_OPTS_LINUX_RELEASE=-O3 -DNDEBUG
 
 
 '***** EMSCRIPTEN *****
