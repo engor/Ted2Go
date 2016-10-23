@@ -2,7 +2,7 @@
 Namespace ted2go
 
 
-Class FindDialog Extends Dialog
+Class FindDialog Extends DialogExt
 
 	Method New( actions:FindActions )
 	
@@ -48,7 +48,7 @@ Class FindDialog Extends Dialog
 		
 		Local close:=AddAction( "Close" )
 		SetKeyAction( Key.Escape,close )
-		close.Triggered=Close
+		close.Triggered=Hide
 		
 		_findField.Activated+=_findField.MakeKeyView
 		
@@ -69,6 +69,13 @@ Class FindDialog Extends Dialog
 	
 		Return _caseSensitive.Checked
 	End
+	
+	Method SetInitialText( find:String )
+		
+		_findField.Text=find
+		_findField.SelectAll()
+	End
+	
 	
 	Private
 	

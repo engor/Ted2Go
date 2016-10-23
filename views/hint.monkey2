@@ -43,7 +43,8 @@ End
 Class HintInstance Extends TextView
 
 	Method New()
-	
+		
+		Style=GetStyle( "Hint" )
 		ReadOnly=True
 		Visible=False
 		Layout="float"
@@ -74,10 +75,10 @@ Class HintInstance Extends TextView
 	
 	Protected
 		
-	Method OnRender( canvas:Canvas ) Override
-		
-		canvas.Clear( Color.Black )
-	End
+	'Method OnRender( canvas:Canvas ) Override
+	'	
+	'	canvas.Clear( Color.Black )
+	'End
 	
 	
 	Private

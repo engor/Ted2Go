@@ -478,6 +478,8 @@ Class CodeDocument Extends Ted2Document
 	
 	Function BgParsing(doc:CodeDocument)
 		
+		If doc.FileType <> ".monkey2" Return
+		
 		New Fiber( Lambda()
 			
 			Local result := 0

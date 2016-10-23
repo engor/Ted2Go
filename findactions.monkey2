@@ -53,8 +53,18 @@ Class FindActions
 	Field _findDialog:FindDialog
 	
 	Method OnFind()
-	
-		_findDialog.Open()
+		
+		_findDialog.Show()
+		
+		Local tv:=_docs.CurrentTextView
+		If tv <> Null
+			If tv.Cursor <> tv.Anchor
+				Local min:=Min( tv.Cursor,tv.Anchor )
+				Local max:=Max( tv.Cursor,tv.Anchor )
+				Local s:=tv.Text.Slice( min,max )
+				_findDialog.SetInitialText( s )
+			Endif
+		Endif
 	End
 	
 	Method OnFindNext()

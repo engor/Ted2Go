@@ -151,7 +151,7 @@
 		
 		"ToolBar":{
 			"padding":[ 2 ],
-			"backgroundColor":"panel"
+			"backgroundColor":"content"
 		},
 		
 		"ToolButton":{
@@ -185,7 +185,9 @@
 		
 		"MenuBar":{
 			"extends":"ToolBar",
-			"backgroundColor":"content"
+			"backgroundColor":"content",
+			"border":[ 0,0,0,1 ],
+			"borderColor":"clear"
 		},
 		
 		"MenuSeparator":{
@@ -345,6 +347,12 @@
 		"HelpTextField":{
 			"extends":"TextField",
 			"skinColor":"panel"
+		},
+
+		"Hint":{
+			"border":[ 1 ],
+			"borderColor":"clear",
+			"backgroundColor":"panel"
 		}
 	}
 }

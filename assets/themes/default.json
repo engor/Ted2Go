@@ -185,7 +185,9 @@
 		
 		"MenuBar":{
 			"extends":"ToolBar",
-			"backgroundColor":"content"
+			"backgroundColor":"clear",
+			"border":[ 3,3,3,3],
+			"borderColor":"clear"
 		},
 		
 		"MenuSeparator":{
