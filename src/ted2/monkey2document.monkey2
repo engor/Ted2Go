@@ -15,11 +15,11 @@ Const COLOR_OTHER:=7
 Global Keywords:=New StringMap<String>
 
 Function InitKeywords()
-	Local kws:=""
 
+	Local kws:=""
 	kws+="Namespace;Using;Import;Extern;"
 	kws+="Public;Private;Protected;Friend;"
-	kws+="Void;Bool;Byte;UByte;Short;UShort;Int;UInt;Long;ULong;Float;Double;String;Object;Continue;Exit;"
+	kws+="Void;Bool;Byte;UByte;Short;UShort;Int;UInt;Long;ULong;Float;Double;String;CString;Variant;TypeInfo;DeclInfo;Object;Continue;Exit;"
 	kws+="New;Self;Super;Eachin;True;False;Null;Where;"
 	kws+="Alias;Const;Local;Global;Field;Method;Function;Property;Getter;Setter;Operator;Lambda;"
 	kws+="Enum;Class;Interface;Struct;Extends;Implements;Virtual;Override;Abstract;Final;Inline;"
@@ -31,7 +31,8 @@ Function InitKeywords()
 	kws+="For;To;Step;Next;"
 	kws+="Select;Case;Default;"
 	kws+="Try;Catch;Throw;Throwable;"
-	kws+="Return;Print;Static;Cast;Extension"
+	kws+="Return;Print;Static;Cast;Extension;"
+	kws+="Typeof"
 	
 	For Local kw:=Eachin kws.Split( ";" )
 		Keywords[kw.ToLower()]=kw
