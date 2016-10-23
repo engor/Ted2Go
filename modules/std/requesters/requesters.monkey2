@@ -15,7 +15,8 @@ Namespace std.requesters
 	
 	#if __TARGET__="windows"
 
-		#Import "<libole32.a>"
+		#Import "<libComdlg32.a>"
+'		#Import "<libole32.a>"
 
 	#endif
 	
