@@ -6,8 +6,8 @@
 
 struct bbVariant{
 
-	template<class T> static bbObject *toObject( T *p,typename T::bb_object_type d=0 ){
-		return p;
+	template<class T,class R=typename T::bb_object_type> static bbObject *toObject( T *p ){
+		return dynamic_cast<bbObject*>( p );
 	}
 
 	template<class T> static bbObject *toObject( T const& ){
