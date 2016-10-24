@@ -864,7 +864,7 @@ Class TextView Extends ScrollableView
 				canvas.DrawRect( _cursorRect.X-2,_cursorRect.Y,5,1 )
 				canvas.DrawRect( _cursorRect.X-2,_cursorRect.Y+_cursorRect.Height-1,5,1 )
 			Default
-				canvas.DrawRect( _cursorRect.X-1,_cursorRect.Y,2,_cursorRect.Height )
+				canvas.DrawRect( Max( _cursorRect.X-1,0 ),_cursorRect.Y,2,_cursorRect.Height )
 			End
 			
 		Endif
