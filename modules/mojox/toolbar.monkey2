@@ -9,6 +9,8 @@ Class ToolButton Extends Button
 		Super.New( action )
 		
 		Style=GetStyle( "ToolButton" )
+		
+		PushButtonMode=True
 	End
 	
 End
@@ -26,7 +28,8 @@ Class ToolBar Extends DockingView
 	Method New( axis:Axis )
 		Style=GetStyle( "ToolBar" )
 		
-		Layout=axis=Axis.X ? "fill-x" Else "fill-y"
+		Layout=(axis=Axis.X ? "fill-x" Else "fill-y")
+
 		Gravity=New Vec2f( 0,0 )
 		
 		_axis=axis
