@@ -21,6 +21,7 @@
 #Import "views/codegutterview"
 #Import "views/toolbarext"
 #Import "views/hint"
+#Import "views/htmlviewext"
 
 #Import "parsers/parser"
 #Import "parsers/monkey2parser"

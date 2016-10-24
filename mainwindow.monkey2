@@ -58,11 +58,50 @@ Class MainWindowInstance Extends Window
 
 		_buildConsole=New ConsoleExt
 		_outputConsole=New ConsoleExt
-		_helpView=New HtmlView
+		
+		'Help tab
+		
+		_helpView=New HtmlViewExt
+		_helpViewDocker=New DockingView
+		Local bar:=New ToolBarExt
+		bar.MaxSize=New Vec2i( 300,30 )
+		bar.AddIconicButton(
+			ThemeImages.Get( "docbar/home.png" ),
+			Lambda()
+				_helpView.ClearHistory()
+				_helpView.Navigate( "asset::ted2/about.html" )
+			End,
+			"Home" )
+		bar.AddIconicButton(
+			ThemeImages.Get( "docbar/back.png" ),
+			Lambda()
+				_helpView.Back()
+			End,
+			"Back" )
+		bar.AddIconicButton(
+			ThemeImages.Get( "docbar/forward.png" ),
+			Lambda()
+				_helpView.Forward()
+			End,
+			"Forward" )
+		bar.AddSeparator()
+		bar.AddSeparator()
+		Local label:=New Label
+		bar.AddView( label,"left" )
+		
+		_helpView.Navigated+=Lambda( url:String )
+			
+			label.Text=url
+		End
+		
+		_helpViewDocker.AddView( bar,"top" )
+		_helpViewDocker.ContentView=_helpView
+		
 '		_helpView.Style=New Style( _helpView.Style )
 '		_helpView.Style.Border=New Recti( 0,-4,0,0 )
 '		_helpView.Style.BorderColor=App.Theme.GetColor( "content" )
-		_helpView.Go( "asset::ted2/about.html" )
+		_helpView.Navigate( "asset::ted2/about.html" )
+		_helpView.Navigate( "asset::ted2/about.html" )
 		
 		_projectView=New ProjectView( _docsManager )
 		
@@ -236,7 +275,8 @@ Class MainWindowInstance Extends Window
 		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/run.png"),_buildActions.buildAndRun.Triggered,"Run (F7)" )
 		_toolBar.AddSeparator()
 		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/options.png"),_buildActions.buildSettings.Triggered,"Target settings" )
-		
+		_toolBar.AddSeparator()
+		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/find.png"),_findActions.find.Triggered,"Find (Ctrl+F)" )
 		
 		_browsersTabView.AddTab( "Files",_projectView,True )
 		_browsersTabView.AddTab( "Debug",_debugView,False )
@@ -244,7 +284,7 @@ Class MainWindowInstance Extends Window
 		
 		_consolesTabView.AddTab( "Build",_buildConsole,True )
 		_consolesTabView.AddTab( "Output",_outputConsole,False )
-		_consolesTabView.AddTab( "Documentation",_helpView,False )
+		_consolesTabView.AddTab( "Documentation",_helpViewDocker,False )
 		
 		_contentView=New DockingView
 		_contentView.AddView( _menuBar,"top" )
@@ -358,7 +398,7 @@ Class MainWindowInstance Extends Window
 	
 	Method ShowHelpView()
 		_consolesTabView.Visible=True
-		_consolesTabView.CurrentView=_helpView
+		_consolesTabView.CurrentView=_helpViewDocker
 	End
 	
 	Method ShowQuickHelp( ident:String )
@@ -367,7 +407,7 @@ Class MainWindowInstance Extends Window
 	
 	Method ShowHelp( url:String  )
 		ShowHelpView()
-		_helpView.Go( url )
+		_helpView.Navigate( url )
 		_helpView.Scroll=New Vec2i( 0,0 )
 	End
 	
@@ -509,7 +549,8 @@ Class MainWindowInstance Extends Window
 	
 	Field _buildConsole:Console
 	Field _outputConsole:Console
-	Field _helpView:HtmlView
+	Field _helpView:HtmlViewExt
+	Field _helpViewDocker:DockingView
 
 	Field _projectView:ProjectView
 	Field _debugView:DebugView

@@ -19,6 +19,8 @@ Class ProjectView Extends ScrollView
 		_docker.ContentView=New TreeViewExt
 		
 		openProject=New Action( "Open project" )
+		openProject.HotKey=Key.O
+		openProject.HotKeyModifiers=Modifier.Menu|Modifier.Shift
 		openProject.Triggered=OnOpenProject
 	End
 	
@@ -67,6 +69,8 @@ Class ProjectView Extends ScrollView
 				
 					Local file:=RequestString( "New file name:" )
 					If Not file Return
+					
+					If ExtractExt(file)="" Then file+=".monkey2"
 					
 					Local tpath:=path+"/"+file
 					
@@ -125,6 +129,26 @@ Class ProjectView Extends ScrollView
 				
 				menu.AddSeparator()
 			
+				menu.AddAction( "Rename" ).Triggered=Lambda()
+				
+					Local oldName:=StripDir( path )
+					Local name:=RequestString( "Enter new name:","Ranaming '"+oldName+"'" )
+					If name=oldName Return
+					
+					Local newPath:=ExtractDir( path )+name
+					If CopyFile( path,newPath )
+					
+						DeleteFile( path )
+					
+						browser.Update()
+						Return
+					Endif
+					
+					Alert( "Failed to rename file: '"+path+"'" )
+				End
+			
+				menu.AddSeparator()
+			
 				menu.AddAction( "Delete" ).Triggered=Lambda()
 				
 					If Not RequestOkay( "Really delete file '"+path+"'?" ) return
@@ -141,7 +165,7 @@ Class ProjectView Extends ScrollView
 					
 					Alert( "Failed to delete file: '"+path+"'" )
 				End
-			
+				
 				#rem
 				Local name := StripDir(path)
 				If name = "module.json"
