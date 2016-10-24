@@ -849,8 +849,10 @@ Class TextView Extends ScrollableView
 				canvas.DrawRect( 0,min.Bottom,clip.Right,max.Top-min.Bottom )
 				canvas.DrawRect( 0,max.Top,max.Left,max.Height )
 			Endif
+		
+		Endif
 			
-		Else If Not _readOnly And App.KeyView=Self And _blinkOn
+		If Not _readOnly And App.KeyView=Self And _blinkOn
 		
 			canvas.Color=_cursorColor
 			
@@ -862,7 +864,7 @@ Class TextView Extends ScrollableView
 				canvas.DrawRect( _cursorRect.X-2,_cursorRect.Y,5,1 )
 				canvas.DrawRect( _cursorRect.X-2,_cursorRect.Y+_cursorRect.Height-1,5,1 )
 			Default
-				canvas.DrawRect( _cursorRect.X,_cursorRect.Y,1,_cursorRect.Height )
+				canvas.DrawRect( _cursorRect.X-1,_cursorRect.Y,2,_cursorRect.Height )
 			End
 			
 		Endif
