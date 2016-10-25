@@ -119,7 +119,10 @@ namespace bbSocket{
 		
 		freeaddrinfo( pres );
 		
-		if( sock<0 ) return -1;
+		if( sock<0 ){
+			 printf( "socket_connect error! err=%i\n",err() );
+			 return -1;
+		}
 		
 		return sock;
 	}
@@ -159,7 +162,10 @@ namespace bbSocket{
 		
 		freeaddrinfo( pres );
 		
-		if( sock<0 ) return -1;
+		if( sock<0 ){
+			 printf( "socket_bind error! err=%i\n",err() );
+			 return -1;
+		}
 		
 // So server ports can be quickly reused...
 //
@@ -205,7 +211,10 @@ namespace bbSocket{
 		
 		freeaddrinfo( pres );
 		
-		if( sock<0 ) return -1;
+		if( sock<0 ){
+			 printf( "socket_listen error! err=%i\n",err() );
+			 return -1;
+		}
 		
 // So server ports can be quickly reused...
 //
@@ -365,13 +374,7 @@ namespace bbSocket{
 	}
 	
 	int cansend( int socket ){
-#if _WIN32
-		u_long count=0;
-#else
-		int count=0;
-		if( ioctl( socket,FIONWRITE,&count )<0 ) count=0;
-#endif
-		return count;
+		return 0;
 	}
 	
 	int canrecv( int socket ){
@@ -481,14 +484,14 @@ namespace bbSocket{
 	int recvfrom( int socket,void *data,int size,void *addr,int *addrlen ){
 	
 		int n=-1;
-	
+
 		if( bbFiber::getCurrentFiber() && canrecv( socket )<size ){
 		
 			Future future;
 			
 			std::thread thread( [=,&future](){
 			
-				future.set( ::recvfrom( socket,(char*)data,size,0,(sockaddr*)addr,addrlen ) );
+				future.set( recvfrom( socket,(char*)data,size,0,(sockaddr*)addr,(socklen_t*)addrlen ) );
 				
 			} );
 			
@@ -498,12 +501,13 @@ namespace bbSocket{
 			
 		}else{
 
-			n=::recvfrom( socket,(char*)data,size,0,(sockaddr*)addr,addrlen );
+			n=::recvfrom( socket,(char*)data,size,0,(sockaddr*)addr,(socklen_t*)addrlen );
 		}
 		
 		if( n<0 ){
-			printf( "socket_recvfrom error! n=%i, err=%i, socket=%i, data=%p, size=%i\n",n,err(),socket,data,size );fflush( stdout );
+			printf( "socket_recvfrom error! err=%i, socket=%i, data=%p, size=%i\n",err(),socket,data,size );fflush( stdout );
 		}
+
 		
 		return n;
 	}
@@ -511,7 +515,7 @@ namespace bbSocket{
 	void setopt( int socket,bbString name,int value ){
 	
 		const char *ip=(const char*)&value;
-		int sz=sizeof(int);
+		int sz=sizeof( value );
 		
 		if( name=="TCP_NODELAY" ){
 			setsockopt( socket,IPPROTO_TCP,TCP_NODELAY,ip,sz );
@@ -525,29 +529,29 @@ namespace bbSocket{
 	int getopt( int socket,bbString name ){
 
 		int value=-1;
-		socklen_t optlen=sizeof(value);
 		
 		char *ip=(char*)&value;
-		int sz=sizeof(int);
-		int *szp=&sz;
+		int sz=sizeof( value );
 		
 		if( name=="TCP_NODELAY" ){
-			getsockopt( socket,IPPROTO_TCP,TCP_NODELAY,ip,szp );
+			getsockopt( socket,IPPROTO_TCP,TCP_NODELAY,ip,(socklen_t*)&sz );
 		}else if( name=="SO_SNDTIMEO" ){
-			getsockopt( socket,SOL_SOCKET,SO_SNDTIMEO,ip,szp );
+			getsockopt( socket,SOL_SOCKET,SO_SNDTIMEO,ip,(socklen_t*)&sz );
 		}else if( name=="SO_RCVTIMEO" ){
-			getsockopt( socket,SOL_SOCKET,SO_RCVTIMEO,ip,szp );
+			getsockopt( socket,SOL_SOCKET,SO_RCVTIMEO,ip,(socklen_t*)&sz );
 		}
+		
+		return value;
 	}
 	
 	int getsockaddr( int socket,void *addr,int *addrlen ){
 	
-		return getsockname( socket,(sockaddr*)addr,addrlen );
+		return getsockname( socket,(sockaddr*)addr,(socklen_t*)addrlen );
 	}
 	
 	int getpeeraddr( int socket,void *addr,int *addrlen ){
 	
-		return getpeername( socket,(sockaddr*)addr,addrlen );
+		return getpeername( socket,(sockaddr*)addr,(socklen_t*)addrlen );
 	}
 	
 	int sockaddrname( const void *addr,int addrlen,char *host,char *service ){
