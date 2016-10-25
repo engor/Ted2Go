@@ -474,7 +474,7 @@ Class @TypeInfo Extends Void="bbTypeInfo"
 	#end
 	Property ParamTypes:TypeInfo[]()="paramTypes"
 	
-	#rem monkeydoc class super type.
+	#rem monkeydoc Class super type.
 	
 	If the type is a class type, returns the type of the super class.
 	
@@ -482,6 +482,16 @@ Class @TypeInfo Extends Void="bbTypeInfo"
 	
 	#end
 	Property SuperType:TypeInfo()="superType"
+	
+	
+	#rem monkeydoc Implemented interfaces.
+	
+	The interfaces implemented by the class or interface type.
+
+	If the type is not a class or interface type a runtime exception occurs.
+	
+	#end
+	Property InterfaceTypes:TypeInfo[]()="interfaceTypes"
 	
 	#rem monkeydoc Gets string representation of type.
 	#end

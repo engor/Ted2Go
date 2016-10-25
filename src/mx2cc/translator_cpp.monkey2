@@ -774,7 +774,7 @@ Class Translator_CPP Extends Translator
 		
 		Local decls:=New StringStack
 		
-		If Not ctype.IsAbstract
+		If ctype.IsClass And Not ctype.IsAbstract
 			If ctype.ctors.Length
 				For Local ctor:=Eachin ctype.ctors
 					Local args:=cname
@@ -842,14 +842,24 @@ Class Translator_CPP Extends Translator
 		Emit( rcname+"():bbClassTypeInfo(~q"+ctype.Name+"~q,~q"+cdecl.kind.Capitalize()+"~q){" )
 		Emit( "}" )
 
-		'superType		
-		Emit( "bbTypeInfo *superType(){" )
+		'superType
 		If ctype.superType
+			Emit( "bbTypeInfo *superType(){" )
 			Emit( "return bbGetType<"+ClassName( ctype.superType )+"*>();" )
-		Else
-			Emit( "return 0;" )
-		Endif		
-		Emit( "}" )
+			Emit( "}" )
+		Endif
+		
+		'interfaceTypes
+		If ctype.ifaceTypes
+			Emit( "bbArray<bbTypeInfo*> interfaceTypes(){" )
+			Local args:=""
+			For Local ty:=Eachin ctype.ifaceTypes
+				If args args+=","
+				args+="bbGetType<"+ClassName( ty )+"*>()"
+			Next
+			Emit( "return bbArray<bbTypeInfo*>({"+args+"},"+ctype.ifaceTypes.Length+");" )
+			Emit( "}" )
+		Endif
 		
 		Emit( "};" )
 		
@@ -1887,7 +1897,7 @@ End
 
 Function GenTypeInfo:Bool( ctype:ClassType )
 
-	If Not ctype.IsClass Return False
+	If ctype.IsStruct Return False
 
 	'This 'sort of' works, but no generics just yet!
 	If ctype.types Or ctype.scope.IsInstanceOf Return False

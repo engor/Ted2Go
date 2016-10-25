@@ -36,6 +36,8 @@ struct bbTypeInfo{
 	
 	virtual bbTypeInfo *superType();
 	
+	virtual bbArray<bbTypeInfo*> interfaceTypes();
+	
 	virtual bbBool extendsType( bbTypeInfo *type );
 	
 	virtual bbArray<bbDeclInfo*> getDecls();
@@ -168,6 +170,10 @@ struct bbClassTypeInfo : public bbTypeInfo{
 	bbClassDecls *_decls=0;
 	
 	bbClassTypeInfo( bbString name,bbString kind );
+	
+	bbTypeInfo *superType();
+	
+	bbArray<bbTypeInfo*> interfaceTypes();
 	
 	bbBool extendsType( bbTypeInfo *type );
 	

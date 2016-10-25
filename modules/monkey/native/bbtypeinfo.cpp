@@ -43,13 +43,18 @@ bbTypeInfo *bbTypeInfo::superType(){
 	return 0;
 }
 	
+bbArray<bbTypeInfo*> bbTypeInfo::interfaceTypes(){
+	bbRuntimeError( "Type '"+name+"' is not a class or interface type" );
+	return {};
+}
+	
 bbBool bbTypeInfo::extendsType( bbTypeInfo *type ){
-	bbRuntimeError( "Type '"+name+"' is not a class type" );
+	bbRuntimeError( "Type '"+name+"' is not a class or interface type" );
 	return false;
 }
 	
 bbArray<bbDeclInfo*> bbTypeInfo::getDecls(){
-	bbRuntimeError( "Type '"+name+"' is not a class type" );
+	bbRuntimeError( "Type '"+name+"' is not a class or interface type" );
 	return {};
 }
 
@@ -209,9 +214,27 @@ bbClassTypeInfo::bbClassTypeInfo( bbString name,bbString kind ){
 	_classes=this;
 }
 
+bbTypeInfo *bbClassTypeInfo::superType(){
+	return 0;
+}
+
+bbArray<bbTypeInfo*> bbClassTypeInfo::interfaceTypes(){
+	return {};
+}
+
 bbBool bbClassTypeInfo::extendsType( bbTypeInfo *type ){
+
 	if( type==this ) return true;
+	
+	bbArray<bbTypeInfo*> ifaces=interfaceTypes();
+	
+	for( int i=0;i<ifaces.length();++i ){
+
+		if( ifaces[i]->extendsType( type ) ) return true;
+	}
+	
 	if( bbTypeInfo *super=superType() ) return super->extendsType( type );
+	
 	return false;
 }
 
