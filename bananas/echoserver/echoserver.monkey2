@@ -14,73 +14,71 @@ Class MyWindow Extends Window
 		New Fiber( Server )
 		
 		New Fiber( Client )
-		
-'		New Timer( 60,App.RequestRender )
 	End
 	
 	Method Server()
 	
-		Local server:=SocketServer.Listen( 12345 )
-		If Not server print "Server:Failed to create server" ; Return
+		Local server:=Socket.Listen( 12345 )
+		If Not server print "Server: Failed to create server" ; Return
 		
-		Print "Server:Listening"
+		Print "Server @"+server.Address+" listening"
 		
 		Repeat
 		
 			Local socket:=server.Accept()
 			If Not socket Exit
 			
-			Print "Server:Accepted"
+			Print "Server accepted client @"+socket.PeerAddress
+			
+			Local stream:=New SocketStream( socket )
 			
 			New Fiber( Lambda()
 			
 				Repeat
 				
-					Local line:=socket.ReadCString()
+					Local line:=stream.ReadSizedString()
 					If Not line Exit
 					
-					socket.WriteCString( line )
+					stream.WriteSizedString( line )
+					
 				Forever
 				
-				socket.Close()
+				stream.Close()
 				
 			End )
 		
 		Forever
 		
-		'Never gets here!
-		'
 		Print "Server:Bye"
 		
 		server.Close()
-	
 	End
 	
 	Method Client()
 	
-		Fiber.Sleep( .5 )	'wait a bit for server to start
+		Fiber.Sleep( .5 )
+	
+		Local socket:=Socket.Connect( "localhost",12345 )
+		If Not socket Print "Client: Couldn't connect to server" ; Return
 		
-		Local socket:=SocketStream.Connect( "localhost",12345 )
-		If Not socket Print "Client:Couldn't connect to server" ; Return
+		Print "Client @"+socket.Address+" connected to server @"+socket.PeerAddress
 		
-		Print "Client:Connected"
+		Local stream:=New SocketStream( socket )
 
 		For Local i:=0 Until 100
 		
-			socket.WriteCString( "This is a number:"+i )
+			stream.WriteSizedString( "This is a number:"+i )
 			
-			Print "Reply:"+socket.ReadCString()
+			Print "Reply:"+stream.ReadSizedString()
 		Next
 		
 		Print "Client:Bye"
 		
-		socket.Close()
+		stream.Close()
 	End
 	
 	Method OnRender( canvas:Canvas ) Override
 	
-'		App.RequestRender()
-		
 		Global ticks:=0
 		ticks+=1
 		

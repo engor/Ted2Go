@@ -6,7 +6,9 @@
 
 namespace bbSocket{
 
-	int connect( bbString hostname,bbString service );
+	int connect( bbString hostname,bbString service,int type );
+	
+	int bind( bbString service );
 
 	int listen( bbString service,int queue );
 	
@@ -15,12 +17,26 @@ namespace bbSocket{
 	void close( int socket );
 	
 	int send( int socket,void *data,int size );
-	
-	int recv( int socket,void *data,int size );
 
+	int recv( int socket,void *data,int size );
+	
+	int sendto( int socket,void *data,int size,const void *sockaddr,int addrlen );
+	
+	int recvfrom( int socket,void *data,int size,void *sockaddr,int *addrlen );
+	
 	void setopt( int socket,bbString name,int value );
 	
 	int getopt( int socket,bbString name );
+	
+	int cansend( int socket );
+	
+	int canrecv( int socket );
+	
+	int getsockaddr( int socket,void *sockaddr,int *addrlen );
+
+	int getpeeraddr( int socket,void *sockaddr,int *addrlen );
+
+	int sockaddrname( const void *sockaddr,int addrlen,char *host,char *service );
 }
 
 #endif

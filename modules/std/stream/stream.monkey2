@@ -299,21 +299,33 @@ Class Stream
 		Return str
 	End
 	
+	#rem monkeydoc Reads a size prefixed string from the stream.
+	
+	Reads an int from the stream, then a string from that many bytes.
+
+	@return the string read.
+	
+	#end
+	Method ReadSizedString:String()
+		Local n:=ReadInt()
+		Local data:=ReadAll( n )
+		Local str:=data.PeekString( 0 )
+		data.Discard()
+		Return str
+	End
+	
 	#rem monkeydoc Reads a null terminated string from the stream.
 	
 	@return the string read.
 	
 	#end
 	Method ReadNullTerminatedString:String()
-	
 		Local buf:=New Stack<Byte>
-		
 		While Not Eof
 			Local chr:=ReadByte()
 			If Not chr Exit
 			buf.Push( chr )
 		Wend
-		
 		Return String.FromCString( buf.Data.Data,buf.Length )
 	End
 	
@@ -427,6 +439,26 @@ Class Stream
 		buf.PokeString( 0,str )
 		Write( buf,0,buf.Length )
 		buf.Discard()
+	End
+	
+	#rem monkeydoc Writes a size prefixed string to the stream.
+	
+	Writes an int containing the size of the string to the stream, followed the string itself.
+	
+	#end
+	Method WriteSizedString( str:String )
+		WriteInt( str.CStringLength )
+		WriteString( str )
+	End
+	
+	#rem monkeydoc Writes a null terminate string to the stream.
+	
+	@param str The string to write.
+	
+	#end
+	Method WriteNullTerminatedString( str:String )
+		WriteString( str )
+		WriteByte( 0 )
 	End
 	
 	#rem monkeydoc Opens a stream

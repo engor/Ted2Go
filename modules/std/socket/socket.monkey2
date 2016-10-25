@@ -10,11 +10,13 @@ Namespace std.socket
 
 Extern
 
-'Note: should probably just make this an extern bbSocket struct, ala bbProcess.
+#rem monkeydoc @hidden
+#end
+Function socket_connect:Int( hostname:String,service:String,type:Int )="bbSocket::connect"
 
 #rem monkeydoc @hidden
 #end
-Function socket_connect:Int( hostname:String,service:String )="bbSocket::connect"
+Function socket_bind:Int( service:String )="bbSocket::bind"
 
 #rem monkeydoc @hidden
 #end
@@ -38,21 +40,167 @@ Function socket_recv:Int( socket:Int,data:Void Ptr,size:Int )="bbSocket::recv"
 
 #rem monkeydoc @hidden
 #end
+Function socket_sendto:Int( socket:Int,data:Void Ptr,size:Int,addr:Void ptr,addrlen:Int )="bbSocket::sendto"
+
+#rem monkeydoc @hidden
+#end
+Function socket_recvfrom:Int( socket:Int,data:Void Ptr,size:Int,addr:Void ptr,addrlen:Int Ptr )="bbSocket::recvfrom"
+
+#rem monkeydoc @hidden
+#end
 Function socket_setopt( socket:Int,opt:String,value:Int )="bbSocket::setopt"
 
 #rem monkeydoc @hidden
 #end
 Function socket_getopt:Int( socket:Int,opt:String )="bbSocket::getopt"
 
+#rem monkeydoc @hidden
+#end
+Function socket_cansend:Int( socket:Int )="bbSocket::cansend"
+
+#rem monkeydoc @hidden
+#end
+Function socket_canrecv:Int( socket:Int )="bbSocket::canrecv"
+
+#rem monkeydoc @hidden
+#end
+Function socket_getsockaddr:Int( socket:Int,addr:Void Ptr,addrlen:Int Ptr )="bbSocket::getsockaddr"
+
+#rem monkeydoc @hidden
+#end
+Function socket_getpeeraddr:Int( socket:Int,addr:Void Ptr,addrlen:Int Ptr )="bbSocket::getpeeraddr"
+
+#rem monkeydoc @hidden
+#end
+Function socket_sockaddrname:Int( addr:Void Ptr,addrlen:Int,host:libc.char_t Ptr,service:libc.char_t Ptr )="bbSocket::sockaddrname"
+
 Public
 
-Struct Socket
+Enum SocketType
 
-	#rem monkeydoc True if socket is currently open.
-	#end
-	Property IsOpen:Bool()
+	Stream=0
+	Datagram=1
+
+End
+
+Class SocketAddress
+
+	Property Host:String()
+		Validate()
+		Return _host
+	End
 	
-		Return _socket<>-1
+	Property Service:String()
+		Validate()
+		Return _service
+	End
+	
+	Method To:String()
+		Return Host+":"+Service
+	End
+	
+	Private
+	
+	Field _addr:=New Byte[128]
+	Field _addrlen:Int=0
+
+	Field _dirty:Bool=False	
+	Field _host:String=""
+	Field _service:String=""
+	
+	Method Validate()
+		If Not _dirty Return
+		
+		Local host:=New libc.char_t[1024]
+		Local service:=New libc.char_t[80]
+		
+		If socket_sockaddrname( _addr.Data,_addrlen,host.Data,service.Data )>=0
+			_host=String.FromCString( host.Data )
+			_service=String.FromCString( service.Data )
+		Else
+			_host=""
+			_service=""
+		Endif
+		
+		_dirty=False
+	End
+
+	Property Addr:Void Ptr()
+		Return _addr.Data
+	End
+	
+	Property Addrlen:Int()
+		Return _addrlen
+	End
+	
+	Method Update( addrlen:Int )
+		_addrlen=addrlen
+		If _addrlen
+			_dirty=True
+			Return
+		Endif
+		_host=""
+		_service=""
+		_dirty=False
+	End
+	
+End
+
+Class Socket
+
+	#rem Not on Windows...
+	
+	#rem monkeydoc The number of bytes that be sent to the socket without it blocking.
+	#end
+	Property CanSend:Int()
+		If _socket=-1 Return 0
+		
+		Return socket_cansend( _socket )
+	End
+	#end
+	
+	#rem  monkeydoc True if socket has been closed
+	#end
+	Property Closed:Bool()
+		Return _socket=-1
+	End
+	
+	#rem monkeydoc The number of bytes that can be received from the socket without blocking.
+	#end
+	Property CanReceive:Int()
+		If _socket=-1 Return 0
+		
+		Return socket_canrecv( _socket )
+	End
+	
+	#rem monkeydoc The address of the socket.
+	#end
+	Property Address:SocketAddress()
+		If _socket=-1 Return Null
+	
+		If Not _addr
+			Local addrlen:Int=128
+			_addr=New SocketAddress
+			Local n:=socket_getsockaddr( _socket,_addr.Addr,Varptr addrlen )
+			_addr.Update( n>=0 ? addrlen Else 0 )
+		Endif
+		
+		Return _addr
+	End
+	
+	#rem monkeydoc The address of the socket peer.
+	#end
+	Property PeerAddress:SocketAddress()
+		If _socket=-1 Return Null
+
+		If Not _peer
+			Local addrlen:Int=128
+			_peer=New SocketAddress
+			Local n:=socket_getpeeraddr( _socket,_peer.Addr,Varptr addrlen )
+			_peer.Update( n>=0 ? addrlen Else 0 )
+		Endif
+		
+		Return _peer
 	End
 
 	#rem monkeydoc Accepts a new incoming connection on a listening socket.
@@ -78,9 +226,10 @@ Struct Socket
 	#end	
 	Method Close()
 		If _socket=-1 Return
-
 		socket_close( _socket )
 		_socket=-1
+		_addr=Null
+		_peer=null
 	End
 	
 	#rem monkeydoc Sends data on a connected socket.
@@ -104,6 +253,14 @@ Struct Socket
 		Return socket_send( _socket,data,size )
 	End
 	
+	Method SendTo:Int( data:Void Ptr,size:Int,address:SocketAddress )
+		If _socket=-1 Return 0
+		
+		DebugAssert( address.Addrlen,"SocketAddress is invalid" )
+		
+		Return socket_sendto( _socket,data,size,address.Addr,address.Addrlen )
+	End
+	
 	#rem monkeydoc Receives data on a connected socket.
 	
 	Reads at most `size` bytes from the socket.
@@ -123,6 +280,18 @@ Struct Socket
 		If _socket=-1 Return 0
 	
 		Return socket_recv( _socket,data,size )
+	End
+	
+	Method ReceiveFrom:Int( data:Void Ptr,size:Int,address:SocketAddress )
+		If _socket=-1 Return 0
+		
+		Local addrlen:Int=128
+		
+		Local n:=socket_recvfrom( _socket,data,size,address.Addr,Varptr addrlen  )
+		
+		address.Update( n>=0 ? addrlen Else 0 )
+		
+		Return n
 	End
 	
 	#rem monkeydoc Sets a socket option.
@@ -153,15 +322,32 @@ Struct Socket
 	@return A new socket.
 	
 	#end	
-	Function Connect:Socket( hostname:String,service:String )
+	Function Connect:Socket( hostname:String,service:String,type:SocketType=SocketType.Stream )
 
-		Local socket:=socket_connect( hostname,service )
+		Local socket:=socket_connect( hostname,service,type )
 		If socket=-1 Return Null
 		
 		Return New Socket( socket )
 	End
 
 	#rem monkeydoc Creates a server socket.
+	
+	Returns a new server socket listening at `service` if successful.
+	
+	Returns a closed socket upon failure.
+
+	@return A new socket.
+	
+	#end
+	Function Bind:Socket( service:String )
+	
+		Local socket:=socket_bind( service )
+		If socket=-1 Return Null
+		
+		Return New Socket( socket )
+	End
+
+	#rem monkeydoc Creates a server socket and listens on it.
 	
 	Returns a new server socket listening at `service` if successful.
 	
@@ -181,6 +367,8 @@ Struct Socket
 	Private
 	
 	Field _socket:Int=-1
+	Field _addr:SocketAddress
+	Field _peer:SocketAddress
 	
 	Method New( socket:Int )
 
