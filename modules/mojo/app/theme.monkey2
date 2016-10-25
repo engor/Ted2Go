@@ -171,20 +171,11 @@ Class Theme
 	
 	Method Load:Bool( path:String,scale:Vec2f=New Vec2f( 1 ) )
 	
-		If Not ExtractRootDir( path ) path="theme::"+path
-		
-		If Not ExtractExt( path ) path+=".json"
-	
-		Local jobj:=JsonObject.Load( path )
-		If Not jobj
+		If Not LoadJson( path )
 			Print "Failed to load theme:"+path
 			return False
 		Endif
-		
-		_jcolors=jobj["colors"].ToObject()
-		_jfonts=jobj["fonts"].ToObject()
-		_jstyles=jobj["styles"].ToObject()
-		
+
 		_themeScale=scale
 		
 		Reload()
@@ -215,6 +206,47 @@ Class Theme
 	Field _colors:=New StringMap<Color>
 	Field _styles:=New StringMap<Style>
 	Field _cstyles:=New StringMap<Style>
+	
+	Method LoadJson:Bool( path:String )
+
+		If Not ExtractRootDir( path ) path="theme::"+path
+		
+		If Not ExtractExt( path ) path+=".json"
+	
+		Local jobj:=JsonObject.Load( path )
+		If Not jobj Return False
+		
+		If jobj.Contains( "extends" ) 
+
+			If Not LoadJson( jobj.GetString( "extends" ) ) Return False
+			
+			If jobj.Contains( "colors" )
+				For Local it:=Eachin jobj["colors"].ToObject()
+					_jcolors[it.Key]=it.Value
+				Next
+			Endif
+			
+			If jobj.Contains( "fonts" )
+				For Local it:=Eachin jobj["fonts"].ToObject()
+					_jfonts[it.Key]=it.Value
+				Next
+			Endif
+			
+			If jobj.Contains( "styles" )
+				For Local it:=Eachin jobj["styles"].ToObject()
+					_jstyles[it.Key]=it.Value
+				Next
+			Endif
+			
+			Return True
+		Endif
+		
+		_jcolors=jobj["colors"].ToObject()
+		_jfonts=jobj["fonts"].ToObject()
+		_jstyles=jobj["styles"].ToObject()
+
+		Return True
+	End
 	
 	Method Unload()
 		_fonts.Clear()

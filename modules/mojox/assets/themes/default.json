@@ -257,7 +257,8 @@
 		
 		"TreeView":{
 			"backgroundColor":"content",
-			"icons":"treeview_icons.png"
+			"icons":"treeview_icons.png",
+			"iconColor":"#8fff"
 		},
 		
 		"TreeViewContent":{
