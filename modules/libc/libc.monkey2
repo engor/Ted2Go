@@ -88,6 +88,7 @@ Function strlen:Int( str:CString )
 Function memset:Void Ptr( dst:Void Ptr,value:Int,count:Int )
 Function memcpy:Void Ptr( dst:Void Ptr,src:Void Ptr,length:Int )
 Function memmove:Void Ptr( dst:Void Ptr,src:Void Ptr,length:Int )
+Function memcmp:Int( dst:Void Ptr,src:Void Ptr,length:Int )
 
 '***** time.h *****
 
