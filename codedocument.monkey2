@@ -230,13 +230,97 @@ Class CodeDocument Extends Ted2Document
 		End
 
 		_view = New DockingView
-		
-		_treeView = New CodeTreeView
-		_view.AddView( _treeView,"left",350,True )
-		
+				
+		' Editor
 		_codeView = New CodeDocumentView( Self )
-		_view.ContentView = _codeView
 		
+		' Toolbar
+		Local bar:=New ToolBarExt
+		bar.Style=App.Theme.GetStyle( "EditorToolBar" )
+		bar.MaxSize=New Vec2i( 10000,30 )
+		bar.AddSeparator()
+		bar.AddSeparator()
+		bar.AddSeparator()
+		bar.AddSeparator()
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/back.png" ),
+			Lambda()
+				OnGoBack()
+			End,
+			"Navigate back (Alt+Left)" )
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/forward.png" ),
+			Lambda()
+				OnGoForward()
+			End,
+			"Navigate forward (Alt+Right)" )
+		bar.AddSeparator()
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/find_selection.png" ),
+			Lambda()
+				OnFindSelection()
+			End,
+			"Find selection" )
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/find_previous.png" ),
+			Lambda()
+				OnFindPrev()
+			End,
+			"Find previous (Shift+F3)" )
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/find_next.png" ),
+			Lambda()
+				OnFindNext()
+			End,
+			"Find next (F3)" )
+		bar.AddSeparator()
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/previous_bookmark.png" ),
+			Lambda()
+				OnPrevBookmark()
+			End,
+			"Prev bookmark (Ctrl+,)" )
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/next_bookmark.png" ),
+			Lambda()
+				OnNextBookmark()
+			End,
+			"Next bookmark (Ctrl+.)" )
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/toggle_bookmark.png" ),
+			Lambda()
+				OnToggleBookmark()
+			End,
+			"Toggle bookmark (Ctrl+M)" )
+		bar.AddSeparator()
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/shift_left.png" ),
+			Lambda()
+				OnShiftLeft()
+			End,
+			"Shift left (Shift+Tab)" )
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/shift_right.png" ),
+			Lambda()
+				OnShiftRight()
+			End,
+			"Shift right (Tab)" )
+		bar.AddSeparator()
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/comment.png" ),
+			Lambda()
+				OnComment()
+			End,
+			"Comment (Ctrl+')" )
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/uncomment.png" ),
+			Lambda()
+				OnUncomment()
+			End,
+			"Uncomment (Shift+Ctrl+')" )
+			
+		' CodeTree
+		_treeView = New CodeTreeView
 		_treeView.SortEnabled = True
 		' goto item from tree view
 		_treeView.NodeClicked += Lambda(node:TreeView.Node)
@@ -244,6 +328,14 @@ Class CodeDocument Extends Ted2Document
 			Local item := codeNode.CodeItem
 			_codeView.GotoLine( item.ScopeStartLine )
 		End		
+		_view.AddView( _treeView,"left",350,True )
+		
+		' bar + editor
+		Local docker:=New DockingView
+		docker.AddView( bar,"top" )
+		docker.ContentView=_codeView
+		
+		_view.ContentView=docker
 		
 	End
 	
@@ -309,29 +401,33 @@ Class CodeDocument Extends Ted2Document
 	Global _timeCharPressed:Long
 	Global _charTimer:Timer
 	Global _docForCheck:CodeDocument
-	Global _bgWorking:Bool
+	Global _timer:Timer
+	Global _parsing:Bool
 	
 	Method OnTextChanged()
 		
 		_timeCharPressed = Millisecs()
 		_docForCheck = Self
 		
-		App.Idle += OnCheckingBg
+		If Not _timer Then _timer=New Timer( 1,Lambda()
+		
+			OnCheckingBg()
+		End )
 		
 	End
 	
 	Function OnCheckingBg()
+		
+		If _parsing Return
+		
 		If _timeCharPressed > 0 And Millisecs() >= _timeCharPressed+3000
-			'Print "BgParsing()"
+			Print "BgParsing()"
 			_timeCharPressed = 0
 			Try
-				BgParsing(_docForCheck)
+				BgParsing( _docForCheck )
 			Catch ex:Throwable
 				' bg parse error
 			End
-			_bgWorking = False
-		Else
-			App.Idle += OnCheckingBg
 		Endif
 	End
 	
@@ -480,6 +576,8 @@ Class CodeDocument Extends Ted2Document
 		
 		If doc.FileType <> ".monkey2" Return
 		
+		_parsing=True
+		
 		New Fiber( Lambda()
 			
 			Local result := 0
@@ -523,10 +621,59 @@ Class CodeDocument Extends Ted2Document
 				Next
 			Endif
 			
+			_parsing=False
 		End)
 		
 	End
 	
+	Method OnGoBack()
+		Alert( "Not implemented yet." )
+	End
+	
+	Method OnGoForward()
+		Alert( "Not implemented yet." )
+	End
+	
+	Method OnFindSelection()
+		Alert( "Not implemented yet." )
+	End
+	
+	Method OnFindPrev()
+		Alert( "Not implemented yet." )
+	End
+	
+	Method OnFindNext()
+		Alert( "Not implemented yet." )
+	End
+	
+	Method OnPrevBookmark()
+		Alert( "Not implemented yet." )
+	End
+	
+	Method OnNextBookmark()
+		Alert( "Not implemented yet." )
+	End
+	
+	Method OnToggleBookmark()
+		Alert( "Not implemented yet." )
+	End
+	
+	Method OnShiftLeft()
+		Alert( "Not implemented yet." )
+	End
+	
+	Method OnShiftRight()
+		Alert( "Not implemented yet." )
+	End
+	
+	Method OnComment()
+		Alert( "Not implemented yet." )
+	End
+	
+	Method OnUncomment()
+		Alert( "Not implemented yet." )
+	End
+				
 End
 
 

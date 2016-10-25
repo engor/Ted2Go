@@ -353,6 +353,13 @@
 			"border":[ 1 ],
 			"borderColor":"clear",
 			"backgroundColor":"panel"
+		},
+
+		"EditorToolBar":{
+			"padding":[ 2 ],
+			"backgroundColor":"content",
+			"border":[ 0,0,0,1 ],
+			"borderColor":"clear"
 		}
 	}
 }

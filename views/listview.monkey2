@@ -80,6 +80,12 @@ Class ListView Extends ScrollableView
 		Return Utils.ValueAt<ListViewItem>(_items,_selIndex)
 	End
 	
+	Property MoveCyclic:Bool()
+		Return _moveCyclic
+	Setter( value:Bool )
+		_moveCyclic=value
+	End
+	
 	Method SelectPrev()
 		SelectPrevInternal(True)
 	End
@@ -113,7 +119,11 @@ Class ListView Extends ScrollableView
 	End
 	
 	Method SelectPrevInternal(ensureVis:Bool)
-		If _selIndex = 0 Return
+	
+		If _selIndex = 0
+			If MoveCyclic Then SelectLast()
+			Return
+		Endif
 		_selIndex -= 1
 		If ensureVis
 			EnsureVisible()
@@ -122,7 +132,12 @@ Class ListView Extends ScrollableView
 	End
 	
 	Method SelectNextInternal(ensureVis:Bool)
-		If _selIndex >= _count-1 Return
+	
+		If _selIndex >= _count-1
+			If MoveCyclic Then SelectFirst()
+			Return
+		Endif
+		
 		_selIndex += 1
 		If ensureVis
 			EnsureVisible()
@@ -222,5 +237,6 @@ Class ListView Extends ScrollableView
 	Field _selIndex:Int
 	Field _selColor:Color, _hoverColor:Color
 	Field _maxHeight:Int, _width:Int
+	Field _moveCyclic:Bool
 	
 End

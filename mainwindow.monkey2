@@ -101,7 +101,6 @@ Class MainWindowInstance Extends Window
 '		_helpView.Style.Border=New Recti( 0,-4,0,0 )
 '		_helpView.Style.BorderColor=App.Theme.GetColor( "content" )
 		_helpView.Navigate( "asset::ted2/about.html" )
-		_helpView.Navigate( "asset::ted2/about.html" )
 		
 		_projectView=New ProjectView( _docsManager )
 		

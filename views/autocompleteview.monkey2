@@ -36,6 +36,7 @@ Class AutocompleteDialog Extends DialogExt
 		Title = title
 		
 		_view = New ListView(20,width,maxHeight)
+		_view.MoveCyclic=True
 		
 		ContentView = _view
 		
