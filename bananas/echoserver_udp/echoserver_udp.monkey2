@@ -1,4 +1,27 @@
 
+#rem
+
+Quick guide to writing UDP client/server apps:
+
+* Server:
+
+1) Create server socket using Socket.Bind (not Listen!).
+
+2) Wait for client messages using Socket.ReceiveFrom.
+
+3) Use the SocketAddress filled in by ReceiveFrom to determine the client the message is from.
+
+4) Use the same SocketAddress with Socket.SendTo to reply to the client.
+
+
+* Client:
+
+1) Connect to server using Socket.Connect with SocketType.Stream as the last parameter.
+
+2) Communicate with the server using Socket.Send and Socket.Receive.
+
+#end
+
 #Import "<mojox>"
 #Import "<mojo>"
 #Import "<std>"
@@ -7,11 +30,15 @@ Using mojox..
 Using mojo..
 Using std..
 
+Const HOST:="localhost"	'Note: Use "" for 'public' host.
+Const PORT:=40123
+
 Class MyWindow Extends Window
 
 	Method New()
 	
 		New Fiber( Server )
+		
 		
 		For Local i:=0 Until 5
 			New Fiber( Client )
@@ -20,10 +47,15 @@ Class MyWindow Extends Window
 	
 	Method Server()
 	
-		Local socket:=Socket.Bind( 12345 )
-		If Not socket print "Server: Failed to create server" ; Return
+		Local server:=Socket.Bind( HOST,PORT )
+		If Not server print "Server: Failed to create server" ; Return
 		
-		Print "Server @"+socket.Address+" ready"
+		Print "Server @"+server.Address+" ready"
+		
+		server.SetOption( "SO_REUSEADDR",1 )
+		
+		'To keep track of connected clients...
+		Local clients:=New Map<SocketAddress,Int>
 		
 		Local addr:=New SocketAddress
 				
@@ -31,17 +63,24 @@ Class MyWindow Extends Window
 		
 			Local data:Int
 			
-			If socket.ReceiveFrom( Varptr data,4,addr )<>4 Exit
+			If server.ReceiveFrom( Varptr data,4,addr )<>4 Exit
 			
 			Print "Server received msg:"+data+" from client @"+addr
 			
+			'check if client exists
+			If Not clients[addr]
+				Local id:=clients.Count()+1
+				clients[ New SocketAddress( addr ) ]=id
+				Print "New Client! id="+id
+			Endif
+			
 			data=-data
 				
-			socket.SendTo( Varptr data,4,addr )
-				
+			server.SendTo( Varptr data,4,addr )
+
 		Forever
 		
-		socket.Close()
+		server.Close()
 		
 	End
 	
@@ -55,20 +94,22 @@ Class MyWindow Extends Window
 	
 		Fiber.Sleep( .5 )	'wait a bit for server to start
 		
-		Local socket:=Socket.Connect( "localhost",12345,SocketType.Datagram )
-		If Not socket Print "Client("+id+"): Couldn't connect to server" ; Return
+		Local client:=Socket.Connect( HOST,PORT,SocketType.Datagram )
+		If Not client Print "Client("+id+"): Couldn't connect to server" ; Return
 		
-		Print "Client("+id+") @"+socket.Address+" connected to @"+socket.PeerAddress
+		Print "Client("+id+") @"+client.Address+" connected to @"+client.PeerAddress
+		
+		Local address:=New SocketAddress
 		
 		For Local i:=0 Until 10
 		
-			Fiber.Sleep( Rnd( .1,.2 ) )
+			Fiber.Sleep( Rnd( .2,.4 ) )
 		
 			Local data:Int=i*10
 			
-			socket.Send( Varptr data,4 )
+			client.Send( Varptr data,4 )
 			
-			If socket.Receive( Varptr data,4 )<>4 Exit
+			If client.Receive( Varptr data,4 )<>4 Exit
 			
 			Print "Client("+id+") received reply:"+data+" from server"
 			

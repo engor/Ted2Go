@@ -1,4 +1,28 @@
 
+#rem
+
+
+Quick quide to writing TCP client/server apps:
+
+
+* Server:
+
+1) Use Socket.Listen to create the server socket.
+
+2) Use Socket.Accept in a loop to accept new clients.
+
+3) Use Socket.Send and Socket.Receive to communicate with clients.
+
+
+* Client:
+
+1) Use Socket.Connect to connect to the listening server (must already be running!) and create a client socket.
+
+2) Use Socket.Send and Socket.Receive to communicate with the server.
+
+
+#end
+
 #Import "<mojox>"
 #Import "<mojo>"
 #Import "<std>"
@@ -6,6 +30,9 @@
 Using mojox..
 Using mojo..
 Using std..
+
+Const HOST:="localhost"	'Note: Use "" for 'public' host?
+Const PORT:=40122
 
 Class MyWindow Extends Window
 
@@ -18,10 +45,14 @@ Class MyWindow Extends Window
 	
 	Method Server()
 	
-		Local server:=Socket.Listen( 12345 )
+		Local server:=Socket.Listen( HOST,PORT )
 		If Not server print "Server: Failed to create server" ; Return
 		
 		Print "Server @"+server.Address+" listening"
+		
+		server.SetOption( "SO_REUSEADDR",1 )
+
+		server.SetOption( "TCP_NODELAY",1 )
 		
 		Repeat
 		
@@ -58,12 +89,14 @@ Class MyWindow Extends Window
 	
 		Fiber.Sleep( .5 )
 	
-		Local socket:=Socket.Connect( "localhost",12345 )
-		If Not socket Print "Client: Couldn't connect to server" ; Return
+		Local client:=Socket.Connect( HOST,PORT )
+		If Not client Print "Client: Couldn't connect to server" ; Return
 		
-		Print "Client @"+socket.Address+" connected to server @"+socket.PeerAddress
+		Print "Client @"+client.Address+" connected to server @"+client.PeerAddress
 		
-		Local stream:=New SocketStream( socket )
+		client.SetOption( "TCP_NODELAY",1 )
+		
+		Local stream:=New SocketStream( client )
 
 		For Local i:=0 Until 100
 		
