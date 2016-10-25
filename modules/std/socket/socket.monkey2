@@ -12,15 +12,15 @@ Extern
 
 #rem monkeydoc @hidden
 #end
-Function socket_connect:Int( hostname:String,service:String,type:Int )="bbSocket::connect"
+Function socket_connect:Int( hostname:CString,service:CString,type:Int )="bbSocket::connect"
 
 #rem monkeydoc @hidden
 #end
-Function socket_bind:Int( service:String )="bbSocket::bind"
+Function socket_bind:Int( hostname:CString,service:CString )="bbSocket::bind"
 
 #rem monkeydoc @hidden
 #end
-Function socket_listen:Int( service:String,queue:Int )="bbSocket::listen"
+Function socket_listen:Int( hostname:CString,service:CString,queue:Int )="bbSocket::listen"
 
 #rem monkeydoc @hidden
 #end
@@ -85,16 +85,49 @@ End
 
 Class SocketAddress
 
+	#rem monkeydoc Creates a new socket address.
+	#end
+	Method New()
+	End
+	
+	Method New( address:SocketAddress )
+		_addr=address._addr.Slice( 0 )
+		_addrlen=address._addrlen
+		_host=address._host
+		_service=address._service
+		_dirty=address._dirty
+	End
+
+	#rem monkeydoc The hostname represented by the address.
+	
+	Returns an empty string if the address is invalid.
+	
+	#end
 	Property Host:String()
 		Validate()
 		Return _host
 	End
 	
+	#rem monkeydoc The service represented by the address.
+
+	Returns an empty string if the address is invalid.
+	
+	#end
 	Property Service:String()
 		Validate()
 		Return _service
 	End
+
+	#rem monkeydoc Comparison operator.
+	#end	
+	Operator<=>:Int( address:SocketAddress )
+		Local n:=libc.memcmp( _addr.Data,address._addr.Data,Min( _addrlen,address._addrlen ) )
+		If Not n Return _addrlen-address._addrlen
+		Return n
+	End
 	
+	#rem monkeydoc Converts the address to a string.
+	#end
 	Method To:String()
 		Return Host+":"+Service
 	End
@@ -104,9 +137,9 @@ Class SocketAddress
 	Field _addr:=New Byte[128]
 	Field _addrlen:Int=0
 
-	Field _dirty:Bool=False	
 	Field _host:String=""
 	Field _service:String=""
+	Field _dirty:Bool=False	
 	
 	Method Validate()
 		If Not _dirty Return
@@ -317,7 +350,9 @@ Class Socket
 	
 	Attempts to connect to the host at `hostname` and service at `service` and returns a new connected socket if successful.
 	
-	Returns a closed socket upon failue.
+	The socket `type` should be SocketType.Stream (the default) is connecting to stream server, or SocketType.DataGram if connecting to a datagram server.
+	
+	Returns null upon failure.
 	
 	@return A new socket.
 	
@@ -330,35 +365,35 @@ Class Socket
 		Return New Socket( socket )
 	End
 
-	#rem monkeydoc Creates a server socket.
+	#rem monkeydoc Creates a datagram server socket.
 	
-	Returns a new server socket listening at `service` if successful.
+	Returns a new datagram server socket that can be connected to by datagram clients.
 	
-	Returns a closed socket upon failure.
+	Returns null upon failure.
 
 	@return A new socket.
 	
 	#end
-	Function Bind:Socket( service:String )
+	Function Bind:Socket( hostname:String,service:String )
 	
-		Local socket:=socket_bind( service )
+		Local socket:=socket_bind( hostname,service )
 		If socket=-1 Return Null
 		
 		Return New Socket( socket )
 	End
 
-	#rem monkeydoc Creates a server socket and listens on it.
+	#rem monkeydoc Creates a stream server socket and listens on it.
 	
-	Returns a new server socket listening at `service` if successful.
+	Returns a new stream server socket listening at `service` if successful.
 	
-	Returns a closed socket upon failure.
+	Returns null upon failure.
 
 	@return A new socket.
 	
 	#end
-	Function Listen:Socket( service:String,queue:Int=128 )
+	Function Listen:Socket( hostname:String,service:String,queue:Int=128 )
 	
-		Local socket:=socket_listen( service,queue )
+		Local socket:=socket_listen( hostname,service,queue )
 		If socket=-1 Return Null
 		
 		Return New Socket( socket )

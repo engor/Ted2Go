@@ -6,12 +6,12 @@
 
 namespace bbSocket{
 
-	int connect( bbString hostname,bbString service,int type );
+	int connect( const char *hostname,const char *service,int type );
 	
-	int bind( bbString service );
+	int bind( const char *hostname,const char *service );
 
-	int listen( bbString service,int queue );
-	
+	int listen( const char *hostname,const char *service,int queue );
+
 	int accept( int socket );
 	
 	void close( int socket );
