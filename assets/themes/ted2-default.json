@@ -1,0 +1,23 @@
+{
+	"extends":"default",
+	
+	"styles":{
+	
+		"GutterView":{
+			"extends":"TextView",
+			"textColor":"text-disabled"
+		},
+		
+		"DebugToolBar":{
+			"extends":"ToolBar",
+			"border":[ 4 ],
+			"borderColor":"content",
+			"icons":"debug_icons.png"
+		},
+		
+		"HelpTextField":{
+			"extends":"TextField",
+			"skinColor":"panel"
+		}
+	}
+}
