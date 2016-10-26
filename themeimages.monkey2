@@ -8,12 +8,12 @@ Class ThemeImages Extends Plugin
 		Return "ThemeImages Plugin"
 	End
 	
-	Function Get:Image(key:String)
+	Function Get:Image( key:String )
 		
 		If Not _images.Contains(key)
-			Local img := Image.Load("theme::"+key)
-			If img Then img.Scale = App.Theme.Scale
-			_images[key] = img
+			Local img:=Image.Load( "theme::"+key )
+			If img Then img.Scale=App.Theme.Scale
+			_images[key]=img
 			Return img
 		Endif
 		Return _images[key]
@@ -22,23 +22,23 @@ Class ThemeImages Extends Plugin
 	
 	Private
 	
-	Global _images := New StringMap<Image>
-	Global _inst := New ThemeImages
+	Global _images:=New StringMap<Image>
+	Global _inst:=New ThemeImages
 	
 	Method New()
 	End
 	
 	Method OnCreate() Override
 		
-		App.ThemeChanged += Lambda()
+		App.ThemeChanged+=Lambda()
 			AdjustIconsScale()
 		End
 	End
 	
 	Function AdjustIconsScale()
 	
-		For Local i := Eachin _images.Values
-			i.Scale = App.Theme.Scale
+		For Local i:=Eachin _images.Values
+			i.Scale=App.Theme.Scale
 		Next
 	End
 	

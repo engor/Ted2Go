@@ -32,65 +32,65 @@ End
 
 Class CodeItem
 	
-	Method New(ident:String)
-		_ident = ident
+	Method New( ident:String )
+		_ident=ident
 	End
 	
 	Property Ident:String()
 		Return _ident
-	Setter(value:String)
-		_ident = value
+	Setter( value:String )
+		_ident=value
 	End
 	
 	Property Indent:Int()
 		Return _indent
-	Setter(value:Int)
-		_indent = value
+	Setter( value:Int )
+		_indent=value
 	End
 	
 	Property Type:String()
 		Return _type
-	Setter(value:String)
-		_type = value
-		'_type = StripGenericType(value)
+	Setter( value:String )
+		_type=value
+		'_type=StripGenericType(value)
 	End
 	
 	Property RawType:String()
 		Return _rawType
-	Setter(value:String)
-		_rawType = value
-		_text = Null 'reset
+	Setter( value:String )
+		_rawType=value
+		_text=Null 'reset
 	End
 	
 	Property Params:String[]()
 		Return _params
-	Setter(value:String[])
-		_params = value
+	Setter( value:String[] )
+		_params=value
 	End
 	
 	Property ParamsStr:String()
 		Return _paramsStr
-	Setter(value:String)
-		_paramsStr = value
+	Setter( value:String )
+		_paramsStr=value
 	End
 	
 	Property Kind:CodeItemKind()
 		Return _kind
-	Setter(value:CodeItemKind)
-		_kind = value
+	Setter( value:CodeItemKind )
+		_kind=value
 	End
 	
 	Property KindStr:String()
 		Return _kindStr
-	Setter(value:String)
-		_kindStr = value
+	Setter( value:String )
+		_kindStr=value
 		UpdateKind()
 	End
 	
 	Property Access:AccessMode()
 		Return _access
-	Setter(value:AccessMode)
-		_access = value
+	Setter( value:AccessMode )
+		_access=value
 	End
 	
 	Property AccessStr:String()
@@ -105,45 +105,45 @@ Class CodeItem
 	
 	Property Text:String()
 		If _text = Null
-			Local s := Ident
+			Local s:=Ident
 			Select _kind
 				Case CodeItemKind.Function_, CodeItemKind.Method_, CodeItemKind.Lambda_, CodeItemKind.Operator_
 					If Type <> Null And Type <> "" And Type <> "Void"
-						s += " : "+Type
+						s+=" : "+Type
 					Endif
-					s += (ParamsStr = Null) ? " ()" Else " ("+ParamsStr+")"
+					s+=(ParamsStr = Null) ? " ()" Else " ("+ParamsStr+")"
 				Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_, CodeItemKind.Enum_
-					's += "   ["+ScopeStartLine+"-"+ScopeEndLine+"]"
+					's+="   ["+ScopeStartLine+"-"+ScopeEndLine+"]"
 				Case CodeItemKind.Inner_
 					'do nothing
 				Case CodeItemKind.Property_
-					s += " : "+Type
+					s+=" : "+Type
 				Default
 					' for enums
 					If Parent = Null Or Parent.Kind <> CodeItemKind.Enum_
-						s += " : "+Type
+						s+=" : "+Type
 					Endif
 			End
-			_text = s
+			_text=s
 		Endif
 		Return _text
 	'Setter(value:String)
-	'	_text = value
+	'	_text=value
 	End
 	
 	Property Parent:CodeItem()
 		Return _parent
-	Setter(value:CodeItem)
-		SetParent(value)
+	Setter( value:CodeItem )
+		SetParent( value )
 	End
 	
 	Property Root:CodeItem()
 		
-		Local par:CodeItem = Null
-		Local i := Parent
+		Local par:CodeItem=Null
+		Local i:=Parent
 		While i <> Null
-			par = i
-			i = i.Parent
+			par=i
+			i=i.Parent
 		Wend
 		Return (par <> Null) ? par Else Self
 		
@@ -151,91 +151,91 @@ Class CodeItem
 	
 	Property Children:List<CodeItem>()
 		Return _children
-	Setter(value:List<CodeItem>)
-		_children = value
+	Setter( value:List<CodeItem> )
+		_children=value
 	End
 	
 	Property Namespac:String()
 		Return _namespace
-	Setter(value:String)
-		_namespace = value
+	Setter( value:String )
+		_namespace=value
 	End
 	
 	Property FilePath:String()
 		Return _filePath
-	Setter(value:String)
-		_filePath = value
+	Setter( value:String )
+		_filePath=value
 	End
 	
 	Property Scope:String()
-		Local s := Ident
-		Local i := Parent
+		Local s:=Ident
+		Local i:=Parent
 		While i <> Null
-			s = i.Ident+"."+s
-			i = i.Parent
+			s=i.Ident+"."+s
+			i=i.Parent
 		Wend
 		Return s
 	End
 	
 	Property ScopeStartLine:Int()
 		Return _scopeStartLine
-	Setter(value:Int)
-		_scopeStartLine = value
+	Setter( value:Int )
+		_scopeStartLine=value
 	End
 	
 	Property ScopeEndLine:Int()
 		Return (_scopeEndLine <> -1) ? _scopeEndLine Else _scopeStartLine
-	Setter(value:Int)
-		_scopeEndLine = value
+	Setter( value:Int )
+		_scopeEndLine=value
 	End
 	
-	Method SetParent(parent:CodeItem)
-		If Parent <> Null Then Parent.Children.Remove(Self)
-		_parent = parent
+	Method SetParent( parent:CodeItem )
+		If Parent <> Null Then Parent.Children.Remove( Self )
+		_parent=parent
 		If _parent.Children = Null Then _parent.Children = New List<CodeItem>
-		_parent.Children.AddLast(Self)
+		_parent.Children.AddLast( Self )
 	End
 	
-	Method AddChild(item:CodeItem)
-		item.Parent = Self
+	Method AddChild( item:CodeItem )
+		item.Parent=Self
 	End
 	
 	Property SuperTypes:List<String>()
 		Return _superTypes
-	Setter(value:List<String>)
-		_superTypes = value
+	Setter( value:List<String> )
+		_superTypes=value
 	End
 	
-	Method AddSuperType(type:String)
+	Method AddSuperType( type:String )
 		If _superTypes = Null Then _superTypes = New List<String>
-		_superTypes.AddLast(type)
+		_superTypes.AddLast( type )
 	End
 	
-	Method FindParent:CodeItem(parentIdent:String)
-		Local p := Parent
+	Method FindParent:CodeItem( parentIdent:String )
+		Local p:=Parent
 		While p <> Null
 			If p.Ident = parentIdent Return p
-			p = p.Parent
+			p=p.Parent
 		Wend
 		Return Null
 	End
 	
-	Method HasSuchSuperClass:Bool(type:String)
+	Method HasSuchSuperClass:Bool( type:String )
 		If _superTypes = Null Return False
-		For Local t := Eachin _superTypes
+		For Local t:=Eachin _superTypes
 			If t = type Return True
 		Next
 		Return False
 	End
 	
 	Property NearestClassScope:CodeItem()
-		Local p := Self
+		Local p:=Self
 		While p <> Null
 			Select p.Kind
 			Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_
 				Return p
 			End
-			p = p.Parent
+			p=p.Parent
 		Wend
 		Return Null
 	End
@@ -250,7 +250,7 @@ Class CodeItem
 	Field _paramsStr:String
 	Field _kind:CodeItemKind
 	Field _kindStr:String
-	Field _access := AccessMode.Public_
+	Field _access:=AccessMode.Public_
 	Field _text:String
 	Field _parent:CodeItem
 	Field _children:List<CodeItem>
@@ -264,37 +264,37 @@ Class CodeItem
 	Method UpdateKind()
 		Select _kindStr
 		Case "function"
-			_kind = CodeItemKind.Function_
+			_kind=CodeItemKind.Function_
 		Case "method"
-			_kind = CodeItemKind.Method_
+			_kind=CodeItemKind.Method_
 		Case "interface"
-			_kind = CodeItemKind.Interface_
+			_kind=CodeItemKind.Interface_
 		Case "enum"
-			_kind = CodeItemKind.Enum_
+			_kind=CodeItemKind.Enum_
 		Case "struct"
-			_kind = CodeItemKind.Struct_
+			_kind=CodeItemKind.Struct_
 		Case "field"
-			_kind = CodeItemKind.Field_
+			_kind=CodeItemKind.Field_
 		Case "global"
-			_kind = CodeItemKind.Global_
+			_kind=CodeItemKind.Global_
 		Case "const"
-			_kind = CodeItemKind.Const_
+			_kind=CodeItemKind.Const_
 		Case "param"
-			_kind = CodeItemKind.Param_
+			_kind=CodeItemKind.Param_
 		Case "class"
-			_kind = CodeItemKind.Class_
+			_kind=CodeItemKind.Class_
 		Case "property"
-			_kind = CodeItemKind.Property_
+			_kind=CodeItemKind.Property_
 		Case "lambda"
-			_kind = CodeItemKind.Lambda_
+			_kind=CodeItemKind.Lambda_
 		Case "local"
-			_kind = CodeItemKind.Local_
+			_kind=CodeItemKind.Local_
 		Case "operator"
-			_kind = CodeItemKind.Operator_
+			_kind=CodeItemKind.Operator_
 		Case "for","select","while"
-			_kind = CodeItemKind.Inner_
+			_kind=CodeItemKind.Inner_
 		Case "alias"
-			_kind = CodeItemKind.Alias_
+			_kind=CodeItemKind.Alias_
 		End
 	End
 	
@@ -304,14 +304,14 @@ End
 
 Interface ICodeParser
 
-	Method RefineRawType(item:CodeItem)
-	Method Parse(text:String, filePath:String)
-	Method IsPosInsideOfQuotes:Bool(text:String, pos:Int)
-	Method CanShowAutocomplete:Bool(line:String, posInLine:Int)
-	Method GetScope:CodeItem(docPath:String, docLine:Int)
-	Method ItemAtScope:CodeItem(scope:CodeItem, idents:String[])
+	Method RefineRawType( item:CodeItem )
+	Method Parse( text:String, filePath:String )
+	Method IsPosInsideOfQuotes:Bool( text:String, pos:Int )
+	Method CanShowAutocomplete:Bool( line:String, posInLine:Int )
+	Method GetScope:CodeItem( docPath:String, docLine:Int )
+	Method ItemAtScope:CodeItem( scope:CodeItem, idents:String[] )
 	
-	Method GetItemsForAutocomplete(ident:String, filePath:String, docLine:Int, target:List<CodeItem>)
+	Method GetItemsForAutocomplete( ident:String, filePath:String, docLine:Int, target:List<CodeItem> )
 	
 	Property Items:List<CodeItem>()
 	Property ItemsMap:StringMap<List<CodeItem>>()
@@ -337,24 +337,24 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 	Protected
 	
 	Method New()
-		AddPlugin(Self)
+		AddPlugin( Self )
 	End
 	
 	
 	Private
 	
-	Field _items := New List<CodeItem>
-	Field _itemsMap := New StringMap<List<CodeItem>>
+	Field _items:=New List<CodeItem>
+	Field _itemsMap:=New StringMap<List<CodeItem>>
 	
 End
 
 
 Class ParsersManager
 	
-	Function Get:ICodeParser(fileType:String)
-		Local plugins := Plugin.PluginsOfType<CodeParserPlugin>()
-		For Local p := Eachin plugins
-			If p.CheckFileTypeSuitability(fileType) Then Return p
+	Function Get:ICodeParser( fileType:String )
+		Local plugins:=Plugin.PluginsOfType<CodeParserPlugin>()
+		For Local p:=Eachin plugins
+			If p.CheckFileTypeSuitability( fileType ) Then Return p
 		Next
 		Return _empty
 	End
@@ -362,14 +362,14 @@ Class ParsersManager
 	
 	Private
 	
-	Global _empty := New EmptyParser
+	Global _empty:=New EmptyParser
 	
 End
 
 
-Function StripGenericType:String(ident:String)
-	Local i := ident.Find("<")
-	If i > 0 Return ident.Slice(0,i)
+Function StripGenericType:String( ident:String )
+	Local i:=ident.Find("<")
+	If i > 0 Return ident.Slice( 0,i )
 	Return ident
 End
 
@@ -386,29 +386,29 @@ Class EmptyParser Implements ICodeParser
 		Return _itemsMap
 	End
 	
-	Method Parse(text:String, filePath:String)
+	Method Parse( text:String, filePath:String )
 		'do nothing
 	End
-	Method IsPosInsideOfQuotes:Bool(text:String, pos:Int)
+	Method IsPosInsideOfQuotes:Bool( text:String, pos:Int )
 		Return False
 	End
-	Method CanShowAutocomplete:Bool(line:String, posInLine:Int)
+	Method CanShowAutocomplete:Bool( line:String, posInLine:Int )
 		Return False
 	End
-	Method GetScope:CodeItem(docPath:String, docLine:Int)
+	Method GetScope:CodeItem( docPath:String, docLine:Int )
 		Return Null
 	End
-	Method ItemAtScope:CodeItem(scope:CodeItem, idents:String[])
+	Method ItemAtScope:CodeItem( scope:CodeItem, idents:String[] )
 		Return Null
 	End
-	Method RefineRawType(item:CodeItem)
+	Method RefineRawType( item:CodeItem )
 	End
-	Method GetItemsForAutocomplete(ident:String, filePath:String, docLine:Int, target:List<CodeItem>)
+	Method GetItemsForAutocomplete( ident:String, filePath:String, docLine:Int, target:List<CodeItem> )
 	End
 	
 	Private
 	
-	Field _items := New List<CodeItem>
-	Field _itemsMap := New StringMap<List<CodeItem>>
+	Field _items:=New List<CodeItem>
+	Field _itemsMap:=New StringMap<List<CodeItem>>
 	
 End

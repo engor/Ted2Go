@@ -9,10 +9,10 @@ Class TextViewKeyEventFilter Extends PluginDependsOnFileType
 		Return "TextViewKeyEventFilter"
 	End
 		
-	Function FilterKeyEvent( event:KeyEvent,textView:TextView, fileType:String=Null )
+	Function FilterKeyEvent( event:KeyEvent,textView:TextView,fileType:String=Null )
 	
 		'local cache
-		If Not _filters Then _filters = Plugin.PluginsOfType<TextViewKeyEventFilter>()
+		If Not _filters Then _filters=Plugin.PluginsOfType<TextViewKeyEventFilter>()
 		
 		For Local filter:=Eachin _filters
 		

@@ -64,7 +64,7 @@ Class PluginDependsOnFileType Extends Plugin Implements IDependsOnFileType
 		Return _types[0]
 	End
 
-	Method CheckFileTypeSuitability:Bool(fileType:String)
+	Method CheckFileTypeSuitability:Bool( fileType:String )
 		If GetMainFileType() = "*" Return True 'any files
 		Return Utils.ArrayContains( GetFileTypes(),fileType )
 	End

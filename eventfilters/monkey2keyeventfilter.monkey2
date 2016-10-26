@@ -21,17 +21,17 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 	
 	Method OnFilterKeyEvent( event:KeyEvent,textView:TextView ) Override
 	
-		Local codeView := Cast<CodeTextView>(textView)
+		Local codeView:=Cast<CodeTextView>(textView)
 		
 		Select event.Type
-		Case EventType.KeyDown, EventType.KeyRepeat
+		Case EventType.KeyDown,EventType.KeyRepeat
 			
-			Local ctrl := (event.Modifiers & Modifier.Control)
+			Local ctrl:=(event.Modifiers & Modifier.Control)
 			
 			Select event.Key
 						
 				Case Key.F1
-					Local ident := codeView.IdentAtCursor()
+					Local ident:=codeView.IdentAtCursor()
 					If ident Then MainWindow.ShowQuickHelp( ident )
 				
 				Case Key.Apostrophe 'ctrl+' - comment / uncomment block
@@ -42,9 +42,9 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 										
 				Case Key.Enter 'ctrl+enter - smart ending of expression
 					If ctrl And Not codeView.CanCopy And codeView.IsCursorAtTheEndOfLine()
-						Local ident := codeView.FirstIdentInLine(codeView.Cursor)
+						Local ident:=codeView.FirstIdentInLine( codeView.Cursor )
 						Print "ident: "+ident
-						ident = ident.ToLower()
+						ident=ident.ToLower()
 						Select ident
 							Case "method","function","class","interface","if","select"
 								'need to add 'End' keyword here for rapid coding
@@ -59,7 +59,7 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 	
 	Private
 	
-	Global _types := New String[]("monkey2")
-	Global _instance := New Monkey2KeyEventFilter
+	Global _types:=New String[]("monkey2")
+	Global _instance:=New Monkey2KeyEventFilter
 
 End

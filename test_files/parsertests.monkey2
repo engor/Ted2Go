@@ -1,9 +1,9 @@
 
-Function FnLambda(p1:String, p2:Void(x:Int,y:Int), p3:Float)
+Function FnLambda( p1:String,p2:Void( x:Int,y:Int ),p3:Float )
 
 End
 
-Function LambdaFn(p1:String, p2:Void(x:Int,y:Int), p3:Float)
+Function LambdaFn( p1:String,p2:Void( x:Int,y:Int ),p3:Float )
 
 End
 
@@ -15,23 +15,23 @@ End
 
 Class AAA Extends TestClass
 	
-	Field tt := New TestClass
+	Field tt:=New TestClass
 	
-	Field generic := New Vec2f
-	Field map := New StringMap<Int>
+	Field generic:=New Vec2f
+	Field map:=New StringMap<Int>
 	
 End
 
-Global tc := New TestClass
+Global tc:=New TestClass
 
 
 Class TestClass
 	
-	Operator [](index:Int)
+	Operator[]( index:Int )
 	
 	End
 	 
-	Const PI := 3.14
+	Const PI:=3.14
 	Global GlobalField:Bool
 	
 	Function MyFuncPub:String()
@@ -59,20 +59,20 @@ Class TestClass
 	Private
 	
 	Field PrivField:String
-	Field _tst := .14
+	Field _tst:=.14
 	
-	Method MyMethodPriv(mymy:Int)
+	Method MyMethodPriv( mymy:Int )
 		
-		FnLambda("", Lambda(xxx:Int,yyy:Int)
+		FnLambda( "",Lambda( xxx:Int,yyy:Int )
 		
-		End, 2.8)
+		End,2.8 )
 		
-		LambdaFn("", Lambda( aaa:Int,bbb:Int)
+		LambdaFn( "",Lambda( aaa:Int,bbb:Int )
 			
-			Local d := 1.15
-			Local tt := New TestClass
+			Local d:=1.15
+			Local tt:=New TestClass
 			
-		End, 2.8)
+		End,2.8 )
 		
 	End
 	
@@ -85,7 +85,7 @@ End
 
 Class Test2 'Extends TestClass
 
-	Function Fff(tt:TestClass, cc:Canvas)
+	Function Fff( tt:TestClass,cc:Canvas )
 		tt.MyFuncPub()
 		
 	End

@@ -3,8 +3,8 @@ Namespace ted2go
 
 
 Interface IKeywords
-	Method Contains:Bool(word:String)
-	Method Get:String(word:String)
+	Method Contains:Bool( word:String )
+	Method Get:String( word:String )
 	Method Values:String[]()
 End
 
@@ -13,41 +13,32 @@ End
 #end
 Class Keywords Implements IKeywords
 	
-	Method New(words:String[]=Null)
-		If words = Null Then Return
-		For Local kw := Eachin words
-			kw = kw.Trim()
-			If kw.Length = 0 Continue
-			_keywords[kw.ToLower()] = kw
+	Method New( words:String[]=Null )
+		If words=Null Then Return
+		For Local kw:=Eachin words
+			Local kwTrimmed:=kw.Trim()
+			If kwTrimmed.Length = 0 Continue
+			_keywords[kwTrimmed.ToLower()]=kw
 		Next
-		_words = words
+		_words=words
 	End
 	
-	Method Contains:Bool(word:String)
-		Return _keywords.Contains(word.ToLower())
+	Method Contains:Bool( word:String )
+		Return _keywords.Contains( word.ToLower() )
 	End
 
-	Method Get:String(word:String)
+	Method Get:String( word:String )
 		Return _keywords[word.ToLower()]
 	End 
 	
 	Method Values:String[]()
 		Return _words
-		#rem
-		Local arr := New String[_keywords.Count()]
-		Local k := 0
-		For Local i := Eachin _keywords.Values
-			arr[k] = i
-			k += 1
-		Next
-		Return arr
-		#end
 	End
 	
 	
 	Private
 	
-	Field _keywords := New StringMap<String>
+	Field _keywords:=New StringMap<String>
 	Field _words:String[]
 	
 End
@@ -82,8 +73,8 @@ Class KeywordsPlugin Extends PluginDependsOnFileType
 		Init()
 		
 		' register extensions
-		Local types := GetFileTypes()
-		If types <> Null
+		Local types:=GetFileTypes()
+		If types<>Null
 			RegisterCodeExtensions(types)
 		Endif
 		
@@ -99,11 +90,12 @@ Class KeywordsPlugin Extends PluginDependsOnFileType
 	End
 	
 	Method Init()
+	
 		Local value:JsonValue
-		If IsNeedLoadFromFile() Then value = JsonUtils.LoadValue(GetWordsFilePath(),GetMainFileType())
+		If IsNeedLoadFromFile() Then value=JsonUtils.LoadValue(GetWordsFilePath(),GetMainFileType())
 		Local s := (value<>Null ? value.ToString() Else GetInternal())
-		Local words := s.Split(";")
-		_keywords = New Keywords(words)
+		Local words:=s.Split(";")
+		_keywords=New Keywords(words)
 	End
 	
 End
@@ -116,8 +108,9 @@ Storage for all keywords for all supported highlighted langs.
 Class KeywordsManager
 	
 	Function Get:IKeywords(fileType:String)
-		Local plugins := Plugin.PluginsOfType<KeywordsPlugin>()
-		For Local p := Eachin plugins
+	
+		Local plugins:=Plugin.PluginsOfType<KeywordsPlugin>()
+		For Local p:=Eachin plugins
 			If p.CheckFileTypeSuitability(fileType) Then Return p.Keywords
 		Next
 		Return _empty
@@ -126,6 +119,6 @@ Class KeywordsManager
 	
 	Private
 	
-	Global _empty := New Keywords
+	Global _empty:=New Keywords
 	
 End

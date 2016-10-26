@@ -13,7 +13,7 @@ Class Ted2Document
 	Method New( path:String )
 	
 		_path=path
-		_fileType = ExtractExt(path)
+		_fileType=ExtractExt( _path )
 				
 		_modTime=GetFileTime( _path )
 	End
@@ -198,16 +198,16 @@ Class Ted2DocumentType Extends Plugin
 		_exts=exts
 	End
 	
-	Method AddExtensions(exts:String[])
+	Method AddExtensions( exts:String[] )
 		If _exts = Null
-			_exts = exts
+			_exts=exts
 			Return
 		Endif
 		' check  for duplicates here?
-		Local arr := New String[_exts.Length+exts.Length]
-		_exts.CopyTo(arr,0,0,_exts.Length)
-		exts.CopyTo(arr,0,_exts.Length,exts.Length)
-		_exts = arr
+		Local arr:=New String[_exts.Length+exts.Length]
+		_exts.CopyTo( arr,0,0,_exts.Length )
+		exts.CopyTo( arr,0,_exts.Length,exts.Length )
+		_exts=arr
 	End
 		
 	Method OnCreateDocument:Ted2Document( path:String ) Virtual

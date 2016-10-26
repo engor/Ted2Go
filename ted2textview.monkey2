@@ -6,8 +6,8 @@ Class Ted2CodeTextView Extends CodeTextView
 
 	Property FileType:String() 'where else we can store this type?
 		return _type
-	Setter(value:String)
-		_type = value
+	Setter( value:String )
+		_type=value
 		Keywords = KeywordsManager.Get(_type)
 		Highlighter = HighlightersManager.Get(_type)
 		Formatter = FormattersManager.Get(_type)
