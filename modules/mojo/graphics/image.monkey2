@@ -423,11 +423,11 @@ Class Image Extends Resource
 			pixmap=pixmap.Convert( PixelFormat.RGBA32 )
 			tpixmap.Discard()
 			
-			'Copy R->A
+			'Copy Max(R,G,B)->A
 			For Local y:=0 Until pixmap.Height
 				Local p:=pixmap.PixelPtr( 0,y )
 				For Local x:=0 Until pixmap.Width
-					p[3]=p[0]
+					p[3]=Max( Max( p[0],p[1] ),p[2] )
 					p+=4
 				Next
 			Next
