@@ -152,7 +152,7 @@ Class Texture Extends Resource
 		path=RealPath( path )
 		specular=specular ? RealPath( specular ) Else ""
 
-		Local pnorm:=Pixmap.Load( path,,True )
+		Local pnorm:=Pixmap.Load( path,,False )
 		If Not pnorm Return Null
 		
 		Local pspec:=Pixmap.Load( specular )
@@ -164,7 +164,7 @@ Class Texture Extends Resource
 				For Local x:=0 Until pnorm.Width
 					Local n:=pnorm.GetPixelARGB( x,y ) ~ yxor
 					Local s:=(pspec.GetPixelARGB( x,y ) Shr 16) & $ff
-					n=n & $ffffff00 | Clamp( Int( specularScale * s ),1,255 )
+					n=n & $ffffff00 | Clamp( Int( specularScale * s ),0,255 )
 					pnorm.SetPixelARGB( x,y,n )
 				Next
 			Next

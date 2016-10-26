@@ -1134,7 +1134,7 @@ Class Canvas
 		_device.Clear( Color.Black )
 			
 		_device.RenderTarget=_gbuffers[1]
-		_device.Clear( Color.Black )
+		_device.Clear( New Color( .5,.5,1 ) )
 		
 		_device.RenderTarget=_rtarget ? _rtarget.Texture Else Null
 	End

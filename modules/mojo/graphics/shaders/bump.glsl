@@ -22,7 +22,9 @@ void main(){
 
 	texCoord0=mx2_TexCoord0;
 
+#if MX2_RENDERPASS==2
 	tanMatrix=mat2( mx2_TexCoord1.x,mx2_TexCoord1.y,-mx2_TexCoord1.y,mx2_TexCoord1.x );
+#endif
 
 #if MX2_RENDERPASS==0
 	color=mx2_AmbientLight * mx2_ImageColor * mx2_Color;
@@ -55,10 +57,9 @@ void main(){
 
 	vec3 normal=texture2D( mx2_ImageTexture1,texCoord0 ).xyz;
 	
-	normal.xy=tanMatrix * (normal.xy * 2.0 - 1.0) * diffuse.a * 0.5 + 0.5;
-	normal.z*=diffuse.a;
-	
-	gl_FragColor=vec4( normal,diffuse.a );
+	normal.xy=tanMatrix * (normal.xy * 2.0 - 1.0) * 0.5 + 0.5;
+
+	gl_FragColor=vec4( normal*diffuse.a,diffuse.a );
 
 #endif
 
