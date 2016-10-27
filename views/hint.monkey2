@@ -32,11 +32,11 @@ Global _duration:Int
 Function InitHint()
 
 	_hint=New HintInstance
-	_timer=New Timer(1, Lambda()
+	_timer=New Timer( 1, Lambda()
 		If _time > 0 And Millisecs() >= _time+_duration
 			HideHint()
 		End
-	End)
+	End )
 End
 
 

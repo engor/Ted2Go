@@ -251,7 +251,6 @@ Class MainWindowInstance Extends Window
 		'Menu bar
 		'
 		_menuBar=New MenuBar
-		'_menuBar.Style.Border = New Recti(0,0,0,1)
 		_menuBar.AddMenu( _fileMenu )
 		_menuBar.AddMenu( _editMenu )
 		_menuBar.AddMenu( _buildMenu )
@@ -260,22 +259,22 @@ Class MainWindowInstance Extends Window
 		
 		'Tool Bar
 		'
-		_toolBar = New ToolBarExt
+		_toolBar=New ToolBarExt
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/new_file.png" ),_fileActions.new_.Triggered,"New file (Ctrl+N)" )
-		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/open_file.png"),_fileActions.open.Triggered,"Open file... (Ctrl+O)" )
-		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/open_project.png"),_projectView.openProject.Triggered,"Open project..." )
-		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/save_all.png"),_fileActions.saveAll.Triggered,"Save all (Ctrl+Shift+S)" )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_file.png" ),_fileActions.open.Triggered,"Open file... (Ctrl+O)" )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_project.png" ),_projectView.openProject.Triggered,"Open project..." )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/save_all.png" ),_fileActions.saveAll.Triggered,"Save all (Ctrl+Shift+S)" )
 		_toolBar.AddSeparator()
-		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/undo.png"),_editActions.undo.Triggered,"Undo (Ctrl+Z)" )
-		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/redo.png"),_editActions.redo.Triggered,"Redo (Ctrl+Y)" )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/undo.png" ),_editActions.undo.Triggered,"Undo (Ctrl+Z)" )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/redo.png" ),_editActions.redo.Triggered,"Redo (Ctrl+Y)" )
 		_toolBar.AddSeparator()
-		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/check.png"),_buildActions.semant.Triggered,"Check errors (F7)" )
-		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/build.png"),_buildActions.build.Triggered,"Build (F6)" )
-		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/run.png"),_buildActions.buildAndRun.Triggered,"Run (F7)" )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/check.png" ),_buildActions.semant.Triggered,"Check errors (F7)" )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/build.png" ),_buildActions.build.Triggered,"Build (F6)" )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/run.png" ),_buildActions.buildAndRun.Triggered,"Run (F7)" )
 		_toolBar.AddSeparator()
-		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/options.png"),_buildActions.buildSettings.Triggered,"Target settings" )
+		_toolBar.AddIconicButton( ThemeImages.Get(" toolbar/options.png" ),_buildActions.buildSettings.Triggered,"Target settings" )
 		_toolBar.AddSeparator()
-		_toolBar.AddIconicButton( ThemeImages.Get("toolbar/find.png"),_findActions.find.Triggered,"Find (Ctrl+F)" )
+		_toolBar.AddIconicButton( ThemeImages.Get(" toolbar/find.png" ),_findActions.find.Triggered,"Find (Ctrl+F)" )
 		
 		_browsersTabView.AddTab( "Files",_projectView,True )
 		_browsersTabView.AddTab( "Debug",_debugView,False )

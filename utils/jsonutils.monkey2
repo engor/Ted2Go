@@ -4,11 +4,11 @@ Namespace ted2go
 
 Class JsonUtils
 
-	Function LoadValue:JsonValue(filePath:String, valueName:String)
+	Function LoadValue:JsonValue( filePath:String,valueName:String )
 		
 		If GetFileType(filePath) <> FileType.File Then Return Null
 		
-		Local json := JsonObject.Load(filePath)
+		Local json:=JsonObject.Load( filePath )
 		
 		Return json[valueName]
 	End

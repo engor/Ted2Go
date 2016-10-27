@@ -4,7 +4,7 @@ Namespace ted2go
 
 Interface ICodeFormatter
 
-	Method Format(document:CodeTextView, row:Int=-1)
+	Method Format( document:CodeTextView,row:Int=-1 )
 	
 End
 
@@ -20,7 +20,7 @@ Class CodeFormatterPlugin Extends PluginDependsOnFileType Implements ICodeFormat
 	Protected
 	
 	Method New()
-		AddPlugin(Self)
+		AddPlugin( Self )
 	End
 	
 End
@@ -28,10 +28,10 @@ End
 
 Class FormattersManager
 	
-	Function Get:ICodeFormatter(fileType:String)
-		Local plugins := Plugin.PluginsOfType<CodeFormatterPlugin>()
-		For Local p := Eachin plugins
-			If p.CheckFileTypeSuitability(fileType) Then Return p
+	Function Get:ICodeFormatter( fileType:String )
+		Local plugins:=Plugin.PluginsOfType<CodeFormatterPlugin>()
+		For Local p:=Eachin plugins
+			If p.CheckFileTypeSuitability( fileType ) Then Return p
 		Next
 		Return _empty
 	End
@@ -39,7 +39,7 @@ Class FormattersManager
 	
 	Private
 	
-	Global _empty := New EmptyFormatter
+	Global _empty:=New EmptyFormatter
 	
 End
 
@@ -49,7 +49,7 @@ Private
 
 Class EmptyFormatter Implements ICodeFormatter
 	
-	Method Format(document:CodeTextView, row:Int=-1)
+	Method Format( document:CodeTextView,row:Int=-1 )
 		'do nothing
 	End
 	

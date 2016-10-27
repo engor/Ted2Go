@@ -11,13 +11,13 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 	
 	Private
 	
-	Global _instance := New Monkey2Highlighter
+	Global _instance:=New Monkey2Highlighter
 	
 	Method New()
 		Super.New()
-		_types = New String[](".monkey2")
-		_hl = New Highlighter
-		_hl.Painter = HL
+		_types=New String[](".monkey2")
+		_hl=New Highlighter
+		_hl.Painter=HL
 	End
 	
 	Method HL:Int( text:String,colors:Byte[],sol:Int,eol:Int,state:Int )
@@ -28,9 +28,9 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 		Local istart:=sol
 		Local preproc:=False
 		
-		If state>-1 Then icolor = Highlighter.COLOR_COMMENT
+		If state>-1 Then icolor=Highlighter.COLOR_COMMENT
 		
-		If _keywords = Null Then _keywords = KeywordsManager.Get(GetMainFileType())
+		If _keywords = Null Then _keywords=KeywordsManager.Get( GetMainFileType() )
 		
 		While i0<eol
 		
@@ -110,7 +110,7 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 				
 					color=Highlighter.COLOR_IDENT
 					
-					If _keywords.Contains(id) Then color=Highlighter.COLOR_KEYWORD
+					If _keywords.Contains( id ) Then color=Highlighter.COLOR_KEYWORD
 				
 				Endif
 				

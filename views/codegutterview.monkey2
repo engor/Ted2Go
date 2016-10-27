@@ -29,7 +29,7 @@ Class CodeGutterView Extends View
 	
 	Method OnRender( canvas:Canvas ) Override
 	
-		_textView = _doc.TextView
+		_textView=_doc.TextView
 		canvas.Color=RenderStyle.BackgroundColor
 		
 		canvas.DrawRect( Rect.X,Rect.Y,Rect.Width,Rect.Height )
@@ -44,7 +44,7 @@ Class CodeGutterView Extends View
 		
 		canvas.Translate( 0,-vrect.Top )
 		
-		If _errorIcon = Null Then _errorIcon = CodeItemIcons.GetIcon("warning")
+		If _errorIcon = Null Then _errorIcon=CodeItemIcons.GetIcon( "warning" )
 		
 		canvas.Color=textColor
 		
@@ -54,7 +54,7 @@ Class CodeGutterView Extends View
 		
 			' show error bubble
 			
-			If _doc.HasErrors And _doc.HasErrorAt(i)
+			If _doc.HasErrors And _doc.HasErrorAt( i )
 				If _errorIcon <> Null
 					canvas.Color=Color.White
 					canvas.DrawImage( _errorIcon,_width-_errorIcon.Width,rect.Top )
@@ -73,11 +73,11 @@ Class CodeGutterView Extends View
 		
 		Select event.Type
 			Case EventType.MouseMove
-				HideAutocomplete()
+				
 			
 		End
 		
-		Super.OnContentMouseEvent(event)
+		Super.OnContentMouseEvent( event )
 		
 	End
 	#End

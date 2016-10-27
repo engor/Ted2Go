@@ -75,7 +75,7 @@ Class KeywordsPlugin Extends PluginDependsOnFileType
 		' register extensions
 		Local types:=GetFileTypes()
 		If types<>Null
-			RegisterCodeExtensions(types)
+			RegisterCodeExtensions( types )
 		Endif
 		
 	End
@@ -92,10 +92,10 @@ Class KeywordsPlugin Extends PluginDependsOnFileType
 	Method Init()
 	
 		Local value:JsonValue
-		If IsNeedLoadFromFile() Then value=JsonUtils.LoadValue(GetWordsFilePath(),GetMainFileType())
+		If IsNeedLoadFromFile() Then value=JsonUtils.LoadValue( GetWordsFilePath(),GetMainFileType() )
 		Local s := (value<>Null ? value.ToString() Else GetInternal())
-		Local words:=s.Split(";")
-		_keywords=New Keywords(words)
+		Local words:=s.Split( ";" )
+		_keywords=New Keywords( words )
 	End
 	
 End
@@ -107,11 +107,11 @@ Storage for all keywords for all supported highlighted langs.
 
 Class KeywordsManager
 	
-	Function Get:IKeywords(fileType:String)
+	Function Get:IKeywords( fileType:String )
 	
 		Local plugins:=Plugin.PluginsOfType<KeywordsPlugin>()
 		For Local p:=Eachin plugins
-			If p.CheckFileTypeSuitability(fileType) Then Return p.Keywords
+			If p.CheckFileTypeSuitability( fileType ) Then Return p.Keywords
 		Next
 		Return _empty
 	End

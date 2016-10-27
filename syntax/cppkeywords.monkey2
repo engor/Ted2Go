@@ -11,11 +11,11 @@ Class CppKeywords Extends KeywordsPlugin
 		
 	Private
 	
-	Global _instance := New CppKeywords
+	Global _instance:=New CppKeywords
 	
 	Method New()
 		Super.New()
-		_types = New String[](".cpp",".h",".hpp")
+		_types=New String[](".cpp",".h",".hpp")
 	End
 	
 	Method GetInternal:String() Override

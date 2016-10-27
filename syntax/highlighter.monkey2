@@ -33,7 +33,7 @@ Class HighlighterPlugin Extends PluginDependsOnFileType
 	Protected
 	
 	Method New()
-		AddPlugin(Self)
+		AddPlugin( Self )
 	End
 		
 	Field _hl:Highlighter
@@ -44,16 +44,16 @@ End
 
 Class HighlightersManager
 	
-	Function Get:Highlighter(fileType:String)
-		Local plugins := Plugin.PluginsOfType<HighlighterPlugin>()
-		For Local p := Eachin plugins
-			If p.CheckFileTypeSuitability(fileType) Then Return p.Highlighter
+	Function Get:Highlighter( fileType:String )
+		Local plugins:=Plugin.PluginsOfType<HighlighterPlugin>()
+		For Local p:=Eachin plugins
+			If p.CheckFileTypeSuitability( fileType ) Then Return p.Highlighter
 		Next
 		Return _empty
 	End
 	
 	Private
 	
-	Global _empty := New Highlighter
+	Global _empty:=New Highlighter
 	
 End

@@ -490,9 +490,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Return
 			Endif
 			Local t:=text.Trim()
-			Local arr:=t.Split(",")
+			Local arr:=t.Split( "," )
 			For Local i:=Eachin arr
-				Local p:=i.Find("=")
+				Local p:=i.Find( "=" )
 				If p <> -1 Then i=i.Slice( 0,p )
 				i=i.Trim()
 				If i <> ""
@@ -747,7 +747,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 					Local pos:=s.Find( "=" )
 					If pos > 0 s=s.Slice( 0,pos ).Trim()
 					
-					pos=s.Find(":")
+					pos=s.Find( ":" )
 					Local ident:=s.Slice( 0,pos ).Trim()
 					Local type:=s.Slice( pos+1,s.Length ).Trim()
 					
@@ -789,12 +789,12 @@ Class Monkey2Parser Extends CodeParserPlugin
 				'Print "s: "+s
 				's=s.Replace(" ","") 'remove spaces
 				
-				Local p0:=s.Find(":=")
-				Local p1:=s.Find(":")
-				Local p2:=s.Find("=")
-				Local p3:=s.Find("[")
-				Local p4:=s.Find("~q")
-				Local p5:=s.Find(" ")
+				Local p0:=s.Find( ":=" )
+				Local p1:=s.Find( ":" )
+				Local p2:=s.Find( "=" )
+				Local p3:=s.Find( "[" )
+				Local p4:=s.Find( "~q" )
+				Local p5:=s.Find( " " )
 				
 				
 				Local ident:String
@@ -814,7 +814,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 					
 					Else
 						'b:=val ? xx else yy
-						Local i1:=type.Find("?")
+						Local i1:=type.Find( "?" )
 						If i1 > 0
 							Local i2:=type.Find( "Else",i1 )
 							If i2 <> -1 Then type=type.Slice( i1+1,i2 ).Trim()
@@ -927,8 +927,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			' some 'copy-paste' code...
 			
-			Local p1:=txt.Find(":")
-			Local p2:=txt.Find("(")
+			Local p1:=txt.Find( ":" )
+			Local p2:=txt.Find( "(" )
 			If p1 = -1 Or p1 > p2
 				item.Type="Void"
 			Else
@@ -951,10 +951,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 				For Local s:=Eachin _params
 					
 					' skip default value after '='
-					Local pos:=s.Find("=")
+					Local pos:=s.Find( "=" )
 					If pos > 0 s=s.Slice( 0,pos ).Trim()
 					
-					pos=s.Find(":")
+					pos=s.Find( ":" )
 					Local ident:=s.Slice( 0,pos ).Trim()
 					Local type:=s.Slice( pos+1,s.Length ).Trim()
 					

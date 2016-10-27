@@ -4,7 +4,7 @@ Namespace ted2go
 
 Class ToolButtonExt Extends ToolButton
 
-	Method New( action:Action, hint:String=Null )
+	Method New( action:Action,hint:String=Null )
 		Super.New( action )
 		PushButtonMode=True
 		_hint=hint
@@ -44,12 +44,10 @@ Class ToolBarExt Extends ToolBar
 		
 		Super.New()
 		MinSize=New Vec2i( 0,42 )
-		Style.BackgroundColor=New Color( 50.0/255.0,50.0/255.0,50.0/255.0 )
-		Style.Border=New Recti( 0,0,0,1 )
-		Style.Padding=New Recti( 0,0,0,5 )
+		Style=GetStyle( "MainToolBar" )
 	End
 	
-	Method AddIconicButton:ToolButton( icon:Image, trigger:Void(), hint:String=Null )
+	Method AddIconicButton:ToolButton( icon:Image,trigger:Void(),hint:String=Null )
 		
 		Local act:=New Action( Null,icon )
 		act.Triggered=trigger
