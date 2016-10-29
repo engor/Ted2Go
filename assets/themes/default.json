@@ -349,9 +349,25 @@
 		},
 		
 		"Hint":{
-			"backgroundColor":"#afaf00",
+			"border":[ 1 ],
 			"borderColor":"clear",
-			"border":[ 1,1,1,1 ]
+			"backgroundColor":"panel"
+		},
+
+		"EditorToolBar":{
+			"extends":"ToolBar",
+			"padding":[ 2 ],
+			"backgroundColor":"content",
+			"border":[ 0,0,0,1 ],
+			"borderColor":"clear"
+		},
+
+		"MainToolBar":{
+			"extends":"ToolBar",
+			"padding":[ 2 ],
+			"backgroundColor":"content",
+			"border":[ 0,0,0,1 ],
+			"borderColor":"clear"
 		}
 	}
 }

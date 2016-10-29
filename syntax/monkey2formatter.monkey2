@@ -45,7 +45,7 @@ Class Monkey2CodeFormatter Extends CodeFormatterPlugin
 		Local ident:=text.Slice( start,cursor )
 		If Not ident Return
 		
-		Local kw:=view.Keywords.Get( ident )
+		Local kw:=view.Keywords.Get( ident ).Trim()
 		If kw And kw<>ident Then doc.ReplaceText( cursor-ident.Length,cursor,kw )
 		
 	End

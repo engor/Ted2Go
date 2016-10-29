@@ -31,14 +31,19 @@ Class ThemeImages Extends Plugin
 	Method OnCreate() Override
 		
 		App.ThemeChanged+=Lambda()
-			AdjustIconsScale()
+			AdjustImagesScale()
 		End
 	End
 	
-	Function AdjustIconsScale()
+	Function AdjustImagesScale()
 	
-		For Local i:=Eachin _images.Values
-			i.Scale=App.Theme.Scale
+		For Local key:=Eachin _images.Keys
+			Local img:=_images[key]
+			If img<>Null
+				img.Scale=App.Theme.Scale
+			Else
+				Print "ThemeImages.AdjustImagesScale: image is null: "+key
+			Endif
 		Next
 	End
 	

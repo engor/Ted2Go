@@ -104,6 +104,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		'ctrl+space - show autocomplete list
 		If event.Type = EventType.KeyDown
+			
 			Select event.Key
 			Case Key.Space
 				If event.Modifiers & Modifier.Control
@@ -124,11 +125,14 @@ Class CodeDocumentView Extends Ted2CodeTextView
 							
 			End
 				
-		Elseif event.Type = EventType.KeyChar And event.Key = Key.Space And event.Modifiers & Modifier.Control
-			If _doc.CanShowAutocomplete()
-				_doc.ShowAutocomplete()
+		Elseif event.Type = EventType.KeyChar
+			
+			If event.Key = Key.Space And event.Modifiers & Modifier.Control
+				If _doc.CanShowAutocomplete()
+					_doc.ShowAutocomplete()
+				Endif
+				Return
 			Endif
-			Return
 		Endif
 				
 		Super.OnKeyEvent( event )
@@ -260,7 +264,7 @@ Class CodeDocument Extends Ted2Document
 			Lambda()
 				OnFindSelection()
 			End,
-			"Find selection" )
+			"Find selection (Ctrl+F)" )
 		bar.AddIconicButton(
 			ThemeImages.Get( "editorbar/find_previous.png" ),
 			Lambda()
@@ -637,15 +641,15 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Method OnFindSelection()
-		Alert( "Not implemented yet." )
+		MainWindow.OnFind()
 	End
 	
 	Method OnFindPrev()
-		Alert( "Not implemented yet." )
+		MainWindow.OnFindPrev()
 	End
 	
 	Method OnFindNext()
-		Alert( "Not implemented yet." )
+		MainWindow.OnFindNext()
 	End
 	
 	Method OnPrevBookmark()
@@ -669,11 +673,17 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Method OnComment()
-		Alert( "Not implemented yet." )
+		
+		' is it cheat?
+		Local event:=New KeyEvent( EventType.KeyDown,_codeView,Key.Apostrophe,Key.Apostrophe,Modifier.Control,"" )
+		_codeView.OnKeyEvent( event )
 	End
 	
 	Method OnUncomment()
-		Alert( "Not implemented yet." )
+		
+		' is it cheat?
+		Local event:=New KeyEvent( EventType.KeyDown,_codeView,Key.Apostrophe,Key.Apostrophe,Modifier.Control|Modifier.Shift,"" )
+		_codeView.OnKeyEvent( event )
 	End
 				
 End

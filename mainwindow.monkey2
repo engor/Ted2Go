@@ -272,9 +272,9 @@ Class MainWindowInstance Extends Window
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/build.png" ),_buildActions.build.Triggered,"Build (F6)" )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/run.png" ),_buildActions.buildAndRun.Triggered,"Run (F7)" )
 		_toolBar.AddSeparator()
-		_toolBar.AddIconicButton( ThemeImages.Get(" toolbar/options.png" ),_buildActions.buildSettings.Triggered,"Target settings" )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/options.png" ),_buildActions.buildSettings.Triggered,"Target settings" )
 		_toolBar.AddSeparator()
-		_toolBar.AddIconicButton( ThemeImages.Get(" toolbar/find.png" ),_findActions.find.Triggered,"Find (Ctrl+F)" )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/find.png" ),_findActions.find.Triggered,"Find (Ctrl+F)" )
 		
 		_browsersTabView.AddTab( "Files",_projectView,True )
 		_browsersTabView.AddTab( "Debug",_debugView,False )
@@ -305,6 +305,18 @@ Class MainWindowInstance Extends Window
 		
 		If GetFileType( "bin/ted2.state.json" )=FileType.None _helpActions.about.Trigger()
 		
+	End
+	
+	Method OnFind()
+		_findActions.find.Trigger()
+	End
+	
+	Method OnFindPrev()
+		_findActions.findPrevious.Trigger()
+	End
+	
+	Method OnFindNext()
+		_findActions.findNext.Trigger()
 	End
 	
 	Property Mx2ccPath:String()

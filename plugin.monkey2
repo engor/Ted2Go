@@ -6,7 +6,7 @@ Class Plugin
 
 	Property Name:String() Virtual
 	
-		Return "<unititled plugin>"
+		Return "<untitled plugin>"
 	End
 	
 	Function PluginsOfType<T>:T[]() Where T Extends Plugin
