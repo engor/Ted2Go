@@ -19,11 +19,26 @@
 	<script>
 	
 	var jstree_theme='default-dark';
-	
+
+	// Ok, link format is:
+	//
+	// module:nmspace.nmspace.decl, eg "monkey:monkey.types.Int"
+	//
+	// ...or...
+	// 
+	// module:topic#section, eg: "monkey:modules#creating-modules"
+	//
 	function openDocsPage( page ){
-
-		var url='../modules/'+page.replace( ':','/docs/__PAGES__/' ).replace( /\./g,'-' )+'.html';
-
+	
+		if( page.indexOf( '#' )!=-1 ){
+		
+			var url='../modules/'+page.replace( ':','/docs/__MANPAGES__/' ).replace( /\#/g,'.md.html#' );
+			
+		}else{
+		
+			var url='../modules/'+page.replace( ':','/docs/__PAGES__/' ).replace( /\./g,'-' )+'.html';
+		}
+		
 		var docs=document.getElementById( 'docs-iframe' );
 		
 		docs.contentWindow.location=url;
@@ -63,7 +78,7 @@ jQuery( function($){
 				'icons' : false,
 				'stripes' : false
 			},
-			'data':[ ${API_INDEX} ]
+			'data':[ ${DOCS_TREE} ]
 		},
 		'plugins':[ 'search' ]
  	});
@@ -77,7 +92,7 @@ jQuery( function($){
 		if( !page ) return;
 		
 		openDocsPage( page );
-	} );
+	});
 	
 	var to=false;
 

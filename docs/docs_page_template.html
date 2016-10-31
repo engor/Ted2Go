@@ -1,0 +1,47 @@
+<!doctype html>
+
+<html>
+
+<head>
+
+	<meta charset="utf-8">
+
+	<link rel="stylesheet" href="../../../../docs/style.css">
+
+	<script>
+	
+	function openDocsPage( page ){
+	
+		if( page.indexOf( '#' )!=-1 ){
+			
+			var url='../modules/'+page.replace( ':','/docs/__MANPAGES__/' ).replace( /\#/g,'.md.html#' );
+				
+		}else{
+			
+			var url='../modules/'+page.replace( ':','/docs/__PAGES__/' ).replace( /\./g,'-' )+'.html';
+		}
+			
+		document.location.href=url;
+		
+		return false;
+	}
+	
+	</script>
+
+</head>
+
+<body class="docs_body">
+
+<div class="docs_content">
+
+<!-- CONTENT -->
+
+${CONTENT}
+
+<!-- END -->
+
+</div>
+
+</body>
+
+</html>
