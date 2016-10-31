@@ -1,6 +1,10 @@
 
 Namespace test
 
+'Must import this to use reflection!
+'
+#Import "<reflection>"
+
 'A test global...
 '
 Global G:Int

@@ -5,7 +5,6 @@
 
 Namespace sdl2test
 
-Using libc..
 Using sdl2..
 Using gles20..
 
@@ -17,9 +16,11 @@ Class SdlWindow
 	
 	Method New()
 	
-		SDL_Init( SDL_INIT_EVERYTHING )
+		SDL_Init( SDL_INIT_VIDEO )
 		
 		libc.atexit( SDL_Quit )
+		
+		SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK,SDL_GL_CONTEXT_PROFILE_ES )
 		
 		sdlWindow=SDL_CreateWindow( "SDL2 OpenGL Window",SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED,640,480,SDL_WINDOW_OPENGL )
 		
@@ -46,7 +47,7 @@ Class SdlWindow
 					
 					Case SDL_WINDOWEVENT_CLOSE
 					
-						exit_( 0 )
+						libc.exit_(0)
 					
 					End
 					
@@ -77,5 +78,4 @@ Function Main()
 	Local window:=New SdlWindow
 	
 	window.Run()
-
 End
