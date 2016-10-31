@@ -37,5 +37,7 @@ __MANPAGES__/
 /modules/module-manager/backups
 
 Monkey2 (Windows).exe
+Monkey2 (Macos).app
+Monkey2 (Linux)
 
 /src/c2mx2/LLVM
