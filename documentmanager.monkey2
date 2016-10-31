@@ -11,9 +11,10 @@ Class DocumentManager
 	Field DocumentAdded:Void( doc:Ted2Document )
 	Field DocumentRemoved:Void( doc:Ted2Document )
 
-	Method New( tabView:TabView )
+	Method New( tabView:TabView,browser:DockingView )
 	
 		_tabView=tabView
+		_browser=browser
 		
 		_tabView.CurrentChanged+=Lambda()
 			CurrentDocument=FindDocument( _tabView.CurrentView )
@@ -57,7 +58,12 @@ Class DocumentManager
 		
 		_currentDoc=doc
 		
-		If doc _tabView.CurrentView=CurrentView
+		If _currentDoc
+			_tabView.CurrentView=CurrentView
+			_browser.ContentView=_currentDoc.BrowserView
+		Else
+			_browser.ContentView=Null
+		Endif
 		
 		'Can't change window title on a fiber on at least windows!
 		'
@@ -225,6 +231,7 @@ Class DocumentManager
 	Private
 	
 	Field _tabView:TabView
+	Field _browser:DockingView
 	
 	Field _currentDoc:Ted2Document
 	

@@ -44,6 +44,13 @@ Class Ted2Document
 		Return _view
 	End
 	
+	Property BrowserView:View()
+	
+		If Not _browser _browser=OnCreateBrowser()
+		
+		Return _browser
+	End
+	
 	Property TextView:TextView()
 	
 		Return OnGetTextView( View )
@@ -123,6 +130,11 @@ Class Ted2Document
 		Return Null
 	End
 	
+	Method OnCreateBrowser:View() Virtual
+	
+		Return Null
+	End
+	
 	Method OnGetTextView:TextView( view:View ) virtual
 	
 		Return Cast<TextView>( view )
@@ -138,6 +150,7 @@ Class Ted2Document
 	Field _modTime:Long
 	Field _state:String
 	Field _view:View
+	Field _browser:View
 	
 End
 

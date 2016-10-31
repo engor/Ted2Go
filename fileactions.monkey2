@@ -131,7 +131,7 @@ Class FileActions
 	
 	Method OnNew()
 	
-		Local path:=MainWindow.AllocTmpPath( ".monkey2" )
+		Local path:=MainWindow.AllocTmpPath( "untitled",".monkey2" )
 		If Not path
 			Alert( "Can't allocate temporary file" )
 			Return
