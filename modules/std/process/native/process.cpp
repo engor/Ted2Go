@@ -17,16 +17,17 @@ struct bbProcess::Rep{
 
 	struct StdoutEvent : public bbAsync::Event{
 		Rep *rep;
+		int avail;
 		bbFunction<void()> func;
 		void dispatch(){
-			bool release=rep->stdoutAvail==0;
+			int n=avail;
+			rep->stdoutAvail=n;
 			func();
-			if( release ) rep->release();
+			if( !n ) rep->release();
 		}
 	};
 
-	std::atomic_int refs;
-	
+	int refs;
 	bbAsync::Semaphore stdoutSema;
 	char stdoutBuf[4096];
 	char *stdoutGet;
@@ -90,7 +91,13 @@ bbProcess::bbProcess():_rep( nullptr ){
 
 bbProcess::~bbProcess(){
 
-	if( _rep ) _rep->release();
+	if( !_rep ) return;
+	
+//	printf( "Destroying bbProcess refs=%i\n",_rep->refs );fflush( stdout );
+	
+	_rep->finishedEvent.func={};
+	_rep->stdoutEvent.func={};
+	_rep->release();
 }
 
 bbBool bbProcess::start( bbString cmd ){
@@ -222,6 +229,7 @@ bbBool bbProcess::start( bbString cmd ){
 	//
 	rep->retain();
 	rep->stdoutEvent.rep=rep;
+	rep->stdoutEvent.avail=-1;
 	rep->stdoutEvent.func=stdoutReady;
 	
 	std::thread( [=](){
@@ -238,7 +246,7 @@ bbBool bbProcess::start( bbString cmd ){
 #endif
 			rep->stdoutGet=rep->stdoutBuf;
 			
-			rep->stdoutAvail=n;
+			rep->stdoutEvent.avail=n;
 			
 			rep->stdoutEvent.post();
 
@@ -247,7 +255,7 @@ bbBool bbProcess::start( bbString cmd ){
 			if( rep->stdoutAvail ) break;
 		}
 		
-		rep->stdoutAvail=0;
+		rep->stdoutEvent.avail=0;
 		
 		rep->stdoutEvent.post();
 
@@ -358,9 +366,9 @@ void bbProcess::gcMark(){
 
 	bbGCMark( finished );
 	bbGCMark( stdoutReady );
-
-	if( !_rep ) return;
 	
-	bbGCMark( _rep->finishedEvent.func );
-	bbGCMark( _rep->stdoutEvent.func );
+	if( _rep ){
+		bbGCMark( _rep->finishedEvent.func );
+		bbGCMark( _rep->stdoutEvent.func );
+	}
 }

@@ -65,6 +65,8 @@ Class ProcessStream Extends Stream
 			
 			avail=_stdoutWaiting.Get()
 			
+			_stdoutWaiting=Null
+			
 			If Not avail Return 0
 		Endif
 		
@@ -148,6 +150,8 @@ Class ProcessStream Extends Stream
 		End
 		
 		If _process.Start( cmd ) Return
+		
+		Print "Failed to start process: "+cmd
 		
 		_process=Null
 	End
