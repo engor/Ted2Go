@@ -246,6 +246,7 @@ Class CodeDocument Extends Ted2Document
 		bar.AddSeparator()
 		bar.AddSeparator()
 		bar.AddSeparator()
+		#Rem
 		bar.AddIconicButton(
 			ThemeImages.Get( "editorbar/back.png" ),
 			Lambda()
@@ -259,6 +260,7 @@ Class CodeDocument Extends Ted2Document
 			End,
 			"Navigate forward (Alt+Right)" )
 		bar.AddSeparator()
+		#End
 		bar.AddIconicButton(
 			ThemeImages.Get( "editorbar/find_selection.png" ),
 			Lambda()
@@ -278,6 +280,7 @@ Class CodeDocument Extends Ted2Document
 			End,
 			"Find next (F3)" )
 		bar.AddSeparator()
+		#Rem
 		bar.AddIconicButton(
 			ThemeImages.Get( "editorbar/previous_bookmark.png" ),
 			Lambda()
@@ -297,6 +300,7 @@ Class CodeDocument Extends Ted2Document
 			End,
 			"Toggle bookmark (Ctrl+M)" )
 		bar.AddSeparator()
+		#End
 		bar.AddIconicButton(
 			ThemeImages.Get( "editorbar/shift_left.png" ),
 			Lambda()
@@ -665,23 +669,25 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Method OnShiftLeft()
-		Alert( "Not implemented yet." )
+		
+		Local event:=New KeyEvent( EventType.KeyDown,_codeView,Key.Tab,Key.Tab,Modifier.Shift,"~t" )
+		_codeView.OnKeyEvent( event )
 	End
 	
 	Method OnShiftRight()
-		Alert( "Not implemented yet." )
+		
+		Local event:=New KeyEvent( EventType.KeyDown,_codeView,Key.Tab,Key.Tab,Modifier.None,"~t" )
+		_codeView.OnKeyEvent( event )
 	End
 	
 	Method OnComment()
 		
-		' is it cheat?
 		Local event:=New KeyEvent( EventType.KeyDown,_codeView,Key.Apostrophe,Key.Apostrophe,Modifier.Control,"" )
 		_codeView.OnKeyEvent( event )
 	End
 	
 	Method OnUncomment()
 		
-		' is it cheat?
 		Local event:=New KeyEvent( EventType.KeyDown,_codeView,Key.Apostrophe,Key.Apostrophe,Modifier.Control|Modifier.Shift,"" )
 		_codeView.OnKeyEvent( event )
 	End
