@@ -33,6 +33,8 @@ Class BuildOpts
 	
 	Field wholeArchive:Bool
 	
+	Field reflection:Bool
+	
 End
 
 Class BuilderInstance
@@ -196,6 +198,7 @@ Class BuilderInstance
 			fdecl.module=module
 			fdecl.hfile=module.hfileDir+ident+".h"
 			fdecl.cfile=module.cfileDir+ident+".cpp"
+'			fdecl.rfile=module.cfileDir+"r_"+ident+".cpp"
 
 			module.fileDecls.Push( fdecl )
 
@@ -249,9 +252,11 @@ Class BuilderInstance
 		For Local i:=0 Until modules.Length
 		
 			Local module:=modules[modules.Length-i-1]
-
-			If module<>mainModule product.MOD_LIBS.Push( module.outputDir+module.name+".a" )
 			
+			If module<>mainModule 
+				product.imports.Push( module )
+				If module.name="reflection" opts.reflection=True
+			Endif
 		Next
 		
 	End
@@ -404,6 +409,7 @@ Class BuilderInstance
 					transFile.exhfile=transFile2.hfile
 					transFile.hfile=module.hfileDir+transFile.ident+".h"
 					transFile.cfile=module.cfileDir+transFile.ident+".cpp"
+'					transFile.rfile=module.cfileDir+"r_"+transFile.ident+".cpp"
 					
 					transFiles[transFile2.ident]=transFile
 					
@@ -437,21 +443,12 @@ Class BuilderInstance
 
 		If Not CreateDir( module.hfileDir ) Throw New BuildEx( "Failed to create dir:"+module.hfileDir )
 		If Not CreateDir( module.cfileDir ) Throw New BuildEx( "Failed to create dir:"+module.cfileDir )
+		
+		Local translator:=New Translator_CPP
+		
+		translator.TranslateModule( module )
 
-		For Local fdecl:=Eachin module.fileDecls
-		
-			If opts.verbose>0 Print "Translating "+fdecl.path
-		
-			Local translator:=New Translator_CPP
-			
-			Try
-				translator.Translate( fdecl )
-			Catch ex:TransEx
-			End
-			
-			product.SRC_FILES.Push( fdecl.cfile )
-		Next
-		
+		translator.TranslateTypeInfo( module )
 	End
 	
 	Method GetNamespace:NamespaceScope( path:String,mustExist:Bool=False )
@@ -662,20 +659,20 @@ Class BuilderInstance
 			Select ext
 			Case ".h"
 			
-				product.CC_OPTS.Push( "-I"+qdir )
-				product.CPP_OPTS.Push( "-I"+qdir )
+				product.CC_OPTS+=" -I"+qdir
+				product.CPP_OPTS+=" -I"+qdir
 				
 			Case ".hh",".hpp"
 			
-				product.CPP_OPTS.Push( "-I"+qdir )
+				product.CPP_OPTS+=" -I"+qdir
 				
 			Case ".a",".lib",".dylib"
 			
-				product.LD_OPTS.Push( "-L"+qdir )
+				product.LD_OPTS+=" -L"+qdir
 				
 			Case ".framework"
 			
-				product.LD_OPTS.Push( "-F"+qdir )
+				product.LD_OPTS+=" -F"+qdir
 				
 			Default
 			

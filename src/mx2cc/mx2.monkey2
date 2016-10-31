@@ -50,4 +50,4 @@ Using libc
 ' 3) edit .sh and .bat files to use new version (common.sh, common.bat)
 ' 4) ./rebuildall
 '
-Const MX2CC_VERSION:="1.0.9"
+Const MX2CC_VERSION:="1.0.91"

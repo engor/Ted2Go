@@ -5,16 +5,16 @@ Class BuildProduct
 
 	Field module:Module
 	Field opts:BuildOpts
-	
+	Field imports:=New Stack<Module>
 	Field outputFile:String
-
-	Field LD_OPTS:=New StringStack	
-	Field CC_OPTS:=New StringStack
-	Field CPP_OPTS:=New StringStack
+	
+	Field LD_OPTS:String
+	Field CC_OPTS:String
+	Field CPP_OPTS:String
+	Field AS_OPTS:String
 
 	Field SRC_FILES:=New StringStack
 	Field OBJ_FILES:=New StringStack
-	Field MOD_LIBS:=New StringStack
 	Field LD_SYSLIBS:=New StringStack
 	Field ASSET_FILES:=New StringStack
 	Field DLL_FILES:=New StringStack
@@ -25,27 +25,70 @@ Class BuildProduct
 		
 		Local copts:=""
 		
+		copts+=" -I~q"+MODULES_DIR+"~q"
+		copts+=" -I~q"+MODULES_DIR+"monkey/native~q"
+		If APP_DIR copts+=" -I~q"+APP_DIR+"~q"
+		
+		CC_OPTS+=copts
+		CPP_OPTS+=copts
+		
 		copts=GetEnv( "MX2_LD_OPTS_"+opts.target.ToUpper() )
-		If copts LD_OPTS.Push( copts )
+		If copts LD_OPTS+=" "+copts
 
 		copts=GetEnv( "MX2_LD_OPTS_"+opts.target.ToUpper()+"_"+opts.config.ToUpper() )
-		If copts LD_OPTS.Push( copts )
+		If copts LD_OPTS+=" "+copts
 		
 		copts=GetEnv( "MX2_CC_OPTS_"+opts.target.ToUpper() )
-		If copts CC_OPTS.Push( copts )
+		If copts CC_OPTS+=" "+copts
 		
 		copts=GetEnv( "MX2_CC_OPTS_"+opts.target.ToUpper()+"_"+opts.config.ToUpper() )
-		If copts CC_OPTS.Push( copts )
+		If copts CC_OPTS+=" "+copts
 		
 		copts=GetEnv( "MX2_CPP_OPTS_"+opts.target.ToUpper() )
-		If opts CPP_OPTS.Push( copts )
+		If opts CPP_OPTS+=" "+copts
 		
 		copts=GetEnv( "MX2_CPP_OPTS_"+opts.target.ToUpper()+"_"+opts.config.ToUpper() )
-		If copts CPP_OPTS.Push( copts )
+		If copts CPP_OPTS+=" "+copts
 		
+		copts=GetEnv( "MX2_AS_OPTS" )
+		If copts AS_OPTS+=" "+copts
 	End
 
-	Method Build() Virtual
+	Method Build()
+	
+		If Not CreateDir( module.cacheDir ) Throw New BuildEx( "Error creating dir '"+module.cacheDir+"'" )
+		
+		If opts.reflection
+			CC_OPTS+=" -DBB_REFLECTION"
+			CPP_OPTS+=" -DBB_REFLECTION"
+		Endif
+
+		If opts.verbose=0 Print "Compiling..."
+		
+		Local srcs:=New StringStack
+
+		If opts.productType="app"
+		
+			srcs.Push( module.rfile )
+			
+			For Local imp:=Eachin imports
+			
+				srcs.Push( imp.rfile )
+			Next
+			
+		Endif
+		
+		For Local fdecl:=Eachin module.fileDecls
+		
+			srcs.Push( fdecl.cfile )
+		Next
+		
+		srcs.AddAll( SRC_FILES )
+		
+		Build( srcs )
+	End
+	
+	Method Build( srcs:StringStack ) Virtual
 	End
 	
 	Method Run() Virtual
@@ -267,33 +310,29 @@ Class GccBuildProduct Extends BuildProduct
 	End
 	
 	Method CompileSource:String( src:String )
+	
+		Local rfile:=src.EndsWith( "/_r.cpp" )
 
-		Local obj:=module.cacheDir+MungPath( MakeRelativePath( src,module.cacheDir ) )+".o"
-			
+		Local obj:=module.cacheDir+MungPath( MakeRelativePath( src,module.cacheDir ) )
+		If rfile And opts.reflection obj+="_r"
+		obj+=".o"
+		
 		Local ext:=ExtractExt( src ).ToLower()
 						
 		Local cmd:="",isasm:=False
-			
+
 		Select ext
 		Case ".c",".m"
 			
-			cmd=CC_CMD+" "+CC_OPTS.Join( " " )
-			cmd+=" -I~q"+MODULES_DIR+"monkey/native~q"
-			cmd+=" -I~q"+MODULES_DIR+"~q"
-			If APP_DIR cmd+=" -I~q"+APP_DIR+"~q"
+			cmd=CC_CMD+CC_OPTS+" -c"
 				
 		Case ".cc",".cxx",".cpp",".mm"
 
-			cmd=CXX_CMD+" "+CPP_OPTS.Join( " " )
-			cmd+=" -I~q"+MODULES_DIR+"monkey/native~q"
-			cmd+=" -I~q"+MODULES_DIR+"~q"
-			If APP_DIR cmd+=" -I~q"+APP_DIR+"~q"
+			cmd=CXX_CMD+CPP_OPTS+" -c"
 
 		Case ".asm",".s"
-			
-			cmd=AS_CMD
-			Local opts:=GetEnv( "MX2_AS_OPTS" )
-			If opts cmd+=" "+opts
+		
+			cmd=AS_CMD+AS_OPTS
 			
 			isasm=True
 		End
@@ -301,37 +340,36 @@ Class GccBuildProduct Extends BuildProduct
 		'Check dependancies
 		'			
 		Local objTime:=GetFileTime( obj )
-			
+
+		'create deps file name
+		'			
 		Local deps:=StripExt( obj )+".deps"
-			
+		
 		If opts.fast And objTime>=GetFileTime( src )	'source file up to date?
+		
+			If isasm Return obj
 			
 			Local uptodate:=True
 			
-			If Not isasm
-			
-				If GetFileType( deps )=FILETYPE_NONE
+			If GetFileType( deps )=FILETYPE_NONE
 					
-					If opts.verbose>0 Print "Scanning "+src
+				If opts.verbose>0 Print "Scanning "+src
 				
-					Exec( cmd+" -MM ~q"+src+"~q >~q"+deps+"~q" ) 
-						
-				Endif
-					
-				Local srcs:=LoadString( deps ).Split( " \" )
-					
-				For Local i:=1 Until srcs.Length
-					
-					Local src:=srcs[i].Trim().Replace( "\ "," " )
-					
-					If GetFileTime( src )>objTime
-						uptodate=False
-						Exit
-					Endif
-						
-				Next
-				
+				Exec( cmd+" -MM ~q"+src+"~q >~q"+deps+"~q" ) 
 			Endif
+					
+			Local srcs:=LoadString( deps ).Split( " \" )
+					
+			For Local i:=1 Until srcs.Length
+					
+				Local src:=srcs[i].Trim().Replace( "\ "," " )
+					
+				If GetFileTime( src )>objTime
+					uptodate=False
+					Exit
+				Endif
+						
+			Next
 				
 			If uptodate Return obj
 				
@@ -343,8 +381,6 @@ Class GccBuildProduct Extends BuildProduct
 			
 		If opts.verbose>0 Print "Compiling "+src
 			
-		If Not isasm cmd+=" -c"
-		
 		cmd+=" -o ~q"+obj+"~q ~q"+src+"~q"
 			
 		Exec( cmd )
@@ -352,76 +388,68 @@ Class GccBuildProduct Extends BuildProduct
 		Return obj
 	End
 	
-	Method Build() Override
-	
-		If opts.verbose=0 Print "Compiling..."
+	Method Build( srcs:StringStack ) Override
 		
-		If Not CreateDir( module.cacheDir ) Throw New BuildEx( "Error create dir '"+module.cacheDir+"'" )
-
-		For Local src:=Eachin SRC_FILES
-			
-			OBJ_FILES.Push( CompileSource( src ) )
-			
+		Local objs:=New StringStack
+		
+		For Local src:=Eachin srcs
+		
+			objs.Push( CompileSource( src ) )
 		Next
-
-		If opts.productType="module"
-			
-			BuildArchive()
-			
-		Else
-			
-			BuildApp()
-			
-		Endif
 		
+		objs.AddAll( OBJ_FILES )
+		
+		If opts.productType="module"
+		
+			BuildModule( objs )
+		
+		Else
+		
+			BuildApp( objs )
+		End
 	End
 	
-	Method BuildArchive:String()
+	Method BuildModule( objs:StringStack )
 
-		Local outputFile:=module.outputDir+module.name+".a"
-		
-		'AR is slow! This is probably not quite right, but it'll do for now...
-		'
+		Local output:=module.afile
+
 		Local maxObjTime:Long
-		For Local obj:=Eachin OBJ_FILES
+		For Local obj:=Eachin objs
 			maxObjTime=Max( maxObjTime,GetFileTime( obj ) )
 		Next
-		If GetFileTime( outputFile )>maxObjTime Return outputFile
+		If GetFileTime( output )>maxObjTime Return
 		
-		If opts.verbose>=0 Print "Archiving "+outputFile+"..."
+		If opts.verbose>=0 Print "Archiving "+output+"..."
 		
-		DeleteFile( outputFile )
+		DeleteFile( output )
 		
-		Local objs:=""
-		
-		For Local i:=0 Until OBJ_FILES.Length
-			
-			objs+=" ~q"+OBJ_FILES.Get( i )+"~q"
-			
-			If objs.Length<1000 And i<OBJ_FILES.Length-1 Continue
+		Local args:=""
 
-			Local cmd:=AR_CMD+" q ~q"+outputFile+"~q"+objs
+		For Local i:=0 Until objs.Length
+			
+			args+=" ~q"+objs.Get( i )+"~q"
+			
+			If args.Length<1000 And i<objs.Length-1 Continue
+
+			Local cmd:=AR_CMD+" q ~q"+output+"~q"+args
 
 			Exec( cmd )
 			
-			objs=""
+			args=""
 			
 		Next
-		
-		Return outputFile
-		
 	End
 	
-	Method BuildApp() Virtual
+	Method BuildApp( objs:StringStack ) Virtual
 	
 		outputFile=opts.product
 		If Not outputFile outputFile=module.outputDir+module.name
 		
 		Local assetsDir:=ExtractDir( outputFile )+"assets/"
+		
 		Local dllsDir:=ExtractDir( outputFile )
 
-		Local cmd:=LD_CMD
-		cmd+=" "+LD_OPTS.Join( " " )
+		Local cmd:=LD_CMD+LD_OPTS
 		
 		Select opts.target
 		Case "windows"
@@ -487,7 +515,7 @@ Class GccBuildProduct Extends BuildProduct
 		
 		Local lnkFiles:=""
 		
-		For Local obj:=Eachin OBJ_FILES
+		For Local obj:=Eachin objs
 			lnkFiles+=" ~q"+obj+"~q"
 		Next
 		
@@ -499,8 +527,8 @@ Class GccBuildProduct Extends BuildProduct
 #Endif
 		Endif
 		
-		For Local lib:=Eachin MOD_LIBS
-			lnkFiles+=" ~q"+lib+"~q"
+		For Local imp:=Eachin imports
+			lnkFiles+=" ~q"+imp.afile+"~q"
 		Next
 
 		If opts.wholeArchive 
@@ -545,13 +573,82 @@ Class GccBuildProduct Extends BuildProduct
 	
 End
 
-Class AndroidBuildProduct Extends BuildProduct
+Class IosBuildProduct Extends GccBuildProduct
 
 	Method New( module:Module,opts:BuildOpts )
+	
 		Super.New( module,opts )
 	End
 	
-	Method Build() Override
+	Method BuildApp( objs:StringStack ) Override
+	
+		BuildModule( objs )
+		
+		Local arc:=module.afile
+
+		Local outputFile:=opts.product+"libmx2_main.a"
+		
+		Local cmd:="libtool -static -o ~q"+outputFile+"~q ~q"+arc+"~q"
+		
+		If opts.wholeArchive cmd+=" -Wl,--whole-archive"
+		
+		For Local imp:=Eachin imports
+			cmd+=" ~q"+imp.afile+"~q"
+		Next
+
+		If opts.wholeArchive cmd+=" -Wl,--no-whole-archive"
+		
+		For Local lib:=Eachin LD_SYSLIBS
+			If lib.ToLower().EndsWith( ".a~q" ) cmd+=" "+lib
+		Next
+		
+		Exec( cmd )
+		
+		CopyAssets( opts.product+"assets/" )
+	End
+	
+	Method Run() Override
+	End
+	
+End
+
+Function SplitOpts:String[]( opts:String )
+
+	Local out:=New StringStack
+
+	Local i0:=0
+	Repeat
+	
+		While i0<opts.Length And opts[i0]<=32
+			i0+=1
+		Wend
+		If i0>=opts.Length Exit
+
+		Local i1:=opts.Find( " ",i0 )
+		If i1=-1 i1=opts.Length
+
+		Local i2:=opts.Find( "~q",i0 )
+		If i2<>-1 And i2<i1
+			i1=opts.Find( "~q",i2+1 )+1
+			If Not i1 i1=opts.Length
+		Endif
+
+		out.Push( opts.Slice( i0,i1 ) )
+		i0=i1+1
+	
+	Forever
+	
+	Return out.ToArray()
+End
+
+Class AndroidBuildProduct Extends BuildProduct
+
+	Method New( module:Module,opts:BuildOpts )
+
+		Super.New( module,opts )
+	End
+	
+	Method Build( srcs:StringStack ) Override
 	
 		Local jniDir:=module.outputDir+"jni/"
 		
@@ -575,19 +672,19 @@ Class AndroidBuildProduct Extends BuildProduct
 		buf.Push( "APP_STL := c++_static" )
 		
 		CSaveString( buf.Join( "~n" ),jniDir+"Application.mk" )
+		
 		buf.Clear()
 
 		buf.Push( "LOCAL_PATH := $(call my-dir)" )
 		
 		If opts.productType="app"
 		
-			For Local extmod:=Eachin Builder.modules
-				If extmod=module continue
+			For Local imp:=Eachin imports
 			
-				Local src:=extmod.outputDir+"obj/local/$(TARGET_ARCH_ABI)/libmx2_"+extmod.name+".a"
+				Local src:=imp.outputDir+"obj/local/$(TARGET_ARCH_ABI)/libmx2_"+imp.name+".a"
 					
 				buf.Push( "include $(CLEAR_VARS)" )
-				buf.Push( "LOCAL_MODULE := mx2_"+extmod.name )
+				buf.Push( "LOCAL_MODULE := mx2_"+imp.name )
 				buf.Push( "LOCAL_SRC_FILES := "+src )
 				buf.Push( "include $(PREBUILT_STATIC_LIBRARY)" )
 			Next
@@ -611,18 +708,18 @@ Class AndroidBuildProduct Extends BuildProduct
 			buf.Push( "LOCAL_MODULE := mx2_"+module.name )
 		Endif
 		
-		buf.Push( "LOCAL_CFLAGS += -I~q"+MODULES_DIR+"monkey/native~q" )
-		buf.Push( "LOCAL_CFLAGS += -I~q"+MODULES_DIR+"~q" )
-		If APP_DIR buf.Push( "LOCAL_CFLAGS += -I~q"+APP_DIR+"~q" )
+		Local cc_opts:=SplitOpts( CC_OPTS )
 		
-		For Local opt:=Eachin CC_OPTS
-			If opt.StartsWith( "-I" ) buf.Push( "LOCAL_CFLAGS += "+opt )
+		For Local opt:=Eachin cc_opts
+			If opt.StartsWith( "-I" ) Or opt.StartsWith( "-D" ) buf.Push( "LOCAL_CFLAGS += "+opt )
 		Next
 		
 		buf.Push( "LOCAL_SRC_FILES := \" )
-		For Local src:=Eachin SRC_FILES
+		
+		For Local src:=Eachin srcs
 			buf.Push( MakeRelativePath( src,jniDir )+" \" )
 		Next
+		
 		buf.Push( "" )
 
 		buf.Push( "LOCAL_CFLAGS += -DGL_GLEXT_PROTOTYPES" )
@@ -630,10 +727,10 @@ Class AndroidBuildProduct Extends BuildProduct
 		If opts.productType="app"
 		
 			buf.Push( "LOCAL_STATIC_LIBRARIES := \" )
-			For Local extmod:=Eachin Builder.modules.Backwards()
-				If extmod=module Continue
+			For Local imp:=Eachin imports	'Builder.modules.Backwards()
+				If imp=module Continue
 				
-				buf.Push( "mx2_"+extmod.name+" \" )
+				buf.Push( "mx2_"+imp.name+" \" )
 			Next
 			buf.Push( "" )
 			
@@ -661,7 +758,6 @@ Class AndroidBuildProduct Extends BuildProduct
 
 			buf.Push( "include $(BUILD_STATIC_LIBRARY)" )
 		Endif
-
 		
 		CSaveString( buf.Join( "~n" ),jniDir+"Android.mk" )
 		buf.Clear()
@@ -682,42 +778,6 @@ Class AndroidBuildProduct Extends BuildProduct
 		
 		Endif
 		
-	End
-	
-End
-
-Class IosBuildProduct Extends GccBuildProduct
-
-	Method New( module:Module,opts:BuildOpts )
-		Super.New( module,opts )
-	End
-	
-	Method BuildApp() Override
-	
-		Local arc:=BuildArchive()
-
-		Local outputFile:=opts.product+"libmx2_main.a"
-		
-		Local cmd:="libtool -static -o ~q"+outputFile+"~q ~q"+arc+"~q"
-		
-		If opts.wholeArchive cmd+=" -Wl,--whole-archive"
-		
-		For Local lib:=Eachin MOD_LIBS
-			cmd+=" ~q"+lib+"~q"
-		Next
-
-		If opts.wholeArchive cmd+=" -Wl,--no-whole-archive"
-		
-		For Local lib:=Eachin LD_SYSLIBS
-			If lib.ToLower().EndsWith( ".a~q" ) cmd+=" "+lib
-		Next
-		
-		Exec( cmd )
-		
-		CopyAssets( opts.product+"assets/" )
-	End
-	
-	Method Run() Override
 	End
 	
 End

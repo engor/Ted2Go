@@ -21,14 +21,16 @@ Using mx2..
 
 Global StartDir:String
 
-Const TestArgs:="mx2cc makeapp -apptype=console -clean -verbose=3 src/mx2cc/test.monkey2"
+Const TestArgs:="mx2cc makedocs"'mods -clean -target=android"' -config=release monkey lua"
+
+'Const TestArgs:="mx2cc makeapp -apptype=console src/mx2cc/test.monkey2"
 
 'To build with old mx2cc...
 '
 'Creates: src/mx2cc/mx2cc.buildv.VERSION/windows_release/mx2cc.exe
 '
 'Const TestArgs:="mx2cc makemods -clean -config=release monkey libc miniz stb-image stb-image-write stb-vorbis std"
-'Const TestArgs:="mx2cc makeapp -build -apptype=console -clean -config=release src/mx2cc/mx2cc.monkey2"
+'Const TestArgs:="mx2cc makeapp -run -apptype=console -clean -config=release src/mx2cc/mx2cc.monkey2"
 
 'To build rasbian mx2cc...
 '
@@ -37,7 +39,8 @@ Const TestArgs:="mx2cc makeapp -apptype=console -clean -verbose=3 src/mx2cc/test
 
 Function Main()
 
-	Print "mx2cc version "+MX2CC_VERSION
+	Print ""
+	Print "Mx2cc version "+MX2CC_VERSION
 	
 	StartDir=CurrentDir()
 	
@@ -58,8 +61,37 @@ Function Main()
 
 	If args.Length<2
 
-		Print "Usage: mx2cc makeapp|makemods|makedocs [-build|-run] [-clean] [-verbose[=1|2|3]] [-target=desktop|emscripten] [-config=debug|release] [-apptype=gui|console] source|modules..."
-		Print "Defaults: -run -target=desktop -config=debug -apptype=gui"
+		Print ""
+		Print "Mx2cc usage: mx2cc action options sources"
+		Print ""
+		Print "Actions:"
+		print "  makeapp      - make an application"
+		print "  makemods     - make modules"
+		print "  makedocs     - make docs"
+		Print ""
+		Print "Options:"
+		Print "  -quiet       - emit less info when building"
+		Print "  -verbose     - emit more info when building"
+		Print "  -parse       - parse only"
+		Print "  -semant      - parse and semant"
+		Print "  -translate   - parse, semant and translate"
+		Print "  -build       - parse, semant, translate and build"
+		Print "  -run         - the works! The default."
+		Print "  -apptype=    - app type to make, one of : gui, console. Defaults to gui."
+		print "  -target=     - build target, one of: windows, macos, linux, emscripten, android, ios, desktop. Desktop is alias for current host. Defaults to desktop."
+		Print "  -config=     - build config, one of: debug, release. Defaults to debug."
+		Print ""
+		Print "Sources:"
+		Print "  for makeapp  - single monkey2 source file."
+		Print "  for makemods - list of modules, or nothing to make all modules."
+		Print "  for makedocs - list of modules, or nothing to make all docs."
+
+#If __DESKTOP_TARGET__
+		CreateDir( "tmp" )
+		system( "g++ --version >tmp/_v.txt" )
+		Print ""
+		Print LoadString( "tmp/_v.txt" )
+#Endif
 
 #If __CONFIG__="release"
 		exit_(0)
@@ -125,7 +157,6 @@ Function MakeApp:Bool( args:String[] )
 	New BuilderInstance( opts )
 	
 	Builder.Parse()
-	If Builder.errors.Length Return False
 	If opts.passes=1 
 		If opts.geninfo
 			Local gen:=New ParseInfoGenerator
@@ -134,6 +165,7 @@ Function MakeApp:Bool( args:String[] )
 		Endif
 		Return True
 	Endif
+	If Builder.errors.Length Return False
 	
 	Builder.Semant()
 	If Builder.errors.Length Return False
@@ -267,6 +299,15 @@ Function MakeDocs:Bool( args:String[] )
 		
 	Next
 	
+	Local tree:=man_indices.Join( "," )
+	If tree tree+=","
+	tree+="{ text:'Modules reference',children:["+api_indices.Join( "," )+"] }"
+	
+	Local page:=LoadString( "docs/docs_template.html" )
+	page=page.Replace( "${DOCS_TREE}",tree )
+	SaveString( page,"docs/docs.html" )
+	
+	#rem
 	Local page:=LoadString( "docs/modules_template.html" )
 	page=page.Replace( "${API_INDEX}",api_indices.Join( "," ) )
 	SaveString( page,"docs/modules.html" )
@@ -274,7 +315,8 @@ Function MakeDocs:Bool( args:String[] )
 	page=LoadString( "docs/manuals_template.html" )
 	page=page.Replace( "${MAN_INDEX}",man_indices.Join( "," ) )
 	SaveString( page,"docs/manuals.html" )
-	
+	#end
+		
 	Return True
 End
 
@@ -301,6 +343,8 @@ Function ParseOpts:String[]( opts:BuildOpts,args:String[] )
 				opts.passes=1
 			Case "-clean"
 				opts.clean=True
+			Case "-quiet"
+				opts.verbose=-1
 			Case "-verbose"
 				opts.verbose=1
 			Case "-geninfo"

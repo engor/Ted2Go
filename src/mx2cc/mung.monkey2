@@ -56,6 +56,7 @@ Function MungArg:String( type:Type )
 		Case Type.FloatType	Return "f"
 		Case Type.DoubleType	Return "d"
 		Case Type.StringType	Return "s"
+		Case Type.VariantType	Return "q"
 		End
 		Return "????? MungArg ?????"
 	End

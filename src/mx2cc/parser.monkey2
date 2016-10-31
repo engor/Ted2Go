@@ -81,15 +81,102 @@ Class Parser
 		Return ident
 	End
 	
+	Method Meta:String()
+	
+		Return _meta
+	End
+	
+	Method ParseMeta:String()
+	
+		If Not CParse( "[" ) Return ""
+		
+		Local meta:=""
+		Repeat
+		
+			Local key:=ParseIdent()
+			
+			Parse( "=" )
+
+			Local value:=""
+			
+			Select TokeType
+			Case TOKE_INTLIT,TOKE_FLOATLIT
+				value=Parse()
+			Case TOKE_STRINGLIT
+				value=DequoteMx2String( Parse() )
+				If value.Contains( "~~~n" ) Error( "Invalid meta data value!" )
+			Default
+				Error( "Expecting literal meta value" )
+			End
+			
+			If meta meta+="~~~n"
+			meta+=key+"="+value
+			
+		Until Not CParse( "," )
+			
+		Parse( "]" )
+		ParseEol()
+		
+		Return meta
+	End
+	
 	Method ParseDecls:Decl[]( flags:Int,fileScope:Bool )
 	
 		Local decls:=New Stack<Decl>
 		
-		While Toke
+		While Toke And Toke<>"end"
+		
 			Try
+			
 				Select Toke
-				Case "end"
-					Exit
+				Case "namespace"
+					If Not fileScope Or decls.Length Or _usings.Length Error( "'Namespace' must appear at the start of the file" )
+					If _fdecl.nmspace Error( "Duplicate namespace declaration" )
+					Bump()					
+					_fdecl.docs=Docs()
+					_fdecl.nmspace=ParseNamespaceIdent()
+					ParseEol()
+					Continue
+				Case "using"
+					If Not fileScope Or decls.Length Error( "Usings must appear before any declarations in a file" )
+					Bump()
+					_usings.Push( ParseUsingIdent() )
+					ParseEol()
+					Continue
+				Case "extern"
+					If Not fileScope Error( "'Extern' must appear at file scope" )
+					Bump()
+					flags=(flags & ~DECL_ACCESSMASK) | DECL_EXTERN
+					If CParse( "private" )
+						flags|=DECL_PRIVATE
+					Else
+						CParse( "public" )
+						flags|=DECL_PUBLIC
+					Endif
+					ParseEol()
+					Continue
+				Case "public","private"
+					flags&=~DECL_ACCESSMASK
+					If fileScope flags&=~DECL_EXTERN
+					If CParse( "private" )
+						flags|=DECL_PRIVATE
+					Else
+						Parse( "public" )
+						flags|=DECL_PUBLIC
+					Endif
+					ParseEol()
+					Continue
+				Case "protected"
+					If fileScope Error( "'Protected' can only be used in a class, struct or interface" )
+					Bump()
+					flags=(flags & ~DECL_ACCESSMASK)|DECL_PROTECTED
+					ParseEol()
+					Continue
+				End
+			
+				_meta=ParseMeta()
+				
+				Select Toke
 				Case "const"
 					ParseVars( decls,flags )
 				Case "global"
@@ -108,8 +195,6 @@ Class Parser
 					decls.Push( ParseClass( flags ) )
 				Case "interface"
 					decls.Push( ParseClass( flags ) )
-'				Case "protocol"
-'					decls.Push( ParseClass( flags ) )
 				Case "enum"
 					decls.Push( ParseEnum( flags ) )
 				Case "function"
@@ -123,50 +208,16 @@ Class Parser
 				Case "property"
 					If fileScope Error( "Properties can only be declared inside a class, struct or interface" )
 					decls.Push( ParseProperty( flags ) )
-				Case "namespace"
-					If Not fileScope Or decls.Length Or _usings.Length Error( "'Namespace' must appear at the start of the file" )
-					If _fdecl.nmspace Error( "Duplicate namespace declaration" )
-					Bump()					
-					_fdecl.docs=Docs()
-					_fdecl.nmspace=ParseNamespaceIdent()
-					ParseEol()
-				Case "using"
-					If Not fileScope Or decls.Length Error( "Usings must appear before any declarations in a file" )
-					Bump()
-					_usings.Push( ParseUsingIdent() )
-					ParseEol()
-				Case "extern"
-					If Not fileScope Error( "'Extern' must appear at file scope" )
-					Bump()
-					flags=(flags & ~DECL_ACCESSMASK) | DECL_EXTERN
-					If CParse( "private" )
-						flags|=DECL_PRIVATE
-					Else
-						CParse( "public" )
-						flags|=DECL_PUBLIC
-					Endif
-					ParseEol()
-				Case "public","private"
-					flags&=~DECL_ACCESSMASK
-					If fileScope flags&=~DECL_EXTERN
-					If CParse( "private" )
-						flags|=DECL_PRIVATE
-					Else
-						Parse( "public" )
-						flags|=DECL_PUBLIC
-					Endif
-					ParseEol()
-				Case "protected"
-					If fileScope Error( "'Protected' can only be used in a class, struct or interface" )
-					Bump()
-					flags=(flags & ~DECL_ACCESSMASK)|DECL_PROTECTED
-					ParseEol()
 				Default
 					Error( "Unexpected token '"+Toke+"'" )
 				End
+				
 			Catch ex:ParseEx
 				SkipToNextLine()
 			End
+			
+			_meta=""
+			
 		Wend
 		
 		Return decls.ToArray()
@@ -197,6 +248,7 @@ Class Parser
 				decl.srcpos=SrcPos
 				decl.kind=kind
 				decl.docs=Docs()
+				decl.meta=Meta()
 				decl.flags=flags
 				decl.ident=ParseIdent()
 				decl.genArgs=ParseGenArgs()
@@ -229,6 +281,7 @@ Class Parser
 				decl.srcpos=SrcPos
 				decl.kind=kind
 				decl.docs=Docs()
+				decl.meta=Meta()
 				decl.flags=flags
 				decl.ident=ParseIdent()
 				
@@ -262,6 +315,7 @@ Class Parser
 		decl.srcpos=SrcPos
 		decl.kind=Parse()
 		decl.docs=Docs()
+		decl.meta=Meta()
 		decl.ident="?????"
 		
 		flags&=(DECL_ACCESSMASK|DECL_EXTERN)
@@ -365,6 +419,7 @@ Class Parser
 		Local srcpos:=SrcPos
 		Local kind:=Parse()
 		Local docs:=Docs()
+		Local meta:=Meta()
 		Local ident:="?????"
 		Local genArgs:String[]
 		Local type:FuncTypeExpr
@@ -519,6 +574,7 @@ Class Parser
 		decl.srcpos=srcpos
 		decl.kind=kind
 		decl.docs=docs
+		decl.meta=meta
 		decl.ident=ident
 		decl.flags=flags
 		decl.genArgs=genArgs
@@ -564,6 +620,7 @@ Class Parser
 		decl.flags=flags
 		decl.kind=Parse()
 		decl.docs=Docs()
+		decl.meta=Meta()
 		
 		Try
 			decl.ident=ParseIdent()
@@ -592,6 +649,7 @@ Class Parser
 				decl.flags=DECL_PUBLIC|(flags & DECL_EXTERN)
 				decl.ident=ParseIdent()
 				decl.docs=Docs()
+				decl.meta=Meta()
 				
 				If flags & DECL_EXTERN
 					If CParse( "=" ) decl.symbol=ParseString()
@@ -637,6 +695,7 @@ Class Parser
 		decl.flags=flags
 		decl.kind="property"
 		decl.docs=Docs()
+		decl.meta=Meta()
 		
 		Local func:=ParseFunc( flags )
 		decl.ident=func.ident
@@ -1983,6 +2042,7 @@ Class Parser
 	
 	Field _fdecl:FileDecl
 	Field _toker:Toker
+	Field _meta:String
 	Field _stateStack:=New Stack<Toker>
 	Field _usings:=New StringStack
 	Field _errors:=New Stack<ParseEx>

@@ -55,6 +55,7 @@ Class PropertyList Extends FuncList
 			Try
 				setFunc=New FuncValue( pdecl.setFunc,scope,Null,Null )
 				setFunc.Semant()
+				If type=Type.VoidType type=setFunc.ftype.argTypes[0]
 				PushFunc( setFunc )
 			Catch ex:SemantEx
 			End

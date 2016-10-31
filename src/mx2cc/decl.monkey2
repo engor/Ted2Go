@@ -28,6 +28,7 @@ Class Decl Extends PNode
 	Field flags:Int
 	Field symbol:String
 	Field docs:String
+	Field meta:String
 	
 	Field members:Decl[]
 	

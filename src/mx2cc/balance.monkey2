@@ -31,6 +31,8 @@ End
 
 Function BalancePrimTypes:Type( lhs:PrimType,rhs:PrimType )
 
+	If lhs=Type.VariantType Or rhs=Type.VariantType Return Type.VariantType
+
 	If lhs=Type.StringType Or rhs=Type.StringType Return Type.StringType
 	
 	If lhs=Type.BoolType Or rhs=Type.BoolType Return Type.BoolType

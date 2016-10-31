@@ -26,6 +26,9 @@ Class Module
 	Field cacheDir:String
 	Field hfileDir:String
 	Field cfileDir:String
+	
+	Field afile:String
+	Field rfile:String
 
 	Field fileDecls:=New Stack<FileDecl>
 	Field fileScopes:=New Stack<FileScope>
@@ -53,6 +56,10 @@ Class Module
 		hfileDir=outputDir+"include/"
 		
 		cfileDir=outputDir+"src/"
+		
+		afile=outputDir+name+".a"
+		
+		rfile=hfileDir+"_r.cpp"
 	End
 End
 
