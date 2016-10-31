@@ -37,14 +37,11 @@ Class ManPage
 		
 		Method ToJson:JsonObject( baseDir:String )
 		
-			Local url:=MakeRelativePath( page.Page,baseDir )
-			If slug url+="#"+slug
-
 			Local jobj:=New JsonObject
 			jobj["text"]=New JsonString( text )
 
 			Local jdata:=New JsonObject
-			jdata["page"]=New JsonString( url )
+			jdata["page"]=New JsonString( page.Page+"#"+slug )
 			jobj["data"]=jdata
 
 			If children.Length
@@ -59,6 +56,11 @@ Class ManPage
 			
 		End
 
+	End
+	
+	Property Path:String()
+	
+		Return _path
 	End
 	
 	Property Page:String()
@@ -76,15 +78,16 @@ Class ManPage
 		Return _html
 	End
 	
-	Function ImportManPage:Node( path:String,basedir:String,linkResolver:MarkdownBuffer.LinkResolver,pages:StringMap<ManPage> )
+	Function ImportManPage:Node( path:String,module:Module,linkResolver:MarkdownBuffer.LinkResolver,pages:StringMap<ManPage> )
 	
 		Local page:=New ManPage
 		pages[path]=page
 		
 		Local root:=New Node( 0,Null,page )
 		Local node:=root
-
-		page._page=basedir+"docs/__MANPAGES__/"+StripDir( path )+".html"	'path+".html"
+		
+		page._path=module.baseDir+"docs/__MANPAGES__/"+StripDir( path )+".html"
+		page._page=module.name+":"+StripDir( StripExt( path ) )
 		page._root=root
 
 		Local md:=New MarkdownBuffer( ExtractDir( path ),linkResolver,Lambda:Bool( tag:String,arg:String )
@@ -107,7 +110,7 @@ Class ManPage
 				
 				If Not ExtractRootDir( arg ) arg=ExtractDir( path )+arg
 				
-				Local node:=ImportManPage( arg,basedir,linkResolver,pages )
+				Local node:=ImportManPage( arg,module,linkResolver,pages )
 				
 				node.SetParent( root )
 				
@@ -182,11 +185,11 @@ Class ManPage
 		Return root
 	End
 	
-	Function MakeManPages:StringMap<ManPage>( path:String,basedir:String,linkResolver:MarkdownBuffer.LinkResolver )
+	Function MakeManPages:StringMap<ManPage>( path:String,module:Module,linkResolver:MarkdownBuffer.LinkResolver )
 	
 		Local pages:=New StringMap<ManPage>
 		
-		ImportManPage( path,basedir,linkResolver,pages )
+		ImportManPage( path,module,linkResolver,pages )
 		
 		Return pages
 	End
@@ -194,6 +197,7 @@ Class ManPage
 	Private
 	
 	Field _root:Node
+	Field _path:String
 	Field _page:String	
 	Field _html:String
 

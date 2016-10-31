@@ -4,16 +4,101 @@ Namespace mx2
 Class Translator_CPP Extends Translator
 
 	Field _lambdaId:Int
-	
 	Field _gctmps:=0
 	
-	Method Translate( fdecl:FileDecl ) 'Override
+	Method Reset() Override
+		Super.Reset()
+		_lambdaId=0
+		_gctmps=0
+	End
 	
-		_incs[fdecl.ident]=fdecl
+	Method TranslateModule:Bool( module:Module )
+	
+		For Local fdecl:=Eachin module.fileDecls
+		
+			If Builder.opts.verbose>0 Print "Translating "+fdecl.path
+		
+			Try
+				TranslateFile( fdecl )
+			Catch ex:TransEx
+				Return False
+			End
+
+		Next
+		
+		Return True
+	End
+	
+	Method TranslateTypeInfo( module:Module )
+	
+		Reset()
+	
+		Emit( "#include <bbmonkey.h>" )
+		
+		EmitBr()
+		
+		Emit( "#ifdef BB_REFLECTION" )
+		
+		BeginDeps()
+		
+		For Local fdecl:=Eachin module.fileDecls
+		
+			EmitTypeInfo( fdecl )
+	
+			For Local ctype:=Eachin fdecl.classes
+			
+				EmitTypeInfo( ctype )
+				
+			Next
+		
+		Next
+		
+		EndDeps( "" )
+		
+		Emit( "#else" )
+		
+		_deps=New Deps
+		
+		BeginDeps()
+
+		For Local fdecl:=Eachin module.fileDecls
+		
+			For Local ctype:=Eachin fdecl.classes
+			
+				If Not GenTypeInfo( ctype ) Continue
+				
+				Uses( ctype )
+				
+				Local cname:=ClassName( ctype )
+				
+				Emit( "bbTypeInfo *bbGetType("+cname+"* const&){" )
+				Emit( "return &bbObjectTypeInfo::instance;" )
+				Emit( "}" )
+				
+				Emit( "bbTypeInfo *"+cname+"::typeof()const{" )
+				Emit( "return &bbObjectTypeInfo::instance;" )
+				Emit( "}" )
+				
+			Next
+		
+		Next
+		
+		EndDeps( "" )
+		
+		Emit( "#endif" )
+		
+		Local src:=_buf.Join( "~n" )
+		
+		CSaveString( src,module.rfile )
+	End
+	
+	Method TranslateFile( fdecl:FileDecl ) 'Override
+	
+		Reset()
+	
+		_deps.incs[fdecl.ident]=fdecl
 
 		'***** Emit header file *****
-		
-		_buf.Clear()
 		
 		EmitBr()
 		Emit( "#ifndef MX2_"+fdecl.ident.ToUpper()+"_H" )
@@ -94,7 +179,7 @@ Class Translator_CPP Extends Translator
 		_buf.Clear()
 		
 		EmitBr()
-		Emit( "#include ~q"+MakeRelativePath( fdecl.hfile,ExtractDir( fdecl.cfile ) )+"~q" )
+		Emit( "#include ~q"+MakeIncludePath( fdecl.hfile,ExtractDir( fdecl.cfile ) )+"~q" )
 		EmitBr()
 		
 		BeginDeps()
@@ -115,14 +200,10 @@ Class Translator_CPP Extends Translator
 		For Local ctype:=Eachin fdecl.classes
 		
 			EmitClassMembers( ctype )
-			
-			EmitTypeInfo( ctype )
 		Next
 		
-		EmitTypeInfo( fdecl )
-		
 		EmitGlobalInits( fdecl )
-
+		
 		EndDeps( ExtractDir( fdecl.cfile ) )
 		
 		EmitBr()
@@ -150,48 +231,6 @@ Class Translator_CPP Extends Translator
 		
 		Return TransType( type )
 	End
-
-#rem		
-	Method GCVarTypeName:String( type:Type )
-	
-		Local ctype:=TCast<ClassType>( type )
-		If ctype And Not ctype.ExtendsVoid And (ctype.cdecl.kind="class" Or ctype.cdecl.kind="interface") Return ClassName( ctype )
-		
-'		Local atype:=TCast<ArrayType>( type )
-'		If atype Return ArrayName( atype )
-		
-		Return ""
-	End
-	
-	Method ElementType:String( type:Type )
-	
-		Local name:=GCVarTypeName( type )
-		If Not name Return TransType( type )
-		
-		Return "bbGCVar<"+name+">"
-	End
-	
-	Method VarType:String( vvar:VarValue )
-	
-		Local type:=vvar.type
-	
-		Local name:=GCVarTypeName( type )
-		If Not name Return TransType( type )
-		
-		Select vvar.vdecl.kind
-		Case "local"
-			Return name+"*"
-		Case "field"
-			Return "bbGCVar<"+name+">"
-		Case "global","const"
-			Return "bbGCVar<"+name+">"
-'			Return "bbGCRootVar<"+name+">"
-		End
-		
-		TransError( "Translator.VarType()" )
-		Return ""
-	End
-#end
 
 	Method VarProto:String( vvar:VarValue ) Override
 	
@@ -291,7 +330,7 @@ Class Translator_CPP Extends Translator
 		
 		emitted[ClassName( ctype )]=True
 	
-		For Local ctype2:=Eachin _usesTypes.Values
+		For Local ctype2:=Eachin _deps.usesTypes.Values
 		
 			If ctype2.cdecl.IsExtern Or ctype2.transFile<>fdecl Or emitted[ClassName( ctype2 )] Continue
 			
@@ -374,7 +413,7 @@ Class Translator_CPP Extends Translator
 				If Not flist Or it.Key="new" Continue
 				
 				For Local func:=Eachin flist.funcs
-					If Not func.IsMethod Or func.scope<>ctype.superType.scope Continue	'Or func.fdecl.IsExtension Continue
+					If Not func.IsMethod Or func.scope<>ctype.superType.scope Continue
 					Local sym:=FuncName( func )
 					If done[sym] Continue
 					done[sym]=True
@@ -382,8 +421,10 @@ Class Translator_CPP Extends Translator
 				Next
 			Next
 		Endif
-		
-		If GenTypeInfo( ctype ) Emit( "bbTypeInfo *typeof()const;" )
+
+		If GenTypeInfo( ctype )
+			Emit( "bbTypeInfo *typeof()const;" )
+		Endif
 		
 		Emit( "const char *typeName()const{return ~q"+cname+"~q;}" )
 		
@@ -453,6 +494,10 @@ Class Translator_CPP Extends Translator
 
 		Next
 		
+		'Emit dtor
+		'		
+		Emit( "~~"+cname+"();" )
+		
 		'Emit non-ctor methods
 		'
 		Local hasCmp:=False
@@ -490,7 +535,9 @@ Class Translator_CPP Extends Translator
 
 		Emit( "};" )
 		
-		If GenTypeInfo( ctype ) Emit( "bbTypeInfo *bbGetType( "+cname+"* const& );" )
+		If GenTypeInfo( ctype )
+			Emit( "bbTypeInfo *bbGetType( "+cname+"* const& );" )
+		Endif
 		
 		If debug
 			Local tname:=cname
@@ -619,6 +666,11 @@ Class Translator_CPP Extends Translator
 			EmitFunc( func,needsInit )
 		Next
 		
+		'Emit dtor
+		'
+		Emit( cname+"::~"+cname+"(){" )
+		Emit( "}" )
+		
 		'Emit non-ctor methods
 		'
 		Local hasCmp:=False
@@ -708,14 +760,18 @@ Class Translator_CPP Extends Translator
 		Local decls:=New Stack<String>
 	
 		For Local vvar:=Eachin fdecl.globals
-			If Not GenTypeInfo( vvar ) continue
+			If Not GenTypeInfo( vvar ) Continue
 			Local fscope:=vvar.scope.FindFile()
 			If fscope.fdecl<>fdecl Continue
 			If vvar.scope<>fscope Continue
 			
+			Refs( vvar )
+						
 			Local id:=vvar.vdecl.ident
 			Local vname:=VarName( vvar )
-			decls.Push( "bbGlobalDecl(~q"+id+"~q,&"+vname+")" )
+			Local meta:=vvar.vdecl.meta ? ","+EnquoteCppString( vvar.vdecl.meta ) Else ""
+			
+			decls.Push( "bb"+vvar.vdecl.kind.Capitalize()+"Decl(~q"+id+"~q,&"+vname+meta+")" )
 		Next
 		
 		For Local func:=Eachin fdecl.functions
@@ -724,13 +780,17 @@ Class Translator_CPP Extends Translator
 			If fscope.fdecl<>fdecl Continue
 			If func.scope<>fscope Continue
 
+			Refs( func )
+						
 			Local id:=func.fdecl.ident
 			Local fname:=FuncName( func )
+			Local meta:=func.fdecl.meta ? ","+EnquoteCppString( func.fdecl.meta ) Else ""
 			Local args:=TransType( func.ftype.retType )
 			For Local arg:=Eachin func.ftype.argTypes
 				args+=","+TransType( arg )
 			Next
-			decls.Push( "bbFunctionDecl<"+args+">(~q"+id+"~q,&"+fname+")" )
+			
+			decls.Push( "bbFunctionDecl<"+args+">(~q"+id+"~q,&"+fname+meta+")" )
 		Next
 		
 		If decls.Empty Return
@@ -752,6 +812,10 @@ Class Translator_CPP Extends Translator
 	Method EmitTypeInfo( ctype:ClassType )
 	
 		If Not GenTypeInfo( ctype ) Return
+		
+		Uses( ctype )
+		
+'		Print "TypeInfo:"+ctype.ToString()
 	
 		Local fdecl:=ctype.scope.FindFile().fdecl
 
@@ -777,12 +841,19 @@ Class Translator_CPP Extends Translator
 		If ctype.IsClass And Not ctype.IsAbstract
 			If ctype.ctors.Length
 				For Local ctor:=Eachin ctype.ctors
+					If Not GenTypeInfo( ctor ) Continue
+				
+					Uses( ctor.ftype )
+						
+					Local meta:=ctor.fdecl.meta ? EnquoteCppString( ctor.fdecl.meta ) Else ""
+					
 					Local args:=cname
 					For Local arg:=Eachin ctor.ftype.argTypes
 						If args args+=","
 						args+=TransType( arg )
 					Next
-					decls.Push( "bbCtorDecl<"+args+">()" )
+					
+					decls.Push( "bbCtorDecl<"+args+">("+meta+")" )
 				Next
 			Else
 				'default ctor!
@@ -793,43 +864,76 @@ Class Translator_CPP Extends Translator
 		For Local vvar:=Eachin ctype.fields
 			If Not GenTypeInfo( vvar ) Continue
 			
+			Uses( vvar.type )
+			
 			Local id:=vvar.vdecl.ident
 			Local vname:=VarName( vvar )
-			decls.Push( "bbFieldDecl(~q"+id+"~q,&"+cname+"::"+vname+")" )
+			Local meta:=vvar.vdecl.meta ? ","+EnquoteCppString( vvar.vdecl.meta ) Else ""
+			
+			decls.Push( "bbFieldDecl(~q"+id+"~q,&"+cname+"::"+vname+meta+")" )
 		Next
 
 		For Local func:=Eachin ctype.methods
-			If Not GenTypeInfo( func ) Continue
+			If func.fdecl.flags & (DECL_GETTER|DECL_SETTER) Or Not GenTypeInfo( func ) Continue
+			
+			Uses( func.ftype )
 			
 			Local id:=func.fdecl.ident
 			Local fname:=FuncName( func )
+			Local meta:=func.fdecl.meta ? ","+EnquoteCppString( func.fdecl.meta ) Else ""
+			
 			Local args:=cname+","+TransType( func.ftype.retType )
 			For Local arg:=Eachin func.ftype.argTypes
 				args+=","+TransType( arg )
 			Next
-			decls.Push( "bbMethodDecl<"+args+">(~q"+id+"~q,&"+cname+"::"+fname+")" )
+			
+			decls.Push( "bbMethodDecl<"+args+">(~q"+id+"~q,&"+cname+"::"+fname+meta+")" )
+		Next
+		
+		For Local node:=Eachin ctype.scope.nodes.Values
+			Local plist:=Cast<PropertyList>( node )
+			If Not plist Continue
+			If plist.getFunc And Not GenTypeInfo( plist.getFunc ) Continue
+			If plist.setFunc And Not GenTypeInfo( plist.setFunc ) Continue
+			
+			Uses( plist.type )
+			
+			Local id:=plist.pdecl.ident
+			Local args:=cname+","+TransType( plist.type )
+			Local meta:=plist.pdecl.meta ? ","+EnquoteCppString( plist.pdecl.meta ) Else ""
+			Local get:=plist.getFunc ? "&"+cname+"::"+FuncName( plist.getFunc ) Else "0"
+			Local set:=plist.setFunc ? "&"+cname+"::"+FuncName( plist.setFunc ) Else "0"
+			
+			decls.Push( "bbPropertyDecl<"+args+">(~q"+id+"~q,"+get+","+set+meta+")" )
 		Next
 		
 		For Local vvar:=Eachin fdecl.globals
-			If Not GenTypeInfo( vvar ) Continue
-			If vvar.scope<>ctype.scope Continue
+			If vvar.scope<>ctype.scope Or Not GenTypeInfo( vvar ) Continue
+			
+			Uses( vvar.type )
 			
 			Local id:=vvar.vdecl.ident
 			Local vname:=VarName( vvar )
-			decls.Push( "bbGlobalDecl(~q"+id+"~q,&"+vname+")" )
+			Local meta:=vvar.vdecl.meta ? ","+EnquoteCppString( vvar.vdecl.meta ) Else ""
+			
+			decls.Push( "bb"+vvar.vdecl.kind.Capitalize()+"Decl(~q"+id+"~q,&"+vname+meta+")" )
 		Next
 		
 		For Local func:=Eachin fdecl.functions
-			If Not GenTypeInfo( func ) Continue
-			If func.scope<>ctype.scope Continue
+			If func.scope<>ctype.scope Or Not GenTypeInfo( func ) Continue
+			
+			Uses( func.ftype )
 			
 			Local id:=func.fdecl.ident
 			Local fname:=FuncName( func )
+			Local meta:=func.fdecl.meta ? ","+EnquoteCppString( func.fdecl.meta ) Else ""
+			
 			Local args:=TransType( func.ftype.retType )
 			For Local arg:=Eachin func.ftype.argTypes
 				args+=","+TransType( arg )
 			Next
-			decls.Push( "bbFunctionDecl<"+args+">(~q"+id+"~q,&"+fname+")" )
+			
+			decls.Push( "bbFunctionDecl<"+args+">(~q"+id+"~q,&"+fname+meta+")" )
 		Next
 		
 		Emit( "return bbMembers("+decls.Join( "," )+");" )
@@ -1507,7 +1611,7 @@ Class Translator_CPP Extends Translator
 		Case Type.StringType
 		
 			Local str:=value.value
-			If str.Length Return "bbString(L"+EnquoteCppString( str )+","+str.Length+")"
+			If str.Length Return "bbString("+EnquoteCppString( str )+","+str.Length+")"
 			Return "bbString()"
 		End
 		
@@ -1881,18 +1985,54 @@ Class Translator_CPP Extends Translator
 
 End
 
+#rem
+Function GenTypeInfo:Bool( type:Type )
+
+	If type=Type.VoidType Return true
+
+	If TCast<PrimType>( type ) Return True
+	
+	Local ctype:=TCast<ClassType>( type )
+	If ctype Return GenTypeInfo( ctype )
+
+	Local atype:=TCast<ArrayType>( type )
+	If atype Return GenTypeInfo( atype.elemType )
+	
+	Local ptype:=TCast<PointerType>( type )
+	If ptype Return GenTypeInfo( ptype.elemType )
+	
+	Local ftype:=TCast<FuncType>( type )
+	If ftype Return GenTypeInfo( ftype )
+	
+	Return False
+End
+
+Function GenTypeInfo:Bool( ftype:FuncType )
+
+	If Not GenTypeInfo( ftype.retType ) Return False
+	
+	For Local arg:=Eachin ftype.argTypes
+		If Not GenTypeInfo( arg ) Return False
+	Next
+	
+	Return True
+End
+#end
+
 Function GenTypeInfo:Bool( vvar:VarValue )
 
-	Return vvar.vdecl.kind="field" Or vvar.vdecl.kind="global"
+	If vvar.vdecl.kind<>"field" And vvar.vdecl.kind="global" And vvar.vdecl.kind="const" Return False
+	
+	Return True	'GenTypeInfo( vvar.type )
 End
 
 Function GenTypeInfo:Bool( func:FuncValue )
 
 	If func.fdecl.kind<>"method" And func.fdecl.kind<>"function" Return False
 
-	If func.IsExtension Return Null
+	If func.IsExtension Return False
 	
-	Return True
+	Return True	'GenTypeInfo( func.ftype )
 End
 
 Function GenTypeInfo:Bool( ctype:ClassType )
@@ -1902,6 +2042,7 @@ Function GenTypeInfo:Bool( ctype:ClassType )
 	'This 'sort of' works, but no generics just yet!
 	If ctype.types Or ctype.scope.IsInstanceOf Return False
 	
+	'No extensions yet either
 	If ctype.cdecl.IsExtension Return False
 	
 	Return True

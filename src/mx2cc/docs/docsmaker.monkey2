@@ -14,7 +14,6 @@ Class DocsMaker
 		_md=New MarkdownBuffer( "",Lambda:String( link:String )
 			Return ResolveLink( link,_linkScope )
 		End )
-		
 	End
 	
 	Method MakeManPages( module:Module )
@@ -25,12 +24,13 @@ Class DocsMaker
 		DeleteDir( module.baseDir+"docs/__MANPAGES__",True )
 		CreateDir( module.baseDir+"docs/__MANPAGES__" )
 		
-		Local pages:=ManPage.MakeManPages( path,module.baseDir,Lambda:String( link:String )
+		Local pages:=ManPage.MakeManPages( path,module,Lambda:String( link:String )
 			Return ResolveLink( link,_linkScope )
 		End )
 		
-		Local template:=stringio.LoadString( module.baseDir+"docs/manuals_page_template.html" )
-		If Not template template=stringio.LoadString( "docs/manuals_page_template.html" )
+'		Local pages:=ManPage.MakeManPages( path,module.baseDir,Lambda:String( link:String )
+'			Return ResolveLink( link,_linkScope )
+'		End )
 		
 		For Local it:=Eachin pages
 		
@@ -46,13 +46,13 @@ Class DocsMaker
 			Local mod_dir:="../.."
 			Local mx2_dir:=mod_dir+"/../.."
 			
-			Local html:=template.Replace( "${CONTENT}",page.HtmlSource )
+			Local html:=_pageTemplate.Replace( "${CONTENT}",page.HtmlSource )
 			
 			html=html.Replace( "${MX2_DIR}",mx2_dir )
 			html=html.Replace( "${MOD_DIR}",mod_dir )
 			html=html.Replace( "${CD}",cd )
 			
-			SaveString( html,page.Page )
+			SaveString( html,page.Path )
 		
 		Next
 		
@@ -88,7 +88,8 @@ Class DocsMaker
 		_module=module
 		
 		_pagesDir=_module.baseDir+PAGES_DIR
-		_pageTemplate=stringio.LoadString( "docs/modules_page_template.html" )
+		
+		_pageTemplate=stringio.LoadString( "docs/docs_page_template.html" )
 		
 		DeleteDir( _pagesDir,True )
 		CreateDir( _pagesDir,True )

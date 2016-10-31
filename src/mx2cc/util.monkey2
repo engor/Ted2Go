@@ -55,12 +55,11 @@ Global MODULES_DIR:String
 
 Function MakeIncludePath:String( path:String,baseDir:String )
 
-'	Return MakeRelativePath( path,baseDir )
-'	Return path
-
-	If path.StartsWith( MODULES_DIR ) Return path.Slice( MODULES_DIR.Length )
+	If MODULES_DIR And path.StartsWith( MODULES_DIR ) Return path.Slice( MODULES_DIR.Length )
 	
 	If APP_DIR And path.StartsWith( APP_DIR ) Return path.Slice( APP_DIR.Length )
+	
+	If baseDir Return MakeRelativePath( path,baseDir )
 	
 	Return path
 End
@@ -223,5 +222,5 @@ Function EnquoteCppString:String( str:String )
 	str=str.Replace( STRING_RETURN,STRING_CPPRETURN )
 	str=str.Replace( STRING_TAB,STRING_CPPTAB )
 	
-	Return STRING_QUOTE+str+STRING_QUOTE
+	Return "L"+STRING_QUOTE+str+STRING_QUOTE
 End

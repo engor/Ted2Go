@@ -58,6 +58,14 @@ Class Translator
 		Self.debug=Builder.opts.config="debug"
 	End
 	
+	Method Reset() Virtual
+		_buf.Clear()
+		_insertStack.Clear()
+		_indent=""
+		_gcframe=Null
+		_deps=New Deps
+	End
+	
 	Method Trans:String( value:Value ) Abstract
 	
 	Method TransType:String( type:Type ) Abstract
@@ -69,8 +77,8 @@ Class Translator
 	'***** Emit *****
 	
 	Field _buf:=New StringStack
+	Field _insertStack:=New Stack<StringStack>
 	Field _indent:String
-	Field _insertStack:=New Stack<Stack<String>>
 	
 	Method EmitBr()
 		If _buf.Length And Not _buf.Top Return
@@ -93,15 +101,6 @@ Class Translator
 		Return _buf.Length
 	End
 	
-	Method Slice:Stack<String>( pos:Int )
-	
-		Local buf:=_buf.Slice( pos )
-		
-		_buf.Resize( pos )
-		
-		Return buf
-	End
-	
 	Method BeginInsert( pos:Int )
 	
 		Local buf:=_buf.Slice( pos )
@@ -116,7 +115,6 @@ Class Translator
 		Local buf:=_insertStack.Pop()
 		
 		_buf.Append( buf )
-
 	End
 	
 	'***** GCFrame *****
@@ -144,6 +142,10 @@ Class Translator
 	End
 	
 	Field _gcframe:GCFrame
+	
+	method ResetGC()
+		_gcframe=Null
+	End
 	
 	Method BeginGCFrame()
 
@@ -277,39 +279,38 @@ Class Translator
 	End
 	
 	'***** Dependancies *****
-	
-	Field _usesFiles:=New StringMap<FileDecl>
-	Field _usesTypes:=New StringMap<ClassType>
-	
-	Field _refs:=New Map<SNode,Bool>
-	
-	Field _refsVars:=New Stack<VarValue>
-	Field _refsFuncs:=New Stack<FuncValue>
-	Field _refsTypes:=New Stack<Type>
 
-	Field _incs:=New StringMap<FileDecl>
+	Class Deps
+		Field depsPos:Int
+		Field usesFiles:=New StringMap<FileDecl>
+		Field usesTypes:=New StringMap<ClassType>
+		Field refs:=New Map<SNode,Bool>
+		Field refsVars:=New Stack<VarValue>
+		Field refsFuncs:=New Stack<FuncValue>
+		Field refsTypes:=New Stack<Type>
+		Field incs:=New StringMap<FileDecl>
+	End
 	
-	Field _depsPos:Int
+	Field _deps:Deps
 	
 	Method BeginDeps()
-		_depsPos=InsertPos
+		_deps.depsPos=InsertPos
 	End
 	
 	Method EndDeps( baseDir:String )
 	
-		BeginInsert( _depsPos )
+		BeginInsert( _deps.depsPos )
 	
 		EmitBr()
 		Emit( "// ***** External *****" )
 
 		EmitBr()
-		For Local fdecl:=Eachin _usesFiles.Values
-
+		For Local fdecl:=Eachin _deps.usesFiles.Values
 			EmitInclude( fdecl,baseDir )
 		Next
 		
 		EmitBr()
-		For Local type:=Eachin _refsTypes
+		For Local type:=Eachin _deps.refsTypes
 		
 			Local ctype:=TCast<ClassType>( type )
 			If ctype
@@ -318,7 +319,12 @@ Class Translator
 				
 				Local cname:=ClassName( ctype )
 				Emit( "struct "+ClassName( ctype )+";" )
-				If GenTypeInfo( ctype ) Emit( "bbTypeInfo *bbGetType( "+cname+"* const& );" )
+				
+				If GenTypeInfo( ctype ) 
+					Emit( "#ifdef BB_REFLECTION" )
+					Emit( "bbTypeInfo *bbGetType( "+cname+"* const& );" )
+					Emit( "#endif" )
+				Endif
 				
 				If debug And Not ctype.cdecl.IsExtern
 					Local tname:=cname
@@ -341,44 +347,41 @@ Class Translator
 			Endif
 
 		Next
-		_refsTypes.Clear()
+		_deps.refsTypes.Clear()
 		
 		EmitBr()	
-		For Local vvar:=Eachin _refsVars
+		For Local vvar:=Eachin _deps.refsVars
 		
 			If Not Included( vvar.transFile ) Emit( "extern "+VarProto( vvar )+";" )
 		Next
-		_refsVars.Clear()
+		_deps.refsVars.Clear()
 	
 		EmitBr()
-		For Local func:=Eachin _refsFuncs
-		
+		For Local func:=Eachin _deps.refsFuncs
 			If Not Included( func.transFile ) Emit( "extern "+FuncProto( func )+";" )
 		Next
-		_refsFuncs.Clear()
-		
-		EmitBr()
+		_deps.refsFuncs.Clear()
 		
 		EndInsert()
 	End
 	
 	Method Included:Bool( fdecl:FileDecl )
 	
-		Return _incs.Contains( fdecl.ident )
+		Return _deps.incs.Contains( fdecl.ident )
 	End
 	
 	Method EmitInclude( fdecl:FileDecl,baseDir:String )
 	
-		If _incs.Contains( fdecl.ident ) Return
+		If _deps.incs.Contains( fdecl.ident ) Return
 
 		Emit( "#include ~q"+MakeIncludePath( fdecl.hfile,baseDir )+"~q" )
 		
-		_incs[fdecl.ident]=fdecl
+		_deps.incs[fdecl.ident]=fdecl
 	End
 	
 	Method AddRef:Bool( node:SNode )
-		If _refs[node] Return True
-		_refs[node]=True
+		If _deps.refs[node] Return True
+		_deps.refs[node]=True
 		Return False
 	End
 	
@@ -388,7 +391,7 @@ Class Translator
 		
 		If vvar.IsStatic
 			If AddRef( vvar ) Return
-			_refsVars.Push( vvar )
+			_deps.refsVars.Push( vvar )
 		End
 		
 		Refs( vvar.type )
@@ -400,7 +403,7 @@ Class Translator
 		
 		If func.IsStatic
 			If AddRef( func ) Return
-			_refsFuncs.Push( func )
+			_deps.refsFuncs.Push( func )
 		Endif
 		
 		Refs( func.ftype )
@@ -413,14 +416,14 @@ Class Translator
 			If ctype.cdecl.IsExtern Uses( ctype.transFile ) ; return
 			If ctype.IsStruct Uses( ctype ) ; Return
 			If AddRef( ctype ) Return
-			_refsTypes.Push( ctype )
+			_deps.refsTypes.Push( ctype )
 			Return
 		Endif
 		
 		Local etype:=TCast<EnumType>( type )
 		If etype
 			If AddRef( etype ) Return
-			_refsTypes.Push( etype )
+			_deps.refsTypes.Push( etype )
 			Return
 		Endif
 		
@@ -465,12 +468,12 @@ Class Translator
 	End
 	
 	Method Uses( ctype:ClassType )
-		_usesTypes[ ClassName( ctype ) ]=ctype
+		_deps.usesTypes[ ClassName( ctype ) ]=ctype
 		Uses( ctype.transFile )
 	End
 	
 	Method Uses( fdecl:FileDecl )
-		_usesFiles[ fdecl.ident ]=fdecl
+		_deps.usesFiles[ fdecl.ident ]=fdecl
 	End
 	
 End
