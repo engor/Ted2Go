@@ -15,11 +15,11 @@ Const COLOR_OTHER:=7
 Global Keywords:=New StringMap<String>
 
 Function InitKeywords()
-	Local kws:=""
 
+	Local kws:=""
 	kws+="Namespace;Using;Import;Extern;"
 	kws+="Public;Private;Protected;Friend;"
-	kws+="Void;Bool;Byte;UByte;Short;UShort;Int;UInt;Long;ULong;Float;Double;String;Object;Continue;Exit;"
+	kws+="Void;Bool;Byte;UByte;Short;UShort;Int;UInt;Long;ULong;Float;Double;String;CString;Variant;TypeInfo;DeclInfo;Object;Continue;Exit;"
 	kws+="New;Self;Super;Eachin;True;False;Null;Where;"
 	kws+="Alias;Const;Local;Global;Field;Method;Function;Property;Getter;Setter;Operator;Lambda;"
 	kws+="Enum;Class;Interface;Struct;Extends;Implements;Virtual;Override;Abstract;Final;Inline;"
@@ -31,7 +31,8 @@ Function InitKeywords()
 	kws+="For;To;Step;Next;"
 	kws+="Select;Case;Default;"
 	kws+="Try;Catch;Throw;Throwable;"
-	kws+="Return;Print;Static;Cast;Extension"
+	kws+="Return;Print;Static;Cast;Extension;"
+	kws+="Typeof"
 	
 	For Local kw:=Eachin kws.Split( ";" )
 		Keywords[kw.ToLower()]=kw
@@ -435,11 +436,13 @@ Class Monkey2Document Extends Ted2Document
 		
 		_doc=New TextDocument
 		
-		_doc.TextChanged=Lambda()
+		_doc.TextHighlighter=Monkey2TextHighlighter
+		
+		_browser=New Monkey2TreeView( _doc )
+		
+		_doc.TextChanged+=Lambda()
 			Dirty=True
 		End
-		
-		_doc.TextHighlighter=Monkey2TextHighlighter
 		
 		_doc.LinesModified=Lambda( first:Int,removed:Int,inserted:Int )
 			Local put:=0
@@ -485,15 +488,7 @@ Class Monkey2Document Extends Ted2Document
 		Return _errors
 	End
 	
-	Private
-
-	Field _doc:TextDocument
-
-	Field _view:Monkey2DocumentView
-
-	Field _errors:=New Stack<BuildError>
-
-	Field _debugLine:Int=-1
+	Protected
 	
 	Method OnLoad:Bool() Override
 	
@@ -517,6 +512,22 @@ Class Monkey2Document Extends Ted2Document
 		Return _view
 	End
 	
+	Method OnCreateBrowser:View() Override
+	
+		Return _browser
+	End
+	
+	Private
+
+	Field _doc:TextDocument
+
+	Field _view:Monkey2DocumentView
+	
+	Field _browser:Monkey2TreeView
+
+	Field _errors:=New Stack<BuildError>
+
+	Field _debugLine:Int=-1
 End
 
 Class Monkey2DocumentType Extends Ted2DocumentType

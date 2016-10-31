@@ -1,0 +1,45 @@
+{
+	"extends":"default",
+	
+	"styles":{
+	
+		"GutterView":{
+			"extends":"TextView",
+			"textColor":"text-disabled"
+		},
+		
+		"DebugToolBar":{
+			"extends":"ToolBar",
+			"border":[ 4 ],
+			"borderColor":"content",
+			"icons":"debug_icons.png"
+		},
+		
+		"HelpTextField":{
+			"extends":"TextField",
+			"skinColor":"panel"
+		},
+
+		"Hint":{
+			"border":[ 1 ],
+			"borderColor":"clear",
+			"backgroundColor":"panel"
+		},
+
+		"EditorToolBar":{
+			"extends":"ToolBar",
+			"padding":[ 2 ],
+			"backgroundColor":"content",
+			"border":[ 0,0,0,1 ],
+			"borderColor":"clear"
+		},
+
+		"MainToolBar":{
+			"extends":"ToolBar",
+			"padding":[ 2 ],
+			"backgroundColor":"content",
+			"border":[ 0,0,0,1 ],
+			"borderColor":"clear"
+		}
+	}
+}

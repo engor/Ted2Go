@@ -448,17 +448,10 @@ Class BuildActions
 		
 		Local opts:=product.GetMx2ccOpts()
 		
-		Local appType:="gui"
-		If target="console"
-			appType="console"
-			target="desktop"
-		End
-		
 		Local run:=(action="run")
 		If run action="build"
 
 		Local cmd:=MainWindow.Mx2ccPath+" makeapp -"+action+" "+opts
-		cmd+=" -apptype="+appType+" "
 		cmd+=" -config="+config
 		cmd+=" -target="+target
 		cmd+=" ~q"+buildDoc.Path+"~q"

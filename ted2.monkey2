@@ -3,6 +3,8 @@
 #Import "bin/wget.exe"
 #End
 
+#Import "<reflection>"
+
 #Import "<std>"
 #Import "<mojo>"
 #Import "<mojox>"
@@ -22,6 +24,8 @@
 #Import "modulemanager"
 #Import "ted2textview"
 #Import "jsontreeview"
+#Import "xmltreeview"
+#Import "monkey2treeview"
 #Import "gutterview"
 
 #Import "plugin"

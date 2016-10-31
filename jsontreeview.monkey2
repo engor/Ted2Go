@@ -58,10 +58,7 @@ Class JsonTreeView Extends TreeView
 	End
 	
 	Method New()
-	
-		RootNodeVisible=False
-		
-		RootNode.Expanded=True
+		RootNode.Text="[No Data]"
 	End
 	
 	Method New( value:JsonValue )
@@ -78,7 +75,14 @@ Class JsonTreeView Extends TreeView
 	
 		RootNode.RemoveAllChildren()
 		
-		If Not value Return
+		If Not value 
+			RootNodeVisible=True
+			RootNode.Text="[No Data]"
+			Return
+		End
+		
+		RootNodeVisible=False
+		RootNode.Expanded=True
 		
 		New Node( value,RootNode )
 	End

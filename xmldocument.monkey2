@@ -2,98 +2,6 @@
 Namespace ted2go
 
 
-Class XmlDocumentView Extends DockingView
-
-	Method New( doc:TextDocument )
-	
-		_textView=New TextView( doc )
-		
-		doc.TextChanged+=Lambda()
-		
-			_treeView.RootNode.RemoveAllChildren()
-			
-			Local xml:=_textView.Text
-			
-			Local doc := New XMLDocument()
-			
-			If doc.Parse( xml ) <> XMLError.XML_SUCCESS
-				Return
-			Endif
- 
-			_treeView.RootNode.Text = "XML Document"
- 
-			AddXMLNodeToTree( doc,_treeView.RootNode )
-		
-		End
-		
-		_treeView=New TreeView
-
-		AddView( _treeView,"right",300,True )
-		
-		ContentView=_textView
-	End
-	
-	Property TextView:TextView()
-	
-		Return _textView
-	End
-	
-	Property TreeView:TreeView()
-	
-		Return _treeView
-	End
-	
-	Private
-	
-	Field _textView:TextView
-	
-	Field _treeView:TreeView
-	
-	Method AddXMLNodeToTree(xmlNode:XMLNode, parent:TreeView.Node)
-	
-		Local str := ""
-	
-		Local xmlElement := xmlNode.ToElement()
-		
-		If xmlElement
-		
-			str += "<" + xmlNode.Value()
-			
-			Local attrib := xmlElement.FirstAttribute()
-			While attrib 
-				str += " " + attrib.Name() + "=~q" + attrib.Value() + "~q "
-				attrib=attrib.NextAttribute()
-			wend
-			
-			str += ">"
-		Else
-			str += xmlNode.Value()
-		Endif
- 
-		Local treeNode:TreeView.Node
-	
-		If str
-			treeNode = New TreeView.Node(str, parent)
-		Endif
-		
-		Local xmlChild := xmlNode.FirstChild()
-	
-		While xmlChild
-		
-			If Not xmlChild.NoChildren()
-				If treeNode Then parent = treeNode
-			Endif
-		
-			AddXMLNodeToTree(xmlChild, parent)
-			
-			xmlChild = xmlChild.NextSibling()
-	
-		Wend
-	
-	End
-
-End
-
 Class XmlDocument Extends Ted2Document
 
 	Method New( path:String )
@@ -101,11 +9,20 @@ Class XmlDocument Extends Ted2Document
 		
 		_doc=New TextDocument
 		
+		_view=New TextView( _doc )
+		
+		_browser=New XmlTreeView
+		
 		_doc.TextChanged+=Lambda()
+		
+			Local xml:=New XMLDocument
+			
+			If xml.Parse( _doc.Text )<>XMLError.XML_SUCCESS xml=Null
+			
+			_browser.Data=xml
+		
 			Dirty=True
 		End
-		
-		_view=New XmlDocumentView( _doc )
 	End
 
 	Protected
@@ -131,16 +48,18 @@ Class XmlDocument Extends Ted2Document
 		Return _view
 	End
 	
-	Method OnGetTextView:TextView( view:View ) Override
+	Method OnCreateBrowser:View() Override
 	
-		Return Cast<XmlDocumentView>( view ).TextView
+		Return _browser
 	End
 	
 	Private
 	
 	Field _doc:TextDocument
 	
-	Field _view:XmlDocumentView
+	Field _view:TextView
+	
+	Field _browser:XmlTreeView
 End
 
 Class XmlDocumentType Extends Ted2DocumentType

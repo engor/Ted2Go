@@ -38,12 +38,13 @@ Class MainWindowInstance Extends Window
 		_recentFilesMenu=New Menu( "Recent files..." )
 		_closeProjectMenu=New Menu( "Close project..." )
 		
-		_docsManager=New DocumentManager( _docsTabView )
+		_docBrowser=New DockingView
+		
+		_docsManager=New DocumentManager( _docsTabView,_docBrowser )
 
 		_docsManager.CurrentDocumentChanged+=UpdateKeyView
 		
 		App.FileDropped+=Lambda( path:String )
-			Print "Dropped:"+path
 			_docsManager.OpenDocument( path,True )
 		End
 
@@ -147,7 +148,7 @@ Class MainWindowInstance Extends Window
 		For Local f:=Eachin LoadDir( p )
 			Local src:=stringio.LoadString( p+f )
 			_newFiles.AddAction( StripExt( f.Replace( "_"," " ) ) ).Triggered=Lambda()
-				Local path:=AllocTmpPath( ExtractExt( f ) )
+				Local path:=AllocTmpPath( "untitled",ExtractExt( f ) )
 				If Not path Return
 				SaveString( src,path )
 				Local doc:=_docsManager.OpenDocument( path,True )
@@ -277,6 +278,7 @@ Class MainWindowInstance Extends Window
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/find.png" ),_findActions.find.Triggered,"Find (Ctrl+F)" )
 		
 		_browsersTabView.AddTab( "Files",_projectView,True )
+		_browsersTabView.AddTab( "Source",_docBrowser,False )
 		_browsersTabView.AddTab( "Debug",_debugView,False )
 		_browsersTabView.AddTab( "Help",_helpTree,False )
 		
@@ -356,11 +358,12 @@ Class MainWindowInstance Extends Window
 		Return future.Get()
 	End
 	
-	Method AllocTmpPath:String( ext:String )
+	Method AllocTmpPath:String( ident:String,ext:String )
 	
-		For Local i:=1 Until 10
-			Local path:=_tmp+"untitled"+i+ext
-			If GetFileType( path )=FileType.None Return path
+		For Local i:=1 Until 100
+			Local path:=_tmp+ident+i+ext
+			If GetFileType( path )<>FileType.None Continue
+			If CreateFile( path ) Return path
 		Next
 
 		Return ""
@@ -563,6 +566,7 @@ Class MainWindowInstance Extends Window
 	Field _helpViewDocker:DockingView
 
 	Field _projectView:ProjectView
+	Field _docBrowser:DockingView
 	Field _debugView:DebugView
 	Field _helpTree:HelpTree
 

@@ -2,41 +2,6 @@
 Namespace ted2go
 
 
-Class JsonDocumentView Extends DockingView
-
-	Method New( doc:TextDocument )
-	
-		_textView=New TextView( doc )
-		
-		doc.TextChanged+=Lambda()
-		
-			_jsonTree.Value=JsonValue.Parse( _textView.Text )
-		End
-
-		_jsonTree=New JsonTreeView
-				
-		AddView( _jsonTree,"right",300,True )
-		
-		ContentView=_textView
-	End
-	
-	Property TextView:TextView()
-	
-		Return _textView
-	End
-	
-	Property JsonTree:JsonTreeView()
-	
-		Return _jsonTree
-	End
-	
-	Private
-	
-	Field _textView:TextView
-	Field _jsonTree:JsonTreeView
-
-End
-
 Class JsonDocument Extends Ted2Document
 
 	Method New( path:String )
@@ -44,11 +9,17 @@ Class JsonDocument Extends Ted2Document
 		
 		_doc=New TextDocument
 		
+		_view=New TextView( _doc )
+		
+		_browser=New JsonTreeView
+
 		_doc.TextChanged+=Lambda()
+		
+			_browser.Value=JsonValue.Parse( _doc.Text )
+			
 			Dirty=True
 		End
 		
-		_view=New JsonDocumentView( _doc )
 	End
 
 	Protected
@@ -58,10 +29,6 @@ Class JsonDocument Extends Ted2Document
 		Local json:=stringio.LoadString( Path )
 		
 		_doc.Text=json
-		
-		Local jval:=JsonValue.Parse( json )
-		
-		_view.JsonTree.Value=jval
 		
 		Return True
 	End
@@ -78,16 +45,23 @@ Class JsonDocument Extends Ted2Document
 		Return _view
 	End
 	
+	Method OnCreateBrowser:View() Override
+	
+		Return _browser
+	End
+	
 	Method OnGetTextView:TextView( view:View ) Override
 	
-		Return Cast<JsonDocumentView>( view ).TextView
+		Return Cast<TextView>( view )
 	End
 	
 	Private
 	
 	Field _doc:TextDocument
 	
-	Field _view:JsonDocumentView
+	Field _view:TextView
+	
+	Field _browser:JsonTreeView
 End
 
 Class JsonDocumentType Extends Ted2DocumentType
