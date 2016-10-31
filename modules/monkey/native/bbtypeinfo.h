@@ -186,28 +186,24 @@ struct bbClassTypeInfo : public bbTypeInfo{
 	static bbClassTypeInfo *getNamespace( bbString name );
 };
 
-#define BB_PRIM_TYPEINFO( TYPE,ID ) inline bbTypeInfo *bbGetType( TYPE const& ){ \
-	static bbPrimTypeInfo info( ID ); \
-	return &info; \
-}
+#define BB_GETTYPE_DECL( TYPE ) bbTypeInfo *bbGetType( TYPE const& );
 
-BB_PRIM_TYPEINFO( bbBool,"Bool" )
-BB_PRIM_TYPEINFO( bbByte,"Byte" )
-BB_PRIM_TYPEINFO( bbUByte,"UShort" )
-BB_PRIM_TYPEINFO( bbShort,"Short" )
-BB_PRIM_TYPEINFO( bbUShort,"UShort" )
-BB_PRIM_TYPEINFO( bbInt,"Int" )
-BB_PRIM_TYPEINFO( bbUInt,"UInt" )
-BB_PRIM_TYPEINFO( bbLong,"Long" )
-BB_PRIM_TYPEINFO( bbULong,"ULong" )
-BB_PRIM_TYPEINFO( bbFloat,"Float" )
-BB_PRIM_TYPEINFO( bbDouble,"Double" )
-BB_PRIM_TYPEINFO( bbString,"String" )
-BB_PRIM_TYPEINFO( bbCString,"CString" )
-BB_PRIM_TYPEINFO( bbVariant,"Variant" )
+BB_GETTYPE_DECL( bbBool )
+BB_GETTYPE_DECL( bbByte )
+BB_GETTYPE_DECL( bbUByte )
+BB_GETTYPE_DECL( bbShort )
+BB_GETTYPE_DECL( bbUShort )
+BB_GETTYPE_DECL( bbInt )
+BB_GETTYPE_DECL( bbUInt )
+BB_GETTYPE_DECL( bbLong )
+BB_GETTYPE_DECL( bbULong )
+BB_GETTYPE_DECL( bbFloat )
+BB_GETTYPE_DECL( bbDouble )
+BB_GETTYPE_DECL( bbString )
+BB_GETTYPE_DECL( bbCString )
+BB_GETTYPE_DECL( bbVariant )
 
 inline bbTypeInfo *bbGetType( bbObject* const& ){
-
 	return &bbObjectTypeInfo::instance;
 }
 
@@ -244,17 +240,14 @@ template<class R,class...A> bbTypeInfo *bbGetType( bbFunction<R(A...)> const& ){
 }
 
 template<class T> bbTypeInfo *bbGetType( bbGCVar<T> const& ){
-
 	return bbGetType<T*>();
 }
 
 template<> inline bbTypeInfo *bbGetType<void>(){
-
 	return &bbVoidTypeInfo::instance;
 }
 
 template<class T> bbTypeInfo *bbGetType(){
-
 	return bbGetType( *(T*)0 );
 }
 

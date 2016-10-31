@@ -14,16 +14,13 @@ struct bbObject : public bbGCNode{
 		bbGC::beginCtor( this );
 	}
 	
-	virtual ~bbObject(){
-	}
+	virtual ~bbObject();
 
 	//implemented in bbtypeinfo.h
 	//	
 	virtual bbTypeInfo *typeof()const;
 	
-	virtual const char *typeName()const{
-		return "monkey.Object";
-	}
+	virtual const char *typeName()const;
 	
 	void *operator new( size_t size ){
 		return bbGC::alloc( size );
@@ -43,8 +40,7 @@ struct bbInterface{
 
 	typedef bbInterface *bb_object_type;
 
-	virtual ~bbInterface(){
-	}
+	virtual ~bbInterface();
 };
 
 struct bbNullCtor_t{

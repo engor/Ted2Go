@@ -27,9 +27,7 @@ template<class T,int D=1> class bbArray;
 template<class T> struct bbGCVar;
 
 struct bbVariant;
-
 struct bbTypeInfo;
-
 struct bbDeclInfo;
 
 namespace detail{
@@ -45,8 +43,11 @@ namespace detail{
 	template<typename T> struct remove_pointer<T*> { typedef typename remove_pointer<T>::type type; };
 }
 
-template<class T> bbTypeInfo *bbGetType();
-
 bbString bbTypeName( const char *type );
+
+template<class X,class Y> int bbCompare( X x,Y y ){
+	if( y>x ) return -1;
+	return x>y;
+}
 
 #endif

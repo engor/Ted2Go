@@ -68,6 +68,7 @@ struct bbVariant{
 		}
 	};
 	
+/*	
 	template<class R,class...A> struct FuncRep : public Rep<bbFunction<R(A...)>>{
 
 		FuncRep( bbFunction<R(A...)> func ):Rep<bbFunction<R(A...)>>( func ){
@@ -101,6 +102,7 @@ struct bbVariant{
 			return {};
 		}
 	};
+*/
 	
 	static RepBase _null;
 	
@@ -129,11 +131,13 @@ struct bbVariant{
 	template<class T> explicit bbVariant( const bbGCVar<T> &t ):_rep( new Rep<T*>( t.get() ) ){
 	}
 	
+	/*
 	template<class R,class...A> explicit bbVariant( bbFunction<R(A...)> func ) : _rep( new FuncRep<R,A...>( func ) ){
 	}
 	
 	template<class R,class...A> explicit bbVariant( R(*func)(A...) ):_rep( new FuncRep<R,A...>( bbMakefunc( func ) ) ){
 	}
+	*/
 	
 	~bbVariant(){
 		release();
@@ -147,7 +151,13 @@ struct bbVariant{
 	}
 	
 	bbTypeInfo *getType()const{
+		
 		return _rep->getType();
+	}
+	
+	operator bool()const{
+		
+		return _rep!=&_null;
 	}
 	
 	template<class T> T get()const{
@@ -172,20 +182,29 @@ struct bbVariant{
 		return T{};
 	}
 	
-	bbVariant invoke( bbArray<bbVariant> params ){
-	
-		return _rep->invoke( params );
-	}
-	
-	operator bool()const{
-	
-		return _rep!=&_null;
-	}
 };
+
+extern template struct bbVariant::Rep<bbBool>;
+extern template struct bbVariant::Rep<bbByte>;
+extern template struct bbVariant::Rep<bbUByte>;
+extern template struct bbVariant::Rep<bbShort>;
+extern template struct bbVariant::Rep<bbUShort>;
+extern template struct bbVariant::Rep<bbInt>;
+extern template struct bbVariant::Rep<bbUInt>;
+extern template struct bbVariant::Rep<bbLong>;
+extern template struct bbVariant::Rep<bbULong>;
+extern template struct bbVariant::Rep<bbFloat>;
+extern template struct bbVariant::Rep<bbDouble>;
+extern template struct bbVariant::Rep<bbString>;
 
 inline void bbGCMark( const bbVariant &v ){
 
 	v._rep->gcMark();
+}
+
+inline int bbCompare( const bbVariant &x,const bbVariant &y ){
+
+	return y._rep>x._rep ? -1 : x._rep>y._rep;
 }
 
 #endif

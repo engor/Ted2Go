@@ -7,6 +7,26 @@ namespace{
 	bbClassTypeInfo *_classes;
 }
 
+#define BB_PRIM_GETTYPE( TYPE,ID ) bbTypeInfo *bbGetType( TYPE const& ){ \
+	static bbPrimTypeInfo info( ID ); \
+	return &info; \
+}
+
+BB_PRIM_GETTYPE( bbBool,"Bool" )
+BB_PRIM_GETTYPE( bbByte,"Byte" )
+BB_PRIM_GETTYPE( bbUByte,"UShort" )
+BB_PRIM_GETTYPE( bbShort,"Short" )
+BB_PRIM_GETTYPE( bbUShort,"UShort" )
+BB_PRIM_GETTYPE( bbInt,"Int" )
+BB_PRIM_GETTYPE( bbUInt,"UInt" )
+BB_PRIM_GETTYPE( bbLong,"Long" )
+BB_PRIM_GETTYPE( bbULong,"ULong" )
+BB_PRIM_GETTYPE( bbFloat,"Float" )
+BB_PRIM_GETTYPE( bbDouble,"Double" )
+BB_PRIM_GETTYPE( bbString,"String" )
+BB_PRIM_GETTYPE( bbCString,"CString" )
+BB_PRIM_GETTYPE( bbVariant,"Variant" )
+
 // ***** bbTypeInfo *****
 
 bbString bbTypeInfo::toString(){
