@@ -90,6 +90,8 @@ Function Main()
 		CreateDir( "tmp" )
 		system( "g++ --version >tmp/_v.txt" )
 		Print ""
+		Print "Mx2cc g++ version:"
+		Print ""
 		Print LoadString( "tmp/_v.txt" )
 #Endif
 
