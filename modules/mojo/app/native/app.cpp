@@ -16,7 +16,7 @@ namespace bbApp{
 		uevent.data2=0;
 	
 		if( SDL_PeepEvents( (SDL_Event*)&uevent,1,SDL_ADDEVENT,SDL_FIRSTEVENT,SDL_LASTEVENT )!=1 ){
-			printf( "SDL_PeepEvents error!\n" );fflush( stdout );
+			printf( "SDL_PeepEvents error: %s\n",SDL_GetError() );fflush( stdout );
 		}
 	}
 

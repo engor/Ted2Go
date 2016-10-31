@@ -119,9 +119,6 @@ Class AppInstance
 #Else If __DESKTOP_TARGET__
 
 #if __TARGET__="windows"
-
-		Local gl_major:=Int( GetConfig( "GL_context_major_version",-1 ) )
-		Local gl_minor:=Int( GetConfig( "GL_context_major_version",-1 ) )
 		
 		Local gl_profile:Int
 
@@ -132,14 +129,14 @@ Class AppInstance
 			gl_profile=SDL_GL_CONTEXT_PROFILE_COMPATIBILITY
 		Default
 			gl_profile=SDL_GL_CONTEXT_PROFILE_ES
-			If gl_major=-1 gl_major=2
-			If gl_minor=-1 gl_minor=0
 		End
+
+		Local gl_major:=Int( GetConfig( "GL_context_major_version",2 ) )
+		Local gl_minor:=Int( GetConfig( "GL_context_minor_version",0 ) )
 		
 		SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK,gl_profile )
-		
-		If gl_major<>-1 SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION,gl_major )
-		If gl_minor<>-1 SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION,gl_minor )
+		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION,gl_major )
+		SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION,gl_minor )
 
 #Endif
 

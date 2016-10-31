@@ -11,6 +11,7 @@
 | `Super`			| Super instance			|
 | `True`			| Boolean true				|
 | `False`			| Boolean false				|
+| `Typeof`			| Typeof operator			|
 | `Cast`			| Cast operator				|
 | `Lambda`			| Lambda function			|
 | _identifier_		| Identifier				|

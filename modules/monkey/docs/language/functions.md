@@ -49,7 +49,6 @@ End )
 Note the closing `)` after the `End` to match the opening `(` after `SomeFunc`.
 
 
-
 #### Function values
 
 Monkey2 supports 'first class' functions.

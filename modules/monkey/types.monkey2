@@ -483,7 +483,6 @@ Class @TypeInfo Extends Void="bbTypeInfo"
 	#end
 	Property SuperType:TypeInfo()="superType"
 	
-	
 	#rem monkeydoc Implemented interfaces.
 	
 	The interfaces implemented by the class or interface type.
@@ -558,21 +557,32 @@ Class DeclInfo Extends Void="bbDeclInfo"
 	#rem monkeydoc Declaration type.
 	#end
 	Property Type:TypeInfo()="getType"
+
+	#rem monkeydoc True if Get can be used with this declaration.
+	#end	
+	Property Gettable:Bool()="gettable"
+
+	#rem monkeydoc True if Set can be used with this declaration.
+	#end	
+	Property Settable:Bool()="settable"
+
+	#rem monkeydoc True if Invoke can be used with this declaration.
+	#end	
+	Property Invokable:Bool()="invokable"
 	
 	#rem monkeydoc Gets string representation of decl.
 	#end
 	Method To:String()="toString"
-	
-	#rem monkeydoc Sets field or global value.
 
-	If the declaration kind is 'Global', the `instance` parameter is ignored.
+	#rem monkeydoc Gets meta data keys.
+	#end	
+	Method GetMetaKeys:String[]()="getMetaKeys"
 	
-	A runtime error will occur if the declaration kind is not 'Field' or 'Global'.
-	
+	#rem monkeydoc Gets meta data value for a key.
 	#end
-	Method Set( instance:Variant,value:Variant )="set"
+	Method GetMetaValue:String( key:String )="getMetaValue"
 	
-	#rem monkeydoc Gets field or global value.
+	#rem monkeydoc Gets field, property or global value.
 	
 	If the declaration kind is 'Global', the `instance` parameter is ignored.
 	
@@ -580,6 +590,15 @@ Class DeclInfo Extends Void="bbDeclInfo"
 
 	#end
 	Method Get:Variant( instance:Variant )="get"
+	
+	#rem monkeydoc Sets field, property or global value.
+
+	If the declaration kind is 'Global', the `instance` parameter is ignored.
+	
+	A runtime error will occur if the declaration kind is not 'Field' or 'Global'.
+	
+	#end
+	Method Set( instance:Variant,value:Variant )="set"
 	
 	#rem monkeydoc Invokes method or function.
 
