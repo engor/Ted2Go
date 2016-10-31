@@ -436,11 +436,13 @@ Class Monkey2Document Extends Ted2Document
 		
 		_doc=New TextDocument
 		
-		_doc.TextChanged=Lambda()
+		_doc.TextHighlighter=Monkey2TextHighlighter
+		
+		_browser=New Monkey2TreeView( _doc )
+		
+		_doc.TextChanged+=Lambda()
 			Dirty=True
 		End
-		
-		_doc.TextHighlighter=Monkey2TextHighlighter
 		
 		_doc.LinesModified=Lambda( first:Int,removed:Int,inserted:Int )
 			Local put:=0
@@ -486,15 +488,7 @@ Class Monkey2Document Extends Ted2Document
 		Return _errors
 	End
 	
-	Private
-
-	Field _doc:TextDocument
-
-	Field _view:Monkey2DocumentView
-
-	Field _errors:=New Stack<BuildError>
-
-	Field _debugLine:Int=-1
+	Protected
 	
 	Method OnLoad:Bool() Override
 	
@@ -518,6 +512,22 @@ Class Monkey2Document Extends Ted2Document
 		Return _view
 	End
 	
+	Method OnCreateBrowser:View() Override
+	
+		Return _browser
+	End
+	
+	Private
+
+	Field _doc:TextDocument
+
+	Field _view:Monkey2DocumentView
+	
+	Field _browser:Monkey2TreeView
+
+	Field _errors:=New Stack<BuildError>
+
+	Field _debugLine:Int=-1
 End
 
 Class Monkey2DocumentType Extends Ted2DocumentType
