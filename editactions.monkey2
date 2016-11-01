@@ -10,6 +10,7 @@ Class EditActions
 	Field paste:Action
 	Field selectAll:Action
 	Field wordWrap:Action
+	Field gotoLine:Action
 	
 	Method New( docs:DocumentManager )
 	
@@ -35,6 +36,11 @@ Class EditActions
 		
 		wordWrap=New Action( "Toggle word wrap" )
 		wordWrap.Triggered=OnWordWrap
+		
+		gotoLine=New Action( "Goto line" )
+		gotoLine.Triggered=OnGotoLine
+		gotoLine.HotKey=Key.G
+		gotoLine.HotKeyModifiers=Modifier.Menu
 	End
 	
 	Method Update()
@@ -100,6 +106,19 @@ Class EditActions
 		Local tv:=Cast<TextView>( App.KeyView )
 		
 		If tv tv.WordWrap=Not tv.WordWrap
+	End
+	
+	Method OnGotoLine()
+	
+		Local tv:=Cast<TextView>( App.KeyView )
+		If Not tv Return
+		
+		Local line:=RequestInt( "Goto line:","Goto line",tv.CursorLine+1,0,1,tv.Document.NumLines )
+		If Not line Return
+		
+		tv.GotoLine( line-1 )
+		
+		tv.MakeKeyView()
 	End
 
 End

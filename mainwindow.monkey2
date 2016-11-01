@@ -156,6 +156,7 @@ Class MainWindowInstance Extends Window
 		_editMenu.AddAction( _findActions.findPrevious )
 		_editMenu.AddAction( _findActions.replace )
 		_editMenu.AddAction( _findActions.replaceAll )
+		_editMenu.AddAction( _editActions.gotoLine )
 		
 		'Build menu
 		'
