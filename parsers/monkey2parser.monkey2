@@ -73,10 +73,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
-	Method Parse( text:String,filePath:String )
+	Method Parse( text:String,filePath:String,pathOnDisk:String )
 			
 		'chech did we already parse this file
-		Local time:=GetFileTime( filePath )
+		Local time:=GetFileTime( pathOnDisk )
 		
 		Local info:=GetFileInfo( filePath )
 		
@@ -108,7 +108,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		'parse line by line
 		
 		If text = Null
-			text=stringio.LoadString( filePath )
+			text=stringio.LoadString( pathOnDisk )
 		Endif
 		
 		Local doc:=New TextDocument
@@ -557,7 +557,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 					Local nspace:=_namespace
 					Local accInFile:=info.accessInFile
 					'Local accInClass:=info.accessInClass
-					Parse( Null,file )
+					Parse( Null,file,file )
 					_filePath=path
 					_fileDir=dir
 					_namespace=nspace
@@ -1214,7 +1214,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Local file:=modDir + d + "/" + d + ".monkey2"
 				'Print "module: "+file
 				If GetFileType( file ) = FileType.File
-					Parse( Null,file )
+					Parse( Null,file,file )
 				Endif
 			Endif
 		Next

@@ -327,17 +327,7 @@ Class CodeDocument Extends Ted2Document
 			End,
 			"Uncomment (Shift+Ctrl+')" )
 			
-		' CodeTree
-		_treeView=New CodeTreeView
-		_treeView.SortEnabled=True
-		' goto item from tree view
-		_treeView.NodeClicked+=Lambda( node:TreeView.Node )
-			Local codeNode:=Cast<CodeTreeNode>( node )
-			Local item:=codeNode.CodeItem
-			_codeView.GotoLine( item.ScopeStartLine )
-		End		
-		_view.AddView( _treeView,"left",350,True )
-		
+				
 		' bar + editor
 		Local docker:=New DockingView
 		docker.AddView( bar,"top" )
@@ -345,6 +335,25 @@ Class CodeDocument Extends Ted2Document
 		
 		_view.ContentView=docker
 		
+		OnCreateBrowser()
+		
+	End
+	
+	Method OnCreateBrowser:View() Override
+		
+		' CodeTree
+		If Not _treeView
+			_treeView=New CodeTreeView
+			_treeView.SortEnabled=True
+			' goto item from tree view
+			_treeView.NodeClicked+=Lambda( node:TreeView.Node )
+				Local codeNode:=Cast<CodeTreeNode>( node )
+				Local item:=codeNode.CodeItem
+				_codeView.GotoLine( item.ScopeStartLine )
+			End
+		Endif
+		
+		Return _treeView
 	End
 	
 	Property TextDocument:TextDocument()
@@ -408,38 +417,8 @@ Class CodeDocument Extends Ted2Document
 		HideHint()
 	End
 	
-	Global _timeCharPressed:Long
-	Global _charTimer:Timer
-	Global _docForCheck:CodeDocument
-	Global _timer:Timer
-	Global _parsing:Bool
 	
-	Method OnTextChanged()
-		
-		_timeCharPressed=Millisecs()
-		_docForCheck=Self
-		
-		If Not _timer Then _timer=New Timer( 1,Lambda()
-		
-			OnCheckingBg()
-		End )
-		
-	End
 	
-	Function OnCheckingBg()
-		
-		If _parsing Return
-		
-		If _timeCharPressed > 0 And Millisecs() >= _timeCharPressed+3000
-			
-			_timeCharPressed=0
-			Try
-				BgParsing( _docForCheck )
-			Catch ex:Throwable
-				' bg parse error
-			End
-		Endif
-	End
 	
 	Method ShowCodeStructureDialog()
 	
@@ -542,6 +521,8 @@ Class CodeDocument Extends Ted2Document
 	Field _errMap:=New IntMap<String>
 	
 	Field _debugLine:Int=-1
+	Field _parsing:Bool
+	Field _timer:Timer
 	
 	
 	Method OnLoad:Bool() Override
@@ -551,7 +532,7 @@ Class CodeDocument Extends Ted2Document
 		_doc.Text=text
 		
 		'code parser
-		ParseSources()
+		'ParseSources( Path )
 		
 		Return True
 	End
@@ -565,7 +546,7 @@ Class CodeDocument Extends Ted2Document
 		Local ok:=stringio.SaveString( text,Path )
 	
 		'code parser - reparse
-		ParseSources()
+		'ParseSources( Path )
 		
 		Return ok
 	End
@@ -575,42 +556,33 @@ Class CodeDocument Extends Ted2Document
 		Return _view
 	End
 	
-	Method ParseSources()
+	Method UpdateCodeTree()
 		
-		ParsersManager.Get( FileType ).Parse( _doc.Text,Path )
 		_treeView.Fill( FileType,Path )
+	End
+	
+	Method ParseSources( pathOnDisk:String )
+		
+		ParsersManager.Get( FileType ).Parse( _doc.Text,Path,pathOnDisk )
+		UpdateCodeTree()
 		
 	End
 	
-	Function BgParsing( doc:CodeDocument )
+	Method BgParsing( path:String )
 		
-		If doc.FileType <> ".monkey2" Return
-		
-		_parsing=True
-		
-		New Fiber( Lambda()
+		'New Fiber( Lambda()
 			
 			Local result:=0
 			
-			doc.ResetErrors()
-			
-			Local path:=doc.Path
-			If doc.Dirty
-				Local tmp:=AppDir()+"/tmp"
-				CreateDir(tmp)
-				If GetFileType( tmp ) <> FILETYPE_DIR Return
-				path=tmp+"/tmp"
-				SaveString( doc.TextDocument.Text,path )
-			Endif
-			
-			Print "path: "+path
+			ResetErrors()
 			
 			'Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+path+"~q"
 			Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse ~q"+path+"~q"
 			
 			Local str:=LoadString( "process::"+cmd )
+			Local hasErrors:=(str.Find( "] : Error : " ) > 0)
 			
-			If str.Find( "] : Error : " ) > 0
+			If hasErrors
 				
 				Local arr:=str.Split( "~n" )
 				For Local s:=Eachin arr
@@ -624,15 +596,59 @@ Class CodeDocument Extends Ted2Document
 							
 							Local err:=New BuildError( path,line,msg )
 						
-							doc.AddError( err )
+							AddError( err )
 							
 						Endif
 					Endif
 				Next
 			Endif
 			
+			' call my parser until implenemt -geninfo
+			If Not hasErrors
+				ParseSources( path )
+			Endif
+			
+		'End)
+		
+	End
+	
+	Method OnTextChanged()
+		
+		' catch for common operations
+		
+		' nothing yet
+		
+		
+		' catch for parsing
+		
+		If FileType <> ".monkey2" Return
+		
+		If _timer _timer.Cancel()
+		
+		_timer=New Timer( 1,Lambda()
+		
+			If _parsing Return
+			
+			_parsing=True
+			
+			Local tmp:=MainWindow.AllocTmpPath( "_mx2cc_parse_",".monkey2" )
+			Local file:=StripDir( Path )
+			Print "parsing:"+file+" ("+tmp+")"
+			
+			SaveString( _doc.Text,tmp )
+		
+			BgParsing( tmp )
+			
+			Print "finished:"+file
+			
+			DeleteFile( tmp )
+			
+			_timer.Cancel()
+						
+			_timer=Null
 			_parsing=False
-		End)
+			
+		End )
 		
 	End
 	
@@ -727,9 +743,7 @@ Class CodeItemIcons
 	
 	Function GetIcon:Image( item:CodeItem )
 	
-		If _icons = Null
-			InitIcons()
-		Endif
+		If Not _icons Then InitIcons()
 		
 		Local key:String
 		Local kind:=item.KindStr
@@ -755,10 +769,14 @@ Class CodeItemIcons
 	End
 
 	Function GetKeywordsIcon:Image()
+	
+		If Not _icons Then InitIcons()
 		Return _icons["keyword"]
 	End
 	
 	Function GetIcon:Image(key:String)
+	
+		If Not _icons Then InitIcons()
 		Return _icons[key]
 	End
 

@@ -107,12 +107,12 @@ Class CodeItem
 		If _text = Null
 			Local s:=Ident
 			Select _kind
-				Case CodeItemKind.Function_, CodeItemKind.Method_, CodeItemKind.Lambda_, CodeItemKind.Operator_
+				Case CodeItemKind.Function_,CodeItemKind.Method_,CodeItemKind.Lambda_,CodeItemKind.Operator_
 					If Type <> Null And Type <> "" And Type <> "Void"
 						s+=" : "+Type
 					Endif
 					s+=(ParamsStr = Null) ? " ()" Else " ("+ParamsStr+")"
-				Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_, CodeItemKind.Enum_
+				Case CodeItemKind.Class_,CodeItemKind.Interface_,CodeItemKind.Struct_,CodeItemKind.Enum_
 					's+="   ["+ScopeStartLine+"-"+ScopeEndLine+"]"
 				Case CodeItemKind.Inner_
 					'do nothing
@@ -232,7 +232,7 @@ Class CodeItem
 		Local p:=Self
 		While p <> Null
 			Select p.Kind
-			Case CodeItemKind.Class_, CodeItemKind.Interface_, CodeItemKind.Struct_
+			Case CodeItemKind.Class_,CodeItemKind.Interface_,CodeItemKind.Struct_
 				Return p
 			End
 			p=p.Parent
@@ -245,7 +245,7 @@ Class CodeItem
 	
 	Field _ident:String
 	Field _indent:Int
-	Field _type:String, _rawType:String
+	Field _type:String,_rawType:String
 	Field _params:String[]
 	Field _paramsStr:String
 	Field _kind:CodeItemKind
@@ -256,7 +256,7 @@ Class CodeItem
 	Field _children:List<CodeItem>
 	Field _namespace:String
 	Field _filePath:String
-	Field _scopeStartLine:Int, _scopeEndLine:Int=-1
+	Field _scopeStartLine:Int,_scopeEndLine:Int=-1
 	Field _superTypes:List<String>
 	
 	Private
@@ -305,13 +305,13 @@ End
 Interface ICodeParser
 
 	Method RefineRawType( item:CodeItem )
-	Method Parse( text:String, filePath:String )
-	Method IsPosInsideOfQuotes:Bool( text:String, pos:Int )
-	Method CanShowAutocomplete:Bool( line:String, posInLine:Int )
-	Method GetScope:CodeItem( docPath:String, docLine:Int )
-	Method ItemAtScope:CodeItem( scope:CodeItem, idents:String[] )
+	Method Parse( text:String,filePath:String,pathOnDisk:String )
+	Method IsPosInsideOfQuotes:Bool( text:String,pos:Int )
+	Method CanShowAutocomplete:Bool( line:String,posInLine:Int )
+	Method GetScope:CodeItem( docPath:String,docLine:Int )
+	Method ItemAtScope:CodeItem( scope:CodeItem,idents:String[] )
 	
-	Method GetItemsForAutocomplete( ident:String, filePath:String, docLine:Int, target:List<CodeItem> )
+	Method GetItemsForAutocomplete( ident:String,filePath:String,docLine:Int,target:List<CodeItem> )
 	
 	Property Items:List<CodeItem>()
 	Property ItemsMap:StringMap<List<CodeItem>>()
@@ -386,24 +386,24 @@ Class EmptyParser Implements ICodeParser
 		Return _itemsMap
 	End
 	
-	Method Parse( text:String, filePath:String )
+	Method Parse( text:String,filePath:String,pathOnDisk:String )
 		'do nothing
 	End
-	Method IsPosInsideOfQuotes:Bool( text:String, pos:Int )
+	Method IsPosInsideOfQuotes:Bool( text:String,pos:Int )
 		Return False
 	End
-	Method CanShowAutocomplete:Bool( line:String, posInLine:Int )
+	Method CanShowAutocomplete:Bool( line:String,posInLine:Int )
 		Return False
 	End
-	Method GetScope:CodeItem( docPath:String, docLine:Int )
+	Method GetScope:CodeItem( docPath:String,docLine:Int )
 		Return Null
 	End
-	Method ItemAtScope:CodeItem( scope:CodeItem, idents:String[] )
+	Method ItemAtScope:CodeItem( scope:CodeItem,idents:String[] )
 		Return Null
 	End
 	Method RefineRawType( item:CodeItem )
 	End
-	Method GetItemsForAutocomplete( ident:String, filePath:String, docLine:Int, target:List<CodeItem> )
+	Method GetItemsForAutocomplete( ident:String,filePath:String,docLine:Int,target:List<CodeItem> )
 	End
 	
 	Private

@@ -7,6 +7,16 @@ Class CodeTreeView Extends TreeViewExt
 	
 	Field SortEnabled:Bool
 	
+	#Rem
+	Method New( doc:TextDocument )
+	
+		_doc=doc
+	
+		_doc.TextChanged+=OnTextChanged
+
+	End
+	#End
+	
 	Method Fill( fileType:String,path:String )
 	
 		StoreTreeExpands()
@@ -35,6 +45,53 @@ Class CodeTreeView Extends TreeViewExt
 	Private
 	
 	Field _expands:=New StringMap<Bool>
+	Field _sorterByName:Int( lhs:CodeItem,rhs:CodeItem )
+	Field _sorter:Int( lhs:CodeItem,rhs:CodeItem )
+	
+	#Rem
+	Field _doc:TextDocument
+	Field _timer:Timer
+	
+	Method OnTextChanged()
+	
+		If _timer _timer.Cancel()
+		
+		_timer=New Timer( 1,Lambda()
+		
+			Local tmp:=MainWindow.AllocTmpPath( "_mx2cc_parse_",".monkey2" )
+			
+			Print "parsing:"+tmp
+			
+			SaveString( _doc.Text,tmp )
+		
+			UpdateTree( tmp )
+			
+			Print "finished:"+tmp
+			
+			DeleteFile( tmp )
+			
+			_timer.Cancel()
+			
+			_timer=Null
+		
+		End )
+	End
+	
+	Method UpdateTree( path:String )
+	
+		Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+path+"~q"
+					
+		Local str:=LoadString( "process::"+cmd )
+		
+		Local jobj:JsonObject,i:=str.Find( "{" )
+		
+		If i<>-1 jobj=JsonObject.Parse( str.Slice( i ) )
+		
+		Super.Value=jobj
+		
+	End
+	#End
+	
 	Method StoreTreeExpands()
 	
 		_expands.Clear()
@@ -98,9 +155,6 @@ Class CodeTreeView Extends TreeViewExt
 		End
 				
 	End
-	
-	Field _sorterByName:Int( lhs:CodeItem,rhs:CodeItem )
-	Field _sorter:Int( lhs:CodeItem,rhs:CodeItem )
 	
 	Method SortItems( list:List<CodeItem> )
 	
