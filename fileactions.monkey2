@@ -62,13 +62,16 @@ Class FileActions
 		
 		quit=New Action( "Quit" )
 		quit.Triggered=OnQuit
-
-#if __HOSTOS__="macos"
-		quit.HotKey=Key.Q
-		quit.HotKeyModifiers=Modifier.Menu
-#Else
+		
+#If __TARGET__="window"
 		quit.HotKey=Key.F4
-		quit.HotKeyModifiers=Modifier.Alt
+		quit.HotKeyModifiers=Modifier.Alt|Modifier.Ignore
+#Elseif __TARGET__="macos"
+		quit.HotKey=Key.Q
+		quit.HotKeyModifiers=Modifier.Menu|Modifier.Igore
+#Elseif __TARGET__="linux"
+		quit.HotKey=Key.F4
+		quit.HotKeyModifiers=Modifier.Alt|Modifier.Ignore
 #endif		
 
 	End
@@ -266,4 +269,5 @@ Class FileActions
 		
 		MainWindow.Terminate()
 	End
+	
 End
