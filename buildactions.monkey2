@@ -247,8 +247,9 @@ Class BuildActions
 		updateModules.Enabled=idle
 		rebuildModules.Enabled=idle
 		rebuildHelp.Enabled=idle
+		moduleManager.Enabled=idle
 	End
-	
+
 	Private
 	
 	Field _docs:DocumentManager
@@ -319,8 +320,6 @@ Class BuildActions
 		_console.Clear()
 		
 		MainWindow.ShowBuildConsole( False )
-		
-		If _console.Running Return False
 		
 		If Not SaveAll() Return False
 
@@ -488,15 +487,21 @@ Class BuildActions
 	
 	Method OnBuildAndRun()
 
+		If _console.Running Return
+	
 		BuildApp( _buildConfig,_buildTarget,"run" )
 	End
 	
 	Method OnBuild()
 	
+		If _console.Running Return
+	
 		BuildApp( _buildConfig,_buildTarget,"build" )
 	End
 	
 	Method OnSemant()
+	
+		If _console.Running Return
 	
 		BuildApp( _buildConfig,_buildTarget,"semant" )
 	End
@@ -541,15 +546,21 @@ Class BuildActions
 	
 	Method OnUpdateModules()
 	
+		If _console.Running Return
+	
 		BuildModules( False )
 	End
 	
 	Method OnRebuildModules()
 	
+		If _console.Running Return
+	
 		BuildModules( True )
 	End
 	
 	Method OnModuleManager()
+	
+		If _console.Running Return
 	
 		Local modman:=New ModuleManager( _console )
 		
@@ -557,6 +568,8 @@ Class BuildActions
 	End
 	
 	Method OnRebuildHelp()
+	
+		If _console.Running Return
 	
 		MakeDocs()
 		
