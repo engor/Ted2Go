@@ -68,7 +68,7 @@ Class FileActions
 		quit.HotKeyModifiers=Modifier.Alt|Modifier.Ignore
 #Elseif __TARGET__="macos"
 		quit.HotKey=Key.Q
-		quit.HotKeyModifiers=Modifier.Menu|Modifier.Igore
+		quit.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
 #Elseif __TARGET__="linux"
 		quit.HotKey=Key.F4
 		quit.HotKeyModifiers=Modifier.Alt|Modifier.Ignore
