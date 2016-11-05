@@ -62,10 +62,15 @@ Class FileActions
 		
 		quit=New Action( "Quit" )
 		quit.Triggered=OnQuit
+
 #if __HOSTOS__="macos"
 		quit.HotKey=Key.Q
 		quit.HotKeyModifiers=Modifier.Menu
+#Else
+		quit.HotKey=Key.F4
+		quit.HotKeyModifiers=Modifier.Alt
 #endif		
+
 	End
 	
 	Method Update()
