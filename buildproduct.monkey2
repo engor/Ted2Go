@@ -38,6 +38,8 @@ Class BuildProduct
 #endif
 		Case "emscripten"
 			product=New EmscriptenProduct( srcPath )
+		Case "wasm"
+			product=New WasmProduct( srcPath )
 		Case "android"
 			product=New AndroidProduct( srcPath )
 		Case "ios"
@@ -430,9 +432,8 @@ Class EmscriptenProduct Extends BuildProduct
 
 	Method New( srcPath:String )
 		Super.New( srcPath,"emscripten" )
-		
-		AddExts( New String[]( ".html" ) )
 
+		AddExts( New String[]( ".html" ) )
 	End
 	
 	Protected
@@ -454,6 +455,47 @@ Class EmscriptenProduct Extends BuildProduct
 	Method OnGetMx2ccOpts:String() Override
 
 		Local opts:=""
+		
+		opts+=" ~q-product="+ProductDir+AppName+".js~q"
+		
+		Return opts
+	End
+
+	Method OnGetExecutable:String() Override
+
+		Return ProductDir+AppName+".html"
+	
+	End
+End
+
+Class WasmProduct Extends BuildProduct
+
+	Method New( srcPath:String )
+		Super.New( srcPath,"wasm" )
+
+		AddExts( New String[]( ".html" ) )
+	End
+	
+	Protected
+	
+	Method OnCreateProduct() Override
+
+		CopyTemplate( "products/wasm",StripSlashes( ProductDir ) )
+		
+		CreateDir( ProductDir+"assets" )
+		
+		If AppName<>"Monkey2Game"
+		
+			CopyFile( ProductDir+"Monkey2Game.html",ProductDir+AppName+".html" )
+		
+			DeleteFile( ProductDir+"Monkey2Game.html" )
+		Endif
+	End
+	
+	Method OnGetMx2ccOpts:String() Override
+
+		Local opts:=""
+		
 		opts+=" ~q-product="+ProductDir+AppName+".js~q"
 		
 		Return opts
