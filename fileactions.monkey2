@@ -63,7 +63,7 @@ Class FileActions
 		quit=New Action( "Quit" )
 		quit.Triggered=OnQuit
 		
-#If __TARGET__="window"
+#If __TARGET__="windows"
 		quit.HotKey=Key.F4
 		quit.HotKeyModifiers=Modifier.Alt|Modifier.Ignore
 #Elseif __TARGET__="macos"
