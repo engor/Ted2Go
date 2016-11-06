@@ -18,24 +18,38 @@ Class EditActions
 		
 		undo=New Action( "Undo" )
 		undo.Triggered=OnUndo
+		undo.HotKey=Key.Z
+		undo.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
 
 		redo=New Action( "Redo" )
 		redo.Triggered=OnRedo
+		redo.HotKey=Key.Y
+		redo.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
 
 		cut=New Action( "Cut" )
 		cut.Triggered=OnCut
+		cut.HotKey=Key.X
+		cut.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
 
 		copy=New Action( "Copy" )
 		copy.Triggered=OnCopy
+		copy.HotKey=Key.C
+		copy.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
 
 		paste=New Action( "Paste" )
 		paste.Triggered=OnPaste
+		paste.HotKey=Key.V
+		paste.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
 
 		selectAll=New Action( "Select all" )
 		selectAll.Triggered=OnSelectAll
+		selectAll.HotKey=Key.A
+		selectAll.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
 		
 		wordWrap=New Action( "Toggle word wrap" )
 		wordWrap.Triggered=OnWordWrap
+		wordWrap.HotKey=Key.W
+		wordWrap.HotKeyModifiers=Modifier.Menu
 		
 		gotoLine=New Action( "Goto line" )
 		gotoLine.Triggered=OnGotoLine
