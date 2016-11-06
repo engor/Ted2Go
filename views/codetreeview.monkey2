@@ -193,4 +193,3 @@ Class CodeTreeNode Extends TreeView.Node
 	Field _code:CodeItem
 	
 End
-

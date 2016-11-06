@@ -9,6 +9,7 @@ Class CodeTextView Extends TextViewExt
 	Field Highlighter:Highlighter
 	
 	Method IsCursorAtTheEndOfLine:Bool()
+	
 		Local line:=Document.FindLine( Cursor )
 		Local pos:=Document.EndOfLine( line )
 		Return pos=Cursor
@@ -62,16 +63,19 @@ Class CodeTextView Extends TextViewExt
 	End
 	
 	Method FirstSelectedLine:Int()
+	
 		Local min:=Min( Anchor,Cursor )
 		Return Document.FindLine( min )
 	End
 	
 	Method LastSelectedLine:Int()
+	
 		Local max:=Max( Anchor,Cursor )
 		Return Document.FindLine( max )
 	End
 	
 	Method FirstIdentInLine:String( cursor:Int )
+	
 		Local line:=Document.FindLine( cursor )
 		Local text:=Document.GetLine( line )
 		Local n:=0
@@ -87,6 +91,7 @@ Class CodeTextView Extends TextViewExt
 	End
 	
 	Method GetIndent:Int( text:String )
+	
 		Local n:=0
 		While n < text.Length And text[n] <= 32
 			n+=1
@@ -94,6 +99,17 @@ Class CodeTextView Extends TextViewExt
 		Return n
 	End
 
+	Method GotoPosition( line:Int,posInLine:Int=0 )
+	
+		If posInLine = 0
+			GotoLine( line )
+			Return
+		Endif
+		
+		Local dest:=Document.StartOfLine( line )+posInLine
+		SelectText( dest,dest )
+	End
+	
 	
 	Protected
 		
@@ -203,6 +219,7 @@ Class CodeTextView Extends TextViewExt
 	Private 
 	
 	Method DoFormat()
+	
 		If Formatter Then Formatter.Format( Self )
 	End
 	

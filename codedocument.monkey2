@@ -349,7 +349,8 @@ Class CodeDocument Extends Ted2Document
 			_treeView.NodeClicked+=Lambda( node:TreeView.Node )
 				Local codeNode:=Cast<CodeTreeNode>( node )
 				Local item:=codeNode.CodeItem
-				_codeView.GotoLine( item.ScopeStartLine )
+				Local pos:=item.ScopeStartPos
+				_codeView.GotoPosition( pos.x,pos.y )
 			End
 		Endif
 		
@@ -523,9 +524,12 @@ Class CodeDocument Extends Ted2Document
 	Field _debugLine:Int=-1
 	Field _parsing:Bool
 	Field _timer:Timer
+	Field _parser:ICodeParser
 	
 	
 	Method OnLoad:Bool() Override
+	
+		_parser=ParsersManager.Get( FileType )
 	
 		Local text:=stringio.LoadString( Path )
 		
@@ -576,8 +580,8 @@ Class CodeDocument Extends Ted2Document
 			
 			ResetErrors()
 			
-			'Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+path+"~q"
-			Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse ~q"+path+"~q"
+			Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+path+"~q"
+			'Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse ~q"+path+"~q"
 			
 			Local str:=LoadString( "process::"+cmd )
 			Local hasErrors:=(str.Find( "] : Error : " ) > 0)
@@ -601,11 +605,18 @@ Class CodeDocument Extends Ted2Document
 						Endif
 					Endif
 				Next
+				
+				Return ' prevent parsing when errors
 			Endif
 			
 			' call my parser until implenemt -geninfo
-			If Not hasErrors
-				ParseSources( path )
+			'ParseSources( path )
+			
+			Local i:=str.Find( "{" )
+			If i <> -1
+				Local jstr:=str.Slice( i )
+				_parser.ParseJson( jstr,Path )
+				UpdateCodeTree()
 			Endif
 			
 		'End)
@@ -787,7 +798,7 @@ Class CodeItemIcons
 	
 	Function Load:Image( name:String )
 		
-		Return Image.Load( "theme::codeicons/"+name )
+		Return ThemeImages.Get( "codeicons/"+name )
 	End
 	
 	Function InitIcons()
@@ -844,19 +855,6 @@ Class CodeItemIcons
 				
 		_iconDefault=Load( "other.png" ) 
 		
-		AdjustIconsScale()
-		
-		App.ThemeChanged+=Lambda()
-			AdjustIconsScale()
-		End
-		
-	End
-	
-	Function AdjustIconsScale()
-		For Local image:=Eachin _icons.Values
-			image.Scale=App.Theme.Scale
-		Next
-		_iconDefault.Scale=App.Theme.Scale
 	End
 	
 End

@@ -25,6 +25,8 @@
 
 #Import "parsers/parser"
 #Import "parsers/monkey2parser"
+#Import "parsers/codeitem"
+#Import "parsers/parserplugin"
 
 #Import "utils/jsonutils"
 #Import "utils/utils"

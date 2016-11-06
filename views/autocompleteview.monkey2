@@ -210,7 +210,7 @@ Class AutocompleteDialog Extends DialogExt
 	
 	Method IsItemInScope:Bool( item:CodeItem,scope:CodeItem )
 		If scope = Null Return False
-		Return item.ScopeStartLine >= scope.ScopeStartLine And item.ScopeEndLine <= scope.ScopeEndLine
+		Return item.ScopeStartPos.x >= scope.ScopeStartPos.x And item.ScopeEndPos.x <= scope.ScopeEndPos.x
 	End
 	
 	Method OnKeyFilter( event:KeyEvent )
