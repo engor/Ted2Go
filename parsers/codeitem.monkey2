@@ -61,7 +61,7 @@ Class CodeItem
 			Select _kind
 				Case CodeItemKind.Function_,CodeItemKind.Method_,CodeItemKind.Lambda_,CodeItemKind.Operator_
 					If Type<>Null And Type.ident<>"void"
-						s+=" : "+Type.ident
+						s+=" : "+Type.ToString()
 					Endif
 					s+=(HasParams ? " ("+ParamsStr+")" Else " ()")
 				Case CodeItemKind.Class_,CodeItemKind.Interface_,CodeItemKind.Struct_,CodeItemKind.Enum_
@@ -69,11 +69,11 @@ Class CodeItem
 				Case CodeItemKind.Inner_
 					' nothing
 				Case CodeItemKind.Property_
-					s+=" : "+Type.ident
+					s+=" : "+Type.ToString()
 				Default
 					' for enums
 					If Parent = Null Or Parent.Kind <> CodeItemKind.Enum_
-						s+=" : "+Type.ident
+						s+=" : "+Type.ToString()
 					Endif
 			End
 			_text=s
@@ -194,9 +194,9 @@ Class CodeItem
 		Return _params<>Null
 	End
 	
-	Property Params:CodeType[]()
+	Property Params:CodeParam[]()
 		Return _params
-	Setter( value:CodeType[] )
+	Setter( value:CodeParam[] )
 		_params=value
 	End
 	
@@ -208,7 +208,7 @@ Class CodeItem
 		_paramsStr=""
 		For Local p:=Eachin _params
 			If _paramsStr<>"" Then _paramsStr+=","
-			_paramsStr+=p.ident
+			_paramsStr+=p.ToString()
 		Next
 		Return _paramsStr
 	End
@@ -229,7 +229,7 @@ Class CodeItem
 	Field _filePath:String
 	Field _scopeStartPos:Vec2i=New Vec2i,_scopeEndPos:Vec2i=New Vec2i
 	Field _superTypes:List<CodeType>
-	Field _params:CodeType[]
+	Field _params:CodeParam[]
 	Field _paramsStr:String
 	
 	
@@ -282,20 +282,61 @@ Struct CodeType
 	Field expr:String
 	Field args:CodeType[]
 	
-'	Operator To:String()
-'		Return ident
-'	End
-'	
-'	Method ToString:String()
-'		Return ident
-'	End
+	Operator To:String()
+		Return ToString()
+	End
 	
-'	Function GetEmptyType:CodeType()
-'
-'		Local t:=New CodeType
-'		t.kind="ident"
-'		t.ident="void"
-'		Return t
-'	End
+	Method ToString:String()
+		
+		If _str Return _str
+		
+		If args
+			_str=expr+"<"
+			For Local i:=0 Until args.Length
+				If i > 0 Then _str+=","
+				_str+=args[i].ToString()
+			Next
+			_str+=">"
+		Else
+			_str=ident
+		Endif
+		
+		Return _str
+	End
+	
+	Private
+	
+	Field _str:String
+	
+End
+
+
+Struct CodeParam
+
+	Field ident:String
+	Field type:CodeType
+	Field params:CodeParam[] 'for func as param
+	
+	Method ToString:String()
+		
+		If _str Return _str
+		
+		_str=ident+":"+type.ToString()
+		
+		If params
+			_str+="("
+			For Local i:=0 Until params.Length
+				If i > 0 Then _str+=","
+				_str+=params[i].ToString()
+			Next
+			_str+=")"
+		Endif
+		
+		Return _str
+	End
+	
+	Private
+	
+	Field _str:String
 	
 End

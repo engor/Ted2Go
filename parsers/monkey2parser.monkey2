@@ -53,6 +53,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 				ident="New"
 			Endif
 			
+			If IsOperator( flags )
+				kind="operator"
+			Endif
+			
 			'
 			If parent And parent.Kind = CodeItemKind.Enum_
 				kind="param"
@@ -68,7 +72,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			arr=endPos.Split( ":" )
 			item.ScopeEndPos=New Vec2i( Int(arr[0])-1,Int(arr[1]) )
 			
-			Print "parser. add item: "+item.Scope+" "+kind+" "+flags
+			'Print "parser. add item: "+item.Scope+" "+kind+" "+flags
 			
 			If kind="class" Or kind="struct" Or kind="interface"
 				Local t:=New CodeType
@@ -78,6 +82,13 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Local t:=ParseType( jobj )
 				'If t<>Null Then t=CodeType.GetEmptyType()
 				item.Type=t
+				
+				' params
+				If t.kind="functype"
+					Local params:=ParseParams( jobj )
+					item.Params=params
+				Endif
+				
 			Endif
 			
 			If parent
@@ -284,20 +295,35 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Method ParseType:CodeType( jobj:Map<String,JsonValue> )
 		
-		Local type:Map<String,JsonValue> = Null
+		Local type:=GetJobjType( jobj )
 		
-		If jobj.Contains( "type" )
-			type=jobj["type"].ToObject()
-		Elseif jobj.Contains( "getFunc" )
-			type=jobj["getFunc"].ToObject()["type"].ToObject()
-		Elseif jobj.Contains( "init" )
-			Local init:=jobj["init"].ToObject()
-			if init.Contains( "type" )
-				type=init["type"].ToObject()
+		If Not type
+		
+			If jobj.Contains( "kind" )
+				Local kind2:=jobj["kind"].ToString()
+				If kind2="ident"
+					Local t:=New CodeType
+					t.kind=kind2
+					t.ident=jobj["ident"].ToString()
+					Return t
+				Endif
 			Endif
-		Endif
 		
-		If Not type Return Null
+			' extract from literal
+			If jobj.Contains( "init" )
+				Local init:=jobj["init"].ToObject()
+				Local kind2:=init["kind"].ToString()
+				If kind2="literal"
+					Local t:=New CodeType
+					t.kind=kind2
+					Local toke:=init["toke"].ToString()
+					t.ident=GetLiteralType( toke )
+					Return t
+				Endif
+			Endif
+			' not found
+			Return Null
+		Endif
 		
 		Local kind:=type["kind"].ToString()
 		
@@ -330,15 +356,79 @@ Class Monkey2Parser Extends CodeParserPlugin
 				'args
 				Local t:=New CodeType
 				t.kind=kind
-				Local expr:=type["expr"].ToString()
+				Local expr:=type["expr"].ToObject()["ident"].ToString()
 				t.ident=expr
 				t.expr=expr
-								
+				Print "expr: "+expr
+				Local jargs:=type["args"].ToArray()
+				If Not jargs.Empty
+					Print "has args"
+					Local args:=New CodeType[jargs.Length]
+					For Local i:=0 Until jargs.Length
+						args[i]=ParseType( jargs[i].ToObject() )
+						Print "args.ident: "+args[i].ident
+					Next
+					t.args=args
+				Endif
+				
 				Return t
+					
+				
+			Default
+			
 				
 		End
 		
 		Return Null
+	End
+	
+	Method ParseParams:CodeParam[]( jobj:Map<String,JsonValue> )
+	
+		'Print "ident: "+jobj["ident"].ToString()
+		
+		Local type:=GetJobjType( jobj )
+		
+		If Not type Return Null
+		
+		Local params:=type["params"]
+		If Not params
+			'Print "params is null"
+			Return Null
+		Endif
+		Local arr:=params.ToArray()
+		If arr.Empty Return Null
+		
+		Local result:=New CodeParam[arr.Length]
+		Local i:=0
+		For Local param:=Eachin arr
+			Local jparam:=param.ToObject()
+			Local p:=New CodeParam
+			p.ident=jparam["ident"].ToString()
+			p.type=ParseType( jparam )
+			' try recursive extraction
+			p.params=ParseParams( jparam )
+			result[i]=p
+			i+=1
+		Next
+		Return result
+	End
+	
+	Method GetJobjType:Map<String,JsonValue>( jobj:Map<String,JsonValue> )
+		
+		Local type:Map<String,JsonValue> = Null
+		
+		If jobj.Contains( "type" )
+			type=jobj["type"].ToObject()
+		Elseif jobj.Contains( "getFunc" )
+			type=jobj["getFunc"].ToObject()["type"].ToObject()
+		Elseif jobj.Contains( "init" )
+			Local init:=jobj["init"].ToObject()
+			if init.Contains( "type" )
+				type=init["type"].ToObject()
+			Endif
+		Endif
+		
+		Return type
 	End
 	
 	Method GetInnerScope:CodeItem( parent:CodeItem,docLine:Int )
@@ -483,6 +573,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
+	Function IsOperator:Bool( flags:Int )
+		Return (flags & Flags.DECL_OPERATOR)<>0
+	End
+	
 	Function GetAccess:AccessMode( flags:Int )
 		
 		If flags & Flags.DECL_PRIVATE Return AccessMode.Private_
@@ -551,6 +645,53 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
+	
+End
+
+
+Private
+
+Function GetLiteralType:String( typeIdent:String )
+
+	If IsString( typeIdent )
+		Return "string"
+	Elseif typeIdent = "True" Or typeIdent = "False"
+		Return "bool"
+	Elseif IsInt( typeIdent )
+		Return "int"
+	Elseif IsFloat( typeIdent )
+		Return "float"
+	Endif
+	Return ""
+End
+
+Function IsString:Bool( text:String )
+	
+	text=text.Trim()
+	Return text.StartsWith("~q")
+End
+
+Function IsFloat:Bool( text:String )
+	
+	text=text.Trim()
+	Local n:=text.Length,i:=0
+	If text.StartsWith( "-" ) Then i=1
+	While i < n And (text[i] = Chars.DOT Or (text[i] >= Chars.DIGIT_0 And text[i] <= Chars.DIGIT_9))
+		i+=1
+	Wend
+	Return i>0 And i=n
+End
+
+Function IsInt:Bool( text:String )
+	
+	text=text.Trim()
+	If text.StartsWith( "$" ) Return True
+	Local n:=text.Length,i:=0
+	If text.StartsWith( "-" ) Then i=1
+	While i < n And text[i] >= Chars.DIGIT_0 And text[i] <= Chars.DIGIT_9
+		i+=1
+	Wend
+	Return i>0 And i=n
 End
 
 

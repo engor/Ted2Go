@@ -55,7 +55,7 @@ Using mojox..
 Using tinyxml2..
 
 
-Global AppTitle := "Ted2Go"
+Global AppTitle:="Ted2Go"
 
 
 Function Main()
