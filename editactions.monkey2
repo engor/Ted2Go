@@ -11,6 +11,7 @@ Class EditActions
 	Field paste:Action
 	Field selectAll:Action
 	Field wordWrap:Action
+	Field gotoLine:Action
 	
 	Method New( docs:DocumentManager )
 	
@@ -19,35 +20,42 @@ Class EditActions
 		undo=New Action( "Undo" )
 		undo.Triggered=OnUndo
 		undo.HotKey=Key.Z
-		undo.HotKeyModifiers=Modifier.Menu
-		
+		undo.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
+
 		redo=New Action( "Redo" )
 		redo.Triggered=OnRedo
 		redo.HotKey=Key.Y
-		redo.HotKeyModifiers=Modifier.Menu
+		redo.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
 
 		cut=New Action( "Cut" )
 		cut.Triggered=OnCut
 		cut.HotKey=Key.X
-		cut.HotKeyModifiers=Modifier.Menu
-		
+		cut.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
+
 		copy=New Action( "Copy" )
 		copy.Triggered=OnCopy
 		copy.HotKey=Key.C
-		copy.HotKeyModifiers=Modifier.Menu
-		
+		copy.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
+
 		paste=New Action( "Paste" )
 		paste.Triggered=OnPaste
 		paste.HotKey=Key.V
-		paste.HotKeyModifiers=Modifier.Menu
-		
+		paste.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
+
 		selectAll=New Action( "Select all" )
 		selectAll.Triggered=OnSelectAll
 		selectAll.HotKey=Key.A
-		selectAll.HotKeyModifiers=Modifier.Menu
+		selectAll.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
 		
 		wordWrap=New Action( "Toggle word wrap" )
 		wordWrap.Triggered=OnWordWrap
+		wordWrap.HotKey=Key.W
+		wordWrap.HotKeyModifiers=Modifier.Menu
+		
+		gotoLine=New Action( "Goto line" )
+		gotoLine.Triggered=OnGotoLine
+		gotoLine.HotKey=Key.G
+		gotoLine.HotKeyModifiers=Modifier.Menu
 		
 	End
 	
@@ -114,6 +122,19 @@ Class EditActions
 		Local tv:=Cast<TextView>( App.KeyView )
 		
 		If tv tv.WordWrap=Not tv.WordWrap
+	End
+	
+	Method OnGotoLine()
+	
+		Local tv:=Cast<TextView>( App.KeyView )
+		If Not tv Return
+		
+		Local line:=RequestInt( "Goto line:","Goto line",tv.CursorLine+1,0,1,tv.Document.NumLines )
+		If Not line Return
+		
+		tv.GotoLine( line-1 )
+		
+		tv.MakeKeyView()
 	End
 
 End
