@@ -24,6 +24,7 @@ Class CodeItem
 		Return _type
 	Setter( value:CodeType )
 		_type=value
+		_type.ident=FixTypeIdent( _type.ident )		
 	End
 		
 	Property Kind:CodeItemKind()
@@ -271,14 +272,18 @@ Class CodeItem
 			_kind=CodeItemKind.Alias_
 		End
 	End
-		
+	
 End
 
 
 Struct CodeType
 	
 	Field kind:String
-	Field ident:String
+	Property ident:String()
+		Return _ident
+	Setter( value:String )
+		_ident = FixTypeIdent( value )
+	End
 	Field expr:String
 	Field args:CodeType[]
 	
@@ -307,13 +312,18 @@ Struct CodeType
 	Private
 	
 	Field _str:String
-	
+	Field _ident:String
+		
 End
 
 
 Struct CodeParam
 
-	Field ident:String
+	Property ident:String()
+		Return _ident
+	Setter( value:String )
+		_ident = FixTypeIdent( value )
+	End
 	Field type:CodeType
 	Field params:CodeParam[] 'for func as param
 	
@@ -338,5 +348,18 @@ Struct CodeParam
 	Private
 	
 	Field _str:String
+	Field _ident:String
 	
+End
+
+
+Private
+
+Function FixTypeIdent:String( ident:String )
+	
+	Select ident
+	Case "string","bool","int","float","long","void"
+		Return ident.Slice( 0,1 ).ToUpper()+ident.Slice( 1 )
+	End
+	Return ident
 End

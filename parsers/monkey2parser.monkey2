@@ -26,9 +26,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local last:=_files[filePath]
 		If last = 0 Or time > last
 			_files[filePath]=time
-			Print "parse file: "+filePath
+			'Print "parse file: "+filePath
 		Else
-			Print "parse file, not modified: "+filePath
+			'Print "parse file, not modified: "+filePath
 			Return Null
 		Endif
 		
@@ -72,37 +72,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		Return Null
 	End
-	
-	#rem
-	Method ParseJson( json:String,filePath:String )
 		
-		RemovePrevious( filePath )
-		
-		Local jobj:=JsonObject.Parse( json )
-		Local items:=New List<CodeItem>
-		Local members:=jobj["members"].ToArray()
-		
-		ParseJsonMembers( members,Null,filePath,items )
-		
-		ItemsMap[filePath]=items
-		
-		If jobj.Contains( "imports" )
-			Local imports:=jobj["imports"].ToArray()
-			For Local jfile:=Eachin imports
-				Local file:=jfile.ToString()
-				If file.StartsWith("<") Continue 'module
-				Local time:=GetFileTime( file )
-				Local last:=_files[filePath]
-				If time > last
-					Print "parse import: "+file
-					
-				Endif
-			Next
-		Endif
-		
-	End
-	#end
-	
 	Method ParseJsonMembers( members:Stack<JsonValue>,parent:CodeItem,filePath:String,resultContainer:List<CodeItem> )
 		
 		For Local val:=Eachin members
@@ -147,7 +117,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Else
 				Local t:=ParseType( jobj )
 				item.Type=t
-				
+								
 				' params
 				If t.kind="functype"
 					Local params:=ParseParams( jobj )
@@ -374,7 +344,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		For Local d:=Eachin dirs
 			If GetFileType( modDir+d ) = FileType.Directory
 				Local file:=modDir + d + "/" + d + ".monkey2"
-				Print "module: "+file
+				'Print "module: "+file
 				If GetFileType( file ) = FileType.File
 					ParseFile( file,file )
 				Endif
