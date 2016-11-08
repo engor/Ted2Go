@@ -442,6 +442,7 @@ Class CodeDocument Extends Ted2Document
 			
 			Local scroller:=New ScrollView
 			Local textView:=New TextView
+			textView.WordWrap=True
 			textView.Text=str
 			scroller.ContentView=textView
 			view.AddView( scroller,"bottom",200,True )
@@ -565,61 +566,36 @@ Class CodeDocument Extends Ted2Document
 		_treeView.Fill( FileType,Path )
 	End
 	
-	Method ParseSources( pathOnDisk:String )
+	Method BgParsing( pathOnDisk:String )
 		
-		ParsersManager.Get( FileType ).Parse( _doc.Text,Path,pathOnDisk )
-		UpdateCodeTree()
+		ResetErrors()
 		
-	End
-	
-	Method BgParsing( path:String )
+		Local errors:=_parser.ParseFile( Path,pathOnDisk )
 		
-		'New Fiber( Lambda()
+		If errors
 			
-			Local result:=0
-			
-			ResetErrors()
-			
-			Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+path+"~q"
-			'Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse ~q"+path+"~q"
-			
-			Local str:=LoadString( "process::"+cmd )
-			Local hasErrors:=(str.Find( "] : Error : " ) > 0)
-			
-			If hasErrors
-				
-				Local arr:=str.Split( "~n" )
-				For Local s:=Eachin arr
-					Local i:=s.Find( "] : Error : " )
-					If i<>-1
-						Local j:=s.Find( " [" )
-						If j<>-1
-							Local path:=s.Slice( 0,j )
-							Local line:=Int( s.Slice( j+2,i ) )-1
-							Local msg:=s.Slice( i+12 )
-							
-							Local err:=New BuildError( path,line,msg )
+			Local arr:=errors.Split( "~n" )
+			For Local s:=Eachin arr
+				Local i:=s.Find( "] : Error : " )
+				If i<>-1
+					Local j:=s.Find( " [" )
+					If j<>-1
+						Local path:=s.Slice( 0,j )
+						Local line:=Int( s.Slice( j+2,i ) )-1
+						Local msg:=s.Slice( i+12 )
 						
-							AddError( err )
-							
-						Endif
+						Local err:=New BuildError( path,line,msg )
+					
+						AddError( err )
+						
 					Endif
-				Next
-				
-				Return ' prevent parsing when errors
-			Endif
+				Endif
+			Next
 			
-			' call my parser until implenemt -geninfo
-			'ParseSources( path )
-			
-			Local i:=str.Find( "{" )
-			If i <> -1
-				Local jstr:=str.Slice( i )
-				_parser.ParseJson( jstr,Path )
-				UpdateCodeTree()
-			Endif
-			
-		'End)
+			Return ' exit when errors
+		Endif
+		
+		UpdateCodeTree()
 		
 	End
 	
@@ -644,13 +620,13 @@ Class CodeDocument Extends Ted2Document
 			
 			Local tmp:=MainWindow.AllocTmpPath( "_mx2cc_parse_",".monkey2" )
 			Local file:=StripDir( Path )
-			Print "parsing:"+file+" ("+tmp+")"
+			'Print "parsing:"+file+" ("+tmp+")"
 			
 			SaveString( _doc.Text,tmp )
 		
 			BgParsing( tmp )
 			
-			Print "finished:"+file
+			'Print "finished:"+file
 			
 			DeleteFile( tmp )
 			

@@ -12,17 +12,68 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		New Fiber( Lambda()
 		
-			'ParseModules()
+			ParseModules()
 			
 		End )
 		
 	End
 
 	
-	Method Parse( text:String,filePath:String,pathOnDisk:String )
-		'do nothing
+	Method ParseFile:String( filePath:String,pathOnDisk:String )
+		
+		' is file modified?
+		Local time:=GetFileTime( pathOnDisk )
+		Local last:=_files[filePath]
+		If last = 0 Or time > last
+			_files[filePath]=time
+			Print "parse file: "+filePath
+		Else
+			Print "parse file, not modified: "+filePath
+			Return Null
+		Endif
+		
+		' start parsing process
+		Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+pathOnDisk+"~q"
+		
+		Local str:=LoadString( "process::"+cmd )
+		Local hasErrors:=(str.Find( "] : Error : " ) > 0)
+		
+		Local i:=str.Find( "{" )
+		
+		' return errors
+		If hasErrors Return (i > 0) ? str.Slice( 0,i ) Else str
+		
+		'----------
+		
+		RemovePrevious( filePath )
+
+		Local json:=str.Slice( i )		
+		Local jobj:=JsonObject.Parse( json )
+		
+		If jobj.Contains( "members" )
+			Local items:=New List<CodeItem>
+			Local members:=jobj["members"].ToArray()
+			ParseJsonMembers( members,Null,filePath,items )
+			ItemsMap[filePath]=items
+			Items.AddAll( items )
+		Endif
+		
+		' parse imports
+		If jobj.Contains( "imports" )
+			Local folder:=ExtractDir( filePath )
+			Local imports:=jobj["imports"].ToArray()
+			For Local jfile:=Eachin imports
+				Local file:=jfile.ToString()
+				If file.StartsWith( "<" ) Or Not file.EndsWith( ".monkey2" )  Continue 'skip modules and not .monkey2
+				file=folder+file
+				ParseFile( file,file )
+			Next
+		Endif
+		
+		Return Null
 	End
 	
+	#rem
 	Method ParseJson( json:String,filePath:String )
 		
 		RemovePrevious( filePath )
@@ -35,7 +86,22 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		ItemsMap[filePath]=items
 		
+		If jobj.Contains( "imports" )
+			Local imports:=jobj["imports"].ToArray()
+			For Local jfile:=Eachin imports
+				Local file:=jfile.ToString()
+				If file.StartsWith("<") Continue 'module
+				Local time:=GetFileTime( file )
+				Local last:=_files[filePath]
+				If time > last
+					Print "parse import: "+file
+					
+				Endif
+			Next
+		Endif
+		
 	End
+	#end
 	
 	Method ParseJsonMembers( members:Stack<JsonValue>,parent:CodeItem,filePath:String,resultContainer:List<CodeItem> )
 		
@@ -80,13 +146,19 @@ Class Monkey2Parser Extends CodeParserPlugin
 				t.ident=ident
 			Else
 				Local t:=ParseType( jobj )
-				'If t<>Null Then t=CodeType.GetEmptyType()
 				item.Type=t
 				
 				' params
 				If t.kind="functype"
 					Local params:=ParseParams( jobj )
-					item.Params=params
+					If params
+						item.Params=params
+						For Local p:=Eachin params
+							Local i:=New CodeItem( p.ident )
+							i.Type=p.type
+							i.Parent=item
+						Next
+					Endif
 				Endif
 				
 			Endif
@@ -202,11 +274,11 @@ Class Monkey2Parser Extends CodeParserPlugin
 		' and check in global scope
 		If item = Null Or onlyOne
 			For Local i:=Eachin Items
-				Print "global 1: "+i.Scope
+				'Print "global 1: "+i.Scope
 				If Not CheckIdent( i.Ident,firstIdent,onlyOne ) Continue
 				If Not CheckAccessInGlobal( i,filePath ) Continue
 				If IsLocalMember( i ) And i.ScopeStartPos.x > docLine Continue
-				Print "global 2"
+				'Print "global 2"
 				If Not onlyOne
 					item=i
 					Exit
@@ -217,7 +289,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Next
 		Endif
 		
-		If item Print "item: "+item.Scope
+		'If item Print "item: "+item.Scope
 		
 		' var1.var2.var3...
 		If Not onlyOne And item <> Null
@@ -284,14 +356,32 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Private
 	
+	Global _instance:=New Monkey2Parser
+	Field _files:=New StringMap<Long>
+	
 	Method New()
 	
 		Super.New()
 		_types=New String[](".monkey2")
 	End
 	
-	Global _instance:=New Monkey2Parser
-	
+	Method ParseModules()
+		
+		Local modDir:=CurrentDir()+"modules/"
+		
+		Local dirs:=LoadDir( modDir )
+		
+		For Local d:=Eachin dirs
+			If GetFileType( modDir+d ) = FileType.Directory
+				Local file:=modDir + d + "/" + d + ".monkey2"
+				Print "module: "+file
+				If GetFileType( file ) = FileType.File
+					ParseFile( file,file )
+				Endif
+			Endif
+		Next
+		
+	End
 	
 	Method ParseType:CodeType( jobj:Map<String,JsonValue> )
 		
@@ -359,14 +449,14 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Local expr:=type["expr"].ToObject()["ident"].ToString()
 				t.ident=expr
 				t.expr=expr
-				Print "expr: "+expr
+				'Print "expr: "+expr
 				Local jargs:=type["args"].ToArray()
 				If Not jargs.Empty
-					Print "has args"
+					'Print "has args"
 					Local args:=New CodeType[jargs.Length]
 					For Local i:=0 Until jargs.Length
 						args[i]=ParseType( jargs[i].ToObject() )
-						Print "args.ident: "+args[i].ident
+						'Print "args.ident: "+args[i].ident
 					Next
 					t.args=args
 				Endif
