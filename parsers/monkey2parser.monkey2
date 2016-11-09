@@ -3,7 +3,10 @@ Namespace ted2go
 
 
 Class Monkey2Parser Extends CodeParserPlugin
-
+	
+	Global OnDoneParseModules:Void()
+	Global OnParseModule:Void( file:String )
+	
 	Property Name:String() Override
 		Return "Monkey2Parser"
 	End
@@ -14,6 +17,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 			ParseModules()
 			
+			OnDoneParseModules()
 		End )
 		
 	End
@@ -346,6 +350,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Local file:=modDir + d + "/" + d + ".monkey2"
 				'Print "module: "+file
 				If GetFileType( file ) = FileType.File
+					OnParseModule( file )
 					ParseFile( file,file )
 				Endif
 			Endif

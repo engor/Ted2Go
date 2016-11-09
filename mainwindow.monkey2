@@ -301,9 +301,7 @@ Class MainWindowInstance Extends Window
 		LoadState( jobj )
 		
 		App.MouseEventFilter+=ThemeScaleMouseFilter
-		
-		OnCreatePlugins()
-		
+				
 		App.Idle+=OnAppIdle
 		
 		If GetFileType( "bin/ted2.state.json" )=FileType.None _helpActions.about.Trigger()
@@ -744,7 +742,22 @@ End
 Private
 
 Function OnCreatePlugins()
-
+	
+	Local dialog:=New ProgressDialog( "Parsing modules...","+" )
+	dialog.MinSize=New Vec2i( 256,128 )
+	dialog.Open()
+	
+	Local onParse:=Lambda( file:String )
+		dialog.Text=StripExt( StripDir( file ) )+"~n~nYou can work while parsing."
+	End
+	
+	Monkey2Parser.OnParseModule+=onParse
+	
+	Monkey2Parser.OnDoneParseModules += Lambda()
+		dialog.Close()
+		Monkey2Parser.OnParseModule-=onParse
+	End
+	
 	For Local plugin:=Eachin Plugin.PluginsOfType<Plugin>()
 		PluginBridge.OnCreate(plugin)
 	Next

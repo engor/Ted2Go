@@ -28,7 +28,7 @@
 
 		"EditorToolBar":{
 			"extends":"ToolBar",
-			"padding":[ 2 ],
+			"padding":[ 0 ],
 			"backgroundColor":"content",
 			"border":[ 0,0,0,1 ],
 			"borderColor":"clear"
@@ -36,10 +36,16 @@
 
 		"MainToolBar":{
 			"extends":"ToolBar",
-			"padding":[ 2 ],
+			"padding":[ 0 ],
 			"backgroundColor":"content",
 			"border":[ 0,0,0,1 ],
 			"borderColor":"clear"
+		},
+
+		"ToolButton":{
+			"extends":"Button",
+			"padding":[2,0],
+			"margin":[3,0]
 		}
 	}
 }
