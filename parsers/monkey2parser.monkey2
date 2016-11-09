@@ -634,16 +634,19 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Return False
 		Endif
 		
-		Local type:=item.Parent.Type.ident
+		' inside of item's parent
+		If item.Parent.Ident = scopeClass.Ident Return True
 		
+'		Local type:=item.Parent.Type.ident
+'		
 		' it's own class
-		If type = scopeClass.Type.ident
-			Return True
-		Else
-			' inherited
-			Local has:=scopeClass.HasSuchSuperClass( type )
-			If has Return item.Access = AccessMode.Protected_
-		Endif
+'		If type = scopeClass.Type.ident
+'			Return True
+'		Else
+'			' inherited
+'			Local has:=scopeClass.HasSuchSuperClass( type )
+'			If has Return item.Access = AccessMode.Protected_
+'		Endif
 		
 		Return False
 		

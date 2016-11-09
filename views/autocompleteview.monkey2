@@ -28,7 +28,7 @@ Class AutocompleteDialog Extends DialogExt
 	Field OnChoosen:Void( text:String )
 	
 	Method New( title:String )
-		Self.New( title,600,480 )
+		Self.New( title,800,480 )
 	End
 	
 	Method New( title:String,width:Int,height:Int )

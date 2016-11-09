@@ -200,7 +200,6 @@ Class ListView Extends ScrollableView
 			w=Max( w,Int(RenderStyle.Font.TextWidth( i.Text )) )
 		Next
 		
-		w+=40 'icon
 		w=Min( w,MaxSize.x )
 		_width=w
 		
@@ -212,7 +211,7 @@ Class ListView Extends ScrollableView
 		Local h:=Min( _count*_lineH,MaxSize.y )
 		h=(h/_lineH)*_lineH
 		
-		Return New Vec2i( _width+16,h ) '+16 for scrollbar
+		Return New Vec2i( _width+40,h ) '+40 for icon + scrollbar
 	End
 	
 	Method OnContentMouseEvent( event:MouseEvent ) Override
