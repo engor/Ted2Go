@@ -50,13 +50,13 @@ Class ListView Extends ScrollableView
 
 	Field OnItemChoosen:Void()
 	
-	Method New( lineHeight:Int,width:Int=300,maxHeight:Int=480 )
+	Method New( lineHeight:Int,width:Int=600,height:Int=480 )
 		_items=New List<ListViewItem>
 		_lineH=lineHeight
 		_selColor=New Color(0.2,0.4,0.6)
 		_hoverColor=New Color(0.4,0.4,0.4,0.5)
-		_width=width
-		_maxHeight=maxHeight
+		MaxSize=New Vec2i( width,height )
+		
 	End
 	
 	Method AddItems( items:List<ListViewItem> )
@@ -194,13 +194,25 @@ Class ListView Extends ScrollableView
 	End
 	
 	Method OnMeasureContent:Vec2i() Override
-		Return New Vec2i( _width-20,_count*_lineH )
+		
+		Local w:=0
+		For Local i:=Eachin _items
+			w=Max( w,Int(RenderStyle.Font.TextWidth( i.Text )) )
+		Next
+		
+		w+=40 'icon
+		w=Min( w,MaxSize.x )
+		_width=w
+		
+		Return New Vec2i( w,_count*_lineH )
 	End
 	
 	Method OnMeasure:Vec2i() Override
-		Local h:=Min(_count*_lineH,_maxHeight)
+		
+		Local h:=Min( _count*_lineH,MaxSize.y )
 		h=(h/_lineH)*_lineH
-		Return New Vec2i( _width,h )
+		
+		Return New Vec2i( _width+16,h ) '+16 for scrollbar
 	End
 	
 	Method OnContentMouseEvent( event:MouseEvent ) Override
@@ -236,7 +248,7 @@ Class ListView Extends ScrollableView
 	Field _count:Int
 	Field _selIndex:Int
 	Field _selColor:Color,_hoverColor:Color
-	Field _maxHeight:Int,_width:Int
+	Field _width:Int
 	Field _moveCyclic:Bool
 	
 End

@@ -353,13 +353,76 @@ Struct CodeParam
 End
 
 
-Private
-
-Function FixTypeIdent:String( ident:String )
+Struct CodeItemsSorter Final
 	
-	Select ident
-	Case "string","bool","int","float","long","void"
-		Return ident.Slice( 0,1 ).ToUpper()+ident.Slice( 1 )
+	Function SortItems( list:List<CodeItem>, inverse:Bool=False )
+		
+		Local sorterFunc:Int( lhs:CodeItem,rhs:CodeItem )
+		
+		If inverse
+			If _sorterInverse = Null
+				_sorterInverse=Lambda:Int( lhs:CodeItem,rhs:CodeItem )
+					
+					Local lp:=GetItemPriority( lhs )
+					Local rp:=GetItemPriority( rhs )
+					
+					Local r:= (lp <=> rp) 'inversion is here
+					If r <> 0 Return r
+					
+					Return lhs.Text <=> rhs.Text
+				End
+			Endif			
+			sorterFunc=_sorterInverse
+		Else
+			If _sorter = Null
+				_sorter=Lambda:Int( lhs:CodeItem,rhs:CodeItem )
+					
+					Local lp:=GetItemPriority( lhs )
+					Local rp:=GetItemPriority( rhs )
+					
+					Local r:= (rp <=> lp)
+					If r <> 0 Return r
+					
+					Return lhs.Text <=> rhs.Text
+				End
+			Endif
+			sorterFunc=_sorter
+		Endif
+		
+		list.Sort( sorterFunc )
 	End
-	Return ident
+	
+	
+	Private
+	
+	Method New()
+	End
+	
+	Global _sorter:Int( lhs:CodeItem,rhs:CodeItem )
+	Global _sorterInverse:Int( lhs:CodeItem,rhs:CodeItem )
+	
+	Function GetItemPriority:Int( item:CodeItem )
+		
+		Select item.Kind
+			
+			Case CodeItemKind.Class_,CodeItemKind.Struct_,CodeItemKind.Interface_,CodeItemKind.Enum_
+				Return 20
+				
+			Case CodeItemKind.Method_,CodeItemKind.Function_
+				Return (item.Ident.ToLower() = "new") ? 15 Else 10
+			
+			Case CodeItemKind.Property_
+				Return 8
+			
+			Case CodeItemKind.Field_,CodeItemKind.Global_
+				Return 7
+				
+			Case CodeItemKind.Const_
+				Return 6
+				
+		End
+		
+		Return 0
+	End
+	
 End

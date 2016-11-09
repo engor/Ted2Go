@@ -45,52 +45,6 @@ Class CodeTreeView Extends TreeViewExt
 	Private
 	
 	Field _expands:=New StringMap<Bool>
-	Field _sorterByName:Int( lhs:CodeItem,rhs:CodeItem )
-	Field _sorter:Int( lhs:CodeItem,rhs:CodeItem )
-	
-	#Rem
-	Field _doc:TextDocument
-	Field _timer:Timer
-	
-	Method OnTextChanged()
-	
-		If _timer _timer.Cancel()
-		
-		_timer=New Timer( 1,Lambda()
-		
-			Local tmp:=MainWindow.AllocTmpPath( "_mx2cc_parse_",".monkey2" )
-			
-			Print "parsing:"+tmp
-			
-			SaveString( _doc.Text,tmp )
-		
-			UpdateTree( tmp )
-			
-			Print "finished:"+tmp
-			
-			DeleteFile( tmp )
-			
-			_timer.Cancel()
-			
-			_timer=Null
-		
-		End )
-	End
-	
-	Method UpdateTree( path:String )
-	
-		Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+path+"~q"
-					
-		Local str:=LoadString( "process::"+cmd )
-		
-		Local jobj:JsonObject,i:=str.Find( "{" )
-		
-		If i<>-1 jobj=JsonObject.Parse( str.Slice( i ) )
-		
-		Super.Value=jobj
-		
-	End
-	#End
 	
 	Method StoreTreeExpands()
 	
@@ -161,47 +115,9 @@ Class CodeTreeView Extends TreeViewExt
 	
 		If Not SortEnabled Return
 	
-		If _sorterByName = Null
-			_sorterByName=Lambda:Int( lhs:CodeItem,rhs:CodeItem )
-				
-				Local lp:=GetItemPriority( lhs )
-				Local rp:=GetItemPriority( rhs )
-				
-				Local r:= (rp <=> lp)
-				If r <> 0 Return r
-				
-				Return lhs.Text <=> rhs.Text
-			End
-		Endif
-		_sorter=_sorterByName
-		' sorting
-		list.Sort(_sorter)
+		CodeItemsSorter.SortItems( list )
 	End
-	
-	Method GetItemPriority:Int( item:CodeItem )
 		
-		Select item.Kind
-			
-			Case CodeItemKind.Class_,CodeItemKind.Struct_,CodeItemKind.Interface_,CodeItemKind.Enum_
-				Return 20
-				
-			Case CodeItemKind.Method_,CodeItemKind.Function_
-				Return (item.Ident.ToLower() = "new") ? 15 Else 10
-			
-			Case CodeItemKind.Property_
-				Return 8
-			
-			Case CodeItemKind.Field_,CodeItemKind.Global_
-				Return 7
-				
-			Case CodeItemKind.Const_
-				Return 6
-				
-		End
-		
-		Return 0
-	End
-	
 End
 
 

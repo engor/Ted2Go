@@ -2,6 +2,30 @@
 Namespace ted2go
 
 
+Function FixTypeIdent:String( ident:String )
+	
+	If ident.StartsWith( "@" ) Then ident=ident.Slice( 1 )
+	
+	Select ident
+	Case "new","bool","byte","double","float","int","long","object","short","string","throwable","variant","void"
+		Return ident.Slice( 0,1 ).ToUpper()+ident.Slice( 1 )
+	Case "typeinfo"
+		Return "TypeInfo"
+	Case "cstring"
+		Return "CString"
+	Case "ubyte"
+		Return "UByte"
+	Case "uint"
+		Return "UInt"
+	Case "ulong"
+		Return "ULong"
+	Case "ushort"
+		Return "UShort"		
+	End
+	Return ident
+End
+
+
 Class Monkey2Parser Extends CodeParserPlugin
 	
 	Global OnDoneParseModules:Void()
@@ -88,10 +112,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Local flags:=Int( jobj["flags"].ToNumber() )
 			Local ident:=jobj["ident"].ToString()
 			
-			' !!
-			If kind="method" And ident="new"
-				ident="New"
-			Endif
+			ident=FixTypeIdent( ident )
 			
 			If IsOperator( flags )
 				kind="operator"
@@ -114,14 +135,14 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			'Print "parser. add item: "+item.Scope+" "+kind+" "+flags
 			
-			If kind="class" Or kind="struct" Or kind="interface"
+			If kind="class" Or kind="struct" Or kind="interface" Or kind="enum"
 				Local t:=New CodeType
 				t.kind=kind
 				t.ident=ident
 			Else
 				Local t:=ParseType( jobj )
 				item.Type=t
-								
+				
 				' params
 				If t.kind="functype"
 					Local params:=ParseParams( jobj )
@@ -233,7 +254,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 							item=i
 							Exit
 						Else
-							RefineRawType( i )
+							'RefineRawType( i )
 							target.AddLast( i )
 						Endif
 					Next
@@ -259,7 +280,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 					item=i
 					Exit
 				Else
-					RefineRawType( i )
+					'RefineRawType( i )
 					target.AddLast( i )
 				Endif
 			Next
@@ -275,13 +296,26 @@ Class Monkey2Parser Extends CodeParserPlugin
 			' start from the second ident part here
 			For Local k:=1 Until idents.Length
 				
-				RefineRawType( item )
+				'RefineRawType( item )
 				
 				Local staticOnly:=(Not isSelf And (item.Kind = CodeItemKind.Class_ Or item.Kind = CodeItemKind.Struct_))
 						
 				' need to check by ident type
 				Local type:=item.Type.ident
-				''type=StripGenericType( type )
+				
+				Select item.Kind
+					Case CodeItemKind.Class_,CodeItemKind.Struct_,CodeItemKind.Interface_,CodeItemKind.Enum_
+						' don't touch 'item'
+					Default
+						item=Null
+						For Local i:=Eachin Items
+							If i.Ident = type
+								item=i
+								Exit
+							Endif
+						Next
+						If item = Null Then Exit
+				End
 				
 				'is it alias?
 				
@@ -290,15 +324,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 '				If at <> Null
 '					type=StripGenericType( at )
 '				Endif
-				
-				item=Null
-				For Local i:=Eachin Items
-					If i.Ident = type
-						item=i
-						Exit
-					Endif
-				Next
-				If item = Null Then Exit
+								
 				
 				Local identPart:=idents[k]
 				Local last:=(k = idents.Length-1)
@@ -314,7 +340,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 						item=i
 						If last
 							If Not staticOnly Or IsStaticMember( i )
-								RefineRawType( i )
+								'RefineRawType( i )
 								target.AddLast( i )
 							Endif
 						Else
@@ -345,7 +371,16 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		Local modDir:=CurrentDir()+"modules/"
 		
-		Local dirs:=LoadDir( modDir )
+		Local dd:=LoadDir( modDir )
+		
+		' pop up some modules to parse them first
+		Local dirs:=New Stack<String>
+		dirs.AddAll( dd )
+		Local mods:=New String[]( "std","mojo","monkey" )
+		For Local m:=Eachin mods
+			dirs.Remove( m )
+			dirs.Insert( 0,m )
+		Next
 		
 		For Local d:=Eachin dirs
 			If GetFileType( modDir+d ) = FileType.Directory
@@ -804,3 +839,5 @@ Struct Flags
 	Const DECL_IFACEMEMBER:=$080000
 	
 End
+
+

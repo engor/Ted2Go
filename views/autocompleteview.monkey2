@@ -28,14 +28,14 @@ Class AutocompleteDialog Extends DialogExt
 	Field OnChoosen:Void( text:String )
 	
 	Method New( title:String )
-		Self.New( title,280,480 )
+		Self.New( title,600,480 )
 	End
 	
-	Method New( title:String,width:Int,maxHeight:Int )
+	Method New( title:String,width:Int,height:Int )
 	
 		Title=title
 		
-		_view=New ListView( 20,width,maxHeight )
+		_view=New ListView( 20,width,height )
 		_view.MoveCyclic=True
 		
 		ContentView=_view
@@ -140,6 +140,8 @@ Class AutocompleteDialog Extends DialogExt
 		_listForExtract.Clear()
 		parser.GetItemsForAutocomplete( ident,filePath,docLine,_listForExtract )
 		
+		CodeItemsSorter.SortItems( _listForExtract,True )
+		
 		For Local i:=Eachin _listForExtract
 			' remove duplicates
 			Local s:=i.Text
@@ -162,8 +164,6 @@ Class AutocompleteDialog Extends DialogExt
 		If result.Empty 
 			Return
 		Endif
-			
-		SortResults( result )
 		
 		_view.Reset()'reset selIndex
 		_view.SetItems( result )
@@ -179,25 +179,12 @@ Class AutocompleteDialog Extends DialogExt
 	Field _keywords:StringMap<List<ListViewItem>>
 	Field _lastIdentPart:String,_fullIdent:String
 	Field _parsers:StringMap<ICodeParser>
-	Field sorter:Int(lhs:ListViewItem,rhs:ListViewItem)
 	Field _listForExtract:=New List<CodeItem>
 	
 	
 	Method New()
 	End
-	
-	Method SortResults( list:List<ListViewItem> )
 		
-		If sorter = Null
-			sorter=Lambda:Int( lhs:ListViewItem,rhs:ListViewItem )
-				Return lhs.Text <=> rhs.Text
-			End
-		Endif
-		
-		list.Sort( sorter )
-		
-	End
-	
 	Method GetParser:ICodeParser( fileType:String )
 		If _parsers[fileType] = Null Then UpdateParsers( fileType )
 		Return _parsers[fileType]
