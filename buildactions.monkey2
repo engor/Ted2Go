@@ -348,13 +348,6 @@ Class BuildActions
 			_console.Terminate()
 		End
 		
-		App.KeyEventFilter += Lambda(event:KeyEvent)
-			If event.Type = EventType.KeyDown And event.Key = Key.Escape
-				_console.Terminate()
-				event.Eat()
-			Endif
-		End
-		
 		progress.Open()
 		
 		Repeat
