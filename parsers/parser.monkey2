@@ -7,6 +7,7 @@ Enum CodeItemKind
 	Class_,
 	Interface_,
 	Enum_,
+	EnumMember_,
 	Struct_,
 	Field_,
 	Global_,

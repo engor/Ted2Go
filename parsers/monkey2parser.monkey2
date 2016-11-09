@@ -99,7 +99,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			'
 			If parent And parent.Kind = CodeItemKind.Enum_
-				kind="param"
+				kind="enumMember"
 			Endif
 			
 			' create code item
@@ -127,9 +127,11 @@ Class Monkey2Parser Extends CodeParserPlugin
 					Local params:=ParseParams( jobj )
 					If params
 						item.Params=params
+						' add params as children
 						For Local p:=Eachin params
 							Local i:=New CodeItem( p.ident )
 							i.Type=p.type
+							i.Kind=CodeItemKind.Param_
 							i.Parent=item
 						Next
 					Endif

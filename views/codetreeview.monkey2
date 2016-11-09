@@ -135,7 +135,7 @@ Class CodeTreeView Extends TreeViewExt
 		
 	Method AddTreeItem( item:CodeItem,node:TreeView.Node,parser:ICodeParser )
 	
-		parser.RefineRawType( item ) 'refine all visible items
+		'parser.RefineRawType( item ) 'refine all visible items
 		
 		Local n:=New CodeTreeNode( item,node )
 		
@@ -151,6 +151,7 @@ Class CodeTreeView Extends TreeViewExt
 		End
 		
 		For Local i:=Eachin item.Children
+			If i.Kind = CodeItemKind.Param_ Continue
 			AddTreeItem( i,n,parser )
 		End
 				
@@ -162,13 +163,43 @@ Class CodeTreeView Extends TreeViewExt
 	
 		If _sorterByName = Null
 			_sorterByName=Lambda:Int( lhs:CodeItem,rhs:CodeItem )
-				' here we can sort by name / access / and so on
+				
+				Local lp:=GetItemPriority( lhs )
+				Local rp:=GetItemPriority( rhs )
+				
+				Local r:= (rp <=> lp)
+				If r <> 0 Return r
+				
 				Return lhs.Text <=> rhs.Text
 			End
 		Endif
 		_sorter=_sorterByName
 		' sorting
 		list.Sort(_sorter)
+	End
+	
+	Method GetItemPriority:Int( item:CodeItem )
+		
+		Select item.Kind
+			
+			Case CodeItemKind.Class_,CodeItemKind.Struct_,CodeItemKind.Interface_,CodeItemKind.Enum_
+				Return 20
+				
+			Case CodeItemKind.Method_,CodeItemKind.Function_
+				Return (item.Ident.ToLower() = "new") ? 15 Else 10
+			
+			Case CodeItemKind.Property_
+				Return 8
+			
+			Case CodeItemKind.Field_,CodeItemKind.Global_
+				Return 7
+				
+			Case CodeItemKind.Const_
+				Return 6
+				
+		End
+		
+		Return 0
 	End
 	
 End

@@ -67,15 +67,13 @@ Class CodeItem
 					s+=(HasParams ? " ("+ParamsStr+")" Else " ()")
 				Case CodeItemKind.Class_,CodeItemKind.Interface_,CodeItemKind.Struct_,CodeItemKind.Enum_
 					' nothing
-				Case CodeItemKind.Inner_
+				Case CodeItemKind.Inner_,CodeItemKind.EnumMember_
 					' nothing
 				Case CodeItemKind.Property_
 					s+=" : "+Type.ToString()
 				Default
-					' for enums
-					If Parent = Null Or Parent.Kind <> CodeItemKind.Enum_
-						s+=" : "+Type.ToString()
-					Endif
+					s+=" : "+Type.ToString()
+					
 			End
 			_text=s
 		Endif
@@ -246,6 +244,8 @@ Class CodeItem
 			_kind=CodeItemKind.Interface_
 		Case "enum"
 			_kind=CodeItemKind.Enum_
+		Case "enumMember"
+			_kind=CodeItemKind.EnumMember_
 		Case "struct"
 			_kind=CodeItemKind.Struct_
 		Case "field"
