@@ -363,10 +363,10 @@ Struct CodeItemsSorter Final
 			If _sorterInverse = Null
 				_sorterInverse=Lambda:Int( lhs:CodeItem,rhs:CodeItem )
 					
-					Local lp:=GetItemPriority( lhs )
-					Local rp:=GetItemPriority( rhs )
+					Local lp:=GetItemPriority( lhs,inverse )
+					Local rp:=GetItemPriority( rhs,inverse )
 					
-					Local r:= (lp <=> rp) 'inversion is here
+					Local r:= (rp <=> lp)
 					If r <> 0 Return r
 					
 					Return lhs.Text <=> rhs.Text
@@ -401,28 +401,34 @@ Struct CodeItemsSorter Final
 	Global _sorter:Int( lhs:CodeItem,rhs:CodeItem )
 	Global _sorterInverse:Int( lhs:CodeItem,rhs:CodeItem )
 	
-	Function GetItemPriority:Int( item:CodeItem )
+	Function GetItemPriority:Int( item:CodeItem,inverse:Bool=False )
+		
+		Local retval:=0
 		
 		Select item.Kind
 			
 			Case CodeItemKind.Class_,CodeItemKind.Struct_,CodeItemKind.Interface_,CodeItemKind.Enum_
-				Return 20
+				retval=20
 				
 			Case CodeItemKind.Method_,CodeItemKind.Function_
-				Return (item.Ident.ToLower() = "new") ? 15 Else 10
+				retval= (item.Ident.ToLower() = "new") ? 15 Else 10
 			
 			Case CodeItemKind.Property_
-				Return 8
+				retval=8
 			
 			Case CodeItemKind.Field_,CodeItemKind.Global_
-				Return 7
+				retval=7
 				
 			Case CodeItemKind.Const_
-				Return 6
+				retval=(inverse ?9 Else 6)
 				
+			Case CodeItemKind.Operator_
+				retval=(inverse ? 25 Else -1) 'always put it on the bottom
 		End
 		
-		Return 0
+		If inverse Then retval=20-retval
+		
+		Return retval
 	End
 	
 End
