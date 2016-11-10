@@ -48,16 +48,16 @@ Class HelpActions
 			dialog.Open()
 		End
 
-		aboutTed2go=New Action( "About Ted2Go" )
+		aboutTed2go=New Action( "About ted2go" )
 		aboutTed2go.Triggered=Lambda()
 		
 			Local htmlView:=New HtmlView
 			htmlView.Go( "asset::ted2/aboutTed2Go.html" )
 	
-			Local dialog:=New Dialog( "About Ted2Go" )
+			Local dialog:=New Dialog( "About ted2go" )
 			dialog.ContentView=htmlView
 
-			dialog.MinSize=New Vec2i( 520,480 )
+			dialog.MinSize=New Vec2i( 640,600 )
 
 			dialog.AddAction( "Okay!" ).Triggered=dialog.Close
 			
