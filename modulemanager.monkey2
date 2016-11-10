@@ -288,9 +288,9 @@ Class ModuleManager Extends Dialog
 			_procmods.Push( module )
 			
 			If module.status="Installed"
-				docker.AddView( New Label( "Update module:"+module.name ),"top" )
+				docker.AddView( New Label( "Update module: "+module.name ),"top" )
 			Else
-				docker.AddView( New Label( "Install module:~t"+module.name ),"top" )
+				docker.AddView( New Label( "Install module: "+module.name ),"top" )
 			Endif
 		Next
 		
@@ -399,7 +399,7 @@ Class ModuleManager Extends Dialog
 		
 		EnumRemoteModules()
 		
-		_filters["Local"].Checked=True
+		_filters["Local"].Checked=False
 		_filters["Installed"].Checked=True
 		_filters["Uninstalled"].Checked=True
 		
