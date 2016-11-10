@@ -120,8 +120,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						_doc.HideAutocomplete()
 					Endif
 				Endif
-			Case Key.F2
-				_doc.GoToDefinition()
+			
 			End
 				
 		Elseif event.Type = EventType.KeyChar
@@ -417,7 +416,7 @@ Class CodeDocument Extends Ted2Document
 		HideHint()
 	End
 	
-	Method GoToDefinition()
+	Method GotoDeclaration()
 	
 		Local ident:=_codeView.FullIdentUnderCursor()
 		Local line:=TextDocument.FindLine( _codeView.Cursor )

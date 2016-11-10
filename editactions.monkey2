@@ -12,6 +12,7 @@ Class EditActions
 	Field selectAll:Action
 	Field wordWrap:Action
 	Field gotoLine:Action
+	Field gotoDeclaration:Action
 	
 	Method New( docs:DocumentManager )
 	
@@ -56,6 +57,10 @@ Class EditActions
 		gotoLine.Triggered=OnGotoLine
 		gotoLine.HotKey=Key.G
 		gotoLine.HotKeyModifiers=Modifier.Menu
+		
+		gotoDeclaration=New Action( "Goto declaration" )
+		gotoDeclaration.Triggered=OnGotoDeclaration
+		gotoDeclaration.HotKey=Key.F2
 		
 	End
 	
@@ -137,4 +142,12 @@ Class EditActions
 		tv.MakeKeyView()
 	End
 
+	Method OnGotoDeclaration()
+	
+		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
+		If Not doc Return
+		
+		doc.GotoDeclaration()
+	End
+	
 End
