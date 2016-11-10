@@ -443,6 +443,19 @@ Class MainWindowInstance Extends Window
 		If doc.TextView doc.TextView.MakeKeyView() Else doc.View.MakeKeyView()
 	End
 	
+	Method GotoCodePosition( docPath:String, pos:Vec2i )
+		
+		Local doc:=Cast<CodeDocument>( _docsManager.OpenDocument( docPath,True ) )
+		If Not doc Return
+		
+		Local tv := Cast<CodeTextView>( doc.TextView )
+		If Not tv Return
+		
+		UpdateWindow( False )
+		
+		tv.GotoPosition( pos.x,pos.y )
+	End
+	
 	Method SaveState()
 	
 		Local jobj:=New JsonObject
@@ -743,6 +756,7 @@ Private
 
 Function OnCreatePlugins()
 	
+	#rem
 	Local dialog:=New ProgressDialog( "Parsing modules...","+" )
 	dialog.MinSize=New Vec2i( 256,128 )
 	dialog.Open()
@@ -757,6 +771,7 @@ Function OnCreatePlugins()
 		dialog.Close()
 		Monkey2Parser.OnParseModule-=onParse
 	End
+	#end
 	
 	For Local plugin:=Eachin Plugin.PluginsOfType<Plugin>()
 		PluginBridge.OnCreate(plugin)

@@ -1,14 +1,6 @@
 
 Namespace ted2go
 
-Struct abc
-
-End
-
-Class qwerty
-	Field boo:=5
-End
-
 
 Class BuildError
 

@@ -84,6 +84,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 			ParseJsonMembers( members,Null,filePath,items )
 			ItemsMap[filePath]=items
 			Items.AddAll( items )
+			
+			'Print "file parsed: "+filePath+", items.count: "+items.Count()
 		Endif
 		
 		' parse imports
@@ -133,7 +135,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			arr=endPos.Split( ":" )
 			item.ScopeEndPos=New Vec2i( Int(arr[0])-1,Int(arr[1]) )
 			
-			'Print "parser. add item: "+item.Scope+" "+kind+" "+flags
+			'If Not parent And filePath.EndsWith( "filesystem.monkey2") Print "parser. add item: "+item.Scope+" "+kind+" "+flags
 			
 			If kind="class" Or kind="struct" Or kind="interface" Or kind="enum"
 				Local t:=New CodeType
@@ -188,6 +190,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Method GetScope:CodeItem( docPath:String,docLine:Int )
 		
 		Local items:=ItemsMap[docPath]
+		
+		If Not items Return Null
+		
 		Local result:CodeItem=Null
 		For Local i:=Eachin items
 			If docLine > i.ScopeStartPos.x And docLine < i.ScopeEndPos.x
@@ -206,7 +211,138 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
-	Method ItemAtScope:CodeItem( scope:CodeItem,idents:String[] )
+	Method ItemAtScope:CodeItem( ident:String,filePath:String,docLine:Int )
+		
+		Local idents:=ident.Split( "." )
+				
+		' using lowerCase for keywords
+		Local lastIdent:=idents[idents.Length-1].ToLower()
+		Local onlyOne:=(idents.Length=1)
+		
+		'check current scope
+		Local rootScope:=GetScope( filePath,docLine )
+		Local scope:=rootScope
+		
+		'-----------------------------
+		' what the first ident is?	
+		'-----------------------------
+		Local firstIdent:=idents[0]
+		Local item:CodeItem=Null
+		Local isSelf:=(firstIdent.ToLower()="self")
+		Local items:=New List<CodeItem>
+		
+		If isSelf
+		
+			item=scope.NearestClassScope
+			
+		Else ' not 'self' ident
+			
+			' check in 'this' scope
+			While scope <> Null
+	
+				GetAllItems( scope,items )
+				
+				If Not items.Empty
+					For Local i:=Eachin items
+						If Not CheckIdent( i.Ident,firstIdent,False ) Continue
+						If Not CheckAccessInScope( i,scope ) Continue
+						' additional checking for the first ident
+						If IsLocalMember( i ) And i.ScopeStartPos.x > docLine Continue
+						If Not onlyOne
+							item=i
+							Exit
+						Else
+							Return i
+						Endif
+					Next
+				Endif
+				'found item
+				If item <> Null Exit
+				
+				scope=scope.Parent 'if inside of func then go to class' scope
+				
+			Wend
+		
+		Endif
+		
+		' and check in global scope
+		If item = Null Or onlyOne
+			For Local i:=Eachin Items
+				If Not CheckIdent( i.Ident,firstIdent,False ) Continue
+				If Not CheckAccessInGlobal( i,filePath ) Continue
+				If IsLocalMember( i ) And i.ScopeStartPos.x > docLine Continue
+				If Not onlyOne
+					item=i
+					Exit
+				Else
+					Return i
+				Endif
+			Next
+		Endif
+		
+		' var1.var2.var3...
+		If Not onlyOne And item <> Null
+			
+			Local scopeClass:=(rootScope <> Null) ? rootScope.NearestClassScope Else Null
+			
+			' start from the second ident part here
+			For Local k:=1 Until idents.Length
+				
+				Local staticOnly:=(Not isSelf And (item.Kind = CodeItemKind.Class_ Or item.Kind = CodeItemKind.Struct_))
+						
+				' need to check by ident type
+				Local type:=item.Type.ident
+				
+				Select item.Kind
+					Case CodeItemKind.Class_,CodeItemKind.Struct_,CodeItemKind.Interface_,CodeItemKind.Enum_
+						' don't touch 'item'
+					Default
+						item=Null
+						For Local i:=Eachin Items
+							If i.Ident = type
+								item=i
+								Exit
+							Endif
+						Next
+						If item = Null Then Exit
+				End
+				
+				'is it alias?
+				
+				' !! need to fix
+'				Local at:=_aliases[type]
+'				If at <> Null
+'					type=StripGenericType( at )
+'				Endif
+								
+				
+				Local identPart:=idents[k]
+				Local last:=(k = idents.Length-1)
+				
+				' extract all items from item
+				items.Clear()
+				GetAllItems( item,items )
+				
+				If Not items.Empty
+					For Local i:=Eachin items
+						If Not CheckIdent( i.Ident,identPart,False ) Continue
+						If Not CheckAccessInClassType( i,scopeClass ) Continue
+						item=i
+						If last
+							If Not staticOnly Or IsStaticMember( i )
+								Return i
+							Endif
+						Else
+							Exit
+						Endif
+					Next
+				Endif
+				
+				If item = Null Then Exit
+			Next
+			
+		Endif
+		
 		Return Null
 	End
 	

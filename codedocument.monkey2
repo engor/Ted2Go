@@ -121,8 +121,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Endif
 				Endif
 			Case Key.F2
-				_doc.ShowCodeStructureDialog()
-							
+				_doc.GoToDefinition()
 			End
 				
 		Elseif event.Type = EventType.KeyChar
@@ -418,42 +417,14 @@ Class CodeDocument Extends Ted2Document
 		HideHint()
 	End
 	
+	Method GoToDefinition()
 	
-	
-	
-	Method ShowCodeStructureDialog()
-	
-		New Fiber( Lambda()
-				
-			Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+Path+"~q"
-			
-			Local str:=LoadString( "process::"+cmd )
-			
-			
-			Local i:=str.Find( "{" )
-			Local jstr := (i <> -1) ? str.Slice( i ) Else "{}"
-			
-			Local jobj:=JsonObject.Parse( jstr )
-			'If Not jobj Return
-			
-			Local view:=New DockingView
-			Local jsonTree:=New JsonTreeView( jobj )
-			view.ContentView=jsonTree
-			
-			Local scroller:=New ScrollView
-			Local textView:=New TextView
-			textView.WordWrap=True
-			textView.Text=str
-			scroller.ContentView=textView
-			view.AddView( scroller,"bottom",200,True )
-			
-			Local dialog:=New Dialog( "ParseInfo",view )
-			dialog.AddAction( "Close" ).Triggered=dialog.Close
-			dialog.MinSize=New Vec2i( 640,800 )
-			
-			dialog.Open()
-		
-		End )
+		Local ident:=_codeView.FullIdentUnderCursor()
+		Local line:=TextDocument.FindLine( _codeView.Cursor )
+		Local item:=_parser.ItemAtScope( ident,Path,line )
+		If item
+			MainWindow.GotoCodePosition( item.FilePath,item.ScopeStartPos )
+		Endif
 	End
 	
 	Method CanShowAutocomplete:Bool()

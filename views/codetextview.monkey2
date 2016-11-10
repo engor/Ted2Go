@@ -62,6 +62,36 @@ Class CodeTextView Extends TextViewExt
 		Return ident
 	End
 	
+	Method FullIdentUnderCursor:String()
+	
+		Local text:=Text
+		Local cur:=Cursor
+		Local n:=Cursor-1
+		Local line:=Document.FindLine( Cursor )
+		Local start:=Document.StartOfLine( line )
+		Local ends:=Document.EndOfLine( line )
+		
+		While n >= start
+			
+			If text[n] = 46 'dot
+				
+			ElseIf Not (IsIdent( text[n] ) Or text[n] = 35) '35 => #
+				Exit
+			Endif
+			
+			n-=1
+		Wend
+		Local p1:=n+1
+		n=cur
+		While n < ends And IsIdent( text[n] )
+			n+=1
+		Wend
+		Local p2:=n
+		Local ident:=(p1 < cur Or p2 > cur) ? text.Slice( p1,p2 ) Else ""
+		
+		Return ident
+	End
+	
 	Method FirstSelectedLine:Int()
 	
 		Local min:=Min( Anchor,Cursor )

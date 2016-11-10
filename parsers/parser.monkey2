@@ -40,7 +40,7 @@ Interface ICodeParser
 	Method IsPosInsideOfQuotes:Bool( text:String,pos:Int )
 	Method CanShowAutocomplete:Bool( line:String,posInLine:Int )
 	Method GetScope:CodeItem( docPath:String,docLine:Int )
-	Method ItemAtScope:CodeItem( scope:CodeItem,idents:String[] )
+	Method ItemAtScope:CodeItem( ident:String,filePath:String,docLine:Int )
 	
 	Method GetItemsForAutocomplete( ident:String,filePath:String,docLine:Int,target:List<CodeItem> )
 	
@@ -99,7 +99,7 @@ Class EmptyParser Implements ICodeParser
 	Method GetScope:CodeItem( docPath:String,docLine:Int )
 		Return Null
 	End
-	Method ItemAtScope:CodeItem( scope:CodeItem,idents:String[] )
+	Method ItemAtScope:CodeItem( ident:String,filePath:String,docLine:Int )
 		Return Null
 	End
 	Method RefineRawType( item:CodeItem )
