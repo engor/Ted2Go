@@ -22,26 +22,45 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 	
 	Method HL:Int( text:String,colors:Byte[],sol:Int,eol:Int,state:Int )
 
+        If _keywords = Null Then _keywords=KeywordsManager.Get( GetMainFileType() )
+
 		Local i0:=sol
 		
 		Local icolor:=0
 		Local istart:=sol
 		Local preproc:=False
+	
+		'comment nest
+		'
+		Local cnest:=state & 255
+		If cnest=255 cnest=-1
 		
-		If state>-1 Then icolor=Highlighter.COLOR_COMMENT
+		'block string flag
+		'	
+		Local blkstr:=(state & 256)=0
 		
-		If _keywords = Null Then _keywords=KeywordsManager.Get( GetMainFileType() )
+		If cnest<>-1 
+			icolor=Highlighter.COLOR_COMMENT
+		Else If blkstr
+			icolor=Highlighter.COLOR_STRING
+		Endif
 		
 		While i0<eol
 		
 			Local start:=i0
 			Local chr:=text[i0]
 			i0+=1
+			
 			If IsSpace( chr ) Continue
+			
+			If blkstr
+				If chr=34 blkstr=False
+				Continue
+			Endif
 			
 			If chr=35 And istart=sol
 				preproc=True
-				If state=-1 icolor=Highlighter.COLOR_PREPROC
+				If cnest=-1 icolor=Highlighter.COLOR_PREPROC
 				Continue
 			Endif
 			
@@ -55,11 +74,11 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 				
 				Select id.ToLower()
 				Case "rem"
-					state+=1
+					cnest+=1
 					icolor=Highlighter.COLOR_COMMENT
 				Case "end"
-					If state>-1 
-						state-=1
+					If cnest<>-1
+						cnest-=1
 						icolor=Highlighter.COLOR_COMMENT
 					Endif
 				End
@@ -68,13 +87,14 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 			
 			Endif
 			
-			If state>-1 Or preproc Exit
+			If cnest<>-1 Or preproc Exit
 			
 			Local color:=icolor
 			
 			If chr=39
 			
 				i0=eol
+				
 				color=Highlighter.COLOR_COMMENT
 				
 			Else If chr=34
@@ -82,7 +102,11 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 				While i0<eol And text[i0]<>34
 					i0+=1
 				Wend
-				If i0<eol i0+=1
+				If i0<eol
+					i0+=1
+				Else
+					blkstr=True
+				Endif
 				
 				color=Highlighter.COLOR_STRING
 				
@@ -98,9 +122,9 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 				
 					Select id.ToLower()
 					Case "rem"				
-						state+=1
+						cnest+=1
 					Case "end"
-						state=Max( state-1,-1 )
+						cnest=Max( cnest-1,-1 )
 					End
 					
 					icolor=Highlighter.COLOR_COMMENT
@@ -152,8 +176,11 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 			colors[i]=icolor
 		Next
 		
+		state=cnest & 255
+		
+		If Not blkstr state|=256
+		
 		Return state
-	
 	End
 	
 End
