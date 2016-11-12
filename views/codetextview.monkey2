@@ -150,6 +150,7 @@ Class CodeTextView Extends TextViewExt
 			Case EventType.KeyDown,EventType.KeyRepeat
 				
 				Local ctrl:=(event.Modifiers & Modifier.Control)
+				Local shift:=(event.Modifiers & Modifier.Shift)
 				
 				Select event.Key
 			
@@ -218,7 +219,7 @@ Class CodeTextView Extends TextViewExt
 								newPos=n
 							Endif
 								
-							If event.Modifiers & Modifier.Shift 'selection
+							If shift 'selection
 								SelectText( Anchor,newPos )
 							Else
 								SelectText( newPos,newPos )
@@ -229,6 +230,18 @@ Class CodeTextView Extends TextViewExt
 						
 					Case Key.Up,Key.Down,Key.Tab
 						DoFormat()
+						
+					Case Key.V
+						If CanPaste And ctrl
+							SmartParse()
+							Return
+						Endif
+					
+					Case Key.Insert
+						If CanPaste And shift
+							SmartParse()
+							Return
+						Endif
 						
 				End
 				
@@ -247,6 +260,51 @@ Class CodeTextView Extends TextViewExt
 	
 	
 	Private 
+	
+	Method SmartParse()
+		
+		' get indent of cursor's line
+		Local cur:=Min( Cursor,Anchor )
+		Local line:=Document.FindLine( cur )
+		Local posInLine:=cur-Document.StartOfLine( line )
+		Local indent:=GetIndent( Document.GetLine( line ) )
+		indent=Min( indent,posInLine )
+		
+		' check indents inside of pasted text
+		Local text:=App.ClipboardText
+		text=text.Replace( "~r~n","~n" )
+		text=text.Replace( "~r","~n" )
+		Local lines:=text.Split( "~n" )
+		Local indent2:=1000
+		
+		' skip first line
+		For Local i:=1 Until lines.Length
+			Local s:=lines[i]
+			indent2=Min( indent2,GetIndent(s) )
+		Next
+		
+		Local delta:=indent2-indent
+		Local result:=""
+		If delta > 0 'need to remove
+			For Local i:=0 Until lines.Length
+				Local s:=lines[i]
+				If result Then result+="~n"
+				result+= (i = 0 ? s Else s.Slice( delta ))
+			Next
+		Elseif delta < 0 'need to append
+			Local add:=Utils.RepeatStr( "~t",Abs(delta) )
+			For Local i:=0 Until lines.Length
+				Local s:=lines[i]
+				If result Then result+="~n"
+				result+= (i = 0 ? s Else add+s)
+			Next
+		Else
+			result=text
+		Endif
+		
+		ReplaceText( result )
+		
+	End
 	
 	Method DoFormat()
 	

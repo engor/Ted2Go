@@ -5,9 +5,9 @@ Namespace ted2go
 Class Utils
 	
 	Function ArrayContains<T>:Bool( arr:T[],value:T )
-		If arr = Null Then Return False
+		If Not arr Return False
 		For Local v:=Eachin arr
-			If v = value Then Return True
+			If v = value Return True
 		Next
 		Return False
 	End
@@ -50,6 +50,15 @@ Class Utils
 			canvas.DrawLine( rect.Left,rect.Top,rect.Left,rect.Bottom )
 		End
 	End
+	
+	Function RepeatStr:String( str:String,count:Int )
+		Local result:=""
+		For Local i:=0 Until count
+			result+=str
+		Next
+		Return result
+	End
+	
 	
 	Private
 	

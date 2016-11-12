@@ -91,6 +91,10 @@ Function Main()
 	config["initialTheme"]=jobj.GetString( "theme" )
 	config["initialThemeScale"]=jobj.GetNumber( "themeScale" )
 	
+	'start the app!
+	'	
+	New AppInstance( config )
+	
 	'initial window state
 	'
 	Local flags:=WindowFlags.Resizable|WindowFlags.HighDPI
@@ -100,14 +104,12 @@ Function Main()
 	If jobj.Contains( "windowRect" ) 
 		rect=ToRecti( jobj["windowRect"] )
 	Else
-		rect=New Recti( 0,0,1024,768 )
+		Local w:=Min( 1024,App.DesktopSize.x-40 )
+		Local h:=Min( 768,App.DesktopSize.y-64 )
+		rect=New Recti( 0,0,w,h )
 		flags|=WindowFlags.Center
 	Endif
 
-	'start the app!
-	'	
-	New AppInstance( config )
-	
 	New MainWindowInstance( AppTitle,rect,flags,jobj )
 		
 	App.Run()
