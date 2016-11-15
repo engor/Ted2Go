@@ -49,38 +49,17 @@ Class TextViewExt Extends TextView
 						
 					Case Key.Tab
 						
-						Local minPos:=Min( Cursor,Anchor )
-						Local maxPos:=Max( Cursor,Anchor )
-						Local min:=Document.FindLine( minPos )
-						Local max:=Document.FindLine( maxPos )
+						If Cursor = Anchor 'has no selection
 							
-						If min = max
-							GetTextLine(minPos,True)
-							Local txt:=_lineInfo.text
-							Local p1:=_lineInfo.posStart
-							Local posInLine:=_lineInfo.posInLine
-							Local cur:=Cursor
-							Local anc:=Anchor
-							If shift
-								If posInLine And txt.StartsWith( "~t" )
-									SelectText( p1,p1+1 )
-									ReplaceText( "" )
-									If (cur-1 >= p1)'don't jump to prev line
-										cur=cur-1
-										anc=anc-1
-									Endif
-								Endif
-							Else
-								SelectText( p1,p1 )
-								ReplaceText( "~t" )
-								cur=cur+1
-								anc=anc+1
-							Endif
-							SelectText( anc,cur )
-
-						Else
+							ReplaceText( "~t" )
 							
-							'block tab/untab
+						Else 'block tab/untab
+						
+							Local minPos:=Min( Cursor,Anchor )
+							Local maxPos:=Max( Cursor,Anchor )
+							Local min:=Document.FindLine( minPos )
+							Local max:=Document.FindLine( maxPos )
+														
 							Local lines:=New StringStack
 								
 							For Local i:=min To max
@@ -88,6 +67,7 @@ Class TextViewExt Extends TextView
 							Next
 								
 							Local go:=True
+							Local shiftFirst:=0,shiftLast:=0
 							
 							If shift
 								
@@ -96,6 +76,11 @@ Class TextViewExt Extends TextView
 									If lines[i].StartsWith( "~t" )
 										lines[i]=lines[i].Slice( 1 )+"~n"
 										changes+=1
+										If i=0
+											shiftFirst=-1
+										Elseif i=lines.Length-1
+											shiftLast=-1
+										Endif
 									Else
 										lines[i]+="~n"
 									Endif
@@ -103,16 +88,21 @@ Class TextViewExt Extends TextView
 								
 								go=(changes > 0)
 							Else
-								
+								shiftFirst=1
+								shiftLast=1
 								For Local i:=0 Until lines.Length
 									lines[i]="~t"+lines[i]+"~n"
 								Next
 							Endif
 								
 							If go
+								Local start:=Document.StartOfLine( max )
+								Local p1:=minPos+shiftFirst 'absolute pos
+								Local p2:=maxPos-start+shiftLast 'pos in line
 								SelectText( Document.StartOfLine( min ),Document.EndOfLine( max )+1 )
 								ReplaceText( lines.Join( "" ) )
-								SelectText( Document.StartOfLine( min ),Document.EndOfLine( max ) )
+								p2+=Document.StartOfLine( max )
+								SelectText( p1,p2 )
 							Endif
 								
 						Endif
