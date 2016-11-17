@@ -6,67 +6,75 @@ Class HtmlViewExt Extends HtmlView
 
 	Field Navigated:Void( url:String )
 	
+	Method New()
+	
+		Super.New()
+				
+		_navOps.OnNavigate += Lambda( nav:Nav )
+			
+			Go( nav.url )
+			Navigated( nav.url )
+			
+			nav.state+=1
+			If nav.state=1 Return 'navigated first time, so it's new page, don't touch the scroll
+			
+			Scroll=nav.scroll
+			
+			'wait a bit for layout
+			If _timer Then _timer.Cancel()
+			_timer=New Timer(20, Lambda()
+				Scroll=nav.scroll
+				_timer.Cancel()
+				_timer=Null
+			End)
+			
+		End
+	End
+	
 	Method Navigate( url:String )
 		
-		Go( url )
-		_url=url
+		StoreScroll()
 		
-		' remove all forwarded
-		While _index<_count-1
-			_history.Pop()
-			_count-=1
-		Wend
+		Local n:=New Nav
+		n.url=url
+		_navOps.Navigate( n )
 		
-		' the same current url
-		If _count > 0 And _history[_count-1]=url Return
-		
-		_history.Push( url )
-		_index+=1
-		_count+=1
-		
-		Navigated( url )
 	End
 	
 	Method Back()
 		
-		_index-=1
-		If _index<0
-			_index=0
-			Return
-		Endif
-		Local url:=_history.Get( _index )
-		Go( url )
-		_url=url
-		Navigated( url )
+		StoreScroll()
+		_navOps.TryBack()
 	End
 
 	Method Forward()
 		
-		_index+=1
-		If _index>=_count
-			_index=_count-1
-			Return
-		Endif
-		Local url:=_history.Get( _index )
-		Go( url )
-		_url=url
-		Navigated( url )
+		StoreScroll()
+		_navOps.TryForward()
 	End
 	
 	Method ClearHistory()
-		_history.Clear()
-		_index=-1
-		_count=0
+		
+		_navOps.Clear()
 	End
 	
-	Property Url:String()
-		Return _url
-	End
-
+	
 	Private
 	
-	Field _index:=-1, _count:Int
-	Field _url:String
-	Field _history:=New Stack<String>
+	Field _navOps:=New NavOps<Nav>
+	Field _timer:Timer
+	
+	Method StoreScroll()
+		
+		Local n:=_navOps.Current
+		If n Then n.scroll=Scroll
+	End
+	
+	Class Nav ' make 'class' to use as ref in method
+	
+		Field url:String
+		Field scroll:Vec2i
+		Field state:=0 'nav counts
+	End
 	
 End

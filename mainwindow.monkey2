@@ -455,7 +455,7 @@ Class MainWindowInstance Extends Window
 		
 		UpdateWindow( False )
 		
-		tv.GotoPosition( pos.x,pos.y )
+		tv.GotoPosition( pos )
 	End
 	
 	Method SaveState()

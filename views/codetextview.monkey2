@@ -129,15 +129,39 @@ Class CodeTextView Extends TextViewExt
 		Return n
 	End
 
-	Method GotoPosition( line:Int,posInLine:Int=0 )
+	Method GotoPosition( pos:Vec2i )
 	
-		If posInLine = 0
-			GotoLine( line )
+		If pos.y = 0
+			GotoLine( pos.x )
 			Return
 		Endif
 		
-		Local dest:=Document.StartOfLine( line )+posInLine
+		Local dest:=Document.StartOfLine( pos.x )+pos.y
 		SelectText( dest,dest )
+	End
+	
+	Property LineAtCursor:Int()
+		Return Document.FindLine( Cursor )
+	End
+	
+	Property LineAtAnchor:Int()
+		Return Document.FindLine( Anchor )
+	End
+	
+	Property PosInLineAtCursor:Int()
+		Return Cursor-Document.StartOfLine( LineAtCursor )
+	End
+	
+	Property PosInLineAtAnchor:Int()
+		Return Anchor-Document.StartOfLine( LineAtAnchor )
+	End
+	
+	Property CursorPos:Vec2i()
+		Return New Vec2i( LineAtCursor,PosInLineAtCursor )
+	End
+	
+	Property AnchorPos:Vec2i()
+		Return New Vec2i( LineAtAnchor,PosInLineAtAnchor )
 	End
 	
 	

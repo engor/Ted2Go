@@ -244,7 +244,6 @@ Class CodeDocument Extends Ted2Document
 		bar.AddSeparator()
 		bar.AddSeparator()
 		bar.AddSeparator()
-		#Rem
 		bar.AddIconicButton(
 			ThemeImages.Get( "editorbar/back.png" ),
 			Lambda()
@@ -258,7 +257,6 @@ Class CodeDocument Extends Ted2Document
 			End,
 			"Navigate forward (Alt+Right)" )
 		bar.AddSeparator()
-		#End
 		bar.AddIconicButton(
 			ThemeImages.Get( "editorbar/find_selection.png" ),
 			Lambda()
@@ -335,6 +333,11 @@ Class CodeDocument Extends Ted2Document
 		
 		OnCreateBrowser()
 		
+		_navOps.OnNavigate += Lambda( pos:Vec2i )
+		
+			_codeView.GotoPosition( pos )
+		End
+		
 	End
 	
 	Method OnCreateBrowser:View() Override
@@ -348,7 +351,14 @@ Class CodeDocument Extends Ted2Document
 				Local codeNode:=Cast<CodeTreeNode>( node )
 				Local item:=codeNode.CodeItem
 				Local pos:=item.ScopeStartPos
-				_codeView.GotoPosition( pos.x,pos.y )
+				
+				Local cur:=_codeView.CursorPos
+				If pos=cur Return
+				
+				' store navOp
+				_navOps.Push( cur ) 'push current pos
+				_navOps.Navigate( pos ) 'and navigate to new pos
+				
 			End
 		Endif
 		
@@ -422,7 +432,20 @@ Class CodeDocument Extends Ted2Document
 		Local line:=TextDocument.FindLine( _codeView.Cursor )
 		Local item:=_parser.ItemAtScope( ident,Path,line )
 		If item
-			MainWindow.GotoCodePosition( item.FilePath,item.ScopeStartPos )
+			
+			Local pos:=item.ScopeStartPos
+			
+			If item.FilePath = Path
+				Local cur:=_codeView.CursorPos
+				If pos=cur Return
+				
+				' store navOp
+				_navOps.Push( cur ) 'push current pos
+				_navOps.Navigate( pos ) 'and navigate to new pos
+			Else
+				Print "123"
+				MainWindow.GotoCodePosition( item.FilePath,pos )
+			Endif
 		Endif
 	End
 	
@@ -496,6 +519,7 @@ Class CodeDocument Extends Ted2Document
 	Field _parsing:Bool
 	Field _timer:Timer
 	Field _parser:ICodeParser
+	Field _navOps:=New NavOps<Vec2i>
 	
 	
 	Method OnLoad:Bool() Override
@@ -610,11 +634,13 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Method OnGoBack()
-		Alert( "Not implemented yet." )
+		
+		_navOps.TryBack()
 	End
 	
 	Method OnGoForward()
-		Alert( "Not implemented yet." )
+		
+		_navOps.TryForward()
 	End
 	
 	Method OnFindSelection()
@@ -806,6 +832,83 @@ Class CodeItemIcons
 End
 
 
+Class NavOps<T>
+	
+	Field OnNavigate:Void( target:T )
+	
+	Method Navigate( value:T )
+		
+		Push( value )
+		
+		OnNavigate( value )
+	End
+	
+	Method Push( value:T )
+		
+		' remove all forwarded
+		While _index<_count-1
+			_items.Pop()
+			_count-=1
+		Wend
+		
+		' the same current value
+		If _count > 0 And _items[_count-1] = value Return
+		
+		_items.Push( value )
+		_index+=1
+		_count+=1
+	End
+	
+	Method TryBack()
+		
+		_index-=1
+		If _index<0
+			_index=0
+			Return
+		Endif
+		Local value:=_items[_index]
+
+		OnNavigate( value )
+	End
+	
+	Method TryForward()
+		
+		_index+=1
+		If _index>=_count
+			_index=_count-1
+			Return
+		Endif
+		Local value:=_items[_index]
+
+		OnNavigate( value )
+	End
+	
+	Property Current:T()
+	
+		Return _index>=0 ? _items[_index] Else Null
+	End
+	
+	Property Empty:Bool()
+	
+		Return _index=-1
+	End
+	
+	Method Clear()
+	
+		_items.Clear()
+		_index=-1
+		_count=0
+	End
+	
+	Private
+	
+	Field _index:=-1,_count:Int
+	Field _items:=New Stack<T>
+	
+End
+
+
+
 
 Private
 
@@ -819,3 +922,4 @@ Class CodeDocumentTypeBridge Extends CodeDocumentType
 	End
 	
 End
+

@@ -61,7 +61,7 @@ Class CodeItem
 			Local s:=Ident
 			Select _kind
 				Case CodeItemKind.Function_,CodeItemKind.Method_,CodeItemKind.Lambda_,CodeItemKind.Operator_
-					If Type<>Null And Type.ident<>"void"
+					If Type<>Null And Type.ident<>"Void"
 						s+=" : "+Type.ToString()
 					Endif
 					s+=(HasParams ? " ("+ParamsStr+")" Else " ()")
