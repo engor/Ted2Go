@@ -220,6 +220,8 @@ Class AutocompleteDialog Extends DialogExt
 				_view.SelectLast()
 				event.Eat()
 			Case Key.Enter,Key.KeypadEnter
+				Hide() 'hide by enter
+			Case Key.Tab
 				OnItemChoosen( _view.CurrentItem )
 				event.Eat()
 			Case Key.Backspace
