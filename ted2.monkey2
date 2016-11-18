@@ -111,7 +111,17 @@ Function Main()
 	Endif
 
 	New MainWindowInstance( AppTitle,rect,flags,jobj )
-		
+	
+	' open docs from args
+	Local args:=AppArgs()
+	For Local i:=1 Until args.Length
+		Local arg:=args[i]
+		arg=arg.Replace( "\","/" )
+		If GetFileType( arg ) = FileType.File
+			MainWindow.OpenDocument( arg )
+		Endif
+	Next
+	
 	App.Run()
 		
 End

@@ -485,6 +485,12 @@ Class MainWindowInstance Extends Window
 		SaveString( jobj.ToJson(),"bin/ted2.state.json" )
 	End
 
+	Method OpenDocument( path:String )
+	
+		_docsManager.OpenDocument( path,True )
+	End
+	
+
 	Private
 	
 	Method LoadState( jobj:JsonObject )
