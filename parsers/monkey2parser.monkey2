@@ -96,6 +96,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Local file:=jfile.ToString()
 				If file.StartsWith( "<" ) Or Not file.EndsWith( ".monkey2" )  Continue 'skip modules and not .monkey2
 				file=folder+file
+				'Print "parse import: "+file
 				ParseFile( file,file )
 			Next
 		Endif

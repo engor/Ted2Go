@@ -105,22 +105,38 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		'ctrl+space - show autocomplete list
 		If event.Type = EventType.KeyDown
 			
-			Select event.Key
-			Case Key.Space
-				If event.Modifiers & Modifier.Control
-					Return
-				Endif
-			Case Key.Backspace
-				If AutoComplete.IsOpened
-					Local ident:=IdentBeforeCursor()
-					ident=ident.Slice( 0,ident.Length-1 )
-					If ident.Length > 0
-						_doc.ShowAutocomplete( ident )
-					Else
-						_doc.HideAutocomplete()
-					Endif
-				Endif
+			Local alt:=(event.Modifiers & Modifier.Alt)
 			
+			Select event.Key
+				
+				Case Key.Space
+					If event.Modifiers & Modifier.Control
+						Return
+					Endif
+				
+				Case Key.Backspace
+					If AutoComplete.IsOpened
+						Local ident:=IdentBeforeCursor()
+						ident=ident.Slice( 0,ident.Length-1 )
+						If ident.Length > 0
+							_doc.ShowAutocomplete( ident )
+						Else
+							_doc.HideAutocomplete()
+						Endif
+					Endif
+				
+				Case Key.Left
+					If alt 
+						_doc.GoBack()
+						Return
+					Endif
+					
+				Case Key.Right
+					If alt
+						_doc.GoForward()
+						Return
+					Endif
+					
 			End
 				
 		Elseif event.Type = EventType.KeyChar
@@ -247,13 +263,13 @@ Class CodeDocument Extends Ted2Document
 		bar.AddIconicButton(
 			ThemeImages.Get( "editorbar/back.png" ),
 			Lambda()
-				OnGoBack()
+				GoBack()
 			End,
 			"Navigate back (Alt+Left)" )
 		bar.AddIconicButton(
 			ThemeImages.Get( "editorbar/forward.png" ),
 			Lambda()
-				OnGoForward()
+				GoForward()
 			End,
 			"Navigate forward (Alt+Right)" )
 		bar.AddSeparator()
@@ -333,9 +349,10 @@ Class CodeDocument Extends Ted2Document
 		
 		OnCreateBrowser()
 		
-		_navOps.OnNavigate += Lambda( pos:Vec2i )
+		' process navigation back / forward
+		Navigator.OnNavigate += Lambda( nav:NavCode )
 		
-			_codeView.GotoPosition( pos )
+			MainWindow.GotoCodePosition( nav.filePath,nav.pos )
 		End
 		
 	End
@@ -344,20 +361,18 @@ Class CodeDocument Extends Ted2Document
 		
 		' CodeTree
 		If Not _treeView
+			
 			_treeView=New CodeTreeView
 			_treeView.SortEnabled=True
+			
 			' goto item from tree view
 			_treeView.NodeClicked+=Lambda( node:TreeView.Node )
+			
 				Local codeNode:=Cast<CodeTreeNode>( node )
 				Local item:=codeNode.CodeItem
 				Local pos:=item.ScopeStartPos
 				
-				Local cur:=_codeView.CursorPos
-				If pos=cur Return
-				
-				' store navOp
-				_navOps.Push( cur ) 'push current pos
-				_navOps.Navigate( pos ) 'and navigate to new pos
+				JumpToPosition( Path,pos )
 				
 			End
 		Endif
@@ -431,22 +446,29 @@ Class CodeDocument Extends Ted2Document
 		Local ident:=_codeView.FullIdentUnderCursor()
 		Local line:=TextDocument.FindLine( _codeView.Cursor )
 		Local item:=_parser.ItemAtScope( ident,Path,line )
+		Print "go decl: "+ident
 		If item
-			
+			Print "item found"
 			Local pos:=item.ScopeStartPos
-			
-			If item.FilePath = Path
-				Local cur:=_codeView.CursorPos
-				If pos=cur Return
-				
-				' store navOp
-				_navOps.Push( cur ) 'push current pos
-				_navOps.Navigate( pos ) 'and navigate to new pos
-			Else
-				Print "123"
-				MainWindow.GotoCodePosition( item.FilePath,pos )
-			Endif
+			JumpToPosition( item.FilePath,pos )
 		Endif
+	End
+	
+	Method JumpToPosition( filePath:String,pos:Vec2i )
+		
+		Local cur:=_codeView.CursorPos
+		If pos=cur Return
+		
+		' store navOp
+		Local nav:=New NavCode
+		nav.pos=cur
+		nav.filePath=Path
+		Navigator.Push( nav ) 'push current pos
+		
+		nav=New NavCode
+		nav.pos=pos
+		nav.filePath=filePath
+		Navigator.Navigate( nav ) 'and navigate to new pos
 	End
 	
 	Method CanShowAutocomplete:Bool()
@@ -496,6 +518,17 @@ Class CodeDocument Extends Ted2Document
 		AutoComplete.Hide()
 	End
 	
+	Method GoBack()
+		
+		Navigator.TryBack()
+	End
+	
+	Method GoForward()
+		
+		Navigator.TryForward()
+	End
+	
+	
 	Protected
 	
 	Method OnGetTextView:TextView( view:View ) Override
@@ -519,8 +552,13 @@ Class CodeDocument Extends Ted2Document
 	Field _parsing:Bool
 	Field _timer:Timer
 	Field _parser:ICodeParser
-	Field _navOps:=New NavOps<Vec2i>
 	
+	' global, to go through all docs
+	Global _navOps:=New NavOps<NavCode>
+	
+	Property Navigator:NavOps<NavCode>()
+		Return _navOps
+	End
 	
 	Method OnLoad:Bool() Override
 	
@@ -631,16 +669,6 @@ Class CodeDocument Extends Ted2Document
 			
 		End )
 		
-	End
-	
-	Method OnGoBack()
-		
-		_navOps.TryBack()
-	End
-	
-	Method OnGoForward()
-		
-		_navOps.TryForward()
 	End
 	
 	Method OnFindSelection()
@@ -919,6 +947,18 @@ Class CodeDocumentTypeBridge Extends CodeDocumentType
 	
 	Function AddExtensions( inst:CodeDocumentType,exts:String[] )
 		inst.AddExtensions( exts )
+	End
+	
+End
+
+
+Class NavCode
+
+	Field pos:Vec2i
+	Field filePath:String
+	
+	Operator =:Bool(value:NavCode)
+		Return pos=value.pos And filePath=value.filePath
 	End
 	
 End

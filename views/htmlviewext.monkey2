@@ -35,9 +35,9 @@ Class HtmlViewExt Extends HtmlView
 		
 		StoreScroll()
 		
-		Local n:=New Nav
-		n.url=url
-		_navOps.Navigate( n )
+		Local nav:=New Nav
+		nav.url=url
+		_navOps.Navigate( nav )
 		
 	End
 	
@@ -66,8 +66,8 @@ Class HtmlViewExt Extends HtmlView
 	
 	Method StoreScroll()
 		
-		Local n:=_navOps.Current
-		If n Then n.scroll=Scroll
+		Local nav:=_navOps.Current
+		If nav Then nav.scroll=Scroll
 	End
 	
 	Class Nav ' make 'class' to use as ref in method
@@ -75,6 +75,10 @@ Class HtmlViewExt Extends HtmlView
 		Field url:String
 		Field scroll:Vec2i
 		Field state:=0 'nav counts
+		
+		Operator =:Bool(value:Nav)
+			Return url=value.url
+		End
 	End
 	
 End
