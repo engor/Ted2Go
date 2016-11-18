@@ -891,6 +891,28 @@ Class Monkey2Parser Extends CodeParserPlugin
 End
 
 
+Struct Chars
+	
+	Const SINGLE_QUOTE:=39
+	Const DOUBLE_QUOTE:=34
+	Const COMMA:=44
+	Const DOT:=46
+	Const EQUALS:=61
+	Const LESS_BRACKET:=60
+	Const MORE_BRACKET:=62
+	Const OPENED_SQUARE_BRACKET:=91
+	Const CLOSED_SQUARE_BRACKET:=93
+	Const OPENED_ROUND_BRACKET:=40
+	Const CLOSED_ROUND_BRACKET:=41
+	Const DIGIT_0:=48
+	Const DIGIT_9:=57
+	Const AT:=64
+	Const GRID:=35
+	Const TAB:=9
+	
+End
+
+
 Private
 
 Function GetLiteralType:String( typeIdent:String )
@@ -934,27 +956,6 @@ Function IsInt:Bool( text:String )
 		i+=1
 	Wend
 	Return i>0 And i=n
-End
-
-
-Struct Chars
-	
-	Const SINGLE_QUOTE:=39
-	Const DOUBLE_QUOTE:=34
-	Const COMMA:=44
-	Const DOT:=46
-	Const EQUALS:=61
-	Const LESS_BRACKET:=60
-	Const MORE_BRACKET:=62
-	Const OPENED_SQUARE_BRACKET:=91
-	Const CLOSED_SQUARE_BRACKET:=93
-	Const OPENED_ROUND_BRACKET:=40
-	Const CLOSED_ROUND_BRACKET:=41
-	Const DIGIT_0:=48
-	Const DIGIT_9:=57
-	Const AT:=64
-	Const GRID:=35
-	
 End
 
 

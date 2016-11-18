@@ -178,6 +178,7 @@ Class CodeTextView Extends TextViewExt
 				
 				Select event.Key
 			
+					#If __TARGET__="windows"
 					Case Key.E 'delete whole line
 						If ctrl
 							Local line:=Document.FindLine( Cursor )
@@ -185,6 +186,7 @@ Class CodeTextView Extends TextViewExt
 							ReplaceText( "" )
 							Return
 						Endif
+					#Endif
 						
 					Case Key.X
 						If ctrl And Not CanCopy 'nothing selected - cut whole line
@@ -227,27 +229,7 @@ Class CodeTextView Extends TextViewExt
 					Case Key.Home 'smart Home behaviour
 			
 						If Not ctrl
-							Local line:=CurrentTextLine
-							Local txt:=line.text
-							Local n:=0
-							Local n2:=txt.Length
-							'check for whitespaces before cursor
-							While (n < n2 And IsSpace( txt[n]) )
-								n+=1
-							Wend
-							n+=line.posStart
-							Local newPos:=0
-							If n >= Cursor And Cursor > line.posStart
-								newPos=line.posStart
-							Else
-								newPos=n
-							Endif
-								
-							If shift 'selection
-								SelectText( Anchor,newPos )
-							Else
-								SelectText( newPos,newPos )
-							Endif
+							SmartHome( shift )
 							
 							Return
 						Endif
@@ -266,7 +248,26 @@ Class CodeTextView Extends TextViewExt
 							SmartParse()
 							Return
 						Endif
+					
+					#If __TARGET__="macos"
+					'smart Home behaviour
+					Case Key.Left
+			
+						If event.Modifiers & Modifier.Menu
+							SmartHome( True )
+							
+							Return
+						Endif
 						
+					Case Key.Right
+			
+						If event.Modifiers & Modifier.Menu
+							SmartHome( False )
+							
+							Return
+						Endif
+					#Endif
+					
 				End
 				
 				
@@ -284,6 +285,31 @@ Class CodeTextView Extends TextViewExt
 	
 	
 	Private 
+	
+	Method SmartHome( shift:Bool )
+	
+		Local line:=CurrentTextLine
+		Local txt:=line.text
+		Local n:=0
+		Local n2:=txt.Length
+		'check for whitespaces before cursor
+		While (n < n2 And IsSpace( txt[n]) )
+			n+=1
+		Wend
+		n+=line.posStart
+		Local newPos:=0
+		If n >= Cursor And Cursor > line.posStart
+			newPos=line.posStart
+		Else
+			newPos=n
+		Endif
+			
+		If shift 'selection
+			SelectText( Anchor,newPos )
+		Else
+			SelectText( newPos,newPos )
+		Endif
+	End
 	
 	Method SmartParse()
 		

@@ -50,16 +50,23 @@ Class TextViewExt Extends TextView
 					Case Key.Tab
 						
 						If Cursor = Anchor 'has no selection
-							
-							ReplaceText( "~t" )
+						
+							If Not shift
+								ReplaceText( "~t" )
+							Else
+								If Cursor > 0 And Document.Text[Cursor-1]=Chars.TAB
+									SelectText( Cursor-1,Cursor )
+									ReplaceText( "" )
+								Endif
+							Endif
 							
 						Else 'block tab/untab
-						
+							
 							Local minPos:=Min( Cursor,Anchor )
 							Local maxPos:=Max( Cursor,Anchor )
 							Local min:=Document.FindLine( minPos )
 							Local max:=Document.FindLine( maxPos )
-														
+							
 							Local lines:=New StringStack
 								
 							For Local i:=min To max
@@ -76,11 +83,8 @@ Class TextViewExt Extends TextView
 									If lines[i].StartsWith( "~t" )
 										lines[i]=lines[i].Slice( 1 )+"~n"
 										changes+=1
-										If i=0
-											shiftFirst=-1
-										Elseif i=lines.Length-1
-											shiftLast=-1
-										Endif
+										If i=0 Then shiftFirst=-1
+										if i=lines.Length-1 Then shiftLast=-1
 									Else
 										lines[i]+="~n"
 									Endif
@@ -96,12 +100,17 @@ Class TextViewExt Extends TextView
 							Endif
 								
 							If go
-								Local start:=Document.StartOfLine( max )
+								Local minStart:=Document.StartOfLine( min )
+								Local maxStart:=Document.StartOfLine( max )
+								Local maxEnd:=Document.EndOfLine( max )
+
 								Local p1:=minPos+shiftFirst 'absolute pos
-								Local p2:=maxPos-start+shiftLast 'pos in line
-								SelectText( Document.StartOfLine( min ),Document.EndOfLine( max )+1 )
+								Local p2:=maxPos-maxStart+shiftLast 'pos in line
+								SelectText( minStart,maxEnd+1 )
 								ReplaceText( lines.Join( "" ) )
 								p2+=Document.StartOfLine( max )
+								' case when cursor is between tabs and we move both of them, so jump to prev line
+								p1=Max( p1,Document.StartOfLine( min ) )
 								SelectText( p1,p2 )
 							Endif
 								
