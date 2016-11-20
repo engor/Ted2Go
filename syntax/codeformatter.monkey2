@@ -4,7 +4,7 @@ Namespace ted2go
 
 Interface ICodeFormatter
 
-	Method Format( document:CodeTextView,row:Int=-1 )
+	Method Format( document:CodeTextView,all:Bool )
 	
 End
 
@@ -49,7 +49,7 @@ Private
 
 Class EmptyFormatter Implements ICodeFormatter
 	
-	Method Format( document:CodeTextView,row:Int=-1 )
+	Method Format( document:CodeTextView,all:Bool )
 		'do nothing
 	End
 	

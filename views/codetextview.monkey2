@@ -8,6 +8,25 @@ Class CodeTextView Extends TextViewExt
 	Field Keywords:IKeywords
 	Field Highlighter:Highlighter
 	
+	Method New()
+		Super.New()
+		
+		'CursorMoved += OnCursorMoved
+		
+	End
+	
+	Method OnCursorMoved()
+		
+'		If Cursor <> Anchor Return
+'		
+'		Local line:=Document.FindLine( Cursor )
+'		If line = _prevLine Return
+'		
+'		DoFormat( True )
+'		
+'		_prevLine=line
+	End
+	
 	Method IsCursorAtTheEndOfLine:Bool()
 	
 		Local line:=Document.FindLine( Cursor )
@@ -187,8 +206,10 @@ Class CodeTextView Extends TextViewExt
 							Return
 						Endif
 					#Endif
+					
 						
 					Case Key.X
+					
 						If ctrl And Not CanCopy 'nothing selected - cut whole line
 							Local line:=Document.FindLine( Cursor )
 							SelectText( Document.StartOfLine( line ),Document.EndOfLine( line )+1 )
@@ -196,7 +217,9 @@ Class CodeTextView Extends TextViewExt
 							Return
 						Endif
 						
+						
 					Case Key.C,Key.Insert
+					
 						If ctrl And Not CanCopy 'nothing selected - copy whole line
 							Local cur:=Cursor
 							Local line:=Document.FindLine( Cursor )
@@ -205,10 +228,11 @@ Class CodeTextView Extends TextViewExt
 							SelectText( cur,cur )'restore
 							Return
 						Endif
+						
 					
 					Case Key.Enter,Key.KeypadEnter 'auto indent
 						
-						DoFormat()
+						If _typing Then DoFormat( False )
 						
 						Local info:=CurrentTextLine
 						Local line:=info.line
@@ -226,6 +250,7 @@ Class CodeTextView Extends TextViewExt
 						
 						Return
 						
+						
 					Case Key.Home 'smart Home behaviour
 			
 						If Not ctrl
@@ -234,20 +259,32 @@ Class CodeTextView Extends TextViewExt
 							Return
 						Endif
 						
-					Case Key.Up,Key.Down,Key.Tab
-						DoFormat()
+					
+					Case Key.Tab
+					
+						'If _typing Then DoFormat( False )
+						
+						
+					Case Key.Up,Key.Down
+											
+						DoFormat( True )
+						
 						
 					Case Key.V
+					
 						If CanPaste And ctrl
 							SmartParse()
 							Return
 						Endif
+						
 					
 					Case Key.Insert
+					
 						If CanPaste And shift
 							SmartParse()
 							Return
 						Endif
+					
 					
 					#If __TARGET__="macos"
 					'smart Home behaviour
@@ -258,6 +295,7 @@ Class CodeTextView Extends TextViewExt
 							
 							Return
 						Endif
+						
 						
 					Case Key.Right
 			
@@ -272,9 +310,11 @@ Class CodeTextView Extends TextViewExt
 				
 				
 			Case EventType.KeyChar
-		
-				If Not IsIdent( event.Text[0] )
-					DoFormat()
+				
+				If IsIdent( event.Text[0] )
+					_typing=True
+				Else
+					If _typing Then DoFormat( False )
 				Endif
 				
 		End
@@ -284,7 +324,11 @@ Class CodeTextView Extends TextViewExt
 	End
 	
 	
-	Private 
+	Private
+	
+	Field _typing:Bool
+	Field _prevLine:Int
+	
 	
 	Method SmartHome( shift:Bool )
 	
@@ -356,9 +400,10 @@ Class CodeTextView Extends TextViewExt
 		
 	End
 	
-	Method DoFormat()
-	
-		If Formatter Then Formatter.Format( Self )
+	Method DoFormat( all:Bool )
+		
+		_typing=False
+		If Formatter Then Formatter.Format( Self,all )
 	End
 	
 End
