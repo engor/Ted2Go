@@ -136,7 +136,10 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						_doc.GoForward()
 						Return
 					Endif
-					
+				
+				Case Key.F11
+				
+					ShowJsonDialog()
 			End
 				
 		Elseif event.Type = EventType.KeyChar
@@ -169,6 +172,38 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			Endif
 		Endif
 		
+	End
+	
+	Method ShowJsonDialog()
+	
+		New Fiber( Lambda()
+		
+			Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+_doc.Path+"~q"
+			
+			Local str:=LoadString( "process::"+cmd )
+			Local i:=str.Find( "{" )
+			If i=-1 Return
+			str=str.Slice( i )
+			
+			Local jobj:=JsonObject.Parse( str )
+			If Not jobj Return
+			
+			Local jsonTree:=New JsonTreeView( jobj )
+			
+			Local dock:=New DockingView
+			dock.ContentView=jsonTree
+			Local tv:=New TextView
+			tv.Text=str
+			dock.AddView( tv,"bottom",200,True )
+			
+			
+			Local dialog:=New Dialog( "ParseInfo",dock )
+			dialog.AddAction( "Close" ).Triggered=dialog.Close
+			dialog.MinSize=New Vec2i( 512,600 )
+			
+			dialog.Open()
+		
+		End )
 	End
 	
 	Method OnContentMouseEvent( event:MouseEvent ) Override

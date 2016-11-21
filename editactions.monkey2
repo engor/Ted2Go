@@ -60,7 +60,7 @@ Class EditActions
 		
 		gotoDeclaration=New Action( "Goto declaration" )
 		gotoDeclaration.Triggered=OnGotoDeclaration
-		gotoDeclaration.HotKey=Key.F2
+		gotoDeclaration.HotKey=Key.F12
 		
 	End
 	
@@ -144,10 +144,7 @@ Class EditActions
 
 	Method OnGotoDeclaration()
 	
-		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
-		If Not doc Return
-		
-		doc.GotoDeclaration()
+		MainWindow.GotoDeclaration()
 	End
 	
 End

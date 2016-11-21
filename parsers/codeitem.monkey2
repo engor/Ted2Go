@@ -155,9 +155,18 @@ Class CodeItem
 		_superTypes=value
 	End
 	
+	Property SuperTypesStr:List<String>()
+		Return _superTypesStr
+	End
+	
 	Method AddSuperType( type:CodeType )
 		If Not _superTypes Then _superTypes=New List<CodeType>
 		_superTypes.AddLast( type )
+	End
+	
+	Method AddSuperTypeStr( type:String )
+		If Not _superTypesStr Then _superTypesStr=New List<String>
+		_superTypesStr.AddLast( type )
 	End
 	
 	Method FindParent:CodeItem( parentIdent:String )
@@ -227,7 +236,7 @@ Class CodeItem
 	Field _namespace:String
 	Field _filePath:String
 	Field _scopeStartPos:Vec2i=New Vec2i,_scopeEndPos:Vec2i=New Vec2i
-	Field _superTypes:List<CodeType>
+	Field _superTypes:List<CodeType>,_superTypesStr:List<String>
 	Field _params:CodeParam[]
 	Field _paramsStr:String
 	

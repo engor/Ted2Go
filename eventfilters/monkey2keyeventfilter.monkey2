@@ -28,6 +28,9 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 						MainWindow.ShowQuickHelp( ident )
 					Endif
 				
+				Case Key.F2
+					MainWindow.GotoDeclaration()
+				
 				Case Key.Enter 'ctrl+enter - smart ending of expression
 					If ctrl And Not codeView.CanCopy And codeView.IsCursorAtTheEndOfLine()
 						Local ident:=codeView.FirstIdentInLine( codeView.Cursor )

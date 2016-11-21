@@ -458,6 +458,14 @@ Class MainWindowInstance Extends Window
 		tv.GotoPosition( pos )
 	End
 	
+	Method GotoDeclaration()
+	
+		Local doc:=Cast<CodeDocument>( _docsManager.CurrentDocument )
+		If Not doc Return
+		
+		doc.GotoDeclaration()
+	End
+	
 	Method SaveState()
 	
 		Local jobj:=New JsonObject

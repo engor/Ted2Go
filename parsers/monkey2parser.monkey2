@@ -163,6 +163,20 @@ Class Monkey2Parser Extends CodeParserPlugin
 				
 			Endif
 			
+			If jobj.Contains( "superType" )
+				Local sup:=jobj["superType"].ToObject()
+				Local supIdent:=sup["ident"]
+				If supIdent Then item.AddSuperTypeStr( supIdent.ToString() )
+			Endif
+			If jobj.Contains( "ifaceTypes" )
+				Local ifaces:=jobj["ifaceTypes"].ToArray()
+				For Local ifaceType:=Eachin ifaces
+					Local iobj:=ifaceType.ToObject()
+					Local iIdent:=iobj["ident"]
+					If iIdent Then item.AddSuperTypeStr( iIdent.ToString() )
+				Next
+			Endif
+			
 			If parent
 				item.SetParent( parent )
 			Else
@@ -383,10 +397,19 @@ Class Monkey2Parser Extends CodeParserPlugin
 				
 				If Not items.Empty
 					For Local i:=Eachin items
-						If Not CheckIdent( i.Ident,firstIdent,onlyOne ) Continue
-						If Not CheckAccessInScope( i,scope ) Continue
+						If Not CheckIdent( i.Ident,firstIdent,onlyOne )
+							'Print "cont1: "+i.Ident
+							Continue
+						Endif
+						If Not CheckAccessInScope( i,scope )
+							'Print "cont2: "+i.Ident
+							Continue
+						Endif
 						' additional checking for the first ident
-						If IsLocalMember( i ) And i.ScopeStartPos.x > docLine Continue
+						If IsLocalMember( i ) And i.ScopeStartPos.x > docLine
+							'Print "cont3: "+i.Ident
+							Continue
+						Endif
 						If Not onlyOne
 							item=i
 							Exit
@@ -472,8 +495,14 @@ Class Monkey2Parser Extends CodeParserPlugin
 				
 				If Not items.Empty
 					For Local i:=Eachin items
-						If Not CheckIdent( i.Ident,identPart,last ) Continue
-						If Not CheckAccessInClassType( i,scopeClass ) Continue
+						If Not CheckIdent( i.Ident,identPart,last )
+							'Print "continue 1: "+i.Ident
+							Continue
+						Endif
+						If Not CheckAccessInClassType( i,scopeClass )
+							'Print "continue 2: "+i.Ident
+							Continue
+						Endif
 						item=i
 						If last
 							If Not staticOnly Or IsStaticMember( i )
@@ -709,13 +738,13 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Endif
 		
 		' add from super classes / ifaces
-		If Not item.SuperTypes Return
+		If Not item.SuperTypesStr Return
 		
-		For Local t:=Eachin item.SuperTypes
+		For Local t:=Eachin item.SuperTypesStr
 			' find class / iface
 			Local result:CodeItem=Null
 			For Local i:=Eachin Items
-				If i.Ident = t.ident
+				If i.Ident = t
 					result=i
 					Exit
 				Endif
