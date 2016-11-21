@@ -161,6 +161,11 @@ Class Monkey2Parser Extends CodeParserPlugin
 					Endif
 				Endif
 				
+				' alias
+				If kind = "alias"
+					_aliases.Add( ident,item )
+				End
+				
 			Endif
 			
 			If jobj.Contains( "superType" )
@@ -464,10 +469,16 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Local type:=item.Type.ident
 				
 				Select item.Kind
+					
 					Case CodeItemKind.Class_,CodeItemKind.Struct_,CodeItemKind.Interface_,CodeItemKind.Enum_
 						' don't touch 'item'
+					
 					Default
 						item=Null
+						' is it alias?
+						Local al:=_aliases[type]
+						If al Then type=al.Type.ident
+						'
 						For Local i:=Eachin Items
 							If i.Ident = type
 								item=i
@@ -477,14 +488,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 						If item = Null Then Exit
 				End
 				
-				'is it alias?
-				
-				' !! need to fix
-'				Local at:=_aliases[type]
-'				If at <> Null
-'					type=StripGenericType( at )
-'				Endif
-								
 				
 				Local identPart:=idents[k]
 				Local last:=(k = idents.Length-1)
@@ -526,6 +529,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Global _instance:=New Monkey2Parser
 	Field _files:=New StringMap<Long>
+	Field _aliases:=New StringMap<CodeItem>
 	
 	Method New()
 	

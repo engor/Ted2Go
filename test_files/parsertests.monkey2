@@ -15,6 +15,7 @@ Global multi:="Hello,
                multiline
                world!"
 
+Global vector:Vec2f
 
 Function FnLambda( p1:String,p2:Void( x:Int,y:Int ),p3:Float )
 
