@@ -16,6 +16,8 @@ Global multi:="Hello,
                world!"
 
 Global vector:Vec2f
+Global globList:List<String>
+
 
 Function FnLambda( p1:String,p2:Void( x:Int,y:Int ),p3:Float )
 
@@ -30,6 +32,9 @@ End
 Struct STRUCTURE
 	
 	Field abc:Bool
+	Property PropList:List<String>()
+		Return Null
+	End
 	
 End
 

@@ -693,6 +693,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 			type=jobj["type"].ToObject()
 		Elseif jobj.Contains( "getFunc" )
 			type=jobj["getFunc"].ToObject()["type"].ToObject()
+			' properties have retType
+			If type.Contains( "retType" )
+				type=type["retType"].ToObject()
+			Endif
 		Elseif jobj.Contains( "init" )
 			Local init:=jobj["init"].ToObject()
 			if init.Contains( "type" )
