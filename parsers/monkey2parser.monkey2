@@ -946,6 +946,7 @@ Struct Chars
 	Const AT:=64
 	Const GRID:=35
 	Const TAB:=9
+	Const SPACE:=32
 	
 End
 

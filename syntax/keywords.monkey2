@@ -3,9 +3,11 @@ Namespace ted2go
 
 
 Interface IKeywords
+
 	Method Contains:Bool( word:String )
 	Method Get:String( word:String )
 	Method Values:String[]()
+	
 End
 
 

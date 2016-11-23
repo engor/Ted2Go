@@ -159,28 +159,32 @@ Class CodeTextView Extends TextViewExt
 		SelectText( dest,dest )
 	End
 	
-	Property LineAtCursor:Int()
+	Property LineTextAtCursor:String()
+		Return Document.GetLine( Document.FindLine( Cursor ) )
+	End
+	
+	Property LineNumAtCursor:Int()
 		Return Document.FindLine( Cursor )
 	End
 	
-	Property LineAtAnchor:Int()
+	Property LineNumAtAnchor:Int()
 		Return Document.FindLine( Anchor )
 	End
 	
 	Property PosInLineAtCursor:Int()
-		Return Cursor-Document.StartOfLine( LineAtCursor )
+		Return Cursor-Document.StartOfLine( LineNumAtCursor )
 	End
 	
 	Property PosInLineAtAnchor:Int()
-		Return Anchor-Document.StartOfLine( LineAtAnchor )
+		Return Anchor-Document.StartOfLine( LineNumAtAnchor )
 	End
 	
 	Property CursorPos:Vec2i()
-		Return New Vec2i( LineAtCursor,PosInLineAtCursor )
+		Return New Vec2i( LineNumAtCursor,PosInLineAtCursor )
 	End
 	
 	Property AnchorPos:Vec2i()
-		Return New Vec2i( LineAtAnchor,PosInLineAtAnchor )
+		Return New Vec2i( LineNumAtAnchor,PosInLineAtAnchor )
 	End
 	
 	

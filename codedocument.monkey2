@@ -49,6 +49,9 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		If AutoComplete = Null Then AutoComplete=New AutocompleteDialog( "" )
 		AutoComplete.OnChoosen+=Lambda( text:String )
 			If App.KeyView = Self
+				
+				text = _doc.PrepareForInsert( text,LineTextAtCursor,PosInLineAtCursor )
+				
 				SelectText( Cursor,Cursor-AutoComplete.LastIdentPart.Length )
 				ReplaceText( text )
 			Endif
@@ -413,6 +416,42 @@ Class CodeDocument Extends Ted2Document
 		Endif
 		
 		Return _treeView
+	End
+	
+	' not multipurpose method, need to move into plugin
+	Method PrepareForInsert:String( word:String,textLine:String,cursorPosInLine:Int )
+		
+		If FileType <> ".monkey2" Return word
+		
+		Select word
+			
+			' try to add space
+			Case "Namespace","Using","Import","New","Eachin","Where","Alias","Const","Local","Global","Field","Method","Function","Property","Operator ","Enum","Class","Interface","Struct","Extends","Implements","If","Then","Elseif","While","Until","For","To","Step","Select","Case","Catch","Throw","Print"
+			
+				Local len:=textLine.Length
+				Print len+","+cursorPosInLine+","+textLine
+				' end or line
+				If cursorPosInLine >= len-1 Then Return word+" "
+				
+				If textLine[cursorPosInLine] <> Chars.SPACE
+					Return word+" "
+				Endif
+			
+			
+			' try to add <
+			Case "Cast"
+			
+				Return word+"<"
+			
+			
+			' try to add (
+			Case "Typeof"
+			
+				Return word+"("
+				
+		End
+		
+		Return word 'as is
 	End
 	
 	Property TextDocument:TextDocument()
@@ -898,7 +937,7 @@ End
 Class NavOps<T>
 	
 	Field OnNavigate:Void( target:T )
-	
+		
 	Method Navigate( value:T )
 		
 		Push( value )
