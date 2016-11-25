@@ -76,7 +76,7 @@ Class Monkey2CodeFormatter Extends CodeFormatterPlugin
 
 		Local kw:=view.Keywords.Get( ident )
 		
-		If kw=ident Return
+		If Not kw Or kw=ident Return
 		
 		doc.ReplaceText( start,ends,kw )
 	End
