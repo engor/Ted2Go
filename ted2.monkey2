@@ -1,7 +1,17 @@
 
 #If __TARGET__="windows"
+
 #Import "bin/wget.exe"
-#End
+
+'to build resource.o when icon changes...
+'
+'windres resource.rc resource.o
+
+#Import "logo/resource.o"
+
+#Endif
+
+'----------------------------
 
 '#Import "<reflection>"
 
