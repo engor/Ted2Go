@@ -186,7 +186,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 				item.SetParent( parent )
 			Else
 				resultContainer.Add( item )
-				Items.Add( item )
 			Endif
 			
 			If jobj.Contains( "members" )
