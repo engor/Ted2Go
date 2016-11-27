@@ -8,23 +8,26 @@ Class CodeTextView Extends TextViewExt
 	Field Keywords:IKeywords
 	Field Highlighter:Highlighter
 	
+	Field LineChanged:Void( prevLine:Int,newLine:Int )
+	
 	Method New()
 		Super.New()
 		
-		'CursorMoved += OnCursorMoved
+		CursorMoved += OnCursorMoved
 		
 	End
 	
 	Method OnCursorMoved()
 		
-'		If Cursor <> Anchor Return
-'		
-'		Local line:=Document.FindLine( Cursor )
-'		If line = _prevLine Return
-'		
-'		DoFormat( True )
-'		
-'		_prevLine=line
+		Local line:=Document.FindLine( Cursor )
+		If line <> _prevLine
+			LineChanged( _prevLine,line )
+			_prevLine=line
+		Endif
+				
+		'If Cursor <> Anchor Return
+		'DoFormat( True )
+		
 	End
 	
 	Method IsCursorAtTheEndOfLine:Bool()

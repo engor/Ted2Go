@@ -56,7 +56,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				ReplaceText( text )
 			Endif
 		End
-				
+		
 	End
 	
 	Property CharsToShowAutoComplete:Int()
@@ -105,10 +105,10 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		_doc.HideHint_()
 		
+		Local alt:=(event.Modifiers & Modifier.Alt)
+		
 		'ctrl+space - show autocomplete list
 		If event.Type = EventType.KeyDown
-			
-			Local alt:=(event.Modifiers & Modifier.Alt)
 			
 			Select event.Key
 				
@@ -132,12 +132,20 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					If alt 
 						_doc.GoBack()
 						Return
+					Else
+						If AutoComplete.IsOpened
+							_doc.ShowAutocomplete()
+						Endif
 					Endif
 					
 				Case Key.Right
 					If alt
 						_doc.GoForward()
 						Return
+					Else
+						If AutoComplete.IsOpened
+							_doc.ShowAutocomplete()
+						Endif
 					Endif
 				
 				Case Key.F11
@@ -149,12 +157,15 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 			If event.Key = Key.Space And event.Modifiers & Modifier.Control
 				If _doc.CanShowAutocomplete()
-					_doc.ShowAutocomplete()
+					Local ident:=IdentBeforeCursor()
+					If ident
+						_doc.ShowAutocomplete()
+					Endif
 				Endif
 				Return
 			Endif
 		Endif
-				
+		
 		Super.OnKeyEvent( event )
 		
 		'show autocomplete list after some typed chars
@@ -173,6 +184,29 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Endif
 				Endif
 			Endif
+		Endif
+		
+		' after super processed
+		If event.Type = EventType.KeyDown
+		
+			Select event.Key
+			
+				Case Key.Left
+					If AutoComplete.IsOpened And Not alt
+						Local ident:=IdentBeforeCursor()
+						If ident
+							_doc.ShowAutocomplete( ident )
+						Else
+							_doc.HideAutocomplete()
+						Endif
+					Endif
+					
+				Case Key.Right
+					If AutoComplete.IsOpened And Not alt
+						_doc.ShowAutocomplete()
+					Endif
+			End
+		
 		Endif
 		
 	End
@@ -258,6 +292,8 @@ End
 
 Class CodeDocument Extends Ted2Document
 
+	
+	
 	Method New( path:String )
 		Super.New( path )
 	
@@ -289,7 +325,10 @@ Class CodeDocument Extends Ted2Document
 				
 		' Editor
 		_codeView=New CodeDocumentView( Self )
-		
+		_codeView.LineChanged += Lambda( prev:Int,cur:Int )
+			If AutoComplete.IsOpened Then AutoComplete.Hide()
+		End
+				
 		' Toolbar
 		Local bar:=New ToolBarExt
 		bar.Style=App.Theme.GetStyle( "EditorToolBar" )
@@ -564,27 +603,27 @@ Class CodeDocument Extends Ted2Document
 		Local line:=TextDocument.FindLine( _codeView.Cursor )
 		AutoComplete.Show( ident,Path,FileType,line )
 		
-		If AutoComplete.IsOpened
-			Local frame:=AutoComplete.Frame
-			
-			Local w:=frame.Width
-			Local h:=frame.Height
-			
-			Local cursorRect:=_codeView.CursorRect
-			Local scroll:=_codeView.Scroll
-			Local tvFrame:=_codeView.Frame
-			frame.Left=tvFrame.Left-scroll.x+cursorRect.Left+100
-			frame.Right=frame.Left+w
-			frame.Top=cursorRect.Top-scroll.y
-			frame.Bottom=frame.Top+h
-			' fit dialog into window
-			If frame.Bottom > tvFrame.Bottom
-				Local dy:=frame.Bottom-tvFrame.Bottom+5
-				frame.Top-=dy
-				frame.Bottom-=dy
-			Endif
-			AutoComplete.Frame=frame
+		If Not AutoComplete.IsOpened Return
+		
+		Local frame:=AutoComplete.Frame
+		
+		Local w:=frame.Width
+		Local h:=frame.Height
+		
+		Local cursorRect:=_codeView.CursorRect
+		Local scroll:=_codeView.Scroll
+		Local tvFrame:=_codeView.Frame
+		frame.Left=tvFrame.Left-scroll.x+cursorRect.Left+100
+		frame.Right=frame.Left+w
+		frame.Top=cursorRect.Top-scroll.y
+		frame.Bottom=frame.Top+h
+		' fit dialog into window
+		If frame.Bottom > tvFrame.Bottom
+			Local dy:=frame.Bottom-tvFrame.Bottom+5
+			frame.Top-=dy
+			frame.Bottom-=dy
 		Endif
+		AutoComplete.Frame=frame
 		
 	End
 	
@@ -626,6 +665,7 @@ Class CodeDocument Extends Ted2Document
 	Field _parsing:Bool
 	Field _timer:Timer
 	Field _parser:ICodeParser
+	Field _prevLine:=-1
 	
 	' global, to go through all docs
 	Global _navOps:=New NavOps<NavCode>

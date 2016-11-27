@@ -85,6 +85,7 @@ Class AutocompleteDialog Extends DialogExt
 		'-----------------------------
 		'if typed ident starts with previous
 		'need to simple filter items
+		#Rem
 		If IsOpened And starts And Not ident.EndsWith(".")
 			
 			Local items:=_view.Items
@@ -113,7 +114,7 @@ Class AutocompleteDialog Extends DialogExt
 			
 			Return
 		End
-		
+		#End
 		
 		_fullIdent=ident
 		_lastIdentPart=lastIdent
