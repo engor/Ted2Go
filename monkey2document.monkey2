@@ -346,85 +346,82 @@ Class Monkey2DocumentView Extends Ted2TextView
 		Return text.Slice( start,ends )
 	End
 	
+	Method OnKeyDown:Bool( key:Key,modifiers:Modifier ) Override
 	
-	Method OnKeyEvent( event:KeyEvent ) Override
-	
-		Select event.Type
-		Case EventType.KeyDown
-		
-			Select event.Key
-			Case Key.F1
+		Select key
+		Case Key.F1
 			
-				Local ident:=IdentNearestCursor()
+			Local ident:=IdentNearestCursor()
 				
-				If ident MainWindow.ShowQuickHelp( ident )
+			If ident MainWindow.ShowQuickHelp( ident )
 				
-			Case Key.F2
+		Case Key.F2
 			
-				New Fiber( Lambda()
+			New Fiber( Lambda()
 				
-					Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+_doc.Path+"~q"
+				Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+_doc.Path+"~q"
 					
-					Local str:=LoadString( "process::"+cmd )
-					Local i:=str.Find( "{" )
-					If i=-1 Return
-					str=str.Slice( i )
+				Local str:=LoadString( "process::"+cmd )
+				Local i:=str.Find( "{" )
+				If i=-1 Return
+				str=str.Slice( i )
 					
-					Local jobj:=JsonObject.Parse( str )
-					If Not jobj Return
+				Local jobj:=JsonObject.Parse( str )
+				If Not jobj Return
 					
-					Local jsonTree:=New JsonTreeView( jobj )
+				Local jsonTree:=New JsonTreeView( jobj )
 					
-					Local dialog:=New Dialog( "ParseInfo",jsonTree )
-					dialog.AddAction( "Close" ).Triggered=dialog.Close
-					dialog.MinSize=New Vec2i( 512,600 )
+				Local dialog:=New Dialog( "ParseInfo",jsonTree )
+				dialog.AddAction( "Close" ).Triggered=dialog.Close
+				dialog.MinSize=New Vec2i( 512,600 )
 					
-					dialog.Open()
+				dialog.Open()
 				
-				End )
+			End )
 				
-			Case Key.Tab,Key.Enter
+		Case Key.Tab,Key.Enter
 			
-				If _typing Capitalize( False )
+			If _typing Capitalize( False )
 				
-			Case Key.Left
+		Case Key.Left
 			
-				If _typing
-					Local text:=Text
-					Local cursor:=Cursor
-					If cursor And Not IsIdent( text[cursor-1] )
-						Capitalize( True )
-					Endif
+			If _typing
+				Local text:=Text
+				Local cursor:=Cursor
+				If cursor And Not IsIdent( text[cursor-1] )
+					Capitalize( True )
 				Endif
-				
-			Case Key.Right
-			
-				If _typing
-					Local text:=Text
-					Local cursor:=Cursor
-					If cursor<text.Length And Not IsIdent( text[cursor] )
-						Capitalize( True )
-					Endif
-				Endif
-				
-			Case Key.Up,Key.Down
-			
-				Capitalize( True )	'in cased we missed anything...
-			End
-		
-		Case EventType.KeyChar
-		
-			If IsIdent( event.Text[0] )
-				_typing=True
-			Else
-				If _typing Capitalize( False )
 			Endif
+				
+		Case Key.Right
+			
+			If _typing
+				Local text:=Text
+				Local cursor:=Cursor
+				If cursor<text.Length And Not IsIdent( text[cursor] )
+					Capitalize( True )
+				Endif
+			Endif
+				
+		Case Key.Up,Key.Down
+			
+			Capitalize( True )	'in cased we missed anything...
 		End
-
-		Super.OnKeyEvent( event )
-
+		
+		Return Super.OnKeyDown( key,modifiers )
 	End
+	
+	Method OnKeyChar( text:String ) Override
 
+		If IsIdent( text[0] )
+			_typing=True
+		Else
+			If _typing Capitalize( False )
+		Endif
+		
+		Super.OnKeyChar( text )
+	End
+	
 End
 
 Class Monkey2Document Extends Ted2Document

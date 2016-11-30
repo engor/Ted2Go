@@ -173,7 +173,7 @@ Class FindActions
 		Local i:=0,t:=0
 		Repeat
 		
-			Local i:=tvtext.Find( text,i )
+			i=tvtext.Find( text,i )
 			If i=-1 Exit
 			
 			tv.SelectText( i+t,i+text.Length+t )

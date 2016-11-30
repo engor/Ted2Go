@@ -1,0 +1,271 @@
+//Theme by Hezkore
+
+{
+	"extends":"ted2-default",
+
+	"styles":{
+
+		"ToolButton":{
+			"iconColor":"#FFF",
+			"skinColor":"panel",
+			"extends":"Button",
+			"padding":[2,0],
+			"margin":[3,0],
+
+			"states":{
+				"hover":{
+					"skinColor":"#9EBEFF"
+				},
+				"active":{
+					"skinColor":"#BED3FF"
+				},
+				"selected":{
+					"skinColor":"#9EBEFF"
+				}
+			}
+		},
+
+		"MainToolBar":{
+			"extends":"ToolBar",
+			"padding":[ 0 ],
+			"backgroundColor":"content",
+			"border":[ 0,1,0,1 ],
+			"borderColor":"border"
+		},
+
+		"EditorToolBar":{
+			"extends":"ToolBar",
+			"padding":[ 0 ],
+			"backgroundColor":"content",
+			"border":[1,0,1,1],
+			"borderColor":"border"
+		},
+
+		"MenuSeparator":{
+			"padding":[ 0,0,0,1 ],
+			"backgroundColor":"content",
+			"border":[ 8,8,7,7 ]
+		},
+
+		"Hint":{
+			"textColor":"text-highlight",
+			"skin":"smooth_assets/button_skin.png",
+			"skinColor":"#9EBEFF"
+		},
+
+		"TextView":{
+			"border":[1,0,1,1],
+			"borderColor":"border",
+			"font":"fixedWidth",
+			"backgroundColor":"content"
+		},
+
+		"GutterView":{
+			"border":[0],
+			"extends":"TextView",
+			"textColor":"text-disabled"
+		},
+
+		"TextViewContent":{
+			"padding":[4]
+		},
+
+		"Console":{
+			"border":[1,0,1,1],
+			"borderColor":"border",
+			"font":"small",
+			"backgroundColor":"content"
+		},
+
+		"ProgressBar":{
+			"icons":"smooth_assets/progressbar_icons.png"
+		},
+
+		"Button":{
+			"font":"small",
+			"extends":"Label",
+			"padding":[4,2],
+			"skin":"smooth_assets/button_skin.png",
+			"skinColor":"panel",
+
+			"states":{
+				"hover":{
+					"skinColor":"active"
+				},
+				"active":{
+					"skinColor":"knob"
+				},
+				"selected":{
+					"skinColor":"clear"
+				}
+			}
+		},
+
+		"Dialog":{
+			"skin":"smooth_assets/dialog_skin.png",
+			"skinColor":"panel"
+		},
+
+		"DialogTitle":{
+			"extends":"Label",
+			"backgroundColor":"knob"
+		},
+
+		"TreeView":{
+			"border":[1,0,1,0],
+			"borderColor":"border",
+			"backgroundColor":"content",
+			"icons":"smooth_assets/treeview_icons.png",
+			"iconColor":"#9DA5B4"
+		},
+
+		"TreeViewContent":{
+			"border":[0],
+			"padding":[4]
+		},
+
+		"TreeViewNode":{
+			"border":[0],
+			"padding":[3],
+			"font":"small",
+			"states":{
+				"hover":{
+					"backgroundColor":"#3F3F3F"
+				},
+				"selected":{
+					"backgroundColor":"#3F3F3F",
+					"textColor":"text-highlight"
+				}
+			}
+		},
+
+		"CheckBox":{
+			"icons":"smooth_assets/checkbox_icons.png",
+			"margin":[8,0,0,0]
+		},
+
+		"DockKnob":{
+			"padding":[2],
+			"backgroundColor":"gutter",
+			"states":{
+				"hover":{
+					"backgroundColor":"hover"
+				},
+				"active":{
+					"backgroundColor":"active"
+				}
+			}
+		},
+
+		"ScrollBar":{
+			"backgroundColor":"content"
+		},
+
+		"ScrollKnob":{
+			"border":[2],
+			"padding":[1],
+			"margin":[3],
+			"skin":"button_skin.png",
+			"skinColor":"knob",
+			"states":{
+				"hover":{
+					"skinColor":"knob",
+					"margin":[1]
+				},
+				"active":{
+					"skinColor":"active",
+					"margin":[0]
+				}
+			}
+		},
+
+		"ToolBar":{
+			"padding":[2,2,0,2],
+			"backgroundColor":"panel"
+		},
+
+		"TabBar":{
+			"border":[0,0,0,1],
+			"borderColor":"border",
+			"extends":"ToolBar",
+			"padding":[ 0,2,4,0 ],
+			"backgroundColor":"clear"
+		},
+
+		"TabButton":{
+			"extends":"Button",
+			"font":"small",
+			"padding":[16,5,16,5],
+			"margin":[1,0],
+			"backgroundColor":"#0000",
+			"skin":"smooth_assets/tabbutton_skin.png",
+			"skinColor":"gutter",
+			"textColor":"text-background",
+			"states":{
+				"hover":{
+					"skinColor":"gutter"
+				},
+				"active":{
+					"skinColor":"content"
+				},
+				"selected":{
+					"border":[2,0,0,0],
+					"borderColor":"#507FDF",
+					"skinColor":"content",
+					"textColor":"text-default"
+				}
+			}
+		},
+
+		"TabClose":{
+			"margin":[4,0,0,0],
+			"icons":"smooth_assets/tabclose_icons.png",
+			"iconColor":"#373737",
+			"states":{
+				"hover":{
+					"iconColor":"#D7DAE0"
+				},
+				"active":{
+					"iconColor":"#D7DAE0"
+				}
+			}
+		}
+
+	},
+
+	"colors":{
+		"border": "#171A1E",
+		"clear": "#21252B",
+		"gutter": "#21252B",
+		"content": "#282C34",
+		"panel": "#444B59",
+
+		"knob": "#575F6F",
+		"hover": "#444B59",
+		"active" : "#636C7F",
+
+		"text-default": "#C1CFD1",
+		"text-highlight": "#fff",
+		"text-disabled": "#4B5262",
+		"text-background": "#737883",
+
+		"textview-cursor":"#7BA4F8",
+		"textview-selection":"#3E4451",
+
+		//FF0000
+		"textview-color0":"#C358F5",
+		"textview-color1": "#6EA4F5",	//identifiers
+		"textview-color2": "#CF84EB",	//keywords
+		"textview-color3": "#7FE37F",	//strings
+		"textview-color4": "#FFB254",	//numbers
+		"textview-color5": "#6E7480",	//comment
+		"textview-color6": "#E06C72",	//preproc
+		"textview-color7": "#C358F5"	//default
+	},
+
+	"fonts":{
+		"normal":"DejaVuSans.ttf,16",
+		"fixedWidth":"DejaVuSans.ttf,15",
+		"small":"DejaVuSans.ttf,15"
+	}
+}
