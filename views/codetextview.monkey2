@@ -201,8 +201,24 @@ Class CodeTextView Extends TextViewExt
 				
 				Local ctrl:=(event.Modifiers & Modifier.Control)
 				Local shift:=(event.Modifiers & Modifier.Shift)
+				Local key:=event.Key
 				
-				Select event.Key
+				'map keypad nav keys...
+				If Not (event.Modifiers & Modifier.NumLock)
+					Select key
+					Case Key.Keypad1 key=Key.KeyEnd
+					Case Key.Keypad2 key=Key.Down
+					Case Key.Keypad3 key=Key.PageDown
+					Case Key.Keypad4 key=Key.Left
+					Case Key.Keypad6 key=Key.Right
+					Case Key.Keypad7 key=Key.Home
+					Case Key.Keypad8 key=Key.Up
+					Case Key.Keypad9 key=Key.PageUp
+					Case Key.Keypad0 key=Key.Insert
+					End
+				Endif
+				
+				Select key
 			
 					#If __TARGET__="windows"
 					Case Key.E 'delete whole line

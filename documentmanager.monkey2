@@ -66,15 +66,7 @@ Class DocumentManager
 			_browser.ContentView=Null
 		Endif
 		
-		'Can't change window title on a fiber on at least windows!
-		'
-		App.Idle+=Lambda()
-			If _currentDoc
-				MainWindow.Title = AppTitle+" - "+_currentDoc.Path
-			Else
-				MainWindow.Title = AppTitle
-			Endif
-		End
+		UpdateWindowTitle( doc )
 		
 		CurrentDocumentChanged()
 	End
@@ -137,7 +129,7 @@ Class DocumentManager
 			
 			Local newType:=Ted2DocumentType.ForExtension( ExtractExt( newPath ) )
 			If Not newType Return Null
-
+			
 			Local oldPath:=doc.Path
 			doc.Rename( newPath )
 			If Not doc.Save()
@@ -145,7 +137,10 @@ Class DocumentManager
 				Return Null
 			Endif
 			
-			If newType=Ted2DocumentType.ForExtension( ExtractExt( oldPath ) ) Return doc
+			If newType=Ted2DocumentType.ForExtension( ExtractExt( oldPath ) )
+				UpdateWindowTitle( doc )
+				Return doc
+			Endif
 			
 			Local newDoc:=newType.CreateDocument( newPath )
 			If Not newDoc.Load() Return Null
@@ -288,6 +283,19 @@ Class DocumentManager
 	Method UpdateTabLabel( doc:Ted2Document )
 	
 		If doc _tabView.SetTabText( doc.View,TabText( doc ) )
+	End
+	
+	Method UpdateWindowTitle( doc:Ted2Document )
+		
+		'Can't change window title on a fiber on at least windows!
+		'
+		App.Idle+=Lambda()
+			If doc
+				MainWindow.Title = AppTitle+" - "+doc.Path
+			Else
+				MainWindow.Title = AppTitle
+			Endif
+		End
 	End
 	
 	Method OnNextDocument()

@@ -94,7 +94,7 @@ Class FileActions
 		closeOthers.Enabled=n>1
 		closeToRight.Enabled=doc And doc<>docs[docs.Length-1]
 		closeAll.Enabled=n>0
-		save.Enabled=doc And doc.Dirty
+		save.Enabled=doc And (doc.Dirty Or MainWindow.IsTmpPath( doc.Path ))
 		saveAs.Enabled=doc
 		saveAll.Enabled=anyDirty
 	End
