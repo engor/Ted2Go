@@ -27,11 +27,11 @@ Class ModuleManager Extends Dialog
 '		_table.Style=App.Theme.GetStyle( "TableView" )
 '		_table.Style.BackgroundColor=App.Theme.GetColor( "content" )
 		
-		_table.AddColumn( "Module",,"15%" )
+		_table.AddColumn( "Module",,"24%" )
 		_table.AddColumn( "About",,"40%" )
 		_table.AddColumn( "Version",,"12%" )
-		_table.AddColumn( "Status",,"20%" )
-		_table.AddColumn( "Action",,"13%" )
+		_table.AddColumn( "Status",,"12%" )
+		_table.AddColumn( "Action",,"12%" )
 		
 		_docker=New DockingView
 		_docker.ContentView=_table
@@ -175,7 +175,7 @@ Class ModuleManager Extends Dialog
 			
 			Case FileType.None
 			
-				If DeleteDir( dst,True )
+				If Not DeleteDir( dst,True )
 					Alert( "Failed to delete module dir '"+dst+"'" )
 					Return False
 				Endif
