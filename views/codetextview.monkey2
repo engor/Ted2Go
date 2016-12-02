@@ -2,7 +2,7 @@
 Namespace ted2go
 
 
-Class CodeTextView Extends TextViewExt
+Class CodeTextView Extends TextView
 
 	Field Formatter:ICodeFormatter		
 	Field Keywords:IKeywords
@@ -13,20 +13,10 @@ Class CodeTextView Extends TextViewExt
 	Method New()
 		Super.New()
 		
+		CursorBlinkRate=2.5
+		BlockCursor=False
+		
 		CursorMoved += OnCursorMoved
-		
-	End
-	
-	Method OnCursorMoved()
-		
-		Local line:=Document.FindLine( Cursor )
-		If line <> _prevLine
-			LineChanged( _prevLine,line )
-			_prevLine=line
-		Endif
-				
-		'If Cursor <> Anchor Return
-		'DoFormat( True )
 		
 	End
 	
@@ -192,7 +182,22 @@ Class CodeTextView Extends TextViewExt
 	
 	
 	Protected
+	
+	Method OnContentMouseEvent( event:MouseEvent ) Override
 		
+		Select event.Type
+			
+			Case EventType.MouseWheel 'little faster scroll
+		
+				Scroll-=New Vec2i( 0,RenderStyle.Font.Height*event.Wheel.Y*3 )
+				Return
+				
+		End
+
+		Super.OnContentMouseEvent( event )
+					
+	End
+	
 	Method OnKeyEvent(event:KeyEvent) Override
 	
 		Select event.Type
@@ -233,40 +238,60 @@ Class CodeTextView Extends TextViewExt
 						
 					Case Key.X
 					
-						If ctrl And Not CanCopy 'nothing selected - cut whole line
-							Local line:=Document.FindLine( Cursor )
-							SelectText( Document.StartOfLine( line ),Document.EndOfLine( line )+1 )
-							Cut()
+						If ctrl 'nothing selected - cut whole line
+							OnCut( Not CanCopy )
 							Return
 						Endif
 						
 						
-					Case Key.C,Key.Insert
+					Case Key.C
 					
-						If ctrl And Not CanCopy 'nothing selected - copy whole line
-							Local cur:=Cursor
-							Local line:=Document.FindLine( Cursor )
-							SelectText( Document.StartOfLine( line ),Document.EndOfLine( line ) )
-							Copy()
-							SelectText( cur,cur )'restore
+						If ctrl 'nothing selected - copy whole line
+							OnCopy( Not CanCopy )
 							Return
 						Endif
+					
+					
+					Case Key.Insert 'ctrl+insert - copy, shift+insert - paste
+					
+						If shift
+							SmartPaste()
+						Elseif ctrl And CanCopy
+							OnCopy()
+						Endif
+						Return
 						
 					
+					Case Key.KeyDelete
+					
+						If shift 'shift+del - cut selected
+							If CanCopy Then OnCut()
+						Else
+							If Anchor = Cursor
+								If Cursor < Document.Text.Length
+									SelectText( Cursor,Cursor+1 )
+									ReplaceText( "" )
+								Endif
+							Else
+								ReplaceText( "" )
+							Endif
+						Endif
+						Return
+						
+							
 					Case Key.Enter,Key.KeypadEnter 'auto indent
 						
 						If _typing Then DoFormat( False )
 						
-						Local info:=CurrentTextLine
-						Local line:=info.line
-						Local text:=info.text
+						Local line:=CursorLine
+						Local text:=Document.GetLine( line )
 						Local indent:=GetIndent( text )
-						
+						Local posInLine:=PosInLineAtCursor
 						'fix 'bug' when we delete ~n at the end of line.
 						'in this case GetLine return 2 lines, and if they empty
 						'then we get double indent
 						'need to fix inside mojox
-						if indent > info.posInLine Then indent=info.posInLine
+						if indent > posInLine Then indent=posInLine
 						
 						Local s:=(indent ? text.Slice( 0,indent ) Else "")
 						ReplaceText( "~n"+s )
@@ -276,16 +301,87 @@ Class CodeTextView Extends TextViewExt
 						
 					Case Key.Home 'smart Home behaviour
 			
-						If Not ctrl
+						If ctrl
+							If shift 'selection
+								SelectText( 0,Anchor )
+							Else
+								SelectText( 0,0 )
+							Endif
+						Else
 							SmartHome( shift )
-							
-							Return
 						Endif
+						Return
 						
 					
 					Case Key.Tab
-					
-						'If _typing Then DoFormat( False )
+											
+						If Cursor = Anchor 'has no selection
+						
+							If Not shift
+								ReplaceText( "~t" )
+							Else
+								If Cursor > 0 And Document.Text[Cursor-1]=Chars.TAB
+									SelectText( Cursor-1,Cursor )
+									ReplaceText( "" )
+								Endif
+							Endif
+							
+						Else 'block tab/untab
+							
+							Local minPos:=Min( Cursor,Anchor )
+							Local maxPos:=Max( Cursor,Anchor )
+							Local min:=Document.FindLine( minPos )
+							Local max:=Document.FindLine( maxPos )
+							
+							Local lines:=New StringStack
+								
+							For Local i:=min To max
+								lines.Push( Document.GetLine( i ) )
+							Next
+								
+							Local go:=True
+							Local shiftFirst:=0,shiftLast:=0
+							
+							If shift
+								
+								Local changes:=0
+								For Local i:=0 Until lines.Length
+									If lines[i].StartsWith( "~t" )
+										lines[i]=lines[i].Slice( 1 )+"~n"
+										changes+=1
+										If i=0 Then shiftFirst=-1
+										if i=lines.Length-1 Then shiftLast=-1
+									Else
+										lines[i]+="~n"
+									Endif
+								Next
+								
+								go=(changes > 0)
+							Else
+								shiftFirst=1
+								shiftLast=1
+								For Local i:=0 Until lines.Length
+									lines[i]="~t"+lines[i]+"~n"
+								Next
+							Endif
+								
+							If go
+								Local minStart:=Document.StartOfLine( min )
+								Local maxStart:=Document.StartOfLine( max )
+								Local maxEnd:=Document.EndOfLine( max )
+
+								Local p1:=minPos+shiftFirst 'absolute pos
+								Local p2:=maxPos-maxStart+shiftLast 'pos in line
+								SelectText( minStart,maxEnd+1 )
+								ReplaceText( lines.Join( "" ) )
+								p2+=Document.StartOfLine( max )
+								' case when cursor is between tabs and we move both of them, so jump to prev line
+								p1=Max( p1,Document.StartOfLine( min ) )
+								SelectText( p1,p2 )
+							Endif
+								
+						Endif
+						Return
 						
 						
 					Case Key.Up,Key.Down
@@ -296,7 +392,7 @@ Class CodeTextView Extends TextViewExt
 					Case Key.V
 					
 						If CanPaste And ctrl
-							SmartParse()
+							SmartPaste()
 							Return
 						Endif
 						
@@ -304,10 +400,16 @@ Class CodeTextView Extends TextViewExt
 					Case Key.Insert
 					
 						If CanPaste And shift
-							SmartParse()
+							SmartPaste()
 							Return
 						Endif
 					
+					Case Key.KeyDelete
+					
+						If shift
+							OnCut()
+							Return
+						Endif
 					
 					#If __TARGET__="macos"
 					'smart Home behaviour
@@ -352,21 +454,34 @@ Class CodeTextView Extends TextViewExt
 	Field _typing:Bool
 	Field _prevLine:Int
 	
+	Method OnCursorMoved()
+		
+		Local line:=Document.FindLine( Cursor )
+		If line <> _prevLine
+			LineChanged( _prevLine,line )
+			_prevLine=line
+		Endif
+				
+		'If Cursor <> Anchor Return
+		'DoFormat( True )
+		
+	End
 	
 	Method SmartHome( shift:Bool )
 	
-		Local line:=CurrentTextLine
-		Local txt:=line.text
+		Local line:=Document.FindLine( Cursor )
+		Local txt:=Document.GetLine( line )
 		Local n:=0
 		Local n2:=txt.Length
 		'check for whitespaces before cursor
 		While (n < n2 And IsSpace( txt[n]) )
 			n+=1
 		Wend
-		n+=line.posStart
+		Local posStart:=Document.StartOfLine( line )
+		n+=posStart
 		Local newPos:=0
-		If n >= Cursor And Cursor > line.posStart
-			newPos=line.posStart
+		If n >= Cursor And Cursor > posStart
+			newPos=posStart
 		Else
 			newPos=n
 		Endif
@@ -378,46 +493,34 @@ Class CodeTextView Extends TextViewExt
 		Endif
 	End
 	
-	Method SmartParse()
+	Method SmartPaste()
 		
 		' get indent of cursor's line
 		Local cur:=Min( Cursor,Anchor )
 		Local line:=Document.FindLine( cur )
-		Local posInLine:=cur-Document.StartOfLine( line )
 		Local indent:=GetIndent( Document.GetLine( line ) )
+		Local posInLine:=cur-Document.StartOfLine( line )
 		indent=Min( indent,posInLine )
 		
-		' check indents inside of pasted text
-		Local text:=App.ClipboardText
-		text=text.Replace( "~r~n","~n" )
-		text=text.Replace( "~r","~n" )
-		Local lines:=text.Split( "~n" )
-		Local indent2:=1000
+		Local txt:=App.ClipboardText
+		txt=txt.Replace( "~r~n","~n" )
+		txt=txt.Replace( "~r","~n" )
+		Local lines:=txt.Split( "~n" )
 		
-		' skip first line
-		For Local i:=1 Until lines.Length
-			Local s:=lines[i]
-			indent2=Min( indent2,GetIndent(s) )
-		Next
-		
-		Local delta:=indent2-indent
-		Local result:=""
-		If delta > 0 'need to remove
-			For Local i:=0 Until lines.Length
-				Local s:=lines[i]
-				If result Then result+="~n"
-				result+= (i = 0 ? s Else s.Slice( delta ))
+		' add indent at cursor
+		If indent
+			Local add:=Utils.RepeatStr( "~t",indent )
+			For Local i:=1 Until lines.Length
+				lines[i]=add+lines[i]
 			Next
-		Elseif delta < 0 'need to append
-			Local add:=Utils.RepeatStr( "~t",Abs(delta) )
-			For Local i:=0 Until lines.Length
-				Local s:=lines[i]
-				If result Then result+="~n"
-				result+= (i = 0 ? s Else add+s)
-			Next
-		Else
-			result=text
 		Endif
+		
+		' result text
+		Local result:=""
+		For Local i:=0 Until lines.Length
+			If result Then result+="~n"
+			result+=lines[i]
+		Next
 		
 		ReplaceText( result )
 		
@@ -427,6 +530,83 @@ Class CodeTextView Extends TextViewExt
 		
 		_typing=False
 		If Formatter Then Formatter.Format( Self,all )
+	End
+	
+	Method OnCut( wholeLine:Bool=False )
+		
+		If wholeLine
+			Local line:=Document.FindLine( Cursor )
+			SelectText( Document.StartOfLine( line ),Document.EndOfLine( line )+1 )
+		Else
+			SelectText( Cursor,Anchor )
+		Endif
+		SmartCopySelected()
+		ReplaceText( "" )
+	End
+	
+	Method OnCopy( wholeLine:Bool=False )
+		
+		If wholeLine
+			Local line:=Document.FindLine( Cursor )
+			SelectText( Document.StartOfLine( line ),Document.EndOfLine( line ) )
+		Else
+			SelectText( Cursor,Anchor )
+		Endif
+		SmartCopySelected()
+		
+		SelectText( Cursor,Anchor )
+	End
+	
+	Method SmartCopySelected()
+		
+		' here we strip indents from all lines - the same as in first-line indent
+		Local min:=Min( Cursor,Anchor )
+		Local max:=Max( Cursor,Anchor )
+		Local line:=Document.FindLine( min )
+		Local line2:=Document.FindLine( max )
+		
+		If line = line2 'nothing to strip
+			Copy()
+			Return
+		Endif
+		
+		Local txt:=Document.GetLine( line )
+		Local indent:=GetIndent( txt )
+		Local posInLine:=min-Document.StartOfLine( line )
+		indent=Min( indent,posInLine )
+		
+		If indent = 0 'nothing to strip
+			Copy()
+			Return
+		Endif
+		
+		Local selText:=Document.Text.Slice( min,max )
+		Local lines:=selText.Split( "~n" )
+		
+		Local indent2:=indent
+		
+		' get min indent, except of first
+		For Local i:=1 Until lines.Length
+			Local s:=lines[i]
+			If Not s.Trim() Continue 'skip empty lines
+			indent2=Min( indent2,GetIndent(s) )
+		Next
+		
+		If indent2 = 0 'nothing to strip
+			Copy()
+			Return
+		Endif
+		
+		Local result:=txt.Slice( posInLine )
+		' strip
+		For Local i:=1 Until lines.Length
+			Local s:=lines[i]
+			If result Then result+="~n"
+			If Not s.Trim() Continue 'empty
+			result+=s.Slice( indent2 )
+		Next
+		
+		App.ClipboardText=result
 	End
 	
 End

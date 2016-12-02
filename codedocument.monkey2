@@ -144,7 +144,8 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						Return
 					Else
 						If AutoComplete.IsOpened
-							_doc.ShowAutocomplete()
+							Local ident:=IdentBeforeCursor()
+							If ident Then _doc.ShowAutocomplete() Else _doc.HideAutocomplete()
 						Endif
 					Endif
 				
@@ -158,9 +159,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			If event.Key = Key.Space And event.Modifiers & Modifier.Control
 				If _doc.CanShowAutocomplete()
 					Local ident:=IdentBeforeCursor()
-					If ident
-						_doc.ShowAutocomplete()
-					Endif
+					If ident Then _doc.ShowAutocomplete()
 				Endif
 				Return
 			Endif

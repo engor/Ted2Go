@@ -274,7 +274,7 @@ Class MainWindowInstance Extends Window
 		_toolBar.AddSeparator()
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/check.png" ),_buildActions.semant.Triggered,"Check errors (F7)" )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/build.png" ),_buildActions.build.Triggered,"Build (F6)" )
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/run.png" ),_buildActions.buildAndRun.Triggered,"Run (F7)" )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/run.png" ),_buildActions.buildAndRun.Triggered,"Run (F5)" )
 		_toolBar.AddSeparator()
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/options.png" ),_buildActions.buildSettings.Triggered,"Target settings" )
 		_toolBar.AddSeparator()
