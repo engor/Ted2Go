@@ -203,15 +203,12 @@ Class MainWindowInstance Extends Window
 		'Build menu
 		'
 		_forceStop=New Action( "Force Stop" )
-		_forceStop.Triggered=Lambda()
-			If _buildConsole.Running
-				_buildConsole.Terminate()
-			Else If _outputConsole.Running
-				_outputConsole.Terminate()
-			Endif
-		End
+		_forceStop.Triggered=OnForceStop
 		_forceStop.HotKey=Key.F5
 		_forceStop.HotKeyModifiers=Modifier.Shift
+		
+		'
+		_buildActions.PreBuild+=OnForceStop		
 		
 		_buildMenu=New Menu( "Build" )
 		_buildMenu.AddAction( _buildActions.buildAndRun )
@@ -500,6 +497,15 @@ Class MainWindowInstance Extends Window
 	
 
 	Private
+	
+	Method OnForceStop()
+		
+		If _buildConsole.Running
+			_buildConsole.Terminate()
+		Else If _outputConsole.Running
+			_outputConsole.Terminate()
+		Endif
+	End
 	
 	Method LoadState( jobj:JsonObject )
 	

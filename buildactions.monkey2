@@ -38,6 +38,8 @@ Class BuildActions
 	
 	Field targetMenu:Menu
 	
+	Field PreBuild:Void()
+	
 	Method New( docs:DocumentManager,console:Console,debugView:DebugView )
 	
 		_docs=docs
@@ -491,14 +493,18 @@ Class BuildActions
 	End
 	
 	Method OnBuildAndRun()
-
+		
+		PreBuild()
+		
 		If _console.Running Return
 	
 		BuildApp( _buildConfig,_buildTarget,"run" )
 	End
 	
 	Method OnBuild()
-	
+		
+		PreBuild()
+		
 		If _console.Running Return
 	
 		BuildApp( _buildConfig,_buildTarget,"build" )
