@@ -694,7 +694,7 @@ Class CodeDocument Extends Ted2Document
 	
 		Local scope:=_parser.GetScope( Path,_codeView.LineNumAtCursor+1 )	
 		If scope And scope <> _prevScope
-			Local classs := (scope.IsLikeClass And scope = _prevScope.Parent)
+			Local classs := (_prevScope And scope.IsLikeClass And scope = _prevScope.Parent)
 			_prevScope = scope
 			If classs Return 'don't select parent class scope if we are inside of it
 			_treeView.SelectByScope( scope )
@@ -873,7 +873,11 @@ Class CodeItemIcons
 				key=kind
 			Case "param"
 				key="*"
-			'Case "
+			Case "field"
+				Local type:=item.Type
+				If type<>Null And type.IsLikeFunc
+					key="field_func"
+				Endif
 			Default
 				If item.Ident.ToLower() = "new"
 					kind="constructor"
@@ -953,6 +957,8 @@ Class CodeItemIcons
 		_icons["global_public"]=Load( "field_static.png" )
 		_icons["global_private"]=Load( "field_static_private.png" )
 		_icons["global_protected"]=Load( "field_static_protected.png" )
+		
+		_icons["field_func"]=Load( "field_func.png" )
 		
 		_icons["const"]=Load( "const.png" )
 		_icons["local"]=Load( "local.png" )

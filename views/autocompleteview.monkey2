@@ -141,7 +141,7 @@ Class AutocompleteDialog Extends DialogExt
 		_listForExtract.Clear()
 		parser.GetItemsForAutocomplete( ident,filePath,docLine,_listForExtract )
 		
-		CodeItemsSorter.SortItems( _listForExtract,True )
+		CodeItemsSorter.SortByType( _listForExtract,True )
 		
 		For Local i:=Eachin _listForExtract
 			' remove duplicates

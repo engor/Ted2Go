@@ -296,13 +296,18 @@ End
 Struct CodeType
 	
 	Field kind:String
+	Field expr:String
+	Field args:CodeType[]
+	
 	Property ident:String()
 		Return _ident
 	Setter( value:String )
 		_ident = FixTypeIdent( value )
 	End
-	Field expr:String
-	Field args:CodeType[]
+	
+	Property IsLikeFunc:Bool()
+		Return kind="functype"
+	End
 	
 	Operator To:String()
 		Return ToString()
@@ -372,7 +377,7 @@ End
 
 Struct CodeItemsSorter Final
 	
-	Function SortItems( list:List<CodeItem>, inverse:Bool=False )
+	Function SortByType( list:List<CodeItem>, inverse:Bool=False )
 		
 		Local sorterFunc:Int( lhs:CodeItem,rhs:CodeItem )
 		
@@ -434,7 +439,12 @@ Struct CodeItemsSorter Final
 				retval=8
 			
 			Case CodeItemKind.Field_,CodeItemKind.Global_
-				retval=7
+				Local t:=item.Type
+				If t<>Null And t.IsLikeFunc
+					retval=16 'more than constructor
+				Else
+					retval=7
+				Endif
 				
 			Case CodeItemKind.Const_
 				retval=(inverse ?9 Else 6)

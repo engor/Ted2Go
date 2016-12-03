@@ -135,9 +135,10 @@ Class CodeTreeView Extends TreeViewExt
 	
 	Method SortItems( list:List<CodeItem> )
 	
-		If SortType <> CodeSortType.Type Return
-	
-		CodeItemsSorter.SortItems( list )
+		Select SortType
+		Case CodeSortType.Type
+			CodeItemsSorter.SortByType( list )
+		End
 	End
 		
 End
