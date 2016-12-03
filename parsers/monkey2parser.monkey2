@@ -572,25 +572,31 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 			If jobj.Contains( "kind" )
 				Local kind2:=jobj["kind"].ToString()
-				If kind2="ident"
+				Select kind2
+				Case "ident"
 					Local t:=New CodeType
 					t.kind=kind2
 					t.ident=jobj["ident"].ToString()
 					Return t
-				Endif
+				End
 			Endif
 		
 			' extract from literal
 			If jobj.Contains( "init" )
 				Local init:=jobj["init"].ToObject()
 				Local kind2:=init["kind"].ToString()
-				If kind2="literal"
+				Select kind2
+				Case "literal"
 					Local t:=New CodeType
 					t.kind=kind2
 					Local toke:=init["toke"].ToString()
 					t.ident=GetLiteralType( toke )
 					Return t
-				Endif
+				Case "member"
+					Local t:=ParseMember( jobj )
+					t.kind=kind2
+					Return t
+				End
 			Endif
 			' not found
 			Return Null
@@ -644,13 +650,29 @@ Class Monkey2Parser Extends CodeParserPlugin
 				
 				Return t
 					
-				
+			Case "member"
+			
+				Local t:=ParseMember( type )
+				t.kind=kind
+				Return t
+								
 			Default
 			
 				
 		End
 		
 		Return Null
+	End
+	
+	Method ParseMember:CodeType( jobj:Map<String,JsonValue> )
+	
+		Local t:=New CodeType
+		t.ident=jobj["ident"].ToString()
+		If jobj.Contains( "expr" )
+			Local expr:=jobj["expr"].ToObject()
+			If expr.Contains( "ident" ) Then t.ident=expr["ident"].ToString()+"."+t.ident
+		Endif
+		Return t
 	End
 	
 	Method ParseParams:CodeParam[]( jobj:Map<String,JsonValue> )

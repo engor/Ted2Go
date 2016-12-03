@@ -132,21 +132,12 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					If alt 
 						_doc.GoBack()
 						Return
-					Else
-						If AutoComplete.IsOpened
-							_doc.ShowAutocomplete()
-						Endif
 					Endif
 					
 				Case Key.Right
 					If alt
 						_doc.GoForward()
 						Return
-					Else
-						If AutoComplete.IsOpened
-							Local ident:=IdentBeforeCursor()
-							If ident Then _doc.ShowAutocomplete() Else _doc.HideAutocomplete()
-						Endif
 					Endif
 				
 				Case Key.F11
@@ -193,16 +184,13 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				Case Key.Left
 					If AutoComplete.IsOpened And Not alt
 						Local ident:=IdentBeforeCursor()
-						If ident
-							_doc.ShowAutocomplete( ident )
-						Else
-							_doc.HideAutocomplete()
-						Endif
+												If ident Then _doc.ShowAutocomplete( ident ) Else _doc.HideAutocomplete()
 					Endif
 					
 				Case Key.Right
 					If AutoComplete.IsOpened And Not alt
-						_doc.ShowAutocomplete()
+						Local ident:=IdentBeforeCursor()
+						If ident Then _doc.ShowAutocomplete( ident ) Else _doc.HideAutocomplete()
 					Endif
 			End
 		
@@ -327,7 +315,8 @@ Class CodeDocument Extends Ted2Document
 		_codeView.LineChanged += Lambda( prev:Int,cur:Int )
 			If AutoComplete.IsOpened Then AutoComplete.Hide()
 		End
-				
+		_codeView.LineChanged += OnLineChanged
+			
 		' Toolbar
 		Local bar:=New ToolBarExt
 		bar.Style=App.Theme.GetStyle( "EditorToolBar" )
@@ -439,7 +428,7 @@ Class CodeDocument Extends Ted2Document
 		If Not _treeView
 			
 			_treeView=New CodeTreeView
-			_treeView.SortEnabled=True
+			_treeView.SortType=CodeSortType.Type
 			
 			' goto item from tree view
 			_treeView.NodeClicked+=Lambda( node:TreeView.Node )
@@ -665,6 +654,7 @@ Class CodeDocument Extends Ted2Document
 	Field _timer:Timer
 	Field _parser:ICodeParser
 	Field _prevLine:=-1
+	Field _prevScope:CodeItem
 	
 	' global, to go through all docs
 	Global _navOps:=New NavOps<NavCode>
@@ -681,9 +671,6 @@ Class CodeDocument Extends Ted2Document
 		
 		_doc.Text=text
 		
-		'code parser
-		'ParseSources( Path )
-		
 		Return True
 	End
 	
@@ -695,15 +682,24 @@ Class CodeDocument Extends Ted2Document
 		
 		Local ok:=stringio.SaveString( text,Path )
 	
-		'code parser - reparse
-		'ParseSources( Path )
-		
 		Return ok
 	End
 	
 	Method OnCreateView:View() Override
 	
 		Return _view
+	End
+	
+	Method OnLineChanged:Void( prevLine:Int,newLine:Int )
+	
+		Local scope:=_parser.GetScope( Path,_codeView.LineNumAtCursor+1 )	
+		If scope And scope <> _prevScope
+			Local classs := (scope.IsLikeClass And scope = _prevScope.Parent)
+			_prevScope = scope
+			If classs Return 'don't select parent class scope if we are inside of it
+			_treeView.SelectByScope( scope )
+			_prevScope = scope
+		Endif
 	End
 	
 	Method UpdateCodeTree()

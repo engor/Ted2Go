@@ -2,20 +2,16 @@
 Namespace ted2go
 
 
+Enum CodeSortType
+	Type,
+	Alpha,
+	Source
+End
+
 
 Class CodeTreeView Extends TreeViewExt
 	
-	Field SortEnabled:Bool
-	
-	#Rem
-	Method New( doc:TextDocument )
-	
-		_doc=doc
-	
-		_doc.TextChanged+=OnTextChanged
-
-	End
-	#End
+	Field SortType:=CodeSortType.Type
 	
 	Method Fill( fileType:String,path:String )
 	
@@ -41,10 +37,36 @@ Class CodeTreeView Extends TreeViewExt
 		
 	End
 	
+	Method SelectByScope( scope:CodeItem )
+	
+		Local node:=FindNode( RootNode,scope )
+		If Not node Return
+		
+		Selected=node
+	End
+	
 	
 	Private
 	
 	Field _expands:=New StringMap<Bool>
+	
+	
+	Method FindNode:TreeView.Node( treeNode:TreeView.Node,item:CodeItem )
+	
+		Local node:=Cast<CodeTreeNode>(treeNode)
+		
+		If node And node.CodeItem = item Return node
+	
+		Local list:=treeNode.Children
+		If Not list Return Null
+		
+		For Local i:=Eachin list
+			Local n:=FindNode( i,item )
+			If n Return n
+		Next
+	
+		Return Null
+	End
 	
 	Method StoreTreeExpands()
 	
@@ -113,7 +135,7 @@ Class CodeTreeView Extends TreeViewExt
 	
 	Method SortItems( list:List<CodeItem> )
 	
-		If Not SortEnabled Return
+		If SortType <> CodeSortType.Type Return
 	
 		CodeItemsSorter.SortItems( list )
 	End

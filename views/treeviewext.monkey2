@@ -8,9 +8,16 @@ Class TreeViewExt Extends TreeView
 		Super.New()
 		
 		NodeClicked+=Lambda( node:TreeView.Node )
-			SetSelected( node )
+			Selected=node
 		End
 		
+	End
+	
+	Property Selected:TreeView.Node()
+		Return _sel
+	Setter( value:TreeView.Node )
+		_sel = value
+		EnsureVisible( _sel )
 	End
 	
 	
@@ -50,9 +57,21 @@ Class TreeViewExt Extends TreeView
 	Private
 	
 	Field _sel:TreeView.Node
-	
-	Method SetSelected( node:TreeView.Node )
-		_sel = node
+		
+	Method EnsureVisible( node:TreeView.Node )
+		
+		Local n:=node
+		While n
+			n.Expanded=True
+			n=n.Parent
+		Wend
+		
+		' scroll Y only 
+		Local sx:=Scroll.x
+		Local scroll:=Scroll
+		Super.EnsureVisible( node.Rect )
+		scroll.Y=Scroll.y
+		Scroll=scroll
 	End
 	
 End

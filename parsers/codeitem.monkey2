@@ -159,6 +159,14 @@ Class CodeItem
 		Return _superTypesStr
 	End
 	
+	Property IsLikeClass:Bool()
+		Select _kind
+		Case CodeItemKind.Class_,CodeItemKind.Interface_,CodeItemKind.Struct_,CodeItemKind.Enum_
+			Return True
+		End
+		Return False
+	End
+	
 	Method AddSuperType( type:CodeType )
 		If Not _superTypes Then _superTypes=New List<CodeType>
 		_superTypes.AddLast( type )
