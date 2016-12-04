@@ -98,9 +98,6 @@ Class MainWindowInstance Extends Window
 		_helpViewDocker.AddView( bar,"top" )
 		_helpViewDocker.ContentView=_helpView
 		
-'		_helpView.Style=New Style( _helpView.Style )
-'		_helpView.Style.Border=New Recti( 0,-4,0,0 )
-'		_helpView.Style.BorderColor=App.Theme.GetColor( "content" )
 		_helpView.Navigate( "asset::ted2/about.html" )
 		
 		_projectView=New ProjectView( _docsManager )
@@ -277,14 +274,14 @@ Class MainWindowInstance Extends Window
 		_toolBar.AddSeparator()
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/find.png" ),_findActions.find.Triggered,"Find (Ctrl+F)" )
 		
-		_browsersTabView.AddTab( "Files",_projectView,True )
+		_browsersTabView.AddTab( "Project",_projectView,True )
 		_browsersTabView.AddTab( "Source",_docBrowser,False )
 		_browsersTabView.AddTab( "Debug",_debugView,False )
 		_browsersTabView.AddTab( "Help",_helpTree,False )
 		
 		_consolesTabView.AddTab( "Build",_buildConsole,True )
 		_consolesTabView.AddTab( "Output",_outputConsole,False )
-		_consolesTabView.AddTab( "Documentation",_helpViewDocker,False )
+		_consolesTabView.AddTab( "Docs",_helpViewDocker,False )
 		
 		_contentView=New DockingView
 		_contentView.AddView( _menuBar,"top" )

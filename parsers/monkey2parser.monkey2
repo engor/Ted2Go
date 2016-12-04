@@ -655,7 +655,19 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Local t:=ParseMember( type )
 				t.kind=kind
 				Return t
-								
+			
+			Case "arraytype"
+			
+				If type.Contains( "type" )
+					Local tp:=type["type"].ToObject()
+					If tp.Contains( "ident" )
+						Local t:=New CodeType
+						t.kind=kind
+						t.ident=tp["ident"].ToString()
+						Return t
+					Endif
+				Endif
+									
 			Default
 			
 				

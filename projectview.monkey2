@@ -44,17 +44,11 @@ Class ProjectView Extends ScrollView
 		
 		If GetFileType( dir )<>FileType.Directory Return False
 	
-		Local browser:=New FileBrowser( dir )
+		Local browser:=New ProjectBrowser( dir )
 		
 		browser.FileClicked+=Lambda( path:String )
 		
-			If GetFileType( path )=FileType.File
-			
-				New Fiber( Lambda()
-					_docs.OpenDocument( path,True )
-				End )
-				
-			Endif
+			OnOpenDocument( path )
 			
 		End
 		
@@ -189,11 +183,11 @@ Class ProjectView Extends ScrollView
 			menu.Open()
 		End
 		
-		browser.RootNode.Text=StripDir( dir )+" ("+dir+")"
-		
 		_docker.AddView( browser,"top" )
 		
 		_projects[dir]=browser
+		
+		AdjustFilter( browser )
 		
 		ProjectOpened( dir )
 
@@ -232,6 +226,23 @@ Class ProjectView Extends ScrollView
 		
 	End
 	
+	
+	Protected
+	
+	Method OnMouseEvent( event:MouseEvent ) Override
+	
+		Select event.Type
+		Case EventType.MouseWheel ' little faster
+	
+			Scroll-=New Vec2i( 0,ContentView.RenderStyle.Font.Height*event.Wheel.Y*2 )
+			Return
+	
+		End
+	
+		Super.OnMouseEvent( event )
+	End
+	
+	
 	Private
 	
 	Field _docs:DocumentManager
@@ -246,6 +257,28 @@ Class ProjectView Extends ScrollView
 		If Not dir Return
 		
 		OpenProject( dir )
+	End
+	
+	Method OnOpenDocument( path:String )
+		
+		If GetFileType( path )=FileType.File
+		
+			New Fiber( Lambda()
+				_docs.OpenDocument( path,True )
+			End )
+		
+		Endif
+	End
+	
+	Method AdjustFilter( brow:ProjectBrowser )
+		
+		Local path:=brow.RootPath+"/project.json"
+		If GetFileType( path ) <> FileType.File Return
+		
+		Local json:=JsonObject.Load( path )
+		If json.Contains( "exclude" )
+			brow.AdjustFilter( json["exclude"].ToArray() )
+		Endif
 	End
 	
 End

@@ -21,6 +21,7 @@
 #Import "views/toolbarext"
 #Import "views/hint"
 #Import "views/htmlviewext"
+#Import "views/projectbrowser"
 
 #Import "parsers/parser"
 #Import "parsers/monkey2parser"

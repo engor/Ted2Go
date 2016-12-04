@@ -65,14 +65,23 @@ Class CodeItem
 						s+=" : "+Type.ToString()
 					Endif
 					s+=(HasParams ? " ("+ParamsStr+")" Else " ()")
+				
 				Case CodeItemKind.Class_,CodeItemKind.Interface_,CodeItemKind.Struct_,CodeItemKind.Enum_
 					' nothing
+				
 				Case CodeItemKind.Inner_,CodeItemKind.EnumMember_
 					' nothing
+				
 				Case CodeItemKind.Property_
 					s+=" : "+Type.ToString()
+				
 				Default
-					s+=" : "+Type.ToString()
+					If Type<>Null And Type.IsLikeFunc
+						If Type.ident<>"Void" Then s+=" : "+Type.ToString()
+						s+=(HasParams ? " ("+ParamsStr+")" Else " ()")
+					Else
+						s+=" : "+Type.ToString()
+					Endif
 					
 			End
 			_text=s

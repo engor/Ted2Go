@@ -873,16 +873,14 @@ Class CodeItemIcons
 				key=kind
 			Case "param"
 				key="*"
-			Case "field"
-				Local type:=item.Type
-				If type<>Null And type.IsLikeFunc
-					key="field_func"
-				Endif
 			Default
-				If item.Ident.ToLower() = "new"
-					kind="constructor"
+				Local type:=item.Type
+				If (kind="field" Or kind="global") And type<>Null And type.IsLikeFunc
+					key="field_func"
+				Else
+					If item.Ident.ToLower() = "new" Then kind="constructor"
+					key=kind+"_"+item.AccessStr
 				Endif
-				key=kind+"_"+item.AccessStr
 		End
 		
 		Local ic:=_icons[key]
