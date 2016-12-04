@@ -34,6 +34,7 @@ Class StringListViewItem Implements ListViewItem
 			canvas.DrawImage( _icon,x-_icon.Width*handleX,y-_icon.Height*handleY )
 			dx=_icon.Width+8
 		Endif
+		canvas.Color=App.Theme.DefaultStyle.TextColor
 		canvas.DrawText( _text,x+dx,y,handleX,handleY )
 	End
 	
@@ -51,11 +52,13 @@ Class ListView Extends ScrollableView
 	Field OnItemChoosen:Void()
 	
 	Method New( lineHeight:Int,width:Int=600,height:Int=480 )
+		
 		_items=New List<ListViewItem>
 		_lineH=lineHeight
-		_selColor=New Color(0.2,0.4,0.6)
-		_hoverColor=New Color(0.4,0.4,0.4,0.5)
 		MaxSize=New Vec2i( width,height )
+		
+		_selColor=New Color( 0,0,0,.3 )
+		_hoverColor=New Color( 0,0,0,.2 )
 		
 	End
 	

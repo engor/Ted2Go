@@ -448,18 +448,22 @@ Class CodeTextView Extends TextView
 		
 	End
 	
+	Property Line:Int()
+		Return _line
+	End
+	
 	
 	Private
 	
 	Field _typing:Bool
-	Field _prevLine:Int
+	Field _line:Int
 	
 	Method OnCursorMoved()
 		
 		Local line:=Document.FindLine( Cursor )
-		If line <> _prevLine
-			LineChanged( _prevLine,line )
-			_prevLine=line
+		If line <> _line
+			LineChanged( _line,line )
+			_line=line
 		Endif
 				
 		'If Cursor <> Anchor Return

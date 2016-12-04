@@ -69,6 +69,14 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	
 		Local color:=canvas.Color
 		
+		' whole current line
+		canvas.Color=New Color( 0,0,0,.03 )
+		canvas.DrawRect( 0,Line*LineHeight,Width,LineHeight )
+		canvas.Color=New Color( 0,0,0,.05 )
+		canvas.DrawLine( 0,Line*LineHeight-1,Width,Line*LineHeight-1 )
+		canvas.DrawLine( 0,(Line+1)*LineHeight,Width,(Line+1)*LineHeight )
+		
+		
 		If _doc._debugLine<>-1
 
 			Local line:=_doc._debugLine

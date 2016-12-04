@@ -11,6 +11,11 @@ Class TreeViewExt Extends TreeView
 			Selected=node
 		End
 		
+		_selColor=App.Theme.GetColor( "panel" )
+		App.ThemeChanged+=Lambda()
+			_selColor=App.Theme.GetColor( "panel" )
+		End
+		
 	End
 	
 	Property Selected:TreeView.Node()
@@ -26,7 +31,7 @@ Class TreeViewExt Extends TreeView
 	Method OnRenderContent( canvas:Canvas ) Override
 	
 		If _sel <> Null
-			canvas.Color=Color.DarkGrey
+			canvas.Color=_selColor
 			Local r:=_sel.Rect
 			' make selection whole line
 			r.Left=Rect.Left
@@ -57,7 +62,8 @@ Class TreeViewExt Extends TreeView
 	Private
 	
 	Field _sel:TreeView.Node
-		
+	Field _selColor:Color
+	
 	Method EnsureVisible( node:TreeView.Node )
 		
 		Local n:=node
