@@ -47,10 +47,10 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		'AutoComplete
 		If AutoComplete = Null Then AutoComplete=New AutocompleteDialog( "" )
-		AutoComplete.OnChoosen+=Lambda( text:String )
+		AutoComplete.OnChoosen+=Lambda( ident:String,text:String )
 			If App.KeyView = Self
 				
-				text = _doc.PrepareForInsert( text,LineTextAtCursor,PosInLineAtCursor )
+				text=_doc.PrepareForInsert( ident,text,LineTextAtCursor,PosInLineAtCursor )
 				
 				SelectText( Cursor,Cursor-AutoComplete.LastIdentPart.Length )
 				ReplaceText( text )
@@ -446,11 +446,25 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	' not multipurpose method, need to move into plugin
-	Method PrepareForInsert:String( word:String,textLine:String,cursorPosInLine:Int )
+	Method PrepareForInsert:String( ident:String,text:String,textLine:String,cursorPosInLine:Int )
 		
-		If FileType <> ".monkey2" Return word
+		If FileType <> ".monkey2" Return ident
 		
-		Select word
+		If ident <> text 'not a keyword
+			
+			Local i:=textLine.Find( "Method " ) 'to simplify overriding - insert full text
+			If i <> -1 And i < cursorPosInLine Return text
+			
+			If cursorPosInLine = textLine.Length
+				Print "end"
+				If text.EndsWith( "()" ) Return text
+				If text.EndsWith( ")" ) Return ident+"("
+			Endif
+			
+			Return ident
+		Endif
+		
+		Select ident
 			
 			' try to add space
 			Case "Namespace","Using","Import","New","Eachin","Where","Alias","Const","Local","Global","Field","Method","Function","Property","Operator ","Enum","Class","Interface","Struct","Extends","Implements","If","Then","Elseif","While","Until","For","To","Step","Select","Case","Catch","Throw","Print"
@@ -458,27 +472,27 @@ Class CodeDocument Extends Ted2Document
 				Local len:=textLine.Length
 				Print len+","+cursorPosInLine+","+textLine
 				' end or line
-				If cursorPosInLine >= len-1 Then Return word+" "
+				If cursorPosInLine >= len-1 Then Return ident+" "
 				
 				If textLine[cursorPosInLine] <> Chars.SPACE
-					Return word+" "
+					Return ident+" "
 				Endif
 			
 			
 			' try to add <
 			Case "Cast"
 			
-				Return word+"<"
+				Return ident+"<"
 			
 			
 			' try to add (
 			Case "Typeof"
 			
-				Return word+"("
+				Return ident+"("
 				
 		End
 		
-		Return word 'as is
+		Return ident 'as is
 	End
 	
 	Property TextDocument:TextDocument()

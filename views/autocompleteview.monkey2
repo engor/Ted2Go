@@ -25,7 +25,7 @@ End
 
 Class AutocompleteDialog Extends DialogExt
 	
-	Field OnChoosen:Void( text:String )
+	Field OnChoosen:Void( ident:String,text:String )
 	
 	Method New( title:String )
 		Self.New( title,800,480 )
@@ -85,7 +85,7 @@ Class AutocompleteDialog Extends DialogExt
 		'-----------------------------
 		'if typed ident starts with previous
 		'need to simple filter items
-		#Rem
+		
 		If IsOpened And starts And Not ident.EndsWith(".")
 			
 			Local items:=_view.Items
@@ -114,7 +114,7 @@ Class AutocompleteDialog Extends DialogExt
 			
 			Return
 		End
-		#End
+		
 		
 		_fullIdent=ident
 		_lastIdentPart=lastIdent
@@ -240,14 +240,16 @@ Class AutocompleteDialog Extends DialogExt
 	
 	Method OnItemChoosen( item:ListViewItem )
 		Local si:=Cast<CodeListViewItem>( item )
-		Local t:=""
+		Local ident:="",text:=""
 		If si <> Null
-			t=si.CodeItem.Ident
+			ident=si.CodeItem.Ident
+			text=si.CodeItem.Text
 		Else
-			t=item.Text
+			ident=item.Text
+			text=item.Text
 		End
 		
-		OnChoosen( t )
+		OnChoosen( ident,text )
 		Hide()
 	End
 	

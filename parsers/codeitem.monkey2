@@ -62,9 +62,9 @@ Class CodeItem
 			Select _kind
 				Case CodeItemKind.Function_,CodeItemKind.Method_,CodeItemKind.Lambda_,CodeItemKind.Operator_
 					If Type<>Null And Type.ident<>"Void"
-						s+=" : "+Type.ToString()
+						s+=":"+Type.ToString()
 					Endif
-					s+=(HasParams ? " ("+ParamsStr+")" Else " ()")
+					s+=(HasParams ? "( "+ParamsStr+" )" Else "()")
 				
 				Case CodeItemKind.Class_,CodeItemKind.Interface_,CodeItemKind.Struct_,CodeItemKind.Enum_
 					' nothing
@@ -77,8 +77,8 @@ Class CodeItem
 				
 				Default
 					If Type<>Null And Type.IsLikeFunc
-						If Type.ident<>"Void" Then s+=" : "+Type.ToString()
-						s+=(HasParams ? " ("+ParamsStr+")" Else " ()")
+						If Type.ident<>"Void" Then s+=":"+Type.ToString()
+						s+=(HasParams ? "( "+ParamsStr+" )" Else "()")
 					Else
 						s+=" : "+Type.ToString()
 					Endif
