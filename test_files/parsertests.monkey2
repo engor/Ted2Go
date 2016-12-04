@@ -117,7 +117,7 @@ Class TestClass
 End
 
 
-Class Test2 'Extends TestClass
+Class Test2 Extends TestClass
 
 	Function Fff( tt:TestClass,cc:Canvas )
 		tt.MyFuncPub()

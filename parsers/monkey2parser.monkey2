@@ -248,9 +248,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local firstIdent:=idents[0]
 		Local item:CodeItem=Null
 		Local isSelf:=(firstIdent.ToLower()="self")
+		Local isSuper:=(firstIdent.ToLower()="super")
 		Local items:=New List<CodeItem>
 		
-		If isSelf
+		If isSelf Or isSuper
 		
 			item=scope.NearestClassScope
 			
@@ -386,9 +387,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local firstIdent:=idents[0]
 		Local item:CodeItem=Null
 		Local isSelf:=(firstIdent.ToLower()="self")
+		Local isSuper:=(firstIdent.ToLower()="super")
 		Local items:=New List<CodeItem>
 		
-		If isSelf
+		If isSelf Or isSuper
 		
 			item=scope.NearestClassScope
 			
@@ -444,7 +446,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 					item=i
 					Exit
 				Else
-					'RefineRawType( i )
 					target.AddLast( i )
 				Endif
 			Next
@@ -456,14 +457,13 @@ Class Monkey2Parser Extends CodeParserPlugin
 		If Not onlyOne And item <> Null
 			
 			Local scopeClass:=(rootScope <> Null) ? rootScope.NearestClassScope Else Null
+			Local forceProtected:=(isSelf Or isSuper)
 			
 			' start from the second ident part here
 			For Local k:=1 Until idents.Length
 				
-				'RefineRawType( item )
+				Local staticOnly:=(Not isSelf And Not isSuper And (item.Kind = CodeItemKind.Class_ Or item.Kind = CodeItemKind.Struct_))
 				
-				Local staticOnly:=(Not isSelf And (item.Kind = CodeItemKind.Class_ Or item.Kind = CodeItemKind.Struct_))
-						
 				' need to check by ident type
 				Local type:=item.Type.ident
 				
@@ -493,7 +493,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				
 				' extract all items from item
 				items.Clear()
-				GetAllItems( item,items )
+				GetAllItems( item,items,isSuper )
 				
 				If Not items.Empty
 					For Local i:=Eachin items
@@ -501,14 +501,13 @@ Class Monkey2Parser Extends CodeParserPlugin
 							'Print "continue 1: "+i.Ident
 							Continue
 						Endif
-						If Not CheckAccessInClassType( i,scopeClass )
+						If Not CheckAccessInClassType( i,scopeClass,forceProtected )
 							'Print "continue 2: "+i.Ident
 							Continue
 						Endif
 						item=i
 						If last
 							If Not staticOnly Or IsStaticMember( i )
-								'RefineRawType( i )
 								target.AddLast( i )
 							Endif
 						Else
@@ -751,32 +750,34 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
-	Method GetAllItems( item:CodeItem,target:List<CodeItem> )
+	Method GetAllItems( item:CodeItem,target:List<CodeItem>,isSuper:Bool=False )
 		
 		Local checkUnique:=Not target.Empty
 		
-		' add children
-		Local items:=item.Children
-		If items
-			If checkUnique' need to add unique
-				For Local i:=Eachin items
-					
-					Local s:=i.Text
-					Local exists:=False
-					For Local ii:=Eachin target
-						If ii.Text = s
-							exists=True
-							Exit
+		If Not isSuper
+			' add children
+			Local items:=item.Children
+			If items
+				If checkUnique' need to add unique
+					For Local i:=Eachin items
+						
+						Local s:=i.Text
+						Local exists:=False
+						For Local ii:=Eachin target
+							If ii.Text = s
+								exists=True
+								Exit
+							Endif
+						End
+						If Not exists
+							target.AddLast( i )
 						Endif
-					End
-					If Not exists
-						target.AddLast( i )
-					Endif
-				Next
-			Else
-				target.AddAll( items )
+					Next
+				Else
+					target.AddAll( items )
+				Endif
 			Endif
-		Endif
+		End
 		
 		' add from super classes / ifaces
 		If Not item.SuperTypesStr Return
@@ -828,11 +829,15 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
-	Method CheckAccessInClassType:Bool( item:CodeItem,scopeClass:CodeItem )
+	Method CheckAccessInClassType:Bool( item:CodeItem,scopeClass:CodeItem,forceProtected:Bool=False )
 		
 		' always show public members of vars
 		Local a:=item.Access
 		If a = AccessMode.Public_
+			Return True
+		Endif
+		
+		If forceProtected And a = AccessMode.Protected_
 			Return True
 		Endif
 		

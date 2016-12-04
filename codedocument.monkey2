@@ -453,10 +453,9 @@ Class CodeDocument Extends Ted2Document
 		If ident <> text 'not a keyword
 			
 			Local i:=textLine.Find( "Method " ) 'to simplify overriding - insert full text
-			If i <> -1 And i < cursorPosInLine Return text
+			If i <> -1 And i < cursorPosInLine Return text+" Override"
 			
 			If cursorPosInLine = textLine.Length
-				Print "end"
 				If text.EndsWith( "()" ) Return text
 				If text.EndsWith( ")" ) Return ident+"("
 			Endif
