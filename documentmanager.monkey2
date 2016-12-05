@@ -328,6 +328,8 @@ Class DocumentManager
 	
 		Local docs:=_openDocs.ToArray()
 		
+		Local reloadAll:=False
+		
 		For Local doc:=Eachin docs
 		
 			Select GetFileType( doc.Path )
@@ -337,14 +339,21 @@ Class DocumentManager
 				
 					doc.Dirty=True
 					
-					CurrentDocument=doc
+					'CurrentDocument=doc
 					
-					Select TextDialog.Run( "File modified","File '"+doc.Path+"' has been modified!~n~nReload new version?",New String[]( "Reload","Close document without saving","Ignore" ) )
+					Local result:=0
+					If Not reloadAll Then result=TextDialog.Run( "File modified","File '"+doc.Path+"' has been modified!~n~nReload new version?",New String[]( "Reload","Reload All","Close document without saving","Ignore" ) )
+					
+					Select result
 					Case 0 'Reload
 						doc.Load()
-					Case 1 'Close
+					Case 1 'Reload All
+						doc.Load()
+						reloadAll=True
+					Case 2 'Close
 						doc.Close()
-					Case 2 'Ignore
+					Case 3 'Ignore
+					
 					End
 				
 				Endif
@@ -353,7 +362,7 @@ Class DocumentManager
 			
 				doc.Dirty=True
 				
-				CurrentDocument=doc
+				'CurrentDocument=doc
 				
 				Alert( "File '"+doc.Path+"' has mysteriously turned into a directory!" )
 			
@@ -361,7 +370,7 @@ Class DocumentManager
 			
 				doc.Dirty=True
 
-				CurrentDocument=doc
+				'CurrentDocument=doc
 				
 				Alert( "File '"+doc.Path+"' has been deleted!" )
 				
