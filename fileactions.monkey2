@@ -99,9 +99,12 @@ Class FileActions
 		saveAll.Enabled=anyDirty
 	End
 	
+	
 	Private
 	
 	Field _docs:DocumentManager
+	Field _saveAllFlag:Bool,_discardAllFlag:Bool
+	
 	
 	Method SaveAs:Ted2Document()
 	
@@ -116,15 +119,30 @@ Class FileActions
 		Return _docs.RenameDocument( doc,path )
 	End
 
-	Method CanClose:Ted2Document( doc:Ted2Document )
+	Method CanClose:Ted2Document( doc:Ted2Document,manyFiles:Bool=False )
 	
 		If Not doc.Dirty Return doc
 		
 		_docs.CurrentDocument=doc
 				
-		Local buttons:=New String[]( "Save","Discard Changes","Cancel" )
+		Local buttons:String[]
+		If manyFiles
+			buttons=New String[]( "Save","Discard","Cancel","Save All","Discard All" )
+		Else
+			buttons=New String[]( "Save","Discard","Cancel" )
+		Endif
 			
-		Select TextDialog.Run( "Close File","File '"+doc.Path+"' has been modified.",buttons )
+		Local result:=-1
+		If manyFiles
+			If _saveAllFlag
+				result=3
+			Elseif _discardAllFlag
+				result=4
+			Endif
+		Endif
+		If result = -1 Then result=TextDialog.Run( "Close File","File '"+doc.Path+"' has been modified.",buttons )
+		
+		Select result
 		Case 0
 			If MainWindow.IsTmpPath( doc.Path )
 				Return SaveAs()
@@ -133,6 +151,15 @@ Class FileActions
 			Endif
 		Case 2
 			Return Null
+		Case 3
+			If MainWindow.IsTmpPath( doc.Path )
+				Return SaveAs()
+			Else
+				If Not doc.Save() Return Null
+			Endif
+			_saveAllFlag=True
+		Case 4
+			_discardAllFlag=True
 		End
 		
 		Return doc
@@ -174,31 +201,39 @@ Class FileActions
 	
 	Method OnCloseOthers()
 	
-		If Not _docs.CurrentDocument Return
+		Local current:=_docs.CurrentDocument
+		If Not current Return
 	
+		_saveAllFlag=False
+		_discardAllFlag=False
+		
 		Local docs:=_docs.OpenDocuments
 		
 		For Local doc:=Eachin docs
-			If doc<>_docs.CurrentDocument And Not CanClose( doc ) Return
+			If doc<>current And Not CanClose( doc,True ) Return
 		Next
 		
 		For Local doc:=Eachin docs
-			If doc<>_docs.CurrentDocument doc.Close()
+			If doc<>current doc.Close()
 		Next
 	End
 	
 	Method OnCloseToRight()
 	
-		If Not _docs.CurrentDocument Return
+		Local current:=_docs.CurrentDocument
+		If Not current Return
 	
+		_saveAllFlag=False
+		_discardAllFlag=False
+		
 		Local docs:=_docs.OpenDocuments
 		
 		Local close:=False
 		For Local doc:=Eachin docs
 			If close
-				If Not CanClose( doc ) Return
+				If Not CanClose( doc,True ) Return
 			Else
-				If doc=_docs.CurrentDocument close=True
+				If doc=current close=True
 			Endif
 		Next
 		
@@ -207,7 +242,7 @@ Class FileActions
 			If close
 				doc.Close()
 			Else
-				If doc=_docs.CurrentDocument close=True
+				If doc=current close=True
 			Endif
 		Next
 		
@@ -215,10 +250,13 @@ Class FileActions
 	
 	Method OnCloseAll()
 
+		_saveAllFlag=False
+		_discardAllFlag=False
+		
 		Local docs:=_docs.OpenDocuments
 		
 		For Local doc:=Eachin docs
-			If Not CanClose( doc ) Return
+			If Not CanClose( doc,True ) Return
 		Next
 		
 		For Local doc:=Eachin docs
@@ -258,13 +296,16 @@ Class FileActions
 	End
 	
 	Method OnQuit()
-	
+		
+		_saveAllFlag=False
+		_discardAllFlag=False
+		
 		For Local doc:=Eachin _docs.OpenDocuments
 		
 			If MainWindow.IsTmpPath( doc.Path )
 				If Not doc.Save() Return
 			Else
-				If Not CanClose( doc ) Return
+				If Not CanClose( doc,True ) Return
 			Endif
 		Next
 		
