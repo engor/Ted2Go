@@ -27,11 +27,11 @@ Class ModuleManager Extends Dialog
 '		_table.Style=App.Theme.GetStyle( "TableView" )
 '		_table.Style.BackgroundColor=App.Theme.GetColor( "content" )
 		
-		_table.AddColumn( "Module",,"24%" )
+		_table.AddColumn( "Module",,"20%" )
 		_table.AddColumn( "About",,"40%" )
-		_table.AddColumn( "Version",,"12%" )
-		_table.AddColumn( "Status",,"12%" )
-		_table.AddColumn( "Action",,"12%" )
+		_table.AddColumn( "Version",,"10%" )
+		_table.AddColumn( "Status",,"17%" )
+		_table.AddColumn( "Action",,"13%" )
 		
 		_docker=New DockingView
 		_docker.ContentView=_table
@@ -98,8 +98,11 @@ Class ModuleManager Extends Dialog
 	
 	Private
 	
-	Const downloadUrl:="http://monkey2.monkey-x.com/wp-content/uploads/mx2-modules/public/"
+	'Const downloadUrl:="http://monkey2.monkey-x.com/wp-content/uploads/mx2-modules/public/"
+    Const downloadUrl:="http://monkey2.monkey-x.com/send-file?file="
+    
 	Const downloadDir:="modules/module-manager/downloads/"
+	
 	Const backupDir:="modules/module-manager/backups/"
 	
 	Field _console:Console
