@@ -104,6 +104,7 @@ Class FileActions
 	
 	Field _docs:DocumentManager
 	Field _saveAllFlag:Bool,_discardAllFlag:Bool
+	Field _quit:Bool
 	
 	
 	Method SaveAs:Ted2Document()
@@ -123,11 +124,11 @@ Class FileActions
 	
 		If Not doc.Dirty Return doc
 		
-		_docs.CurrentDocument=doc
+		'_docs.CurrentDocument=doc
 				
 		Local buttons:String[]
 		If manyFiles
-			buttons=New String[]( "Save","Discard","Cancel","Save All","Discard All" )
+			buttons=New String[]( "Save","Save All","Discard","Discard All","Cancel" )
 		Else
 			buttons=New String[]( "Save","Discard","Cancel" )
 		Endif
@@ -135,31 +136,35 @@ Class FileActions
 		Local result:=-1
 		If manyFiles
 			If _saveAllFlag
-				result=3
+				result=1
 			Elseif _discardAllFlag
-				result=4
+				result=3
 			Endif
 		Endif
 		If result = -1 Then result=TextDialog.Run( "Close File","File '"+doc.Path+"' has been modified.",buttons )
 		
 		Select result
-		Case 0
+		Case 0 'save
 			If MainWindow.IsTmpPath( doc.Path )
 				Return SaveAs()
 			Else
 				If Not doc.Save() Return Null
 			Endif
-		Case 2
-			Return Null
-		Case 3
-			If MainWindow.IsTmpPath( doc.Path )
-				Return SaveAs()
-			Else
-				If Not doc.Save() Return Null
+		Case 1 'saveAll or discard
+			If manyFiles
+				If MainWindow.IsTmpPath( doc.Path )
+					Return SaveAs()
+				Else
+					If Not doc.Save() Return Null
+				Endif
+				_saveAllFlag=True
 			Endif
-			_saveAllFlag=True
-		Case 4
+		Case 2 'discard or cancel
+			Return manyFiles ? doc Else Null
+		Case 3 'discardAll
 			_discardAllFlag=True
+		Case 4 'cancel
+			Return Null
 		End
 		
 		Return doc
@@ -297,15 +302,18 @@ Class FileActions
 	
 	Method OnQuit()
 		
+		If _quit Return
+		_quit=True
+		
 		_saveAllFlag=False
 		_discardAllFlag=False
 		
 		For Local doc:=Eachin _docs.OpenDocuments
 		
 			If MainWindow.IsTmpPath( doc.Path )
-				If Not doc.Save() Return
+				If Not doc.Save() Then _quit=False ; Return
 			Else
-				If Not CanClose( doc,True ) Return
+				If Not CanClose( doc,True ) Then _quit=False ; Return
 			Endif
 		Next
 		
