@@ -25,7 +25,7 @@ End
 
 Class AutocompleteDialog Extends DialogExt
 	
-	Field OnChoosen:Void( ident:String,text:String )
+	Field OnChoosen:Void( ident:String,text:String,item:CodeItem )
 	
 	Method New( title:String )
 		Self.New( title,800,480 )
@@ -241,15 +241,17 @@ Class AutocompleteDialog Extends DialogExt
 	Method OnItemChoosen( item:ListViewItem )
 		Local si:=Cast<CodeListViewItem>( item )
 		Local ident:="",text:=""
+		Local code:CodeItem=Null
 		If si <> Null
 			ident=si.CodeItem.Ident
 			text=si.CodeItem.Text
+			code=si.CodeItem
 		Else
 			ident=item.Text
 			text=item.Text
 		End
 		
-		OnChoosen( ident,text )
+		OnChoosen( ident,text,code )
 		Hide()
 	End
 	

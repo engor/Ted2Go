@@ -176,6 +176,14 @@ Class CodeItem
 		Return False
 	End
 	
+	Property IsLikeFunc:Bool()
+		Select _kind
+		Case CodeItemKind.Method_,CodeItemKind.Function_
+			Return True
+		End
+		Return False
+	End
+	
 	Method AddSuperType( type:CodeType )
 		If Not _superTypes Then _superTypes=New List<CodeType>
 		_superTypes.AddLast( type )
