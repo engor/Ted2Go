@@ -47,10 +47,10 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		'AutoComplete
 		If AutoComplete = Null Then AutoComplete=New AutocompleteDialog( "" )
-		AutoComplete.OnChoosen+=Lambda( ident:String,text:String )
+		AutoComplete.OnChoosen+=Lambda( ident:String,text:String,item:CodeItem )
 			If App.KeyView = Self
 				
-				text=_doc.PrepareForInsert( ident,text,LineTextAtCursor,PosInLineAtCursor )
+				text=_doc.PrepareForInsert( ident,text,LineTextAtCursor,PosInLineAtCursor,item )
 				
 				SelectText( Cursor,Cursor-AutoComplete.LastIdentPart.Length )
 				ReplaceText( text )
@@ -454,14 +454,17 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	' not multipurpose method, need to move into plugin
-	Method PrepareForInsert:String( ident:String,text:String,textLine:String,cursorPosInLine:Int )
+	Method PrepareForInsert:String( ident:String,text:String,textLine:String,cursorPosInLine:Int,item:CodeItem )
 		
 		If FileType <> ".monkey2" Return ident
 		
-		If ident <> text 'not a keyword
+		If ident <> text And item And item.IsLikeFunc 'not a keyword
 			
 			Local i:=textLine.Find( "Method " ) 'to simplify overriding - insert full text
-			If i <> -1 And i < cursorPosInLine Return text+" Override"
+			If i <> -1 And i < cursorPosInLine
+				Local i2:=textLine.Find( "(" ) 'is inside of params?
+				If i2 = -1 Or i2 > cursorPosInLine Return text+" Override"
+			Endif
 			
 			If cursorPosInLine = textLine.Length
 				If text.EndsWith( "()" ) Return text
