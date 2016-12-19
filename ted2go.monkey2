@@ -22,6 +22,7 @@
 #Import "views/hint"
 #Import "views/htmlviewext"
 #Import "views/projectbrowser"
+#Import "views/tabviewext"
 
 #Import "parsers/parser"
 #Import "parsers/monkey2parser"

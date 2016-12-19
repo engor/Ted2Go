@@ -12,7 +12,7 @@ Class DocumentManager
 	Field DocumentAdded:Void( doc:Ted2Document )
 	Field DocumentRemoved:Void( doc:Ted2Document )
 
-	Method New( tabView:TabView,browser:DockingView )
+	Method New( tabView:TabViewExt,browser:DockingView )
 	
 		_tabView=tabView
 		_browser=browser
@@ -44,7 +44,7 @@ Class DocumentManager
 		End
 	End
 	
-	Property TabView:TabView()
+	Property TabView:TabViewExt()
 
 		Return _tabView
 	End
@@ -226,7 +226,7 @@ Class DocumentManager
 	
 	Private
 	
-	Field _tabView:TabView
+	Field _tabView:TabViewExt
 	Field _browser:DockingView
 	
 	Field _currentDoc:Ted2Document

@@ -46,6 +46,18 @@
 			"extends":"Button",
 			"padding":[2,0],
 			"margin":[3,0]
+		},
+
+		"TabViewArrowPrev":{
+			"extends":"Button",
+			"padding":[4,1],
+			"margin":[2,0,1,0]
+		},
+
+		"TabViewArrowNext":{
+			"extends":"Button",
+			"padding":[4,1],
+			"margin":[1,0,2,0]
 		}
 	}
 }

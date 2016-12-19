@@ -31,7 +31,8 @@ Class MainWindowInstance Extends Window
 #Endif
 		_mx2cc=RealPath( _mx2cc )
 		
-		_docsTabView=New TabView( TabViewFlags.DraggableTabs|TabViewFlags.ClosableTabs )
+		_docsTabView=New TabViewExt( TabViewFlags.DraggableTabs|TabViewFlags.ClosableTabs )
+				
 		_browsersTabView=New TabView( TabViewFlags.DraggableTabs )
 		_consolesTabView=New TabView( TabViewFlags.DraggableTabs )
 		
@@ -601,7 +602,7 @@ Class MainWindowInstance Extends Window
 	Field _debugView:DebugView
 	Field _helpTree:HelpTree
 
-	Field _docsTabView:TabView
+	Field _docsTabView:TabViewExt
 	Field _consolesTabView:TabView
 	Field _browsersTabView:TabView
 	
