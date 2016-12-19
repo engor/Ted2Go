@@ -333,6 +333,13 @@ Class CodeTextView Extends TextView
 							Local min:=Document.FindLine( minPos )
 							Local max:=Document.FindLine( maxPos )
 							
+							' if we are at the beginning of bottom line - skip it
+							Local strt:=Document.StartOfLine( max )
+							If maxPos = strt
+								max-=1
+								DebugStop()
+							Endif
+							
 							Local lines:=New StringStack
 								
 							For Local i:=min To max

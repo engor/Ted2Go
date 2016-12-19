@@ -467,7 +467,7 @@ Class CodeDocument Extends Ted2Document
 			Endif
 			
 			If cursorPosInLine = textLine.Length
-				If text.EndsWith( "()" ) Return text
+				If text.EndsWith( "()" ) Return ident+"()"
 				If text.EndsWith( ")" ) Return ident+"("
 			Endif
 			
