@@ -9,10 +9,13 @@ Class FindActions
 	field findPrevious:Action
 	Field replace:Action
 	Field replaceAll:Action
+	Field findInFiles:Action
+	Field findAllInFiles:Action
 	
-	Method New( docs:DocumentManager )
+	Method New( docs:DocumentManager,projView:ProjectView,findConsole:TreeViewExt )
 		
 		_docs=docs
+		_findConsole=findConsole
 		
 		find=New Action( "Find" )
 		find.Triggered=OnFind
@@ -34,7 +37,16 @@ Class FindActions
 		replaceAll=New Action( "Replace all" )
 		replaceAll.Triggered=OnReplaceAll
 		
+		findInFiles=New Action( "Find in files..." )
+		findInFiles.Triggered=OnFindInFiles
+		findInFiles.HotKey=Key.F
+		findInFiles.HotKeyModifiers=Modifier.Menu|Modifier.Shift
+		
+		findAllInFiles=New Action( "Find all" )
+		findAllInFiles.Triggered=OnFindAllInFiles
+		
 		_findDialog=New FindDialog( Self )
+		_findInFilesDialog=New FindInFilesDialog( Self,projView )
 	End
 	
 	Method Update()
@@ -51,6 +63,9 @@ Class FindActions
 	Field _docs:DocumentManager
 	
 	Field _findDialog:FindDialog
+	Field _findInFilesDialog:FindInFilesDialog
+	Field _findConsole:TreeViewExt
+	
 	
 	Method OnFind()
 		
@@ -63,6 +78,21 @@ Class FindActions
 				Local max:=Max( tv.Cursor,tv.Anchor )
 				Local s:=tv.Text.Slice( min,max )
 				_findDialog.SetInitialText( s )
+			Endif
+		Endif
+	End
+	
+	Method OnFindInFiles()
+	
+		_findInFilesDialog.Show()
+	
+		Local tv:=_docs.CurrentTextView
+		If tv <> Null
+			If tv.Cursor <> tv.Anchor
+				Local min:=Min( tv.Cursor,tv.Anchor )
+				Local max:=Max( tv.Cursor,tv.Anchor )
+				Local s:=tv.Text.Slice( min,max )
+				_findInFilesDialog.SetInitialText( s )
 			Endif
 		Endif
 	End
@@ -90,6 +120,87 @@ Class FindActions
 		Endif
 		
 		tv.SelectText( i,i+text.Length )
+	End
+	
+	Method OnFindAllInFiles()
+	
+		New Fiber( Lambda()
+		
+			Local what:=_findInFilesDialog.FindText
+			If Not what Return
+			
+			Local proj:=_findInFilesDialog.SelectedProject
+			If Not proj Return
+			
+			_findInFilesDialog.Hide()
+			MainWindow.ShowFindResults()
+			
+			Local filter:=_findInFilesDialog.FilterText
+			If Not filter Then filter="monkey2"
+			
+			Local exts:=filter.Split( "," )
+			
+			proj+="/"
+			
+			Local sens:=_findInFilesDialog.CaseSensitive
+			
+			If Not sens Then what=what.ToLower()
+			
+			Local files:=New Stack<String>
+			Utils.GetAllFiles( proj,exts,files )
+			
+			Local root:=_findConsole.RootNode
+			root.RemoveAllChildren()
+			
+			root.Text="Finding of '"+what+"'"
+						
+			Local subRoot:TreeView.Node
+			Local items:=New Stack<FileJumpData>
+			Local len:=what.Length
+			
+			For Local f:=Eachin files
+				
+				Local text:=LoadString( f )
+				If Not sens Then text=text.ToLower()
+				text=text.Replace( "~r~n","~n" )
+				text=text.Replace( "~r","~n" )
+				
+				Local i:=0
+				items.Clear()
+				
+				Repeat
+					i=text.Find( what,i )
+					If i=-1 Exit
+					
+					Local data:=New FileJumpData
+					data.path=f
+					data.pos=i
+					data.len=len
+					
+					items.Add( data )
+					
+					i+=len
+					
+				Forever
+				
+				If Not items.Empty
+
+					subRoot=New TreeView.Node( f.Replace( proj,"" )+" ("+items.Length+")",root )
+					
+					For Local d:=Eachin items
+						Local node:=New NodeWithData<FileJumpData>( " at ["+d.pos+"]",subRoot )
+						node.data=d
+					Next
+					
+				Endif
+			Next
+			
+			If root.NumChildren=0 Then New TreeView.Node( "not found :(",root )
+			
+			root.Expanded=True
+			
+		End)
+		
 	End
 	
 	Method OnFindPrevious()

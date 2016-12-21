@@ -12,7 +12,7 @@
 
 #Import "views/codetextview"
 #Import "views/consoleext"
-#Import "views/listview"
+#Import "views/listviewext"
 #Import "views/dialogext"
 #Import "views/autocompleteview"
 #Import "views/codetreeview"
@@ -35,3 +35,4 @@
 #Import "test_files/parsertests"
 
 #Import "themeimages"
+#Import "findinfilesdialog"

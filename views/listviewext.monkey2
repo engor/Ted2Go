@@ -47,7 +47,7 @@ Class StringListViewItem Implements ListViewItem
 End
 
 
-Class ListView Extends ScrollableView
+Class ListViewExt Extends ScrollableView
 
 	Field OnItemChoosen:Void()
 	

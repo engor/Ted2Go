@@ -59,10 +59,31 @@ Class Utils
 		Return result
 	End
 	
+	Function GetAllFiles( rootDir:String,filterExts:String[],target:Stack<String> )
+		
+		GetAllFilesInternal( rootDir,filterExts,target )
+	End
+	
 	
 	Private
 	
 	Method New()
+	End
+	
+	Function GetAllFilesInternal( dir:String,filterExts:String[],target:Stack<String> )
+		
+		Local files:=LoadDir( dir )
+		For Local f:=Eachin files
+			f=dir+f
+			If GetFileType( f )=FileType.Directory
+				GetAllFilesInternal( f+"/",filterExts,target )
+			Else
+				Local ext:=ExtractExt( f )
+				If Not ext Continue
+				ext=ext.Slice( 1 ) 'skip dot
+				If ArrayContains( filterExts,ext ) Then target.Add( f )
+			Endif
+		End
 	End
 	
 End

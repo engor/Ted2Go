@@ -35,7 +35,7 @@ Class AutocompleteDialog Extends DialogExt
 	
 		Title=title
 		
-		_view=New ListView( 20,width,height )
+		_view=New ListViewExt( 20,width,height )
 		_view.MoveCyclic=True
 		
 		ContentView=_view
@@ -176,7 +176,7 @@ Class AutocompleteDialog Extends DialogExt
 		
 	Private
 	
-	Field _view:ListView
+	Field _view:ListViewExt
 	Field _keywords:StringMap<List<ListViewItem>>
 	Field _lastIdentPart:String,_fullIdent:String
 	Field _parsers:StringMap<ICodeParser>

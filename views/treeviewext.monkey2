@@ -81,3 +81,24 @@ Class TreeViewExt Extends TreeView
 	End
 	
 End
+
+
+Class NodeWithData<T> Extends TreeView.Node
+
+	Field data:T
+	
+	Method New( text:String,parent:TreeView.Node=Null,index:Int=-1 )
+		
+		Super.New( text,parent,index )
+	End
+	
+End
+
+
+Struct FileJumpData
+
+	Field path:String
+	Field pos:Int
+	Field len:Int
+	
+End

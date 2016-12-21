@@ -61,6 +61,25 @@ Class MainWindowInstance Extends Window
 		_buildConsole=New ConsoleExt
 		_outputConsole=New ConsoleExt
 		
+		_findConsole=New TreeViewExt
+		_findConsole.NodeClicked+=Lambda( node:TreeView.Node )
+		
+			Local n:=Cast<NodeWithData<FileJumpData>>( node )
+			If Not n Return
+			
+			Local data:=n.data
+			
+			Local doc:=_docsManager.OpenDocument( data.path,True )
+			If Not doc Return
+			
+			Local tv:=doc.TextView
+			If Not tv Return
+			
+			UpdateWindow( False )
+			
+			tv.SelectText( data.pos,data.pos+data.len ) 'set cursor here
+		End
+		
 		'Help tab
 		
 		_helpView=New HtmlViewExt
@@ -109,7 +128,7 @@ Class MainWindowInstance Extends Window
 		
 		_fileActions=New FileActions( _docsManager )
 		_editActions=New EditActions( _docsManager )
-		_findActions=New FindActions( _docsManager )
+		_findActions=New FindActions( _docsManager,_projectView,_findConsole )
 		_buildActions=New BuildActions( _docsManager,_buildConsole,_debugView )
 		_helpActions=New HelpActions
 
@@ -194,6 +213,8 @@ Class MainWindowInstance Extends Window
 		_editMenu.AddAction( _findActions.findPrevious )
 		_editMenu.AddAction( _findActions.replace )
 		_editMenu.AddAction( _findActions.replaceAll )
+		_editMenu.AddSeparator()
+		_editMenu.AddAction( _findActions.findInFiles )
 		_editMenu.AddSeparator()
 		_editMenu.AddAction( _editActions.gotoLine )
 		_editMenu.AddAction( _editActions.gotoDeclaration )
@@ -283,6 +304,7 @@ Class MainWindowInstance Extends Window
 		_consolesTabView.AddTab( "Build",_buildConsole,True )
 		_consolesTabView.AddTab( "Output",_outputConsole,False )
 		_consolesTabView.AddTab( "Docs",_helpViewDocker,False )
+		_consolesTabView.AddTab( "Find",_findConsole,False )
 		
 		_contentView=New DockingView
 		_contentView.AddView( _menuBar,"top" )
@@ -408,6 +430,11 @@ Class MainWindowInstance Extends Window
 	Method ShowHelpView()
 		_consolesTabView.Visible=True
 		_consolesTabView.CurrentView=_helpViewDocker
+	End
+	
+	Method ShowFindResults()
+		_consolesTabView.Visible=True
+		_consolesTabView.CurrentView=_findConsole
 	End
 	
 	Method ShowQuickHelp( ident:String )
@@ -596,7 +623,8 @@ Class MainWindowInstance Extends Window
 	Field _outputConsole:Console
 	Field _helpView:HtmlViewExt
 	Field _helpViewDocker:DockingView
-
+	Field _findConsole:TreeViewExt
+	
 	Field _projectView:ProjectView
 	Field _docBrowser:DockingView
 	Field _debugView:DebugView
