@@ -10,6 +10,7 @@ Private
 '0000000000000000000000000000000
 '0000000000000000000000000000000
 
+Global boo:=True
 
 Global multi:="Hello,
                multiline
@@ -19,8 +20,8 @@ Global vector:Vec2f
 Global globList:List<String>
 
 
-Function FnLambda( p1:String,p2:Void( x:Int,y:Int ),p3:Float )
-
+Function FnLambda:Bool[]( p1:String,p2:Void( x:Int,y:Int ),p3:Float )
+	Return Null
 End
 
 Function LambdaFn( p1:String,p2:Void( x:Int,y:Int ),p3:Float )

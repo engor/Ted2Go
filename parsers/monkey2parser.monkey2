@@ -563,9 +563,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
-	Method ParseType:CodeType( jobj:Map<String,JsonValue> )
+	Method ParseType:CodeType( jobj:Map<String,JsonValue>,type:Map<String,JsonValue> = Null )
 		
-		Local type:=GetJobjType( jobj )
+		If type=Null Then type=GetJobjType( jobj )
 		
 		If Not type
 		
@@ -615,18 +615,17 @@ Class Monkey2Parser Extends CodeParserPlugin
 				'params
 				Local t:=New CodeType
 				t.kind=kind
-				't.ident=type["ident"].ToString()
-				
 				If type.Contains( "retType" )
 					Local retval:=type["retType"].ToObject()
-					If retval.Contains( "ident" )
-						t.ident=retval["ident"].ToString()
+					Local t2:=ParseType( Null,retval )
+					If t2<>Null
+						t.ident=t2.ident
+						t.expr=t2.expr
+						t.args=t2.args
 					Endif
-					'Local t2:=ParseType( retval )
-					'Return t2
 				Endif
 				Return t
-				
+						
 			Case "generic"
 				'expr
 				'args
@@ -659,14 +658,25 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 				If type.Contains( "type" )
 					Local tp:=type["type"].ToObject()
-					If tp.Contains( "ident" )
-						Local t:=New CodeType
-						t.kind=kind
-						t.ident=tp["ident"].ToString()
+					Local t:=ParseType( tp )
+					If t<>Null
+						Local rank:=Int( type["rank"].ToNumber() )
+						t.ident+="["+Utils.RepeatStr( ",",rank-1 )+"]"
 						Return t
 					Endif
 				Endif
-									
+			
+			Case "pointertype"
+			
+				If type.Contains( "type" )
+					Local tp:=type["type"].ToObject()
+					Local t:=ParseType( tp )
+					If t<>Null
+						t.ident+=" Ptr"
+						Return t
+					Endif
+				Endif
+					
 			Default
 			
 				
@@ -994,13 +1004,14 @@ Private
 Function GetLiteralType:String( typeIdent:String )
 
 	If IsString( typeIdent )
-		Return "string"
-	Elseif typeIdent = "True" Or typeIdent = "False"
-		Return "bool"
+		Return "String"
 	Elseif IsInt( typeIdent )
-		Return "int"
+		Return "Int"
 	Elseif IsFloat( typeIdent )
-		Return "float"
+		Return "Float"
+	Else
+		typeIdent=typeIdent.ToLower()
+		If typeIdent = "true" Or typeIdent = "false" Return "Bool"
 	Endif
 	Return ""
 End
