@@ -239,8 +239,8 @@ Class TabViewExt Extends DockingView
 		_tabBar.AddView( tab )
 		_tabs.Push( tab )
 		
-		If makeCurrent CurrentIndex=index
-
+		If makeCurrent MakeCurrent( tab,True ) 'CurrentIndex=index
+		
 		Return index
 	End
 	
@@ -299,6 +299,12 @@ Class TabViewExt Extends DockingView
 		SetTabIcon( TabIndex( view ),icon )
 	End
 	
+	Method EnsureVisibleCurrentTab()
+	
+		EnsureVisibleTab( _current )
+	End
+	
+	
 	Private
 	
 	Field _flags:TabViewFlags
@@ -326,8 +332,39 @@ Class TabViewExt Extends DockingView
 		
 		If notify CurrentChanged()
 		
-		'_scrollView.EnsureVisible( tab.RenderRect ) 'this method doesn't work
+		EnsureVisibleTab( tab )
 		
+	End
+	
+	Method EnsureVisibleTab( tab:TabButton )
+	
+		If Not tab Return
+		
+		Local scroll:=_scrollView.Scroll
+		Local xx:=GetTabPosX( tab )
+		Local L:=xx-scroll.x
+		Local R:=L+tab.Frame.Width
+	
+		If L < 0
+			scroll.x+=L-8
+			_scrollView.Scroll=scroll
+		Else
+			Local d:=R-_scrollView.Frame.Width
+			If d > 0
+				scroll.x+=d+8
+				_scrollView.Scroll=scroll
+			Endif
+		Endif
+	End
+	
+	Method GetTabPosX:Int( tab:TabButton )
+		
+		Local xx:=0
+		For Local view:=Eachin _tabs
+			If view=tab Exit
+			xx+=view.Frame.Width
+		Next
+		Return xx
 	End
 	
 End

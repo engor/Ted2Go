@@ -32,7 +32,7 @@ Class MainWindowInstance Extends Window
 		_mx2cc=RealPath( _mx2cc )
 		
 		_docsTabView=New TabViewExt( TabViewFlags.DraggableTabs|TabViewFlags.ClosableTabs )
-				
+		
 		_browsersTabView=New TabView( TabViewFlags.DraggableTabs )
 		_consolesTabView=New TabView( TabViewFlags.DraggableTabs )
 		
@@ -522,6 +522,23 @@ Class MainWindowInstance Extends Window
 	
 
 	Private
+	
+	Field _inited:=False
+	
+	Method OnRender( canvas:Canvas ) Override
+	
+		If Not _inited
+			_inited=True
+			OnInit()
+		Endif
+		Super.OnRender( canvas )
+	End
+	
+	Method OnInit()
+		
+		' need to make visible after layout
+		_docsTabView.EnsureVisibleCurrentTab()
+	End
 	
 	Method OnForceStop()
 		
