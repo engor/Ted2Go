@@ -2,10 +2,11 @@
 Namespace ted2go
 
 
-Class CodeListViewItem Extends StringListViewItem
+Class CodeListViewItem Extends ListViewItem
 	
 	Method New( item:CodeItem )
-		Super.New(item.Text)
+
+		Super.New( item.Text )
 		_item=item
 		Icon=CodeItemIcons.GetIcon( item )
 	End
@@ -22,6 +23,59 @@ Class CodeListViewItem Extends StringListViewItem
 End
 
 
+Class AutocompleteListView Extends ListViewExt
+	
+	Field word:String 'word to select
+	
+	Method New( lineHeight:Int,width:Int=600,height:Int=480 )
+		Super.New( lineHeight,width,height )
+	End
+	
+	
+	Protected
+	
+	Method DrawItem( item:ListViewItem,canvas:Canvas,x:Float,y:Float,handleX:Float=0,handleY:Float=0 ) Override
+		
+		canvas.Color=App.Theme.DefaultStyle.TextColor
+		
+		Local txt:=item.Text
+		Local icon:=item.Icon
+		If icon <> Null
+			canvas.DrawImage( icon,x-icon.Width*handleX,y-icon.Height*handleY )
+			x+=icon.Width+8
+		Endif
+		If Not word
+			canvas.DrawText( txt,x,y,handleX,handleY )
+			Return
+		Endif
+		
+		Local fnt:=canvas.Font
+		Local clr:Color
+		Local ch:=word[0],index:=0,len:=word.Length
+		
+		For Local i:=0 Until txt.Length
+			Local s:=txt.Slice( i,i+1 )
+			Local w:=fnt.TextWidth( s )
+			If ch<>-1 And s.ToLower()[0]=ch
+				index+=1
+				ch = index>=len ? -1 Else word[index]
+				clr=canvas.Color
+				canvas.Color=_selColor
+				canvas.DrawRect( x,y-LineHeight*handleY,w,LineHeight )
+				canvas.Color=clr
+			Endif
+			canvas.DrawText( s,x,y,handleX,handleY )
+			x+=w
+		Next
+	End
+	
+	
+	Private
+	
+	Field _selColor:=New Color( .8,.8,.8,.1 )
+	
+End
+
 
 Class AutocompleteDialog Extends DialogExt
 	
@@ -35,7 +89,7 @@ Class AutocompleteDialog Extends DialogExt
 	
 		Title=title
 		
-		_view=New ListViewExt( 20,width,height )
+		_view=New AutocompleteListView( 20,width,height )
 		_view.MoveCyclic=True
 		
 		ContentView=_view
@@ -74,11 +128,16 @@ Class AutocompleteDialog Extends DialogExt
 		
 		' using lowerCase for keywords
 		Local lastIdent:=(dotPos > 0) ? ident.Slice( dotPos+1 ) Else ident
-		lastIdent=lastIdent.ToLower()
+		Local lastIdentLower:=lastIdent.ToLower()
+				
+		_view.word=lastIdentLower
 		
-		Local starts:=ident.ToLower().StartsWith( _fullIdent.ToLower() )
+		Local starts:=(_fullIdent And ident.StartsWith( _fullIdent ))
 		
-		Local result:=New List<ListViewItem>
+		Local result:=New Stack<ListViewItem>
+		
+		Local parser:=GetParser( fileType )
+		
 		
 		'-----------------------------
 		' some optimization
@@ -91,22 +150,24 @@ Class AutocompleteDialog Extends DialogExt
 			Local items:=_view.Items
 			For Local i:=Eachin items
 				
-				If i.Text.ToLower().StartsWith( lastIdent )
-					result.AddLast( i )
+				If parser.CheckStartsWith( i.Text,lastIdentLower )
+					result.Add( i )
 				Endif
 				
 			Next
 			
 			' some "copy/paste" code
 			_fullIdent=ident
-			_lastIdentPart=lastIdent
+			_lastIdentPart=lastIdentLower
 			If IsOpened Then Hide() 'hide to re-layout on open
 			
 			'nothing to show
-			If result.Empty 
+			If result.Empty
 				Return
 			Endif
-						
+			
+			CodeItemsSorter.SortByIdent( result,lastIdent )
+			
 			_view.Reset()'reset selIndex
 			_view.SetItems( result )
 			
@@ -117,27 +178,14 @@ Class AutocompleteDialog Extends DialogExt
 		
 		
 		_fullIdent=ident
-		_lastIdentPart=lastIdent
+		_lastIdentPart=lastIdentLower
 		
 		Local onlyOne:=(dotPos = -1)
 		
 		'-----------------------------
-		' extract keywords
-		'-----------------------------
-		If onlyOne
-			Local kw:=GetKeywords( fileType )
-			For Local i:=Eachin kw
-				Local txt:=i.Text.ToLower()
-				If txt.StartsWith( lastIdent )
-					result.AddLast( i )
-				End
-			Next
-		Endif
-		
-		'-----------------------------
 		' extract items
 		'-----------------------------
-		Local parser:=GetParser( fileType )
+		
 		_listForExtract.Clear()
 		parser.GetItemsForAutocomplete( ident,filePath,docLine,_listForExtract )
 		
@@ -152,19 +200,33 @@ Class AutocompleteDialog Extends DialogExt
 					exists=True
 					Exit
 				Endif
-			End
+			Next
 			If Not exists
-				result.AddLast( New CodeListViewItem( i ) )
+				result.Add( New CodeListViewItem( i ) )
 			Endif
-		End
+		Next
+		
+		'-----------------------------
+		' extract keywords
+		'-----------------------------
+		If onlyOne
+			Local kw:=GetKeywords( fileType )
+			For Local i:=Eachin kw
+				If parser.CheckStartsWith( i.Text,lastIdentLower )
+					result.Add( i )
+				Endif
+			Next
+		Endif
 		
 		' hide to re-layout on open
 		If IsOpened Then Hide()
 		
 		' nothing to show
-		If result.Empty 
+		If result.Empty
 			Return
 		Endif
+		
+		If lastIdent Then CodeItemsSorter.SortByIdent( result,lastIdent )
 		
 		_view.Reset()'reset selIndex
 		_view.SetItems( result )
@@ -176,7 +238,7 @@ Class AutocompleteDialog Extends DialogExt
 		
 	Private
 	
-	Field _view:ListViewExt
+	Field _view:AutocompleteListView
 	Field _keywords:StringMap<List<ListViewItem>>
 	Field _lastIdentPart:String,_fullIdent:String
 	Field _parsers:StringMap<ICodeParser>
@@ -261,8 +323,7 @@ Class AutocompleteDialog Extends DialogExt
 		Local list:=New List<ListViewItem>
 		Local ic:=CodeItemIcons.GetKeywordsIcon()
 		For Local i:=Eachin kw.Values()
-			Local si:=New StringListViewItem( i )
-			si.Icon=ic
+			Local si:=New ListViewItem( i,ic )
 			list.AddLast( si )
 		Next
 		'preprocessor
@@ -270,7 +331,7 @@ Class AutocompleteDialog Extends DialogExt
 		Local s:="#If ,#Rem,#End,#Endif,#Import "
 		Local arr:=s.Split( "," )
 		For Local i:=Eachin arr
-			list.AddLast( New StringListViewItem( i ) )
+			list.AddLast( New ListViewItem( i ) )
 		Next
 		_keywords[fileType]=list
 	End

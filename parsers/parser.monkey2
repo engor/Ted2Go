@@ -43,6 +43,7 @@ Interface ICodeParser
 	Method ItemAtScope:CodeItem( ident:String,filePath:String,docLine:Int )
 	
 	Method GetItemsForAutocomplete( ident:String,filePath:String,docLine:Int,target:List<CodeItem> )
+	Method CheckStartsWith:Bool( ident1:String,ident2:String )
 	
 	Property Items:List<CodeItem>()
 	Property ItemsMap:StringMap<List<CodeItem>>()
@@ -105,6 +106,9 @@ Class EmptyParser Implements ICodeParser
 	Method RefineRawType( item:CodeItem )
 	End
 	Method GetItemsForAutocomplete( ident:String,filePath:String,docLine:Int,target:List<CodeItem> )
+	End
+	Method CheckStartsWith:Bool( ident1:String,ident2:String )
+		Return False
 	End
 	
 	Private

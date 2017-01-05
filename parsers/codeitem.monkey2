@@ -394,7 +394,8 @@ End
 
 Struct CodeItemsSorter Final
 	
-	Function SortByType( list:List<CodeItem>, inverse:Bool=False )
+	
+	Function SortByType( list:List<CodeItem>,inverse:Bool=False )
 		
 		Local sorterFunc:Int( lhs:CodeItem,rhs:CodeItem )
 		
@@ -405,10 +406,7 @@ Struct CodeItemsSorter Final
 					Local lp:=GetItemPriority( lhs,inverse )
 					Local rp:=GetItemPriority( rhs,inverse )
 					
-					Local r:= (rp <=> lp)
-					If r <> 0 Return r
-					
-					Return lhs.Text <=> rhs.Text
+					Return (rp <=> lp)
 				End
 			Endif			
 			sorterFunc=_sorterInverse
@@ -419,10 +417,7 @@ Struct CodeItemsSorter Final
 					Local lp:=GetItemPriority( lhs )
 					Local rp:=GetItemPriority( rhs )
 					
-					Local r:= (rp <=> lp)
-					If r <> 0 Return r
-					
-					Return lhs.Text <=> rhs.Text
+					Return (rp <=> lp)
 				End
 			Endif
 			sorterFunc=_sorter
@@ -431,14 +426,74 @@ Struct CodeItemsSorter Final
 		list.Sort( sorterFunc )
 	End
 	
+	Function SortByIdent( list:Stack<ListViewItem>,etalonIdent:String )
+		
+		_etalonIdent=etalonIdent
+		
+		If _sorterIdent = Null
+			_sorterIdent=Lambda:Int( lhs:ListViewItem,rhs:ListViewItem )
+
+				Local lp:=GetIdentPower( lhs.Text,_etalonIdent )
+				Local rp:=GetIdentPower( rhs.Text,_etalonIdent )
+				
+				Local r:=(rp<=>lp)
+				If r=0 Return GetIdentLength( lhs )<=>GetIdentLength( rhs ) 'brings up shorter idents
+				
+				Return r
+			End
+		Endif
+		
+		list.Sort( _sorterIdent )
+	End
+	
+	Function GetIdentPower:Int( ident:String,etalon:String )
+		
+		Local len:=etalon.Length
+		Local power:=0
+		Local ch:=etalon[0],index:=0
+		For Local i:=0 Until ident.Length
+			Local s:=ident.Slice( i,i+1 )
+			Local eq1:=(s[0]=ch)
+			Local eq2:=(s.ToLower()[0]=ch)
+			If eq1 Or eq2
+				Local pw:=(len-i)*30
+				If eq1 Then pw*=2 'full equals is 'better' than lower-cased
+				power+=pw
+				index+=1
+				ch = index>=len ? -1 Else etalon[index]
+				If ch=-1 Exit
+			Endif
+		Next
+		
+		Return power
+	End
+	
+	Function GetIdentLength:Int( item:ListViewItem )
+		
+		Local ident:=item.Text
+		Local p:=ident.Find( ":" )
+		If p<>-1
+			ident=ident.Slice( 0,p )
+			p=ident.Find( "(" )
+			If p<>-1 Then ident=ident.Slice( 0,p )
+		Else
+			p=ident.Find( "(" )
+			If p<>-1 Then ident=ident.Slice( 0,p )
+		Endif
+		
+		Return ident.Length
+	End
+	
 	
 	Private
 	
 	Method New()
 	End
 	
+	Global _etalonIdent:String
 	Global _sorter:Int( lhs:CodeItem,rhs:CodeItem )
 	Global _sorterInverse:Int( lhs:CodeItem,rhs:CodeItem )
+	Global _sorterIdent:Int( lhs:ListViewItem,rhs:ListViewItem )
 	
 	Function GetItemPriority:Int( item:CodeItem,inverse:Bool=False )
 		
@@ -464,7 +519,10 @@ Struct CodeItemsSorter Final
 				Endif
 				
 			Case CodeItemKind.Const_
-				retval=(inverse ?9 Else 6)
+				retval=(inverse ? 9 Else 6)
+			
+			Case CodeItemKind.Param_
+				retval=(inverse ? -10 Else 30)
 				
 			Case CodeItemKind.Operator_
 				retval=(inverse ? 25 Else -1) 'always put it on the bottom

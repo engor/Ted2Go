@@ -2,15 +2,7 @@
 Namespace ted2go
 
 
-Interface ListViewItem
-	
-	Property Text:String()
-	Method Draw( canvas:Canvas,x:Float,y:Float,handleX:Float=0,handleY:Float=0 )
-	
-End
-
-
-Class StringListViewItem Implements ListViewItem
+Class ListViewItem
 	
 	Property Text:String()
 		Return _text
@@ -24,11 +16,12 @@ Class StringListViewItem Implements ListViewItem
 		_icon=value
 	End
 	
-	Method New( text:String )
+	Method New( text:String,icon:Image=Null )
 		_text=text
+		_icon=icon
 	End
 	
-	Method Draw( canvas:Canvas,x:Float,y:Float,handleX:Float=0,handleY:Float=0 )
+	Method Draw( canvas:Canvas,x:Float,y:Float,handleX:Float=0,handleY:Float=0 ) Virtual
 		Local dx:=0.0
 		If _icon <> Null
 			canvas.DrawImage( _icon,x-_icon.Width*handleX,y-_icon.Height*handleY )
@@ -57,25 +50,29 @@ Class ListViewExt Extends ScrollableView
 		_lineH=lineHeight
 		MaxSize=New Vec2i( width,height )
 		
-		_selColor=New Color( 0,0,0,.3 )
-		_hoverColor=New Color( 0,0,0,.2 )
+		_selColor=App.Theme.GetColor( "content" )
+		_hoverColor=App.Theme.GetColor( "knob" )
 		
 	End
 	
-	Method AddItems( items:List<ListViewItem> )
+	Method AddItems( items:Stack<ListViewItem> )
 		For Local i:=Eachin items
 			_items.AddLast( i )
 		Next
 		_count=_items.Count()
 	End
 	
-	Method SetItems( items:List<ListViewItem> )
+	Method SetItems<T>( items:Stack<T> ) Where T Extends ListViewItem
 		_items.Clear()
 		AddItems( items )
 	End
 	
 	Method Reset()
 		_selIndex=0
+	End
+	
+	Property LineHeight:Float()
+		Return _lineH
 	End
 	
 	Property CurrentItem:ListViewItem()
@@ -113,6 +110,11 @@ Class ListViewExt Extends ScrollableView
 	
 	Property Items:List<ListViewItem>.Iterator()
 		Return _items.All()
+	End
+	
+	Method DrawItem( item:ListViewItem,canvas:Canvas,x:Float,y:Float,handleX:Float=0,handleY:Float=0 ) Virtual
+	
+		item.Draw( canvas,x,y,handleX,handleY )
 	End
 	
 	
@@ -188,7 +190,7 @@ Class ListViewExt Extends ScrollableView
 				End
 				'draw item
 				canvas.Color=Color.White
-				item.Draw( canvas,clip.Left+5,posY,0,0.5 )
+				DrawItem( item,canvas,clip.Left+5,posY,0,0.5 )
 				posY+=_lineH
 			Endif
 			k+=1

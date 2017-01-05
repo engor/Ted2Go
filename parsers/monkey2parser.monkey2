@@ -46,6 +46,41 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 
+	Method CheckStartsWith:Bool( ident1:String,ident2:String ) Override
+	
+		ident1=ident1.ToLower()
+		ident2=ident2.ToLower()
+	
+		Local p:=ident1.Find( ":" )
+		If p<>-1
+			ident1=ident1.Slice( 0,p )
+			p=ident1.Find( "(" )
+			If p<>-1 Then ident1=ident1.Slice( 0,p )
+		Else
+			p=ident1.Find( "(" )
+			If p<>-1 Then ident1=ident1.Slice( 0,p )
+		Endif
+		
+		Local len1:=ident1.Length
+		Local len2:=ident2.Length
+		p=-1
+		Local dist:=0,maxDist:=3
+		For Local i:=0 Until len2
+			Local found:=False
+			Local ch:=ident2[i]
+			For Local j:=0 Until len1
+				If j>p And ident1[j]=ch
+					dist=j-p
+					p=j
+					found=True
+					Exit
+				Endif
+			Next
+			If Not found Return False
+			If dist>maxDist Return False
+		Next
+		Return True
+	End
 	
 	Method ParseFile:String( filePath:String,pathOnDisk:String )
 		
@@ -136,7 +171,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			arr=endPos.Split( ":" )
 			item.ScopeEndPos=New Vec2i( Int(arr[0])-1,Int(arr[1]) )
 			
-			'If Not parent And filePath.EndsWith( "filesystem.monkey2") Print "parser. add item: "+item.Scope+" "+kind+" "+flags
+			'Print "parser. add item: "+item.Scope+" "+kind
 			
 			If kind="class" Or kind="struct" Or kind="interface" Or kind="enum"
 				Local t:=New CodeType
@@ -878,7 +913,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 		If ident2 = "" Return True
 		If startsOnly
-			Return ident1.ToLower().StartsWith( ident2.ToLower() )
+			Return CheckStartsWith( ident1,ident2 )
 		Else
 			Return ident1 = ident2
 		Endif

@@ -16,6 +16,14 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 		Return _itemsMap
 	End
 	
+	Method CheckStartsWith:Bool( ident1:String,ident2:String ) Virtual
+	
+		ident1=ident1.ToLower()
+		ident2=ident2.ToLower()
+		
+		Return ident1.StartsWith( ident2 )
+	End
+	
 	
 	Protected
 	
