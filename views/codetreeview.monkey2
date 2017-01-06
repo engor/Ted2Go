@@ -137,7 +137,7 @@ Class CodeTreeView Extends TreeViewExt
 	
 		Select SortType
 		Case CodeSortType.Type
-			CodeItemsSorter.SortByType( list )
+			CodeItemsSorter.SortByType( list,False,True )
 		End
 	End
 		

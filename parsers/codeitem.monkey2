@@ -395,43 +395,35 @@ End
 Struct CodeItemsSorter Final
 	
 	
-	Function SortByType( list:List<CodeItem>,inverse:Bool=False )
+	Function SortByType( list:List<CodeItem>,inverse:Bool=False,checkIdent:Bool=False )
 		
-		Local sorterFunc:Int( lhs:CodeItem,rhs:CodeItem )
+		_checkIdent=checkIdent
 		
-		If inverse
-			If _sorterInverse = Null
-				_sorterInverse=Lambda:Int( lhs:CodeItem,rhs:CodeItem )
-					
-					Local lp:=GetItemPriority( lhs,inverse )
-					Local rp:=GetItemPriority( rhs,inverse )
-					
-					Return (rp <=> lp)
-				End
-			Endif			
-			sorterFunc=_sorterInverse
-		Else
-			If _sorter = Null
-				_sorter=Lambda:Int( lhs:CodeItem,rhs:CodeItem )
-					
-					Local lp:=GetItemPriority( lhs )
-					Local rp:=GetItemPriority( rhs )
-					
-					Return (rp <=> lp)
-				End
-			Endif
-			sorterFunc=_sorter
+		If _sorterByType = Null
+			_sorterByType=Lambda:Int( lhs:CodeItem,rhs:CodeItem )
+				
+				Local lp:=GetItemPriority( lhs,inverse )
+				Local rp:=GetItemPriority( rhs,inverse )
+				
+				Local r:=(rp <=> lp)
+				
+				If r=0 And _checkIdent
+					r = inverse ? rhs.Text<=>lhs.Text Else lhs.Text<=>rhs.Text
+				Endif
+				
+				Return r
+			End
 		Endif
 		
-		list.Sort( sorterFunc )
+		list.Sort( _sorterByType )
 	End
 	
 	Function SortByIdent( list:Stack<ListViewItem>,etalonIdent:String )
 		
 		_etalonIdent=etalonIdent
 		
-		If _sorterIdent = Null
-			_sorterIdent=Lambda:Int( lhs:ListViewItem,rhs:ListViewItem )
+		If _sorterByIdent = Null
+			_sorterByIdent=Lambda:Int( lhs:ListViewItem,rhs:ListViewItem )
 
 				Local lp:=GetIdentPower( lhs.Text,_etalonIdent )
 				Local rp:=GetIdentPower( rhs.Text,_etalonIdent )
@@ -443,7 +435,7 @@ Struct CodeItemsSorter Final
 			End
 		Endif
 		
-		list.Sort( _sorterIdent )
+		list.Sort( _sorterByIdent )
 	End
 	
 	Function GetIdentPower:Int( ident:String,etalon:String )
@@ -490,10 +482,10 @@ Struct CodeItemsSorter Final
 	Method New()
 	End
 	
+	Global _checkIdent:Bool
 	Global _etalonIdent:String
-	Global _sorter:Int( lhs:CodeItem,rhs:CodeItem )
-	Global _sorterInverse:Int( lhs:CodeItem,rhs:CodeItem )
-	Global _sorterIdent:Int( lhs:ListViewItem,rhs:ListViewItem )
+	Global _sorterByType:Int( lhs:CodeItem,rhs:CodeItem )
+	Global _sorterByIdent:Int( lhs:ListViewItem,rhs:ListViewItem )
 	
 	Function GetItemPriority:Int( item:CodeItem,inverse:Bool=False )
 		
