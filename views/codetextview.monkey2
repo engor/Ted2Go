@@ -268,8 +268,17 @@ Class CodeTextView Extends TextView
 							If CanCopy Then OnCut()
 						Else
 							If Anchor = Cursor
-								If Cursor < Document.Text.Length
-									SelectText( Cursor,Cursor+1 )
+								Local len:=Text.Length
+								If Cursor < len
+									Local ends:=Cursor+1
+									If Text[Cursor] = 10 ' do we delete \n ?
+										Local i:=Cursor+1
+										While i<len And Text[i]<32 And Text[i]<>10
+											i+=1
+										Wend
+										ends=i
+									Endif
+									SelectText( Cursor,ends )
 									ReplaceText( "" )
 								Endif
 							Else
