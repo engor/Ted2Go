@@ -9,6 +9,7 @@ Class HelpActions
 	Field uploadModules:Action
 	Field about:Action
 	Field aboutTed2go:Action
+	Field makeBetter:Action
 
 	Method New()
 	
@@ -62,6 +63,12 @@ Class HelpActions
 			dialog.AddAction( "Okay!" ).Triggered=dialog.Close
 			
 			dialog.Open()
+		End
+		
+		makeBetter=New Action( "Make this app better! (paypal)" )
+		makeBetter.Triggered=Lambda()
+		
+			OpenUrl( "https://paypal.me/engor" )
 		End
 		
 	End

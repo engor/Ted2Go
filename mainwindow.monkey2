@@ -267,8 +267,9 @@ Class MainWindowInstance Extends Window
 		_helpMenu.AddAction( _helpActions.uploadModules )
 		_helpMenu.AddSeparator()
 		_helpMenu.AddAction( _helpActions.about )
-		_helpMenu.AddSeparator()
 		_helpMenu.AddAction( _helpActions.aboutTed2go )
+		_helpMenu.AddSeparator()
+		_helpMenu.AddAction( _helpActions.makeBetter )
 		
 		'Menu bar
 		'
@@ -313,7 +314,18 @@ Class MainWindowInstance Extends Window
 		
 		_contentView=New DockingView
 		_contentView.AddView( _menuBar,"top" )
-		If _toolBar Then _contentView.AddView( _toolBar,"top" )
+		
+		If _toolBar
+'			Local vv:=New DockingView
+'			vv.AddView( _toolBar,"left" )
+'			
+'			Local better:=New DockingView
+'			better.AddView( New Label( "Make me better" ),"left" )
+'			vv.AddView( better,"right" )
+			
+			_contentView.AddView( _toolBar,"top" )
+		Endif
+		
 		_contentView.AddView( _browsersTabView,"right",250,True )
 		_contentView.AddView( _consolesTabView,"bottom",200,True )
 		_contentView.ContentView=_docsTabView
