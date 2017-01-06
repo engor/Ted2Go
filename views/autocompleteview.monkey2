@@ -186,25 +186,29 @@ Class AutocompleteDialog Extends DialogExt
 		' extract items
 		'-----------------------------
 		
-		_listForExtract.Clear()
-		parser.GetItemsForAutocomplete( ident,filePath,docLine,_listForExtract )
+		If Not Prefs.AcKeywordsOnly
 		
-		CodeItemsSorter.SortByType( _listForExtract,True )
-		
-		For Local i:=Eachin _listForExtract
-			' remove duplicates
-			Local s:=i.Text
-			Local exists:=False
-			For Local ii:=Eachin result
-				If ii.Text = s
-					exists=True
-					Exit
+			_listForExtract.Clear()
+			parser.GetItemsForAutocomplete( ident,filePath,docLine,_listForExtract )
+			
+			CodeItemsSorter.SortByType( _listForExtract,True )
+			
+			For Local i:=Eachin _listForExtract
+				' remove duplicates
+				Local s:=i.Text
+				Local exists:=False
+				For Local ii:=Eachin result
+					If ii.Text = s
+						exists=True
+						Exit
+					Endif
+				Next
+				If Not exists
+					result.Add( New CodeListViewItem( i ) )
 				Endif
 			Next
-			If Not exists
-				result.Add( New CodeListViewItem( i ) )
-			Endif
-		Next
+			
+		Endif
 		
 		'-----------------------------
 		' extract keywords
@@ -283,10 +287,17 @@ Class AutocompleteDialog Extends DialogExt
 				_view.SelectLast()
 				event.Eat()
 			Case Key.Enter,Key.KeypadEnter
-				Hide() 'hide by enter
+				If Prefs.AcUseEnter
+					OnItemChoosen( _view.CurrentItem )
+					If Not Prefs.AcNewLineByEnter Then event.Eat()
+				Else
+					Hide() 'hide by enter
+				Endif
 			Case Key.Tab
-				OnItemChoosen( _view.CurrentItem )
-				event.Eat()
+				If Prefs.AcUseTab
+					OnItemChoosen( _view.CurrentItem )
+					event.Eat()
+				Endif
 			Case Key.Backspace
 			Case Key.CapsLock
 			Case Key.LeftShift,Key.RightShift

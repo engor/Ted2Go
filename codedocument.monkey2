@@ -38,8 +38,10 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		ContentView.Style.Border=New Recti( -4,-4,4,4 )
 		
-		AddView( New CodeGutterView( _doc ),"left" )
-
+		If Prefs.EditorGutterVisible
+			AddView( New CodeGutterView( _doc ),"left" )
+		Endif
+		
 		'very important to set FileType for init
 		'formatter, highlighter and keywords
 		FileType=doc.FileType
@@ -60,7 +62,8 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	End
 	
 	Property CharsToShowAutoComplete:Int()
-		Return 2
+		
+		Return Prefs.AcShowAfter
 	End
 	
 	Protected
@@ -192,7 +195,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				Case Key.Left
 					If AutoComplete.IsOpened And Not alt
 						Local ident:=IdentBeforeCursor()
-												If ident Then _doc.ShowAutocomplete( ident ) Else _doc.HideAutocomplete()
+						If ident Then _doc.ShowAutocomplete( ident ) Else _doc.HideAutocomplete()
 					Endif
 					
 				Case Key.Right
@@ -286,8 +289,6 @@ End
 
 
 Class CodeDocument Extends Ted2Document
-
-	
 	
 	Method New( path:String )
 		Super.New( path )
@@ -326,96 +327,100 @@ Class CodeDocument Extends Ted2Document
 		_codeView.LineChanged += OnLineChanged
 			
 		' Toolbar
-		Local bar:=New ToolBarExt
-		bar.Style=App.Theme.GetStyle( "EditorToolBar" )
-		bar.MaxSize=New Vec2i( 10000,30 )
-		bar.AddSeparator()
-		bar.AddSeparator()
-		bar.AddSeparator()
-		bar.AddSeparator()
-		bar.AddIconicButton(
-			ThemeImages.Get( "editorbar/back.png" ),
-			Lambda()
-				GoBack()
-			End,
-			"Navigate back (Alt+Left)" )
-		bar.AddIconicButton(
-			ThemeImages.Get( "editorbar/forward.png" ),
-			Lambda()
-				GoForward()
-			End,
-			"Navigate forward (Alt+Right)" )
-		bar.AddSeparator()
-		bar.AddIconicButton(
-			ThemeImages.Get( "editorbar/find_selection.png" ),
-			Lambda()
-				OnFindSelection()
-			End,
-			"Find selection (Ctrl+F)" )
-		bar.AddIconicButton(
-			ThemeImages.Get( "editorbar/find_previous.png" ),
-			Lambda()
-				OnFindPrev()
-			End,
-			"Find previous (Shift+F3)" )
-		bar.AddIconicButton(
-			ThemeImages.Get( "editorbar/find_next.png" ),
-			Lambda()
-				OnFindNext()
-			End,
-			"Find next (F3)" )
-		bar.AddSeparator()
-		#Rem
-		bar.AddIconicButton(
-			ThemeImages.Get( "editorbar/previous_bookmark.png" ),
-			Lambda()
-				OnPrevBookmark()
-			End,
-			"Prev bookmark (Ctrl+,)" )
-		bar.AddIconicButton(
-			ThemeImages.Get( "editorbar/next_bookmark.png" ),
-			Lambda()
-				OnNextBookmark()
-			End,
-			"Next bookmark (Ctrl+.)" )
-		bar.AddIconicButton(
-			ThemeImages.Get( "editorbar/toggle_bookmark.png" ),
-			Lambda()
-				OnToggleBookmark()
-			End,
-			"Toggle bookmark (Ctrl+M)" )
-		bar.AddSeparator()
-		#End
-		bar.AddIconicButton(
-			ThemeImages.Get( "editorbar/shift_left.png" ),
-			Lambda()
-				OnShiftLeft()
-			End,
-			"Shift left (Shift+Tab)" )
-		bar.AddIconicButton(
-			ThemeImages.Get( "editorbar/shift_right.png" ),
-			Lambda()
-				OnShiftRight()
-			End,
-			"Shift right (Tab)" )
-		bar.AddSeparator()
-		bar.AddIconicButton(
-			ThemeImages.Get( "editorbar/comment.png" ),
-			Lambda()
-				OnComment()
-			End,
-			"Comment (Ctrl+')" )
-		bar.AddIconicButton(
-			ThemeImages.Get( "editorbar/uncomment.png" ),
-			Lambda()
-				OnUncomment()
-			End,
-			"Uncomment (Shift+Ctrl+')" )
-			
+		Local bar:ToolBarExt=Null
+		If Prefs.EditorToolBarVisible
+		
+			bar=New ToolBarExt
+			bar.Style=App.Theme.GetStyle( "EditorToolBar" )
+			bar.MaxSize=New Vec2i( 10000,30 )
+			bar.AddSeparator()
+			bar.AddSeparator()
+			bar.AddSeparator()
+			bar.AddSeparator()
+			bar.AddIconicButton(
+				ThemeImages.Get( "editorbar/back.png" ),
+				Lambda()
+					GoBack()
+				End,
+				"Navigate back (Alt+Left)" )
+			bar.AddIconicButton(
+				ThemeImages.Get( "editorbar/forward.png" ),
+				Lambda()
+					GoForward()
+				End,
+				"Navigate forward (Alt+Right)" )
+			bar.AddSeparator()
+			bar.AddIconicButton(
+				ThemeImages.Get( "editorbar/find_selection.png" ),
+				Lambda()
+					OnFindSelection()
+				End,
+				"Find selection (Ctrl+F)" )
+			bar.AddIconicButton(
+				ThemeImages.Get( "editorbar/find_previous.png" ),
+				Lambda()
+					OnFindPrev()
+				End,
+				"Find previous (Shift+F3)" )
+			bar.AddIconicButton(
+				ThemeImages.Get( "editorbar/find_next.png" ),
+				Lambda()
+					OnFindNext()
+				End,
+				"Find next (F3)" )
+			bar.AddSeparator()
+			#Rem
+			bar.AddIconicButton(
+				ThemeImages.Get( "editorbar/previous_bookmark.png" ),
+				Lambda()
+					OnPrevBookmark()
+				End,
+				"Prev bookmark (Ctrl+,)" )
+			bar.AddIconicButton(
+				ThemeImages.Get( "editorbar/next_bookmark.png" ),
+				Lambda()
+					OnNextBookmark()
+				End,
+				"Next bookmark (Ctrl+.)" )
+			bar.AddIconicButton(
+				ThemeImages.Get( "editorbar/toggle_bookmark.png" ),
+				Lambda()
+					OnToggleBookmark()
+				End,
+				"Toggle bookmark (Ctrl+M)" )
+			bar.AddSeparator()
+			#End
+			bar.AddIconicButton(
+				ThemeImages.Get( "editorbar/shift_left.png" ),
+				Lambda()
+					OnShiftLeft()
+				End,
+				"Shift left (Shift+Tab)" )
+			bar.AddIconicButton(
+				ThemeImages.Get( "editorbar/shift_right.png" ),
+				Lambda()
+					OnShiftRight()
+				End,
+				"Shift right (Tab)" )
+			bar.AddSeparator()
+			bar.AddIconicButton(
+				ThemeImages.Get( "editorbar/comment.png" ),
+				Lambda()
+					OnComment()
+				End,
+				"Comment (Ctrl+')" )
+			bar.AddIconicButton(
+				ThemeImages.Get( "editorbar/uncomment.png" ),
+				Lambda()
+					OnUncomment()
+				End,
+				"Uncomment (Shift+Ctrl+')" )
 				
+		Endif
+		
 		' bar + editor
 		Local docker:=New DockingView
-		docker.AddView( bar,"top" )
+		If bar Then docker.AddView( bar,"top" )
 		docker.ContentView=_codeView
 		
 		_view.ContentView=docker
@@ -597,6 +602,8 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Method CanShowAutocomplete:Bool()
+		
+		If Not Prefs.AcEnabled Return False
 		
 		Local line:=TextDocument.FindLine( _codeView.Cursor )
 		Local text:=TextDocument.GetLine( line )

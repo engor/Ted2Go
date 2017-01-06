@@ -36,3 +36,5 @@
 
 #Import "themeimages"
 #Import "findinfilesdialog"
+
+#Import "prefs"

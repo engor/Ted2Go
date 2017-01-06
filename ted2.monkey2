@@ -91,6 +91,8 @@ Function Main()
 	Local jobj:=JsonObject.Load( "bin/ted2.state.json" )
 	If Not jobj jobj=New JsonObject
 
+	Prefs.LoadState( jobj )
+	
 	'initial theme
 	'	
 	If Not jobj.Contains( "theme" ) jobj["theme"]=New JsonString( "theme-classic-dark" )
