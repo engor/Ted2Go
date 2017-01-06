@@ -64,6 +64,35 @@ Class Utils
 		GetAllFilesInternal( rootDir,filterExts,target )
 	End
 	
+	#Rem monkeydoc If 'any' is true - check at least one starts, else - check all.
+	#End
+	Function BatchStartsWith:Bool( text:String,values:String[],any:Bool )
+	
+		For Local i:=0 Until values.Length
+			Local ok:=text.StartsWith( values[i] )
+			If ok 
+				If any Return True
+			Else
+				If Not any Return False
+			Endif
+		Next
+		
+		Return any ? False Else True
+	End
+	
+	Function BatchContains:Bool( text:String,values:String[],any:Bool )
+	
+		For Local i:=0 Until values.Length
+			Local ok:=text.Contains( values[i] )
+			If ok 
+				If any Return True
+			Else
+				If Not any Return False
+			Endif
+		Next
+	
+		Return any ? False Else True
+	End
 	
 	Private
 	

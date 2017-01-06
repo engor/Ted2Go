@@ -198,6 +198,9 @@ Class CodeTextView Extends TextView
 					
 	End
 	
+	Field _arrAddonIndents:=New String[]("else","for","method ","function ","class ","interface ","select ","try ","catch ","case ","default","while","repeat","property ","getter","setter","enum ","struct ")
+	Field _arrIf:=New String[]("then "," return"," exit"," continue")
+	
 	Method OnKeyEvent(event:KeyEvent) Override
 	
 		Select event.Type
@@ -303,6 +306,15 @@ Class CodeTextView Extends TextView
 						if indent > posInLine Then indent=posInLine
 						
 						Local s:=(indent ? text.Slice( 0,indent ) Else "")
+						
+						text=text.Trim().ToLower()
+						If text.StartsWith( "if" )
+							If Not Utils.BatchContains( text,_arrIf,True )
+								s="~t"+s
+							Endif
+						Elseif Utils.BatchStartsWith( text,_arrAddonIndents,True )
+							s="~t"+s
+						Endif
 						ReplaceText( "~n"+s )
 						
 						Return

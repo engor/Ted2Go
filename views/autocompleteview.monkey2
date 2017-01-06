@@ -192,22 +192,6 @@ Class AutocompleteDialog Extends DialogExt
 			parser.GetItemsForAutocomplete( ident,filePath,docLine,_listForExtract )
 			
 			CodeItemsSorter.SortByType( _listForExtract,True )
-			
-			For Local i:=Eachin _listForExtract
-				' remove duplicates
-				Local s:=i.Text
-				Local exists:=False
-				For Local ii:=Eachin result
-					If ii.Text = s
-						exists=True
-						Exit
-					Endif
-				Next
-				If Not exists
-					result.Add( New CodeListViewItem( i ) )
-				Endif
-			Next
-			
 		Endif
 		
 		'-----------------------------
@@ -218,6 +202,25 @@ Class AutocompleteDialog Extends DialogExt
 			For Local i:=Eachin kw
 				If parser.CheckStartsWith( i.Text,lastIdentLower )
 					result.Add( i )
+				Endif
+			Next
+		Endif
+		
+		'-----------------------------
+		' remove duplicates
+		'-----------------------------
+		If Not Prefs.AcKeywordsOnly
+			For Local i:=Eachin _listForExtract
+				Local s:=i.Text
+				Local exists:=False
+				For Local ii:=Eachin result
+					If ii.Text = s
+						exists=True
+						Exit
+					Endif
+				Next
+				If Not exists
+					result.Add( New CodeListViewItem( i ) )
 				Endif
 			Next
 		Endif
@@ -339,7 +342,7 @@ Class AutocompleteDialog Extends DialogExt
 		Next
 		'preprocessor
 		'need to load it like keywords
-		Local s:="#If ,#Rem,#End,#Endif,#Import "
+		Local s:="#If ,#Rem,#End,#Endif,#Import ,monkeydoc"
 		Local arr:=s.Split( "," )
 		For Local i:=Eachin arr
 			list.AddLast( New ListViewItem( i ) )
