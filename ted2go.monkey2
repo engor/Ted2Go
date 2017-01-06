@@ -38,3 +38,4 @@
 #Import "findinfilesdialog"
 
 #Import "prefs"
+#Import "prefsdialog"

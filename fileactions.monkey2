@@ -14,6 +14,7 @@ Class FileActions
 	Field saveAs:Action
 	Field saveAll:Action
 	Field quit:Action
+	Field prefs:Action
 	
 	Method New( docs:DocumentManager )
 	
@@ -75,6 +76,11 @@ Class FileActions
 		quit.HotKeyModifiers=Modifier.Alt|Modifier.Ignore
 #endif		
 
+		prefs=New Action( "Preferences..." )
+		prefs.Triggered=OnPrefs
+		prefs.HotKey=Key.P
+		prefs.HotKeyModifiers=Modifier.Menu
+		
 	End
 	
 	Method Update()
@@ -318,6 +324,14 @@ Class FileActions
 		Next
 		
 		MainWindow.Terminate()
+	End
+	
+	Field _prefsDialog:PrefsDialog
+	
+	Method OnPrefs()
+	
+		If Not _prefsDialog Then _prefsDialog=New PrefsDialog
+		_prefsDialog.Show()
 	End
 	
 End

@@ -193,6 +193,8 @@ Class MainWindowInstance Extends Window
 		_fileMenu.AddAction( _projectView.openProject )
 		_fileMenu.AddSubMenu( _closeProjectMenu )
 		_fileMenu.AddSeparator()
+		_fileMenu.AddAction( _fileActions.prefs )
+		_fileMenu.AddSeparator()
 		_fileMenu.AddAction( _fileActions.quit )
 		
 		'Edit menu
