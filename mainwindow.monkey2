@@ -31,6 +31,8 @@ Class MainWindowInstance Extends Window
 #Endif
 		_mx2cc=RealPath( _mx2cc )
 		
+		_modsDir=RealPath( "modules/" )
+		
 		_docsTabView=New TabViewExt( TabViewFlags.DraggableTabs|TabViewFlags.ClosableTabs )
 		
 		_browsersTabView=New TabView( TabViewFlags.DraggableTabs )
@@ -312,6 +314,8 @@ Class MainWindowInstance Extends Window
 		_consolesTabView.AddTab( "Docs",_helpViewDocker,False )
 		_consolesTabView.AddTab( "Find",_findConsole,False )
 		
+		_statusBar=New StatusBar
+		
 		_contentView=New DockingView
 		_contentView.AddView( _menuBar,"top" )
 		
@@ -326,6 +330,7 @@ Class MainWindowInstance Extends Window
 			_contentView.AddView( _toolBar,"top" )
 		Endif
 		
+		_contentView.AddView( _statusBar,"bottom" )
 		_contentView.AddView( _browsersTabView,"right",250,True )
 		_contentView.AddView( _consolesTabView,"bottom",200,True )
 		_contentView.ContentView=_docsTabView
@@ -359,6 +364,21 @@ Class MainWindowInstance Extends Window
 	Property Mx2ccPath:String()
 	
 		Return _mx2cc
+	End
+	
+	Property ModsPath:String()
+	
+		Return _modsDir
+	End
+	
+	Property OverrideTextMode:Bool()
+	
+		Return _ovdMode
+	Setter( value:Bool )
+		
+		If value=_ovdMode Return
+		_ovdMode=value
+		SetStatusBarInsertMode( Not _ovdMode )
 	End
 	
 	Method Terminate()
@@ -409,6 +429,37 @@ Class MainWindowInstance Extends Window
 		Return path.StartsWith( _tmp )
 	End
 
+	Method ShowStatusBarText( text:String )
+	
+		_statusBar.SetText( text )
+	End
+	
+	Method SetStatusBarInsertMode( ins:Bool )
+	
+		_statusBar.SetInsMode( ins )
+	End
+	
+	Method ShowStatusBarLineInfo( tv:TextView )
+		
+		Local line:=tv.Document.FindLine( tv.Cursor )
+		Local pos:=tv.Cursor-tv.Document.StartOfLine( line )
+		line+=1
+		pos+=1
+		_statusBar.SetLineInfo( "Ln : "+line+"  Col : "+pos )
+	End
+	
+	Method ShowStatusBarProgress( cancelCallback:Void() )
+	
+		_statusBar.Cancelled=cancelCallback
+		_statusBar.ShowProgress()
+	End
+	
+	Method HideStatusBarProgress()
+	
+		_statusBar.HideProgress()
+	End
+	
+	
 	Private
 		
 	Method DeleteTmps()
@@ -454,8 +505,48 @@ Class MainWindowInstance Extends Window
 		_consolesTabView.CurrentView=_findConsole
 	End
 	
-	Method ShowQuickHelp( ident:String )
-		_helpTree.QuickHelp( ident )
+	Method ShowQuickHelp()
+		
+		Local doc:=Cast<CodeDocumentView>( _docsManager.CurrentTextView )
+		If Not doc Return
+		
+		Local ident:=doc.FullIdentAtCursor()
+		
+		If Not ident Return
+		
+		Local parser:=ParsersManager.Get( doc.FileType )
+		Local item:=parser.ItemAtScope( ident,doc.FilePath,doc.LineNumAtCursor )
+		If item
+			Local s:=item.Namespac
+			If s
+				Local i:=s.Find( "." )
+				If i<>-1 Then s=s.Slice( 0,i )
+			Endif
+			ident=s+":"+item.Namespac+"."+item.Ident
+			
+			If ident=_helpIdent
+				If item.IsModuleMember
+					Local url:=_helpTree.PageUrl( ident )
+					ShowHelp( url )
+				Else
+					GotoCodePosition( item.FilePath,item.ScopeStartPos )
+				Endif
+			Else
+				ShowStatusBarText( "("+item.KindStr+") "+item.Text+"    |  "+item.Namespac+"  |  "+StripDir( item.FilePath )+"  |  line "+(item.ScopeStartPos.x+1) )
+			Endif
+			
+			_helpIdent=ident
+			
+		Elseif KeywordsManager.Get( doc.FileType ).Contains( ident )
+			
+			ShowStatusBarText( "(keyword) "+ident )
+		
+		Else
+			
+			_helpTree.QuickHelp( ident )
+				
+		Endif
+		
 	End
 	
 	Method ShowHelp( url:String  )
@@ -481,7 +572,12 @@ Class MainWindowInstance Extends Window
 		Local doc:=_docsManager.CurrentDocument
 		If Not doc Return
 		
-		If doc.TextView doc.TextView.MakeKeyView() Else doc.View.MakeKeyView()
+		If doc.TextView
+			doc.TextView.MakeKeyView()
+			ShowStatusBarLineInfo( doc.TextView )
+		Else
+			doc.View.MakeKeyView()
+		Endif
 	End
 	
 	Method GotoCodePosition( docPath:String, pos:Vec2i )
@@ -543,6 +639,7 @@ Class MainWindowInstance Extends Window
 	Private
 	
 	Field _inited:=False
+	Field _helpIdent:String
 	
 	Method OnRender( canvas:Canvas ) Override
 	
@@ -563,6 +660,7 @@ Class MainWindowInstance Extends Window
 		
 		If _buildConsole.Running
 			_buildConsole.Terminate()
+			HideStatusBarProgress()
 		Else If _outputConsole.Running
 			_outputConsole.Terminate()
 		Endif
@@ -646,6 +744,7 @@ Class MainWindowInstance Extends Window
 	Field _tmp:String
 	Field _mx2cc:String
 	Field _mx2ccDir:String
+	Field _modsDir:String
 	
 	Field _toolBar:ToolBarExt
 	Field _docsManager:DocumentManager
@@ -692,6 +791,9 @@ Class MainWindowInstance Extends Window
 	
 	Field _recentFilesMenu:Menu
 	Field _closeProjectMenu:Menu
+	Field _statusBar:StatusBar
+	Field _ovdMode:=False
+	
 	
 	Method ToJson:JsonValue( rect:Recti )
 		Return New JsonArray( New JsonValue[]( New JsonNumber( rect.min.x ),New JsonNumber( rect.min.y ),New JsonNumber( rect.max.x ),New JsonNumber( rect.max.y ) ) )

@@ -332,17 +332,22 @@ Class BuildActions
 		Endif
 		
 		Local title := run ? "Building" Else "Checking"
-		Local progress:=New ProgressDialog( title,progressText )
+		'Local progress:=New ProgressDialog( title,progressText )
 		
-		progress.MinSize=New Vec2i( 320,0 )
+		'progress.MinSize=New Vec2i( 320,0 )
 		
-		Local cancel:=progress.AddAction( "Cancel" )
+		'Local cancel:=progress.AddAction( "Cancel" )
 		
-		cancel.Triggered=Lambda()
-			_console.Terminate()
-		End
+		'cancel.Triggered=Lambda()
+		'	_console.Terminate()
+		'End
 		
-		progress.Open()
+		'progress.Open()
+		
+		MainWindow.ShowStatusBarText( progressText+" ..." )
+		MainWindow.ShowStatusBarProgress( _console.Terminate )
+		
+		Local hasErrors:=False
 		
 		Repeat
 		
@@ -356,6 +361,7 @@ Class BuildActions
 			
 				Local i:=stdout.Find( "] : Error : " )
 				If i<>-1
+					hasErrors=True
 					Local j:=stdout.Find( " [" )
 					If j<>-1
 						Local path:=stdout.Slice( 0,j )
@@ -376,13 +382,22 @@ Class BuildActions
 						
 					Endif
 				Endif
+				If Not hasErrors
+					i=stdout.Find( "Build error: " )
+					hasErrors=(i<>-1)
+				Endif
+				
 			Endif
 						
 			_console.Write( stdout )
 		
 		Forever
 		
-		progress.Close()
+		'progress.Close()
+		MainWindow.HideStatusBarProgress()
+		
+		Local status:=hasErrors ? "Process failed. See the build console for details." Else (_console.ExitCode=0 ? "Process finished." Else "Process cancelled.")
+		MainWindow.ShowStatusBarText( status )
 		
 		Return _console.ExitCode=0
 	End
@@ -465,7 +480,7 @@ Class BuildActions
 		cmd+=" -target="+target
 		cmd+=" ~q"+buildDoc.Path+"~q"
 		
-		Local title := run ? "Building" Else "Checking"
+		Local title := action="build" ? "Building" Else "Checking"
 		Local msg:=title+" "+StripDir( buildDoc.Path )+" for "+target+" "+config
 		
 		If Not BuildMx2( cmd,msg,run ) Return False

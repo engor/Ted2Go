@@ -12,6 +12,8 @@ Class ToolButtonExt Extends ToolButton
 	
 	Property Hint:String()
 		Return _hint
+	Setter( value:String )
+		_hint=value
 	End
 	
 	

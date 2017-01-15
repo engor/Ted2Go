@@ -265,6 +265,12 @@ Class DocumentManager
 			DocumentRemoved( doc )
 		End
 		
+		Local tv:=doc.TextView
+		If tv
+			tv.CursorMoved+=Lambda()
+				MainWindow.ShowStatusBarLineInfo( tv )
+			End
+		Endif
 	End
 	
 	Method TabText:String( doc:Ted2Document )

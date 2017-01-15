@@ -74,7 +74,7 @@ Class CodeTextView Extends TextView
 		Return ident
 	End
 	
-	Method FullIdentUnderCursor:String()
+	Method FullIdentAtCursor:String()
 	
 		Local text:=Text
 		Local cur:=Cursor
@@ -203,12 +203,13 @@ Class CodeTextView Extends TextView
 	
 	Method OnKeyEvent(event:KeyEvent) Override
 	
+		Local ctrl:=(event.Modifiers & Modifier.Control)
+		Local shift:=(event.Modifiers & Modifier.Shift)
+		
 		Select event.Type
 			
 			Case EventType.KeyDown,EventType.KeyRepeat
 				
-				Local ctrl:=(event.Modifiers & Modifier.Control)
-				Local shift:=(event.Modifiers & Modifier.Shift)
 				Local key:=event.Key
 				
 				'map keypad nav keys...
@@ -303,18 +304,24 @@ Class CodeTextView Extends TextView
 						'in this case GetLine return 2 lines, and if they empty
 						'then we get double indent
 						'need to fix inside mojox
-						if indent > posInLine Then indent=posInLine
+						
+						Local beforeIndent:=(posInLine<=indent)
+						
+						If indent > posInLine Then indent=posInLine
 						
 						Local s:=(indent ? text.Slice( 0,indent ) Else "")
 						
-						text=text.Trim().ToLower()
-						If text.StartsWith( "if" )
-							If Not Utils.BatchContains( text,_arrIf,True )
+						If Not beforeIndent
+							text=text.Trim().ToLower()
+							If text.StartsWith( "if" )
+								If Not Utils.BatchContains( text,_arrIf,True )
+									s="~t"+s
+								Endif
+							Elseif Utils.BatchStartsWith( text,_arrAddonIndents,True )
 								s="~t"+s
 							Endif
-						Elseif Utils.BatchStartsWith( text,_arrAddonIndents,True )
-							s="~t"+s
 						Endif
+						
 						ReplaceText( "~n"+s )
 						
 						Return
@@ -470,6 +477,16 @@ Class CodeTextView Extends TextView
 					If _typing Then DoFormat( False )
 				Endif
 				
+				If Cursor=Anchor
+					'override mode
+					Local ovd:=MainWindow.OverrideTextMode
+					If ovd 
+						Local alt:=(event.Modifiers & Modifier.Alt)
+						If Cursor < Text.Length And Text[Cursor]<>10 And Not shift And Not ctrl And Not alt
+							SelectText( Cursor,Cursor+1 )
+						Endif
+					Endif
+				Endif
 		End
 		
 		Super.OnKeyEvent( event )

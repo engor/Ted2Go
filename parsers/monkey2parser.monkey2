@@ -82,16 +82,20 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return True
 	End
 	
-	Method ParseFile:String( filePath:String,pathOnDisk:String )
+	Method ParseFile:String( filePath:String,pathOnDisk:String,isModule:Bool )
+		
+		If Not isModule '!!! dirty code
+			isModule=filePath.StartsWith( MainWindow.ModsPath )
+		Endif
 		
 		' is file modified?
 		Local time:=GetFileTime( pathOnDisk )
 		Local last:=_files[filePath]
 		If last = 0 Or time > last
 			_files[filePath]=time
-			'Print "parse file: "+filePath
+			'Print "parse file: "+filePath.Replace( "C:/proj/monkey/monkey2fork/","" )+"  "+pathOnDisk.Replace( "C:/proj/monkey/monkey2fork/","" )+"  mod:"+Int(isModule)
 		Else
-			'Print "parse file, not modified: "+filePath
+			'Print "parse file, not modified: "+filePath.Replace( "C:/proj/monkey/monkey2fork/","" )+"  "+pathOnDisk.Replace( "C:/proj/monkey/monkey2fork/","" )+"  mod:"+Int(isModule)
 			Return Null
 		Endif
 		
@@ -113,6 +117,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local json:=str.Slice( i )		
 		Local jobj:=JsonObject.Parse( json )
 		
+		Local nmspace:= jobj.Contains( "namespace" ) ? jobj["namespace"].ToString() Else ""
+		
+		
 		If jobj.Contains( "members" )
 			Local items:=New List<CodeItem>
 			Local members:=jobj["members"].ToArray()
@@ -120,6 +127,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 			ItemsMap[filePath]=items
 			Items.AddAll( items )
 			
+			For Local i:=Eachin items
+				i.Namespac=nmspace
+				i.IsModuleMember=isModule
+			Next
 			'Print "file parsed: "+filePath+", items.count: "+items.Count()
 		Endif
 		
@@ -129,10 +140,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Local imports:=jobj["imports"].ToArray()
 			For Local jfile:=Eachin imports
 				Local file:=jfile.ToString()
-				If file.StartsWith( "<" ) Or Not file.EndsWith( ".monkey2" )  Continue 'skip modules and not .monkey2
+				If file.StartsWith( "<" ) Or Not file.EndsWith( ".monkey2" ) Continue 'skip modules and not .monkey2
 				file=folder+file
-				'Print "parse import: "+file
-				ParseFile( file,file )
+				'Print "parse import: "+file+"  mod: "+Int(isModule)
+				ParseFile( file,file,isModule )
 			Next
 		Endif
 		
@@ -190,8 +201,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 						For Local p:=Eachin params
 							Local i:=New CodeItem( p.ident )
 							i.Type=p.type
-							i.Kind=CodeItemKind.Param_
+							i.KindStr="param"
 							i.Parent=item
+							i.ScopeStartPos=item.ScopeStartPos
+							i.FilePath=item.FilePath
 						Next
 					Endif
 				Endif
@@ -266,17 +279,17 @@ Class Monkey2Parser Extends CodeParserPlugin
 	End
 	
 	Method ItemAtScope:CodeItem( ident:String,filePath:String,docLine:Int )
-		
+	
 		Local idents:=ident.Split( "." )
-				
+	
 		' using lowerCase for keywords
 		Local lastIdent:=idents[idents.Length-1].ToLower()
 		Local onlyOne:=(idents.Length=1)
-		
+	
 		'check current scope
 		Local rootScope:=GetScope( filePath,docLine )
 		Local scope:=rootScope
-		
+			
 		'-----------------------------
 		' what the first ident is?	
 		'-----------------------------
@@ -285,24 +298,33 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local isSelf:=(firstIdent.ToLower()="self")
 		Local isSuper:=(firstIdent.ToLower()="super")
 		Local items:=New List<CodeItem>
-		
+	
 		If isSelf Or isSuper
-		
+	
 			item=scope.NearestClassScope
-			
+	
 		Else ' not 'self' ident
-			
+	
 			' check in 'this' scope
 			While scope <> Null
 	
 				GetAllItems( scope,items )
-				
+	
 				If Not items.Empty
 					For Local i:=Eachin items
-						If Not CheckIdent( i.Ident,firstIdent,False ) Continue
-						If Not CheckAccessInScope( i,scope ) Continue
+						If Not CheckIdent( i.Ident,firstIdent,onlyOne,False )
+							'Print "cont1: "+i.Ident
+							Continue
+						Endif
+						If Not CheckAccessInScope( i,scope )
+							'Print "cont2: "+i.Ident
+							Continue
+						Endif
 						' additional checking for the first ident
-						If IsLocalMember( i ) And i.ScopeStartPos.x > docLine Continue
+						If IsLocalMember( i ) And i.ScopeStartPos.x > docLine
+							'Print "cont3: "+i.Ident
+							Continue
+						Endif
 						If Not onlyOne
 							item=i
 							Exit
@@ -313,19 +335,21 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Endif
 				'found item
 				If item <> Null Exit
-				
+	
 				scope=scope.Parent 'if inside of func then go to class' scope
-				
+	
 			Wend
-		
+	
 		Endif
-		
+	
 		' and check in global scope
 		If item = Null Or onlyOne
 			For Local i:=Eachin Items
-				If Not CheckIdent( i.Ident,firstIdent,False ) Continue
-				If Not CheckAccessInGlobal( i,filePath ) Continue
-				If IsLocalMember( i ) And i.ScopeStartPos.x > docLine Continue
+				'Print "global 1: "+i.Scope
+				If Not CheckIdent( i.Ident,firstIdent,onlyOne,False ) Continue
+				'If Not CheckAccessInGlobal( i,filePath ) Continue
+				'If IsLocalMember( i ) And i.ScopeStartPos.x > docLine Continue
+				'Print "global 2"
 				If Not onlyOne
 					item=i
 					Exit
@@ -334,25 +358,34 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Endif
 			Next
 		Endif
-		
+	
+		'If item Print "item: "+item.Scope
+	
 		' var1.var2.var3...
 		If Not onlyOne And item <> Null
-			
+	
 			Local scopeClass:=(rootScope <> Null) ? rootScope.NearestClassScope Else Null
-			
+			Local forceProtected:=(isSelf Or isSuper)
+	
 			' start from the second ident part here
 			For Local k:=1 Until idents.Length
-				
-				Local staticOnly:=(Not isSelf And (item.Kind = CodeItemKind.Class_ Or item.Kind = CodeItemKind.Struct_))
-						
+	
+				Local staticOnly:=(Not isSelf And Not isSuper And (item.Kind = CodeItemKind.Class_ Or item.Kind = CodeItemKind.Struct_))
+	
 				' need to check by ident type
 				Local type:=item.Type.ident
-				
+	
 				Select item.Kind
+	
 					Case CodeItemKind.Class_,CodeItemKind.Struct_,CodeItemKind.Interface_,CodeItemKind.Enum_
 						' don't touch 'item'
+	
 					Default
 						item=Null
+						' is it alias?
+						Local al:=_aliases[type]
+						If al Then type=al.Type.ident
+						'
 						For Local i:=Eachin Items
 							If i.Ident = type
 								item=i
@@ -361,27 +394,25 @@ Class Monkey2Parser Extends CodeParserPlugin
 						Next
 						If item = Null Then Exit
 				End
-				
-				'is it alias?
-				
-				' !! need to fix
-'				Local at:=_aliases[type]
-'				If at <> Null
-'					type=StripGenericType( at )
-'				Endif
-								
-				
+	
+	
 				Local identPart:=idents[k]
 				Local last:=(k = idents.Length-1)
-				
+	
 				' extract all items from item
 				items.Clear()
-				GetAllItems( item,items )
-				
+				GetAllItems( item,items,isSuper )
+	
 				If Not items.Empty
 					For Local i:=Eachin items
-						If Not CheckIdent( i.Ident,identPart,False ) Continue
-						If Not CheckAccessInClassType( i,scopeClass ) Continue
+						If Not CheckIdent( i.Ident,identPart,last,False )
+							'Print "continue 1: "+i.Ident
+							Continue
+						Endif
+						'If Not CheckAccessInClassType( i,scopeClass,forceProtected )
+							'Print "continue 2: "+i.Ident
+						'	Continue
+						'Endif
 						item=i
 						If last
 							If Not staticOnly Or IsStaticMember( i )
@@ -392,10 +423,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 						Endif
 					Next
 				Endif
-				
+	
 				If item = Null Then Exit
 			Next
-			
+	
 		Endif
 		
 		Return Null
@@ -591,7 +622,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				'Print "module: "+file
 				If GetFileType( file ) = FileType.File
 					OnParseModule( file )
-					ParseFile( file,file )
+					ParseFile( file,file,True )
 				Endif
 			Endif
 		Next
@@ -909,11 +940,11 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
-	Method CheckIdent:Bool( ident1:String,ident2:String,startsOnly:Bool )
+	Method CheckIdent:Bool( ident1:String,ident2:String,startsOnly:Bool,smartStarts:Bool=True )
 	
 		If ident2 = "" Return True
 		If startsOnly
-			Return CheckStartsWith( ident1,ident2 )
+			Return smartStarts ? CheckStartsWith( ident1,ident2 ) Else ident1.StartsWith( ident2 )
 		Else
 			Return ident1 = ident2
 		Endif

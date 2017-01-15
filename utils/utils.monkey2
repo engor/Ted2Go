@@ -94,6 +94,19 @@ Class Utils
 		Return any ? False Else True
 	End
 	
+	#Rem monkeydoc 
+	@return arr[2] or null, arr[0] - position of first found match or -1 if not found, arr[1] - index of matched value from values array
+	#End
+	Function FindAny:Int[]( text:String,values:String[] )
+	
+		For Local i:=0 Until values.Length
+			Local p:=text.Find( values[i] )
+			If p<>-1 Return New Int[](p,i)
+		Next
+		
+		Return Null
+	End
+	
 	Private
 	
 	Method New()

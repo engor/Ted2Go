@@ -77,7 +77,7 @@ Class HelpTree Extends TreeViewExt
 	End
 	
 	Method PageUrl:String( page:String )
-	
+		
 		Return RealPath( "modules/"+page.Replace( ":","/docs/__PAGES__/" ).Replace( ".","-" )+".html" )
 	End
 	

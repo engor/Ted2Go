@@ -228,6 +228,8 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			Local dock:=New DockingView
 			dock.ContentView=jsonTree
 			Local tv:=New TextView
+			tv.MaxSize=New Vec2i( 512,480 )
+			tv.WordWrap=True
 			tv.Text=str
 			dock.AddView( tv,"bottom",200,True )
 			
@@ -573,7 +575,7 @@ Class CodeDocument Extends Ted2Document
 	
 	Method GotoDeclaration()
 	
-		Local ident:=_codeView.FullIdentUnderCursor()
+		Local ident:=_codeView.FullIdentAtCursor()
 		Local line:=TextDocument.FindLine( _codeView.Cursor )
 		Local item:=_parser.ItemAtScope( ident,Path,line )
 		Print "go decl: "+ident
@@ -742,7 +744,7 @@ Class CodeDocument Extends Ted2Document
 		
 		ResetErrors()
 		
-		Local errors:=_parser.ParseFile( Path,pathOnDisk )
+		Local errors:=_parser.ParseFile( Path,pathOnDisk,False )
 		
 		If errors
 			

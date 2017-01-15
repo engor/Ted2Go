@@ -35,7 +35,7 @@ End
 Interface ICodeParser
 
 	Method RefineRawType( item:CodeItem )
-	Method ParseFile:String( filePath:String,pathOnDisk:String )
+	Method ParseFile:String( filePath:String,pathOnDisk:String,isModule:Bool )
 	'Method ParseJson( json:String,filePath:String )
 	Method IsPosInsideOfQuotes:Bool( text:String,pos:Int )
 	Method CanShowAutocomplete:Bool( line:String,posInLine:Int )
@@ -87,7 +87,7 @@ Class EmptyParser Implements ICodeParser
 		Return _itemsMap
 	End
 	
-	Method ParseFile:String( filePath:String,pathOnDisk:String )
+	Method ParseFile:String( filePath:String,pathOnDisk:String,isModule:Bool )
 		'do nothing
 		Return Null
 	End

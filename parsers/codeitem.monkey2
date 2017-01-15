@@ -114,9 +114,33 @@ Class CodeItem
 	End
 	
 	Property Namespac:String()
+		
+		If Not _namespace
+			Local p:=_parent
+			While p<>Null
+				_namespace=p._namespace
+				If _namespace Exit
+				p=p._parent
+			Wend
+		Endif
 		Return _namespace
 	Setter( value:String )
 		_namespace=value
+	End
+	
+	Property IsModuleMember:Bool()
+		
+		If _isModuleMember=-1
+			Local p:=_parent
+			While p<>Null
+				_isModuleMember=p._isModuleMember
+				If _isModuleMember<>-1 Exit
+				p=p._parent
+			Wend
+		Endif
+		Return _isModuleMember=1 ? True Else False
+	Setter( value:Bool )
+		_isModuleMember=value ? 1 Else 0
 	End
 	
 	Property FilePath:String()
@@ -264,6 +288,7 @@ Class CodeItem
 	Field _superTypes:List<CodeType>,_superTypesStr:List<String>
 	Field _params:CodeParam[]
 	Field _paramsStr:String
+	Field _isModuleMember:=-1
 	
 	
 	Private

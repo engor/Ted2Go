@@ -23,25 +23,22 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 			Select event.Key
 						
 				Case Key.F1
-					Local ident:=codeView.IdentAtCursor()
-					If ident
-						MainWindow.ShowQuickHelp( ident )
-					Endif
-				
+					MainWindow.ShowQuickHelp()
+					
 				Case Key.F2
 					MainWindow.GotoDeclaration()
 				
 				Case Key.Enter 'ctrl+enter - smart ending of expression
-					If ctrl And Not codeView.CanCopy And codeView.IsCursorAtTheEndOfLine()
-						Local ident:=codeView.FirstIdentInLine( codeView.Cursor )
-						Print "ident: "+ident
-						ident=ident.ToLower()
-						Select ident
-							Case "method","function","class","interface","if","select"
-								'need to add 'End' keyword here for rapid coding
-								event.Eat()
-						End
-					Endif
+					'If ctrl And Not codeView.CanCopy And codeView.IsCursorAtTheEndOfLine()
+						'Local ident:=codeView.FirstIdentInLine( codeView.Cursor )
+						'Print "ident: "+ident
+						'ident=ident.ToLower()
+						'Select ident
+						'	Case "method","function","class","interface","if","select"
+						'		'need to add 'End' keyword here for rapid coding
+						'		event.Eat()
+						'End
+					'Endif
 					
 				Case Key.Apostrophe 'ctrl+' - comment / uncomment block
 				
@@ -54,7 +51,14 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 						OnCommentUncommentBlock( textView,True )
 						
 					End
+				
+				Case Key.Insert
 					
+					Local alt:=(event.Modifiers & Modifier.Alt)
+					
+					If Not shift And Not ctrl And Not alt
+						MainWindow.OverrideTextMode=Not MainWindow.OverrideTextMode
+					Endif
 			End
 			
 		End
