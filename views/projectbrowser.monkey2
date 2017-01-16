@@ -19,9 +19,9 @@ Class ProjectBrowser Extends FileBrowser
 		
 		NodeDoubleClicked+=Lambda( node:TreeView.Node )
 			
-			Update() 'need to refresh icons
 			node.Expanded=Not node.Expanded
 			If node = RootNode And node.Expanded And _filters Then AdjustFilter( _filters )
+			Update() 'need to refresh icons
 		End
 	End
 	

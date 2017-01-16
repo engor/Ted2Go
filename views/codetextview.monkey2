@@ -198,7 +198,7 @@ Class CodeTextView Extends TextView
 					
 	End
 	
-	Field _arrAddonIndents:=New String[]("else","for","method ","function ","class ","interface ","select ","try ","catch ","case ","default","while","repeat","property ","getter","setter","enum ","struct ")
+	Field _arrAddonIndents:=New String[]("else","for ","method ","function ","class ","interface ","select ","try ","catch ","case ","default","while","repeat","property ","getter","setter","enum ","struct ")
 	Field _arrIf:=New String[]("then "," return"," exit"," continue")
 	
 	Method OnKeyEvent(event:KeyEvent) Override

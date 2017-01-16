@@ -203,7 +203,7 @@ Class ModuleManager Extends Dialog
 			Local dst:=downloadDir+zip
 
 #if __HOSTOS__="macos"
-			Local cmd:="curl -o ~q"+dst+"~q ~q"+src+"~q"
+			Local cmd:="curl -o ~q"+dst+"~q -data-binary ~q"+src+"~q"
 #else
 			Local cmd:="wget -O ~q"+dst+"~q ~q"+src+"~q"
 #endif

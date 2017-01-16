@@ -522,17 +522,41 @@ Class MainWindowInstance Extends Window
 				Local i:=s.Find( "." )
 				If i<>-1 Then s=s.Slice( 0,i )
 			Endif
-			ident=s+":"+item.Namespac+"."+item.Ident
+			Local ident2:="",parentIdent:=""
+			ident=s+":"+item.Namespac+"."
+			If item.Parent
+				If item.Parent.IsLikeClass
+					parentIdent=item.Parent.Ident
+					ident2=s+":"+parentIdent+"."+item.Ident
+				Endif
+				ident+=item.Parent.Ident+"."
+			Endif
+			ident+=item.Ident
 			
 			If ident=_helpIdent
 				If item.IsModuleMember
 					Local url:=_helpTree.PageUrl( ident )
-					ShowHelp( url )
+					If GetFileType( url )<>FileType.File Then url=_helpTree.PageUrl( ident2 )
+					
+					If GetFileType( url )<>FileType.File
+						Local ext:=ExtractExt( url )
+						Repeat
+							Local i:=url.FindLast( "-" )
+							If i=-1
+								url=""
+								Exit
+							Endif
+							url=url.Slice( 0,i )+ext
+						Forever
+					Endif
+					If url ShowHelp( url )
 				Else
 					GotoCodePosition( item.FilePath,item.ScopeStartPos )
 				Endif
 			Else
-				ShowStatusBarText( "("+item.KindStr+") "+item.Text+"    |  "+item.Namespac+"  |  "+StripDir( item.FilePath )+"  |  line "+(item.ScopeStartPos.x+1) )
+				Local nmspace:=item.Namespac
+				If parentIdent nmspace+="."+parentIdent
+				ShowStatusBarText( "("+item.KindStr+") "+item.Text+"    |  "+nmspace+"  |  "+StripDir( item.FilePath )+"  |  line "+(item.ScopeStartPos.x+1) )
 			Endif
 			
 			_helpIdent=ident

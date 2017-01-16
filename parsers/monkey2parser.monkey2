@@ -7,7 +7,7 @@ Function FixTypeIdent:String( ident:String )
 	If ident.StartsWith( "@" ) Then ident=ident.Slice( 1 )
 	
 	Select ident
-	Case "new","bool","byte","double","float","int","long","object","short","string","throwable","variant","void"
+	Case "new","bool","byte","double","float","int","long","object","short","string","throwable","variant","void","array"
 		Return ident.Slice( 0,1 ).ToUpper()+ident.Slice( 1 )
 	Case "typeinfo"
 		Return "TypeInfo"
