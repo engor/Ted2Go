@@ -481,7 +481,7 @@ Class BuildActions
 		cmd+=" ~q"+buildDoc.Path+"~q"
 		
 		Local title := action="build" ? "Building" Else "Checking"
-		Local msg:=title+" "+StripDir( buildDoc.Path )+" for "+target+" "+config
+		Local msg:=title+" ~ "+target+" ~ "+config+" ~ "+StripDir( buildDoc.Path )
 		
 		If Not BuildMx2( cmd,msg,run ) Return False
 		

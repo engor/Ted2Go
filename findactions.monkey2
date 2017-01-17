@@ -124,6 +124,13 @@ Class FindActions
 	
 	Method OnFindAllInFiles()
 	
+		If Not _findInFilesDialog.FindText Return
+		
+		If Not _findInFilesDialog.SelectedProject Return
+		
+		_findInFilesDialog.Hide()
+		MainWindow.ShowFindResults()
+		
 		New Fiber( Lambda()
 		
 			Local what:=_findInFilesDialog.FindText
@@ -131,9 +138,6 @@ Class FindActions
 			
 			Local proj:=_findInFilesDialog.SelectedProject
 			If Not proj Return
-			
-			_findInFilesDialog.Hide()
-			MainWindow.ShowFindResults()
 			
 			Local filter:=_findInFilesDialog.FilterText
 			If Not filter Then filter="monkey2"

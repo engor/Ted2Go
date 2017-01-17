@@ -68,7 +68,7 @@ Class HelpActions
 		makeBetter=New Action( "Make this app better! (paypal)" )
 		makeBetter.Triggered=Lambda()
 		
-			OpenUrl( "https://paypal.me/engor" )
+			OpenUrl( "https://paypal.me/engor/10" )
 		End
 		
 	End

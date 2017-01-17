@@ -3,9 +3,9 @@ Namespace ted2go
 
 
 Class FindInFilesDialog Extends DialogExt
-
-	Method New( actions:FindActions,projView:ProjectView )
 	
+	Method New( actions:FindActions,projView:ProjectView )
+		
 		_findField=New TextField
 		
 		_findField.Entered+=Lambda()
@@ -13,6 +13,7 @@ Class FindInFilesDialog Extends DialogExt
 		End
 		
 		_projList=New ListView
+		_projList.MaxSize=New Vec2i( 500,120 )
 		_filterField=New TextField( "monkey2,txt" )
 		
 		_caseSensitive=New CheckButton( "Case sensitive" )
@@ -25,16 +26,17 @@ Class FindInFilesDialog Extends DialogExt
 		table[1,1]=_projList
 		table[0,2]=New Label( "Filter" )
 		table[1,2]=_filterField
+		table.Layout="float"
 		
 		_docker=New DockingView
 		_docker.AddView( table,"top" )
 		_docker.AddView( _caseSensitive,"top" )
-		_docker.AddView( New Label( " " ),"top" )
+		'_docker.AddView( New Label( " " ),"top" )
 		
 		Title="Find in files"
 		
-		MaxSize=New Vec2i( 512,0 )
-				
+		_docker.MinSize=New Vec2i( 512,200 )
+		
 		ContentView=_docker
 		
 		AddAction( actions.findAllInFiles )
