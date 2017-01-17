@@ -17,7 +17,7 @@ Class FindActions
 		_docs=docs
 		_findConsole=findConsole
 		
-		find=New Action( "Find" )
+		find=New Action( "Find / Replace" )
 		find.Triggered=OnFind
 		find.HotKey=Key.F
 		find.HotKeyModifiers=Modifier.Menu

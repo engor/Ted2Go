@@ -139,18 +139,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						Endif
 					Endif
 				
-				Case Key.Left
-					If alt 
-						_doc.GoBack()
-						Return
-					Endif
-					
-				Case Key.Right
-					If alt
-						_doc.GoForward()
-						Return
-					Endif
-				
 				Case Key.F11
 				
 					ShowJsonDialog()
@@ -408,13 +396,13 @@ Class CodeDocument Extends Ted2Document
 			bar.AddIconicButton(
 				ThemeImages.Get( "editorbar/comment.png" ),
 				Lambda()
-					OnComment()
+					Comment()
 				End,
 				"Comment (Ctrl+')" )
 			bar.AddIconicButton(
 				ThemeImages.Get( "editorbar/uncomment.png" ),
 				Lambda()
-					OnUncomment()
+					Uncomment()
 				End,
 				"Uncomment (Shift+Ctrl+')" )
 				
@@ -662,6 +650,17 @@ Class CodeDocument Extends Ted2Document
 		Navigator.TryForward()
 	End
 	
+	Method Comment()
+	
+		Local event:=New KeyEvent( EventType.KeyDown,_codeView,Key.Apostrophe,Key.Apostrophe,Modifier.Control,"" )
+		_codeView.OnKeyEvent( event )
+	End
+	
+	Method Uncomment()
+	
+		Local event:=New KeyEvent( EventType.KeyDown,_codeView,Key.Apostrophe,Key.Apostrophe,Modifier.Control|Modifier.Shift,"" )
+		_codeView.OnKeyEvent( event )
+	End
 	
 	Protected
 	
@@ -846,18 +845,6 @@ Class CodeDocument Extends Ted2Document
 	Method OnShiftRight()
 		
 		Local event:=New KeyEvent( EventType.KeyDown,_codeView,Key.Tab,Key.Tab,Modifier.None,"~t" )
-		_codeView.OnKeyEvent( event )
-	End
-	
-	Method OnComment()
-		
-		Local event:=New KeyEvent( EventType.KeyDown,_codeView,Key.Apostrophe,Key.Apostrophe,Modifier.Control,"" )
-		_codeView.OnKeyEvent( event )
-	End
-	
-	Method OnUncomment()
-		
-		Local event:=New KeyEvent( EventType.KeyDown,_codeView,Key.Apostrophe,Key.Apostrophe,Modifier.Control|Modifier.Shift,"" )
 		_codeView.OnKeyEvent( event )
 	End
 				

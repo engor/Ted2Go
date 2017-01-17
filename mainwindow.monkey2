@@ -133,6 +133,7 @@ Class MainWindowInstance Extends Window
 		_findActions=New FindActions( _docsManager,_projectView,_findConsole )
 		_buildActions=New BuildActions( _docsManager,_buildConsole,_debugView )
 		_helpActions=New HelpActions
+		_viewActions=New ViewActions( _docsManager )
 
 		_tabMenu=New Menu
 		_tabMenu.AddAction( _fileActions.close )
@@ -189,9 +190,6 @@ Class MainWindowInstance Extends Window
 		_fileMenu.AddAction( _fileActions.saveAs )
 		_fileMenu.AddAction( _fileActions.saveAll )
 		_fileMenu.AddSeparator()
-		_fileMenu.AddAction( _docsManager.nextDocument )
-		_fileMenu.AddAction( _docsManager.prevDocument )
-		_fileMenu.AddSeparator()
 		_fileMenu.AddAction( _projectView.openProject )
 		_fileMenu.AddSubMenu( _closeProjectMenu )
 		_fileMenu.AddSeparator()
@@ -208,20 +206,33 @@ Class MainWindowInstance Extends Window
 		_editMenu.AddAction( _editActions.cut )
 		_editMenu.AddAction( _editActions.copy )
 		_editMenu.AddAction( _editActions.paste )
+		_editMenu.AddSeparator()
 		_editMenu.AddAction( _editActions.selectAll )
 		_editMenu.AddSeparator()
 		_editMenu.AddAction( _editActions.wordWrap )
-		_editMenu.AddSeparator()
-		_editMenu.AddAction( _findActions.find )
-		_editMenu.AddAction( _findActions.findNext )
-		_editMenu.AddAction( _findActions.findPrevious )
-		_editMenu.AddAction( _findActions.replace )
-		_editMenu.AddAction( _findActions.replaceAll )
-		_editMenu.AddSeparator()
-		_editMenu.AddAction( _findActions.findInFiles )
-		_editMenu.AddSeparator()
-		_editMenu.AddAction( _editActions.gotoLine )
-		_editMenu.AddAction( _editActions.gotoDeclaration )
+		
+		'Find menu
+		'
+		_findMenu=New Menu( "Find" )
+		_findMenu.AddAction( _findActions.find )
+		_findMenu.AddAction( _findActions.findNext )
+		_findMenu.AddAction( _findActions.findPrevious )
+		'_findMenu.AddAction( _findActions.replace )
+		'_findMenu.AddAction( _findActions.replaceAll )
+		_findMenu.AddSeparator()
+		_findMenu.AddAction( _findActions.findInFiles )
+		
+		'View menu
+		'
+		_viewMenu=New Menu( "View" )
+		_viewMenu.AddAction( _editActions.gotoLine )
+		_viewMenu.AddAction( _editActions.gotoDeclaration )
+		_viewMenu.AddSeparator()
+		_viewMenu.AddAction( _viewActions.comment )
+		_viewMenu.AddAction( _viewActions.uncomment )
+		_viewMenu.AddSeparator()
+		_viewMenu.AddAction( _viewActions.goBack )
+		_viewMenu.AddAction( _viewActions.goForward )
 		
 		'Build menu
 		'
@@ -239,33 +250,40 @@ Class MainWindowInstance Extends Window
 		_buildMenu.AddAction( _buildActions.semant )
 		_buildMenu.AddSubMenu( _buildActions.targetMenu )
 		_buildMenu.AddSeparator()
+		_buildMenu.AddAction( _forceStop )
 		_buildMenu.AddAction( _buildActions.nextError )
 		_buildMenu.AddSeparator()
 		_buildMenu.AddAction( _buildActions.lockBuildFile )
 		_buildMenu.AddSeparator()
 		_buildMenu.AddAction( _buildActions.updateModules )
 		_buildMenu.AddAction( _buildActions.rebuildModules )
-		_buildMenu.AddAction( _buildActions.rebuildHelp )
-		_buildMenu.AddSeparator()
-		_buildMenu.AddAction( _forceStop )
 		_buildMenu.AddSeparator()
 		_buildMenu.AddAction( _buildActions.moduleManager )
 		
-		'View menu
+		'Window menu
 		'
+		_windowMenu=New Menu( "Window" )
+		_windowMenu.AddAction( _docsManager.nextDocument )
+		_windowMenu.AddAction( _docsManager.prevDocument )
+		_windowMenu.AddSeparator()
+		
 		_themesMenu=CreateThemesMenu( "Themes..." )
 		
-		_viewMenu=New Menu( "View" )
-		AddZoomActions( _viewMenu )
-		_viewMenu.AddSeparator()
-		_viewMenu.AddSubMenu( _themesMenu )
+		AddZoomActions( _windowMenu )
+		_windowMenu.AddSeparator()
+		_windowMenu.AddSubMenu( _themesMenu )
+		
 		
 		'Help menu
 		'
 		_helpMenu=New Menu( "Help" )
-		_helpMenu.AddAction( _helpActions.onlineHelp )
+		_helpMenu.AddAction( _helpActions.quickHelp )
 		_helpMenu.AddAction( _helpActions.viewManuals )
 		_helpMenu.AddSeparator()
+		_helpMenu.AddAction( _buildActions.rebuildHelp )
+		_helpMenu.AddSeparator()
+		_helpMenu.AddAction( _helpActions.onlineHelp )
+		_helpMenu.AddAction( _helpActions.mx2homepage )
 		_helpMenu.AddAction( _helpActions.uploadModules )
 		_helpMenu.AddSeparator()
 		_helpMenu.AddAction( _helpActions.about )
@@ -278,8 +296,10 @@ Class MainWindowInstance Extends Window
 		_menuBar=New MenuBar
 		_menuBar.AddMenu( _fileMenu )
 		_menuBar.AddMenu( _editMenu )
-		_menuBar.AddMenu( _buildMenu )
+		_menuBar.AddMenu( _findMenu )
 		_menuBar.AddMenu( _viewMenu )
+		_menuBar.AddMenu( _buildMenu )
+		_menuBar.AddMenu( _windowMenu )
 		_menuBar.AddMenu( _helpMenu )
 		
 		'Tool Bar
@@ -777,6 +797,7 @@ Class MainWindowInstance Extends Window
 	Field _findActions:FindActions
 	Field _buildActions:BuildActions
 	Field _helpActions:HelpActions
+	Field _viewActions:ViewActions
 	
 	Field _buildConsole:Console
 	Field _outputConsole:Console
@@ -799,8 +820,10 @@ Class MainWindowInstance Extends Window
 	Field _newFiles:Menu
 	Field _fileMenu:Menu
 	Field _editMenu:Menu
+	Field _findMenu:Menu
 	Field _viewMenu:Menu
 	Field _buildMenu:Menu
+	Field _windowMenu:Menu
 	Field _helpMenu:Menu
 	Field _menuBar:MenuBar
 	
