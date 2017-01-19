@@ -4,15 +4,22 @@ Namespace ted2go
 
 Class HelpActions
 
+	Field quickHelp:Action
 	Field onlineHelp:Action
 	Field viewManuals:Action
 	Field uploadModules:Action
 	Field about:Action
 	Field aboutTed2go:Action
 	Field makeBetter:Action
+	Field mx2homepage:Action
+	
 
 	Method New()
 	
+		quickHelp=New Action( "Quick help" )
+		quickHelp.Triggered=OnQuickHelp
+		quickHelp.HotKey=Key.F1
+		
 		onlineHelp=New Action( "Online help" )
 		onlineHelp.Triggered=lambda()
 		
@@ -71,6 +78,21 @@ Class HelpActions
 			OpenUrl( "https://paypal.me/engor/10" )
 		End
 		
+		mx2homepage=New Action( "Monkey2 homepage" )
+		mx2homepage.Triggered=lambda()
+		
+			OpenUrl( "http://monkey2.monkey-x.com/" )
+		End
 	End
 
+	
+	Private
+	
+	Field _docs:DocumentManager
+	
+	Method OnQuickHelp()
+	
+		MainWindow.ShowQuickHelp()
+	End
+	
 End

@@ -13,7 +13,7 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 
 	Method OnFilterKeyEvent( event:KeyEvent,textView:TextView ) Override
 	
-		Local codeView:=Cast<CodeTextView>(textView)
+		'Local codeView:=Cast<CodeTextView>(textView)
 		Local ctrl:=(event.Modifiers & Modifier.Control)
 		Local shift:=(event.Modifiers & Modifier.Shift)
 			

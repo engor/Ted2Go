@@ -29,12 +29,12 @@ Class DocumentManager
 			_openDocs=docs
 		End
 		
-		nextDocument=New Action( "Next file" )
+		nextDocument=New Action( "Next tab" )
 		nextDocument.Triggered=OnNextDocument
 		nextDocument.HotKey=Key.Tab
 		nextDocument.HotKeyModifiers=Modifier.Control
 
-		prevDocument=New Action( "Previous file" )
+		prevDocument=New Action( "Previous tab" )
 		prevDocument.Triggered=OnPrevDocument
 		prevDocument.HotKey=Key.Tab
 		prevDocument.HotKeyModifiers=Modifier.Control|Modifier.Shift

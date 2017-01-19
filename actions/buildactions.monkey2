@@ -344,7 +344,10 @@ Class BuildActions
 		
 		'progress.Open()
 		
-		MainWindow.ShowStatusBarText( progressText+" ..." )
+		Local s:=progressText
+		If Not s.EndsWith( "..." ) Then s+="..."
+		
+		MainWindow.ShowStatusBarText( s )
 		MainWindow.ShowStatusBarProgress( _console.Terminate )
 		
 		Local hasErrors:=False

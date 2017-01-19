@@ -30,7 +30,7 @@ Class FileActions
 		open.HotKeyModifiers=Modifier.Menu
 		open.Triggered=OnOpen
 		
-		close=New Action( "Close" )
+		close=New Action( "Close tab" )
 #if __HOSTOS__="macos"
 		close.HotKey=Key.W
 		close.HotKeyModifiers=Modifier.Menu
@@ -46,7 +46,7 @@ Class FileActions
 		closeToRight=New Action( "Close tabs to the right" )
 		closeToRight.Triggered=OnCloseToRight
 		
-		closeAll=New Action( "Close all" )
+		closeAll=New Action( "Close all tabs" )
 		closeAll.Triggered=OnCloseAll
 		
 		save=New Action( "Save" )

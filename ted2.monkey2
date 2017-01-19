@@ -22,12 +22,15 @@
 
 #Import "mainwindow"
 #Import "documentmanager"
-#Import "fileactions"
-#Import "editactions"
-#Import "findactions"
+
+#Import "actions/fileactions"
+#Import "actions/editactions"
+#Import "actions/buildactions"
+#Import "actions/helpactions"
+#Import "actions/findactions"
+#Import "actions/viewactions"
+
 #Import "finddialog"
-#Import "buildactions"
-#Import "helpactions"
 #Import "debugview"
 #Import "projectview"
 #Import "helptree"
@@ -54,7 +57,48 @@
 
 #Import "mx2ccenv"
 
-#Import "ted2go"
+#Import "eventfilters/monkey2keyeventfilter"
+
+#Import "syntax/keywords"
+#Import "syntax/monkey2keywords"
+#Import "syntax/highlighter"
+#Import "syntax/monkey2highlighter"
+#Import "syntax/cpphighlighter"
+#Import "syntax/cppkeywords"
+#Import "syntax/codeformatter"
+#Import "syntax/monkey2formatter"
+
+#Import "views/codetextview"
+#Import "views/consoleext"
+#Import "views/listviewext"
+#Import "views/dialogext"
+#Import "views/autocompleteview"
+#Import "views/codetreeview"
+#Import "views/treeviewext"
+#Import "views/codegutterview"
+#Import "views/toolbarext"
+#Import "views/hint"
+#Import "views/htmlviewext"
+#Import "views/projectbrowser"
+#Import "views/tabviewext"
+#Import "views/statusbar"
+
+#Import "parsers/parser"
+#Import "parsers/monkey2parser"
+#Import "parsers/codeitem"
+#Import "parsers/parserplugin"
+
+#Import "utils/jsonutils"
+#Import "utils/utils"
+
+#Import "test_files/parsertests"
+
+#Import "themeimages"
+#Import "findinfilesdialog"
+
+#Import "prefs"
+#Import "prefsdialog"
+
 
 
 Namespace ted2go
