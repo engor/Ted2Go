@@ -541,8 +541,7 @@ Class AndroidProduct Extends BuildProduct
 	Method OnGetMx2ccOpts:String() Override
 
 		Local opts:=""
-		opts+=" ~q-assets="+ProductDir+"app/src/main/assets/~q"
-		opts+=" ~q-dlls="+ProductDir+"app/src/main/jniLibs/~q"
+		opts+=" ~q-product="+ProductDir+"~q"
 		
 		Return opts
 	End
