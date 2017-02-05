@@ -11,11 +11,13 @@ Class Prefs
 	Global AcUseTab:=True
 	Global AcUseEnter:=False
 	Global AcNewLineByEnter:=True
-	
 	'
 	Global MainToolBarVisible:=True
 	Global EditorToolBarVisible:=True
 	Global EditorGutterVisible:=True
+	'
+	Global SourceSortByType:=True
+	Global SourceShowInherited:=False
 	
 	Function LoadState( json:JsonObject )
 		
@@ -44,6 +46,14 @@ Class Prefs
 			EditorGutterVisible=j2["gutterVisible"].ToBool()
 			
 		Endif
+		
+		If json.Contains( "source" )
+		
+			Local j2:=json["source"].ToObject()
+			SourceSortByType=j2["sortByType"].ToBool()
+			SourceShowInherited=j2["showInherited"].ToBool()
+		
+		Endif
 	End
 	
 	Function SaveState( json:JsonObject )
@@ -64,6 +74,10 @@ Class Prefs
 		j["gutterVisible"]=New JsonBool( EditorGutterVisible )
 		json["editor"]=j
 		
+		j=New JsonObject
+		j["sortByType"]=New JsonBool( SourceSortByType )
+		j["showInherited"]=New JsonBool( SourceShowInherited )
+		json["source"]=j
 	End
 	
 End

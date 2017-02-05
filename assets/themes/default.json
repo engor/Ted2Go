@@ -14,8 +14,8 @@
 		"text-disabled": "#888",
 		"text-background": "#888",
 		
-		"textview-cursor":"#08f",
-		"textview-selection":"#888",
+		"textview-cursor":"#fff",
+		"textview-selection":"#88f",
 
 		"textview-color0":"#0000",
 		"textview-color1":"#fff",
@@ -31,9 +31,10 @@
 	
 	"fonts":{
 	
-		"normal":"DejaVuSans.ttf,16",
-		"fixedWidth":"DejaVuSansMono.ttf,16",
-		"small":"DejaVuSans.ttf,14"
+		"normal":"DejaVuSans.ttf,14",
+		"fixedWidth":"DejaVuSansMono.ttf,14",
+		"small":"DejaVuSans.ttf,13",
+		"editor":"DejaVuSansMono.ttf,16"
 	},
 	
 	"styles":{
@@ -115,7 +116,7 @@
 		},
 		
 		"TextView":{
-			"font":"fixedWidth",
+			"font":"editor",
 			"backgroundColor":"content"
 		},
 		
@@ -124,6 +125,7 @@
 		},
 		
 		"TextField":{
+			"font":"editor",
 			"padding":[ 2 ],
 			"margin":[ 2 ],
 			"skin":"button_skin.png",
@@ -169,7 +171,7 @@
 		
 		"MenuButton":{
 			"extends":"Label",
-			"padding":[8,4],
+			"padding":[8,3],
 			"states":{
 				"hover":{
 					"backgroundColor":"hover"
@@ -185,7 +187,8 @@
 		
 		"MenuBar":{
 			"extends":"ToolBar",
-			"backgroundColor":"content"
+			"backgroundColor":"content",
+			"margin":[ 0 ]
 		},
 		
 		"MenuSeparator":{

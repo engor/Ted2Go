@@ -14,9 +14,8 @@ Class PlainTextDocumentView Extends TextView
 		
 		ContentView.Style.Border=New Recti( -4,-4,4,4 )
 		
-		CursorColor=New Color( 0,.5,1 )
-
-		SelectionColor=New Color( .4,.4,.4 )
+		BlockCursor=False
+		CursorBlinkRate=2.5
 		
 		WordWrap=True
 	End

@@ -23,7 +23,7 @@ Class HelpActions
 		onlineHelp=New Action( "Online help" )
 		onlineHelp.Triggered=lambda()
 		
-			OpenUrl( "http://monkey2.monkey-x.com/modules-reference/" )
+			OpenUrl( "http://monkey2.monkey-x.com/monkey2-docs/" )
 		End
 		
 		viewManuals=New Action( "Browse manuals" )

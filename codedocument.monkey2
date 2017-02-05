@@ -423,29 +423,69 @@ Class CodeDocument Extends Ted2Document
 			MainWindow.GotoCodePosition( nav.filePath,nav.pos )
 		End
 		
+		' update 
+		Monkey2Parser.OnDoneParseModules+=Lambda()
+			UpdateCodeTree()
+		End
+		
 	End
 	
 	Method OnCreateBrowser:View() Override
 		
-		' CodeTree
-		If Not _treeView
+		If Not _browserView
+			
+			' sorting toolbar
+			_browserView=New DockingView
+			
+			Local bar:=New ToolBarExt
+			bar.Style=App.Theme.GetStyle( "SourceToolBar" )
+			bar.MaxSize=New Vec2i( 10000,30 )
+			Local btn:ToolButtonExt
+			
+			btn = bar.AddIconicButton( ThemeImages.Get( "sourcebar/sort_alpha.png" ),
+				Lambda()
+				End,
+				"Sort by type")
+			btn.ToggleMode=True
+			btn.IsToggled=Prefs.SourceSortByType
+			btn.Toggled+=Lambda( state:Bool )
+				' true - sort by alpha, false - sort by source
+				Prefs.SourceSortByType=state
+				_treeView.SortByType=state
+				UpdateCodeTree()
+			End
+			btn = bar.AddIconicButton( ThemeImages.Get( "sourcebar/filter_inherited.png" ),
+				Lambda()
+				End,
+				"Show inherited members")
+			btn.ToggleMode=True
+			btn.IsToggled=Prefs.SourceShowInherited
+			btn.Toggled+=Lambda( state:Bool )
+				Prefs.SourceShowInherited=state
+				_treeView.ShowInherited=state
+				UpdateCodeTree()
+			End
+			_browserView.AddView( bar,"top" )
+			
+			
 			
 			_treeView=New CodeTreeView
-			_treeView.SortType=CodeSortType.Type
+			_browserView.ContentView=_treeView
+			
+			_treeView.SortByType=Prefs.SourceSortByType
+			_treeView.ShowInherited=Prefs.SourceShowInherited
 			
 			' goto item from tree view
 			_treeView.NodeClicked+=Lambda( node:TreeView.Node )
 			
 				Local codeNode:=Cast<CodeTreeNode>( node )
 				Local item:=codeNode.CodeItem
-				Local pos:=item.ScopeStartPos
-				
-				JumpToPosition( Path,pos )
+				JumpToPosition( item.FilePath,item.ScopeStartPos )
 				
 			End
 		Endif
 		
-		Return _treeView
+		Return _browserView
 	End
 	
 	' not multipurpose method, need to move into plugin
@@ -677,6 +717,7 @@ Class CodeDocument Extends Ted2Document
 	Field _view:DockingView
 	Field _codeView:CodeDocumentView
 	Field _treeView:CodeTreeView
+	Field _browserView:DockingView
 	
 	Field _errors:=New Stack<BuildError>
 	Field _errMap:=New IntMap<String>
@@ -889,7 +930,7 @@ Class CodeItemIcons
 		Local kind:=item.KindStr
 		
 		Select kind
-			Case "const","interface","lambda","local","alias","operator"
+			Case "const","interface","lambda","local","alias","operator","inherited"
 				key=kind
 			Case "param"
 				key="*"
@@ -985,6 +1026,7 @@ Class CodeItemIcons
 		_icons["operator"]=Load( "operator.png" )
 		_icons["error"]=Load( "error.png" )
 		_icons["warning"]=Load( "warning.png" )
+		_icons["inherited"]=Load( "class.png" )
 				
 		_iconDefault=Load( "other.png" ) 
 		

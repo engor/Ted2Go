@@ -34,6 +34,7 @@
 	
 		"normal":"Verdana.ttf,16",
 		"fixedWidth":"Verdana.ttf,16",
+		"editor":"Verdana.ttf,16",
 		"small":"Verdana.ttf,14"
 	}
 }

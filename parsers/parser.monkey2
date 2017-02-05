@@ -20,7 +20,8 @@ Enum CodeItemKind
 	Local_,
 	Operator_,
 	Inner_,
-	Alias_
+	Alias_,
+	Inherited_
 End
 
 
@@ -44,6 +45,8 @@ Interface ICodeParser
 	
 	Method GetItemsForAutocomplete( ident:String,filePath:String,docLine:Int,target:List<CodeItem> )
 	Method CheckStartsWith:Bool( ident1:String,ident2:String )
+	
+	Method GetItem:CodeItem( ident:String )
 	
 	Property Items:List<CodeItem>()
 	Property ItemsMap:StringMap<List<CodeItem>>()
@@ -110,6 +113,10 @@ Class EmptyParser Implements ICodeParser
 	Method CheckStartsWith:Bool( ident1:String,ident2:String )
 		Return False
 	End
+	Method GetItem:CodeItem( ident:String )
+		Return Null
+	End
+	
 	
 	Private
 	

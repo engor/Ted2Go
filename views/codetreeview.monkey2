@@ -2,16 +2,10 @@
 Namespace ted2go
 
 
-Enum CodeSortType
-	Type,
-	Alpha,
-	Source
-End
-
-
 Class CodeTreeView Extends TreeViewExt
 	
-	Field SortType:=CodeSortType.Type
+	Field SortByType:=True
+	Field ShowInherited:=False
 	
 	Method Fill( fileType:String,path:String )
 	
@@ -111,36 +105,89 @@ Class CodeTreeView Extends TreeViewExt
 		
 	Method AddTreeItem( item:CodeItem,node:TreeView.Node,parser:ICodeParser )
 	
-		'parser.RefineRawType( item ) 'refine all visible items
-		
 		Local n:=New CodeTreeNode( item,node )
 		
 		' restore expand state
 		RestoreNodeExpand( n )
 		
-		If item.Children = Null Return
+		If item.Children = Null And Not ShowInherited Return
+		
+		Local list:=New List<CodeItem>
+		
+		If item.Children<>Null Then list.AddAll( item.Children )
+		
+		Local inherRoot:CodeItem=Null
 		
 		' sorting only root class members
-		Select item.Kind
-			Case CodeItemKind.Class_,CodeItemKind.Struct_,CodeItemKind.Enum_
-				SortItems( item.Children )
+		If item.IsLikeClass
+				
+			SortItems( list )
+			
+			If ShowInherited
+				Local lst:=New List<CodeItem>
+				GetInherited( item,parser,lst )
+				If lst<>Null And Not lst.Empty
+					inherRoot=New CodeItem( "[ Inherited members ]" )
+					inherRoot.Children=lst
+					inherRoot.KindStr="inherited"
+					list.AddFirst( inherRoot )
+					'For Local i:=Eachin lst
+					'	Local children:=i.Children
+					'	
+					'Next
+				Endif
+			Endif
 		End
 		
-		For Local i:=Eachin item.Children
+		If list.Empty Return
+		
+		Local added:=New StringStack
+		For Local i:=Eachin list
 			If i.Kind = CodeItemKind.Param_ Continue
+			Local txt:=i.Text
+			If added.Contains( txt ) Continue
+			added.Add( txt )
 			AddTreeItem( i,n,parser )
 		End
-				
+		
 	End
 	
 	Method SortItems( list:List<CodeItem> )
 	
-		Select SortType
-		Case CodeSortType.Type
+		If SortByType
 			CodeItemsSorter.SortByType( list,False,True )
+		Else
+			CodeItemsSorter.SortByPosition( list )
 		End
 	End
-		
+	
+	Method GetInherited:List<CodeItem>( item:CodeItem,parser:ICodeParser,result:List<CodeItem> )
+	
+		If item.SuperTypesStr=Null Return Null
+	
+		For Local t:=Eachin item.SuperTypesStr
+			Local sup:=parser.GetItem( t )
+			If Not sup Continue
+			If sup.Children<>Null
+				Local it:=New CodeItem( t )
+				it.KindStr=sup.KindStr
+				it.Children=sup.Children
+				result.Add( it )
+				'Local list:=New List<CodeItem>
+				'For Local child:=Eachin sup.Children
+					' grab some properties
+					'it=New CodeItem( child.Ident)
+					'it.KindStr=child.KindStr
+					'it.Type=child.Type
+					'it.FilePath=child.FilePath
+					'it.ScopeStartPos=child.ScopeStartPos
+					
+				'Next
+			Endif
+			If sup.IsLikeClass Then GetInherited( sup,parser,result )
+		Next
+		Return result
+	End
 End
 
 

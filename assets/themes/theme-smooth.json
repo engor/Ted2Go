@@ -56,7 +56,6 @@
 		"TextView":{
 			"border":[1,0,1,1],
 			"borderColor":"border",
-			"font":"fixedWidth",
 			"backgroundColor":"content"
 		},
 
@@ -266,6 +265,7 @@
 	"fonts":{
 		"normal":"DejaVuSans.ttf,16",
 		"fixedWidth":"DejaVuSans.ttf,15",
+		"editor":"DejaVuSansMono.ttf,15",
 		"small":"DejaVuSans.ttf,15"
 	}
 }

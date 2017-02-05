@@ -312,19 +312,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 				If Not items.Empty
 					For Local i:=Eachin items
-						If Not CheckIdent( i.Ident,firstIdent,onlyOne,False )
-							'Print "cont1: "+i.Ident
-							Continue
-						Endif
-						If Not CheckAccessInScope( i,scope )
-							'Print "cont2: "+i.Ident
-							Continue
-						Endif
+						If i.Ident <> firstIdent Continue
+						If Not CheckAccessInScope( i,scope ) Continue
 						' additional checking for the first ident
-						If IsLocalMember( i ) And i.ScopeStartPos.x > docLine
-							'Print "cont3: "+i.Ident
-							Continue
-						Endif
+						If IsLocalMember( i ) And i.ScopeStartPos.x > docLine Continue
 						If Not onlyOne
 							item=i
 							Exit
@@ -345,11 +336,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		' and check in global scope
 		If item = Null Or onlyOne
 			For Local i:=Eachin Items
-				'Print "global 1: "+i.Scope
-				If Not CheckIdent( i.Ident,firstIdent,onlyOne,False ) Continue
-				'If Not CheckAccessInGlobal( i,filePath ) Continue
-				'If IsLocalMember( i ) And i.ScopeStartPos.x > docLine Continue
-				'Print "global 2"
+				If i.Ident <> firstIdent Continue
 				If Not onlyOne
 					item=i
 					Exit
@@ -405,14 +392,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 				If Not items.Empty
 					For Local i:=Eachin items
-						If Not CheckIdent( i.Ident,identPart,last,False )
-							'Print "continue 1: "+i.Ident
-							Continue
-						Endif
-						'If Not CheckAccessInClassType( i,scopeClass,forceProtected )
-							'Print "continue 2: "+i.Ident
-						'	Continue
-						'Endif
+						If i.Ident <> identPart Continue
 						item=i
 						If last
 							If Not staticOnly Or IsStaticMember( i )
@@ -433,6 +413,14 @@ Class Monkey2Parser Extends CodeParserPlugin
 	End
 	
 	Method RefineRawType( item:CodeItem )
+	End
+	
+	Method GetItem:CodeItem( ident:String )
+		
+		For Local i:=Eachin Items
+			If i.Ident=ident Return i
+		Next
+		Return Null
 	End
 	
 	Method GetItemsForAutocomplete( ident:String,filePath:String,docLine:Int,target:List<CodeItem> )

@@ -306,6 +306,8 @@ Class MainWindowInstance Extends Window
 		'
 		If Prefs.MainToolBarVisible
 			_toolBar=New ToolBarExt
+			_toolBar.Style=GetStyle( "MainToolBar" )
+			_toolBar.MaxSize=New Vec2i( 10000,40 )
 			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/new_file.png" ),_fileActions.new_.Triggered,"New file (Ctrl+N)" )
 			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_file.png" ),_fileActions.open.Triggered,"Open file... (Ctrl+O)" )
 			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_project.png" ),_projectView.openProject.Triggered,"Open project..." )
@@ -575,7 +577,7 @@ Class MainWindowInstance Extends Window
 				Endif
 			Else
 				Local nmspace:=item.Namespac
-				If parentIdent nmspace+="."+parentIdent
+				If parentIdent Then nmspace+="."+parentIdent
 				ShowStatusBarText( "("+item.KindStr+") "+item.Text+"    |  "+nmspace+"  |  "+StripDir( item.FilePath )+"  |  line "+(item.ScopeStartPos.x+1) )
 			Endif
 			

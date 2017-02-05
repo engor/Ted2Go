@@ -62,9 +62,9 @@ Class CodeItem
 			Select _kind
 				Case CodeItemKind.Function_,CodeItemKind.Method_,CodeItemKind.Lambda_,CodeItemKind.Operator_
 					If Type<>Null And Type.ident<>"Void"
-						s+=":"+Type.ToString()
+						s+=" : "+Type.ToString()
 					Endif
-					s+=(HasParams ? "( "+ParamsStr+" )" Else "()")
+					s+=(HasParams ? " ( "+ParamsStr+" )" Else "()")
 				
 				Case CodeItemKind.Class_,CodeItemKind.Interface_,CodeItemKind.Struct_,CodeItemKind.Enum_
 					' nothing
@@ -77,10 +77,11 @@ Class CodeItem
 				
 				Default
 					If Type<>Null And Type.IsLikeFunc
-						If Type.ident<>"Void" Then s+=":"+Type.ToString()
-						s+=(HasParams ? "( "+ParamsStr+" )" Else "()")
+						If Type.ident<>"Void" Then s+=" : "+Type.ToString()
+						s+=(HasParams ? " ( "+ParamsStr+" )" Else "()")
 					Else
-						s+=" : "+Type.ToString()
+						Local t:=Type.ToString()
+						If t Then s+=" : "+t
 					Endif
 					
 			End
@@ -329,6 +330,8 @@ Class CodeItem
 			_kind=CodeItemKind.Inner_
 		Case "alias"
 			_kind=CodeItemKind.Alias_
+		Case "inherited"
+			_kind=CodeItemKind.Inherited_
 		End
 	End
 	
@@ -443,6 +446,27 @@ Struct CodeItemsSorter Final
 		list.Sort( _sorterByType )
 	End
 	
+	Function SortByPosition( list:List<CodeItem> )
+	
+		If _sorterByPosition = Null
+			_sorterByPosition=Lambda:Int( lhs:CodeItem,rhs:CodeItem )
+	
+				Local lp:=lhs.ScopeStartPos
+				Local rp:=rhs.ScopeStartPos
+	
+				Local r:=0
+				If lp.x<rp.x
+					r=-1
+				Else If lp.x>rp.y
+					r=1
+				Endif
+				Return r
+			End
+		Endif
+	
+		list.Sort( _sorterByPosition )
+	End
+	
 	Function SortByIdent( list:Stack<ListViewItem>,etalonIdent:String )
 		
 		_etalonIdent=etalonIdent
@@ -511,6 +535,7 @@ Struct CodeItemsSorter Final
 	Global _etalonIdent:String
 	Global _sorterByType:Int( lhs:CodeItem,rhs:CodeItem )
 	Global _sorterByIdent:Int( lhs:ListViewItem,rhs:ListViewItem )
+	Global _sorterByPosition:Int( lhs:CodeItem,rhs:CodeItem )
 	
 	Function GetItemPriority:Int( item:CodeItem,inverse:Bool=False )
 		
