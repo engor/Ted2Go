@@ -29,9 +29,11 @@ End
 
 
 Class CodeDocumentView Extends Ted2CodeTextView
-
+	
+	
 	Method New( doc:CodeDocument )
 	
+		
 		_doc=doc
 		
 		Document=_doc.TextDocument
@@ -645,7 +647,7 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Method ShowAutocomplete( ident:String="" )
-		'check ident
+		
 		If ident = "" Then ident=_codeView.IdentBeforeCursor()
 		
 		'show
@@ -662,13 +664,22 @@ Class CodeDocument Extends Ted2Document
 		Local cursorRect:=_codeView.CursorRect
 		Local scroll:=_codeView.Scroll
 		Local tvFrame:=_codeView.Frame
+		Local yy:=cursorRect.Top-scroll.y
+		
+		' get absolute Y of codeView inside of window
+		Local v:View=_codeView
+		While v.Parent And v.Parent<>MainWindow
+			v=v.Parent
+			yy+=v.Frame.Top
+		Wend
+		
 		frame.Left=tvFrame.Left-scroll.x+cursorRect.Left+100
 		frame.Right=frame.Left+w
-		frame.Top=cursorRect.Top-scroll.y
+		frame.Top=yy
 		frame.Bottom=frame.Top+h
 		' fit dialog into window
 		If frame.Bottom > tvFrame.Bottom
-			Local dy:=frame.Bottom-tvFrame.Bottom+5
+			Local dy:=frame.Bottom-tvFrame.Bottom-64
 			frame.Top-=dy
 			frame.Bottom-=dy
 		Endif

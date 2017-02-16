@@ -238,6 +238,13 @@ Class ListViewExt Extends ScrollableView
 			_selIndex=index
 			OnItemChoosen()
 			
+		Case EventType.MouseClick
+		
+			Local index:=(MouseLocation.y+Scroll.y)/_lineH
+		
+			_selIndex=index
+			OnItemChoosen()
+			
 		Default
 			Return
 		End
