@@ -51,10 +51,15 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		'AutoComplete
 		If AutoComplete = Null Then AutoComplete=New AutocompleteDialog( "" )
-		AutoComplete.OnChoosen+=Lambda( ident:String,text:String,item:CodeItem )
+		AutoComplete.OnChoosen+=Lambda( result:AutocompleteResult )
 			If App.KeyView = Self
 				
-				text=_doc.PrepareForInsert( ident,text,LineTextAtCursor,PosInLineAtCursor,item )
+				Local ident:=result.ident
+				Local text:=result.text
+				Local item:=result.item
+				Local bySpace:=result.bySpace
+				
+				text=_doc.PrepareForInsert( ident,text,Not bySpace,LineTextAtCursor,PosInLineAtCursor,item )
 				
 				SelectText( Cursor,Cursor-AutoComplete.LastIdentPart.Length )
 				ReplaceText( text )
@@ -128,6 +133,8 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				Case Key.Space
 					If event.Modifiers & Modifier.Control
 						Return
+					'Else
+					'	if AutoComplete.IsOpened And Prefs.AcUseSpace Return
 					Endif
 				
 				Case Key.Backspace
@@ -491,7 +498,7 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	' not multipurpose method, need to move into plugin
-	Method PrepareForInsert:String( ident:String,text:String,textLine:String,cursorPosInLine:Int,item:CodeItem )
+	Method PrepareForInsert:String( ident:String,text:String,addSpace:Bool,textLine:String,cursorPosInLine:Int,item:CodeItem )
 		
 		If FileType <> ".monkey2" Return ident
 		
@@ -511,13 +518,18 @@ Class CodeDocument Extends Ted2Document
 			Return ident
 		Endif
 		
+		If ident="Cast" Return ident+"<"
+		If ident="Typeof" Return ident+"("
+		
+		If Not addSpace Return ident
+		
 		Select ident
 			
 			' try to add space
 			Case "Namespace","Using","Import","New","Eachin","Where","Alias","Const","Local","Global","Field","Method","Function","Property","Operator ","Enum","Class","Interface","Struct","Extends","Implements","If","Then","Elseif","While","Until","For","To","Step","Select","Case","Catch","Throw","Print"
 			
 				Local len:=textLine.Length
-				Print len+","+cursorPosInLine+","+textLine
+				
 				' end or line
 				If cursorPosInLine >= len-1 Then Return ident+" "
 				
@@ -525,18 +537,6 @@ Class CodeDocument Extends Ted2Document
 					Return ident+" "
 				Endif
 			
-			
-			' try to add <
-			Case "Cast"
-			
-				Return ident+"<"
-			
-			
-			' try to add (
-			Case "Typeof"
-			
-				Return ident+"("
-				
 		End
 		
 		Return ident 'as is

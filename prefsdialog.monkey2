@@ -7,7 +7,6 @@ Class PrefsDialog Extends DialogExt
 		
 		Title="Prefs"
 		
-		
 		_acShowAfter=New TextField( ""+Prefs.AcShowAfter )
 		
 		_acEnabled=New CheckButton( "Enabled" )
@@ -21,6 +20,9 @@ Class PrefsDialog Extends DialogExt
 		
 		_acUseEnter=New CheckButton( "Choose by Enter" )
 		_acUseEnter.Checked=Prefs.AcUseEnter
+		
+		_acUseSpace=New CheckButton( "Choose by Space" )
+		_acUseSpace.Checked=Prefs.AcUseSpace
 		
 		_acNewLineByEnter=New CheckButton( "Add new line (by Enter)" )
 		_acNewLineByEnter.Checked=Prefs.AcNewLineByEnter
@@ -52,6 +54,7 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( _acUseTab,"top" )
 		docker.AddView( _acUseEnter,"top" )
 		docker.AddView( _acNewLineByEnter,"top" )
+		docker.AddView( _acUseSpace,"top" )
 		docker.AddView( _acKeywordsOnly,"top" )
 		docker.AddView( New Label( " " ),"top" )
 		docker.AddView( New Label( "(Restart IDE to see all changes)" ),"top" )
@@ -78,6 +81,7 @@ Class PrefsDialog Extends DialogExt
 	Field _acEnabled:CheckButton
 	Field _acUseTab:CheckButton
 	Field _acUseEnter:CheckButton
+	Field _acUseSpace:CheckButton
 	Field _acNewLineByEnter:CheckButton
 	Field _acKeywordsOnly:CheckButton
 	Field _acShowAfter:TextField
@@ -93,6 +97,7 @@ Class PrefsDialog Extends DialogExt
 		Prefs.AcEnabled=_acEnabled.Checked
 		Prefs.AcUseTab=_acUseTab.Checked
 		Prefs.AcUseEnter=_acUseEnter.Checked
+		Prefs.AcUseSpace=_acUseSpace.Checked
 		Prefs.AcNewLineByEnter=_acNewLineByEnter.Checked
 		Prefs.AcKeywordsOnly=_acKeywordsOnly.Checked
 		Local count:=Max( 1,Int( _acShowAfter.Text ) )

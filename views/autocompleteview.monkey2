@@ -77,9 +77,19 @@ Class AutocompleteListView Extends ListViewExt
 End
 
 
+Struct AutocompleteResult
+	
+	Field ident:String
+	Field text:String
+	Field item:CodeItem
+	Field bySpace:Bool
+	
+End
+
+
 Class AutocompleteDialog Extends DialogExt
 	
-	Field OnChoosen:Void( ident:String,text:String,item:CodeItem )
+	Field OnChoosen:Void( result:AutocompleteResult )
 	
 	Method New( title:String )
 		Self.New( title,800,480 )
@@ -200,7 +210,7 @@ Class AutocompleteDialog Extends DialogExt
 		If onlyOne
 			Local kw:=GetKeywords( fileType )
 			For Local i:=Eachin kw
-				If parser.CheckStartsWith( i.Text,lastIdentLower )
+				If i.Text.ToLower().StartsWith( lastIdentLower )
 					result.Add( i )
 				Endif
 			Next
@@ -271,6 +281,7 @@ Class AutocompleteDialog Extends DialogExt
 	End
 	
 	Method OnKeyFilter( event:KeyEvent )
+		
 		If Not IsOpened Return
 		If event.Type = EventType.KeyDown Or event.Type = EventType.KeyRepeat
 			Select event.Key
@@ -301,6 +312,17 @@ Class AutocompleteDialog Extends DialogExt
 					OnItemChoosen( _view.CurrentItem )
 					event.Eat()
 				Endif
+			Case Key.Space
+				If Prefs.AcUseSpace
+					OnItemChoosen( _view.CurrentItem,True )
+					event.Eat()
+				Endif
+			Case Key.Period
+				If Prefs.AcUseSpace
+					OnItemChoosen( _view.CurrentItem )
+					event.Eat()
+				Endif
+			
 			Case Key.Backspace
 			Case Key.CapsLock
 			Case Key.LeftShift,Key.RightShift
@@ -314,7 +336,8 @@ Class AutocompleteDialog Extends DialogExt
 		Endif
 	End
 	
-	Method OnItemChoosen( item:ListViewItem )
+	Method OnItemChoosen( item:ListViewItem,bySpace:Bool=False )
+		
 		Local si:=Cast<CodeListViewItem>( item )
 		Local ident:="",text:=""
 		Local code:CodeItem=Null
@@ -326,12 +349,17 @@ Class AutocompleteDialog Extends DialogExt
 			ident=item.Text
 			text=item.Text
 		End
-		
-		OnChoosen( ident,text,code )
+		Local result:=New AutocompleteResult
+		result.ident=ident
+		result.text=text
+		result.item=code
+		result.bySpace=bySpace
+		OnChoosen( result )
 		Hide()
 	End
 	
 	Method UpdateKeywords( fileType:String )
+		
 		'keywords
 		Local kw:=KeywordsManager.Get( fileType )
 		Local list:=New List<ListViewItem>

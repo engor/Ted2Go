@@ -10,6 +10,7 @@ Class Prefs
 	Global AcShowAfter:=2
 	Global AcUseTab:=True
 	Global AcUseEnter:=False
+	Global AcUseSpace:=True
 	Global AcNewLineByEnter:=True
 	'
 	Global MainToolBarVisible:=True
@@ -29,6 +30,7 @@ Class Prefs
 			AcShowAfter=j2["showAfter"].ToNumber()
 			AcUseTab=j2["useTab"].ToBool()
 			AcUseEnter=j2["useEnter"].ToBool()
+			AcUseSpace=GetJsonBool( j2,"useSpace",AcUseSpace )
 			AcNewLineByEnter=j2["newLineByEnter"].ToBool()
 			
 		Endif
@@ -64,6 +66,7 @@ Class Prefs
 		j["showAfter"]=New JsonNumber( AcShowAfter )
 		j["useTab"]=New JsonBool( AcUseTab )
 		j["useEnter"]=New JsonBool( AcUseEnter )
+		j["useSpace"]=New JsonBool( AcUseSpace )
 		j["newLineByEnter"]=New JsonBool( AcNewLineByEnter )
 		json["completion"]=j
 		
@@ -80,4 +83,10 @@ Class Prefs
 		json["source"]=j
 	End
 	
+End
+
+
+Function GetJsonBool:Bool( json:Map<String,JsonValue>,key:String,def:Bool )
+	
+	Return json[key] ? json[key].ToBool() Else def
 End
