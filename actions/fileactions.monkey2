@@ -36,13 +36,8 @@ Class FileActions
 		open.Triggered=OnOpen
 		
 		close=New Action( "Close tab" )
-#if __TARGET__="macos"
 		close.HotKey=Key.W
 		close.HotKeyModifiers=Modifier.Menu
-#else
-		close.HotKey=Key.F4
-		close.HotKeyModifiers=Modifier.Menu
-#endif
 		close.Triggered=OnClose
 		
 		closeOthers=New Action( "Close other tabs" )
@@ -339,7 +334,17 @@ Class FileActions
 	
 	Method OnPrefs()
 	
-		If Not _prefsDialog Then _prefsDialog=New PrefsDialog
+		If Not _prefsDialog
+			_prefsDialog=New PrefsDialog
+			
+			_prefsDialog.Apply+=Lambda()
+			
+				For Local d:=Eachin _docs.OpenDocuments
+					Local tv:=Cast<CodeTextView>( d.TextView )
+					If tv Then tv.ShowWhiteSpaces=Prefs.EditorShowWhiteSpaces
+				Next
+			End
+		Endif
 		_prefsDialog.Show()
 	End
 	

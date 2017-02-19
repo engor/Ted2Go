@@ -18,17 +18,18 @@ Class CodeTextView Extends TextView
 		
 		CursorMoved += OnCursorMoved
 		
+		UpdateColors2()
 	End
 	
 	Method IsCursorAtTheEndOfLine:Bool()
-	
+		
 		Local line:=Document.FindLine( Cursor )
 		Local pos:=Document.EndOfLine( line )
 		Return pos=Cursor
 	End
 	
 	Method IdentAtCursor:String()
-	
+		
 		Local text:=Text
 		Local start:=Cursor
 		
@@ -52,7 +53,7 @@ Class CodeTextView Extends TextView
 	End
 	
 	Method IdentBeforeCursor:String( withDots:Bool=True )
-	
+		
 		Local text:=Text
 		Local cur:=Cursor
 		Local n:=Cursor-1
@@ -75,7 +76,7 @@ Class CodeTextView Extends TextView
 	End
 	
 	Method FullIdentAtCursor:String()
-	
+		
 		Local text:=Text
 		Local cur:=Cursor
 		Local n:=Cursor-1
@@ -105,7 +106,7 @@ Class CodeTextView Extends TextView
 	End
 	
 	Method FirstSelectedLine:Int()
-	
+		
 		Local min:=Min( Anchor,Cursor )
 		Return Document.FindLine( min )
 	End
@@ -180,6 +181,14 @@ Class CodeTextView Extends TextView
 		Return New Vec2i( LineNumAtAnchor,PosInLineAtAnchor )
 	End
 	
+	Property ShowWhiteSpaces:Bool()
+	
+		Return _showWhiteSpaces
+	
+	Setter( value:Bool )
+	
+		_showWhiteSpaces=value
+	End
 	
 	Protected
 	
@@ -392,10 +401,36 @@ Class CodeTextView Extends TextView
 		If Formatter Then Formatter.Format( Self,all )
 	End
 	
+	Method OnRenderContent( canvas:Canvas ) Override
+	
+		Super.OnRenderContent( canvas )
+		
+		Local clip:=VisibleRect
+	
+		Local firstLine:=LineAtPoint( New Vec2i( 0,clip.Top ) ) 
+		Local lastLine:=LineAtPoint( New Vec2i( 0,clip.Bottom-1 ) )+1
+		
+		For Local line:=firstLine Until lastLine
+			
+			RenderLineDecor( canvas,line )
+		Next
+	
+	End
+	
+	Method OnThemeChanged() Override
+	
+		UpdateColors2()
+	End
 	
 	Private
 	
 	Field _line:Int
+	Field _whitespacesColor:Color
+	Field _showWhiteSpaces:Bool
+	Field _font:Font
+	Field _charw:Int
+	Field _charh:Int
+	Field _tabw:Int
 	
 	Method OnCursorMoved()
 		
@@ -408,6 +443,109 @@ Class CodeTextView Extends TextView
 		'If Cursor <> Anchor Return
 		'DoFormat( True )
 		
+	End
+	
+	Method UpdateColors2()
+		
+		_whitespacesColor=App.Theme.GetColor( "textview-whitespaces" )
+	End
+	
+	Method RenderLineDecor( canvas:Canvas,line:Int )
+	
+		Local text:=Document.Text
+		Local colors:=Document.Colors
+	
+		Local i0:=Document.StartOfLine( line )
+		Local eol:=Document.EndOfLine( line )
+	
+		Local x0:=0,y0:=LineRect( line ).Top
+		
+		While i0<eol
+	
+			Local w:=WordWidth2( text,i0,eol,x0 )
+			Local l:=WordLength2( text,i0,eol )
+	
+			If text[i0]<=32
+				If _showWhiteSpaces And text[i0]=9 'tab
+					canvas.Color=_whitespacesColor
+					Local ww:=w/l
+					Local xx:=x0+ww
+					For Local i:=1 Until l
+						canvas.DrawLine( xx,y0,xx,y0+_charh )
+						xx+=ww
+					Next
+				Endif
+			Endif
+			
+			i0+=l
+			x0+=w
+			
+		Wend
+	
+	End
+	
+	Method WordLength2:Int( text:String,i0:Int,eol:Int )
+	
+		Local i1:=i0
+	
+		If text[i1]<=32
+			While i1<eol And text[i1]<=32
+				i1+=1
+			Wend
+		Else If IsIdent( text[i1] )
+			While i1<eol And IsIdent( text[i1] )
+				i1+=1
+			Wend
+		Else
+			While i1<eol And text[i1]>32 And Not IsIdent( text[i1] )
+				i1+=1
+			Wend
+		Endif
+	
+		Return i1-i0
+	End
+	
+	Method WordWidth2:Int( text:String,i0:Int,eol:Int,x0:Int )
+	
+		Local i1:=i0,x1:=x0
+	
+		If text[i0]<=32
+			While i1<eol And text[i1]<=32
+				If text[i1]=9
+					x1=Int( (x1+_tabw)/_tabw ) * _tabw
+				Else
+					x1+=_charw
+				Endif
+				i1+=1
+			Wend
+		Else 
+			If IsIdent( text[i1] )
+				While i1<eol And IsIdent( text[i1] )
+					i1+=1
+				Wend
+			Else
+				While i1<eol And text[i1]>32 And Not IsIdent( text[i1] )
+					i1+=1
+				Wend
+			Endif
+			x1+=_font.TextWidth( text.Slice( i0,i1 ) )
+		Endif
+	
+		Return x1-x0
+	End
+	
+	Method OnValidateStyle() Override
+	
+		Super.OnValidateStyle()
+		
+		Local style:=RenderStyle
+	
+		_font=style.Font
+	
+		_charw=_font.TextWidth( "X" )
+		_charh=_font.Height
+	
+		_tabw=_charw*TabStop
 	End
 	
 End

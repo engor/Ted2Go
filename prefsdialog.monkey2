@@ -3,6 +3,8 @@ Namespace ted2go
 
 Class PrefsDialog Extends DialogExt
 
+	Field Apply:Void()
+	
 	Method New()
 		
 		Title="Prefs"
@@ -36,6 +38,9 @@ Class PrefsDialog Extends DialogExt
 		_mainToolBarVisible=New CheckButton( "ToolBar visible" )
 		_mainToolBarVisible.Checked=Prefs.MainToolBarVisible
 		
+		_editorShowWhiteSpaces=New CheckButton( "White spaces visible" )
+		_editorShowWhiteSpaces.Checked=Prefs.EditorShowWhiteSpaces
+		
 		Local after:=New DockingView
 		after.AddView( New Label( "Show after" ),"left" )
 		after.AddView( _acShowAfter,"left" )
@@ -47,6 +52,7 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( New Label( "[Code Editor]" ),"top" )
 		docker.AddView( _editorToolBarVisible,"top" )
 		docker.AddView( _editorGutterVisible,"top" )
+		docker.AddView( _editorShowWhiteSpaces,"top" )
 		docker.AddView( New Label( " " ),"top" )
 		docker.AddView( New Label( "[Completion]" ),"top" )
 		docker.AddView( _acEnabled,"top" )
@@ -64,10 +70,6 @@ Class PrefsDialog Extends DialogExt
 		
 		Local apply:=AddAction( "Apply" )
 		apply.Triggered=OnApply
-		
-		Local close:=AddAction( "Cancel" )
-		SetKeyAction( Key.Escape,close )
-		close.Triggered=Hide
 		
 		_acShowAfter.Activated+=_acShowAfter.MakeKeyView
 		
@@ -88,6 +90,7 @@ Class PrefsDialog Extends DialogExt
 	
 	Field _editorToolBarVisible:CheckButton
 	Field _editorGutterVisible:CheckButton
+	Field _editorShowWhiteSpaces:CheckButton
 	
 	Field _mainToolBarVisible:CheckButton
 	
@@ -105,10 +108,12 @@ Class PrefsDialog Extends DialogExt
 		
 		Prefs.EditorToolBarVisible=_editorToolBarVisible.Checked
 		Prefs.EditorGutterVisible=_editorGutterVisible.Checked
+		Prefs.EditorShowWhiteSpaces=_editorShowWhiteSpaces.Checked
 		
 		Prefs.MainToolBarVisible=_mainToolBarVisible.Checked
 		
 		Hide()
+		Apply()
 	End
 	
 End

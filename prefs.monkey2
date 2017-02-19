@@ -16,9 +16,11 @@ Class Prefs
 	Global MainToolBarVisible:=True
 	Global EditorToolBarVisible:=True
 	Global EditorGutterVisible:=True
+	Global EditorShowWhiteSpaces:=False
 	'
 	Global SourceSortByType:=True
 	Global SourceShowInherited:=False
+	
 	
 	Function LoadState( json:JsonObject )
 		
@@ -46,6 +48,7 @@ Class Prefs
 			Local j2:=json["editor"].ToObject()
 			EditorToolBarVisible=j2["toolBarVisible"].ToBool()
 			EditorGutterVisible=j2["gutterVisible"].ToBool()
+			EditorShowWhiteSpaces=GetJsonBool( j2,"showWhiteSpaces",EditorShowWhiteSpaces )
 			
 		Endif
 		
@@ -75,6 +78,7 @@ Class Prefs
 		j=New JsonObject
 		j["toolBarVisible"]=New JsonBool( EditorToolBarVisible )
 		j["gutterVisible"]=New JsonBool( EditorGutterVisible )
+		j["showWhiteSpaces"]=New JsonBool( EditorShowWhiteSpaces )
 		json["editor"]=j
 		
 		j=New JsonObject

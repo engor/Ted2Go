@@ -17,6 +17,7 @@
 		"textview-cursor":"#fff",
 		"textview-selection":"#88f",
 		"textview-cursor-line":"#2000",
+		"textview-whitespaces":"#2aaa",
 
 		"textview-color0":"#0000",
 		"textview-color1":"#fff",

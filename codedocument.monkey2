@@ -33,6 +33,8 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	
 	Method New( doc:CodeDocument )
 	
+		ShowWhiteSpaces=Prefs.EditorShowWhiteSpaces
+		
 		_doc=doc
 		
 		Document=_doc.TextDocument

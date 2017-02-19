@@ -28,7 +28,7 @@ Function FixTypeIdent:String( ident:String )
 	Case "ulong"
 		Return "ULong"
 	Case "ushort"
-		Return "UShort"		
+		Return "UShort"
 	End
 	Return ident
 End
