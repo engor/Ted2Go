@@ -2,6 +2,14 @@
 Namespace ted2go
 
 
+Struct UsingInfo
+	
+	Field usings:String[]
+	Field nspace:String
+	
+End
+
+
 Function FixTypeIdent:String( ident:String )
 	
 	If ident.StartsWith( "@" ) Then ident=ident.Slice( 1 )
@@ -117,7 +125,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local json:=str.Slice( i )		
 		Local jobj:=JsonObject.Parse( json )
 		
-		Local nmspace:= jobj.Contains( "namespace" ) ? jobj["namespace"].ToString() Else ""
+		Local nspace:= jobj.Contains( "namespace" ) ? jobj["namespace"].ToString() Else ""
 		
 		
 		If jobj.Contains( "members" )
@@ -128,7 +136,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Items.AddAll( items )
 			
 			For Local i:=Eachin items
-				i.Namespac=nmspace
+				i.Namespac=nspace
 				i.IsModuleMember=isModule
 			Next
 			'Print "file parsed: "+filePath+", items.count: "+items.Count()
@@ -147,14 +155,18 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Next
 		Endif
 		
+		Local useInfo:=New UsingInfo
+		useInfo.nspace=nspace
+		
 		If jobj.Contains( "usings" )
 			Local jarr:=jobj["usings"].ToArray()
 			Local arr:=New String[jarr.Length]
 			For Local i:=0 Until jarr.Length
 				arr[i]=jarr[i].ToString()
 			Next
-			UsingsMap[filePath]=arr
+			useInfo.usings=arr
 		Endif
+		UsingsMap[filePath]=useInfo
 		
 		Return Null
 	End
@@ -432,7 +444,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return Null
 	End
 	
-	Method GetItemsForAutocomplete( ident:String,filePath:String,docLine:Int,target:List<CodeItem>,usingsFilter:String[]=Null )
+	Method GetItemsForAutocomplete( ident:String,filePath:String,docLine:Int,target:List<CodeItem>,usingsFilter:Stack<String> =Null )
 		
 		Local idents:=ident.Split( "." )
 				
@@ -826,9 +838,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
-	Method CheckUsingsFilter:Bool( item:CodeItem,usingsFilter:String[] )
+	Method CheckUsingsFilter:Bool( item:CodeItem,usingsFilter:StringStack )
 		
-		If Not usingsFilter Return True
+		If Not usingsFilter Or usingsFilter.Empty Return True
 		
 		For Local u:=Eachin usingsFilter
 			If u.EndsWith( ".." )

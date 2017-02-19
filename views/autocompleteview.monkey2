@@ -198,13 +198,31 @@ Class AutocompleteDialog Extends DialogExt
 		
 		If Not Prefs.AcKeywordsOnly
 		
-			Local usings:String[]=Null
+			Local usings:=New Stack<String>
 			
 			If onlyOne
-				
 				Local locked:=MainWindow.LockedDocument
-				If Not locked Then locked=Cast<CodeDocument>(MainWindow.DocsManager.CurrentDocument)
-				If locked Then usings=parser.UsingsMap[locked.Path]
+				local current:=Cast<CodeDocument>(MainWindow.DocsManager.CurrentDocument)
+				
+				If Not locked Then locked=current
+				If locked
+					Local info:=parser.UsingsMap[locked.Path]
+					If info.nspace Or info.usings
+						usings=New StringStack
+						If info.nspace Then usings.Add( info.nspace+".." )
+						If info.usings Then usings.AddAll( info.usings )
+					Endif
+				Endif
+				
+				If current And current <> locked
+					Local info:=parser.UsingsMap[current.Path]
+					If info.nspace
+						Local s:=info.nspace+".."
+						If s And Not usings.Contains( s ) Then usings.Add( s )
+					Endif
+					If info.usings Then usings.AddAll( info.usings )
+				Endif
+				
 			Endif
 			
 			_listForExtract.Clear()

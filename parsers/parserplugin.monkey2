@@ -16,7 +16,7 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 		Return _itemsMap
 	End
 	
-	Property UsingsMap:StringMap<String[]>()
+	Property UsingsMap:StringMap<UsingInfo>()
 		Return _usingsMap
 	End
 	
@@ -40,6 +40,6 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 	
 	Field _items:=New List<CodeItem>
 	Field _itemsMap:=New StringMap<List<CodeItem>>
-	Field _usingsMap:=New StringMap<String[]>
+	Field _usingsMap:=New StringMap<UsingInfo>
 	
 End

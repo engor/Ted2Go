@@ -40,6 +40,26 @@ Class Utils
 		Return  (n > 0) ? line.Slice( 0,n ) Else ""
 	End
 	
+	Function GetIndentBeforePos:String( line:String,pos:Int )
+	
+		Local n:=pos-1
+		
+		While n >= 0
+		
+			If line[n] = 46 'dot
+				' dot is valid full-ident part
+			ElseIf Not (IsIdent( line[n] ) Or line[n] = 35) '35 => #
+				Exit
+			Endif
+		
+			n-=1
+		Wend
+		n+=1
+		Local ident:=(n < pos) ? line.Slice( n,pos ) Else ""
+		
+		Return ident
+	End
+	
 	Function DrawRect( canvas:Canvas,rect:Rectf,fill:Bool )
 		If fill
 			canvas.DrawRect( rect )

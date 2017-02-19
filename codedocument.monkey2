@@ -849,6 +849,48 @@ Class CodeDocument Extends Ted2Document
 		If ident="Cast" Return ident+"<"
 		If ident="Typeof" Return ident+"("
 		
+		' ---------------------------------------------------------
+		' try to auto-add properly lambda definition
+		' ---------------------------------------------------------
+		If ident="Lambda"
+			
+			Local indent:=Utils.GetIndent( textLine )
+			Local result:=text+"()"
+			
+			textLine=textLine.Trim()
+			
+			If Not textLine.StartsWith( "'" )
+				
+				Local i0:=textLine.Find( "(" )
+				
+				If i0 = -1 'don't process func params yet
+					Local i1:=textLine.Find( "=" )
+					Local i2:=textLine.Find( "+=" )
+					If i1 <> -1
+						If i2 <> -1 And i2 < i1 Then i1=i2
+						Local s:=textLine.Slice( 0,i1 ).Trim()
+						s=Utils.GetIndentBeforePos( s,s.Length )
+						
+						Local item:=_parser.ItemAtScope( s,Path,_codeView.LineNumAtCursor )
+						If item
+							' strip ident
+							s=item.Text.Slice( item.Ident.Length )
+							' and add some formatting
+							s=s.Replace( " ","" )
+							s=s.Replace( "(","( " )
+							s=s.Replace( ")"," )" )
+							
+							result="Lambda"+s
+						Endif
+					Endif
+				Endif
+			Endif
+			
+			result+="~n"+Utils.RepeatStr( "~t",indent+1 )+"~n"
+			result+=Utils.RepeatStr( "~t",indent )+"End"
+			Return result
+		Endif
+		
 		If Not addSpace Return ident
 		
 		Select ident

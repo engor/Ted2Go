@@ -31,6 +31,10 @@ Global globList:List<String>
 
 
 Function FnLambda:Bool[]( p1:String,p2:Void( x:Int,y:Int ),p3:Float )
+	
+	AAA.event += Lambda:Bool( p1:String[],p2:Object )
+		Return False
+	End
 	Return Null
 End
 
@@ -64,6 +68,8 @@ Class AAA Extends TestClass
 	
 	Field generic:=New Vec2f
 	Field map:=New StringMap<Int>
+	
+	Global event:Bool( p1:String[],p2:Object )
 	
 	Method anstrMethod() Abstract
 	
