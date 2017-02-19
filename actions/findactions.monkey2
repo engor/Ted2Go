@@ -162,12 +162,16 @@ Class FindActions
 			Local items:=New Stack<FileJumpData>
 			Local len:=what.Length
 			
+			Local doc:=New TextDocument 'use it to get line number
 			For Local f:=Eachin files
 				
 				Local text:=LoadString( f )
+				
 				If Not sens Then text=text.ToLower()
 				text=text.Replace( "~r~n","~n" )
 				text=text.Replace( "~r","~n" )
+				
+				doc.Text=text
 				
 				Local i:=0
 				items.Clear()
@@ -180,11 +184,11 @@ Class FindActions
 					data.path=f
 					data.pos=i
 					data.len=len
+					data.line=doc.FindLine( i )+1
 					
 					items.Add( data )
 					
 					i+=len
-					
 				Forever
 				
 				If Not items.Empty
@@ -192,7 +196,7 @@ Class FindActions
 					subRoot=New TreeView.Node( f.Replace( proj,"" )+" ("+items.Length+")",root )
 					
 					For Local d:=Eachin items
-						Local node:=New NodeWithData<FileJumpData>( " at ["+d.pos+"]",subRoot )
+						Local node:=New NodeWithData<FileJumpData>( " at line "+d.line,subRoot )
 						node.data=d
 					Next
 					

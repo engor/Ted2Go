@@ -100,5 +100,6 @@ Struct FileJumpData
 	Field path:String
 	Field pos:Int
 	Field len:Int
+	Field line:Int
 	
 End
