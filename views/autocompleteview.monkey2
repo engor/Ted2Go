@@ -115,6 +115,17 @@ Class AutocompleteDialog Extends DialogExt
 			OnKeyFilter( event )
 		End
 		
+		OnHide+=Lambda()
+			_disableUsingsFilter=False
+		End
+		
+	End
+	
+	Property DisableUsingsFilter:Bool()
+		Return _disableUsingsFilter
+	Setter( value:Bool )
+		_fullIdent=""
+		_disableUsingsFilter=value
 	End
 	
 	Property LastIdentPart:String()
@@ -148,6 +159,7 @@ Class AutocompleteDialog Extends DialogExt
 		
 		Local parser:=GetParser( fileType )
 		
+		Local filter:=_disableUsingsFilter
 		
 		'-----------------------------
 		' some optimization
@@ -183,6 +195,7 @@ Class AutocompleteDialog Extends DialogExt
 			
 			Show()
 			
+			_disableUsingsFilter=filter
 			Return
 		End
 		
@@ -198,9 +211,12 @@ Class AutocompleteDialog Extends DialogExt
 		
 		If Not Prefs.AcKeywordsOnly
 		
-			Local usings:=New Stack<String>
+			Local usings:Stack<String>
 			
-			If onlyOne
+			If onlyOne And Not _disableUsingsFilter
+				
+				usings=New Stack<String>
+				
 				Local locked:=MainWindow.LockedDocument
 				local current:=Cast<CodeDocument>(MainWindow.DocsManager.CurrentDocument)
 				
@@ -276,7 +292,8 @@ Class AutocompleteDialog Extends DialogExt
 		_view.SetItems( result )
 		
 		Show()
-				
+		
+		_disableUsingsFilter=filter		
 	End
 	
 		
@@ -288,7 +305,7 @@ Class AutocompleteDialog Extends DialogExt
 	Field _parsers:StringMap<ICodeParser>
 	Field _listForExtract:=New List<CodeItem>
 	Field _listForExtract2:=New List<CodeItem>
-	
+	Field _disableUsingsFilter:Bool
 	
 	Method New()
 	End
@@ -311,6 +328,7 @@ Class AutocompleteDialog Extends DialogExt
 	Method OnKeyFilter( event:KeyEvent )
 		
 		If Not IsOpened Return
+		
 		If event.Type = EventType.KeyDown Or event.Type = EventType.KeyRepeat
 			Select event.Key
 			Case Key.Escape
@@ -341,7 +359,8 @@ Class AutocompleteDialog Extends DialogExt
 					event.Eat()
 				Endif
 			Case Key.Space
-				If Prefs.AcUseSpace
+				Local ctrl:=event.Modifiers & Modifier.Control
+				If Prefs.AcUseSpace And Not ctrl
 					OnItemChoosen( _view.CurrentItem,True )
 					event.Eat()
 				Endif

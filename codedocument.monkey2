@@ -483,7 +483,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			If event.Key = Key.Space And event.Modifiers & Modifier.Control
 				If _doc.CanShowAutocomplete()
 					Local ident:=IdentBeforeCursor()
-					If ident Then _doc.ShowAutocomplete()
+					If ident Then _doc.ShowAutocomplete( ident,True )
 				Endif
 				Return
 			Endif
@@ -1021,12 +1021,17 @@ Class CodeDocument Extends Ted2Document
 		
 	End
 	
-	Method ShowAutocomplete( ident:String="" )
+	Method ShowAutocomplete( ident:String="",byCtrlSpace:Bool=False )
 		
 		If ident = "" Then ident=_codeView.IdentBeforeCursor()
 		
 		'show
 		Local line:=TextDocument.FindLine( _codeView.Cursor )
+		
+		If byCtrlSpace And AutoComplete.IsOpened
+			AutoComplete.DisableUsingsFilter=Not AutoComplete.DisableUsingsFilter
+		Endif
+		
 		AutoComplete.Show( ident,Path,FileType,line )
 		
 		If Not AutoComplete.IsOpened Return
