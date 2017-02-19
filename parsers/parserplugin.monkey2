@@ -16,6 +16,10 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 		Return _itemsMap
 	End
 	
+	Property UsingsMap:StringMap<String[]>()
+		Return _usingsMap
+	End
+	
 	Method CheckStartsWith:Bool( ident1:String,ident2:String ) Virtual
 	
 		ident1=ident1.ToLower()
@@ -36,5 +40,6 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 	
 	Field _items:=New List<CodeItem>
 	Field _itemsMap:=New StringMap<List<CodeItem>>
+	Field _usingsMap:=New StringMap<String[]>
 	
 End

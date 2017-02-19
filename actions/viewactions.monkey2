@@ -25,12 +25,20 @@ Class ViewActions
 		
 		comment=New Action( "Comment block" )
 		comment.Triggered=OnComment
+#If __TARGET__="macos"
+		comment.HotKey=Key.Slash
+#Else
 		comment.HotKey=Key.Apostrophe
+#Endif
 		comment.HotKeyModifiers=Modifier.Menu
 		
 		uncomment=New Action( "Uncomment block" )
 		uncomment.Triggered=OnUncomment
+#If __TARGET__="macos"
+		uncomment.HotKey=Key.Slash
+#Else
 		uncomment.HotKey=Key.Apostrophe
+#Endif
 		uncomment.HotKeyModifiers=Modifier.Menu|Modifier.Shift
 	End
 	

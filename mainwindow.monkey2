@@ -304,23 +304,40 @@ Class MainWindowInstance Extends Window
 		
 		'Tool Bar
 		'
+		#If __TARGET__="macos"
+		Local newTitle:="New file (Ctrl+T)"
+		Local redoTitle:="Redo (Shish+Ctrl+Z)"
+		Local runTitle:="Run (Ctrl+R)"
+		Local buildTitle:="Build (Ctrl+B)"
+		Local checkTitle:="Check errors (Shift+Ctrl+R)"
+		#Else
+		Local newTitle:="New file (Ctrl+N)"
+		Local redoTitle:="Redo (Ctrl+Y)"
+		Local runTitle:="Run (F5)"
+		Local buildTitle:="Build (F6)"
+		Local checkTitle:="Check errors (F7)"
+		#Endif
 		If Prefs.MainToolBarVisible
 			_toolBar=New ToolBarExt
 			_toolBar.Style=GetStyle( "MainToolBar" )
 			_toolBar.MaxSize=New Vec2i( 10000,40 )
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/new_file.png" ),_fileActions.new_.Triggered,"New file (Ctrl+N)" )
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/new_file.png" ),_fileActions.new_.Triggered,newTitle )
 			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_file.png" ),_fileActions.open.Triggered,"Open file... (Ctrl+O)" )
 			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_project.png" ),_projectView.openProject.Triggered,"Open project..." )
 			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/save_all.png" ),_fileActions.saveAll.Triggered,"Save all (Ctrl+Shift+S)" )
 			_toolBar.AddSeparator()
 			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/undo.png" ),_editActions.undo.Triggered,"Undo (Ctrl+Z)" )
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/redo.png" ),_editActions.redo.Triggered,"Redo (Ctrl+Y)" )
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/redo.png" ),_editActions.redo.Triggered,redoTitle )
 			_toolBar.AddSeparator()
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/check.png" ),_buildActions.semant.Triggered,"Check errors (F7)" )
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/build.png" ),_buildActions.build.Triggered,"Build (F6)" )
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/run.png" ),_buildActions.buildAndRun.Triggered,"Run (F5)" )
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/check.png" ),_buildActions.semant.Triggered,checkTitle )
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/build.png" ),_buildActions.build.Triggered,buildTitle )
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/run.png" ),_buildActions.buildAndRun.Triggered,runTitle )
 			_toolBar.AddSeparator()
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/options.png" ),_buildActions.buildSettings.Triggered,"Target settings" )
+			
+			Local act:=Lambda()
+				_buildActions.targetMenu.Open()
+			End
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/options.png" ),act,"Target settings" )
 			_toolBar.AddSeparator()
 			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/find.png" ),_findActions.find.Triggered,"Find (Ctrl+F)" )
 			
@@ -401,6 +418,16 @@ Class MainWindowInstance Extends Window
 		If value=_ovdMode Return
 		_ovdMode=value
 		SetStatusBarInsertMode( Not _ovdMode )
+	End
+	
+	Property DocsManager:DocumentManager()
+	
+		Return _docsManager
+	End
+	
+	Property LockedDocument:CodeDocument()
+	
+		Return _buildActions.LockedDocument
 	End
 	
 	Method Terminate()

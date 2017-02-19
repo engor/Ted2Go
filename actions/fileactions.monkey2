@@ -21,8 +21,13 @@ Class FileActions
 		_docs=docs
 		
 		new_=New Action( "New" )
+#if __TARGET__="macos"
 		new_.HotKey=Key.N
 		new_.HotKeyModifiers=Modifier.Menu
+#else
+		new_.HotKey=Key.T
+		new_.HotKeyModifiers=Modifier.Menu
+#endif
 		new_.Triggered=OnNew
 		
 		open=New Action( "Open" )
@@ -31,13 +36,13 @@ Class FileActions
 		open.Triggered=OnOpen
 		
 		close=New Action( "Close tab" )
-#if __HOSTOS__="macos"
+#if __TARGET__="macos"
 		close.HotKey=Key.W
 		close.HotKeyModifiers=Modifier.Menu
 #else
 		close.HotKey=Key.F4
 		close.HotKeyModifiers=Modifier.Menu
-#endif		
+#endif
 		close.Triggered=OnClose
 		
 		closeOthers=New Action( "Close other tabs" )
@@ -78,7 +83,11 @@ Class FileActions
 
 		prefs=New Action( "Preferences..." )
 		prefs.Triggered=OnPrefs
+#if __TARGET__="macos"
+		prefs.HotKey=Key.Comma
+#Else
 		prefs.HotKey=Key.P
+#Endif
 		prefs.HotKeyModifiers=Modifier.Menu
 		
 	End

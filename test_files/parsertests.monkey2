@@ -4,6 +4,16 @@ Namespace ted2go
 
 Private
 
+
+Interface ITest
+
+	Method abs()
+	Property bpp()
+	
+		
+End
+
+
 '0000000000000000000000000000000
 '0000000000000000000000000000000
 '0000000000000000000000000000000
@@ -54,6 +64,8 @@ Class AAA Extends TestClass
 	
 	Field generic:=New Vec2f
 	Field map:=New StringMap<Int>
+	
+	Method anstrMethod() Abstract
 	
 End
 

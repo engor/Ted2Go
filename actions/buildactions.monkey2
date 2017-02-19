@@ -52,16 +52,33 @@ Class BuildActions
 		End
 		
 		buildAndRun=New Action( "Build and run" )
-		buildAndRun.Triggered=OnBuildAndRun
+#If __TARGET__="macos"
+		buildAndRun.HotKey=Key.R
+		buildAndRun.HotKeyModifiers=Modifier.Menu
+#Else
 		buildAndRun.HotKey=Key.F5
+#Endif
+		buildAndRun.Triggered=OnBuildAndRun
+		
 
 		build=New Action( "Build only" )
-		build.Triggered=OnBuild
+#If __TARGET__="macos"
+		build.HotKey=Key.B
+		build.HotKeyModifiers=Modifier.Menu
+#Else
 		build.HotKey=Key.F6
+#Endif
+		build.Triggered=OnBuild
 		
 		semant=New Action( "Check app" )
-		semant.Triggered=OnSemant
+#If __TARGET__="macos"
+		semant.HotKey=Key.R
+		semant.HotKeyModifiers=Modifier.Menu|Modifier.Shift
+#Else
 		semant.HotKey=Key.F7
+#Endif
+		semant.Triggered=OnSemant
+		
 		
 		buildSettings=New Action( "Target settings" )
 		buildSettings.Triggered=OnBuildFileSettings
@@ -178,6 +195,11 @@ Class BuildActions
 		Else
 			_iosTarget.Enabled=False
 		Endif
+	End
+	
+	Property LockedDocument:CodeDocument()
+	
+		Return _locked
 	End
 	
 	Method SaveState( jobj:JsonObject )

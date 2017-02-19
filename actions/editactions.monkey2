@@ -25,9 +25,14 @@ Class EditActions
 
 		redo=New Action( "Redo" )
 		redo.Triggered=OnRedo
+#If __TARGET__="macos"
+		buildAndRun.HotKey=Key.Z
+		buildAndRun.HotKeyModifiers=Modifier.Menu|Modifier.Ignore|Modifier.Shift
+#Else
 		redo.HotKey=Key.Y
 		redo.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
-
+#Endif
+		
 		cut=New Action( "Cut" )
 		cut.Triggered=OnCut
 		cut.HotKey=Key.X

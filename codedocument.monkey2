@@ -33,7 +33,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	
 	Method New( doc:CodeDocument )
 	
-		
 		_doc=doc
 		
 		Document=_doc.TextDocument
@@ -66,6 +65,11 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			Endif
 		End
 		
+		UpdateThemeColors()
+		
+		App.ThemeChanged+=Lambda()
+			UpdateThemeColors()
+		End
 	End
 	
 	Property CharsToShowAutoComplete:Int()
@@ -80,11 +84,8 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		Local color:=canvas.Color
 		
 		' whole current line
-		canvas.Color=New Color( 0,0,0,.03 )
-		canvas.DrawRect( 0,Line*LineHeight,Width,LineHeight )
-		canvas.Color=New Color( 0,0,0,.05 )
-		canvas.DrawLine( 0,Line*LineHeight-1,Width,Line*LineHeight-1 )
-		canvas.DrawLine( 0,(Line+1)*LineHeight,Width,(Line+1)*LineHeight )
+		canvas.Color=_lineColor
+		canvas.DrawRect( 0,Line*LineHeight-1,Width,LineHeight+3 )
 		
 		
 		If _doc._debugLine<>-1
@@ -119,17 +120,40 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 	End
 	
+	Field _arrAddonIndents:=New String[]("else","for ","method ","function ","class ","interface ","select ","try ","catch ","case ","default","while","repeat","property ","getter","setter","enum ","struct ")
+	Field _arrIf:=New String[]("then "," return"," exit"," continue")
+	
 	Method OnKeyEvent( event:KeyEvent ) Override
 		
 		_doc.HideHint_()
 		
 		Local alt:=(event.Modifiers & Modifier.Alt)
+		Local ctrl:=(event.Modifiers & Modifier.Control)
+		Local shift:=(event.Modifiers & Modifier.Shift)
 		
 		'ctrl+space - show autocomplete list
-		If event.Type = EventType.KeyDown
+		Select event.Type
+		Case EventType.KeyDown,EventType.KeyRepeat
 			
-			Select event.Key
-				
+			Local key:=event.Key
+			
+			'map keypad nav keys...
+			If Not (event.Modifiers & Modifier.NumLock)
+				Select key
+				Case Key.Keypad1 key=Key.KeyEnd
+				Case Key.Keypad2 key=Key.Down
+				Case Key.Keypad3 key=Key.PageDown
+				Case Key.Keypad4 key=Key.Left
+				Case Key.Keypad6 key=Key.Right
+				Case Key.Keypad7 key=Key.Home
+				Case Key.Keypad8 key=Key.Up
+				Case Key.Keypad9 key=Key.PageUp
+				Case Key.Keypad0 key=Key.Insert
+				End
+			Endif
+			
+			Select key
+			
 				Case Key.Space
 					If event.Modifiers & Modifier.Control
 						Return
@@ -151,9 +175,310 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				Case Key.F11
 				
 					ShowJsonDialog()
+					
+					
+				#If __TARGET__="windows"
+				Case Key.E 'delete whole line
+					If ctrl
+						Local line:=Document.FindLine( Cursor )
+						SelectText( Document.StartOfLine( line ),Document.EndOfLine( line )+1 )
+						ReplaceText( "" )
+						Return
+					Endif
+				#Endif
+			
+			
+				Case Key.X
+			
+					If ctrl 'nothing selected - cut whole line
+						OnCut( Not CanCopy )
+						Return
+					Endif
+			
+			
+				Case Key.C
+			
+					If ctrl 'nothing selected - copy whole line
+						OnCopy( Not CanCopy )
+						Return
+					Endif
+			
+			
+				Case Key.Insert 'ctrl+insert - copy, shift+insert - paste
+			
+					If shift
+						SmartPaste()
+					Elseif ctrl And CanCopy
+						OnCopy()
+					Endif
+					Return
+			
+			
+				Case Key.KeyDelete
+			
+					If shift 'shift+del - cut selected
+						If CanCopy Then OnCut()
+					Else
+						If Anchor = Cursor
+							Local len:=Text.Length
+							If Cursor < len
+								Local ends:=Cursor+1
+								If Text[Cursor] = 10 ' do we delete \n ?
+									Local i:=Cursor+1
+									While i<len And Text[i]<32 And Text[i]<>10
+										i+=1
+									Wend
+									ends=i
+								Endif
+								SelectText( Cursor,ends )
+								ReplaceText( "" )
+							Endif
+						Else
+							ReplaceText( "" )
+						Endif
+					Endif
+					Return
+			
+			
+				Case Key.Enter,Key.KeypadEnter 'auto indent
+			
+					If _typing Then DoFormat( False )
+			
+					Local line:=CursorLine
+					Local text:=Document.GetLine( line )
+					Local indent:=GetIndent( text )
+					Local posInLine:=PosInLineAtCursor
+					'fix 'bug' when we delete ~n at the end of line.
+					'in this case GetLine return 2 lines, and if they empty
+					'then we get double indent
+					'need to fix inside mojox
+			
+					Local beforeIndent:=(posInLine<=indent)
+			
+					If indent > posInLine Then indent=posInLine
+			
+					Local s:=(indent ? text.Slice( 0,indent ) Else "")
+			
+					If Not beforeIndent
+						text=text.Trim().ToLower()
+						If text.StartsWith( "if" )
+							If Not Utils.BatchContains( text,_arrIf,True )
+								s="~t"+s
+							Endif
+						Elseif Utils.BatchStartsWith( text,_arrAddonIndents,True )
+							
+							If text.ToLower().EndsWith( "abstract" )
+								' nothing
+							Else
+								Local scope:=_doc.Parser.GetScope( FilePath,LineNumAtCursor )
+								If scope And scope.Kind=CodeItemKind.Interface_
+									' nothing
+								Else
+									s="~t"+s
+								Endif
+							Endif
+						Endif
+					Endif
+			
+					ReplaceText( "~n"+s )
+			
+					Return
+			
+				#If __TARGET__="macos"
+				Case Key.Left 'smart Home behaviour
+			
+					If event.Modifiers & Modifier.Menu
+						SmartHome( shift )
+						Return
+					Endif
+			
+				Case Key.Right
+			
+					If event.Modifiers & Modifier.Menu
+						SmartEnd( shift )
+						Return
+					Endif
+			
+				Case Key.Up '
+			
+					If event.Modifiers & Modifier.Menu
+						If shift 'selection
+							SelectText( 0,Anchor )
+						Else
+							SelectText( 0,0 )
+						Endif
+						Return
+					Endif
+			
+				Case Key.Down '
+			
+					If event.Modifiers & Modifier.Menu
+						If shift 'selection
+							SelectText( Anchor,Text.Length )
+						Else
+							SelectText( Text.Length,Text.Length )
+						Endif
+						Return
+					Endif
+			
+				#Else
+			
+				Case Key.Home 'smart Home behaviour
+			
+					If ctrl
+						If shift 'selection
+							SelectText( 0,Anchor )
+						Else
+							SelectText( 0,0 )
+						Endif
+					Else
+						SmartHome( shift )
+					Endif
+					Return
+				#Endif
+			
+				Case Key.Tab
+			
+					If Cursor = Anchor 'has no selection
+			
+						If Not shift
+							ReplaceText( "~t" )
+						Else
+							If Cursor > 0 And Document.Text[Cursor-1]=Chars.TAB
+								SelectText( Cursor-1,Cursor )
+								ReplaceText( "" )
+							Endif
+						Endif
+			
+					Else 'block tab/untab
+			
+						Local minPos:=Min( Cursor,Anchor )
+						Local maxPos:=Max( Cursor,Anchor )
+						Local min:=Document.FindLine( minPos )
+						Local max:=Document.FindLine( maxPos )
+			
+						' if we are at the beginning of bottom line - skip it
+						Local strt:=Document.StartOfLine( max )
+						If maxPos = strt
+							max-=1
+							DebugStop()
+						Endif
+			
+						Local lines:=New StringStack
+			
+						For Local i:=min To max
+							lines.Push( Document.GetLine( i ) )
+						Next
+			
+						Local go:=True
+						Local shiftFirst:=0,shiftLast:=0
+			
+						If shift
+			
+							Local changes:=0
+							For Local i:=0 Until lines.Length
+								If lines[i].StartsWith( "~t" )
+									lines[i]=lines[i].Slice( 1 )+"~n"
+									changes+=1
+									If i=0 Then shiftFirst=-1
+									if i=lines.Length-1 Then shiftLast=-1
+								Else
+									lines[i]+="~n"
+								Endif
+							Next
+			
+							go=(changes > 0)
+						Else
+							shiftFirst=1
+							shiftLast=1
+							For Local i:=0 Until lines.Length
+								lines[i]="~t"+lines[i]+"~n"
+							Next
+						Endif
+			
+						If go
+							Local minStart:=Document.StartOfLine( min )
+							Local maxStart:=Document.StartOfLine( max )
+							Local maxEnd:=Document.EndOfLine( max )
+			
+							Local p1:=minPos+shiftFirst 'absolute pos
+							Local p2:=maxPos-maxStart+shiftLast 'pos in line
+							SelectText( minStart,maxEnd+1 )
+							ReplaceText( lines.Join( "" ) )
+							p2+=Document.StartOfLine( max )
+							' case when cursor is between tabs and we move both of them, so jump to prev line
+							p1=Max( p1,Document.StartOfLine( min ) )
+							SelectText( p1,p2 )
+						Endif
+			
+					Endif
+					Return
+			
+			
+				Case Key.Up,Key.Down
+			
+					DoFormat( True )
+			
+			
+				Case Key.V
+			
+					If CanPaste And ctrl
+						SmartPaste()
+						Return
+					Endif
+			
+			
+				Case Key.Insert
+			
+					If CanPaste And shift
+						SmartPaste()
+						Return
+					Endif
+			
+				Case Key.KeyDelete
+			
+					If shift
+						OnCut()
+						Return
+					Endif
+			
+				#If __TARGET__="macos"
+				'smart Home behaviour
+				Case Key.Left
+			
+					If event.Modifiers & Modifier.Menu
+						SmartHome( True )
+			
+						Return
+					Endif
+			
+			
+				Case Key.Right
+			
+					If event.Modifiers & Modifier.Menu
+						SmartHome( False )
+			
+						Return
+					Endif
+			
+				Case Key.Z
+			
+					If event.Modifiers & Modifier.Menu
+			
+						If shift
+							Redo()
+						Else
+							Undo()
+						Endif
+						Return
+					Endif
+			
+				#Endif
+			
 			End
+			
 				
-		Elseif event.Type = EventType.KeyChar
+		Case EventType.KeyChar
 			
 			If event.Key = Key.Space And event.Modifiers & Modifier.Control
 				If _doc.CanShowAutocomplete()
@@ -162,7 +487,8 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				Endif
 				Return
 			Endif
-		Endif
+			
+		End
 		
 		Super.OnKeyEvent( event )
 		
@@ -283,6 +609,13 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	
 	Field _doc:CodeDocument
 	Field _prevErrorLine:Int
+	Field _lineColor:Color
+	
+	
+	Method UpdateThemeColors()
+		
+		_lineColor=App.Theme.GetColor( "textview-cursor-line" )
+	End
 	
 End
 
@@ -324,7 +657,14 @@ Class CodeDocument Extends Ted2Document
 			If AutoComplete.IsOpened Then AutoComplete.Hide()
 		End
 		_codeView.LineChanged += OnLineChanged
-			
+		
+#If __TARGET__="macos"
+		Local commentTitle:="Comment block (Ctrl+\)"
+		Local uncommentTitle:="Uncomment block (Shist+Ctrl+\)"
+#Else
+		Local commentTitle:="Comment block (Ctrl+')"
+		Local uncommentTitle:="Uncomment block (Shist+Ctrl+')"
+#Endif
 		' Toolbar
 		Local bar:ToolBarExt=Null
 		If Prefs.EditorToolBarVisible
@@ -407,13 +747,13 @@ Class CodeDocument Extends Ted2Document
 				Lambda()
 					Comment()
 				End,
-				"Comment (Ctrl+')" )
+				commentTitle )
 			bar.AddIconicButton(
 				ThemeImages.Get( "editorbar/uncomment.png" ),
 				Lambda()
 					Uncomment()
 				End,
-				"Uncomment (Shift+Ctrl+')" )
+				commentTitle )
 				
 		Endif
 		
@@ -567,6 +907,11 @@ Class CodeDocument Extends Ted2Document
 	
 	Property HasErrors:Bool()
 		Return Not _errors.Empty
+	End
+	
+	Property Parser:ICodeParser()
+	
+		Return _parser
 	End
 	
 	Method HasErrorAt:Bool( line:Int )

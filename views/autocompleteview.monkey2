@@ -198,8 +198,17 @@ Class AutocompleteDialog Extends DialogExt
 		
 		If Not Prefs.AcKeywordsOnly
 		
+			Local usings:String[]=Null
+			
+			If onlyOne
+				
+				Local locked:=MainWindow.LockedDocument
+				If Not locked Then locked=Cast<CodeDocument>(MainWindow.DocsManager.CurrentDocument)
+				If locked Then usings=parser.UsingsMap[locked.Path]
+			Endif
+			
 			_listForExtract.Clear()
-			parser.GetItemsForAutocomplete( ident,filePath,docLine,_listForExtract )
+			parser.GetItemsForAutocomplete( ident,filePath,docLine,_listForExtract,usings )
 			
 			CodeItemsSorter.SortByType( _listForExtract,True )
 		Endif
@@ -260,6 +269,7 @@ Class AutocompleteDialog Extends DialogExt
 	Field _lastIdentPart:String,_fullIdent:String
 	Field _parsers:StringMap<ICodeParser>
 	Field _listForExtract:=New List<CodeItem>
+	Field _listForExtract2:=New List<CodeItem>
 	
 	
 	Method New()
@@ -370,7 +380,7 @@ Class AutocompleteDialog Extends DialogExt
 		Next
 		'preprocessor
 		'need to load it like keywords
-		Local s:="#If ,#Rem,#End,#Endif,#Import ,monkeydoc"
+		Local s:="#If ,#Rem,#End,#Endif,#Else,#Else If ,#Import ,monkeydoc,__TARGET__,__MOBILE_TARGET__,__DESKTOP_TARGET__,__HOSTOS__"
 		Local arr:=s.Split( "," )
 		For Local i:=Eachin arr
 			list.AddLast( New ListViewItem( i ) )

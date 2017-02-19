@@ -90,9 +90,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		' is file modified?
 		Local time:=GetFileTime( pathOnDisk )
-		Local last:=_files[filePath]
+		Local last:=_filesTime[filePath]
 		If last = 0 Or time > last
-			_files[filePath]=time
+			_filesTime[filePath]=time
 			'Print "parse file: "+filePath.Replace( "C:/proj/monkey/monkey2fork/","" )+"  "+pathOnDisk.Replace( "C:/proj/monkey/monkey2fork/","" )+"  mod:"+Int(isModule)
 		Else
 			'Print "parse file, not modified: "+filePath.Replace( "C:/proj/monkey/monkey2fork/","" )+"  "+pathOnDisk.Replace( "C:/proj/monkey/monkey2fork/","" )+"  mod:"+Int(isModule)
@@ -145,6 +145,15 @@ Class Monkey2Parser Extends CodeParserPlugin
 				'Print "parse import: "+file+"  mod: "+Int(isModule)
 				ParseFile( file,file,isModule )
 			Next
+		Endif
+		
+		If jobj.Contains( "usings" )
+			Local jarr:=jobj["usings"].ToArray()
+			Local arr:=New String[jarr.Length]
+			For Local i:=0 Until jarr.Length
+				arr[i]=jarr[i].ToString()
+			Next
+			UsingsMap[filePath]=arr
 		Endif
 		
 		Return Null
@@ -423,7 +432,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return Null
 	End
 	
-	Method GetItemsForAutocomplete( ident:String,filePath:String,docLine:Int,target:List<CodeItem> )
+	Method GetItemsForAutocomplete( ident:String,filePath:String,docLine:Int,target:List<CodeItem>,usingsFilter:String[]=Null )
 		
 		Local idents:=ident.Split( "." )
 				
@@ -491,6 +500,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 		' and check in global scope
 		If item = Null Or onlyOne
 			For Local i:=Eachin Items
+				
+				If Not CheckUsingsFilter( i,usingsFilter ) Continue
+				
 				'Print "global 1: "+i.Scope
 				If Not CheckIdent( i.Ident,firstIdent,onlyOne ) Continue
 				If Not CheckAccessInGlobal( i,filePath ) Continue
@@ -580,7 +592,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Private
 	
 	Global _instance:=New Monkey2Parser
-	Field _files:=New StringMap<Long>
+	Field _filesTime:=New StringMap<Long>
 	Field _aliases:=New StringMap<CodeItem>
 	
 	Method New()
@@ -814,6 +826,21 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
+	Method CheckUsingsFilter:Bool( item:CodeItem,usingsFilter:String[] )
+		
+		If Not usingsFilter Return True
+		
+		For Local u:=Eachin usingsFilter
+			If u.EndsWith( ".." )
+				u=u.Slice( 0,u.Length-2 )
+				If item.Namespac.StartsWith( u ) Return True
+			Else
+				If item.Namespac = u Return True
+			Endif
+		Next
+		Return False
+	End
+	
 	Method GetAllItems( item:CodeItem,target:List<CodeItem>,isSuper:Bool=False )
 		
 		Local checkUnique:=Not target.Empty
@@ -855,7 +882,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 					Exit
 				Endif
 			Next
-			If result <> Null Then GetAllItems( result,target )
+			If result <> Null Then GetAllItems( result,target,isSuper )
 		Next
 		
 	End
