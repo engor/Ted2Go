@@ -676,19 +676,7 @@ Class CodeDocument Extends Ted2Document
 			bar.AddSeparator()
 			bar.AddSeparator()
 			bar.AddSeparator()
-			bar.AddIconicButton(
-				ThemeImages.Get( "editorbar/back.png" ),
-				Lambda()
-					GoBack()
-				End,
-				"Navigate back (Alt+Left)" )
-			bar.AddIconicButton(
-				ThemeImages.Get( "editorbar/forward.png" ),
-				Lambda()
-					GoForward()
-				End,
-				"Navigate forward (Alt+Right)" )
-			bar.AddSeparator()
+			
 			bar.AddIconicButton(
 				ThemeImages.Get( "editorbar/find_selection.png" ),
 				Lambda()
@@ -1085,13 +1073,6 @@ Class CodeDocument Extends Ted2Document
 	Field _prevLine:=-1
 	Field _prevScope:CodeItem
 	
-	' global, to go through all docs
-	Global _navOps:=New NavOps<NavCode>
-	
-	Property Navigator:NavOps<NavCode>()
-		Return _navOps
-	End
-	
 	Method OnLoad:Bool() Override
 	
 		_parser=ParsersManager.Get( FileType )
@@ -1466,6 +1447,9 @@ Class NavOps<T>
 	
 End
 
+
+' global, to go through all docs
+Global Navigator:=New NavOps<NavCode>
 
 
 

@@ -321,6 +321,7 @@ Class MainWindowInstance Extends Window
 			_toolBar=New ToolBarExt
 			_toolBar.Style=GetStyle( "MainToolBar" )
 			_toolBar.MaxSize=New Vec2i( 10000,40 )
+			
 			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/new_file.png" ),_fileActions.new_.Triggered,newTitle )
 			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_file.png" ),_fileActions.open.Triggered,"Open file... (Ctrl+O)" )
 			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_project.png" ),_projectView.openProject.Triggered,"Open project..." )
@@ -340,6 +341,17 @@ Class MainWindowInstance Extends Window
 			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/options.png" ),act,"Target settings" )
 			_toolBar.AddSeparator()
 			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/find.png" ),_findActions.find.Triggered,"Find (Ctrl+F)" )
+			_toolBar.AddSeparator()
+			
+			Local goBack:=Lambda()
+				Navigator.TryBack()
+			End
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/back.png" ),goBack,"Go back (Alt+Left)" )
+			
+			Local goForw:=Lambda()
+				Navigator.TryForward()
+			End
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/forward.png" ),goForw,"Go forward (Alt+Right)" )
 			
 		Endif
 		
