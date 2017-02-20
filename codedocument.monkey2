@@ -661,11 +661,11 @@ Class CodeDocument Extends Ted2Document
 		_codeView.LineChanged += OnLineChanged
 		
 #If __TARGET__="macos"
-		Local commentTitle:="Comment block (Ctrl+\)"
-		Local uncommentTitle:="Uncomment block (Shist+Ctrl+\)"
+		Local commentTitle:="Comment block (Ctrl+/)"
+		Local uncommentTitle:="Uncomment block (Ctrl+Shist+/)"
 #Else
 		Local commentTitle:="Comment block (Ctrl+')"
-		Local uncommentTitle:="Uncomment block (Shist+Ctrl+')"
+		Local uncommentTitle:="Uncomment block (Ctrl+Shist+')"
 #Endif
 		' Toolbar
 		Local bar:ToolBarExt=Null
@@ -743,7 +743,7 @@ Class CodeDocument Extends Ted2Document
 				Lambda()
 					Uncomment()
 				End,
-				commentTitle )
+				uncommentTitle )
 				
 		Endif
 		

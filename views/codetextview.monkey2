@@ -418,7 +418,8 @@ Class CodeTextView Extends TextView
 	End
 	
 	Method OnThemeChanged() Override
-	
+		
+		Super.OnThemeChanged()
 		UpdateColors2()
 	End
 	

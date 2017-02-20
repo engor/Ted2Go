@@ -26,7 +26,7 @@ Class ViewActions
 		comment=New Action( "Comment block" )
 		comment.Triggered=OnComment
 #If __TARGET__="macos"
-		comment.HotKey=Key.Slash
+		comment.HotKey=Key.Backslash
 #Else
 		comment.HotKey=Key.Apostrophe
 #Endif
@@ -35,7 +35,7 @@ Class ViewActions
 		uncomment=New Action( "Uncomment block" )
 		uncomment.Triggered=OnUncomment
 #If __TARGET__="macos"
-		uncomment.HotKey=Key.Slash
+		uncomment.HotKey=Key.Backslash
 #Else
 		uncomment.HotKey=Key.Apostrophe
 #Endif

@@ -55,8 +55,8 @@ Class EditActions
 		
 		wordWrap=New Action( "Toggle word wrap" )
 		wordWrap.Triggered=OnWordWrap
-		'wordWrap.HotKey=Key.W
-		'wordWrap.HotKeyModifiers=Modifier.Menu|Modifier.Shift
+		wordWrap.HotKey=Key.Z
+		wordWrap.HotKeyModifiers=Modifier.Menu|Modifier.Alt
 		
 		gotoLine=New Action( "Goto line" )
 		gotoLine.Triggered=OnGotoLine

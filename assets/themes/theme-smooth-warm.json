@@ -1,0 +1,28 @@
+//Theme by Ethernaut, vaguely based on "smooth" by Hezcore
+{
+	"extends":"ted2-default",
+ 
+	"colors":{
+		"border": "#211d12",
+		"clear": "#23211f",
+		"gutter": "#242324",
+		"content": "#282728",
+		"panel": "#594f45",
+ 
+		"knob": "#363330",
+		"hover": "#594f45",
+		"active" : "#7e7763",
+ 
+		"textview-cursor":"#FFDD55",
+		"textview-selection":"#3E4451",
+ 
+		"textview-color0":"#f2dba6",
+		"textview-color1": "#f6e4bc",	//identifiers
+		"textview-color2": "#ffbf00",	//keywords
+		"textview-color3": "#cbcb4d",	//strings
+		"textview-color4": "#66b3cc",	//numbers
+		"textview-color5": "#8E744A",	//comment
+		"textview-color6": "#729888",	//preproc
+		"textview-color7": "#fff9e6"	//default
+	}
+}
