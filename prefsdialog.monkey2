@@ -38,7 +38,7 @@ Class PrefsDialog Extends DialogExt
 		_mainToolBarVisible=New CheckButton( "ToolBar visible" )
 		_mainToolBarVisible.Checked=Prefs.MainToolBarVisible
 		
-		_editorShowWhiteSpaces=New CheckButton( "White spaces visible" )
+		_editorShowWhiteSpaces=New CheckButton( "Whitespaces visible" )
 		_editorShowWhiteSpaces.Checked=Prefs.EditorShowWhiteSpaces
 		
 		Local after:=New DockingView

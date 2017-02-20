@@ -26,8 +26,8 @@ Class EditActions
 		redo=New Action( "Redo" )
 		redo.Triggered=OnRedo
 #If __TARGET__="macos"
-		buildAndRun.HotKey=Key.Z
-		buildAndRun.HotKeyModifiers=Modifier.Menu|Modifier.Ignore|Modifier.Shift
+		redo.HotKey=Key.Z
+		redo.HotKeyModifiers=Modifier.Menu|Modifier.Ignore|Modifier.Shift
 #Else
 		redo.HotKey=Key.Y
 		redo.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
@@ -55,8 +55,8 @@ Class EditActions
 		
 		wordWrap=New Action( "Toggle word wrap" )
 		wordWrap.Triggered=OnWordWrap
-		wordWrap.HotKey=Key.W
-		wordWrap.HotKeyModifiers=Modifier.Menu
+		'wordWrap.HotKey=Key.W
+		'wordWrap.HotKeyModifiers=Modifier.Menu|Modifier.Shift
 		
 		gotoLine=New Action( "Goto line" )
 		gotoLine.Triggered=OnGotoLine
