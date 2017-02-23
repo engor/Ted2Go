@@ -363,7 +363,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						Local strt:=Document.StartOfLine( max )
 						If maxPos = strt
 							max-=1
-							DebugStop()
 						Endif
 			
 						Local lines:=New StringStack
