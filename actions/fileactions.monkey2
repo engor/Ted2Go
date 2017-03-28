@@ -25,7 +25,7 @@ Class FileActions
 		new_.HotKey=Key.N
 		new_.HotKeyModifiers=Modifier.Menu
 #else
-		new_.HotKey=Key.T
+		new_.HotKey=Key.N
 		new_.HotKeyModifiers=Modifier.Menu
 #endif
 		new_.Triggered=OnNew
