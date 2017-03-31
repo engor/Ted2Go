@@ -651,7 +651,7 @@ Class CodeDocument Extends Ted2Document
 		End
 
 		_view=New DockingView
-				
+		
 		' Editor
 		_codeView=New CodeDocumentView( Self )
 		_codeView.LineChanged += Lambda( prev:Int,cur:Int )
@@ -659,13 +659,10 @@ Class CodeDocument Extends Ted2Document
 		End
 		_codeView.LineChanged += OnLineChanged
 		
-#If __TARGET__="macos"
-		Local commentTitle:="Comment block (Ctrl+/)"
-		Local uncommentTitle:="Uncomment block (Ctrl+Shist+/)"
-#Else
-		Local commentTitle:="Comment block (Ctrl+')"
-		Local uncommentTitle:="Uncomment block (Ctrl+Shist+')"
-#Endif
+		Local commentTitle:=GetActionTextWithShortcut( MainWindow.GetActionComment() )
+		Local uncommentTitle:=GetActionTextWithShortcut( MainWindow.GetActionUncomment() )
+		Local findTitle:=GetActionTextWithShortcut( MainWindow.GetActionFind() )
+
 		' Toolbar
 		Local bar:ToolBarExt=Null
 		If Prefs.EditorToolBarVisible
@@ -683,7 +680,7 @@ Class CodeDocument Extends Ted2Document
 				Lambda()
 					OnFindSelection()
 				End,
-				"Find selection (Ctrl+F)" )
+				findTitle )
 			bar.AddIconicButton(
 				ThemeImages.Get( "editorbar/find_previous.png" ),
 				Lambda()

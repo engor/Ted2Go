@@ -109,7 +109,7 @@ Using mojox..
 Using tinyxml2..
 
 
-Global AppTitle:="Ted2Go v2.2.2"
+Global AppTitle:="Ted2Go v2.2.3"
 
 
 Function Main()
@@ -180,5 +180,11 @@ Function Main()
 	
 	App.Run()
 		
+End
+
+
+Function GetActionTextWithShortcut:String( action:Action )
+
+	Return action.Text+" ("+action.HotKeyText+")"
 End
 

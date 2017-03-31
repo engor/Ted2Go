@@ -22,7 +22,7 @@ Class FileActions
 		
 		new_=New Action( "New" )
 #if __TARGET__="macos"
-		new_.HotKey=Key.N
+		new_.HotKey=Key.T
 		new_.HotKeyModifiers=Modifier.Menu
 #else
 		new_.HotKey=Key.N

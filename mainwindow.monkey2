@@ -304,30 +304,27 @@ Class MainWindowInstance Extends Window
 		
 		'Tool Bar
 		'
-		#If __TARGET__="macos"
-		Local newTitle:="New file (Ctrl+T)"
-		Local redoTitle:="Redo (Shish+Ctrl+Z)"
-		Local runTitle:="Run (Ctrl+R)"
-		Local buildTitle:="Build (Ctrl+B)"
-		Local checkTitle:="Check errors (Shift+Ctrl+R)"
-		#Else
-		Local newTitle:="New file (Ctrl+N)"
-		Local redoTitle:="Redo (Ctrl+Y)"
-		Local runTitle:="Run (F5)"
-		Local buildTitle:="Build (F6)"
-		Local checkTitle:="Check errors (F7)"
-		#Endif
+		Local newTitle:=GetActionTextWithShortcut( _fileActions.new_ )
+		Local openTitle:=GetActionTextWithShortcut( _fileActions.open )
+		Local saveAllTitle:=GetActionTextWithShortcut( _fileActions.saveAll )
+		Local undoTitle:=GetActionTextWithShortcut( _editActions.undo )
+		Local redoTitle:=GetActionTextWithShortcut( _editActions.redo )
+		Local runTitle:=GetActionTextWithShortcut( _buildActions.buildAndRun )
+		Local buildTitle:=GetActionTextWithShortcut( _buildActions.build )
+		Local checkTitle:=GetActionTextWithShortcut( _buildActions.semant )
+		Local findTitle:=GetActionTextWithShortcut( _findActions.find )
+		
 		If Prefs.MainToolBarVisible
 			_toolBar=New ToolBarExt
 			_toolBar.Style=GetStyle( "MainToolBar" )
 			_toolBar.MaxSize=New Vec2i( 10000,40 )
 			
 			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/new_file.png" ),_fileActions.new_.Triggered,newTitle )
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_file.png" ),_fileActions.open.Triggered,"Open file... (Ctrl+O)" )
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_file.png" ),_fileActions.open.Triggered,openTitle )
 			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_project.png" ),_projectView.openProject.Triggered,"Open project..." )
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/save_all.png" ),_fileActions.saveAll.Triggered,"Save all (Ctrl+Shift+S)" )
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/save_all.png" ),_fileActions.saveAll.Triggered,saveAllTitle )
 			_toolBar.AddSeparator()
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/undo.png" ),_editActions.undo.Triggered,"Undo (Ctrl+Z)" )
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/undo.png" ),_editActions.undo.Triggered,undoTitle )
 			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/redo.png" ),_editActions.redo.Triggered,redoTitle )
 			_toolBar.AddSeparator()
 			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/check.png" ),_buildActions.semant.Triggered,checkTitle )
@@ -340,7 +337,7 @@ Class MainWindowInstance Extends Window
 			End
 			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/options.png" ),act,"Target settings" )
 			_toolBar.AddSeparator()
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/find.png" ),_findActions.find.Triggered,"Find (Ctrl+F)" )
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/find.png" ),_findActions.find.Triggered,findTitle )
 			_toolBar.AddSeparator()
 			
 			Local goBack:=Lambda()
@@ -720,6 +717,21 @@ Class MainWindowInstance Extends Window
 		_docsManager.OpenDocument( path,True )
 	End
 	
+	Method GetActionFind:Action()
+	
+		Return _findActions.find
+	End
+	
+	Method GetActionComment:Action()
+	
+		Return _viewActions.comment
+	End
+	
+	Method GetActionUncomment:Action()
+	
+		Return _viewActions.uncomment
+	End
+	
 
 	Private
 	
@@ -792,6 +804,7 @@ Class MainWindowInstance Extends Window
 
 		DeleteTmps()
 	End
+	
 	
 	Protected
 	
