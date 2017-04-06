@@ -885,8 +885,14 @@ Class Monkey2Parser Extends CodeParserPlugin
 		' add from super classes / ifaces
 		If Not item.SuperTypesStr Return
 		
+		' find class / iface
 		For Local t:=Eachin item.SuperTypesStr
-			' find class / iface
+			
+			' avoid recursive calls
+			If t = item.Ident
+				Continue
+			Endif
+			
 			Local result:CodeItem=Null
 			For Local i:=Eachin Items
 				If i.Ident = t
