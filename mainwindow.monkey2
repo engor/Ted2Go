@@ -379,7 +379,11 @@ Class MainWindowInstance Extends Window
 		Endif
 		
 		_contentView.AddView( _statusBar,"bottom" )
-		_contentView.AddView( _browsersTabView,"right",250,True )
+		If Prefs.MainProjectRight
+			_contentView.AddView( _browsersTabView,"right",250,True )
+		Else
+			_contentView.AddView( _browsersTabView,"left",250,True )
+		Endif
 		_contentView.AddView( _consolesTabView,"bottom",200,True )
 		_contentView.ContentView=_docsTabView
 		

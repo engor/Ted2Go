@@ -13,11 +13,13 @@ Class Prefs
 	Global AcNewLineByEnter:=True
 	'
 	Global MainToolBarVisible:=True
+	Global MainProjectRight:=True
+	'
 	Global EditorToolBarVisible:=True
 	Global EditorGutterVisible:=True
 	Global EditorShowWhiteSpaces:=False
 	Global EditorFontName:String
-	Global EditorFontSize:Int
+	Global EditorFontSize:String
 	'
 	Global SourceSortByType:=True
 	Global SourceShowInherited:=False
@@ -25,8 +27,16 @@ Class Prefs
 	
 	Function LoadState( json:JsonObject )
 		
-		If json.Contains( "completion" )
+		If json.Contains( "main" )
+			
+			Local j2:=json["main"].ToObject()
+			If j2.Contains( "mainToolBarVisible" ) Then MainToolBarVisible=j2["mainToolBarVisible"].ToBool()
+			If j2.Contains( "mainProjectRight" ) Then MainProjectRight=j2["mainProjectRight"].ToBool()
+			
+		Endif
 		
+		If json.Contains( "completion" )
+			
 			Local j2:=json["completion"].ToObject()
 			AcEnabled=j2["enabled"].ToBool()
 			AcKeywordsOnly=j2["keywordsOnly"].ToBool()
@@ -38,25 +48,19 @@ Class Prefs
 			
 		Endif
 		
-		If json.Contains( "mainToolBarVisible" )
-		
-			MainToolBarVisible=json["mainToolBarVisible"].ToBool()
-		
-		Endif
-		
 		If json.Contains( "editor" )
-		
+			
 			Local j2:=json["editor"].ToObject()
 			EditorToolBarVisible=j2["toolBarVisible"].ToBool()
 			EditorGutterVisible=j2["gutterVisible"].ToBool()
 			EditorShowWhiteSpaces=GetJsonBool( j2,"showWhiteSpaces",EditorShowWhiteSpaces )
 			If j2.Contains("fontName") Then EditorFontName=j2["fontName"].ToString()
-			If j2.Contains("fontSize") Then EditorFontSize=Int( j2["fontSize"].ToNumber() )
+			If j2.Contains("fontSize") Then EditorFontSize=j2["fontSize"].ToString()
 			
 		Endif
 		
 		If json.Contains( "source" )
-		
+			
 			Local j2:=json["source"].ToObject()
 			SourceSortByType=j2["sortByType"].ToBool()
 			SourceShowInherited=j2["showInherited"].ToBool()
@@ -67,6 +71,11 @@ Class Prefs
 	Function SaveState( json:JsonObject )
 		
 		Local j:=New JsonObject
+		j["mainToolBarVisible"]=New JsonBool( MainToolBarVisible )
+		j["mainProjectRight"]=New JsonBool( MainProjectRight )
+		json["main"]=j
+		
+		j=New JsonObject
 		j["enabled"]=New JsonBool( AcEnabled )
 		j["keywordsOnly"]=New JsonBool( AcKeywordsOnly )
 		j["showAfter"]=New JsonNumber( AcShowAfter )
@@ -76,14 +85,12 @@ Class Prefs
 		j["newLineByEnter"]=New JsonBool( AcNewLineByEnter )
 		json["completion"]=j
 		
-		json["mainToolBarVisible"]=New JsonBool( MainToolBarVisible )
-		
 		j=New JsonObject
 		j["toolBarVisible"]=New JsonBool( EditorToolBarVisible )
 		j["gutterVisible"]=New JsonBool( EditorGutterVisible )
 		j["showWhiteSpaces"]=New JsonBool( EditorShowWhiteSpaces )
 		j["fontName"]=New JsonString( EditorFontName )
-		j["fontSize"]=New JsonNumber( EditorFontSize )
+		j["fontSize"]=New JsonString( EditorFontSize )
 		json["editor"]=j
 		
 		j=New JsonObject
