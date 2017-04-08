@@ -616,7 +616,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		_lineColor=App.Theme.GetColor( "textview-cursor-line" )
 		
-		If Prefs.EditorFontName.Length>1 And Prefs.EditorFontSize>1 Then
+		If Prefs.EditorFontName.Length>1 And Int(Prefs.EditorFontSize)>1 Then
 			Local tmpFont:=Font.Load( "asset::fonts\"+Prefs.EditorFontName,Int(Prefs.EditorFontSize) )
 			If tmpFont Then RenderStyle.Font=tmpFont Else RenderStyle.Font=App.Theme.GetStyle("Editor").Font
 		Endif

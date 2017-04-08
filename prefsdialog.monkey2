@@ -37,6 +37,8 @@ Class PrefsDialog Extends DialogExt
 		
 		_mainToolBarVisible=New CheckButton( "ToolBar visible" )
 		_mainToolBarVisible.Checked=Prefs.MainToolBarVisible
+		_mainProjectRight=New CheckButton( "Project view position:left/right" )
+		_mainProjectRight.Checked=Prefs.MainProjectRight
 		
 		_editorShowWhiteSpaces=New CheckButton( "Whitespaces visible" )
 		_editorShowWhiteSpaces.Checked=Prefs.EditorShowWhiteSpaces
@@ -56,6 +58,7 @@ Class PrefsDialog Extends DialogExt
 		Local docker:=New DockingView
 		docker.AddView( New Label( "[Main]" ),"top" )
 		docker.AddView( _mainToolBarVisible,"top" )
+		docker.AddView( _mainProjectRight,"top" )
 		docker.AddView( New Label( " " ),"top" )
 		docker.AddView( New Label( "[Code Editor]" ),"top" )
 		docker.AddView( _editorToolBarVisible,"top" )
@@ -103,7 +106,7 @@ Class PrefsDialog Extends DialogExt
 	Field _editorFontSize:TextField
 	
 	Field _mainToolBarVisible:CheckButton
-	
+	Field _mainProjectRight:CheckButton
 	
 	Method OnApply()
 	
@@ -121,8 +124,10 @@ Class PrefsDialog Extends DialogExt
 		Prefs.EditorShowWhiteSpaces=_editorShowWhiteSpaces.Checked
 		Prefs.EditorFontName=_editorFontName.Text
 		Prefs.EditorFontSize=Int(_editorFontSize.Text)
+		If Int(Prefs.EditorFontSize)<=0 Then Prefs.EditorFontSize=""
 		
 		Prefs.MainToolBarVisible=_mainToolBarVisible.Checked
+		Prefs.MainProjectRight=_mainProjectRight.Checked
 		
 		App.ThemeChanged()
 		
