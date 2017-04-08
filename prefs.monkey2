@@ -17,7 +17,7 @@ Class Prefs
 	Global EditorGutterVisible:=True
 	Global EditorShowWhiteSpaces:=False
 	Global EditorFontName:String
-	Global EditorFontSize:String
+	Global EditorFontSize:Int
 	'
 	Global SourceSortByType:=True
 	Global SourceShowInherited:=False
@@ -51,7 +51,7 @@ Class Prefs
 			EditorGutterVisible=j2["gutterVisible"].ToBool()
 			EditorShowWhiteSpaces=GetJsonBool( j2,"showWhiteSpaces",EditorShowWhiteSpaces )
 			If j2.Contains("fontName") Then EditorFontName=j2["fontName"].ToString()
-			If j2.Contains("fontSize") Then EditorFontSize=j2["fontSize"].ToString()
+			If j2.Contains("fontSize") Then EditorFontSize=Int( j2["fontSize"].ToNumber() )
 			
 		Endif
 		
@@ -83,7 +83,7 @@ Class Prefs
 		j["gutterVisible"]=New JsonBool( EditorGutterVisible )
 		j["showWhiteSpaces"]=New JsonBool( EditorShowWhiteSpaces )
 		j["fontName"]=New JsonString( EditorFontName )
-		j["fontSize"]=New JsonString( EditorFontSize )
+		j["fontSize"]=New JsonNumber( EditorFontSize )
 		json["editor"]=j
 		
 		j=New JsonObject
