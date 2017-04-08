@@ -41,6 +41,14 @@ Class PrefsDialog Extends DialogExt
 		_editorShowWhiteSpaces=New CheckButton( "Whitespaces visible" )
 		_editorShowWhiteSpaces.Checked=Prefs.EditorShowWhiteSpaces
 		
+		_editorFontName=New TextField( Prefs.EditorFontName )
+		_editorFontSize=New TextField( Prefs.EditorFontSize )
+		
+		Local font:=New DockingView
+		font.AddView( New Label( "Font" ),"left" )
+		font.AddView( _editorFontName,"left" )
+		font.AddView( _editorFontSize,"left","45" )
+		
 		Local after:=New DockingView
 		after.AddView( New Label( "Show after" ),"left" )
 		after.AddView( _acShowAfter,"left" )
@@ -53,6 +61,7 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( _editorToolBarVisible,"top" )
 		docker.AddView( _editorGutterVisible,"top" )
 		docker.AddView( _editorShowWhiteSpaces,"top" )
+		docker.AddView( font,"top" )
 		docker.AddView( New Label( " " ),"top" )
 		docker.AddView( New Label( "[Completion]" ),"top" )
 		docker.AddView( _acEnabled,"top" )
@@ -74,7 +83,6 @@ Class PrefsDialog Extends DialogExt
 		_acShowAfter.Activated+=_acShowAfter.MakeKeyView
 		
 		Deactivated+=MainWindow.UpdateKeyView
-		
 	End
 	
 	
@@ -91,6 +99,8 @@ Class PrefsDialog Extends DialogExt
 	Field _editorToolBarVisible:CheckButton
 	Field _editorGutterVisible:CheckButton
 	Field _editorShowWhiteSpaces:CheckButton
+	Field _editorFontName:TextField
+	Field _editorFontSize:TextField
 	
 	Field _mainToolBarVisible:CheckButton
 	
@@ -109,8 +119,12 @@ Class PrefsDialog Extends DialogExt
 		Prefs.EditorToolBarVisible=_editorToolBarVisible.Checked
 		Prefs.EditorGutterVisible=_editorGutterVisible.Checked
 		Prefs.EditorShowWhiteSpaces=_editorShowWhiteSpaces.Checked
+		Prefs.EditorFontName=_editorFontName.Text
+		Prefs.EditorFontSize=Int(_editorFontSize.Text)
 		
 		Prefs.MainToolBarVisible=_mainToolBarVisible.Checked
+		
+		App.ThemeChanged()
 		
 		Hide()
 		Apply()
