@@ -1,4 +1,3 @@
-
 Namespace ted2go
 
 
@@ -17,6 +16,8 @@ Class Prefs
 	Global EditorToolBarVisible:=True
 	Global EditorGutterVisible:=True
 	Global EditorShowWhiteSpaces:=False
+	Global EditorFontName:String
+	Global EditorFontSize:String
 	'
 	Global SourceSortByType:=True
 	Global SourceShowInherited:=False
@@ -49,6 +50,8 @@ Class Prefs
 			EditorToolBarVisible=j2["toolBarVisible"].ToBool()
 			EditorGutterVisible=j2["gutterVisible"].ToBool()
 			EditorShowWhiteSpaces=GetJsonBool( j2,"showWhiteSpaces",EditorShowWhiteSpaces )
+			If j2.Contains("fontName") Then EditorFontName=j2["fontName"].ToString()
+			If j2.Contains("fontSize") Then EditorFontSize=j2["fontSize"].ToString()
 			
 		Endif
 		
@@ -57,7 +60,7 @@ Class Prefs
 			Local j2:=json["source"].ToObject()
 			SourceSortByType=j2["sortByType"].ToBool()
 			SourceShowInherited=j2["showInherited"].ToBool()
-		
+			
 		Endif
 	End
 	
@@ -79,6 +82,8 @@ Class Prefs
 		j["toolBarVisible"]=New JsonBool( EditorToolBarVisible )
 		j["gutterVisible"]=New JsonBool( EditorGutterVisible )
 		j["showWhiteSpaces"]=New JsonBool( EditorShowWhiteSpaces )
+		j["fontName"]=New JsonString( EditorFontName )
+		j["fontSize"]=New JsonString( EditorFontSize )
 		json["editor"]=j
 		
 		j=New JsonObject
