@@ -30,6 +30,9 @@ Class CodeGutterView Extends View
 	Method OnRender( canvas:Canvas ) Override
 	
 		_textView=_doc.TextView
+		
+		Local selLine:=_textView.Document.FindLine( _textView.Cursor )
+		
 		canvas.Color=RenderStyle.BackgroundColor
 		
 		canvas.DrawRect( Rect.X,Rect.Y,Rect.Width,Rect.Height )
@@ -52,6 +55,13 @@ Class CodeGutterView Extends View
 		
 			Local rect:=_textView.LineRect( i )
 		
+			If i<>selLine And (i+1) Mod 10 <> 0
+				canvas.Alpha=0.5
+				canvas.DrawRect( _width-4,rect.Top+rect.Height*0.5-1,2,2 )
+				canvas.Alpha=1
+				Continue
+			Endif
+			
 			' show error bubble
 			
 			If _doc.HasErrors And _doc.HasErrorAt( i )
@@ -61,6 +71,7 @@ Class CodeGutterView Extends View
 					canvas.Color=textColor
 				Endif
 			Else
+				canvas.Color=(i = selLine) ? textColor*1.1 Else textColor 'make selected line number little brighter
 				canvas.DrawText( i+1,_width,rect.Top,1,0 )
 			Endif
 			
