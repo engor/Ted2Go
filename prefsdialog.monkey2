@@ -26,6 +26,9 @@ Class PrefsDialog Extends DialogExt
 		_acUseSpace=New CheckButton( "Choose by Space" )
 		_acUseSpace.Checked=Prefs.AcUseSpace
 		
+		_acUseDot=New CheckButton( "Choose by Dot (.)" )
+		_acUseDot.Checked=Prefs.AcUseDot
+		
 		_acNewLineByEnter=New CheckButton( "Add new line (by Enter)" )
 		_acNewLineByEnter.Checked=Prefs.AcNewLineByEnter
 		
@@ -37,6 +40,9 @@ Class PrefsDialog Extends DialogExt
 		
 		_mainToolBarVisible=New CheckButton( "ToolBar visible" )
 		_mainToolBarVisible.Checked=Prefs.MainToolBarVisible
+		
+		_mainProjectTabsRight=New CheckButton( "Project tabs on the right side" )
+		_mainProjectTabsRight.Checked=Prefs.MainProjectTabsRight
 		
 		_editorShowWhiteSpaces=New CheckButton( "Whitespaces visible" )
 		_editorShowWhiteSpaces.Checked=Prefs.EditorShowWhiteSpaces
@@ -72,26 +78,30 @@ Class PrefsDialog Extends DialogExt
 		after.AddView( _acShowAfter,"left" )
 		
 		Local docker:=New DockingView
-		docker.AddView( New Label( "[Main]" ),"top" )
+		docker.AddView( New Label( "------ Main:" ),"top" )
+		docker.AddView( _mainProjectTabsRight,"top" )
 		docker.AddView( _mainToolBarVisible,"top" )
 		docker.AddView( New Label( " " ),"top" )
-		docker.AddView( New Label( "[Code Editor]" ),"top" )
+		
+		docker.AddView( New Label( "------ Code Editor:" ),"top" )
 		docker.AddView( _editorToolBarVisible,"top" )
 		docker.AddView( _editorGutterVisible,"top" )
 		docker.AddView( _editorShowWhiteSpaces,"top" )
 		docker.AddView( font,"top" )
 		docker.AddView( New Label( " " ),"top" )
-		docker.AddView( New Label( "[Completion]" ),"top" )
+		
+		docker.AddView( New Label( "------ Completion:" ),"top" )
 		docker.AddView( _acEnabled,"top" )
 		docker.AddView( after,"top" )
 		docker.AddView( _acUseTab,"top" )
 		docker.AddView( _acUseEnter,"top" )
 		docker.AddView( _acNewLineByEnter,"top" )
 		docker.AddView( _acUseSpace,"top" )
+		docker.AddView( _acUseDot,"top" )
 		docker.AddView( _acKeywordsOnly,"top" )
 		docker.AddView( New Label( " " ),"top" )
-		docker.AddView( New Label( "(Restart IDE to see all changes)" ),"top" )
-		docker.AddView( New Label( " " ),"top" )
+		'docker.AddView( New Label( "(Restart IDE to see all changes)" ),"top" )
+		'docker.AddView( New Label( " " ),"top" )
 		
 		ContentView=docker
 		
@@ -110,6 +120,7 @@ Class PrefsDialog Extends DialogExt
 	Field _acUseTab:CheckButton
 	Field _acUseEnter:CheckButton
 	Field _acUseSpace:CheckButton
+	Field _acUseDot:CheckButton
 	Field _acNewLineByEnter:CheckButton
 	Field _acKeywordsOnly:CheckButton
 	Field _acShowAfter:TextField
@@ -121,7 +132,7 @@ Class PrefsDialog Extends DialogExt
 	Field _editorFontSize:TextField
 	
 	Field _mainToolBarVisible:CheckButton
-	
+	Field _mainProjectTabsRight:CheckButton
 	
 	Method OnApply()
 	
@@ -129,6 +140,7 @@ Class PrefsDialog Extends DialogExt
 		Prefs.AcUseTab=_acUseTab.Checked
 		Prefs.AcUseEnter=_acUseEnter.Checked
 		Prefs.AcUseSpace=_acUseSpace.Checked
+		Prefs.AcUseDot=_acUseDot.Checked
 		Prefs.AcNewLineByEnter=_acNewLineByEnter.Checked
 		Prefs.AcKeywordsOnly=_acKeywordsOnly.Checked
 		Local count:=Max( 1,Int( _acShowAfter.Text ) )
@@ -143,6 +155,7 @@ Class PrefsDialog Extends DialogExt
 		Prefs.EditorFontSize=Int(s)
 		
 		Prefs.MainToolBarVisible=_mainToolBarVisible.Checked
+		Prefs.MainProjectTabsRight=_mainProjectTabsRight.Checked
 		
 		App.ThemeChanged()
 		

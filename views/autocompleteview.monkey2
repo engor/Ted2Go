@@ -365,7 +365,7 @@ Class AutocompleteDialog Extends DialogExt
 					event.Eat()
 				Endif
 			Case Key.Period
-				If Prefs.AcUseSpace
+				If Prefs.AcUseDot
 					OnItemChoosen( _view.CurrentItem )
 					event.Eat()
 				Endif

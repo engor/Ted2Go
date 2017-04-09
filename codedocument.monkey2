@@ -32,17 +32,11 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	
 	Method New( doc:CodeDocument )
 	
-		ShowWhiteSpaces=Prefs.EditorShowWhiteSpaces
-		
 		_doc=doc
 		
 		Document=_doc.TextDocument
 		
 		ContentView.Style.Border=New Recti( -4,-4,4,4 )
-		
-		If Prefs.EditorGutterVisible
-			AddView( New CodeGutterView( _doc ),"left" )
-		Endif
 		
 		'very important to set FileType for init
 		'formatter, highlighter and keywords
@@ -67,12 +61,25 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		End
 		
 		UpdateThemeColors()
-		
+		UpdatePrefs()
 	End
 	
 	Property CharsToShowAutoComplete:Int()
 		
 		Return Prefs.AcShowAfter
+	End
+	
+	Method UpdatePrefs()
+		
+		ShowWhiteSpaces=Prefs.EditorShowWhiteSpaces
+		
+		RemoveView( _gutter )
+		If Prefs.EditorGutterVisible
+			If Not _gutter Then _gutter=New CodeGutterView( _doc )
+			AddView( _gutter,"left" )
+		Endif
+		
+		_doc.ArrangeElements()
 	End
 	
 	
@@ -614,7 +621,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	Field _doc:CodeDocument
 	Field _prevErrorLine:Int
 	Field _lineColor:Color
-	
+	Field _gutter:CodeGutterView
 	
 	Method UpdateThemeColors()
 		
@@ -636,6 +643,7 @@ End
 Class CodeDocument Extends Ted2Document
 	
 	Method New( path:String )
+		
 		Super.New( path )
 	
 		_doc=New TextDocument
@@ -671,96 +679,12 @@ Class CodeDocument Extends Ted2Document
 		End
 		_codeView.LineChanged += OnLineChanged
 		
-		Local commentTitle:=GetActionTextWithShortcut( MainWindow.GetActionComment() )
-		Local uncommentTitle:=GetActionTextWithShortcut( MainWindow.GetActionUncomment() )
-		Local findTitle:=GetActionTextWithShortcut( MainWindow.GetActionFind() )
-
-		' Toolbar
-		Local bar:ToolBarExt=Null
-		If Prefs.EditorToolBarVisible
-		
-			bar=New ToolBarExt
-			bar.Style=App.Theme.GetStyle( "EditorToolBar" )
-			bar.MaxSize=New Vec2i( 10000,30 )
-			bar.AddSeparator()
-			bar.AddSeparator()
-			bar.AddSeparator()
-			bar.AddSeparator()
-			
-			bar.AddIconicButton(
-				ThemeImages.Get( "editorbar/find_selection.png" ),
-				Lambda()
-					OnFindSelection()
-				End,
-				findTitle )
-			bar.AddIconicButton(
-				ThemeImages.Get( "editorbar/find_previous.png" ),
-				Lambda()
-					OnFindPrev()
-				End,
-				"Find previous (Shift+F3)" )
-			bar.AddIconicButton(
-				ThemeImages.Get( "editorbar/find_next.png" ),
-				Lambda()
-					OnFindNext()
-				End,
-				"Find next (F3)" )
-			bar.AddSeparator()
-			#Rem
-			bar.AddIconicButton(
-				ThemeImages.Get( "editorbar/previous_bookmark.png" ),
-				Lambda()
-					OnPrevBookmark()
-				End,
-				"Prev bookmark (Ctrl+,)" )
-			bar.AddIconicButton(
-				ThemeImages.Get( "editorbar/next_bookmark.png" ),
-				Lambda()
-					OnNextBookmark()
-				End,
-				"Next bookmark (Ctrl+.)" )
-			bar.AddIconicButton(
-				ThemeImages.Get( "editorbar/toggle_bookmark.png" ),
-				Lambda()
-					OnToggleBookmark()
-				End,
-				"Toggle bookmark (Ctrl+M)" )
-			bar.AddSeparator()
-			#End
-			bar.AddIconicButton(
-				ThemeImages.Get( "editorbar/shift_left.png" ),
-				Lambda()
-					OnShiftLeft()
-				End,
-				"Shift left (Shift+Tab)" )
-			bar.AddIconicButton(
-				ThemeImages.Get( "editorbar/shift_right.png" ),
-				Lambda()
-					OnShiftRight()
-				End,
-				"Shift right (Tab)" )
-			bar.AddSeparator()
-			bar.AddIconicButton(
-				ThemeImages.Get( "editorbar/comment.png" ),
-				Lambda()
-					Comment()
-				End,
-				commentTitle )
-			bar.AddIconicButton(
-				ThemeImages.Get( "editorbar/uncomment.png" ),
-				Lambda()
-					Uncomment()
-				End,
-				uncommentTitle )
-				
-		Endif
 		
 		' bar + editor
-		Local docker:=New DockingView
-		If bar Then docker.AddView( bar,"top" )
-		docker.ContentView=_codeView
+		_content=New DockingView
+		_content.ContentView=_codeView
 		
-		_view.ContentView=docker
+		_view.ContentView=_content
 		
 		OnCreateBrowser()
 		
@@ -774,6 +698,20 @@ Class CodeDocument Extends Ted2Document
 		Monkey2Parser.OnDoneParseModules+=Lambda()
 			UpdateCodeTree()
 		End
+		
+		ArrangeElements()
+	End
+	
+	Method ArrangeElements()
+		
+		If Not _content Return
+		
+		_content.RemoveView( _toolBar )
+		
+		If Prefs.EditorToolBarVisible
+			_toolBar=GetToolBar()
+			_content.AddView( _toolBar,"top" )
+		Endif
 		
 	End
 	
@@ -1129,6 +1067,98 @@ Class CodeDocument Extends Ted2Document
 	Field _parser:ICodeParser
 	Field _prevLine:=-1
 	Field _prevScope:CodeItem
+	
+	Field _toolBar:ToolBarExt
+	Field _content:DockingView
+	
+	
+	Method GetToolBar:ToolBarExt()
+		
+		If _toolBar Return _toolBar
+		
+		Local commentTitle:=GetActionTextWithShortcut( MainWindow.GetActionComment() )
+		Local uncommentTitle:=GetActionTextWithShortcut( MainWindow.GetActionUncomment() )
+		Local findTitle:=GetActionTextWithShortcut( MainWindow.GetActionFind() )
+		
+		' Toolbar
+		
+		Local bar:=New ToolBarExt
+		_toolBar=bar
+		bar.Style=App.Theme.GetStyle( "EditorToolBar" )
+		bar.MaxSize=New Vec2i( 10000,30 )
+		bar.AddSeparator()
+		bar.AddSeparator()
+		bar.AddSeparator()
+		bar.AddSeparator()
+	
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/find_selection.png" ),
+			Lambda()
+				OnFindSelection()
+			End,
+			findTitle )
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/find_previous.png" ),
+			Lambda()
+				OnFindPrev()
+			End,
+			"Find previous (Shift+F3)" )
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/find_next.png" ),
+			Lambda()
+				OnFindNext()
+			End,
+			"Find next (F3)" )
+		bar.AddSeparator()
+		#Rem
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/previous_bookmark.png" ),
+			Lambda()
+				OnPrevBookmark()
+			End,
+			"Prev bookmark (Ctrl+,)" )
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/next_bookmark.png" ),
+			Lambda()
+				OnNextBookmark()
+			End,
+			"Next bookmark (Ctrl+.)" )
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/toggle_bookmark.png" ),
+			Lambda()
+				OnToggleBookmark()
+			End,
+			"Toggle bookmark (Ctrl+M)" )
+		bar.AddSeparator()
+		#End
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/shift_left.png" ),
+			Lambda()
+				OnShiftLeft()
+			End,
+			"Shift left (Shift+Tab)" )
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/shift_right.png" ),
+			Lambda()
+				OnShiftRight()
+			End,
+			"Shift right (Tab)" )
+		bar.AddSeparator()
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/comment.png" ),
+			Lambda()
+				Comment()
+			End,
+			commentTitle )
+		bar.AddIconicButton(
+			ThemeImages.Get( "editorbar/uncomment.png" ),
+			Lambda()
+				Uncomment()
+			End,
+			uncommentTitle )
+		
+		Return _toolBar
+	End
 	
 	Method OnLoad:Bool() Override
 	

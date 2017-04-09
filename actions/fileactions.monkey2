@@ -340,10 +340,13 @@ Class FileActions
 			_prefsDialog.Apply+=Lambda()
 			
 				For Local d:=Eachin _docs.OpenDocuments
-					Local tv:=Cast<CodeTextView>( d.TextView )
-					If tv Then tv.ShowWhiteSpaces=Prefs.EditorShowWhiteSpaces
+					Local tv:=Cast<CodeDocumentView>( d.TextView )
+					If tv Then tv.UpdatePrefs()
 				Next
+				
+				MainWindow.ArrangeElements()
 			End
+			
 		Endif
 		_prefsDialog.Show()
 	End

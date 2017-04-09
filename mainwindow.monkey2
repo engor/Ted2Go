@@ -305,55 +305,6 @@ Class MainWindowInstance Extends Window
 		_menuBar.AddMenu( _windowMenu )
 		_menuBar.AddMenu( _helpMenu )
 		
-		'Tool Bar
-		'
-		Local newTitle:=GetActionTextWithShortcut( _fileActions.new_ )
-		Local openTitle:=GetActionTextWithShortcut( _fileActions.open )
-		Local saveAllTitle:=GetActionTextWithShortcut( _fileActions.saveAll )
-		Local undoTitle:=GetActionTextWithShortcut( _editActions.undo )
-		Local redoTitle:=GetActionTextWithShortcut( _editActions.redo )
-		Local runTitle:=GetActionTextWithShortcut( _buildActions.buildAndRun )
-		Local buildTitle:=GetActionTextWithShortcut( _buildActions.build )
-		Local checkTitle:=GetActionTextWithShortcut( _buildActions.semant )
-		Local findTitle:=GetActionTextWithShortcut( _findActions.find )
-		
-		If Prefs.MainToolBarVisible
-			_toolBar=New ToolBarExt
-			_toolBar.Style=GetStyle( "MainToolBar" )
-			_toolBar.MaxSize=New Vec2i( 10000,40 )
-			
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/new_file.png" ),_fileActions.new_.Triggered,newTitle )
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_file.png" ),_fileActions.open.Triggered,openTitle )
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_project.png" ),_projectView.openProject.Triggered,"Open project..." )
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/save_all.png" ),_fileActions.saveAll.Triggered,saveAllTitle )
-			_toolBar.AddSeparator()
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/undo.png" ),_editActions.undo.Triggered,undoTitle )
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/redo.png" ),_editActions.redo.Triggered,redoTitle )
-			_toolBar.AddSeparator()
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/check.png" ),_buildActions.semant.Triggered,checkTitle )
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/build.png" ),_buildActions.build.Triggered,buildTitle )
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/run.png" ),_buildActions.buildAndRun.Triggered,runTitle )
-			_toolBar.AddSeparator()
-			
-			Local act:=Lambda()
-				_buildActions.targetMenu.Open()
-			End
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/options.png" ),act,"Target settings" )
-			_toolBar.AddSeparator()
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/find.png" ),_findActions.find.Triggered,findTitle )
-			_toolBar.AddSeparator()
-			
-			Local goBack:=Lambda()
-				Navigator.TryBack()
-			End
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/back.png" ),goBack,"Go back (Alt+Left)" )
-			
-			Local goForw:=Lambda()
-				Navigator.TryForward()
-			End
-			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/forward.png" ),goForw,"Go forward (Alt+Right)" )
-			
-		Endif
 		
 		_browsersTabView.AddTab( "Project",_projectView,True )
 		_browsersTabView.AddTab( "Source",_docBrowser,False )
@@ -370,21 +321,7 @@ Class MainWindowInstance Extends Window
 		_contentView=New DockingView
 		_contentView.AddView( _menuBar,"top" )
 		
-		If _toolBar
-'			Local vv:=New DockingView
-'			vv.AddView( _toolBar,"left" )
-'			
-'			Local better:=New DockingView
-'			better.AddView( New Label( "Make me better" ),"left" )
-'			vv.AddView( better,"right" )
-			
-			_contentView.AddView( _toolBar,"top" )
-		Endif
-		
-		_contentView.AddView( _statusBar,"bottom" )
-		_contentView.AddView( _browsersTabView,"right",250,True )
-		_contentView.AddView( _consolesTabView,"bottom",200,True )
-		_contentView.ContentView=_docsTabView
+		ArrangeElements()
 		
 		ContentView=_contentView
 
@@ -399,6 +336,34 @@ Class MainWindowInstance Extends Window
 		If GetFileType( "bin/ted2.state.json" )=FileType.None _helpActions.about.Trigger()
 		
 	End
+	
+	Method ArrangeElements()
+		
+		_contentView.RemoveView( _toolBar )
+		_contentView.RemoveView( _statusBar )
+		_contentView.RemoveView( _browsersTabView )
+		_contentView.RemoveView( _consolesTabView )
+		
+		If Prefs.MainToolBarVisible
+			_toolBar=GetMainToolBar()
+			_contentView.AddView( _toolBar,"top" )
+		Endif
+		
+		_contentView.AddView( _statusBar,"bottom" )
+		
+		Local location:=Prefs.MainProjectTabsRight ? "right" Else "left"
+		
+		Local size:=_browsersTabView.Rect.Width
+		If size=0 Then size=250
+		_contentView.AddView( _browsersTabView,location,size,True )
+		
+		size=_consolesTabView.Rect.Height
+		If size=0 Then size=200
+		_contentView.AddView( _consolesTabView,"bottom",size,True )
+		
+		_contentView.ContentView=_docsTabView
+	End
+	
 	
 	Method OnFind()
 		_findActions.find.Trigger()
@@ -522,7 +487,61 @@ Class MainWindowInstance Extends Window
 	
 	
 	Private
+	
+	Method GetMainToolBar:ToolBarExt()
 		
+		If _toolBar Return _toolBar
+		
+		'Tool Bar
+		'
+		Local newTitle:=GetActionTextWithShortcut( _fileActions.new_ )
+		Local openTitle:=GetActionTextWithShortcut( _fileActions.open )
+		Local saveAllTitle:=GetActionTextWithShortcut( _fileActions.saveAll )
+		Local undoTitle:=GetActionTextWithShortcut( _editActions.undo )
+		Local redoTitle:=GetActionTextWithShortcut( _editActions.redo )
+		Local runTitle:=GetActionTextWithShortcut( _buildActions.buildAndRun )
+		Local buildTitle:=GetActionTextWithShortcut( _buildActions.build )
+		Local checkTitle:=GetActionTextWithShortcut( _buildActions.semant )
+		Local findTitle:=GetActionTextWithShortcut( _findActions.find )
+		
+		_toolBar=New ToolBarExt
+		_toolBar.Style=GetStyle( "MainToolBar" )
+		_toolBar.MaxSize=New Vec2i( 10000,40 )
+		
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/new_file.png" ),_fileActions.new_.Triggered,newTitle )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_file.png" ),_fileActions.open.Triggered,openTitle )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_project.png" ),_projectView.openProject.Triggered,"Open project..." )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/save_all.png" ),_fileActions.saveAll.Triggered,saveAllTitle )
+		_toolBar.AddSeparator()
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/undo.png" ),_editActions.undo.Triggered,undoTitle )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/redo.png" ),_editActions.redo.Triggered,redoTitle )
+		_toolBar.AddSeparator()
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/check.png" ),_buildActions.semant.Triggered,checkTitle )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/build.png" ),_buildActions.build.Triggered,buildTitle )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/run.png" ),_buildActions.buildAndRun.Triggered,runTitle )
+		_toolBar.AddSeparator()
+		
+		Local act:=Lambda()
+			_buildActions.targetMenu.Open()
+		End
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/options.png" ),act,"Target settings" )
+		_toolBar.AddSeparator()
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/find.png" ),_findActions.find.Triggered,findTitle )
+		_toolBar.AddSeparator()
+		
+		Local goBack:=Lambda()
+			Navigator.TryBack()
+		End
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/back.png" ),goBack,"Go back (Alt+Left)" )
+		
+		Local goForw:=Lambda()
+			Navigator.TryForward()
+		End
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/forward.png" ),goForw,"Go forward (Alt+Right)" )
+		
+		Return _toolBar
+	End
+	
 	Method DeleteTmps()
 	
 		For Local f:=Eachin LoadDir( _tmp )
@@ -890,6 +909,8 @@ Class MainWindowInstance Extends Window
 	Field _themeScale:Float=1
 	
 	Field _contentView:DockingView
+	Field _contentLeftView:DockingView
+	Field _contentRightView:DockingView
 
 	Field _recentFiles:=New StringStack
 	

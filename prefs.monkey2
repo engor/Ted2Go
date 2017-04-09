@@ -10,9 +10,12 @@ Class Prefs
 	Global AcUseTab:=True
 	Global AcUseEnter:=False
 	Global AcUseSpace:=True
+	Global AcUseDot:=False
 	Global AcNewLineByEnter:=True
 	'
 	Global MainToolBarVisible:=True
+	Global MainProjectTabsRight:=True
+	'
 	Global EditorToolBarVisible:=True
 	Global EditorGutterVisible:=True
 	Global EditorShowWhiteSpaces:=False
@@ -25,6 +28,14 @@ Class Prefs
 	
 	Function LoadState( json:JsonObject )
 		
+		If json.Contains( "main" )
+			
+			Local j2:=json["main"].ToObject()
+			If j2.Contains( "toolBarVisible" ) Then MainToolBarVisible=j2["toolBarVisible"].ToBool()
+			If j2.Contains( "tabsRight" ) Then MainProjectTabsRight=j2["tabsRight"].ToBool()
+		
+		Endif
+		
 		If json.Contains( "completion" )
 		
 			Local j2:=json["completion"].ToObject()
@@ -34,14 +45,9 @@ Class Prefs
 			AcUseTab=j2["useTab"].ToBool()
 			AcUseEnter=j2["useEnter"].ToBool()
 			AcUseSpace=GetJsonBool( j2,"useSpace",AcUseSpace )
+			AcUseDot=GetJsonBool( j2,"useDot",AcUseDot )
 			AcNewLineByEnter=j2["newLineByEnter"].ToBool()
 			
-		Endif
-		
-		If json.Contains( "mainToolBarVisible" )
-		
-			MainToolBarVisible=json["mainToolBarVisible"].ToBool()
-		
 		Endif
 		
 		If json.Contains( "editor" )
@@ -67,16 +73,20 @@ Class Prefs
 	Function SaveState( json:JsonObject )
 		
 		Local j:=New JsonObject
+		j["toolBarVisible"]=New JsonBool( MainToolBarVisible )
+		j["tabsRight"]=New JsonBool( MainProjectTabsRight )
+		json["main"]=j
+		 
+		j=New JsonObject
 		j["enabled"]=New JsonBool( AcEnabled )
 		j["keywordsOnly"]=New JsonBool( AcKeywordsOnly )
 		j["showAfter"]=New JsonNumber( AcShowAfter )
 		j["useTab"]=New JsonBool( AcUseTab )
 		j["useEnter"]=New JsonBool( AcUseEnter )
 		j["useSpace"]=New JsonBool( AcUseSpace )
+		j["useDot"]=New JsonBool( AcUseDot )
 		j["newLineByEnter"]=New JsonBool( AcNewLineByEnter )
 		json["completion"]=j
-		
-		json["mainToolBarVisible"]=New JsonBool( MainToolBarVisible )
 		
 		j=New JsonObject
 		j["toolBarVisible"]=New JsonBool( EditorToolBarVisible )
