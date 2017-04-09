@@ -419,13 +419,16 @@ Class MainWindowInstance Extends Window
 
 	'Use these as macos still seems to have problems running requesters on a fiber - stacksize?
 	'
-	Method RequestFile:String( title:String,path:String,save:Bool )
+	Method RequestFile:String( title:String,path:String,save:Bool,filter:String="" )
 	
 		Local future:=New Future<String>
 		
-		App.Idle+=Lambda()
+		If Not filter Then filter="Monkey2 files:monkey2;Text files:txt;Image files:png,jpg,jpeg;All files:*"
 		
-			future.Set( requesters.RequestFile( title,,save,path ) )
+		App.Idle+=Lambda()
+			
+			Local s:=requesters.RequestFile( title,filter,save,path )
+			future.Set( s )
 		End
 		
 		Return future.Get()

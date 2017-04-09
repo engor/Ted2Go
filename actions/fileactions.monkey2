@@ -122,7 +122,8 @@ Class FileActions
 		Local doc:=_docs.CurrentDocument
 		If Not doc Return Null
 		
-		Local path:=MainWindow.RequestFile( "Save As","",True )
+		Local name:=StripDir( doc.Path )
+		Local path:=MainWindow.RequestFile( "Save As",name,True )
 		If Not path Return Null
 				
 		If Not ExtractExt( path ) path+=ExtractExt( doc.Path )
