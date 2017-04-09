@@ -9,6 +9,9 @@ Namespace ted2go
 
 #Import "assets/newfiles/@/ted2/newfiles"
 
+#Import "assets/fonts/@/fonts"
+
+
 Global MainWindow:MainWindowInstance
 
 Class MainWindowInstance Extends Window
