@@ -57,7 +57,7 @@ Class PrefsDialog Extends DialogExt
 			
 			Local initDir:=RealPath( AssetsDir() )
 			
-			Local path:=MainWindow.RequestFile( "Choose Font",initDir,False )
+			Local path:=MainWindow.RequestFile( "Choose Font",initDir,False,"Font files:ttf;Any files:*" )
 			If Not path Return
 			
 			path=RealPath( path )
