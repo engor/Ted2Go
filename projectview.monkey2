@@ -48,8 +48,14 @@ Class ProjectView Extends ScrollView
 		
 		browser.FileClicked+=Lambda( path:String )
 		
-			OnOpenDocument( path )
+			'OnOpenDocument( path )
 			
+		End
+		
+		browser.FileDoubleClicked+=Lambda( path:String )
+		
+			OnOpenDocument( path )
+		
 		End
 		
 		browser.FileRightClicked+=Lambda( path:String )
@@ -113,6 +119,23 @@ Class ProjectView Extends ScrollView
 					
 					Alert( "Failed to delete folder '"+path+"'" )
 				End
+				
+				menu.AddSeparator()
+				
+				If path = browser.RootPath ' root node
+					
+					menu.AddAction( "Close Project" ).Triggered=Lambda()
+					
+						CloseProject( path )
+					End
+				Else
+					
+					menu.AddAction( "Open as a Project" ).Triggered=Lambda()
+					
+						OpenProject( path )
+					End
+				Endif
+				
 				
 			Case FileType.File
 			

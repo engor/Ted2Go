@@ -92,17 +92,17 @@ Class BuildActions
 		lockBuildFile.HotKey=Key.L
 		lockBuildFile.HotKeyModifiers=Modifier.Menu
 		
-		updateModules=New Action( "Update modules" )
+		updateModules=New Action( "Update modules..." )
 		updateModules.Triggered=OnUpdateModules
 		updateModules.HotKey=Key.U
 		updateModules.HotKeyModifiers=Modifier.Menu
 		
-		rebuildModules=New Action( "Rebuild modules" )
+		rebuildModules=New Action( "Rebuild modules..." )
 		rebuildModules.Triggered=OnRebuildModules
 		rebuildModules.HotKey=Key.U
 		rebuildModules.HotKeyModifiers=Modifier.Menu|Modifier.Shift
 		
-		moduleManager=New Action( "Module manager" )
+		moduleManager=New Action( "Module manager..." )
 		moduleManager.Triggered=OnModuleManager
 		
 		rebuildHelp=New Action( "Rebuild documentation" )
@@ -138,7 +138,7 @@ Class BuildActions
 		_iosTarget=New CheckButton( "iOS",,group )
 		_iosTarget.Layout="fill-x"
 		
-		targetMenu=New Menu( "Build target..." )
+		targetMenu=New Menu( "Build variants..." )
 		targetMenu.AddView( _debugConfig )
 		targetMenu.AddView( _releaseConfig )
 		targetMenu.AddSeparator()
