@@ -42,6 +42,7 @@ Class MainWindowInstance Extends Window
 		_consolesTabView=New TabView( TabViewFlags.DraggableTabs )
 		
 		_recentFilesMenu=New Menu( "Recent files..." )
+		_recentProjectsMenu=New Menu( "Recent projects..." )
 		_closeProjectMenu=New Menu( "Close project..." )
 		
 		_docBrowser=New DockingView
@@ -56,7 +57,6 @@ Class MainWindowInstance Extends Window
 
 		_docsManager.DocumentAdded+=Lambda( doc:Ted2Document )
 			AddRecentFile( doc.Path )
-			UpdateRecentFilesMenu()
 		End
 
 		_docsManager.DocumentRemoved+=Lambda( doc:Ted2Document )
@@ -126,6 +126,8 @@ Class MainWindowInstance Extends Window
 		_helpView.Navigate( "asset::ted2/about.html" )
 		
 		_projectView=New ProjectView( _docsManager )
+		_projectView.ProjectOpened+=AddRecentProject
+		_projectView.ProjectClosed+=UpdateCloseProjectMenu
 		
 		_helpTree=New HelpTree( _helpView )
 		
@@ -194,6 +196,7 @@ Class MainWindowInstance Extends Window
 		_fileMenu.AddAction( _fileActions.saveAll )
 		_fileMenu.AddSeparator()
 		_fileMenu.AddAction( _projectView.openProject )
+		_fileMenu.AddSubMenu( _recentProjectsMenu )
 		_fileMenu.AddSubMenu( _closeProjectMenu )
 		_fileMenu.AddSeparator()
 		_fileMenu.AddAction( _fileActions.prefs )
@@ -719,6 +722,12 @@ Class MainWindowInstance Extends Window
 		End
 		jobj["recentFiles"]=recent
 		
+		recent=New JsonArray
+		For Local path:=Eachin _recentProjects
+			recent.Add( New JsonString( path ) )
+		End
+		jobj["recentProjects"]=recent
+		
 		jobj["theme"]=New JsonString( _theme )
 		
 		jobj["themeScale"]=New JsonNumber( App.Theme.Scale.y )
@@ -799,6 +808,14 @@ Class MainWindowInstance Extends Window
 			Next
 		End
 		
+		If jobj.Contains( "recentProjects" )
+			For Local file:=Eachin jobj.GetArray( "recentProjects" )
+				Local path:=file.ToString()
+				If GetFileType( path )<>FileType.Directory Continue
+				_recentProjects.Push( path )
+			Next
+		End
+		
 		If jobj.Contains( "theme" ) _theme=jobj.GetString( "theme" )
 		
 		If jobj.Contains( "themeScale" )
@@ -812,16 +829,15 @@ Class MainWindowInstance Extends Window
 			_mx2cc=_mx2ccDir+StripDir( _mx2cc )
 		Endif
 		
+		
 		_docsManager.LoadState( jobj )
 		_buildActions.LoadState( jobj )
 		_projectView.LoadState( jobj )
 		
 		If Not _projectView.OpenProjects _projectView.OpenProject( CurrentDir() )
 		
-		_projectView.ProjectOpened+=UpdateCloseProjectMenu
-		
 		UpdateRecentFilesMenu()
-		
+		UpdateRecentProjectsMenu()
 		UpdateCloseProjectMenu()
 
 		DeleteTmps()
@@ -913,8 +929,10 @@ Class MainWindowInstance Extends Window
 	Field _contentRightView:DockingView
 
 	Field _recentFiles:=New StringStack
+	Field _recentProjects:=New StringStack
 	
 	Field _recentFilesMenu:Menu
+	Field _recentProjectsMenu:Menu
 	Field _closeProjectMenu:Menu
 	Field _statusBar:StatusBar
 	Field _ovdMode:=False
@@ -934,14 +952,27 @@ Class MainWindowInstance Extends Window
 		_recentFiles.Remove( path )
 		_recentFiles.Insert( 0,path )
 		
-		If _recentFiles.Length>20 _recentFiles.Resize( 20 )
+		If _recentFiles.Length>20 Then _recentFiles.Resize( 20 )
+		
+		UpdateRecentFilesMenu()	
+	End
+	
+	Method AddRecentProject( path:String )
+	
+		_recentProjects.Remove( path )
+		_recentProjects.Insert( 0,path )
+	
+		If _recentProjects.Length>10 Then _recentProjects.Resize( 10 )
+		
+		UpdateRecentProjectsMenu()
+		UpdateCloseProjectMenu( path )
 	End
 	
 	Method UpdateRecentFilesMenu()
 	
 		_recentFilesMenu.Clear()
 		
-		Local recentFiles:=New StringStack
+		Local recents:=New StringStack
 		
 		For Local path:=Eachin _recentFiles
 			If GetFileType( path )<>FileType.File Continue
@@ -950,10 +981,29 @@ Class MainWindowInstance Extends Window
 				_docsManager.OpenDocument( path,True )
 			End
 			
-			recentFiles.Add( path )
+			recents.Add( path )
 		Next
 		
-		_recentFiles=recentFiles
+		_recentFiles=recents
+	End
+	
+	Method UpdateRecentProjectsMenu()
+	
+		_recentProjectsMenu.Clear()
+	
+		Local recents:=New StringStack
+	
+		For Local path:=Eachin _recentProjects
+			If GetFileType( path )<>FileType.Directory Continue
+	
+			_recentProjectsMenu.AddAction( path ).Triggered=Lambda()
+				_projectView.OpenProject( path )
+			End
+	
+			recents.Add( path )
+		Next
+	
+		_recentProjects=recents
 	End
 	
 	Method UpdateCloseProjectMenu( dir:String="" )

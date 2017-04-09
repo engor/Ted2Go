@@ -7,6 +7,7 @@ Class ProjectView Extends ScrollView
 	Field openProject:Action
 	
 	Field ProjectOpened:Void( dir:String )
+	Field ProjectClosed:Void( dir:String )
 
 	Method New( docs:DocumentManager )
 	
@@ -227,6 +228,8 @@ Class ProjectView Extends ScrollView
 		_docker.RemoveView( view )
 		
 		_projects.Remove( dir )
+		
+		ProjectClosed( dir )
 	End
 	
 	Method SaveState( jobj:JsonObject )
