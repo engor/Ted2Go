@@ -1,17 +1,17 @@
 //Theme by Hezkore
-
+ 
 {
 	"extends":"ted2-default",
-
+ 
 	"styles":{
-
+ 
 		"ToolButton":{
 			"iconColor":"#FFF",
 			"skinColor":"panel",
 			"extends":"Button",
 			"padding":[2,0],
 			"margin":[3,0],
-
+ 
 			"states":{
 				"hover":{
 					"skinColor":"#9EBEFF"
@@ -24,7 +24,7 @@
 				}
 			}
 		},
-
+ 
 		"MainToolBar":{
 			"extends":"ToolBar",
 			"padding":[ 0 ],
@@ -32,7 +32,7 @@
 			"border":[ 0,1,0,1 ],
 			"borderColor":"border"
 		},
-
+ 
 		"EditorToolBar":{
 			"extends":"ToolBar",
 			"padding":[ 0 ],
@@ -40,53 +40,54 @@
 			"border":[1,0,1,1],
 			"borderColor":"border"
 		},
-
+ 
 		"MenuSeparator":{
 			"padding":[ 0,0,0,1 ],
 			"backgroundColor":"content",
 			"border":[ 8,8,7,7 ]
 		},
-
+ 
 		"Hint":{
 			"textColor":"text-highlight",
 			"skin":"smooth_assets/button_skin.png",
 			"skinColor":"#9EBEFF"
 		},
-
+ 
 		"TextView":{
+			"font":"editor",
 			"border":[1,0,1,1],
 			"borderColor":"border",
 			"backgroundColor":"content"
 		},
-
+ 
 		"GutterView":{
 			"border":[0],
 			"extends":"TextView",
 			"textColor":"text-disabled"
 		},
-
+ 
 		"TextViewContent":{
 			"padding":[4]
 		},
-
+ 
 		"Console":{
 			"border":[1,0,1,1],
 			"borderColor":"border",
 			"font":"small",
 			"backgroundColor":"content"
 		},
-
+ 
 		"ProgressBar":{
 			"icons":"smooth_assets/progressbar_icons.png"
 		},
-
+ 
 		"Button":{
 			"font":"small",
 			"extends":"Label",
 			"padding":[4,2],
 			"skin":"smooth_assets/button_skin.png",
 			"skinColor":"panel",
-
+ 
 			"states":{
 				"hover":{
 					"skinColor":"active"
@@ -99,17 +100,17 @@
 				}
 			}
 		},
-
+ 
 		"Dialog":{
 			"skin":"smooth_assets/dialog_skin.png",
 			"skinColor":"panel"
 		},
-
+ 
 		"DialogTitle":{
 			"extends":"Label",
 			"backgroundColor":"knob"
 		},
-
+ 
 		"TreeView":{
 			"border":[1,0,1,0],
 			"borderColor":"border",
@@ -117,12 +118,12 @@
 			"icons":"smooth_assets/treeview_icons.png",
 			"iconColor":"#9DA5B4"
 		},
-
+ 
 		"TreeViewContent":{
 			"border":[0],
 			"padding":[4]
 		},
-
+ 
 		"TreeViewNode":{
 			"border":[0],
 			"padding":[3],
@@ -137,12 +138,12 @@
 				}
 			}
 		},
-
+ 
 		"CheckBox":{
 			"icons":"smooth_assets/checkbox_icons.png",
 			"margin":[8,0,0,0]
 		},
-
+ 
 		"DockKnob":{
 			"padding":[2],
 			"backgroundColor":"gutter",
@@ -155,11 +156,11 @@
 				}
 			}
 		},
-
+ 
 		"ScrollBar":{
 			"backgroundColor":"content"
 		},
-
+ 
 		"ScrollKnob":{
 			"border":[2],
 			"padding":[1],
@@ -177,12 +178,12 @@
 				}
 			}
 		},
-
+ 
 		"ToolBar":{
 			"padding":[2,2,0,2],
 			"backgroundColor":"panel"
 		},
-
+ 
 		"TabBar":{
 			"border":[0,0,0,1],
 			"borderColor":"border",
@@ -190,7 +191,7 @@
 			"padding":[ 0,2,4,0 ],
 			"backgroundColor":"clear"
 		},
-
+ 
 		"TabButton":{
 			"extends":"Button",
 			"font":"small",
@@ -215,7 +216,7 @@
 				}
 			}
 		},
-
+ 
 		"TabClose":{
 			"margin":[4,0,0,0],
 			"icons":"smooth_assets/tabclose_icons.png",
@@ -229,28 +230,28 @@
 				}
 			}
 		}
-
+ 
 	},
-
+ 
 	"colors":{
 		"border": "#171A1E",
 		"clear": "#21252B",
 		"gutter": "#21252B",
 		"content": "#282C34",
 		"panel": "#444B59",
-
+ 
 		"knob": "#575F6F",
 		"hover": "#444B59",
 		"active" : "#636C7F",
-
+ 
 		"text-default": "#C1CFD1",
 		"text-highlight": "#fff",
 		"text-disabled": "#4B5262",
 		"text-background": "#737883",
-
+ 
 		"textview-cursor":"#7BA4F8",
 		"textview-selection":"#3E4451",
-
+ 
 		//FF0000
 		"textview-color0":"#C358F5",
 		"textview-color1": "#6EA4F5",	//identifiers
@@ -261,11 +262,11 @@
 		"textview-color6": "#E06C72",	//preproc
 		"textview-color7": "#C358F5"	//default
 	},
-
+ 
 	"fonts":{
-		"normal":"DejaVuSans.ttf,16",
-		"fixedWidth":"DejaVuSans.ttf,15",
-		"editor":"DejaVuSansMono.ttf,15",
-		"small":"DejaVuSans.ttf,15"
+		"normal":"Roboto-Medium.ttf,18",
+		"fixedWidth":"RobotoMono-Medium.ttf,16",
+		"editor":"RobotoMono-Medium.ttf,15",
+		"small":"Roboto-Medium.ttf,16"
 	}
 }

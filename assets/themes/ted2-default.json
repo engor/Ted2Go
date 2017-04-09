@@ -65,6 +65,10 @@
 			"margin":[ 1,0,2,0 ]
 		},
 
+		"ProgressBar":{
+			"icons":"progressbar_icons.png"
+		},
+
 		"StatusBar":{
 			"extends":"DockingView",
 			"padding":[ 0 ],
