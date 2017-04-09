@@ -68,9 +68,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		UpdateThemeColors()
 		
-		App.ThemeChanged+=Lambda()
-			UpdateThemeColors()
-		End
 	End
 	
 	Property CharsToShowAutoComplete:Int()
@@ -78,7 +75,14 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		Return Prefs.AcShowAfter
 	End
 	
+	
 	Protected
+	
+	Method OnThemeChanged() Override
+	
+		Super.OnThemeChanged()
+		UpdateThemeColors()
+	End
 	
 	Method OnRenderContent( canvas:Canvas ) Override
 	
@@ -616,10 +620,14 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		_lineColor=App.Theme.GetColor( "textview-cursor-line" )
 		
-		If Prefs.EditorFontName.Length>1 And Prefs.EditorFontSize>1 Then
-			Local tmpFont:=Font.Load( "asset::fonts\"+Prefs.EditorFontName,Int(Prefs.EditorFontSize) )
-			If tmpFont Then RenderStyle.Font=tmpFont Else RenderStyle.Font=App.Theme.GetStyle("Editor").Font
+		Local newFont:Font
+		Local fontPath:=Prefs.GetCustomFontPath()
+		If fontPath
+			Local size:=Prefs.GetCustomFontSize()
+			newFont=Font.Load( fontPath,size )
 		Endif
+		If Not newFont Then newFont=App.Theme.GetStyle("Editor").Font
+		RenderStyle.Font=newFont
 	End
 	
 End

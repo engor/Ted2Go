@@ -16,8 +16,8 @@ Class Prefs
 	Global EditorToolBarVisible:=True
 	Global EditorGutterVisible:=True
 	Global EditorShowWhiteSpaces:=False
-	Global EditorFontName:String
-	Global EditorFontSize:Int
+	Global EditorFontPath:String
+	Global EditorFontSize:=16
 	'
 	Global SourceSortByType:=True
 	Global SourceShowInherited:=False
@@ -50,7 +50,7 @@ Class Prefs
 			EditorToolBarVisible=j2["toolBarVisible"].ToBool()
 			EditorGutterVisible=j2["gutterVisible"].ToBool()
 			EditorShowWhiteSpaces=GetJsonBool( j2,"showWhiteSpaces",EditorShowWhiteSpaces )
-			If j2.Contains("fontName") Then EditorFontName=j2["fontName"].ToString()
+			If j2.Contains("fontPath") Then EditorFontPath=j2["fontPath"].ToString()
 			If j2.Contains("fontSize") Then EditorFontSize=Int( j2["fontSize"].ToNumber() )
 			
 		Endif
@@ -82,7 +82,7 @@ Class Prefs
 		j["toolBarVisible"]=New JsonBool( EditorToolBarVisible )
 		j["gutterVisible"]=New JsonBool( EditorGutterVisible )
 		j["showWhiteSpaces"]=New JsonBool( EditorShowWhiteSpaces )
-		j["fontName"]=New JsonString( EditorFontName )
+		j["fontPath"]=New JsonString( EditorFontPath )
 		j["fontSize"]=New JsonNumber( EditorFontSize )
 		json["editor"]=j
 		
@@ -92,6 +92,23 @@ Class Prefs
 		json["source"]=j
 	End
 	
+	Function GetCustomFontPath:String()
+		
+		If Not EditorFontPath Return ""
+		If Not EditorFontPath.Contains( ".ttf" ) Return ""
+		
+		Local path:=EditorFontPath
+		If Not path.Contains( ":" ) 'relative asset path
+			path=AssetsDir()+path
+		Endif
+		
+		Return path
+	End
+	
+	Function GetCustomFontSize:Int()
+	
+		Return Max( EditorFontSize,6 ) '6 is a minumal
+	End
 End
 
 

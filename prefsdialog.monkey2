@@ -41,12 +41,30 @@ Class PrefsDialog Extends DialogExt
 		_editorShowWhiteSpaces=New CheckButton( "Whitespaces visible" )
 		_editorShowWhiteSpaces.Checked=Prefs.EditorShowWhiteSpaces
 		
-		_editorFontName=New TextField( Prefs.EditorFontName )
-		_editorFontSize=New TextField( Prefs.EditorFontSize )
+		Local path:=Prefs.EditorFontPath
+		If Not path Then path="(default)"
+		_editorFontPath=New TextField( path )
+		_editorFontSize=New TextField( ""+Prefs.EditorFontSize )
+		
+		Local chooseFont:=New Action( "..." )
+		chooseFont.Triggered+=Lambda()
+			
+			Local initDir:=RealPath( AssetsDir() )
+			
+			Local path:=MainWindow.RequestFile( "Choose Font",initDir,False )
+			If Not path Return
+			
+			path=RealPath( path )
+			path=path.Replace( initDir,"" )
+			
+			_editorFontPath.Text=path
+		End
+		Local btnChooseFont:=New PushButton( chooseFont )
 		
 		Local font:=New DockingView
 		font.AddView( New Label( "Font" ),"left" )
-		font.AddView( _editorFontName,"left" )
+		font.AddView( _editorFontPath,"left" )
+		font.AddView( btnChooseFont,"left" )
 		font.AddView( _editorFontSize,"left","45" )
 		
 		Local after:=New DockingView
@@ -99,7 +117,7 @@ Class PrefsDialog Extends DialogExt
 	Field _editorToolBarVisible:CheckButton
 	Field _editorGutterVisible:CheckButton
 	Field _editorShowWhiteSpaces:CheckButton
-	Field _editorFontName:TextField
+	Field _editorFontPath:TextField
 	Field _editorFontSize:TextField
 	
 	Field _mainToolBarVisible:CheckButton
@@ -119,8 +137,10 @@ Class PrefsDialog Extends DialogExt
 		Prefs.EditorToolBarVisible=_editorToolBarVisible.Checked
 		Prefs.EditorGutterVisible=_editorGutterVisible.Checked
 		Prefs.EditorShowWhiteSpaces=_editorShowWhiteSpaces.Checked
-		Prefs.EditorFontName=_editorFontName.Text
-		Prefs.EditorFontSize=Int(_editorFontSize.Text)
+		Prefs.EditorFontPath=_editorFontPath.Text.Trim()
+		Local s:=_editorFontSize.Text.Trim()
+		If Not s Then s="16" 'default
+		Prefs.EditorFontSize=Int(s)
 		
 		Prefs.MainToolBarVisible=_mainToolBarVisible.Checked
 		
