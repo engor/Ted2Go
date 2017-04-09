@@ -238,6 +238,8 @@ Class DocumentManager
 		doc.DirtyChanged+=Lambda()
 		
 			UpdateTabLabel( doc )
+			
+			If doc=_currentDoc Then UpdateWindowTitle( doc )
 		End
 		
 		doc.StateChanged+=Lambda()
@@ -297,7 +299,9 @@ Class DocumentManager
 		'
 		App.Idle+=Lambda()
 			If doc
-				MainWindow.Title = AppTitle+" - "+doc.Path
+				Local name:=StripDir( doc.Path )
+				If doc.Dirty Then name="*"+name
+				MainWindow.Title = name+" - "+AppTitle+" - "+doc.Path
 			Else
 				MainWindow.Title = AppTitle
 			Endif
