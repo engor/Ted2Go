@@ -115,18 +115,35 @@ Global AppTitle:="Ted2Go v2.2.6"
 Function Main()
 
 #If __DESKTOP_TARGET__
-		
-	ChangeDir( AppDir() )
+	
+	Local root:=AppDir()
+	
+	Local json:=JsonObject.Load( AppDir()+"state.json" )
+	If json And json.Contains( "rootPath" )
+		root=json["rootPath"].ToString()
+	Endif
+	
+	ChangeDir( root )
 	
 	While GetFileType( "bin" )<>FileType.Directory Or GetFileType( "modules" )<>FileType.Directory
 
 		If IsRootDir( CurrentDir() )
-			Print "Error initializing Ted2 - can't find working dir!"
-			libc.exit_( 1 )
+			
+			Local ok:=Confirm( "Initializing","Error initializing - can't find working dir!~nDo you want to specify Monkey2 root folder now?" )
+			If Not ok
+				libc.exit_( 1 )
+			End
+			Local s:=requesters.RequestDir( "Choose Monkey2 folder",AppDir() )
+			ChangeDir( s )
+			Continue
 		Endif
 		
 		ChangeDir( ExtractDir( CurrentDir() ) )
 	Wend
+	
+	json=New JsonObject
+	json["rootPath"]=New JsonString( CurrentDir() )
+	json.Save( AppDir()+"state.json" )
 	
 #Endif
 	
