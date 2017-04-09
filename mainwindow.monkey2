@@ -456,6 +456,17 @@ Class MainWindowInstance Extends Window
 		Return ""
 	End
 	
+	Method StoreConsoleVisibility()
+		
+		_storedConsoleVisible=_consolesTabView.Visible
+	End
+	
+	Method RestoreConsoleVisibility()
+	
+		_consolesTabView.Visible=_storedConsoleVisible
+		RequestRender()
+	End
+	
 	Method IsTmpPath:Bool( path:String )
 
 		Return path.StartsWith( _tmp )
@@ -572,6 +583,7 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Method ShowBuildConsole( vis:Bool=True )
+		
 		If vis _consolesTabView.Visible=True
 		_consolesTabView.CurrentView=_buildConsole
 	End
@@ -939,7 +951,7 @@ Class MainWindowInstance Extends Window
 	Field _closeProjectMenu:Menu
 	Field _statusBar:StatusBar
 	Field _ovdMode:=False
-	
+	Field _storedConsoleVisible:Bool
 	
 	Method ToJson:JsonValue( rect:Recti )
 		Return New JsonArray( New JsonValue[]( New JsonNumber( rect.min.x ),New JsonNumber( rect.min.y ),New JsonNumber( rect.max.x ),New JsonNumber( rect.max.y ) ) )

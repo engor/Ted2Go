@@ -344,7 +344,9 @@ Class BuildActions
 		
 		_console.Clear()
 		
-		MainWindow.ShowBuildConsole( False )
+		MainWindow.StoreConsoleVisibility()
+		
+		MainWindow.ShowBuildConsole()
 		
 		If Not SaveAll() Return False
 
@@ -354,17 +356,6 @@ Class BuildActions
 		Endif
 		
 		Local title := run ? "Building" Else "Checking"
-		'Local progress:=New ProgressDialog( title,progressText )
-		
-		'progress.MinSize=New Vec2i( 320,0 )
-		
-		'Local cancel:=progress.AddAction( "Cancel" )
-		
-		'cancel.Triggered=Lambda()
-		'	_console.Terminate()
-		'End
-		
-		'progress.Open()
 		
 		Local s:=progressText
 		If Not s.EndsWith( "..." ) Then s+="..."
@@ -418,11 +409,12 @@ Class BuildActions
 		
 		Forever
 		
-		'progress.Close()
 		MainWindow.HideStatusBarProgress()
 		
 		Local status:=hasErrors ? "Process failed. See the build console for details." Else (_console.ExitCode=0 ? "Process finished." Else "Process cancelled.")
 		MainWindow.ShowStatusBarText( status )
+		
+		MainWindow.RestoreConsoleVisibility()
 		
 		Return _console.ExitCode=0
 	End
@@ -487,7 +479,7 @@ Class BuildActions
 		Return BuildMx2( MainWindow.Mx2ccPath+" makedocs","Rebuilding documentation..." )
 	End
 	
-	Method BuildApp:Bool( config:String,target:String,action:String )
+	Method BuildApp:Bool( config:String,target:String,sourceAction:String )
 	
 		Local buildDoc:=BuildDoc()
 		If Not buildDoc Return False
@@ -497,15 +489,17 @@ Class BuildActions
 		
 		Local opts:=product.GetMx2ccOpts()
 		
-		Local run:=(action="run")
-		If run action="build"
+		Local run:=(sourceAction="run")
+		
+		Local action:=sourceAction
+		If run Then action="build"
 
 		Local cmd:=MainWindow.Mx2ccPath+" makeapp -"+action+" "+opts
 		cmd+=" -config="+config
 		cmd+=" -target="+target
 		cmd+=" ~q"+buildDoc.Path+"~q"
 		
-		Local title := action="build" ? "Building" Else "Checking"
+		Local title := sourceAction="build" ? "Building" Else (sourceAction="run" ? "Running" Else "Checking")
 		Local msg:=title+" ~ "+target+" ~ "+config+" ~ "+StripDir( buildDoc.Path )
 		
 		If Not BuildMx2( cmd,msg,run ) Return False
@@ -537,7 +531,7 @@ Class BuildActions
 		PreBuild()
 		
 		If _console.Running Return
-	
+		
 		BuildApp( _buildConfig,_buildTarget,"run" )
 	End
 	
