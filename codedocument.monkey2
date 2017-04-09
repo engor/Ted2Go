@@ -101,7 +101,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		
 		If _doc._debugLine<>-1
-
+			
 			Local line:=_doc._debugLine
 			If line<0 Or line>=Document.NumLines Return
 			

@@ -448,22 +448,34 @@ Class CodeTextView Extends TextView
 		
 		For Local word:=Eachin WordIterator.ForLine( Self,line )
 		
-			Local len:=word.Length
-			If len > 1 And text[word.Index]=9 ' tab
+			If text[word.Index]=9 ' tab
 				
 				canvas.Color=_whitespacesColor
 				
+				Local len:=word.Length
+				
 				r=word.Rect
-				Local x0:=r.Left,y0:=r.Top
+				Local x0:=r.Left,y0:=r.Top+4,y1:=y0+r.Height
 				Local ww:=r.Width/len
 				Local xx:=x0+ww
-				For Local i:=1 Until len
-					canvas.DrawLine( xx,y0,xx,y0+r.Height )
+				
+				Local after:=word.Index+len
+				If after < text.Length And text[after] > 32 Then len-=1
+				
+				For Local i:=0 Until len
+					canvas.DrawLine( xx,y0,xx,y1 )
 					xx+=ww
 				Next
 			Endif
 		Next
 
 	End
+	
+'	Function DrawDottedLineVert ( canvas:Canvas,x:Float,y1:Float,y2:Float )
+'		
+'		For Local y:=y1 To y2 Step 6
+'			canvas.DrawLine( x,y,x,y+1 )
+'		Next
+'	End
 	
 End
