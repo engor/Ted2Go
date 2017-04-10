@@ -131,84 +131,91 @@ Class FindActions
 		_findInFilesDialog.Hide()
 		MainWindow.ShowFindResults()
 		
-		New Fiber( Lambda()
+		App.Idle+=Lambda()
+			
+			New Fiber( Lambda()
+			
+				FindInFilesInternal()
+			End)
+		End
 		
-			Local what:=_findInFilesDialog.FindText
-			If Not what Return
-			
-			Local proj:=_findInFilesDialog.SelectedProject
-			If Not proj Return
-			
-			Local filter:=_findInFilesDialog.FilterText
-			If Not filter Then filter="monkey2"
-			
-			Local exts:=filter.Split( "," )
-			
-			proj+="/"
-			
-			Local sens:=_findInFilesDialog.CaseSensitive
-			
-			If Not sens Then what=what.ToLower()
-			
-			Local files:=New Stack<String>
-			Utils.GetAllFiles( proj,exts,files )
-			
-			Local root:=_findConsole.RootNode
-			root.RemoveAllChildren()
-			
-			root.Text="Finding of '"+what+"'"
-						
-			Local subRoot:TreeView.Node
-			Local items:=New Stack<FileJumpData>
-			Local len:=what.Length
-			
-			Local doc:=New TextDocument 'use it to get line number
-			For Local f:=Eachin files
-				
-				Local text:=LoadString( f )
-				
-				If Not sens Then text=text.ToLower()
-				text=text.Replace( "~r~n","~n" )
-				text=text.Replace( "~r","~n" )
-				
-				doc.Text=text
-				
-				Local i:=0
-				items.Clear()
-				
-				Repeat
-					i=text.Find( what,i )
-					If i=-1 Exit
-					
-					Local data:=New FileJumpData
-					data.path=f
-					data.pos=i
-					data.len=len
-					data.line=doc.FindLine( i )+1
-					
-					items.Add( data )
-					
-					i+=len
-				Forever
-				
-				If Not items.Empty
-
-					subRoot=New TreeView.Node( f.Replace( proj,"" )+" ("+items.Length+")",root )
-					
-					For Local d:=Eachin items
-						Local node:=New NodeWithData<FileJumpData>( " at line "+d.line,subRoot )
-						node.data=d
-					Next
-					
-				Endif
-			Next
-			
-			If root.NumChildren=0 Then New TreeView.Node( "not found :(",root )
-			
-			root.Expanded=True
-			
-		End)
+	End
+	
+	Method FindInFilesInternal()
 		
+		Local what:=_findInFilesDialog.FindText
+		If Not what Return
+		
+		Local proj:=_findInFilesDialog.SelectedProject
+		If Not proj Return
+		
+		Local filter:=_findInFilesDialog.FilterText
+		If Not filter Then filter="monkey2"
+		
+		Local exts:=filter.Split( "," )
+		
+		proj+="/"
+		
+		Local sens:=_findInFilesDialog.CaseSensitive
+		
+		If Not sens Then what=what.ToLower()
+		
+		Local files:=New Stack<String>
+		Utils.GetAllFiles( proj,exts,files )
+		
+		Local root:=_findConsole.RootNode
+		root.RemoveAllChildren()
+		
+		root.Text="Finding of '"+what+"'"
+		
+		Local subRoot:TreeView.Node
+		Local items:=New Stack<FileJumpData>
+		Local len:=what.Length
+		
+		Local doc:=New TextDocument 'use it to get line number
+		For Local f:=Eachin files
+		
+			Local text:=LoadString( f )
+		
+			If Not sens Then text=text.ToLower()
+			text=text.Replace( "~r~n","~n" )
+			text=text.Replace( "~r","~n" )
+		
+			doc.Text=text
+		
+			Local i:=0
+			items.Clear()
+		
+			Repeat
+				i=text.Find( what,i )
+				If i=-1 Exit
+		
+				Local data:=New FileJumpData
+				data.path=f
+				data.pos=i
+				data.len=len
+				data.line=doc.FindLine( i )+1
+		
+				items.Add( data )
+		
+				i+=len
+			Forever
+		
+			If Not items.Empty
+		
+				subRoot=New TreeView.Node( f.Replace( proj,"" )+" ("+items.Length+")",root )
+		
+				For Local d:=Eachin items
+					Local node:=New NodeWithData<FileJumpData>( " at line "+d.line,subRoot )
+					node.data=d
+				Next
+		
+			Endif
+		Next
+		
+		If root.NumChildren=0 Then New TreeView.Node( "not found :(",root )
+		
+		root.Expanded=True
 	End
 	
 	Method OnFindPrevious()
