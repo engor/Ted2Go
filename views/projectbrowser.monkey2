@@ -14,20 +14,23 @@ Class ProjectBrowser Extends FileBrowser
 		
 		NodeExpanded+=Lambda( node:TreeView.Node )
 			
-			If node = RootNode And node.Expanded And _filters Then AdjustFilter( _filters )
+			If node = RootNode And node.Expanded Then Refresh( False )
 		End
 		
 		NodeDoubleClicked+=Lambda( node:TreeView.Node )
 			
 			node.Expanded=Not node.Expanded
-			If node = RootNode And node.Expanded And _filters Then AdjustFilter( _filters )
-			Update() 'need to refresh icons
+			
+			If node = RootNode And node.Expanded Then Refresh( True ) ' TRUE - need to refresh icons
 		End
 	End
 	
-	Method AdjustFilter( jarr:Stack<JsonValue> )
+	Method Refresh( update:Bool=True )
 		
-		_filters=jarr
+		If update Then Update()
+		
+		Local jarr:=GetFilterItems()
+		If Not jarr Return
 		
 		For Local i:=Eachin jarr
 			Local filter:=i.ToString()
@@ -49,6 +52,7 @@ Class ProjectBrowser Extends FileBrowser
 	Private
 	
 	Field _filters:Stack<JsonValue>
+	Field _fileTime:Long
 	
 	Method Filter( filter:String,type:FilterType)
 	
@@ -89,6 +93,24 @@ Class ProjectBrowser Extends FileBrowser
 		For Local i:=Eachin list
 			FilterNode( i,filter,type )
 		Next
+	End
+	
+	Method GetFilterItems:Stack<JsonValue>()
+		
+		Local path:=RootPath+"/project.json"
+		If GetFileType( path ) <> FileType.File Return _filters
+		
+		Local t:=GetFileTime( path )
+		If t=_fileTime Return _filters
+		
+		_fileTime=t
+		
+		Local json:=JsonObject.Load( path )
+		If json.Contains( "exclude" )
+			_filters=json["exclude"].ToArray()
+		Endif
+		
+		Return _filters
 	End
 	
 	Enum FilterType

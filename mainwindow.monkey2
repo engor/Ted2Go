@@ -129,10 +129,16 @@ Class MainWindowInstance Extends Window
 		
 		_debugView=New DebugView( _docsManager,_outputConsole )
 		
+		
+		_buildActions=New BuildActions( _docsManager,_buildConsole,_debugView )
+		
+		_projectView=New ProjectView( _docsManager,_buildActions )
+		_projectView.ProjectOpened+=AddRecentProject
+		_projectView.ProjectClosed+=UpdateCloseProjectMenu
+		
 		_fileActions=New FileActions( _docsManager )
 		_editActions=New EditActions( _docsManager )
 		_findActions=New FindActions( _docsManager,_projectView,_findConsole )
-		_buildActions=New BuildActions( _docsManager,_buildConsole,_debugView )
 		_helpActions=New HelpActions
 		_viewActions=New ViewActions( _docsManager )
 
@@ -145,10 +151,6 @@ Class MainWindowInstance Extends Window
 		_tabMenu.AddAction( _fileActions.saveAs )
 		_tabMenu.AddSeparator()
 		_tabMenu.AddAction( _buildActions.lockBuildFile )
-		
-		_projectView=New ProjectView( _docsManager,_buildActions )
-		_projectView.ProjectOpened+=AddRecentProject
-		_projectView.ProjectClosed+=UpdateCloseProjectMenu
 		
 		_docsTabView.RightClicked+=Lambda()
 			_tabMenu.Open()

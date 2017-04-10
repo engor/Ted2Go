@@ -9,10 +9,10 @@ Class ProjectView Extends ScrollView
 	Field ProjectOpened:Void( dir:String )
 	Field ProjectClosed:Void( dir:String )
 
-	Method New( docs:DocumentManager,buildActions:BuildActions )
+	Method New( docs:DocumentManager,builder:IModuleBuilder )
 	
 		_docs=docs
-		_buildActions=buildActions
+		_builder=builder
 		
 		_docker=New DockingView
 		
@@ -90,7 +90,7 @@ Class ProjectView Extends ScrollView
 						Alert( "Failed to create file '"+file+"'" )
 					Endif
 					
-					browser.Update()
+					browser.Refresh()
 					Return
 				End
 		
@@ -111,7 +111,7 @@ Class ProjectView Extends ScrollView
 						Return
 					Endif
 					
-					browser.Update()
+					browser.Refresh()
 					Return
 				End
 				
@@ -120,7 +120,7 @@ Class ProjectView Extends ScrollView
 					If Not RequestOkay( "Really delete folder '"+path+"'?" ) Return
 					
 					If DeleteDir( path,True )
-						browser.Update()
+						browser.Refresh()
 						Return
 					Endif
 					
@@ -139,7 +139,7 @@ Class ProjectView Extends ScrollView
 					menu.AddAction( "Clean (delete .buildv)" ).Triggered=Lambda()
 					
 						Local changes:=CleanProject( path )
-						If changes Then browser.Update()
+						If changes Then browser.Refresh()
 					End
 				Else
 					
@@ -160,12 +160,12 @@ Class ProjectView Extends ScrollView
 					
 					menu.AddAction( "Update module" ).Triggered=Lambda()
 						
-						_buildActions.BuildModules( False,name )
+						_builder.BuildModules( False,name )
 					End
 					
 					menu.AddAction( "Rebuild module" ).Triggered=Lambda()
 				
-						_buildActions.BuildModules( True,name )
+						_builder.BuildModules( True,name )
 					End
 				
 				Endif
@@ -190,7 +190,7 @@ Class ProjectView Extends ScrollView
 					
 						DeleteFile( path )
 					
-						browser.Update()
+						browser.Refresh()
 						Return
 					Endif
 					
@@ -209,7 +209,7 @@ Class ProjectView Extends ScrollView
 						
 						If doc doc.Close()
 					
-						browser.Update()
+						browser.Refresh()
 						Return
 					Endif
 					
@@ -228,7 +228,7 @@ Class ProjectView Extends ScrollView
 		
 		_projects[dir]=browser
 		
-		AdjustFilter( browser )
+		browser.Refresh()
 		
 		ProjectOpened( dir )
 
@@ -291,7 +291,7 @@ Class ProjectView Extends ScrollView
 	Field _docs:DocumentManager
 	Field _docker:=New DockingView
 	Field _projects:=New StringMap<FileBrowser>
-	Field _buildActions:BuildActions
+	Field _builder:IModuleBuilder
 
 	Method OnOpenProject()
 	
@@ -309,17 +309,6 @@ Class ProjectView Extends ScrollView
 				_docs.OpenDocument( path,True )
 			End )
 		
-		Endif
-	End
-	
-	Method AdjustFilter( brow:ProjectBrowser )
-		
-		Local path:=brow.RootPath+"/project.json"
-		If GetFileType( path ) <> FileType.File Return
-		
-		Local json:=JsonObject.Load( path )
-		If json.Contains( "exclude" )
-			brow.AdjustFilter( json["exclude"].ToArray() )
 		Endif
 	End
 	

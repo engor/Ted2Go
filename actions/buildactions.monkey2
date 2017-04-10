@@ -23,7 +23,15 @@ Class BuildError
 	
 End
 
-Class BuildActions
+
+Interface IModuleBuilder
+	
+	Method BuildModules:Bool( clean:Bool,modules:String="" )
+	
+End
+
+
+Class BuildActions Implements IModuleBuilder
 
 	Field buildAndRun:Action
 	Field build:Action
@@ -37,6 +45,7 @@ Class BuildActions
 	Field rebuildHelp:Action
 	
 	Field targetMenu:Menu
+	
 	
 	Field PreBuild:Void()
 	
@@ -340,6 +349,7 @@ Class BuildActions
 	Field _iosTarget:CheckButton
 	
 	Field _validTargets:StringStack
+	Field _timing:Long
 	
 	Method BuildDoc:CodeDocument()
 		
@@ -392,7 +402,9 @@ Class BuildActions
 		MainWindow.ShowBuildConsole()
 		
 		If Not SaveAll() Return False
-
+		
+		_timing=Millisecs()
+		
 		If Not _console.Start( cmd )
 			Alert( "Failed to start process: '"+cmd+"'" )
 			Return False
@@ -455,6 +467,12 @@ Class BuildActions
 		MainWindow.HideStatusBarProgress()
 		
 		Local status:=hasErrors ? "Process failed. See the build console for details." Else (_console.ExitCode=0 ? "Process finished." Else "Process cancelled.")
+		
+		Local elapsed:=(Millisecs()-_timing)/1000
+		Local m:=elapsed/60
+		Local sec:=elapsed Mod 60
+		status+="   Time elapsed: "+m+" m "+sec+" s"
+		
 		MainWindow.ShowStatusBarText( status )
 		
 		MainWindow.RestoreConsoleVisibility()
