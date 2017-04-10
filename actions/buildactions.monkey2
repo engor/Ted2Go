@@ -275,6 +275,49 @@ Class BuildActions
 		moduleManager.Enabled=idle
 	End
 
+	Method BuildModules:Bool( clean:Bool,modules:String="" )
+	
+		Local targets:=New StringStack
+	
+		For Local target:=Eachin _validTargets
+			targets.Push( target="ios" ? "iOS" Else target.Capitalize() )
+		Next
+	
+		targets.Push( "All!" )
+		targets.Push( "Cancel" )
+	
+		Local prefix:=clean ? "Rebuild" Else "Update"
+		Local text:="Modules: "
+		If modules Then text+=modules.Replace( " ",", " ) Else text+="All"
+		text+="~n~nSelect target:"
+	
+		Local i:=TextDialog.Run( prefix+" modules",text,targets.ToArray(),0,targets.Length-1 )
+	
+		Local result:=True
+	
+		Select i
+		Case targets.Length-1	'Cancel
+			Return False
+		Case targets.Length-2	'All!
+			For Local i:=0 Until targets.Length-2
+				If BuildModules( clean,targets[i],modules ) Continue
+				result=False
+				Exit
+			Next
+		Default
+			result=BuildModules( clean,targets[i],modules )
+		End
+	
+		If result
+			_console.Write( "~n"+prefix+" modules completed successfully!~n" )
+		Else
+			_console.Write( "~n"+prefix+" modules failed.~n" )
+		Endif
+	
+		Return result
+	End
+	
+	
 	Private
 	
 	Field _docs:DocumentManager
@@ -419,9 +462,9 @@ Class BuildActions
 		Return _console.ExitCode=0
 	End
 
-	Method BuildModules:Bool( clean:Bool,target:String )
+	Method BuildModules:Bool( clean:Bool,target:String,modules:String )
 	
-		Local msg:=(clean ? "Rebuilding " Else "Updating ")+target
+		Local msg:=(clean ? "Rebuilding ~ " Else "Updating ~ ")+target
 		
 		For Local config:=0 Until 2
 		
@@ -430,48 +473,15 @@ Class BuildActions
 			Local cmd:=MainWindow.Mx2ccPath+" makemods -target="+target
 			If clean cmd+=" -clean"
 			cmd+=" -config="+cfg
+			If modules Then cmd+=" "+modules
 			
-			If Not BuildMx2( cmd,msg+" "+cfg+" modules..." ) Return False
+			Local s:=msg+" ~ "+cfg+" ~ ["
+			s+=modules ? modules Else "all modules"
+			s+="]..."
+			If Not BuildMx2( cmd,s ) Return False
 		Next
 		
 		Return True
-	End
-	
-	Method BuildModules:Bool( clean:Bool )
-	
-		Local targets:=New StringStack
-		
-		For Local target:=Eachin _validTargets
-			targets.Push( target="ios" ? "iOS" Else target.Capitalize() )
-		Next
-
-		targets.Push( "All!" )
-		targets.Push( "Cancel" )
-		
-		Local i:=TextDialog.Run( "Build Modules","Select target..",targets.ToArray(),0,targets.Length-1 )
-		
-		Local result:=True
-		
-		Select i
-		Case targets.Length-1	'Cancel
-			Return False
-		Case targets.Length-2	'All!
-			For Local i:=0 Until targets.Length-2
-				If BuildModules( clean,targets[i] ) Continue
-				result=False
-				Exit
-			Next
-		Default
-			result=BuildModules( clean,targets[i] )
-		End
-		
-		If result
-			_console.Write( "~nBuild modules completed successfully!~n" )
-		Else
-			_console.Write( "~nBuild modules failed.~n" )
-		Endif
-		
-		Return result
 	End
 	
 	Method MakeDocs:Bool()

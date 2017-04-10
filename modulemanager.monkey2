@@ -256,7 +256,7 @@ Class ModuleManager Extends Dialog
 		For Local config:=0 Until 2
 			
 			Local cmd:=MainWindow.Mx2ccPath+" makemods -config="+(config ? "debug" Else "release")
-				
+			
 			If Not _console.Run( cmd ) Return False
 			
 			If _console.Process.ExitCode

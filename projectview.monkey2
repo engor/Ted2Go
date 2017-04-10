@@ -9,10 +9,11 @@ Class ProjectView Extends ScrollView
 	Field ProjectOpened:Void( dir:String )
 	Field ProjectClosed:Void( dir:String )
 
-	Method New( docs:DocumentManager )
+	Method New( docs:DocumentManager,buildActions:BuildActions )
 	
 		_docs=docs
-	
+		_buildActions=buildActions
+		
 		_docker=New DockingView
 		
 		ContentView=_docker
@@ -31,8 +32,6 @@ Class ProjectView Extends ScrollView
 		For Local proj:=Eachin _projects.Keys
 			projs.Add( proj )
 		Next
-		
-'		projs.Add( _projects.Keys )	'Should work - FIXME
 		
 		Return projs.ToArray()
 	End
@@ -150,6 +149,26 @@ Class ProjectView Extends ScrollView
 					End
 				Endif
 				
+				' update / rebuild module
+				path=path.Replace( "\","/" )
+				Local name := path.Slice( path.FindLast( "/")+1 )
+				Local file:=path+"/module.json"
+				
+				If path.Contains( "/modules/") And GetFileType( file )=FileType.File
+					
+					menu.AddSeparator()
+					
+					menu.AddAction( "Update module" ).Triggered=Lambda()
+						
+						_buildActions.BuildModules( False,name )
+					End
+					
+					menu.AddAction( "Rebuild module" ).Triggered=Lambda()
+				
+						_buildActions.BuildModules( True,name )
+					End
+				
+				Endif
 				
 			Case FileType.File
 			
@@ -196,21 +215,6 @@ Class ProjectView Extends ScrollView
 					
 					Alert( "Failed to delete file: '"+path+"'" )
 				End
-				
-				#rem
-				Local name := StripDir(path)
-				If name = "module.json"
-					menu.AddSeparator()
-			
-					menu.AddAction( "Rebuild module Debug" ).Triggered=Lambda()
-											
-					End
-					
-					menu.AddAction( "Rebuild module Release" ).Triggered=Lambda()
-											
-					End
-				Endif
-				#end
 				
 			Default
 			
@@ -285,10 +289,9 @@ Class ProjectView Extends ScrollView
 	Private
 	
 	Field _docs:DocumentManager
-	
 	Field _docker:=New DockingView
-	
 	Field _projects:=New StringMap<FileBrowser>
+	Field _buildActions:BuildActions
 
 	Method OnOpenProject()
 	

@@ -125,10 +125,6 @@ Class MainWindowInstance Extends Window
 		
 		_helpView.Navigate( "asset::ted2/about.html" )
 		
-		_projectView=New ProjectView( _docsManager )
-		_projectView.ProjectOpened+=AddRecentProject
-		_projectView.ProjectClosed+=UpdateCloseProjectMenu
-		
 		_helpTree=New HelpTree( _helpView )
 		
 		_debugView=New DebugView( _docsManager,_outputConsole )
@@ -149,6 +145,10 @@ Class MainWindowInstance Extends Window
 		_tabMenu.AddAction( _fileActions.saveAs )
 		_tabMenu.AddSeparator()
 		_tabMenu.AddAction( _buildActions.lockBuildFile )
+		
+		_projectView=New ProjectView( _docsManager,_buildActions )
+		_projectView.ProjectOpened+=AddRecentProject
+		_projectView.ProjectClosed+=UpdateCloseProjectMenu
 		
 		_docsTabView.RightClicked+=Lambda()
 			_tabMenu.Open()
