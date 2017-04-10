@@ -85,12 +85,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	
 	Protected
 	
-	Method OnThemeChanged() Override
-	
-		Super.OnThemeChanged()
-		UpdateThemeColors()
-	End
-	
 	Method OnRenderContent( canvas:Canvas ) Override
 	
 		Local color:=canvas.Color
@@ -623,7 +617,9 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	Field _lineColor:Color
 	Field _gutter:CodeGutterView
 	
-	Method UpdateThemeColors()
+	Method UpdateThemeColors() Override
+		
+		Super.UpdateThemeColors()
 		
 		_lineColor=App.Theme.GetColor( "textview-cursor-line" )
 		

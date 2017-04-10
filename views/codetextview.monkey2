@@ -18,7 +18,7 @@ Class CodeTextView Extends TextView
 		
 		CursorMoved += OnCursorMoved
 		
-		UpdateColors2()
+		UpdateThemeColors()
 	End
 	
 	Method IsCursorAtTheEndOfLine:Bool()
@@ -404,8 +404,14 @@ Class CodeTextView Extends TextView
 	Method OnThemeChanged() Override
 		
 		Super.OnThemeChanged()
-		UpdateColors2()
+		UpdateThemeColors()
 	End
+	
+	Method UpdateThemeColors() Virtual
+	
+		_whitespacesColor=App.Theme.GetColor( "textview-whitespaces" )
+	End
+	
 	
 	Private
 	
@@ -428,11 +434,6 @@ Class CodeTextView Extends TextView
 		'If Cursor <> Anchor Return
 		'DoFormat( True )
 		
-	End
-	
-	Method UpdateColors2()
-		
-		_whitespacesColor=App.Theme.GetColor( "textview-whitespaces" )
 	End
 	
 	Method OnRenderLine( canvas:Canvas,line:Int ) Override
