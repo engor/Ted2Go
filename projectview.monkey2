@@ -66,7 +66,14 @@ Class ProjectView Extends ScrollView
 			Select GetFileType( path )
 			Case FileType.Directory
 			
-				menu.AddAction( "New File" ).Triggered=Lambda()
+				menu.AddAction( "Open on Desktop" ).Triggered=Lambda()
+				
+					requesters.OpenUrl( path )
+				End
+				
+				menu.AddSeparator()
+				
+				menu.AddAction( "New file" ).Triggered=Lambda()
 				
 					Local file:=RequestString( "New file name:" )
 					If Not file Return
@@ -88,7 +95,7 @@ Class ProjectView Extends ScrollView
 					Return
 				End
 		
-				menu.AddAction( "New Folder" ).Triggered=Lambda()
+				menu.AddAction( "New folder" ).Triggered=Lambda()
 				
 					Local dir:=RequestString( "New folder name:" )
 					If Not dir Return
@@ -125,13 +132,19 @@ Class ProjectView Extends ScrollView
 				
 				If path = browser.RootPath ' root node
 					
-					menu.AddAction( "Close Project" ).Triggered=Lambda()
+					menu.AddAction( "Close project" ).Triggered=Lambda()
 					
 						CloseProject( path )
 					End
+					
+					menu.AddAction( "Clean (delete .buildv)" ).Triggered=Lambda()
+					
+						Local changes:=CleanProject( path )
+						If changes Then browser.Update()
+					End
 				Else
 					
-					menu.AddAction( "Open as a Project" ).Triggered=Lambda()
+					menu.AddAction( "Open as a project" ).Triggered=Lambda()
 					
 						OpenProject( path )
 					End
@@ -140,7 +153,7 @@ Class ProjectView Extends ScrollView
 				
 			Case FileType.File
 			
-				menu.AddAction( "Open On Desktop" ).Triggered=Lambda()
+				menu.AddAction( "Open on Desktop" ).Triggered=Lambda()
 				
 					requesters.OpenUrl( path )
 				End
@@ -305,6 +318,27 @@ Class ProjectView Extends ScrollView
 		If json.Contains( "exclude" )
 			brow.AdjustFilter( json["exclude"].ToArray() )
 		Endif
+	End
+	
+	' Return True if there is an actual folder deletion
+	Method CleanProject:Bool( dir:String )
+	
+		Local succ:=0,err:=0
+		Local items:=LoadDir( dir )
+		For Local i:=Eachin items
+			i=dir+"/"+i
+			If GetFileType(i)=FileType.Directory
+				If i.Contains( ".buildv" )
+					Local ok:=DeleteDir( i,True )
+					If ok Then succ+=1 Else err+=1
+				Endif
+			Endif
+		Next
+	
+		Local s:= err=0 ? "Project was successfully cleaned." Else "Clean project error! Some files are busy or you have no privileges."
+		MainWindow.ShowStatusBarText( s )
+		
+		Return succ>0
 	End
 	
 End
