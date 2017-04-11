@@ -4,7 +4,7 @@ Namespace ted2go
 
 Class CodeTextView Extends TextView
 
-	Field Formatter:ICodeFormatter	
+	Field Formatter:ICodeFormatter
 	Field Keywords:IKeywords
 	Field Highlighter:Highlighter
 	
