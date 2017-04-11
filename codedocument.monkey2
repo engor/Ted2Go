@@ -88,10 +88,10 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	Method OnRenderContent( canvas:Canvas ) Override
 	
 		Local color:=canvas.Color
-		
+		Local xx:=Scroll.x
 		' whole current line
 		canvas.Color=_lineColor
-		canvas.DrawRect( 0,Line*LineHeight-1,Width,LineHeight+3 )
+		canvas.DrawRect( xx,Line*LineHeight-1,Width,LineHeight+3 )
 		
 		
 		If _doc._debugLine<>-1
@@ -100,7 +100,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			If line<0 Or line>=Document.NumLines Return
 			
 			canvas.Color=New Color( 0,.5,0 )
-			canvas.DrawRect( 0,line*LineHeight,Width,LineHeight )
+			canvas.DrawRect( xx,line*LineHeight,Width,LineHeight )
 			
 		Endif
 		
