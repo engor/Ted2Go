@@ -98,7 +98,7 @@
 
 #Import "prefs"
 #Import "prefsdialog"
-#Import "ProcessWrapper"
+#Import "ProcessReader"
 
 
 

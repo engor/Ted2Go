@@ -91,14 +91,9 @@ Class EditActions
 		
 		If tv tv.Undo()
 		
-		Local p:=New ProcessWrapper( MainWindow.Mx2ccPath+" makemods -target=desktop -config=release jni",Lambda( t:String,code:Int )
-			
-			Print ">>>>>"
-			Print t
-			Print "<<<<<"
-			Print "code: "+code
-		End)
-		p.Run()
+		'TODO
+		' testing stuff here
+		
 	End
 	
 	Method OnRedo()

@@ -801,6 +801,14 @@ Class MainWindowInstance Extends Window
 		_docsTabView.EnsureVisibleCurrentTab()
 	End
 	
+	Method OnCloseApp()
+		
+		SaveState()
+		OnForceStop() ' kill build process if started
+		ProcessReader.StopAll()
+		_fileActions.quit.Trigger()
+	End
+	
 	Method OnForceStop()
 		
 		If _buildConsole.Running
@@ -883,8 +891,7 @@ Class MainWindowInstance Extends Window
 
 		Select event.Type
 		Case EventType.WindowClose
-			SaveState()
-			_fileActions.quit.Trigger()
+			OnCloseApp()
 		Default
 			Super.OnWindowEvent( event )
 		End

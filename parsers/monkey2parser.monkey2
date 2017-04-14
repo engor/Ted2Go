@@ -36,7 +36,7 @@ End
 
 Class Monkey2Parser Extends CodeParserPlugin
 	
-	Global OnDoneParseModules:Void()
+	Global OnDoneParseModules:Void( deltaMs:Int )
 	Global OnParseModule:Void( file:String )
 	
 	Property Name:String() Override
@@ -45,11 +45,20 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Method OnCreate() Override
 		
-		New Fiber( Lambda()
+		_modsPath=MainWindow.ModsPath
+		_mx2ccPath=MainWindow.Mx2ccPath
+		Print "modsPath: "+_modsPath
 		
+		New Fiber( Lambda()
+			
+			Local time:=Millisecs()
+			
 			ParseModules()
 			
-			OnDoneParseModules()
+			time=Millisecs()-time
+			'Print "parse modules: "+time+" ms"
+			
+			OnDoneParseModules( time )
 		End )
 		
 	End
@@ -92,13 +101,16 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Method ParseFile:String( filePath:String,pathOnDisk:String,isModule:Bool )
 		
-		If Not isModule '!!! dirty code
-			isModule=filePath.StartsWith( MainWindow.ModsPath )
+		If Not isModule
+			isModule=filePath.StartsWith( _modsPath )
 		Endif
 		
 		' is file modified?
 		Local time:=GetFileTime( pathOnDisk )
+		If time=0 Return Null ' file not found
+		
 		Local last:=_filesTime[filePath]
+		
 		If last = 0 Or time > last
 			_filesTime[filePath]=time
 			'Print "parse file: "+filePath.Replace( "C:/proj/monkey/monkey2fork/","" )+"  "+pathOnDisk.Replace( "C:/proj/monkey/monkey2fork/","" )+"  mod:"+Int(isModule)
@@ -108,9 +120,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Endif
 		
 		' start parsing process
-		Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+pathOnDisk+"~q"
-		
-		Local str:=LoadString( "process::"+cmd )
+		Local str:=StartParsing( pathOnDisk,isModule )
 		Local hasErrors:=(str.Find( "] : Error : " ) > 0)
 		
 		Local i:=str.Find( "{" )
@@ -606,6 +616,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Global _instance:=New Monkey2Parser
 	Field _filesTime:=New StringMap<Long>
 	Field _aliases:=New StringMap<CodeItem>
+	Field _modsPath:String,_mx2ccPath:String
 	
 	Method New()
 	
@@ -613,11 +624,21 @@ Class Monkey2Parser Extends CodeParserPlugin
 		_types=New String[](".monkey2")
 	End
 	
+	Method StartParsing:String( pathOnDisk:String,isModule:Bool )
+		
+		Local proc:=ProcessReader.Obtain()
+		
+		Local cmd:=_mx2ccPath+" makeapp -parse -geninfo ~q"+pathOnDisk+"~q"
+		Local str:=proc.RunSync( cmd )
+		
+		ProcessReader.Recycle( proc )
+		
+		Return str
+	End
+	
 	Method ParseModules()
 		
-		Local modDir:=CurrentDir()+"modules/"
-		
-		Local dd:=LoadDir( modDir )
+		Local dd:=LoadDir( _modsPath )
 		
 		' pop up some modules to parse them first
 		Local dirs:=New Stack<String>
@@ -629,8 +650,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Next
 		
 		For Local d:=Eachin dirs
-			If GetFileType( modDir+d ) = FileType.Directory
-				Local file:=modDir + d + "/" + d + ".monkey2"
+			If GetFileType( _modsPath+d ) = FileType.Directory
+				Local file:=_modsPath + d + "/" + d + ".monkey2"
 				'Print "module: "+file
 				If GetFileType( file ) = FileType.File
 					OnParseModule( file )

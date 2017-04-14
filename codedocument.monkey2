@@ -691,7 +691,7 @@ Class CodeDocument Extends Ted2Document
 		End
 		
 		' update 
-		Monkey2Parser.OnDoneParseModules+=Lambda()
+		Monkey2Parser.OnDoneParseModules+=Lambda( deltaMs:Int )
 			UpdateCodeTree()
 		End
 		
@@ -1243,6 +1243,7 @@ Class CodeDocument Extends Ted2Document
 		' catch for parsing
 		
 		If FileType <> ".monkey2" Return
+
 		
 		If _timer _timer.Cancel()
 		
@@ -1252,23 +1253,26 @@ Class CodeDocument Extends Ted2Document
 			
 			_parsing=True
 			
-			Local tmp:=MainWindow.AllocTmpPath( "_mx2cc_parse_",".monkey2" )
-			Local file:=StripDir( Path )
-			'Print "parsing:"+file+" ("+tmp+")"
+			New Fiber( Lambda()
 			
-			SaveString( _doc.Text,tmp )
-		
-			BgParsing( tmp )
+				Local tmp:=MainWindow.AllocTmpPath( "_mx2cc_parse_",".monkey2" )
+				Local file:=StripDir( Path )
+				'Print "parsing:"+file+" ("+tmp+")"
+				
+				SaveString( _doc.Text,tmp )
 			
-			'Print "finished:"+file
-			
-			DeleteFile( tmp )
-			
-			_timer.Cancel()
-						
-			_timer=Null
-			_parsing=False
-			
+				BgParsing( tmp )
+				
+				'Print "finished:"+file
+				
+				DeleteFile( tmp )
+				
+				_timer.Cancel()
+							
+				_timer=Null
+				_parsing=False
+				
+			End )
 		End )
 		
 	End
