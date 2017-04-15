@@ -28,6 +28,7 @@ Class DebugView Extends DockingView
 			If _stopped
 				_console.WriteStdin( "r~n" )
 				Resume()
+				ResetDebugLines()
 			Else
 				_console.Process.SendBreak()
 			Endif
@@ -168,18 +169,25 @@ Class DebugView Extends DockingView
 		
 		DebugEnd()
 		
-		For Local doc:=Eachin _docs.OpenDocuments
-			Local mx2Doc:=Cast<CodeDocument>( doc )
-			If mx2Doc mx2Doc.DebugLine=-1
-		Next
-			
+		ResetDebugLines()
+		
 		_console.Write( "~nFinished debugging app.~n" )
 		
 		MainWindow.UpdateKeyView()
 	End
 
+
 	Private
 		
+	Method ResetDebugLines()
+	
+		For Local doc:=Eachin _docs.OpenDocuments
+			Local mx2Doc:=Cast<CodeDocument>( doc )
+			If mx2Doc mx2Doc.DebugLine=-1
+		Next
+	End
+	
+	
 	Class Node Extends TreeView.Node
 
 		Field srcFile:String

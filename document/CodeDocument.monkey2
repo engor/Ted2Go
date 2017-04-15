@@ -97,7 +97,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		If _doc._debugLine<>-1
 			
 			Local line:=_doc._debugLine
-			If line<0 Or line>=Document.NumLines Return
+			'If line<0 Or line>=Document.NumLines Return
 			
 			canvas.Color=New Color( 0,.5,0 )
 			canvas.DrawRect( xx,line*LineHeight,Width,LineHeight )
@@ -110,8 +110,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		If _doc._errors.Length
 		
-			canvas.Color=New Color( 1,0,0 )
-			
+			canvas.Color=Color.Red
 			For Local err:=Eachin _doc._errors
 				Local s:=Document.GetLine( err.line )
 				Local indent:=Utils.GetIndent( s )
@@ -650,6 +649,7 @@ Class CodeDocument Extends Ted2Document
 		End
 		
 		_doc.LinesModified+=Lambda( first:Int,removed:Int,inserted:Int )
+		
 			Local put:=0
 			For Local get:=0 Until _errors.Length
 				Local err:=_errors[get]
@@ -664,6 +664,11 @@ Class CodeDocument Extends Ted2Document
 				put+=1
 			Next
 			_errors.Resize( put )
+			
+			' also move debug line
+			If _debugLine>=first
+				_debugLine+=(inserted-removed)
+			Endif
 		End
 
 		_view=New DockingView
@@ -1237,9 +1242,8 @@ Class CodeDocument Extends Ted2Document
 		
 		' catch for common operations
 		
-		' nothing yet
 		
-		
+		' -----------------------------------
 		' catch for parsing
 		
 		If FileType <> ".monkey2" Return
