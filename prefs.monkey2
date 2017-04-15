@@ -16,7 +16,7 @@ Class Prefs
 	Global MainToolBarVisible:=True
 	Global MainProjectTabsRight:=True
 	'
-	Global EditorToolBarVisible:=True
+	Global EditorToolBarVisible:=False
 	Global EditorGutterVisible:=True
 	Global EditorShowWhiteSpaces:=False
 	Global EditorFontPath:String
