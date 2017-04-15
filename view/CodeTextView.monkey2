@@ -219,17 +219,12 @@ Class CodeTextView Extends TextView
 					If _typing Then DoFormat( False )
 				Endif
 				
-				If Cursor=Anchor
-					'override mode
-					Local ovd:=MainWindow.OverrideTextMode
-					If ovd
-						Local ctrl:=(event.Modifiers & Modifier.Control)
-						Local shift:=(event.Modifiers & Modifier.Shift)
-						
-						Local alt:=(event.Modifiers & Modifier.Alt)
-						If Cursor < Text.Length And Text[Cursor]<>10 And Not shift And Not ctrl And Not alt
-							SelectText( Cursor,Cursor+1 )
-						Endif
+				' select next char in override mode
+				If Cursor=Anchor And MainWindow.OverrideTextMode
+				
+					' don't select new-line-char ~n
+					If Cursor < Text.Length And Text[Cursor]<>10
+						SelectText( Cursor,Cursor+1 )
 					Endif
 				Endif
 		End

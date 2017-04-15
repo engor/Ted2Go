@@ -47,8 +47,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		_modsPath=MainWindow.ModsPath
 		_mx2ccPath=MainWindow.Mx2ccPath
-		Print "modsPath: "+_modsPath
-		
+				
 		New Fiber( Lambda()
 			
 			Local time:=Millisecs()

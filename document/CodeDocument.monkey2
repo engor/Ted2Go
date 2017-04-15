@@ -44,7 +44,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		FilePath=doc.Path
 		
 		'AutoComplete
-		If AutoComplete = Null Then AutoComplete=New AutocompleteDialog( "" )
+		If Not AutoComplete Then AutoComplete=New AutocompleteDialog( "" )
 		AutoComplete.OnChoosen+=Lambda( result:AutocompleteResult )
 			If App.KeyView = Self
 				

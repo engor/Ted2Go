@@ -81,7 +81,7 @@
 		},
 		"StatusBarLineInfo":{
 			"extends":"Label",
-			"margin":[ 30,0,0,0 ]
+			"margin":[ 40,0,0,0 ]
 		},
 		"StatusBarIns":{
 			"extends":"Label"

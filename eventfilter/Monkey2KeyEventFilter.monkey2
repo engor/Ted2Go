@@ -12,13 +12,12 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 	Protected
 
 	Method OnFilterKeyEvent( event:KeyEvent,textView:TextView ) Override
-	
-		'Local codeView:=Cast<CodeTextView>(textView)
+		
 		Local ctrl:=(event.Modifiers & Modifier.Control)
 		Local shift:=(event.Modifiers & Modifier.Shift)
 			
 		Select event.Type
-		Case EventType.KeyDown ',EventType.KeyRepeat
+		Case EventType.KeyDown,EventType.KeyUp
 			
 			Select event.Key
 						
