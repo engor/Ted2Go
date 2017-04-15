@@ -629,7 +629,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			Local size:=Prefs.GetCustomFontSize()
 			newFont=Font.Load( fontPath,size )
 		Endif
-		If Not newFont Then newFont=App.Theme.GetStyle("Editor").Font
+		If Not newFont Then newFont=App.Theme.GetStyle( Style.Name ).Font
 		RenderStyle.Font=newFont
 	End
 	

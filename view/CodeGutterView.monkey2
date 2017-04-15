@@ -31,7 +31,8 @@ Class CodeGutterView Extends View
 	
 		_textView=_doc.TextView
 		
-		Local selLine:=_textView.Document.FindLine( _textView.Cursor )
+		Local cursorLine:=_textView.Document.FindLine( _textView.Cursor )
+		Local anchorLine:=_textView.Document.FindLine( _textView.Anchor )
 		
 		canvas.Color=RenderStyle.BackgroundColor
 		
@@ -55,9 +56,9 @@ Class CodeGutterView Extends View
 		
 			Local rect:=_textView.LineRect( i )
 		
-			If i<>selLine And (i+1) Mod 10 <> 0
+			If i<>cursorLine And i<>anchorLine And (i+1) Mod 10 <> 0
 				canvas.Alpha=0.5
-				canvas.DrawRect( _width-4,rect.Top+rect.Height*0.5-1,2,2 )
+				canvas.DrawRect( _width-4,rect.Top+rect.Height*.5-1,2,2 )
 				canvas.Alpha=1
 				Continue
 			Endif
@@ -71,8 +72,8 @@ Class CodeGutterView Extends View
 					canvas.Color=textColor
 				Endif
 			Else
-				canvas.Color=(i = selLine) ? textColor*1.1 Else textColor 'make selected line number little brighter
-				canvas.DrawText( i+1,_width,rect.Top,1,0 )
+				canvas.Color=(i=cursorLine Or i=anchorLine) ? textColor*1.125 Else textColor 'make selected line number little brighter
+				canvas.DrawText( i+1,_width,rect.Top+rect.Height*.5,1,.5 )
 			Endif
 			
 		Next

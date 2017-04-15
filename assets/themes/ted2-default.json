@@ -5,7 +5,8 @@
 	
 		"GutterView":{
 			"extends":"TextView",
-			"textColor":"text-disabled"
+			"textColor":"text-disabled",
+			"font":"normal"
 		},
 		
 		"DebugToolBar":{

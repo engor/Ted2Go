@@ -127,7 +127,7 @@
 		},
 		
 		"TextField":{
-			"font":"editor",
+			"font":"normal",
 			"padding":[ 2 ],
 			"margin":[ 2 ],
 			"skin":"button_skin.png",

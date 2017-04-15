@@ -48,7 +48,7 @@ Class PrefsDialog Extends DialogExt
 		_editorShowWhiteSpaces.Checked=Prefs.EditorShowWhiteSpaces
 		
 		Local path:=Prefs.EditorFontPath
-		If Not path Then path="(default)"
+		If Not path Then path=_defaultFont
 		_editorFontPath=New TextField( path )
 		_editorFontSize=New TextField( ""+Prefs.EditorFontSize )
 		
@@ -116,6 +116,7 @@ Class PrefsDialog Extends DialogExt
 	
 	Private
 	
+	Const _defaultFont:="(default)"
 	Field _acEnabled:CheckButton
 	Field _acUseTab:CheckButton
 	Field _acUseEnter:CheckButton
@@ -149,10 +150,12 @@ Class PrefsDialog Extends DialogExt
 		Prefs.EditorToolBarVisible=_editorToolBarVisible.Checked
 		Prefs.EditorGutterVisible=_editorGutterVisible.Checked
 		Prefs.EditorShowWhiteSpaces=_editorShowWhiteSpaces.Checked
-		Prefs.EditorFontPath=_editorFontPath.Text.Trim()
-		Local s:=_editorFontSize.Text.Trim()
-		If Not s Then s="16" 'default
-		Prefs.EditorFontSize=Int(s)
+		Local path:=_editorFontPath.Text.Trim()
+		If path=_defaultFont Then path=""
+		Prefs.EditorFontPath=path
+		Local size:=_editorFontSize.Text.Trim()
+		If Not size Then size="16" 'default
+		Prefs.EditorFontSize=Int(size)
 		
 		Prefs.MainToolBarVisible=_mainToolBarVisible.Checked
 		Prefs.MainProjectTabsRight=_mainProjectTabsRight.Checked
