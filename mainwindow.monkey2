@@ -125,7 +125,7 @@ Class MainWindowInstance Extends Window
 		
 		_helpView.Navigate( "asset::ted2/about.html" )
 		
-		_helpTree=New HelpTree( _helpView )
+		_helpTree=New HelpTreeView( _helpView )
 		
 		_debugView=New DebugView( _docsManager,_outputConsole )
 		
@@ -321,7 +321,7 @@ Class MainWindowInstance Extends Window
 		_consolesTabView.AddTab( "Docs",_helpViewDocker,False )
 		_consolesTabView.AddTab( "Find",_findConsole,False )
 		
-		_statusBar=New StatusBar
+		_statusBar=New StatusBarView
 		
 		_contentView=New DockingView
 		_contentView.AddView( _menuBar,"top" )
@@ -924,7 +924,7 @@ Class MainWindowInstance Extends Window
 	Field _projectView:ProjectView
 	Field _docBrowser:DockingView
 	Field _debugView:DebugView
-	Field _helpTree:HelpTree
+	Field _helpTree:HelpTreeView
 
 	Field _docsTabView:TabViewExt
 	Field _consolesTabView:TabView
@@ -958,7 +958,7 @@ Class MainWindowInstance Extends Window
 	Field _recentFilesMenu:Menu
 	Field _recentProjectsMenu:Menu
 	Field _closeProjectMenu:Menu
-	Field _statusBar:StatusBar
+	Field _statusBar:StatusBarView
 	Field _ovdMode:=False
 	Field _storedConsoleVisible:Bool
 	

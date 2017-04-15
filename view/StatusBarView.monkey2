@@ -2,7 +2,7 @@
 Namespace ted2go
 
 
-Class StatusBar Extends DockingView
+Class StatusBarView Extends DockingView
 	
 	Field Cancelled:Void()
 	

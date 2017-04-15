@@ -44,7 +44,7 @@ Class ProjectView Extends ScrollView
 		
 		If GetFileType( dir )<>FileType.Directory Return False
 	
-		Local browser:=New ProjectBrowser( dir )
+		Local browser:=New ProjectBrowserView( dir )
 		
 		browser.FileClicked+=Lambda( path:String )
 		

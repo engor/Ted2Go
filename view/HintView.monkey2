@@ -24,14 +24,14 @@ End
 
 Private
 
-Global _hint:HintInstance
+Global _hint:HintView
 Global _timer:Timer
 Global _time:Long
 Global _duration:Int
 
 Function InitHint()
 
-	_hint=New HintInstance
+	_hint=New HintView
 	_timer=New Timer( 1, Lambda()
 		If _time > 0 And Millisecs() >= _time+_duration
 			HideHint()
@@ -40,7 +40,7 @@ Function InitHint()
 End
 
 
-Class HintInstance Extends TextView
+Class HintView Extends TextView
 
 	Method New()
 		
@@ -71,17 +71,5 @@ Class HintInstance Extends TextView
 		Endif
 		Visible=False
 	End
-	
-	
-	Protected
-		
-	'Method OnRender( canvas:Canvas ) Override
-	'	
-	'	canvas.Clear( Color.Black )
-	'End
-	
-	
-	Private
-	
 	
 End

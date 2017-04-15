@@ -2,7 +2,7 @@
 Namespace ted2go
 
 
-Class ProjectBrowser Extends FileBrowser
+Class ProjectBrowserView Extends FileBrowser
 
 	
 	Method New( rootPath:String )

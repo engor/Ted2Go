@@ -31,7 +31,7 @@ End
 
 Public
 
-Class HelpTree Extends TreeViewExt
+Class HelpTreeView Extends TreeViewExt
 
 	Field PageClicked:Void( page:String )
 	
@@ -109,13 +109,13 @@ Class HelpTree Extends TreeViewExt
 	
 	Class Node Extends TreeView.Node
 	
-		Method New( page:String,parent:TreeView.Node,tree:HelpTree )
+		Method New( page:String,parent:TreeView.Node,tree:HelpTreeView )
 			Super.New( page,parent )
 			
 			_page=page
 		End
 	
-		Method New( obj:JsonObject,parent:TreeView.Node,tree:HelpTree )
+		Method New( obj:JsonObject,parent:TreeView.Node,tree:HelpTreeView )
 			Super.New( "",parent )
 		
 			Text=obj["text"].ToString()
