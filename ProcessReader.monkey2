@@ -40,11 +40,9 @@ Class ProcessReader
 		Local r:ProcessReader
 		If _recycled.Empty
 			r=New ProcessReader
-			Print "create new reader"
 		Else
 			r=_recycled[0]
 			_recycled.Remove( r )
-			Print "use existing reader"
 		Endif
 		r.Finished=Null
 		r.PortionRead=Null
@@ -74,6 +72,7 @@ Class ProcessReader
 	
 	#rem monkeydoc Async reading of process. You should to subscribe on (at least) Finished event to get result.
 	This method can be used without creation of new Fiber.
+	If started while process already running - nothing happen.
 	#end
 	Method RunAsync( command:String )
 		
@@ -88,6 +87,7 @@ Class ProcessReader
 	#rem monkeydoc Sync reading of process.
 	This method must be used with creation of new Fiber, because it uses Future to waiting for process finished.
 	Return full output of a process.
+	If started while process already running - immediately return an empty string.
 	#end
 	Method Run:String( command:String )
 	
