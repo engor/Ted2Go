@@ -57,37 +57,16 @@ Class CodeItem
 	End
 	
 	Property Text:String()
+		
 		If _text = Null
-			Local s:=Ident
-			Select _kind
-				Case CodeItemKind.Function_,CodeItemKind.Method_,CodeItemKind.Lambda_,CodeItemKind.Operator_
-					If Type<>Null And Type.ident<>"Void"
-						s+=" : "+Type.ToString()
-					Endif
-					s+=(HasParams ? " ( "+ParamsStr+" )" Else "()")
-				
-				Case CodeItemKind.Class_,CodeItemKind.Interface_,CodeItemKind.Struct_,CodeItemKind.Enum_
-					' nothing
-				
-				Case CodeItemKind.Inner_,CodeItemKind.EnumMember_
-					' nothing
-				
-				Case CodeItemKind.Property_
-					s+=" : "+Type.ToString()
-				
-				Default
-					If Type<>Null And Type.IsLikeFunc
-						If Type.ident<>"Void" Then s+=" : "+Type.ToString()
-						s+=(HasParams ? " ( "+ParamsStr+" )" Else "()")
-					Else
-						Local t:=Type.ToString()
-						If t Then s+=" : "+t
-					Endif
-					
-			End
-			_text=s
+			_text=GetText( True )
 		Endif
 		Return _text
+	End
+	
+	Property TextForInsert:String()
+		
+		Return GetText( False )
 	End
 	
 	Property Parent:CodeItem()
@@ -293,6 +272,56 @@ Class CodeItem
 	
 	
 	Private
+	
+	Method GetText:String( withSpaces:Bool )
+		
+		Local s:=Ident
+		Select _kind
+			Case CodeItemKind.Function_,CodeItemKind.Method_,CodeItemKind.Lambda_,CodeItemKind.Operator_
+				If Type<>Null And Type.ident<>"Void"
+					s+=withSpaces ? " : " Else ":"
+					s+=Type.ToString()
+				Endif
+				If HasParams
+					s+=withSpaces ? " ( " Else "( "
+					s+=ParamsStr+" )"
+				Else
+					s+="()"
+				Endif
+		
+			Case CodeItemKind.Class_,CodeItemKind.Interface_,CodeItemKind.Struct_,CodeItemKind.Enum_
+				' nothing
+		
+			Case CodeItemKind.Inner_,CodeItemKind.EnumMember_
+				' nothing
+		
+			Case CodeItemKind.Property_
+				s+=withSpaces ? " : " Else ":"
+				s+=Type.ToString()
+		
+			Default
+				If Type<>Null And Type.IsLikeFunc
+					If Type.ident<>"Void"
+						s+=withSpaces ? " : " Else ":"
+						s+=Type.ToString()
+					Endif
+					If HasParams
+						s+=withSpaces ? " ( " Else "( "
+						s+=ParamsStr+" )"
+					Else
+						s+="()"
+					Endif
+				Else
+					Local t:=Type.ToString()
+					If t
+						s+=withSpaces ? " : " Else ":"
+						s+=t
+					Endif
+				Endif
+		
+		End
+		Return s
+	End
 	
 	Method UpdateKind()
 		Select _kindStr

@@ -390,7 +390,7 @@ Class AutocompleteDialog Extends DialogExt
 		Local code:CodeItem=Null
 		If si <> Null
 			ident=si.CodeItem.Ident
-			text=si.CodeItem.Text
+			text=si.CodeItem.TextForInsert
 			code=si.CodeItem
 		Else
 			ident=item.Text
