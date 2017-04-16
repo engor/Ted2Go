@@ -15,7 +15,7 @@ Class CppKeywords Extends KeywordsPlugin
 	
 	Method New()
 		Super.New()
-		_types=New String[](".cpp",".h",".hpp")
+		_types=New String[]( ".cpp",".h",".hpp",".c" )
 	End
 	
 	Method GetInternal:String() Override
