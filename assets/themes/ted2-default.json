@@ -95,6 +95,13 @@
 		"StatusBarProgress":{
 			"extends":"ProgressBar",
 			"margin":[ 6,0 ]
+		},
+
+		"CompletionDialog":{
+			"extends":"Dialog"
+		},
+		"CompletionDialogContent":{
+			"padding":[ 1 ]
 		}
 	}
 }

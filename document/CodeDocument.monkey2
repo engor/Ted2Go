@@ -44,7 +44,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		FilePath=doc.Path
 		
 		'AutoComplete
-		If Not AutoComplete Then AutoComplete=New AutocompleteDialog( "" )
+		If Not AutoComplete Then AutoComplete=New AutocompleteDialog
 		AutoComplete.OnChoosen+=Lambda( result:AutocompleteResult )
 			If App.KeyView = Self
 				
@@ -784,7 +784,9 @@ Class CodeDocument Extends Ted2Document
 			Local i:=textLine.Find( "Method " ) 'to simplify overriding - insert full text
 			If i <> -1 And i < cursorPosInLine
 				Local i2:=textLine.Find( "(" ) 'is inside of params?
-				If i2 = -1 Or i2 > cursorPosInLine Return text+" Override"
+				If i2 = -1 Or i2 > cursorPosInLine
+					Return text.StartsWith( "New(" ) ? text Else text+"Override"
+				Endif
 			Endif
 			
 			If cursorPosInLine = textLine.Length
@@ -988,7 +990,7 @@ Class CodeDocument Extends Ted2Document
 		Local frame:=AutoComplete.Frame
 		
 		Local w:=frame.Width
-		Local h:=frame.Height
+		Local h:=Min( frame.Height,300 )
 		
 		Local cursorRect:=_codeView.CursorRect
 		Local scroll:=_codeView.Scroll
@@ -1001,17 +1003,21 @@ Class CodeDocument Extends Ted2Document
 			v=v.Parent
 			yy+=v.Frame.Top
 		Wend
-		
-		frame.Left=tvFrame.Left-scroll.x+cursorRect.Left+100
+		yy+=28 'magic offset :)
+		Local xx:=tvFrame.Left-scroll.x+cursorRect.Left'+100
+		xx+=32 'magic
+		frame.Left=xx
 		frame.Right=frame.Left+w
 		frame.Top=yy
 		frame.Bottom=frame.Top+h
 		' fit dialog into window
-		If frame.Bottom > tvFrame.Bottom
-			Local dy:=frame.Bottom-tvFrame.Bottom-64
-			frame.Top-=dy
-			frame.Bottom-=dy
-		Endif
+'		If frame.Bottom > tvFrame.Bottom
+'			Local dy:=frame.Bottom-tvFrame.Bottom-64
+'			frame.Top-=dy
+'			frame.Bottom-=dy
+'			frame.Left+=70
+'			frame.Right+=70
+''		Endif
 		AutoComplete.Frame=frame
 		
 	End

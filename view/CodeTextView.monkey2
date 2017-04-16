@@ -451,7 +451,7 @@ Class CodeTextView Extends TextView
 				Local len:=word.Length
 				
 				r=word.Rect
-				Local x0:=r.Left,y0:=r.Top+4,y1:=y0+r.Height
+				Local x0:=r.Left,y0:=r.Top+1,y1:=y0+r.Height
 				Local ww:=r.Width/len
 				Local xx:=x0+ww
 				

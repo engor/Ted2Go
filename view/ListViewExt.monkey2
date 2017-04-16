@@ -170,11 +170,11 @@ Class ListViewExt Extends ScrollableView
 		Local clip:=VisibleRect
 		
 		'draw mouse hover
-		If Rect.Contains( MouseLocation ) 
-			Local yy:Int=MouseLocation.y/_lineH
-			canvas.Color=_hoverColor
-			canvas.DrawRect( clip.Left,yy*_lineH,clip.Width,_lineH )
-		Endif
+'		If Rect.Contains( MouseLocation ) 
+'			Local yy:Int=MouseLocation.y/_lineH
+'			canvas.Color=_hoverColor
+'			canvas.DrawRect( clip.Left,yy*_lineH,clip.Width,_lineH )
+''		Endif
 		
 		Local firstVisLine:=Max( clip.Top/_lineH,0 )
 		Local lastVisLine:=Min( (clip.Bottom-1)/_lineH,_count )

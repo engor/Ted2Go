@@ -87,17 +87,17 @@ Struct AutocompleteResult
 End
 
 
-Class AutocompleteDialog Extends DialogExt
+Class AutocompleteDialog Extends NoTitleDialog
 	
 	Field OnChoosen:Void( result:AutocompleteResult )
 	
-	Method New( title:String )
-		Self.New( title,800,480 )
+	Method New()
+		Self.New( 800,480 )
 	End
 	
-	Method New( title:String,width:Int,height:Int )
-	
-		Title=title
+	Method New( width:Int,height:Int )
+		
+		Super.New()
 		
 		_view=New AutocompleteListView( 20,width,height )
 		_view.MoveCyclic=True
@@ -193,7 +193,7 @@ Class AutocompleteDialog Extends DialogExt
 			_view.Reset()'reset selIndex
 			_view.SetItems( result )
 			
-			Show()
+			Super.Show()
 			
 			_disableUsingsFilter=filter
 			Return
@@ -291,12 +291,12 @@ Class AutocompleteDialog Extends DialogExt
 		_view.Reset()'reset selIndex
 		_view.SetItems( result )
 		
-		Show()
+		Super.Show()
 		
-		_disableUsingsFilter=filter		
+		_disableUsingsFilter=filter
 	End
 	
-		
+	
 	Private
 	
 	Field _view:AutocompleteListView
@@ -307,9 +307,6 @@ Class AutocompleteDialog Extends DialogExt
 	Field _listForExtract2:=New List<CodeItem>
 	Field _disableUsingsFilter:Bool
 	
-	Method New()
-	End
-		
 	Method GetParser:ICodeParser( fileType:String )
 		If _parsers[fileType] = Null Then UpdateParsers( fileType )
 		Return _parsers[fileType]

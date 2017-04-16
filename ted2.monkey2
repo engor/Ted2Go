@@ -31,6 +31,7 @@
 #Import "dialog/PrefsDialog"
 #Import "dialog/EditProductDialog"
 #Import "dialog/DialogExt"
+#Import "dialog/NoTitleDialog"
 #Import "dialog/FindInFilesDialog"
 
 #Import "document/DocumentManager"
