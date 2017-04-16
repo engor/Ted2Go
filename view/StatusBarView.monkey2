@@ -39,30 +39,47 @@ Class StatusBarView Extends DockingView
 		ContentView=_labelText
 		
 		HideProgress()
+		UpdateThemeColors()
 	End
 	
-	Method SetText( text:String )
+	Method OnThemeChanged() Override
+		
+		Super.OnThemeChanged()
+		UpdateThemeColors()
+	End
+	
+	Method SetText( text:String,append:Bool=False )
+		
+		If append Then text=_labelText.Text+text
 		_labelText.Text=text
 	End
 	
 	Method SetLineInfo( text:String )
+		
 		_labelLineInfo.Text=text
 	End
 	
 	Method SetInsMode( ins:Bool )
+		
 		_labelIns.Text=ins ? "INS" else "OVR"
 	End
 	
 	Method ShowProgress()
+		
 		_progress.Visible=True
 		_progressCancel.Visible=True
 	End
 	
 	Method HideProgress()
+		
 		_progress.Visible=False
 		_progressCancel.Visible=False
 	End
 	
+	Method SetActiveState( active:Bool )
+		
+		RenderStyle.BackgroundColor=active ? _activeColor Else _defaultColor
+	End
 	
 	Private
 	
@@ -71,11 +88,18 @@ Class StatusBarView Extends DockingView
 	Field _labelIns:Label
 	Field _progress:ProgressBar
 	Field _progressCancel:ToolButtonExt
+	Field _activeColor:Color,_defaultColor:Color
 	
 	Method OnCancel()
 		
 		HideProgress()
 		Cancelled()
+	End
+	
+	Method UpdateThemeColors()
+		
+		_defaultColor=App.Theme.GetColor( "statusbar" )
+		_activeColor=App.Theme.GetColor( "statusbar-active" )
 	End
 	
 End

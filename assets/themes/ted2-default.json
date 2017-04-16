@@ -1,6 +1,12 @@
 {
 	"extends":"default",
 	
+	"colors":{
+
+		"statusbar": "content",
+		"statusbar-active": "#CA5100"
+	},
+
 	"styles":{
 	
 		"GutterView":{
@@ -73,7 +79,7 @@
 		"StatusBar":{
 			"extends":"DockingView",
 			"padding":[ 0 ],
-			"backgroundColor":"content",
+			"backgroundColor":"statusbar",
 			"border":[ 0,1,0,0 ]
 		},
 		"StatusBarText":{

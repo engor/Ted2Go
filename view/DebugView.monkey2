@@ -142,6 +142,8 @@ Class DebugView Extends DockingView
 			_console.Write( "~nFinished running app.~n" )
 			
 			MainWindow.UpdateKeyView()
+			MainWindow.SetStatusBarActive( False )
+			MainWindow.ShowStatusBarText( "Finished running app." )
 			
 			Return
 		End
@@ -174,6 +176,8 @@ Class DebugView Extends DockingView
 		_console.Write( "~nFinished debugging app.~n" )
 		
 		MainWindow.UpdateKeyView()
+		MainWindow.SetStatusBarActive( False )
+		MainWindow.ShowStatusBarText( "Finished debugging app." )
 	End
 
 

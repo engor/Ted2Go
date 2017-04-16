@@ -466,12 +466,13 @@ Class BuildActions Implements IModuleBuilder
 		
 		MainWindow.HideStatusBarProgress()
 		
-		Local status:=hasErrors ? "Process failed. See the build console for details." Else (_console.ExitCode=0 ? "Process finished." Else "Process cancelled.")
+		Local status:=hasErrors ? "{0} failed. See the build console for details." Else (_console.ExitCode=0 ? "{0} finished." Else "{0} cancelled.")
+		status=status.Replace( "{0}",title )
 		
 		Local elapsed:=(Millisecs()-_timing)/1000
 		Local m:=elapsed/60
 		Local sec:=elapsed Mod 60
-		status+="   Time elapsed: "+m+" m "+sec+" s"
+		status+="   Time elapsed: "+m+" m "+sec+" s."
 		
 		MainWindow.ShowStatusBarText( status )
 		
@@ -541,7 +542,9 @@ Class BuildActions Implements IModuleBuilder
 		
 		Select target
 		Case "desktop"
-
+			
+			MainWindow.ShowStatusBarText( "   App is running now...",True )
+			MainWindow.SetStatusBarActive( True )
 			_debugView.DebugApp( exeFile,config )
 
 		Case "emscripten","wasm"

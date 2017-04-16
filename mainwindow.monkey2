@@ -482,10 +482,15 @@ Class MainWindowInstance Extends Window
 
 		Return path.StartsWith( _tmp )
 	End
-
-	Method ShowStatusBarText( text:String )
 	
-		_statusBar.SetText( text )
+	Method SetStatusBarActive( active:Bool )
+	
+		_statusBar.SetActiveState( active )
+	End
+	
+	Method ShowStatusBarText( text:String,append:Bool=False )
+	
+		_statusBar.SetText( text,append )
 	End
 	
 	Method SetStatusBarInsertMode( ins:Bool )
@@ -825,7 +830,8 @@ Class MainWindowInstance Extends Window
 		If _buildConsole.Running
 			_buildConsole.Terminate()
 			HideStatusBarProgress()
-		Else If _outputConsole.Running
+		Endif
+		If _outputConsole.Running
 			_outputConsole.Terminate()
 		Endif
 	End
@@ -1134,7 +1140,7 @@ Class MainWindowInstance Extends Window
 	End
 		
 	Method OnAppIdle()
-	
+		
 		_docsManager.Update()
 		_fileActions.Update()
 		_editActions.Update()
