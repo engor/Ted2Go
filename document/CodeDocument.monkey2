@@ -1188,6 +1188,11 @@ Class CodeDocument Extends Ted2Document
 		Return _view
 	End
 	
+	Method OnClose() Override
+		
+		If _timer Then _timer.Cancel()
+	End
+	
 	Method OnLineChanged:Void( prevLine:Int,newLine:Int )
 	
 		Local scope:=_parser.GetScope( Path,_codeView.LineNumAtCursor+1 )	
@@ -1210,6 +1215,8 @@ Class CodeDocument Extends Ted2Document
 		ResetErrors()
 		
 		Local errors:=_parser.ParseFile( Path,pathOnDisk,False )
+		
+		If MainWindow.IsTerminating Return
 		
 		If errors
 			

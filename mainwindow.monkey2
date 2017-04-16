@@ -412,9 +412,18 @@ Class MainWindowInstance Extends Window
 		Return _buildActions.LockedDocument
 	End
 	
+	Property IsTerminating:Bool()
+		
+		Return _isTerminating
+	End
+	
 	Method Terminate()
 	
+		_isTerminating=True
+		
 		SaveState()
+		
+		_fileActions.closeAll.Trigger() 'stops all parser's timers on close docs
 		
 		App.Terminate()
 	End
@@ -732,6 +741,8 @@ Class MainWindowInstance Extends Window
 		jobj["windowRect"]=ToJson( Frame )
 		jobj["browserSize"]=New JsonNumber( Int( _contentView.GetViewSize( _browsersTabView ) ) )
 		jobj["consoleSize"]=New JsonNumber( Int( _contentView.GetViewSize( _consolesTabView ) ) )
+		jobj["browserVisible"]=New JsonBool( _browsersTabView.Visible )
+		jobj["consoleVisible"]=New JsonBool( _consolesTabView.Visible )
 		
 		Local recent:=New JsonArray
 		For Local path:=Eachin _recentFiles
@@ -822,9 +833,11 @@ Class MainWindowInstance Extends Window
 	Method LoadState( jobj:JsonObject )
 	
 		If jobj.Contains( "browserSize" ) _contentView.SetViewSize( _browsersTabView,jobj.GetNumber( "browserSize" ) )
-
+		If jobj.Contains( "browserVisible" ) _browsersTabView.Visible=jobj.GetBool( "browserVisible" )
+		
 		If jobj.Contains( "consoleSize" ) _contentView.SetViewSize( _consolesTabView,jobj.GetNumber( "consoleSize" ) )
-			
+		If jobj.Contains( "consoleVisible" ) _consolesTabView.Visible=jobj.GetBool( "consoleVisible" )
+		
 		If jobj.Contains( "recentFiles" )
 			For Local file:=Eachin jobj.GetArray( "recentFiles" )
 				Local path:=file.ToString()
@@ -961,6 +974,7 @@ Class MainWindowInstance Extends Window
 	Field _statusBar:StatusBarView
 	Field _ovdMode:=False
 	Field _storedConsoleVisible:Bool
+	Field _isTerminating:Bool
 	
 	Method ToJson:JsonValue( rect:Recti )
 		Return New JsonArray( New JsonValue[]( New JsonNumber( rect.min.x ),New JsonNumber( rect.min.y ),New JsonNumber( rect.max.x ),New JsonNumber( rect.max.y ) ) )
