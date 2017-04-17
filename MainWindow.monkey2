@@ -311,6 +311,15 @@ Class MainWindowInstance Extends Window
 		_menuBar.AddMenu( _windowMenu )
 		_menuBar.AddMenu( _helpMenu )
 		
+		Local testMenu:=New Menu( "Test" )
+		_menuBar.AddMenu( testMenu )
+		Local push:=New MenuButtonExt( "Push" )
+		testMenu.AddAction( push.ClickAction )
+		Local subMenu:=New Menu( "" )
+		subMenu.AddAction(New Action("Item1"))
+		subMenu.AddAction(New Action("Item2"))
+		subMenu.AddAction(New Action("Item3"))
+		push.AddSubMenu( subMenu )
 		
 		_browsersTabView.AddTab( "Project",_projectView,True )
 		_browsersTabView.AddTab( "Source",_docBrowser,False )
