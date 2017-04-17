@@ -56,7 +56,8 @@ Class CodeGutterView Extends View
 		
 			Local rect:=_textView.LineRect( i )
 		
-			If i<>cursorLine And i<>anchorLine And (i+1) Mod 10 <> 0
+			Local ok:= Prefs.EditorShowEvery10LineNumber And ((i+1) Mod 10 <> 0)
+			If ok And i<>cursorLine And i<>anchorLine
 				canvas.Alpha=0.5
 				canvas.DrawRect( _width-4,rect.Top+rect.Height*.5-1,2,2 )
 				canvas.Alpha=1

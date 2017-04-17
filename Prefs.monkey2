@@ -21,6 +21,7 @@ Class Prefs
 	Global EditorShowWhiteSpaces:=False
 	Global EditorFontPath:String
 	Global EditorFontSize:=16
+	Global EditorShowEvery10LineNumber:=True
 	'
 	Global SourceSortByType:=True
 	Global SourceShowInherited:=False
@@ -58,6 +59,7 @@ Class Prefs
 			EditorShowWhiteSpaces=GetJsonBool( j2,"showWhiteSpaces",EditorShowWhiteSpaces )
 			If j2.Contains("fontPath") Then EditorFontPath=j2["fontPath"].ToString()
 			If j2.Contains("fontSize") Then EditorFontSize=Int( j2["fontSize"].ToNumber() )
+			EditorShowEvery10LineNumber=GetJsonBool( j2,"showEvery10",EditorShowEvery10LineNumber )
 			
 		Endif
 		
@@ -94,6 +96,7 @@ Class Prefs
 		j["showWhiteSpaces"]=New JsonBool( EditorShowWhiteSpaces )
 		j["fontPath"]=New JsonString( EditorFontPath )
 		j["fontSize"]=New JsonNumber( EditorFontSize )
+		j["showEvery10"]=New JsonBool( EditorShowEvery10LineNumber )
 		json["editor"]=j
 		
 		j=New JsonObject
