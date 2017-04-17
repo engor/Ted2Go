@@ -459,7 +459,7 @@ Class BuildActions Implements IModuleBuilder
 				Endif
 				
 			Endif
-						
+			
 			_console.Write( stdout )
 		
 		Forever
@@ -475,8 +475,6 @@ Class BuildActions Implements IModuleBuilder
 		status+="   Time elapsed: "+m+" m "+sec+" s."
 		
 		MainWindow.ShowStatusBarText( status )
-		
-		MainWindow.RestoreConsoleVisibility()
 		
 		Return _console.ExitCode=0
 	End
@@ -535,7 +533,10 @@ Class BuildActions Implements IModuleBuilder
 		
 		_console.Write("~nDone.")
 		
-		If Not run Return True
+		If Not run
+			MainWindow.RestoreConsoleVisibility()
+			Return True
+		Endif
 		
 		Local exeFile:=product.GetExecutable()
 		If Not exeFile Return True

@@ -144,6 +144,7 @@ Class DebugView Extends DockingView
 			MainWindow.UpdateKeyView()
 			MainWindow.SetStatusBarActive( False )
 			MainWindow.ShowStatusBarText( "Finished running app." )
+			MainWindow.RestoreConsoleVisibility()
 			
 			Return
 		End
@@ -178,6 +179,7 @@ Class DebugView Extends DockingView
 		MainWindow.UpdateKeyView()
 		MainWindow.SetStatusBarActive( False )
 		MainWindow.ShowStatusBarText( "Finished debugging app." )
+		MainWindow.RestoreConsoleVisibility()
 	End
 
 
