@@ -88,7 +88,7 @@ Class MainWindowInstance Extends Window
 		'Help tab
 		
 		_helpView=New HtmlViewExt
-		_helpViewDocker=New DockingView
+		_helpConsole=New DockingView
 		Local bar:=New ToolBarExt
 		bar.MaxSize=New Vec2i( 300,30 )
 		bar.AddIconicButton(
@@ -120,8 +120,8 @@ Class MainWindowInstance Extends Window
 			label.Text=url
 		End
 		
-		_helpViewDocker.AddView( bar,"top" )
-		_helpViewDocker.ContentView=_helpView
+		_helpConsole.AddView( bar,"top" )
+		_helpConsole.ContentView=_helpView
 		
 		_helpView.Navigate( "asset::ted2/about.html" )
 		
@@ -318,7 +318,7 @@ Class MainWindowInstance Extends Window
 		
 		_consolesTabView.AddTab( "Build",_buildConsole,True )
 		_consolesTabView.AddTab( "Output",_outputConsole,False )
-		_consolesTabView.AddTab( "Docs",_helpViewDocker,False )
+		_consolesTabView.AddTab( "Docs",_helpConsole,False )
 		_consolesTabView.AddTab( "Find",_findConsole,False )
 		
 		_statusBar=New StatusBarView
@@ -611,7 +611,7 @@ Class MainWindowInstance Extends Window
 	
 	Method ShowHelpView()
 		_consolesTabView.Visible=True
-		_consolesTabView.CurrentView=_helpViewDocker
+		_consolesTabView.CurrentView=_helpConsole
 	End
 	
 	Method ShowFindResults()
@@ -744,10 +744,15 @@ Class MainWindowInstance Extends Window
 		Local jobj:=New JsonObject
 		
 		jobj["windowRect"]=ToJson( Frame )
+		
 		jobj["browserSize"]=New JsonNumber( Int( _contentView.GetViewSize( _browsersTabView ) ) )
-		jobj["consoleSize"]=New JsonNumber( Int( _contentView.GetViewSize( _consolesTabView ) ) )
 		jobj["browserVisible"]=New JsonBool( _browsersTabView.Visible )
+		jobj["browserTab"]=New JsonString( GetBrowsersTabAsString() )
+		
+		jobj["consoleSize"]=New JsonNumber( Int( _contentView.GetViewSize( _consolesTabView ) ) )
 		jobj["consoleVisible"]=New JsonBool( _consolesTabView.Visible )
+		jobj["consoleTab"]=New JsonString( GetConsolesTabAsString() )
+		
 		
 		Local recent:=New JsonArray
 		For Local path:=Eachin _recentFiles
@@ -841,9 +846,11 @@ Class MainWindowInstance Extends Window
 	
 		If jobj.Contains( "browserSize" ) _contentView.SetViewSize( _browsersTabView,jobj.GetNumber( "browserSize" ) )
 		If jobj.Contains( "browserVisible" ) _browsersTabView.Visible=jobj.GetBool( "browserVisible" )
+		If jobj.Contains( "browserTab" ) SetBrowsersTabByString( jobj.GetString( "browserTab" ) )
 		
 		If jobj.Contains( "consoleSize" ) _contentView.SetViewSize( _consolesTabView,jobj.GetNumber( "consoleSize" ) )
 		If jobj.Contains( "consoleVisible" ) _consolesTabView.Visible=jobj.GetBool( "consoleVisible" )
+		If jobj.Contains( "consoleTab" ) SetConsolesTabByString( jobj.GetString( "consoleTab" ) )
 		
 		If jobj.Contains( "recentFiles" )
 			For Local file:=Eachin jobj.GetArray( "recentFiles" )
@@ -938,7 +945,7 @@ Class MainWindowInstance Extends Window
 	Field _buildConsole:Console
 	Field _outputConsole:Console
 	Field _helpView:HtmlViewExt
-	Field _helpViewDocker:DockingView
+	Field _helpConsole:DockingView
 	Field _findConsole:TreeViewExt
 	
 	Field _projectView:ProjectView
@@ -1155,6 +1162,67 @@ Class MainWindowInstance Extends Window
 		GCCollect()	'thrash that GC!
 	End
 	
+	Method GetConsolesTabAsString:String()
+		
+		Select _consolesTabView.CurrentView
+			Case _outputConsole
+				Return "output"
+			Case _buildConsole
+				Return "build"
+			Case _helpConsole
+				Return "docs"
+			Case _findConsole
+				Return "find"
+		End
+		Return ""
+	End
+	
+	Method SetConsolesTabByString( value:String )
+		
+		Local view:View
+		Select value
+			Case "output"
+				view=_outputConsole
+			Case "build"
+				view=_buildConsole
+			Case "docs"
+				view=_helpConsole
+			Case "find"
+				view=_findConsole
+		End
+		If view Then _consolesTabView.CurrentView=view
+	End
+	
+	Method GetBrowsersTabAsString:String()
+	
+		Select _browsersTabView.CurrentView
+			Case _projectView
+				Return "project"
+			Case _docBrowser
+				Return "source"
+			Case _debugView
+				Return "debug"
+			Case _helpTree
+				Return "help"
+		End
+		Return ""
+	End
+	
+	Method SetBrowsersTabByString( value:String )
+	
+		Local view:View
+		Select value
+			Case "project"
+				view=_projectView
+			Case "source"
+				view=_docBrowser
+			Case "debug"
+				view=_debugView
+			Case "help"
+				view=_helpTree
+		End
+		If view Then _browsersTabView.CurrentView=view
+	End
 End
 
 
