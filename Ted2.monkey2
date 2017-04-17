@@ -90,7 +90,7 @@
 #Import "view/XmlTreeView"
 #Import "view/Monkey2TreeView"
 #Import "view/GutterView"
-#Import "view/MenuButtonExt"
+#Import "view/MenuExt"
 
 #Import "MainWindow"
 #Import "Plugin"

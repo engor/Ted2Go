@@ -1,0 +1,294 @@
+
+Namespace ted2go
+
+
+Class MenuExt Extends DockingView
+
+	#rem monkeydoc Creates a new menu.
+	#end
+	Method New( text:String="" )
+		Style=GetStyle( "Menu" )
+		Visible=False
+		Layout="float"
+		Gravity=New Vec2f( 0,0 )
+		
+		_text=text
+	End
+	
+	#rem monkeydoc Menu text
+	#end
+	Property Text:String()
+		Return _text
+	End
+
+	#rem monkeydoc Clears all items from the menu.
+	#end
+	Method Clear()
+		Super.RemoveAllViews()
+	End
+
+	#rem monkeydoc Adds a view to the menu.
+	#end	
+	Method AddView( view:View )
+	
+		AddView( view,"top" )
+	End
+	
+	#rem monkeydoc Adds an action to the menu.
+	#end	
+	Method AddAction( action:Action )
+	
+		Local button:=New MenuButton( action )
+		
+		button.Clicked=Lambda()
+		
+			CloseAll()
+			'
+			'a bit gnarly, but makes sure menu is *really* closed...
+			'
+			App.RequestRender()
+			App.Idle+=action.Trigger
+		End
+		
+		AddView( button )
+	End
+	
+	Method AddAction:Action( text:String )
+		Local action:=New Action( text )
+		AddAction( action )
+		Return action
+	End
+	
+	#rem monkeydoc Adds a separator to the menu.
+	#end
+	Method AddSeparator()
+		AddView( New MenuSeparator,"top" )
+	End
+	
+	#rem monkeydoc Adds a submenu to the menu.
+	#end
+	Method AddSubMenu( menu:Menu )
+	
+		Local button:=New MenuButtonExt( menu.Text )
+
+		_subs[button]=menu
+		
+		button.Clicked=Lambda()
+			If menu.Visible
+				menu.Close()
+			Else
+				Local location:=New Vec2i( button.Bounds.Right,button.Bounds.Top )
+				menu.Open( location,button,Self )
+			Endif
+		End
+		
+		AddView( button,"top" )
+	End
+	
+	#rem monkeydoc Opens the menu.
+	#end
+	Method Open()
+	
+		Open( App.MouseLocation,App.ActiveWindow,Null )
+	End
+	
+	#rem monkeydoc @hidden
+	#end
+	Method Open( location:Vec2i,view:View,owner:View )
+	
+		Assert( Not Visible )
+		
+		While Not _open.Empty And _open.Top<>owner
+			_open.Top.Close()
+		Wend
+		
+		If _open.Empty
+			_filter=App.MouseEventFilter
+			App.MouseEventFilter=MouseEventFilter
+		Endif
+		
+		Local window:=view.Window
+		location=view.TransformPointToView( location,window )
+		
+		window.AddChildView( Self )
+		Offset=location
+		Visible=True
+		
+		_owner=owner
+
+		_open.Push( Self )
+	End
+	
+	#rem monkeydoc @hidden
+	#end	
+	Method Close()
+	
+		Assert( Visible )
+		
+		While Not _open.Empty
+		
+			Local menu:=_open.Pop()
+			menu.Parent.RemoveChildView( menu )
+			menu.Visible=False
+			menu._owner=Null
+			
+			If menu=Self Exit
+		Wend
+		
+		If Not _open.Empty Return
+		
+		App.MouseEventFilter=_filter
+
+		_filter=Null
+	End
+	
+	Private
+	
+	Field _subs:=New Map<View,Menu>
+	Field _text:String
+	Field _owner:View
+	Global _hovered:View
+	Global _timer:Timer
+	Global _sub:Menu,_parent:MenuExt
+	
+	Global _open:=New Stack<MenuExt>
+	
+	Global _filter:Void( MouseEvent )
+	
+	Function CloseAll()
+		
+		_open[0].Close()
+	End
+	
+	Function MouseEventFilter( event:MouseEvent )
+	
+		If event.Eaten Return
+		
+		Local view:=event.View
+			
+		For Local menu:=Eachin _open
+		
+			If view.IsChildOf( menu )
+				
+				If event.Type=EventType.MouseMove
+					
+					If view=_hovered Return
+					_hovered=view
+					Local sub:=menu._subs[view]
+					If _timer Then _timer.Cancel()
+					If _sub And menu=_parent
+						If _sub.Visible Then _sub.Close()
+						_sub=Null
+						_parent=Null
+					Endif
+					If sub
+						_parent=menu
+						_timer=New Timer( 1.2,Lambda()
+							Local location:=New Vec2i( view.Bounds.Right,view.Bounds.Top )
+							If sub.Visible Then sub.Close()
+							sub.Open( location,view,menu )
+							_sub=sub
+							_timer.Cancel()
+							_timer=Null
+						End )
+					Endif
+				Endif
+				
+				Return
+			Endif
+		Next
+		
+		_hovered=Null
+		If _timer Then _timer.Cancel()
+		
+		If _open[0]._owner
+		
+			If view<>_open[0]._owner And view.IsChildOf( _open[0]._owner ) Return
+			
+			If event.Type=EventType.MouseDown 
+				CloseAll()
+			Else
+'				event.Eat()
+			Endif
+		
+		Else
+			
+			If event.Type=EventType.MouseDown
+				CloseAll()
+			Else
+'				event.Eat()
+			Endif
+		
+		Endif
+	End
+	
+End
+
+
+Class MenuButtonExt Extends MenuButton
+	
+	Method New( action:Action )
+	
+		Super.New( action )
+	End
+	
+	Method New( text:String )
+	
+		Super.New( text )
+	End
+	
+	
+	Protected
+	
+'	Method OnMeasure:Vec2i() Override
+'	
+'		Local size:=Super.OnMeasure()
+'	
+'		If _action
+'			Local hotKey:=_action.HotKeyText
+'			If hotKey size.x+=RenderStyle.Font.TextWidth( "         "+hotKey )
+'		Endif
+'	
+'		Return size
+'	End
+	
+	Method OnRender( canvas:Canvas ) Override
+	
+		Super.OnRender( canvas )
+		
+		Local tx:=(Width-2)
+		Local ty:=(Height-MeasuredSize.y) * TextGravity.y
+		canvas.DrawText( ">",tx,ty,1,0 )
+	
+	End
+	
+End
+
+
+Class MenuBarExt Extends ToolBar
+
+	Method New()
+		Style=GetStyle( "MenuBar" )
+		
+		Layout="fill-x"
+		Gravity=New Vec2f( 0,0 )
+	End
+	
+	Method AddMenu( menu:MenuExt )
+	
+		Local button:=New MenuButton( menu.Text )
+
+		button.Clicked=Lambda()
+		
+			If menu.Visible
+				menu.Close()
+			Else
+				Local location:=New Vec2i( button.Bounds.Left,button.Bounds.Bottom )
+				menu.Open( location,button,Self )
+			Endif
+		End
+		
+		AddView( button )
+	End
+	
+End

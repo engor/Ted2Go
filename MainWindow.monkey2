@@ -183,7 +183,7 @@ Class MainWindowInstance Extends Window
 			End
 		Next
 		
-		_fileMenu=New Menu( "File" )
+		_fileMenu=New MenuExt( "File" )
 		_fileMenu.AddAction( _fileActions.new_ )
 		_fileMenu.AddSubMenu( _newFiles )
 		_fileMenu.AddAction( _fileActions.open )
@@ -208,7 +208,7 @@ Class MainWindowInstance Extends Window
 		
 		'Edit menu
 		'
-		_editMenu=New Menu( "Edit" )
+		_editMenu=New MenuExt( "Edit" )
 		_editMenu.AddAction( _editActions.undo )
 		_editMenu.AddAction( _editActions.redo )
 		_editMenu.AddSeparator()
@@ -222,7 +222,7 @@ Class MainWindowInstance Extends Window
 		
 		'Find menu
 		'
-		_findMenu=New Menu( "Find" )
+		_findMenu=New MenuExt( "Find" )
 		_findMenu.AddAction( _findActions.find )
 		_findMenu.AddAction( _findActions.findNext )
 		_findMenu.AddAction( _findActions.findPrevious )
@@ -233,7 +233,7 @@ Class MainWindowInstance Extends Window
 		
 		'View menu
 		'
-		_viewMenu=New Menu( "View" )
+		_viewMenu=New MenuExt( "View" )
 		_viewMenu.AddAction( _editActions.gotoLine )
 		_viewMenu.AddAction( _editActions.gotoDeclaration )
 		_viewMenu.AddSeparator()
@@ -251,9 +251,9 @@ Class MainWindowInstance Extends Window
 		_forceStop.HotKeyModifiers=Modifier.Shift
 		
 		'
-		_buildActions.PreBuild+=OnForceStop		
+		_buildActions.PreBuild+=OnForceStop
 		
-		_buildMenu=New Menu( "Build" )
+		_buildMenu=New MenuExt( "Build" )
 		_buildMenu.AddAction( _buildActions.buildAndRun )
 		_buildMenu.AddAction( _buildActions.build )
 		_buildMenu.AddAction( _buildActions.semant )
@@ -271,7 +271,7 @@ Class MainWindowInstance Extends Window
 		
 		'Window menu
 		'
-		_windowMenu=New Menu( "Window" )
+		_windowMenu=New MenuExt( "Window" )
 		_windowMenu.AddAction( _docsManager.nextDocument )
 		_windowMenu.AddAction( _docsManager.prevDocument )
 		_windowMenu.AddSeparator()
@@ -285,7 +285,7 @@ Class MainWindowInstance Extends Window
 		
 		'Help menu
 		'
-		_helpMenu=New Menu( "Help" )
+		_helpMenu=New MenuExt( "Help" )
 		_helpMenu.AddAction( _helpActions.quickHelp )
 		_helpMenu.AddAction( _helpActions.viewManuals )
 		_helpMenu.AddSeparator()
@@ -302,7 +302,7 @@ Class MainWindowInstance Extends Window
 		
 		'Menu bar
 		'
-		_menuBar=New MenuBar
+		_menuBar=New MenuBarExt
 		_menuBar.AddMenu( _fileMenu )
 		_menuBar.AddMenu( _editMenu )
 		_menuBar.AddMenu( _findMenu )
@@ -311,15 +311,6 @@ Class MainWindowInstance Extends Window
 		_menuBar.AddMenu( _windowMenu )
 		_menuBar.AddMenu( _helpMenu )
 		
-		Local testMenu:=New Menu( "Test" )
-		_menuBar.AddMenu( testMenu )
-		Local push:=New MenuButtonExt( "Push" )
-		testMenu.AddAction( push.ClickAction )
-		Local subMenu:=New Menu( "" )
-		subMenu.AddAction(New Action("Item1"))
-		subMenu.AddAction(New Action("Item2"))
-		subMenu.AddAction(New Action("Item3"))
-		push.AddSubMenu( subMenu )
 		
 		_browsersTabView.AddTab( "Project",_projectView,True )
 		_browsersTabView.AddTab( "Source",_docBrowser,False )
@@ -971,14 +962,14 @@ Class MainWindowInstance Extends Window
 
 	Field _tabMenu:Menu
 	Field _newFiles:Menu
-	Field _fileMenu:Menu
-	Field _editMenu:Menu
-	Field _findMenu:Menu
-	Field _viewMenu:Menu
-	Field _buildMenu:Menu
-	Field _windowMenu:Menu
-	Field _helpMenu:Menu
-	Field _menuBar:MenuBar
+	Field _fileMenu:MenuExt
+	Field _editMenu:MenuExt
+	Field _findMenu:MenuExt
+	Field _viewMenu:MenuExt
+	Field _buildMenu:MenuExt
+	Field _windowMenu:MenuExt
+	Field _helpMenu:MenuExt
+	Field _menuBar:MenuBarExt
 	
 	Field _themesMenu:Menu
 	
@@ -1084,7 +1075,7 @@ Class MainWindowInstance Extends Window
 		Next
 	End
 	
-	Method AddZoomActions( menu:Menu )
+	Method AddZoomActions( menu:MenuExt )
 		
 		menu.AddAction( "Zoom in" ).Triggered=Lambda()
 			If _themeScale>=4 Return
