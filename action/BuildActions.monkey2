@@ -391,7 +391,7 @@ Class BuildActions Implements IModuleBuilder
 		tv.GotoLine( err.line )
 	End
 	
-	Method BuildMx2:Bool( cmd:String,progressText:String,run:Bool=True )
+	Method BuildMx2:Bool( cmd:String,progressText:String,action:String="build" )
 	
 		ClearErrors()
 		
@@ -410,7 +410,7 @@ Class BuildActions Implements IModuleBuilder
 			Return False
 		Endif
 		
-		Local title := run ? "Building" Else "Checking"
+		Local title := (action="semant") ? "Checking" Else "Building"
 		
 		Local s:=progressText
 		If Not s.EndsWith( "..." ) Then s+="..."
@@ -529,7 +529,7 @@ Class BuildActions Implements IModuleBuilder
 		Local title := sourceAction="build" ? "Building" Else (sourceAction="run" ? "Running" Else "Checking")
 		Local msg:=title+" ~ "+target+" ~ "+config+" ~ "+StripDir( buildDoc.Path )
 		
-		If Not BuildMx2( cmd,msg,run ) Return False
+		If Not BuildMx2( cmd,msg,sourceAction ) Return False
 		
 		_console.Write("~nDone.")
 		

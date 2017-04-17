@@ -68,8 +68,13 @@ Class AAA Extends TestClass
 	
 	Field generic:=New Vec2f
 	Field map:=New StringMap<Int>
-	
+	Global arr:String[]
 	Global event:Bool( p1:String[],p2:Object )
+	
+	Method TestArray( arr2:String[] )
+		
+		'arr2[i].start
+	End
 	
 	Method anstrMethod() Abstract
 	
