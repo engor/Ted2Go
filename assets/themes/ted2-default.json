@@ -107,6 +107,12 @@
 		"ProjectTabView":{
 			"extends":"TabView",
 			"backgroundColor":"content"
+		},
+		
+		"StatusBarButton":{
+			"extends":"ToolButton",
+			"padding":[ 0 ],
+			"skinColor":"transparent"
 		}
 	}
 }

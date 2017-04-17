@@ -27,6 +27,7 @@ Class StatusBarView Extends DockingView
 		act.Triggered=OnCancel
 		
 		_progressCancel=New ToolButtonExt( act,"" ) '"Stop process" )
+		_progressCancel.Style=GetStyle( "StatusBarButton" )
 		AddView( _progressCancel,"right" )
 		
 		_progress=New ProgressBar
@@ -64,9 +65,9 @@ Class StatusBarView Extends DockingView
 		_labelIns.Text=ins ? "INS" else "OVR"
 	End
 	
-	Method ShowProgress()
+	Method ShowProgress( cancelIconOnly:Bool=False )
 		
-		_progress.Visible=True
+		If Not cancelIconOnly Then _progress.Visible=True
 		_progressCancel.Visible=True
 	End
 	

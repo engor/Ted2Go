@@ -141,10 +141,7 @@ Class DebugView Extends DockingView
 			
 			_console.Write( "~nFinished running app.~n" )
 			
-			MainWindow.UpdateKeyView()
-			MainWindow.SetStatusBarActive( False )
-			MainWindow.ShowStatusBarText( "Finished running app." )
-			MainWindow.RestoreConsoleVisibility()
+			OnStopRunning( "Finished running app." )
 			
 			Return
 		End
@@ -176,15 +173,22 @@ Class DebugView Extends DockingView
 		
 		_console.Write( "~nFinished debugging app.~n" )
 		
-		MainWindow.UpdateKeyView()
-		MainWindow.SetStatusBarActive( False )
-		MainWindow.ShowStatusBarText( "Finished debugging app." )
-		MainWindow.RestoreConsoleVisibility()
+		OnStopRunning( "Finished debugging app." )
 	End
 
 
 	Private
+	
+	Method OnStopRunning( info:String )
 		
+		MainWindow.UpdateKeyView()
+		MainWindow.SetStatusBarActive( False )
+		MainWindow.ShowStatusBarText( info )
+		MainWindow.RestoreConsoleVisibility()
+		MainWindow.HideStatusBarProgress()
+		
+	End
+	
 	Method ResetDebugLines()
 	
 		For Local doc:=Eachin _docs.OpenDocuments

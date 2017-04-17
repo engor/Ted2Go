@@ -383,6 +383,18 @@ Class MainWindowInstance Extends Window
 		_findActions.findNext.Trigger()
 	End
 	
+	Method OnForceStop()
+	
+		If _buildConsole.Running
+			_buildConsole.Terminate()
+			HideStatusBarProgress()
+			RestoreConsoleVisibility()
+		Endif
+		If _outputConsole.Running
+			_outputConsole.Terminate()
+		Endif
+	End
+	
 	Property Mx2ccPath:String()
 	
 		Return _mx2cc
@@ -508,10 +520,10 @@ Class MainWindowInstance Extends Window
 		_statusBar.SetLineInfo( "Ln : "+line+"  Col : "+pos )
 	End
 	
-	Method ShowStatusBarProgress( cancelCallback:Void() )
+	Method ShowStatusBarProgress( cancelCallback:Void(),cancelIconOnly:Bool=False )
 	
 		_statusBar.Cancelled=cancelCallback
-		_statusBar.ShowProgress()
+		_statusBar.ShowProgress( cancelIconOnly )
 	End
 	
 	Method HideStatusBarProgress()
@@ -829,18 +841,6 @@ Class MainWindowInstance Extends Window
 		OnForceStop() ' kill build process if started
 		ProcessReader.StopAll()
 		_fileActions.quit.Trigger()
-	End
-	
-	Method OnForceStop()
-		
-		If _buildConsole.Running
-			_buildConsole.Terminate()
-			HideStatusBarProgress()
-			RestoreConsoleVisibility()
-		Endif
-		If _outputConsole.Running
-			_outputConsole.Terminate()
-		Endif
 	End
 	
 	Method LoadState( jobj:JsonObject )

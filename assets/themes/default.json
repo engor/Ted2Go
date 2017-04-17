@@ -1,6 +1,7 @@
 {
 	"colors":{
 
+		"transparent": "#0000",
 		"clear": "#181818",
 		"gutter": "#262626",
 		"content": "#323232",

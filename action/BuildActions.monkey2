@@ -546,6 +546,8 @@ Class BuildActions Implements IModuleBuilder
 			
 			MainWindow.ShowStatusBarText( "   App is running now...",True )
 			MainWindow.SetStatusBarActive( True )
+			MainWindow.ShowStatusBarProgress( MainWindow.OnForceStop,True )
+			
 			_debugView.DebugApp( exeFile,config )
 
 		Case "emscripten","wasm"
