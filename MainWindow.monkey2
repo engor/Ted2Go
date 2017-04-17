@@ -39,6 +39,7 @@ Class MainWindowInstance Extends Window
 		_docsTabView=New TabViewExt( TabViewFlags.DraggableTabs|TabViewFlags.ClosableTabs )
 		
 		_browsersTabView=New TabView( TabViewFlags.DraggableTabs )
+		_browsersTabView.Style=GetStyle( "ProjectTabView" )
 		_consolesTabView=New TabView( TabViewFlags.DraggableTabs )
 		
 		_recentFilesMenu=New Menu( "Recent files..." )

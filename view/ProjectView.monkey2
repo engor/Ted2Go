@@ -276,8 +276,8 @@ Class ProjectView Extends ScrollView
 	
 		Select event.Type
 		Case EventType.MouseWheel ' little faster
-	
-			Scroll-=New Vec2i( 0,ContentView.RenderStyle.Font.Height*event.Wheel.Y*2 )
+			
+			Scroll-=New Vec2i( 0,ContentView.RenderStyle.Font.Height*event.Wheel.Y*3 )
 			Return
 	
 		End

@@ -102,6 +102,11 @@
 		},
 		"CompletionDialogContent":{
 			"padding":[ 1 ]
+		},
+		
+		"ProjectTabView":{
+			"extends":"TabView",
+			"backgroundColor":"content"
 		}
 	}
 }
