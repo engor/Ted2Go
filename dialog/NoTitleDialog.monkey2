@@ -9,7 +9,6 @@ Class NoTitleDialog Extends View
 	
 	Method New()
 		
-		Print "ctor"
 		Style=GetStyle( "CompletionDialog" )
 		
 		_content=New DockingView

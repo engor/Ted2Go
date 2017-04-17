@@ -990,34 +990,28 @@ Class CodeDocument Extends Ted2Document
 		Local frame:=AutoComplete.Frame
 		
 		Local w:=frame.Width
-		Local h:=Min( frame.Height,300 )
+		Local h:=frame.Height
 		
 		Local cursorRect:=_codeView.CursorRect
 		Local scroll:=_codeView.Scroll
-		Local tvFrame:=_codeView.Frame
-		Local yy:=cursorRect.Top-scroll.y
-		
-		' get absolute Y of codeView inside of window
-		Local v:View=_codeView
-		While v.Parent And v.Parent<>MainWindow
-			v=v.Parent
-			yy+=v.Frame.Top
-		Wend
-		yy+=28 'magic offset :)
-		Local xx:=tvFrame.Left-scroll.x+cursorRect.Left'+100
-		xx+=32 'magic
+		Local tvFrame:=_codeView.TransformRectToView( _codeView.Frame,MainWindow )
+		Local yy:=tvFrame.Top+cursorRect.Top-scroll.y
+		yy-=5 'magic offset :)
+		Local xx:=tvFrame.Left+cursorRect.Left-scroll.x'+100
+		xx+=40 'magic
 		frame.Left=xx
 		frame.Right=frame.Left+w
 		frame.Top=yy
 		frame.Bottom=frame.Top+h
 		' fit dialog into window
-'		If frame.Bottom > tvFrame.Bottom
-'			Local dy:=frame.Bottom-tvFrame.Bottom-64
-'			frame.Top-=dy
-'			frame.Bottom-=dy
-'			frame.Left+=70
-'			frame.Right+=70
-''		Endif
+		If frame.Bottom > MainWindow.Frame.Bottom-32 ' 32 for status bar
+			
+			Local dy:=frame.Bottom-MainWindow.Frame.Bottom-128
+			frame.Top+=dy
+			frame.Bottom+=dy
+			frame.Left+=50
+			frame.Right+=50
+		Endif
 		AutoComplete.Frame=frame
 		
 	End

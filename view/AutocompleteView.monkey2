@@ -15,11 +15,11 @@ Class CodeListViewItem Extends ListViewItem
 		Return _item
 	End
 	
-		
+	
 	Private
 	
 	Field _item:CodeItem
-		
+	
 End
 
 
@@ -27,8 +27,8 @@ Class AutocompleteListView Extends ListViewExt
 	
 	Field word:String 'word to select
 	
-	Method New( lineHeight:Int,width:Int=600,height:Int=480 )
-		Super.New( lineHeight,width,height )
+	Method New( lineHeight:Int,maxLines:Int )
+		Super.New( lineHeight,maxLines )
 	End
 	
 	
@@ -41,8 +41,10 @@ Class AutocompleteListView Extends ListViewExt
 		Local txt:=item.Text
 		Local icon:=item.Icon
 		If icon <> Null
+			canvas.Alpha=.8
 			canvas.DrawImage( icon,x-icon.Width*handleX,y-icon.Height*handleY )
 			x+=icon.Width+8
+			canvas.Alpha=1
 		Endif
 		If Not word
 			canvas.DrawText( txt,x,y,handleX,handleY )
@@ -92,15 +94,13 @@ Class AutocompleteDialog Extends NoTitleDialog
 	Field OnChoosen:Void( result:AutocompleteResult )
 	
 	Method New()
-		Self.New( 800,480 )
-	End
-	
-	Method New( width:Int,height:Int )
 		
 		Super.New()
 		
-		_view=New AutocompleteListView( 20,width,height )
+		_view=New AutocompleteListView( 20,15 )
 		_view.MoveCyclic=True
+		
+		_view.MaxSize=New Vec2i( 500,20*15 )
 		
 		ContentView=_view
 		
@@ -337,11 +337,11 @@ Class AutocompleteDialog Extends NoTitleDialog
 			Case Key.Down
 				_view.SelectNext()
 				event.Eat()
-			Case Key.Home
-				_view.SelectFirst()
+			Case Key.PageUp
+				_view.PageUp()
 				event.Eat()
-			Case Key.KeyEnd
-				_view.SelectLast()
+			Case Key.PageDown
+				_view.PageDown()
 				event.Eat()
 			Case Key.Enter,Key.KeypadEnter
 				If Prefs.AcUseEnter
