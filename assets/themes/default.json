@@ -29,7 +29,8 @@
 		"textview-color6":"#fc0",
 		"textview-color7":"#fff",
 		
-		"windowClearColor":"clear"
+		"windowClearColor":"clear",
+		"menu-shortcut":"text-background"
 	},
 	
 	"fonts":{
@@ -166,7 +167,7 @@
 		},
 		
 		"Menu":{
-			
+			"extends":"DockingView",
 			"padding":[ 0 ],
 			"skin":"dialog_skin.png",
 			"skinColor":"panel"

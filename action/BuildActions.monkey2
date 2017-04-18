@@ -44,7 +44,7 @@ Class BuildActions Implements IModuleBuilder
 	Field moduleManager:Action
 	Field rebuildHelp:Action
 	
-	Field targetMenu:Menu
+	Field targetMenu:MenuExt
 	
 	
 	Field PreBuild:Void()
@@ -89,7 +89,7 @@ Class BuildActions Implements IModuleBuilder
 		semant.Triggered=OnSemant
 		
 		
-		buildSettings=New Action( "Target settings" )
+		buildSettings=New Action( "Target settings..." )
 		buildSettings.Triggered=OnBuildFileSettings
 		
 		nextError=New Action( "Next build error" )
@@ -147,7 +147,7 @@ Class BuildActions Implements IModuleBuilder
 		_iosTarget=New CheckButton( "iOS",,group )
 		_iosTarget.Layout="fill-x"
 		
-		targetMenu=New Menu( "Build variants..." )
+		targetMenu=New MenuExt( "Build variants" )
 		targetMenu.AddView( _debugConfig )
 		targetMenu.AddView( _releaseConfig )
 		targetMenu.AddSeparator()

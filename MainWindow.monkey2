@@ -42,9 +42,9 @@ Class MainWindowInstance Extends Window
 		_browsersTabView.Style=GetStyle( "ProjectTabView" )
 		_consolesTabView=New TabView( TabViewFlags.DraggableTabs )
 		
-		_recentFilesMenu=New Menu( "Recent files..." )
-		_recentProjectsMenu=New Menu( "Recent projects..." )
-		_closeProjectMenu=New Menu( "Close project..." )
+		_recentFilesMenu=New MenuExt( "Recent files" )
+		_recentProjectsMenu=New MenuExt( "Recent projects" )
+		_closeProjectMenu=New MenuExt( "Close project" )
 		
 		_docBrowser=New DockingView
 		
@@ -171,11 +171,11 @@ Class MainWindowInstance Extends Window
 		
 		'File menu
 		'
-		_newFiles=New Menu( "New..." )
+		_templateFiles=New MenuExt( "Templates" )
 		Local p:=AssetsDir()+"ted2/newfiles/"
 		For Local f:=Eachin LoadDir( p )
 			Local src:=stringio.LoadString( p+f )
-			_newFiles.AddAction( StripExt( f.Replace( "_"," " ) ) ).Triggered=Lambda()
+			_templateFiles.AddAction( StripExt( f.Replace( "_"," " ) ) ).Triggered=Lambda()
 				Local path:=AllocTmpPath( "untitled",ExtractExt( f ) )
 				If Not path Return
 				SaveString( src,path )
@@ -185,9 +185,9 @@ Class MainWindowInstance Extends Window
 		
 		_fileMenu=New MenuExt( "File" )
 		_fileMenu.AddAction( _fileActions.new_ )
-		_fileMenu.AddSubMenu( _newFiles )
 		_fileMenu.AddAction( _fileActions.open )
 		_fileMenu.AddSubMenu( _recentFilesMenu )
+		_fileMenu.AddSubMenu( _templateFiles )
 		_fileMenu.AddSeparator()
 		_fileMenu.AddAction( _fileActions.close )
 		_fileMenu.AddAction( _fileActions.closeOthers )
@@ -276,7 +276,7 @@ Class MainWindowInstance Extends Window
 		_windowMenu.AddAction( _docsManager.prevDocument )
 		_windowMenu.AddSeparator()
 		
-		_themesMenu=CreateThemesMenu( "Themes..." )
+		_themesMenu=CreateThemesMenu( "Themes" )
 		
 		AddZoomActions( _windowMenu )
 		_windowMenu.AddSeparator()
@@ -961,7 +961,7 @@ Class MainWindowInstance Extends Window
 	Field _forceStop:Action
 
 	Field _tabMenu:Menu
-	Field _newFiles:Menu
+	Field _templateFiles:MenuExt
 	Field _fileMenu:MenuExt
 	Field _editMenu:MenuExt
 	Field _findMenu:MenuExt
@@ -971,7 +971,7 @@ Class MainWindowInstance Extends Window
 	Field _helpMenu:MenuExt
 	Field _menuBar:MenuBarExt
 	
-	Field _themesMenu:Menu
+	Field _themesMenu:MenuExt
 	
 	Field _theme:String="default"
 	Field _themeScale:Float=1
@@ -983,9 +983,9 @@ Class MainWindowInstance Extends Window
 	Field _recentFiles:=New StringStack
 	Field _recentProjects:=New StringStack
 	
-	Field _recentFilesMenu:Menu
-	Field _recentProjectsMenu:Menu
-	Field _closeProjectMenu:Menu
+	Field _recentFilesMenu:MenuExt
+	Field _recentProjectsMenu:MenuExt
+	Field _closeProjectMenu:MenuExt
 	Field _statusBar:StatusBarView
 	Field _ovdMode:=False
 	Field _storedConsoleVisible:Bool
@@ -1128,9 +1128,9 @@ Class MainWindowInstance Extends Window
 		
 	End
 	
-	Method CreateThemesMenu:Menu( text:String )
+	Method CreateThemesMenu:MenuExt( text:String )
 	
-		Local menu:=New Menu( text )
+		Local menu:=New MenuExt( text )
 		
 		Local themes:=JsonObject.Load( "theme::themes.json" )
 		If Not themes Return menu

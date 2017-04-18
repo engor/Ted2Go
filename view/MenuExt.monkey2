@@ -7,6 +7,7 @@ Class MenuExt Extends DockingView
 	#rem monkeydoc Creates a new menu.
 	#end
 	Method New( text:String="" )
+		
 		Style=GetStyle( "Menu" )
 		Visible=False
 		Layout="float"
@@ -38,7 +39,7 @@ Class MenuExt Extends DockingView
 	#end	
 	Method AddAction( action:Action )
 	
-		Local button:=New MenuButton( action )
+		Local button:=New MenuButtonExt( action )
 		
 		button.Clicked=Lambda()
 		
@@ -54,6 +55,7 @@ Class MenuExt Extends DockingView
 	End
 	
 	Method AddAction:Action( text:String )
+		
 		Local action:=New Action( text )
 		AddAction( action )
 		Return action
@@ -62,15 +64,17 @@ Class MenuExt Extends DockingView
 	#rem monkeydoc Adds a separator to the menu.
 	#end
 	Method AddSeparator()
+		
 		AddView( New MenuSeparator,"top" )
 	End
 	
 	#rem monkeydoc Adds a submenu to the menu.
 	#end
-	Method AddSubMenu( menu:Menu )
+	Method AddSubMenu( menu:MenuExt )
 	
 		Local button:=New MenuButtonExt( menu.Text )
-
+		button.HasSubmenu=True
+		
 		_subs[button]=menu
 		
 		button.Clicked=Lambda()
@@ -96,7 +100,7 @@ Class MenuExt Extends DockingView
 	#end
 	Method Open( location:Vec2i,view:View,owner:View )
 	
-		Assert( Not Visible )
+		If Visible Return
 		
 		While Not _open.Empty And _open.Top<>owner
 			_open.Top.Close()
@@ -123,7 +127,7 @@ Class MenuExt Extends DockingView
 	#end	
 	Method Close()
 	
-		Assert( Visible )
+		If Not Visible Return
 		
 		While Not _open.Empty
 		
@@ -144,12 +148,12 @@ Class MenuExt Extends DockingView
 	
 	Private
 	
-	Field _subs:=New Map<View,Menu>
+	Field _subs:=New Map<View,MenuExt>
 	Field _text:String
 	Field _owner:View
 	Global _hovered:View
 	Global _timer:Timer
-	Global _sub:Menu,_parent:MenuExt
+	Global _sub:MenuExt
 	
 	Global _open:=New Stack<MenuExt>
 	
@@ -172,18 +176,18 @@ Class MenuExt Extends DockingView
 				
 				If event.Type=EventType.MouseMove
 					
+					' auto-expand sub menus
+					'
 					If view=_hovered Return
 					_hovered=view
 					Local sub:=menu._subs[view]
 					If _timer Then _timer.Cancel()
-					If _sub And menu=_parent
-						If _sub.Visible Then _sub.Close()
+					If _sub And menu<>_sub
+						_sub.Close()
 						_sub=Null
-						_parent=Null
 					Endif
 					If sub
-						_parent=menu
-						_timer=New Timer( 1.2,Lambda()
+						_timer=New Timer( 1,Lambda()
 							Local location:=New Vec2i( view.Bounds.Right,view.Bounds.Top )
 							If sub.Visible Then sub.Close()
 							sub.Open( location,view,menu )
@@ -201,65 +205,123 @@ Class MenuExt Extends DockingView
 		_hovered=Null
 		If _timer Then _timer.Cancel()
 		
+		' auto-expand root menus in menu bar
+		'
+		If event.Type=EventType.MouseMove
+			
+			Local bar:=Cast<MenuBarExt>( _open[0]._owner )
+			If bar
+				Local window:=view.Window
+				Local location:=view.TransformPointToView( event.Location,window )
+				Local v:=bar.FindViewAtWindowPoint( location )
+				If v<>bar.Opened
+					Local b:=Cast<MenuButton>( v )
+					If b Then b.Clicked()
+				Endif
+			Endif
+		Endif
+		
+		' we are interesting to mousedown only
+		'
+		If event.Type<>EventType.MouseDown Return
+		
 		If _open[0]._owner
 		
 			If view<>_open[0]._owner And view.IsChildOf( _open[0]._owner ) Return
 			
-			If event.Type=EventType.MouseDown 
-				CloseAll()
-			Else
-'				event.Eat()
-			Endif
-		
+			CloseAll()
 		Else
 			
-			If event.Type=EventType.MouseDown
-				CloseAll()
-			Else
-'				event.Eat()
-			Endif
-		
+			CloseAll()
 		Endif
 	End
 	
 End
 
 
-Class MenuButtonExt Extends MenuButton
+Class MenuButtonExt Extends Button
+	
+	Field HasSubmenu:Bool
 	
 	Method New( action:Action )
 	
 		Super.New( action )
+		
+		Style=GetStyle( "MenuButton" )
+		TextGravity=New Vec2f( 0,.5 )
+		Layout="fill-x"
+		
+		_action=action
+		
+		UpdateThemeColors()
 	End
 	
 	Method New( text:String )
 	
 		Super.New( text )
+		
+		Style=GetStyle( "MenuButton" )
+		TextGravity=New Vec2f( 0,.5 )
+		Layout="fill-x"
+		
+		UpdateThemeColors()
 	End
 	
 	
 	Protected
 	
-'	Method OnMeasure:Vec2i() Override
-'	
-'		Local size:=Super.OnMeasure()
-'	
-'		If _action
-'			Local hotKey:=_action.HotKeyText
-'			If hotKey size.x+=RenderStyle.Font.TextWidth( "         "+hotKey )
-'		Endif
-'	
-'		Return size
-'	End
+	Method OnThemeChanged() Override
+		
+		UpdateThemeColors()
+	End
+	
+	Method OnMeasure:Vec2i() Override
+	
+		Local size:=Super.OnMeasure()
+	
+		If _action
+			Local hotKey:=_action.HotKeyText
+			If hotKey size.x+=RenderStyle.Font.TextWidth( "         "+hotKey )
+		Endif
+		If HasSubmenu
+			size.x+=RenderStyle.Font.TextWidth( " >" )
+		Endif
+		Return size
+	End
 	
 	Method OnRender( canvas:Canvas ) Override
 	
 		Super.OnRender( canvas )
 		
-		Local tx:=(Width-2)
-		Local ty:=(Height-MeasuredSize.y) * TextGravity.y
-		canvas.DrawText( ">",tx,ty,1,0 )
+		If _action
+			Local hotKey:=_action.HotKeyText
+			If hotKey
+				Local w:=RenderStyle.Font.TextWidth( hotKey )
+				Local tx:=(Width-w)
+				Local ty:=(Height-MeasuredSize.y) * TextGravity.y
+				Local color:=canvas.Color
+				canvas.Color=_shortCutColor
+				canvas.DrawText( hotKey,tx,ty )
+				canvas.Color=color
+			Endif
+		Endif
+		
+		If HasSubmenu
+			Local tx:=Width
+			Local ty:=(Height-MeasuredSize.y) * TextGravity.y
+			canvas.DrawText( ">",tx,ty,1,0 )
+		Endif
+	End
 	
+	
+	Private
+	
+	Field _action:Action
+	Field _shortCutColor:Color
+	
+	Method UpdateThemeColors()
+		
+		_shortCutColor=App.Theme.GetColor( "menu-shortcut" )
 	End
 	
 End
@@ -279,16 +341,26 @@ Class MenuBarExt Extends ToolBar
 		Local button:=New MenuButton( menu.Text )
 
 		button.Clicked=Lambda()
-		
+			_opened=Null
 			If menu.Visible
 				menu.Close()
 			Else
 				Local location:=New Vec2i( button.Bounds.Left,button.Bounds.Bottom )
 				menu.Open( location,button,Self )
+				_opened=button
 			Endif
 		End
 		
 		AddView( button )
 	End
+	
+	Property Opened:MenuButton()
+		Return _opened
+	End
+	
+	
+	Private
+	
+	Field _opened:MenuButton
 	
 End
