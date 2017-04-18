@@ -110,14 +110,13 @@
 			"extends":"Label",
 			"backgroundColor":"knob"
 		},
-
-		"TreeView":{
-			"border":[1,0,1,0],
-			"borderColor":"border",
-			"backgroundColor":"content",
-			"icons":"smooth_assets/treeview_icons.png",
-			"iconColor":"#9DA5B4"
-		},
+        
+        "TreeView":{
+            "borderColor":"border",
+            "backgroundColor":"content",
+            "icons":"smooth_assets/treeview_icons.png",
+            "iconColor":"#9DA5B4"
+        },
 
 		"TreeViewContent":{
 			"border":[0],
@@ -178,40 +177,37 @@
 				}
 			}
 		},
-
+        
 		"ToolBar":{
 			"padding":[2,2,0,2],
 			"backgroundColor":"panel"
 		},
 
 		"TabBar":{
-			"border":[0,0,0,1],
-			"borderColor":"border",
 			"extends":"ToolBar",
-			"padding":[ 0,2,4,0 ],
+			"padding":[0,2,4,0 ],
 			"backgroundColor":"clear"
 		},
 
 		"TabButton":{
+            "skinColor":"#ffffff",
 			"extends":"Button",
 			"font":"small",
-			"padding":[16,5,16,5],
-			"margin":[1,0],
+            "margin":[0,0,-1,0],
+			"padding":[16,5,16,7],
 			"backgroundColor":"#0000",
 			"skin":"smooth_assets/tabbutton_skin.png",
-			"skinColor":"gutter",
 			"textColor":"text-background",
 			"states":{
 				"hover":{
-					"skinColor":"gutter"
 				},
 				"active":{
-					"skinColor":"content"
 				},
 				"selected":{
-					"border":[2,0,0,0],
+                    "skin":"smooth_assets/tabbutton_selected_skin.png",
+                    "padding":[16,5,16,9],
+					"border":[0],
 					"borderColor":"#507FDF",
-					"skinColor":"content",
 					"textColor":"text-default"
 				}
 			}
