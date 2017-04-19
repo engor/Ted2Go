@@ -17,6 +17,9 @@ Class StatusBarView Extends DockingView
 		_labelIns.MinSize=New Vec2i( 44,0 )
 		_labelIns.Style=GetStyle( "StatusBarIns" )
 		AddView( _labelIns,"right" )
+		_labelIns.DoubleClicked+=Lambda()
+			MainWindow.OverrideTextMode=Not MainWindow.OverrideTextMode
+		End
 		
 		_labelLineInfo=New Label( "0 : 0")
 		_labelLineInfo.MinSize=New Vec2i( 200,0 )

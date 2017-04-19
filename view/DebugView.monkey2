@@ -147,7 +147,9 @@ Class DebugView Extends DockingView
 		End
 		
 		If Not _console.Start( cmd )
+			
 			Alert( "Failed to start process: '"+cmd+"'" )
+			OnStopRunning( "Failed to start process: '"+cmd+"'" )
 			Return
 		Endif
 		

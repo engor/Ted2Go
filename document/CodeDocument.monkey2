@@ -994,19 +994,19 @@ Class CodeDocument Extends Ted2Document
 		
 		Local cursorRect:=_codeView.CursorRect
 		Local scroll:=_codeView.Scroll
-		Local tvFrame:=_codeView.TransformRectToView( _codeView.Frame,MainWindow )
+		Local tvFrame:=_codeView.RenderRect
 		Local yy:=tvFrame.Top+cursorRect.Top-scroll.y
-		yy-=5 'magic offset :)
+		yy+=30 'magic offset :)
 		Local xx:=tvFrame.Left+cursorRect.Left-scroll.x'+100
-		xx+=40 'magic
+		xx+=46 'magic
 		frame.Left=xx
 		frame.Right=frame.Left+w
 		frame.Top=yy
 		frame.Bottom=frame.Top+h
 		' fit dialog into window
-		If frame.Bottom > MainWindow.Frame.Bottom-32 ' 32 for status bar
+		If frame.Bottom > MainWindow.RenderRect.Bottom
 			
-			Local dy:=frame.Bottom-MainWindow.Frame.Bottom-128
+			Local dy:=frame.Bottom-MainWindow.RenderRect.Bottom-128
 			frame.Top+=dy
 			frame.Bottom+=dy
 			frame.Left+=50
