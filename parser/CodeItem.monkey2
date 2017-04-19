@@ -24,7 +24,7 @@ Class CodeItem
 		Return _type
 	Setter( value:CodeType )
 		_type=value
-		_type.ident=FixTypeIdent( _type.ident )		
+		_type.ident=FixTypeIdent( _type.ident )
 	End
 		
 	Property Kind:CodeItemKind()

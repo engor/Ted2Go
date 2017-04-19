@@ -626,9 +626,10 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		Local fontPath:=Prefs.GetCustomFontPath()
 		If fontPath
 			Local size:=Prefs.GetCustomFontSize()
-			newFont=Font.Load( fontPath,size )
+			newFont=App.Theme.OpenFont( fontPath,size )
 		Endif
 		If Not newFont Then newFont=App.Theme.GetStyle( Style.Name ).Font
+		
 		RenderStyle.Font=newFont
 	End
 	
@@ -718,58 +719,57 @@ Class CodeDocument Extends Ted2Document
 	
 	Method OnCreateBrowser:View() Override
 		
-		If Not _browserView
+		If _browserView Return _browserView
 			
-			' sorting toolbar
-			_browserView=New DockingView
+		' sorting toolbar
+		_browserView=New DockingView
+		
+		Local bar:=New ToolBarExt
+		bar.Style=App.Theme.GetStyle( "SourceToolBar" )
+		bar.MaxSize=New Vec2i( 10000,30 )
+		Local btn:ToolButtonExt
+		
+		btn = bar.AddIconicButton( ThemeImages.Get( "sourcebar/sort_alpha.png" ),
+			Lambda()
+			End,
+			"Sort by type")
+		btn.ToggleMode=True
+		btn.IsToggled=Prefs.SourceSortByType
+		btn.Toggled+=Lambda( state:Bool )
+			' true - sort by alpha, false - sort by source
+			Prefs.SourceSortByType=state
+			_treeView.SortByType=state
+			UpdateCodeTree()
+		End
+		btn = bar.AddIconicButton( ThemeImages.Get( "sourcebar/filter_inherited.png" ),
+			Lambda()
+			End,
+			"Show inherited members")
+		btn.ToggleMode=True
+		btn.IsToggled=Prefs.SourceShowInherited
+		btn.Toggled+=Lambda( state:Bool )
+			Prefs.SourceShowInherited=state
+			_treeView.ShowInherited=state
+			UpdateCodeTree()
+		End
+		_browserView.AddView( bar,"top" )
+		
+		
+		
+		_treeView=New CodeTreeView
+		_browserView.ContentView=_treeView
+		
+		_treeView.SortByType=Prefs.SourceSortByType
+		_treeView.ShowInherited=Prefs.SourceShowInherited
+		
+		' goto item from tree view
+		_treeView.NodeClicked+=Lambda( node:TreeView.Node )
+		
+			Local codeNode:=Cast<CodeTreeNode>( node )
+			Local item:=codeNode.CodeItem
+			JumpToPosition( item.FilePath,item.ScopeStartPos )
 			
-			Local bar:=New ToolBarExt
-			bar.Style=App.Theme.GetStyle( "SourceToolBar" )
-			bar.MaxSize=New Vec2i( 10000,30 )
-			Local btn:ToolButtonExt
-			
-			btn = bar.AddIconicButton( ThemeImages.Get( "sourcebar/sort_alpha.png" ),
-				Lambda()
-				End,
-				"Sort by type")
-			btn.ToggleMode=True
-			btn.IsToggled=Prefs.SourceSortByType
-			btn.Toggled+=Lambda( state:Bool )
-				' true - sort by alpha, false - sort by source
-				Prefs.SourceSortByType=state
-				_treeView.SortByType=state
-				UpdateCodeTree()
-			End
-			btn = bar.AddIconicButton( ThemeImages.Get( "sourcebar/filter_inherited.png" ),
-				Lambda()
-				End,
-				"Show inherited members")
-			btn.ToggleMode=True
-			btn.IsToggled=Prefs.SourceShowInherited
-			btn.Toggled+=Lambda( state:Bool )
-				Prefs.SourceShowInherited=state
-				_treeView.ShowInherited=state
-				UpdateCodeTree()
-			End
-			_browserView.AddView( bar,"top" )
-			
-			
-			
-			_treeView=New CodeTreeView
-			_browserView.ContentView=_treeView
-			
-			_treeView.SortByType=Prefs.SourceSortByType
-			_treeView.ShowInherited=Prefs.SourceShowInherited
-			
-			' goto item from tree view
-			_treeView.NodeClicked+=Lambda( node:TreeView.Node )
-			
-				Local codeNode:=Cast<CodeTreeNode>( node )
-				Local item:=codeNode.CodeItem
-				JumpToPosition( item.FilePath,item.ScopeStartPos )
-				
-			End
-		Endif
+		End
 		
 		Return _browserView
 	End
@@ -785,7 +785,7 @@ Class CodeDocument Extends Ted2Document
 			If i <> -1 And i < cursorPosInLine
 				Local i2:=textLine.Find( "(" ) 'is inside of params?
 				If i2 = -1 Or i2 > cursorPosInLine
-					Return text.StartsWith( "New(" ) ? text Else text+"Override"
+					Return text.StartsWith( "New(" ) ? text Else text+" Override"
 				Endif
 			Endif
 			

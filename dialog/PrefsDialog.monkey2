@@ -156,7 +156,7 @@ Class PrefsDialog Extends DialogExt
 		Prefs.EditorGutterVisible=_editorGutterVisible.Checked
 		Prefs.EditorShowWhiteSpaces=_editorShowWhiteSpaces.Checked
 		Local path:=_editorFontPath.Text.Trim()
-		If path=_defaultFont Then path=""
+		If Not path Or path=_defaultFont Then path=""
 		Prefs.EditorFontPath=path
 		Local size:=_editorFontSize.Text.Trim()
 		If Not size Then size="16" 'default

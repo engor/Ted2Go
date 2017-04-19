@@ -137,7 +137,9 @@ Class ProjectView Extends ScrollView
 					End
 					
 					menu.AddAction( "Clean (delete .buildv)" ).Triggered=Lambda()
-					
+						
+						If Not RequestOkay( "Really delete all '.buildv' folders?" ) Return
+						
 						Local changes:=CleanProject( path )
 						If changes Then browser.Refresh()
 					End

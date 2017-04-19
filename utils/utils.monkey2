@@ -127,6 +127,14 @@ Class Utils
 		Return Null
 	End
 	
+	Function PrintLog<T>( list:List<T>,prefix:String="" )
+	
+		For Local i:=Eachin list
+			Print prefix+""+i
+		End
+	End
+	
+	
 	Private
 	
 	Method New()

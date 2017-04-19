@@ -430,6 +430,14 @@ Class MainWindowInstance Extends Window
 		Return _isTerminating
 	End
 	
+	Property ThemeName:String()
+		
+		Return _theme
+	Setter( value:String )
+		
+		_theme=value
+	End
+	
 	Method Terminate()
 	
 		_isTerminating=True
@@ -779,7 +787,7 @@ Class MainWindowInstance Extends Window
 		End
 		jobj["recentProjects"]=recent
 		
-		jobj["theme"]=New JsonString( _theme )
+		jobj["theme"]=New JsonString( ThemeName )
 		
 		jobj["themeScale"]=New JsonNumber( App.Theme.Scale.y )
 		
@@ -869,7 +877,7 @@ Class MainWindowInstance Extends Window
 			Next
 		End
 		
-		If jobj.Contains( "theme" ) _theme=jobj.GetString( "theme" )
+		If jobj.Contains( "theme" ) ThemeName=jobj.GetString( "theme" )
 		
 		If jobj.Contains( "themeScale" )
 			_themeScale=jobj.GetNumber( "themeScale" )
@@ -1139,7 +1147,11 @@ Class MainWindowInstance Extends Window
 			Local name:=it.Key
 			Local value:=it.Value.ToString()
 			menu.AddAction( name ).Triggered=Lambda()
-				_theme=value
+				
+				If value=ThemeName Return
+				
+				ThemeName=value
+				
 				App.Theme.Load( _theme,New Vec2f( _themeScale ) )
 				SaveState()
 			End

@@ -8,7 +8,7 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 		Return "Monkey2KeyEventFilter"
 	End
 	
-			
+	
 	Protected
 
 	Method OnFilterKeyEvent( event:KeyEvent,textView:TextView ) Override
@@ -17,37 +17,31 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 		Local shift:=(event.Modifiers & Modifier.Shift)
 			
 		Select event.Type
-		Case EventType.KeyDown,EventType.KeyUp
+		Case EventType.KeyDown
 			
 			Select event.Key
-						
+				
 				Case Key.F1
+					
 					MainWindow.ShowQuickHelp()
+					event.Eat()
 					
 				Case Key.F2
-					MainWindow.GotoDeclaration()
 				
-				Case Key.Enter 'ctrl+enter - smart ending of expression
-					'If ctrl And Not codeView.CanCopy And codeView.IsCursorAtTheEndOfLine()
-						'Local ident:=codeView.FirstIdentInLine( codeView.Cursor )
-						'Print "ident: "+ident
-						'ident=ident.ToLower()
-						'Select ident
-						'	Case "method","function","class","interface","if","select"
-						'		'need to add 'End' keyword here for rapid coding
-						'		event.Eat()
-						'End
-					'Endif
-					
+					MainWindow.GotoDeclaration()
+					event.Eat()
+				
 				Case Key.Apostrophe 'ctrl+' - comment / uncomment block
 				
 					If  shift And ctrl 'uncomment
 						
 						OnCommentUncommentBlock( textView,False )
-					
+						event.Eat()
+						
 					Elseif ctrl 'comment
 					
 						OnCommentUncommentBlock( textView,True )
+						event.Eat()
 						
 					End
 				

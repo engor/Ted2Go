@@ -187,7 +187,7 @@ Class MenuExt Extends DockingView
 						_sub=Null
 					Endif
 					If sub
-						_timer=New Timer( 1,Lambda()
+						_timer=New Timer( 1.8,Lambda()
 							Local location:=New Vec2i( view.Bounds.Right,view.Bounds.Top )
 							If sub.Visible Then sub.Close()
 							sub.Open( location,view,menu )
