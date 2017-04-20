@@ -45,10 +45,12 @@ Class MainWindowInstance Extends Window
 
 		_docsManager.DocumentAdded+=Lambda( doc:Ted2Document )
 			AddRecentFile( doc.Path )
+			SaveState()
 		End
 
 		_docsManager.DocumentRemoved+=Lambda( doc:Ted2Document )
 			If IsTmpPath( doc.Path ) DeleteFile( doc.Path )
+			SaveState()
 		End
 
 		_buildConsole=New ConsoleExt
@@ -121,8 +123,14 @@ Class MainWindowInstance Extends Window
 		_buildActions=New BuildActions( _docsManager,_buildConsole,_debugView )
 		
 		_projectView=New ProjectView( _docsManager,_buildActions )
-		_projectView.ProjectOpened+=AddRecentProject
-		_projectView.ProjectClosed+=UpdateCloseProjectMenu
+		_projectView.ProjectOpened+=Lambda( dir:String )
+			AddRecentProject( dir )
+			SaveState()
+		End
+		_projectView.ProjectClosed+=Lambda( dir:String )
+			UpdateCloseProjectMenu( dir )
+			SaveState()
+		End
 		
 		_fileActions=New FileActions( _docsManager )
 		_editActions=New EditActions( _docsManager )
@@ -323,10 +331,12 @@ Class MainWindowInstance Extends Window
 		LoadState( jobj )
 		
 		App.MouseEventFilter+=ThemeScaleMouseFilter
-				
+		
 		App.Idle+=OnAppIdle
 		
 		If GetFileType( "bin/ted2.state.json" )=FileType.None _helpActions.about.Trigger()
+		
+		_enableSaving=True
 		
 	End
 	
@@ -785,6 +795,8 @@ Class MainWindowInstance Extends Window
 	
 	Method SaveState()
 	
+		If Not _enableSaving Return
+
 		Local jobj:=New JsonObject
 		
 		jobj["windowRect"]=ToJson( Frame )
@@ -869,6 +881,7 @@ Class MainWindowInstance Extends Window
 	Method OnCloseApp()
 		
 		SaveState()
+		_enableSaving=False
 		OnForceStop() ' kill build process if started
 		ProcessReader.StopAll()
 		_fileActions.quit.Trigger()
@@ -1021,6 +1034,7 @@ Class MainWindowInstance Extends Window
 	Field _ovdMode:=False
 	Field _storedConsoleVisible:Bool
 	Field _isTerminating:Bool
+	Field _enableSaving:Bool
 	
 	Method ToJson:JsonValue( rect:Recti )
 		Return New JsonArray( New JsonValue[]( New JsonNumber( rect.min.x ),New JsonNumber( rect.min.y ),New JsonNumber( rect.max.x ),New JsonNumber( rect.max.y ) ) )
@@ -1038,7 +1052,7 @@ Class MainWindowInstance Extends Window
 		
 		If _recentFiles.Length>20 Then _recentFiles.Resize( 20 )
 		
-		UpdateRecentFilesMenu()	
+		UpdateRecentFilesMenu()
 	End
 	
 	Method AddRecentProject( path:String )
