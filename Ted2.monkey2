@@ -61,6 +61,8 @@
 #Import "syntax/Monkey2Highlighter"
 #Import "syntax/CppHighlighter"
 #Import "syntax/CppKeywords"
+#Import "syntax/GlslHighlighter"
+#Import "syntax/GlslKeywords"
 #Import "syntax/CodeFormatter"
 #Import "syntax/Monkey2Formatter"
 
