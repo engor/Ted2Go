@@ -326,58 +326,66 @@ Class AutocompleteDialog Extends NoTitleDialog
 		
 		If Not IsOpened Return
 		
-		If event.Type = EventType.KeyDown Or event.Type = EventType.KeyRepeat
-			Select event.Key
-			Case Key.Escape
-				Hide()
-				event.Eat()
-			Case Key.Up
-				_view.SelectPrev()
-				event.Eat()
-			Case Key.Down
-				_view.SelectNext()
-				event.Eat()
-			Case Key.PageUp
-				_view.PageUp()
-				event.Eat()
-			Case Key.PageDown
-				_view.PageDown()
-				event.Eat()
-			Case Key.Enter,Key.KeypadEnter
-				If Prefs.AcUseEnter
-					OnItemChoosen( _view.CurrentItem )
-					If Not Prefs.AcNewLineByEnter Then event.Eat()
-				Else
-					Hide() 'hide by enter
-				Endif
-			Case Key.Tab
-				If Prefs.AcUseTab
-					OnItemChoosen( _view.CurrentItem )
-					event.Eat()
-				Endif
-			Case Key.Space
-				Local ctrl:=event.Modifiers & Modifier.Control
-				If Prefs.AcUseSpace And Not ctrl
-					OnItemChoosen( _view.CurrentItem,True )
-					event.Eat()
-				Endif
-			Case Key.Period
-				If Prefs.AcUseDot
-					OnItemChoosen( _view.CurrentItem )
-					event.Eat()
-				Endif
+		Select event.Type
 			
-			Case Key.Backspace
-			Case Key.CapsLock
-			Case Key.LeftShift,Key.RightShift
-			Case Key.LeftControl,Key.RightControl
-			Case Key.LeftAlt,Key.RightAlt
-				'do nothing,skip filtering
-			Default
-				'Hide()
-			End
+			Case EventType.KeyDown,EventType.KeyRepeat
+				
+				Select event.Key
+				Case Key.Escape
+					Hide()
+					event.Eat()
+				Case Key.Up
+					_view.SelectPrev()
+					event.Eat()
+				Case Key.Down
+					_view.SelectNext()
+					event.Eat()
+				Case Key.PageUp
+					_view.PageUp()
+					event.Eat()
+				Case Key.PageDown
+					_view.PageDown()
+					event.Eat()
+				Case Key.Enter,Key.KeypadEnter
+					If Prefs.AcUseEnter
+						OnItemChoosen( _view.CurrentItem )
+						If Not Prefs.AcNewLineByEnter Then event.Eat()
+					Else
+						Hide() 'hide by enter
+					Endif
+				Case Key.Tab
+					If Prefs.AcUseTab
+						OnItemChoosen( _view.CurrentItem )
+						event.Eat()
+					Endif
+				Case Key.Space
+					Local ctrl:=event.Modifiers & Modifier.Control
+					If Prefs.AcUseSpace And Not ctrl
+						OnItemChoosen( _view.CurrentItem,True )
+						event.Eat()
+					Endif
+				Case Key.Period
+					If Prefs.AcUseDot
+						OnItemChoosen( _view.CurrentItem )
+						event.Eat()
+					Endif
+				
+				Case Key.Backspace
+				Case Key.CapsLock
+				Case Key.LeftShift,Key.RightShift
+				Case Key.LeftControl,Key.RightControl
+				Case Key.LeftAlt,Key.RightAlt
+					'do nothing,skip filtering
+				Default
+					'Hide()
+				End
 			
-		Endif
+			Case EventType.KeyChar
+				
+				If Not IsIdent( event.Text[0] ) Then Hide()
+				
+		End
+		
 	End
 	
 	Method OnItemChoosen( item:ListViewItem,bySpace:Bool=False )
