@@ -11,8 +11,7 @@ Class EditActions
 	Field paste:Action
 	Field selectAll:Action
 	Field wordWrap:Action
-	Field gotoLine:Action
-	Field gotoDeclaration:Action
+	
 	
 	Method New( docs:DocumentManager )
 	
@@ -57,15 +56,6 @@ Class EditActions
 		wordWrap.Triggered=OnWordWrap
 		wordWrap.HotKey=Key.Z
 		wordWrap.HotKeyModifiers=Modifier.Alt
-		
-		gotoLine=New Action( "Goto line" )
-		gotoLine.Triggered=OnGotoLine
-		gotoLine.HotKey=Key.G
-		gotoLine.HotKeyModifiers=Modifier.Menu
-		
-		gotoDeclaration=New Action( "Goto declaration" )
-		gotoDeclaration.Triggered=OnGotoDeclaration
-		gotoDeclaration.HotKey=Key.F12
 		
 	End
 	
@@ -117,7 +107,7 @@ Class EditActions
 		If tv tv.Copy()
 	End
 
-	Method OnPaste()		
+	Method OnPaste()
 		
 		Local tv:=Cast<TextView>( App.KeyView )
 		
@@ -136,24 +126,6 @@ Class EditActions
 		Local tv:=Cast<TextView>( App.KeyView )
 		
 		If tv tv.WordWrap=Not tv.WordWrap
-	End
-	
-	Method OnGotoLine()
-	
-		Local tv:=Cast<TextView>( App.KeyView )
-		If Not tv Return
-		
-		Local line:=RequestInt( "Goto line:","Goto line",tv.CursorLine+1,0,1,tv.Document.NumLines )
-		If Not line Return
-		
-		tv.GotoLine( line-1 )
-		
-		tv.MakeKeyView()
-	End
-
-	Method OnGotoDeclaration()
-	
-		MainWindow.GotoDeclaration()
 	End
 	
 End

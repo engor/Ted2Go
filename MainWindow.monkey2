@@ -234,8 +234,8 @@ Class MainWindowInstance Extends Window
 		'View menu
 		'
 		_viewMenu=New MenuExt( "View" )
-		_viewMenu.AddAction( _editActions.gotoLine )
-		_viewMenu.AddAction( _editActions.gotoDeclaration )
+		_viewMenu.AddAction( _viewActions.gotoLine )
+		_viewMenu.AddAction( _viewActions.gotoDeclaration )
 		_viewMenu.AddSeparator()
 		_viewMenu.AddAction( _viewActions.comment )
 		_viewMenu.AddAction( _viewActions.uncomment )
@@ -759,6 +759,24 @@ Class MainWindowInstance Extends Window
 		
 		doc.GotoDeclaration()
 	End
+	
+	Method GotoLine()
+		
+		Local tv:=_docsManager.CurrentTextView
+		If Not tv Return
+		
+		New Fiber( Lambda()
+			
+			Local line:=RequestInt( "Goto line:","Goto line",tv.CursorLine+1,0,1,tv.Document.NumLines )
+			
+			If line Then tv.GotoLine( line-1 )
+			
+			tv.MakeKeyView()
+			
+		End )
+		
+	End
+	
 	
 	Method SaveState()
 	

@@ -17,7 +17,9 @@ Class StatusBarView Extends DockingView
 		_labelIns.MinSize=New Vec2i( 44,0 )
 		_labelIns.Style=GetStyle( "StatusBarIns" )
 		AddView( _labelIns,"right" )
+		' DoubleClick
 		_labelIns.DoubleClicked+=Lambda()
+		
 			MainWindow.OverrideTextMode=Not MainWindow.OverrideTextMode
 		End
 		
@@ -25,6 +27,11 @@ Class StatusBarView Extends DockingView
 		_labelLineInfo.MinSize=New Vec2i( 200,0 )
 		_labelLineInfo.Style=GetStyle( "StatusBarLineInfo" )
 		AddView( _labelLineInfo,"right" )
+		' DoubleClick
+		_labelLineInfo.DoubleClicked+=Lambda()
+		
+			MainWindow.GotoLine()
+		End
 		
 		Local act:=New Action( Null,ThemeImages.Get( "cancel.png" ) )
 		act.Triggered=OnCancel

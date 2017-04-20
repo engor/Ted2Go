@@ -8,6 +8,8 @@ Class ViewActions
 	Field goForward:Action
 	Field comment:Action
 	Field uncomment:Action
+	Field gotoLine:Action
+	Field gotoDeclaration:Action
 	
 	Method New( docs:DocumentManager )
 		
@@ -40,6 +42,15 @@ Class ViewActions
 		uncomment.HotKey=Key.Apostrophe
 #Endif
 		uncomment.HotKeyModifiers=Modifier.Menu|Modifier.Shift
+		
+		gotoLine=New Action( "Goto line" )
+		gotoLine.Triggered=OnGotoLine
+		gotoLine.HotKey=Key.G
+		gotoLine.HotKeyModifiers=Modifier.Menu
+		
+		gotoDeclaration=New Action( "Goto declaration" )
+		gotoDeclaration.Triggered=OnGotoDeclaration
+		gotoDeclaration.HotKey=Key.F12
 	End
 	
 	
@@ -78,4 +89,15 @@ Class ViewActions
 	
 		doc.Uncomment()
 	End
+	
+	Method OnGotoLine()
+	
+		MainWindow.GotoLine()
+	End
+	
+	Method OnGotoDeclaration()
+	
+		MainWindow.GotoDeclaration()
+	End
+	
 End
