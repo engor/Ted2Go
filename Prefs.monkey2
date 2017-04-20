@@ -25,7 +25,8 @@ Class Prefs
 	'
 	Global SourceSortByType:=True
 	Global SourceShowInherited:=False
-	
+	'
+	Global MonkeyRootPath:String
 	
 	Function LoadState( json:JsonObject )
 		
@@ -103,6 +104,23 @@ Class Prefs
 		j["sortByType"]=New JsonBool( SourceSortByType )
 		j["showInherited"]=New JsonBool( SourceShowInherited )
 		json["source"]=j
+	End
+	
+	Function LoadLocalState()
+		
+		Local json:=JsonObject.Load( AppDir()+"state.json" )
+		If Not json Return
+		
+		If json.Contains( "rootPath" ) Then MonkeyRootPath=json["rootPath"].ToString()
+		
+	End
+	
+	Function SaveLocalState()
+		
+		Local json:=New JsonObject
+		json["rootPath"]=New JsonString( MonkeyRootPath )
+		json.Save( AppDir()+"state.json" )
+		
 	End
 	
 	Function GetCustomFontPath:String()

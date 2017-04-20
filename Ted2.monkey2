@@ -112,38 +112,22 @@ Global AppTitle:="Ted2Go v2.3.1"
 
 Function Main()
 
-#If __DESKTOP_TARGET__
+	Prefs.LoadLocalState()
 	
-	Local root:=AppDir()
+	Local root:=Prefs.MonkeyRootPath
+	If Not root Then root=AppDir()
 	
-	Local json:=JsonObject.Load( AppDir()+"state.json" )
-	If json And json.Contains( "rootPath" )
-		root=json["rootPath"].ToString()
+	' return real folder or empty string
+	Local path:=SetupMonkeyRootPath( root,True )
+	If Not path
+		libc.exit_( 1 )
+		Return
 	Endif
 	
-	ChangeDir( root )
-	
-	While GetFileType( "bin" )<>FileType.Directory Or GetFileType( "modules" )<>FileType.Directory
-
-		If IsRootDir( CurrentDir() )
-			
-			Local ok:=Confirm( "Initializing","Error initializing - can't find working dir!~nDo you want to specify Monkey2 root folder now?" )
-			If Not ok
-				libc.exit_( 1 )
-			End
-			Local s:=requesters.RequestDir( "Choose Monkey2 folder",AppDir() )
-			ChangeDir( s )
-			Continue
-		Endif
-		
-		ChangeDir( ExtractDir( CurrentDir() ) )
-	Wend
-	
-	json=New JsonObject
-	json["rootPath"]=New JsonString( CurrentDir() )
-	json.Save( AppDir()+"state.json" )
-	
-#Endif
+	If path<>root
+		Prefs.MonkeyRootPath=path
+		Prefs.SaveLocalState()
+	Endif
 	
 	'load ted2 state
 	'
@@ -197,6 +181,44 @@ Function Main()
 		
 End
 
+Function SetupMonkeyRootPath:String( rootPath:String,searchMode:Bool )
+	
+#If __DESKTOP_TARGET__
+	
+	ChangeDir( rootPath )
+	
+	If searchMode
+		While GetFileType( "bin" )<>FileType.Directory Or GetFileType( "modules" )<>FileType.Directory
+	
+			If IsRootDir( CurrentDir() )
+				
+				Local ok:=Confirm( "Initializing","Error initializing - can't find working dir!~nDo you want to specify Monkey2 root folder now?" )
+				If Not ok
+					Return ""
+				End
+				Local s:=requesters.RequestDir( "Choose Monkey2 folder",AppDir() )
+				ChangeDir( s )
+				Continue
+			Endif
+			
+			ChangeDir( ExtractDir( CurrentDir() ) )
+		Wend
+		
+		rootPath=CurrentDir()
+	Else
+		
+		Local ok:= (GetFileType( "bin" )=FileType.Directory And GetFileType( "modules" )=FileType.Directory)
+		If Not ok
+			Notify( "Monkey2 root folder","Incorrect folder!" )
+			Return ""
+		Endif
+		
+	Endif
+	
+#Endif
+	
+	Return rootPath
+End
 
 Function GetActionTextWithShortcut:String( action:Action )
 

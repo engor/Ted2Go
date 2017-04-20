@@ -80,7 +80,45 @@ Class PrefsDialog Extends DialogExt
 		after.AddView( New Label( "Show after" ),"left" )
 		after.AddView( _acShowAfter,"left" )
 		
+		' monkey path
+		'
+		_monkeyRootPath=New TextField( Prefs.MonkeyRootPath )
+		_monkeyRootPath.Enabled=False
+		Local chooseMonkeyPath:=New Action( "..." )
+		chooseMonkeyPath.Triggered+=Lambda()
+		
+			Local initDir:=Prefs.MonkeyRootPath
+		
+			Local path:=MainWindow.RequestDir( "Choose Monkey2 root folder",initDir )
+			If Not path Return
+			
+			' check path
+			Local real:=SetupMonkeyRootPath( path,False )
+			If real
+				_monkeyRootPath.Text=path
+				Prefs.MonkeyRootPath=path
+				MainWindow.UpdateToolsPaths()
+				Return
+			Else
+				' restore current
+				ChangeDir( initDir )
+			Endif
+			
+		End
+		Local btnChooseMonkeyPath:=New PushButton( chooseMonkeyPath )
+		
+		Local monkeyPathDock:=New DockingView
+		monkeyPathDock.AddView( New Label( "Monkey2 root folder" ),"left" )
+		monkeyPathDock.AddView( _monkeyRootPath,"left" )
+		monkeyPathDock.AddView( btnChooseMonkeyPath,"left" )
+		
+		'----------------------------
+		' put into the form
+		'----------------------------
 		Local docker:=New DockingView
+		
+		docker.AddView( monkeyPathDock,"top" )
+		
 		docker.AddView( New Label( "------ Main:" ),"top" )
 		docker.AddView( _mainProjectTabsRight,"top" )
 		docker.AddView( _mainToolBarVisible,"top" )
@@ -140,6 +178,8 @@ Class PrefsDialog Extends DialogExt
 	Field _mainToolBarVisible:CheckButton
 	Field _mainProjectTabsRight:CheckButton
 	
+	Field _monkeyRootPath:TextField
+	
 	Method OnApply()
 	
 		Prefs.AcEnabled=_acEnabled.Checked
@@ -170,6 +210,8 @@ Class PrefsDialog Extends DialogExt
 		
 		Hide()
 		Apply()
+		
+		Prefs.SaveLocalState()
 	End
 	
 End

@@ -21,20 +21,7 @@ Class MainWindowInstance Extends Window
 		
 		MainWindow=Self
 		
-		_tmp=RealPath( "tmp/" )
-		
-#If __TARGET__="macos"
-		_mx2cc="bin/mx2cc_macos"
-#Else If __TARGET__="windows"
-		_mx2cc="bin/mx2cc_windows.exe"
-#Else If __TARGET__="raspbian"
-		_mx2cc="bin/mx2cc_raspbian"
-#Else
-		_mx2cc="bin/mx2cc_linux"
-#Endif
-		_mx2cc=RealPath( _mx2cc )
-		
-		_modsDir=RealPath( "modules/" )
+		UpdateToolsPaths()
 		
 		_docsTabView=New TabViewExt( TabViewFlags.DraggableTabs|TabViewFlags.ClosableTabs )
 		
@@ -486,6 +473,24 @@ Class MainWindowInstance Extends Window
 		Next
 
 		Return ""
+	End
+	
+	Method UpdateToolsPaths()
+		
+		_tmp=RealPath( "tmp/" )
+		
+#If __TARGET__="macos"
+		_mx2cc="bin/mx2cc_macos"
+#Else If __TARGET__="windows"
+		_mx2cc="bin/mx2cc_windows.exe"
+#Else If __TARGET__="raspbian"
+		_mx2cc="bin/mx2cc_raspbian"
+#Else
+		_mx2cc="bin/mx2cc_linux"
+#Endif
+		_mx2cc=RealPath( _mx2cc )
+		
+		_modsDir=RealPath( "modules/" )
 	End
 	
 	Method StoreConsoleVisibility()
