@@ -828,9 +828,10 @@ Class CodeDocument Extends Ted2Document
 							s=item.Text.Slice( item.Ident.Length )
 							' and add some formatting
 							s=s.Replace( " ","" )
-							s=s.Replace( "(","( " )
-							s=s.Replace( ")"," )" )
-							
+							If s<>"()" 'if have params
+								s=s.Replace( "(","( " )
+								s=s.Replace( ")"," )" )
+							Endif
 							result="Lambda"+s
 						Endif
 					Endif
