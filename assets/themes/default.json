@@ -334,6 +334,8 @@
 		
 		"DialogActions":{
 			"padding":[ 8,4,8,4 ]
-		}
+		},
+
+		"GridView":{}
 	}
 }

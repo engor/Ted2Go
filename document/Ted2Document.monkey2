@@ -13,7 +13,7 @@ Class Ted2Document
 	Method New( path:String )
 	
 		_path=path
-		_fileType=ExtractExt( _path )
+		_fileExt=ExtractExt( _path )
 				
 		_modTime=GetFileTime( _path )
 	End
@@ -23,9 +23,9 @@ Class Ted2Document
 		Return _path
 	End
 	
-	Property FileType:String()'file extension
+	Property FileExtension:String()'file extension
 		
-		Return _fileType
+		Return _fileExt
 	End
 	
 	Property ModTime:Long()
@@ -157,7 +157,7 @@ Class Ted2Document
 	Field _modTime:Long
 	Field _state:String
 	Field _view:View
-	Field _fileType:String
+	Field _fileExt:String
 	Field _browser:View
 	
 End

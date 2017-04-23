@@ -40,7 +40,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		'very important to set FileType for init
 		'formatter, highlighter and keywords
-		FileType=doc.FileType
+		FileType=doc.FileExtension
 		FilePath=doc.Path
 		
 		'AutoComplete
@@ -777,7 +777,7 @@ Class CodeDocument Extends Ted2Document
 	' not multipurpose method, need to move into plugin
 	Method PrepareForInsert:String( ident:String,text:String,addSpace:Bool,textLine:String,cursorPosInLine:Int,item:CodeItem )
 		
-		If FileType <> ".monkey2" Return ident
+		If FileExtension <> ".monkey2" Return ident
 		
 		If ident <> text And item And item.IsLikeFunc 'not a keyword
 			
@@ -968,7 +968,7 @@ Class CodeDocument Extends Ted2Document
 		Local text:=TextDocument.GetLine( line )
 		Local posInLine:=_codeView.Cursor-TextDocument.StartOfLine( line )
 		
-		Local can:=AutoComplete.CanShow( text,posInLine,FileType )
+		Local can:=AutoComplete.CanShow( text,posInLine,FileExtension )
 		Return can
 		
 	End
@@ -984,7 +984,7 @@ Class CodeDocument Extends Ted2Document
 			AutoComplete.DisableUsingsFilter=Not AutoComplete.DisableUsingsFilter
 		Endif
 		
-		AutoComplete.Show( ident,Path,FileType,line )
+		AutoComplete.Show( ident,Path,FileExtension,line )
 		
 		If Not AutoComplete.IsOpened Return
 		
@@ -1164,7 +1164,7 @@ Class CodeDocument Extends Ted2Document
 	
 	Method OnLoad:Bool() Override
 	
-		_parser=ParsersManager.Get( FileType )
+		_parser=ParsersManager.Get( FileExtension )
 	
 		Local text:=stringio.LoadString( Path )
 		
@@ -1208,7 +1208,7 @@ Class CodeDocument Extends Ted2Document
 	
 	Method UpdateCodeTree()
 		
-		_treeView.Fill( FileType,Path )
+		_treeView.Fill( FileExtension,Path )
 	End
 	
 	Method BgParsing( pathOnDisk:String )
@@ -1254,7 +1254,7 @@ Class CodeDocument Extends Ted2Document
 		' -----------------------------------
 		' catch for parsing
 		
-		If FileType <> ".monkey2" Return
+		If FileExtension <> ".monkey2" Return
 
 		
 		If _timer _timer.Cancel()

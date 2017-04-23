@@ -157,3 +157,14 @@ Class Utils
 	End
 	
 End
+
+
+Function FileExists:Bool( path:String )
+	
+	Return GetFileType( path )=FileType.File
+End
+
+Function DirectoryExists:Bool( path:String )
+	
+	Return GetFileType( path )=FileType.Directory
+End

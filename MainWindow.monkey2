@@ -15,7 +15,10 @@ Namespace ted2go
 Global MainWindow:MainWindowInstance
 
 Class MainWindowInstance Extends Window
-
+	
+	Field SizeChanged:Void()
+	Field Rendered:Void()
+	
 	Method New( title:String,rect:Recti,flags:WindowFlags,jobj:JsonObject )
 		Super.New( title,rect,flags )
 		
@@ -837,9 +840,10 @@ Class MainWindowInstance Extends Window
 		SaveString( jobj.ToJson(),"bin/ted2.state.json" )
 	End
 
-	Method OpenDocument( path:String )
+	Method OpenDocument( path:String,lockIt:Bool=False )
 	
 		_docsManager.OpenDocument( path,True )
+		If lockIt Then _buildActions.LockBuildFile()
 	End
 	
 	Method GetActionFind:Action()
@@ -869,7 +873,16 @@ Class MainWindowInstance Extends Window
 			_inited=True
 			OnInit()
 		Endif
+		
 		Super.OnRender( canvas )
+		
+		If _resized
+			_resized=False
+			SizeChanged()
+		Endif
+		
+		Rendered()
+		Rendered=Null
 	End
 	
 	Method OnInit()
@@ -885,6 +898,13 @@ Class MainWindowInstance Extends Window
 		OnForceStop() ' kill build process if started
 		ProcessReader.StopAll()
 		_fileActions.quit.Trigger()
+	End
+	
+	Method OnResized()
+		
+		' just set a flag here.
+		' SizeChanged event will be called inside of OnRender to take re-layout effect.
+		_resized=True
 	End
 	
 	Method LoadState( jobj:JsonObject )
@@ -962,12 +982,17 @@ Class MainWindowInstance Extends Window
 	Method OnWindowEvent( event:WindowEvent ) Override
 
 		Select event.Type
-		Case EventType.WindowClose
-			OnCloseApp()
-		Default
-			Super.OnWindowEvent( event )
+			
+			Case EventType.WindowClose
+				OnCloseApp()
+				Return
+			
+			Case EventType.WindowResized
+				OnResized()
+			
 		End
-	
+		
+		Super.OnWindowEvent( event )
 	End
 	
 	
@@ -1035,6 +1060,7 @@ Class MainWindowInstance Extends Window
 	Field _storedConsoleVisible:Bool
 	Field _isTerminating:Bool
 	Field _enableSaving:Bool
+	Field _resized:Bool
 	
 	Method ToJson:JsonValue( rect:Recti )
 		Return New JsonArray( New JsonValue[]( New JsonNumber( rect.min.x ),New JsonNumber( rect.min.y ),New JsonNumber( rect.max.x ),New JsonNumber( rect.max.y ) ) )

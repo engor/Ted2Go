@@ -30,6 +30,12 @@ Class JsonUtils
 		Return jval
 	End
 	
+	Function FindValue:JsonValue( jobj:JsonObject,key:String )
+		
+		Return FindValue( jobj.Data,key )
+	End
+	
+	
 	Private 
 	
 	Method New()

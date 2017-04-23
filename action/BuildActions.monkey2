@@ -211,6 +211,11 @@ Class BuildActions Implements IModuleBuilder
 		Return _locked
 	End
 	
+	Method LockBuildFile()
+		
+		OnLockBuildFile()
+	End
+	
 	Method SaveState( jobj:JsonObject )
 		
 		If _locked jobj["lockedDocument"]=New JsonString( _locked.Path )
@@ -601,6 +606,7 @@ Class BuildActions Implements IModuleBuilder
 	Method OnLockBuildFile()
 	
 		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
+		
 		If Not doc Return
 		
 		If _locked _locked.State=""

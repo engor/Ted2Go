@@ -113,6 +113,12 @@
 			"extends":"ToolButton",
 			"padding":[ 0 ],
 			"skinColor":"transparent"
+		},
+
+		"BananasView":{
+			"extends":"Button",
+			"border":[ 1 ],
+			"margin":[ 15,55,0,0 ]
 		}
 		
 	}
