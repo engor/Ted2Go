@@ -120,12 +120,20 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		' start parsing process
 		Local str:=StartParsing( pathOnDisk,isModule )
+		
+'		If Not isModule
+'			Print "-----"
+'			Print str
+'			Print "-----"
+'		Endif
+		
 		Local hasErrors:=(str.Find( "] : Error : " ) > 0)
 		
 		Local i:=str.Find( "{" )
 		
 		' return errors
 		If hasErrors Return (i > 0) ? str.Slice( 0,i ) Else str
+		If i=-1 Return "" ' not a valid json
 		
 		'----------
 		
