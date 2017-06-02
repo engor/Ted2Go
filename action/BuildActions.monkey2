@@ -34,6 +34,7 @@ End
 Class BuildActions Implements IModuleBuilder
 
 	Field buildAndRun:Action
+	Field debugApp:Action
 	Field build:Action
 	Field semant:Action
 	Field buildSettings:Action
@@ -60,7 +61,7 @@ Class BuildActions Implements IModuleBuilder
 			If doc=_locked _locked=Null
 		End
 		
-		buildAndRun=New Action( "Build and run" )
+		buildAndRun=New Action( "Run" )
 #If __TARGET__="macos"
 		buildAndRun.HotKey=Key.R
 		buildAndRun.HotKeyModifiers=Modifier.Menu
@@ -69,8 +70,16 @@ Class BuildActions Implements IModuleBuilder
 #Endif
 		buildAndRun.Triggered=OnBuildAndRun
 		
+		debugApp=New Action( "Debug" )
+#If __TARGET__="macos"
+		debugApp.HotKey=Key.D
+		debugApp.HotKeyModifiers=Modifier.Menu
+#Else
+		debugApp.HotKey=Key.F8
+#Endif
+		debugApp.Triggered=OnDebugApp
 
-		build=New Action( "Build only" )
+		build=New Action( "Build" )
 #If __TARGET__="macos"
 		build.HotKey=Key.B
 		build.HotKeyModifiers=Modifier.Menu
@@ -79,7 +88,7 @@ Class BuildActions Implements IModuleBuilder
 #Endif
 		build.Triggered=OnBuild
 		
-		semant=New Action( "Check app" )
+		semant=New Action( "Check" )
 #If __TARGET__="macos"
 		semant.HotKey=Key.R
 		semant.HotKeyModifiers=Modifier.Menu|Modifier.Shift
@@ -567,6 +576,15 @@ Class BuildActions Implements IModuleBuilder
 		If _console.Running Return
 		
 		BuildApp( _buildConfig,_buildTarget,"run" )
+	End
+	
+	Method OnDebugApp()
+	
+		PreBuild()
+	
+		If _console.Running Return
+	
+		BuildApp( "debug",_buildTarget,"run" )
 	End
 	
 	Method OnBuild()

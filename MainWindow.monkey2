@@ -252,6 +252,8 @@ Class MainWindowInstance Extends Window
 		_buildMenu.AddAction( _buildActions.buildAndRun )
 		_buildMenu.AddAction( _buildActions.build )
 		_buildMenu.AddAction( _buildActions.semant )
+		_buildMenu.AddAction( _buildActions.debugApp )
+		_buildMenu.AddSeparator()
 		_buildMenu.AddSubMenu( _buildActions.targetMenu )
 		_buildMenu.AddSeparator()
 		_buildMenu.AddAction( _forceStop )
@@ -574,6 +576,7 @@ Class MainWindowInstance Extends Window
 		Local buildTitle:=GetActionTextWithShortcut( _buildActions.build )
 		Local checkTitle:=GetActionTextWithShortcut( _buildActions.semant )
 		Local findTitle:=GetActionTextWithShortcut( _findActions.find )
+		Local debugTitle:=GetActionTextWithShortcut( _buildActions.debugApp )
 		
 		_toolBar=New ToolBarExt
 		_toolBar.Style=GetStyle( "MainToolBar" )
@@ -590,6 +593,7 @@ Class MainWindowInstance Extends Window
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/check.png" ),_buildActions.semant.Triggered,checkTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/build.png" ),_buildActions.build.Triggered,buildTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/run.png" ),_buildActions.buildAndRun.Triggered,runTitle )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/debug.png" ),_buildActions.debugApp.Triggered,debugTitle )
 		_toolBar.AddSeparator()
 		
 		Local act:=Lambda()
