@@ -801,14 +801,16 @@ Class MainWindowInstance Extends Window
 		
 		jobj["windowRect"]=ToJson( Frame )
 		
-		jobj["browserSize"]=New JsonNumber( Int( _contentView.GetViewSize( _browsersTabView ) ) )
-		jobj["browserVisible"]=New JsonBool( _browsersTabView.Visible )
+		Local vis:Bool
+		vis=_browsersTabView.Visible
+		jobj["browserVisible"]=New JsonBool( vis )
 		jobj["browserTab"]=New JsonString( GetBrowsersTabAsString() )
+		If vis Then jobj["browserSize"]=New JsonNumber( Int( _contentView.GetViewSize( _browsersTabView ) ) )
 		
-		jobj["consoleSize"]=New JsonNumber( Int( _contentView.GetViewSize( _consolesTabView ) ) )
-		jobj["consoleVisible"]=New JsonBool( _consolesTabView.Visible )
+		vis=_consolesTabView.Visible
+		jobj["consoleVisible"]=New JsonBool( vis )
 		jobj["consoleTab"]=New JsonString( GetConsolesTabAsString() )
-		
+		If vis Then jobj["consoleSize"]=New JsonNumber( Int( _contentView.GetViewSize( _consolesTabView ) ) )
 		
 		Local recent:=New JsonArray
 		For Local path:=Eachin _recentFiles
