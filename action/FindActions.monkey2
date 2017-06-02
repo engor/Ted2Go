@@ -23,7 +23,9 @@ Class FindActions
 		find.HotKeyModifiers=Modifier.Menu
 		
 		findNext=New Action( "Find next" )
-		findNext.Triggered=OnFindNext
+		findNext.Triggered=Lambda()
+			OnFindNext()
+		End
 		findNext.HotKey=Key.F3
 		
 		findPrevious=New Action( "Find previous" )
@@ -58,6 +60,12 @@ Class FindActions
 		replaceAll.Enabled=tv
 	End
 	
+	Method FindByTextChanged()
+		
+		OnFindNext( False )
+	End
+	
+	
 	Private
 	
 	Field _docs:DocumentManager
@@ -65,7 +73,7 @@ Class FindActions
 	Field _findDialog:FindDialog
 	Field _findInFilesDialog:FindInFilesDialog
 	Field _findConsole:TreeViewExt
-	
+	Field _cursorPos:=0
 	
 	Method OnFind()
 		
@@ -79,6 +87,7 @@ Class FindActions
 				Local s:=tv.Text.Slice( min,max )
 				_findDialog.SetInitialText( s )
 			Endif
+			_cursorPos=Min( tv.Cursor,tv.Anchor )
 		Endif
 	End
 	
@@ -97,7 +106,7 @@ Class FindActions
 		Endif
 	End
 	
-	Method OnFindNext()
+	Method OnFindNext( changeCursorPos:Bool=True )
 	
 		Local tv:=_docs.CurrentTextView
 		If Not tv Return
@@ -106,7 +115,11 @@ Class FindActions
 		If Not text Return
 		
 		Local tvtext:=tv.Text
-		Local cursor:=Max( tv.Anchor,tv.Cursor )
+		Local cursor:=_cursorPos
+		If changeCursorPos
+			cursor=Max( tv.Anchor,tv.Cursor )
+			_cursorPos=cursor
+		Endif
 		
 		If Not _findDialog.CaseSensitive
 			tvtext=tvtext.ToLower()
