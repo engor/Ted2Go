@@ -506,10 +506,12 @@ Class MainWindowInstance Extends Window
 	Method StoreConsoleVisibility()
 		
 		_storedConsoleVisible=_consolesTabView.Visible
+		_consoleVisibleCounter=0
 	End
 	
 	Method RestoreConsoleVisibility()
 	
+		If _consoleVisibleCounter > 0 Return
 		_consolesTabView.Visible=_storedConsoleVisible
 		RequestRender()
 	End
@@ -540,7 +542,7 @@ Class MainWindowInstance Extends Window
 		Local pos:=tv.Cursor-tv.Document.StartOfLine( line )
 		line+=1
 		pos+=1
-		_statusBar.SetLineInfo( "Ln : "+line+"  Col : "+pos )
+		_statusBar.SetLineInfo( "Ln : "+line+"    Col : "+pos )
 	End
 	
 	Method ShowStatusBarProgress( cancelCallback:Void(),cancelIconOnly:Bool=False )
@@ -805,12 +807,14 @@ Class MainWindowInstance Extends Window
 		vis=_browsersTabView.Visible
 		jobj["browserVisible"]=New JsonBool( vis )
 		jobj["browserTab"]=New JsonString( GetBrowsersTabAsString() )
-		If vis Then jobj["browserSize"]=New JsonNumber( Int( _contentView.GetViewSize( _browsersTabView ) ) )
+		If vis Then _browsersSize=Int( _contentView.GetViewSize( _browsersTabView ) )
+		If _browsersSize > 0 Then jobj["browserSize"]=New JsonNumber( _browsersSize )
 		
 		vis=_consolesTabView.Visible
 		jobj["consoleVisible"]=New JsonBool( vis )
 		jobj["consoleTab"]=New JsonString( GetConsolesTabAsString() )
-		If vis Then jobj["consoleSize"]=New JsonNumber( Int( _contentView.GetViewSize( _consolesTabView ) ) )
+		If vis Then _consolesSize=Int( _contentView.GetViewSize( _consolesTabView ) ) 
+		If _consolesSize > 0 Then jobj["consoleSize"]=New JsonNumber( _consolesSize )
 		
 		Local recent:=New JsonArray
 		For Local path:=Eachin _recentFiles
@@ -891,11 +895,17 @@ Class MainWindowInstance Extends Window
 	
 	Method LoadState( jobj:JsonObject )
 	
-		If jobj.Contains( "browserSize" ) _contentView.SetViewSize( _browsersTabView,jobj.GetNumber( "browserSize" ) )
+		If jobj.Contains( "browserSize" )
+			_browsersSize=Int( jobj.GetNumber( "browserSize" ) )
+			_contentView.SetViewSize( _browsersTabView,_browsersSize )
+		Endif
 		If jobj.Contains( "browserVisible" ) _browsersTabView.Visible=jobj.GetBool( "browserVisible" )
 		If jobj.Contains( "browserTab" ) SetBrowsersTabByString( jobj.GetString( "browserTab" ) )
 		
-		If jobj.Contains( "consoleSize" ) _contentView.SetViewSize( _consolesTabView,jobj.GetNumber( "consoleSize" ) )
+		If jobj.Contains( "consoleSize" )
+			_consolesSize=Int( jobj.GetNumber( "consoleSize" ) )
+			_contentView.SetViewSize( _consolesTabView,_consolesSize )
+		Endif
 		If jobj.Contains( "consoleVisible" ) _consolesTabView.Visible=jobj.GetBool( "consoleVisible" )
 		If jobj.Contains( "consoleTab" ) SetConsolesTabByString( jobj.GetString( "consoleTab" ) )
 		
@@ -955,6 +965,7 @@ Class MainWindowInstance Extends Window
 					_browsersTabView.Visible=Not _browsersTabView.Visible
 				Else
 					_consolesTabView.Visible=Not _consolesTabView.Visible
+					_consoleVisibleCounter+=1
 				Endif
 			Case Key.Keypad1
 			End
@@ -1019,8 +1030,8 @@ Class MainWindowInstance Extends Window
 	
 	Field _themesMenu:MenuExt
 	
-	Field _theme:String="default"
-	Field _themeScale:Float=1
+	Field _theme:="default"
+	Field _themeScale:=1.0
 	
 	Field _contentView:DockingView
 	Field _contentLeftView:DockingView
@@ -1035,8 +1046,12 @@ Class MainWindowInstance Extends Window
 	Field _statusBar:StatusBarView
 	Field _ovdMode:=False
 	Field _storedConsoleVisible:Bool
+	Field _consoleVisibleCounter:=0
 	Field _isTerminating:Bool
 	Field _enableSaving:Bool
+	Field _browsersSize:=0,_consolesSize:=0
+	
+	
 	
 	Method ToJson:JsonValue( rect:Recti )
 		Return New JsonArray( New JsonValue[]( New JsonNumber( rect.min.x ),New JsonNumber( rect.min.y ),New JsonNumber( rect.max.x ),New JsonNumber( rect.max.y ) ) )

@@ -9,7 +9,7 @@ Class Prefs
 	Global AcShowAfter:=2
 	Global AcUseTab:=True
 	Global AcUseEnter:=False
-	Global AcUseSpace:=True
+	Global AcUseSpace:=False
 	Global AcUseDot:=False
 	Global AcNewLineByEnter:=True
 	'
