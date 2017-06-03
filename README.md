@@ -1,5 +1,5 @@
 # Ted2Go
-My custom version of Ted2 IDE.
+An IDE for Monkey2 programming language.
 
 ## Benefits & Goals
 * Autocompletion for keywords, modules and user's code (WIP).
