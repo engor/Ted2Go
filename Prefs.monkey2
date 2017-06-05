@@ -12,6 +12,7 @@ Class Prefs
 	Global AcUseSpace:=False
 	Global AcUseDot:=False
 	Global AcNewLineByEnter:=True
+	Global AcStrongFirstChar:=True
 	'
 	Global MainToolBarVisible:=True
 	Global MainProjectTabsRight:=True
