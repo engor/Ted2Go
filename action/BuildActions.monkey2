@@ -50,7 +50,7 @@ Class BuildActions Implements IModuleBuilder
 	
 	Field PreBuild:Void()
 	
-	Method New( docs:DocumentManager,console:Console,debugView:DebugView )
+	Method New( docs:DocumentManager,console:ConsoleExt,debugView:DebugView )
 	
 		_docs=docs
 		_console=console
@@ -339,7 +339,7 @@ Class BuildActions Implements IModuleBuilder
 	Private
 	
 	Field _docs:DocumentManager
-	Field _console:Console
+	Field _console:ConsoleExt
 	Field _debugView:DebugView
 	
 	Field _locked:CodeDocument

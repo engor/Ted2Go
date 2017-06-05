@@ -53,8 +53,45 @@ Class MainWindowInstance Extends Window
 			SaveState()
 		End
 
+		'Build tab
+		
 		_buildConsole=New ConsoleExt
+		
+		'Output tab
+		
 		_outputConsole=New ConsoleExt
+		Local bar:=New ToolBarExt
+		bar.MaxSize=New Vec2i( 300,30 )
+		
+		bar.AddIconicButton(
+			ThemeImages.Get( "outputbar/clean.png" ),
+			Lambda()
+				_outputConsole.ClearAll()
+			End,
+			"Clear all" )
+		
+		'bar.AddSeparator()
+		'bar.AddSeparator()
+			
+		Local label:=New Label( "Filter:" )
+		bar.AddView( label,"left" )
+		Local editFilter:=New TextField()
+		editFilter.Style=GetStyle( "TextFieldBordered" )
+		editFilter.CursorType=CursorType.Line
+		editFilter.CursorBlinkRate=2.5
+		bar.AddView( editFilter,"left",200 )
+		editFilter.TextChanged+=Lambda()
+		
+			Local t:=editFilter.Text
+			_outputConsole.SetFilter( t )
+		End
+		
+		_outputConsoleView=New DockingView
+		_outputConsoleView.AddView( bar,"top" )
+		_outputConsoleView.ContentView=_outputConsole
+		
+		
+		'Find tab
 		
 		_findConsole=New TreeViewExt
 		_findConsole.NodeClicked+=Lambda( node:TreeView.Node )
@@ -79,7 +116,7 @@ Class MainWindowInstance Extends Window
 		
 		_helpView=New HtmlViewExt
 		_helpConsole=New DockingView
-		Local bar:=New ToolBarExt
+		bar=New ToolBarExt
 		bar.MaxSize=New Vec2i( 300,30 )
 		bar.AddIconicButton(
 			ThemeImages.Get( "docbar/home.png" ),
@@ -102,7 +139,7 @@ Class MainWindowInstance Extends Window
 			"Forward" )
 		bar.AddSeparator()
 		bar.AddSeparator()
-		Local label:=New Label
+		label=New Label
 		bar.AddView( label,"left" )
 		
 		_helpView.Navigated+=Lambda( url:String )
@@ -315,7 +352,7 @@ Class MainWindowInstance Extends Window
 		_browsersTabView.AddTab( "Help",_helpTree,False )
 		
 		_consolesTabView.AddTab( "Build",_buildConsole,True )
-		_consolesTabView.AddTab( "Output",_outputConsole,False )
+		_consolesTabView.AddTab( "Output",_outputConsoleView,False )
 		_consolesTabView.AddTab( "Docs",_helpConsole,False )
 		_consolesTabView.AddTab( "Find",_findConsole,False )
 		
@@ -648,7 +685,7 @@ Class MainWindowInstance Extends Window
 	
 	Method ShowOutputConsole( vis:Bool=True )
 		If vis _consolesTabView.Visible=True
-		_consolesTabView.CurrentView=_outputConsole
+		_consolesTabView.CurrentView=_outputConsoleView
 	End
 	
 	Method ShowHelpView()
@@ -1004,8 +1041,9 @@ Class MainWindowInstance Extends Window
 	Field _helpActions:HelpActions
 	Field _viewActions:ViewActions
 	
-	Field _buildConsole:Console
-	Field _outputConsole:Console
+	Field _buildConsole:ConsoleExt
+	Field _outputConsole:ConsoleExt
+	Field _outputConsoleView:DockingView
 	Field _helpView:HtmlViewExt
 	Field _helpConsole:DockingView
 	Field _findConsole:TreeViewExt
@@ -1236,7 +1274,7 @@ Class MainWindowInstance Extends Window
 	Method GetConsolesTabAsString:String()
 		
 		Select _consolesTabView.CurrentView
-			Case _outputConsole
+			Case _outputConsoleView
 				Return "output"
 			Case _buildConsole
 				Return "build"
@@ -1253,7 +1291,7 @@ Class MainWindowInstance Extends Window
 		Local view:View
 		Select value
 			Case "output"
-				view=_outputConsole
+				view=_outputConsoleView
 			Case "build"
 				view=_buildConsole
 			Case "docs"

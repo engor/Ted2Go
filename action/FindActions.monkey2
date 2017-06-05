@@ -179,7 +179,7 @@ Class FindActions
 		Local root:=_findConsole.RootNode
 		root.RemoveAllChildren()
 		
-		root.Text="Finding of '"+what+"'"
+		root.Text="Results for '"+what+"'"
 		
 		Local subRoot:TreeView.Node
 		Local items:=New Stack<FileJumpData>
