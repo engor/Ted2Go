@@ -113,6 +113,12 @@
 			"extends":"ToolButton",
 			"padding":[ 0 ],
 			"skinColor":"transparent"
+		},
+		
+		"TextFieldBordered":{
+			"extends":"TextField",
+			"border":[ 1 ],
+			"borderColor":"clear"
 		}
 		
 	}

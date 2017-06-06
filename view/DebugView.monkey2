@@ -4,7 +4,7 @@ Namespace ted2go
 
 Class DebugView Extends DockingView
 
-	Method New( docs:DocumentManager,console:Console )
+	Method New( docs:DocumentManager,console:ConsoleExt )
 	
 		_docs=docs
 		_console=console
@@ -279,7 +279,7 @@ Class DebugView Extends DockingView
 	Field _toolBar:ToolBar
 
 	Field _docs:DocumentManager	
-	Field _console:Console
+	Field _console:ConsoleExt
 
 	Field _debugging:Bool
 	Field _stopped:Bool

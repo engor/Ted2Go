@@ -1004,6 +1004,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Method CheckIdent:Bool( ident1:String,ident2:String,startsOnly:Bool,smartStarts:Bool=True )
 	
 		If ident2 = "" Return True
+		
 		If startsOnly
 			Return smartStarts ? CheckStartsWith( ident1,ident2 ) Else ident1.StartsWith( ident2 )
 		Else

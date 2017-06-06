@@ -53,8 +53,45 @@ Class MainWindowInstance Extends Window
 			SaveState()
 		End
 
+		'Build tab
+		
 		_buildConsole=New ConsoleExt
+		
+		'Output tab
+		
 		_outputConsole=New ConsoleExt
+		Local bar:=New ToolBarExt
+		bar.MaxSize=New Vec2i( 300,30 )
+		
+		bar.AddIconicButton(
+			ThemeImages.Get( "outputbar/clean.png" ),
+			Lambda()
+				_outputConsole.ClearAll()
+			End,
+			"Clear all" )
+		
+		'bar.AddSeparator()
+		'bar.AddSeparator()
+			
+		Local label:=New Label( "Filter:" )
+		bar.AddView( label,"left" )
+		Local editFilter:=New TextField()
+		editFilter.Style=GetStyle( "TextFieldBordered" )
+		editFilter.CursorType=CursorType.Line
+		editFilter.CursorBlinkRate=2.5
+		bar.AddView( editFilter,"left",200 )
+		editFilter.TextChanged+=Lambda()
+		
+			Local t:=editFilter.Text
+			_outputConsole.SetFilter( t )
+		End
+		
+		_outputConsoleView=New DockingView
+		_outputConsoleView.AddView( bar,"top" )
+		_outputConsoleView.ContentView=_outputConsole
+		
+		
+		'Find tab
 		
 		_findConsole=New TreeViewExt
 		_findConsole.NodeClicked+=Lambda( node:TreeView.Node )
@@ -79,7 +116,7 @@ Class MainWindowInstance Extends Window
 		
 		_helpView=New HtmlViewExt
 		_helpConsole=New DockingView
-		Local bar:=New ToolBarExt
+		bar=New ToolBarExt
 		bar.MaxSize=New Vec2i( 300,30 )
 		bar.AddIconicButton(
 			ThemeImages.Get( "docbar/home.png" ),
@@ -102,7 +139,7 @@ Class MainWindowInstance Extends Window
 			"Forward" )
 		bar.AddSeparator()
 		bar.AddSeparator()
-		Local label:=New Label
+		label=New Label
 		bar.AddView( label,"left" )
 		
 		_helpView.Navigated+=Lambda( url:String )
@@ -252,6 +289,8 @@ Class MainWindowInstance Extends Window
 		_buildMenu.AddAction( _buildActions.buildAndRun )
 		_buildMenu.AddAction( _buildActions.build )
 		_buildMenu.AddAction( _buildActions.semant )
+		_buildMenu.AddAction( _buildActions.debugApp )
+		_buildMenu.AddSeparator()
 		_buildMenu.AddSubMenu( _buildActions.targetMenu )
 		_buildMenu.AddSeparator()
 		_buildMenu.AddAction( _forceStop )
@@ -313,7 +352,7 @@ Class MainWindowInstance Extends Window
 		_browsersTabView.AddTab( "Help",_helpTree,False )
 		
 		_consolesTabView.AddTab( "Build",_buildConsole,True )
-		_consolesTabView.AddTab( "Output",_outputConsole,False )
+		_consolesTabView.AddTab( "Output",_outputConsoleView,False )
 		_consolesTabView.AddTab( "Docs",_helpConsole,False )
 		_consolesTabView.AddTab( "Find",_findConsole,False )
 		
@@ -506,10 +545,12 @@ Class MainWindowInstance Extends Window
 	Method StoreConsoleVisibility()
 		
 		_storedConsoleVisible=_consolesTabView.Visible
+		_consoleVisibleCounter=0
 	End
 	
 	Method RestoreConsoleVisibility()
 	
+		If _consoleVisibleCounter > 0 Return
 		_consolesTabView.Visible=_storedConsoleVisible
 		RequestRender()
 	End
@@ -540,7 +581,7 @@ Class MainWindowInstance Extends Window
 		Local pos:=tv.Cursor-tv.Document.StartOfLine( line )
 		line+=1
 		pos+=1
-		_statusBar.SetLineInfo( "Ln : "+line+"  Col : "+pos )
+		_statusBar.SetLineInfo( "Ln : "+line+"    Col : "+pos )
 	End
 	
 	Method ShowStatusBarProgress( cancelCallback:Void(),cancelIconOnly:Bool=False )
@@ -572,6 +613,7 @@ Class MainWindowInstance Extends Window
 		Local buildTitle:=GetActionTextWithShortcut( _buildActions.build )
 		Local checkTitle:=GetActionTextWithShortcut( _buildActions.semant )
 		Local findTitle:=GetActionTextWithShortcut( _findActions.find )
+		Local debugTitle:=GetActionTextWithShortcut( _buildActions.debugApp )
 		
 		_toolBar=New ToolBarExt
 		_toolBar.Style=GetStyle( "MainToolBar" )
@@ -588,6 +630,7 @@ Class MainWindowInstance Extends Window
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/check.png" ),_buildActions.semant.Triggered,checkTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/build.png" ),_buildActions.build.Triggered,buildTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/run.png" ),_buildActions.buildAndRun.Triggered,runTitle )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/debug.png" ),_buildActions.debugApp.Triggered,debugTitle )
 		_toolBar.AddSeparator()
 		
 		Local act:=Lambda()
@@ -642,7 +685,7 @@ Class MainWindowInstance Extends Window
 	
 	Method ShowOutputConsole( vis:Bool=True )
 		If vis _consolesTabView.Visible=True
-		_consolesTabView.CurrentView=_outputConsole
+		_consolesTabView.CurrentView=_outputConsoleView
 	End
 	
 	Method ShowHelpView()
@@ -801,14 +844,18 @@ Class MainWindowInstance Extends Window
 		
 		jobj["windowRect"]=ToJson( Frame )
 		
-		jobj["browserSize"]=New JsonNumber( Int( _contentView.GetViewSize( _browsersTabView ) ) )
-		jobj["browserVisible"]=New JsonBool( _browsersTabView.Visible )
+		Local vis:Bool
+		vis=_browsersTabView.Visible
+		jobj["browserVisible"]=New JsonBool( vis )
 		jobj["browserTab"]=New JsonString( GetBrowsersTabAsString() )
+		If vis Then _browsersSize=Int( _contentView.GetViewSize( _browsersTabView ) )
+		If _browsersSize > 0 Then jobj["browserSize"]=New JsonNumber( _browsersSize )
 		
-		jobj["consoleSize"]=New JsonNumber( Int( _contentView.GetViewSize( _consolesTabView ) ) )
-		jobj["consoleVisible"]=New JsonBool( _consolesTabView.Visible )
+		vis=_consolesTabView.Visible
+		jobj["consoleVisible"]=New JsonBool( vis )
 		jobj["consoleTab"]=New JsonString( GetConsolesTabAsString() )
-		
+		If vis Then _consolesSize=Int( _contentView.GetViewSize( _consolesTabView ) ) 
+		If _consolesSize > 0 Then jobj["consoleSize"]=New JsonNumber( _consolesSize )
 		
 		Local recent:=New JsonArray
 		For Local path:=Eachin _recentFiles
@@ -889,11 +936,17 @@ Class MainWindowInstance Extends Window
 	
 	Method LoadState( jobj:JsonObject )
 	
-		If jobj.Contains( "browserSize" ) _contentView.SetViewSize( _browsersTabView,jobj.GetNumber( "browserSize" ) )
+		If jobj.Contains( "browserSize" )
+			_browsersSize=Int( jobj.GetNumber( "browserSize" ) )
+			_contentView.SetViewSize( _browsersTabView,_browsersSize )
+		Endif
 		If jobj.Contains( "browserVisible" ) _browsersTabView.Visible=jobj.GetBool( "browserVisible" )
 		If jobj.Contains( "browserTab" ) SetBrowsersTabByString( jobj.GetString( "browserTab" ) )
 		
-		If jobj.Contains( "consoleSize" ) _contentView.SetViewSize( _consolesTabView,jobj.GetNumber( "consoleSize" ) )
+		If jobj.Contains( "consoleSize" )
+			_consolesSize=Int( jobj.GetNumber( "consoleSize" ) )
+			_contentView.SetViewSize( _consolesTabView,_consolesSize )
+		Endif
 		If jobj.Contains( "consoleVisible" ) _consolesTabView.Visible=jobj.GetBool( "consoleVisible" )
 		If jobj.Contains( "consoleTab" ) SetConsolesTabByString( jobj.GetString( "consoleTab" ) )
 		
@@ -953,6 +1006,7 @@ Class MainWindowInstance Extends Window
 					_browsersTabView.Visible=Not _browsersTabView.Visible
 				Else
 					_consolesTabView.Visible=Not _consolesTabView.Visible
+					_consoleVisibleCounter+=1
 				Endif
 			Case Key.Keypad1
 			End
@@ -987,8 +1041,9 @@ Class MainWindowInstance Extends Window
 	Field _helpActions:HelpActions
 	Field _viewActions:ViewActions
 	
-	Field _buildConsole:Console
-	Field _outputConsole:Console
+	Field _buildConsole:ConsoleExt
+	Field _outputConsole:ConsoleExt
+	Field _outputConsoleView:DockingView
 	Field _helpView:HtmlViewExt
 	Field _helpConsole:DockingView
 	Field _findConsole:TreeViewExt
@@ -1017,8 +1072,8 @@ Class MainWindowInstance Extends Window
 	
 	Field _themesMenu:MenuExt
 	
-	Field _theme:String="default"
-	Field _themeScale:Float=1
+	Field _theme:="default"
+	Field _themeScale:=1.0
 	
 	Field _contentView:DockingView
 	Field _contentLeftView:DockingView
@@ -1033,8 +1088,12 @@ Class MainWindowInstance Extends Window
 	Field _statusBar:StatusBarView
 	Field _ovdMode:=False
 	Field _storedConsoleVisible:Bool
+	Field _consoleVisibleCounter:=0
 	Field _isTerminating:Bool
 	Field _enableSaving:Bool
+	Field _browsersSize:=0,_consolesSize:=0
+	
+	
 	
 	Method ToJson:JsonValue( rect:Recti )
 		Return New JsonArray( New JsonValue[]( New JsonNumber( rect.min.x ),New JsonNumber( rect.min.y ),New JsonNumber( rect.max.x ),New JsonNumber( rect.max.y ) ) )
@@ -1215,7 +1274,7 @@ Class MainWindowInstance Extends Window
 	Method GetConsolesTabAsString:String()
 		
 		Select _consolesTabView.CurrentView
-			Case _outputConsole
+			Case _outputConsoleView
 				Return "output"
 			Case _buildConsole
 				Return "build"
@@ -1232,7 +1291,7 @@ Class MainWindowInstance Extends Window
 		Local view:View
 		Select value
 			Case "output"
-				view=_outputConsole
+				view=_outputConsoleView
 			Case "build"
 				view=_buildConsole
 			Case "docs"

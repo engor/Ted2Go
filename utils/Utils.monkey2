@@ -2,6 +2,14 @@
 Namespace ted2go
 
 
+Function IsLowercacedFirstChar:Bool(s:String)
+	
+	If Not s Return False
+	Local s1:=s.Slice( 0,1 )
+	Return s1 = s1.ToLower()
+End
+
+
 Class Utils
 	
 	Function ArrayContains<T>:Bool( arr:T[],value:T )

@@ -18,7 +18,7 @@ Public
 
 Class ModuleManager Extends Dialog
 
-	Method New( console:Console )
+	Method New( console:ConsoleExt )
 		Super.New( "Module Manager" )
 		
 		_console=console
@@ -105,7 +105,7 @@ Class ModuleManager Extends Dialog
 	
 	Const backupDir:="modules/module-manager/backups/"
 	
-	Field _console:Console
+	Field _console:ConsoleExt
 	Field _docker:DockingView
 	Field _modules:=New StringMap<Module>
 	Field _filters:=New StringMap<CheckButton>
