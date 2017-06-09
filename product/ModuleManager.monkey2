@@ -4,6 +4,9 @@ Namespace ted2go
 
 Private
 
+Const MONKEY2_DOMAIN:="http://monkeycoder.co.nz"
+
+
 Class Module
 	Field name:String
 	Field about:String
@@ -99,8 +102,9 @@ Class ModuleManager Extends Dialog
 	Private
 	
 	'Const downloadUrl:="http://monkey2.monkey-x.com/wp-content/uploads/mx2-modules/public/"
-    Const downloadUrl:="http://monkey2.monkey-x.com/send-file?file="
-    
+    'Const downloadUrl:="http://monkey2.monkey-x.com/send-file?file="
+    Const downloadUrl:=MONKEY2_DOMAIN+"/send-file?file="
+	
 	Const downloadDir:="modules/module-manager/downloads/"
 	
 	Const backupDir:="modules/module-manager/backups/"

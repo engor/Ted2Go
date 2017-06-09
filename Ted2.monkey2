@@ -109,7 +109,7 @@ Using mojox..
 Using tinyxml2..
 
 
-Global AppTitle:="Ted2Go v2.3.1"
+Global AppTitle:="Ted2Go v2.3.2"
 
 
 Function Main()
