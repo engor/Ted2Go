@@ -605,6 +605,12 @@ Class ModuleManager Extends Dialog
 
 		Next
 		
+		' some bottom pagdding
+		_table.Rows+=1
+		Local label:=New Label( "" )
+		label.MinSize=New Vec2i( 0,30 )
+		_table[0,_table.Rows-1]=label
+		
 		App.RequestRender()
 	
 	End
