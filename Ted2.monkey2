@@ -109,6 +109,8 @@ Using mojox..
 Using tinyxml2..
 
 
+Const MONKEY2_DOMAIN:="http://monkeycoder.co.nz"
+
 Global AppTitle:="Ted2Go v2.3.2"
 
 
@@ -227,3 +229,7 @@ Function GetActionTextWithShortcut:String( action:Action )
 	Return action.Text+" ("+action.HotKeyText+")"
 End
 
+Function IsFileExists:Bool( path:String )
+	
+	Return GetFileType( path ) = FileType.File
+End

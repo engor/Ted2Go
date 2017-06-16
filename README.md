@@ -10,7 +10,7 @@ An IDE for Monkey2 programming language.
 * Doc's hints directly inside of code area (todo).
 
 ## More info
-Discussion page: http://monkey2.monkey-x.com/forums/topic/ted2go-fork/
+Discussion page: http://monkeycoder.co.nz/forums/topic/ted2go-fork/
 
 ## Monkey <-> money :)
 Support me if you like this project: https://paypal.me/engor
