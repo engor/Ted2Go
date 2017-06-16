@@ -1,3 +1,4 @@
+
 Namespace ted2go
 
 
@@ -64,6 +65,10 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		UpdatePrefs()
 	End
 	
+	Property Gutter:CodeGutterView()
+		Return _gutter
+	End
+	
 	Property CharsToShowAutoComplete:Int()
 		
 		Return Prefs.AcShowAfter
@@ -78,6 +83,15 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			If Not _gutter Then _gutter=New CodeGutterView( _doc )
 			AddView( _gutter,"left" )
 		Endif
+		
+		'add codemap
+		RemoveView( _codeMap )
+		'If Prefs.EditorCodeMapVisible
+			If Not _codeMap Then _codeMap=New CodeMapView( _doc )
+			AddView( _codeMap,"right" )
+			_codeMap.Layout="float"
+			_codeMap.Gravity=New Vec2f(1,0)
+		'Endif
 		
 		_doc.ArrangeElements()
 	End
@@ -608,13 +622,13 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 	End
 	
-	
 	Private
 	
 	Field _doc:CodeDocument
 	Field _prevErrorLine:Int
 	Field _lineColor:Color
 	Field _gutter:CodeGutterView
+	Field _codeMap:CodeMapView
 	
 	Method UpdateThemeColors() Override
 		
@@ -1043,13 +1057,16 @@ Class CodeDocument Extends Ted2Document
 		_codeView.OnKeyEvent( event )
 	End
 	
+	Property CodeView:CodeDocumentView()
+		Return _codeView
+	End
+	
 	Protected
 	
 	Method OnGetTextView:TextView( view:View ) Override
 	
 		Return _codeView
 	End
-	
 	
 	Private
 
@@ -1072,7 +1089,6 @@ Class CodeDocument Extends Ted2Document
 	
 	Field _toolBar:ToolBarExt
 	Field _content:DockingView
-	
 	
 	Method GetToolBar:ToolBarExt()
 		
