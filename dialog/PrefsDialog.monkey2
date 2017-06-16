@@ -7,7 +7,7 @@ Class PrefsDialog Extends DialogExt
 	
 	Method New()
 		
-		Title="Prefs"
+		Title="Preferences"
 		
 		_acShowAfter=New TextField( ""+Prefs.AcShowAfter )
 		
@@ -43,6 +43,9 @@ Class PrefsDialog Extends DialogExt
 		
 		_mainProjectTabsRight=New CheckButton( "Project tabs on the right side" )
 		_mainProjectTabsRight.Checked=Prefs.MainProjectTabsRight
+		
+		_mainProjectIcons=New CheckButton( "Project file type icons" )
+		_mainProjectIcons.Checked=Prefs.MainProjectIcons
 		
 		_editorShowWhiteSpaces=New CheckButton( "Whitespaces visible" )
 		_editorShowWhiteSpaces.Checked=Prefs.EditorShowWhiteSpaces
@@ -121,6 +124,7 @@ Class PrefsDialog Extends DialogExt
 		
 		docker.AddView( New Label( "------ Main:" ),"top" )
 		docker.AddView( _mainProjectTabsRight,"top" )
+		docker.AddView( _mainProjectIcons,"top" )
 		docker.AddView( _mainToolBarVisible,"top" )
 		docker.AddView( New Label( " " ),"top" )
 		
@@ -177,6 +181,7 @@ Class PrefsDialog Extends DialogExt
 	
 	Field _mainToolBarVisible:CheckButton
 	Field _mainProjectTabsRight:CheckButton
+	Field _mainProjectIcons:CheckButton
 	
 	Field _monkeyRootPath:TextField
 	
@@ -205,6 +210,7 @@ Class PrefsDialog Extends DialogExt
 		
 		Prefs.MainToolBarVisible=_mainToolBarVisible.Checked
 		Prefs.MainProjectTabsRight=_mainProjectTabsRight.Checked
+		Prefs.MainProjectIcons=_mainProjectIcons.Checked
 		
 		App.ThemeChanged()
 		

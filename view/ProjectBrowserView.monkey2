@@ -2,7 +2,7 @@
 Namespace ted2go
 
 
-Class ProjectBrowserView Extends FileBrowser
+Class ProjectBrowserView Extends FileBrowserExt
 
 	
 	Method New( rootPath:String )
@@ -10,7 +10,7 @@ Class ProjectBrowserView Extends FileBrowser
 		Super.New( rootPath )
 		
 		RootNode.Text=StripDir( rootPath )+" ("+rootPath+")"
-		RootNode.Icon=ThemeImages.Get( "project/package.png" )
+		UpdateRootIcon()
 		
 		NodeExpanded+=Lambda( node:TreeView.Node )
 			
@@ -111,6 +111,21 @@ Class ProjectBrowserView Extends FileBrowser
 		Endif
 		
 		Return _filters
+	End
+	
+	Method OnThemeChanged() Override
+		
+		Super.OnThemeChanged()
+		UpdateRootIcon()
+		Self.Refresh(True)
+	End
+	
+	Method UpdateRootIcon()
+		If Prefs.MainProjectIcons Then 'Only load icon if settings say so
+			RootNode.Icon=ThemeImages.Get( "project/package.png" )
+		Else
+			RootNode.Icon=Null
+		Endif
 	End
 	
 	Enum FilterType

@@ -77,6 +77,7 @@
 #Import "view/AutocompleteView"
 #Import "view/CodeTreeView"
 #Import "view/TreeViewExt"
+#Import "view/FileBrowserExt"
 #Import "view/CodeGutterView"
 #Import "view/ToolBarViewExt"
 #Import "view/HintView"

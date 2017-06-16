@@ -292,7 +292,7 @@ Class ProjectView Extends ScrollView
 	
 	Field _docs:DocumentManager
 	Field _docker:=New DockingView
-	Field _projects:=New StringMap<FileBrowser>
+	Field _projects:=New StringMap<FileBrowserExt>
 	Field _builder:IModuleBuilder
 
 	Method OnOpenProject()
