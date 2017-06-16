@@ -16,6 +16,7 @@ Class Prefs
 	'
 	Global MainToolBarVisible:=True
 	Global MainProjectTabsRight:=True
+	Global MainProjectIcons:=True
 	'
 	Global EditorToolBarVisible:=False
 	Global EditorGutterVisible:=True
@@ -36,7 +37,7 @@ Class Prefs
 			Local j2:=json["main"].ToObject()
 			If j2.Contains( "toolBarVisible" ) Then MainToolBarVisible=j2["toolBarVisible"].ToBool()
 			If j2.Contains( "tabsRight" ) Then MainProjectTabsRight=j2["tabsRight"].ToBool()
-		
+			If j2.Contains( "projectIcons" ) Then MainProjectIcons=j2["projectIcons"].ToBool()
 		Endif
 		
 		If json.Contains( "completion" )
@@ -79,6 +80,7 @@ Class Prefs
 		Local j:=New JsonObject
 		j["toolBarVisible"]=New JsonBool( MainToolBarVisible )
 		j["tabsRight"]=New JsonBool( MainProjectTabsRight )
+		j["projectIcons"]=New JsonBool( MainProjectIcons )
 		json["main"]=j
 		 
 		j=New JsonObject
@@ -139,7 +141,7 @@ Class Prefs
 	
 	Function GetCustomFontSize:Int()
 	
-		Return Max( EditorFontSize,6 ) '6 is a minumal
+		Return Max( EditorFontSize,6 ) '6 is a minimum
 	End
 End
 
