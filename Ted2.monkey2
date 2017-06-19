@@ -71,6 +71,7 @@
 #Import "utils/JsonUtils"
 #Import "utils/Utils"
 
+#Import "view/CodeMapView"
 #Import "view/CodeTextView"
 #Import "view/ConsoleViewExt"
 #Import "view/ListViewExt"

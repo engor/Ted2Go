@@ -431,6 +431,8 @@ Class CodeTextView Extends TextView
 		
 	End
 	
+	Public
+	
 	Method OnRenderLine( canvas:Canvas,line:Int ) Override
 	
 		Super.OnRenderLine( canvas,line )
