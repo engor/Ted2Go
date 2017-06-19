@@ -476,10 +476,10 @@ Class MainWindowInstance Extends Window
 	
 	Property AboutPagePath:String()
 		
-		Local path:=Prefs.MonkeyRootPath+"About.html"
-		If Not IsFileExists( path )
-			path="asset::ted2/about.html"
-		Endif
+		Local path:=Prefs.MonkeyRootPath+"ABOUT.HTML"
+'		If Not IsFileExists( path )
+'			path="asset::ted2/about.html"
+'		Endif
 		Return path
 	End
 	
