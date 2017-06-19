@@ -71,6 +71,7 @@
 #Import "utils/JsonUtils"
 #Import "utils/Utils"
 
+#Import "view/IRCView"
 #Import "view/CodeMapView"
 #Import "view/CodeTextView"
 #Import "view/ConsoleViewExt"
@@ -141,7 +142,7 @@ Function Main()
 	Prefs.LoadState( jobj )
 	
 	'initial theme
-	'	
+	'
 	If Not jobj.Contains( "theme" ) jobj["theme"]=New JsonString( "theme-classic-dark" )
 	If Not jobj.Contains( "themeScale" ) jobj["themeScale"]=New JsonNumber( 1 )
 	
@@ -151,7 +152,7 @@ Function Main()
 	config["initialThemeScale"]=jobj.GetNumber( "themeScale" )
 	
 	'start the app!
-	'	
+	'
 	New AppInstance( config )
 	
 	'initial window state

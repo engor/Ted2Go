@@ -18,6 +18,8 @@ Class Prefs
 	Global MainProjectTabsRight:=True
 	Global MainProjectIcons:=True
 	'
+	Global IrcNickname:String
+	'
 	Global EditorToolBarVisible:=False
 	Global EditorGutterVisible:=True
 	Global EditorShowWhiteSpaces:=False
@@ -31,6 +33,12 @@ Class Prefs
 	Global MonkeyRootPath:String
 	
 	Function LoadState( json:JsonObject )
+		
+		If json.Contains( "irc" )
+			
+			Local j2:=json["irc"].ToObject()
+			If j2.Contains( "nickname" ) Then IrcNickname=j2["nickname"].ToString()
+		Endif
 		
 		If json.Contains( "main" )
 			
@@ -82,7 +90,11 @@ Class Prefs
 		j["tabsRight"]=New JsonBool( MainProjectTabsRight )
 		j["projectIcons"]=New JsonBool( MainProjectIcons )
 		json["main"]=j
-		 
+		
+		j=New JsonObject
+		j["nickname"]=New JsonString( IrcNickname )
+		json["irc"]=j
+		
 		j=New JsonObject
 		j["enabled"]=New JsonBool( AcEnabled )
 		j["keywordsOnly"]=New JsonBool( AcKeywordsOnly )
