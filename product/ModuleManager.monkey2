@@ -98,7 +98,7 @@ Class ModuleManager Extends Dialog
 	
 	Private
 	
-    Const downloadUrl:=MONKEY2_DOMAIN+"/send-file?file="
+    Field downloadUrl:=MONKEY2_DOMAIN+"/send-file?file="
 	
 	Const downloadDir:="modules/module-manager/downloads/"
 	
