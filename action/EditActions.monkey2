@@ -123,9 +123,23 @@ Class EditActions
 	
 	Method OnWordWrap()
 	
+		Local tvCode:=Cast<CodeTextView>( App.KeyView )
+		If tvCode
+			Local cur:=tvCode.Cursor
+			Local anc:=tvCode.Anchor
+			tvCode.WordWrapped=Not tvCode.WordWrapped
+			tvCode.SelectText( cur,anc )
+			Return
+		Endif
+		
 		Local tv:=Cast<TextView>( App.KeyView )
 		
-		If tv tv.WordWrap=Not tv.WordWrap
+		If tv
+			Local cur:=tv.Cursor
+			Local anc:=tv.Anchor
+			tv.WordWrap=Not tv.WordWrap
+			tv.SelectText( cur,anc )
+		Endif
 	End
 	
 End

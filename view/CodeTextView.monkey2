@@ -9,6 +9,8 @@ Class CodeTextView Extends TextView
 	Field Highlighter:Highlighter
 	
 	Field LineChanged:Void( prevLine:Int,newLine:Int )
+	Field VisualUpdated:Void()
+	Field TextChanged:Void()
 	
 	Method New()
 		Super.New()
@@ -188,6 +190,17 @@ Class CodeTextView Extends TextView
 	Setter( value:Bool )
 	
 		_showWhiteSpaces=value
+		VisualUpdated()
+	End
+	
+	Property WordWrapped:Bool()
+	
+		Return WordWrap
+	
+	Setter( value:Bool )
+	
+		WordWrap=value
+		VisualUpdated()
 	End
 	
 	Protected
@@ -407,6 +420,42 @@ Class CodeTextView Extends TextView
 		_whitespacesColor=App.Theme.GetColor( "textview-whitespaces" )
 	End
 	
+	Method OnRenderLine( canvas:Canvas,line:Int ) Override
+	
+		Super.OnRenderLine( canvas,line )
+	
+		' draw whitespaces
+		If Not _showWhiteSpaces Return
+	
+		Local text:=Document.Text
+		Local colors:=Document.Colors
+		Local r:Recti
+	
+		For Local word:=Eachin WordIterator.ForLine( Self,line )
+	
+			If text[word.Index]=9 ' tab
+	
+				canvas.Color=_whitespacesColor
+	
+				Local len:=word.Length
+	
+				r=word.Rect
+				Local x0:=r.Left,y0:=r.Top+1,y1:=y0+r.Height
+				Local ww:=r.Width/len
+				Local xx:=x0+ww
+	
+				Local after:=word.Index+len
+				If after < text.Length And text[after] > 32 Then len-=1
+	
+				For Local i:=0 Until len
+					canvas.DrawLine( xx,y0,xx,y1 )
+					xx+=ww
+				Next
+			Endif
+		Next
+	
+	End
+	
 	
 	Private
 	
@@ -417,6 +466,7 @@ Class CodeTextView Extends TextView
 	Field _charw:Int
 	Field _charh:Int
 	Field _tabw:Int
+	
 	
 	Method OnCursorMoved()
 		
@@ -431,49 +481,5 @@ Class CodeTextView Extends TextView
 		
 	End
 	
-	Public
-	
-	Method OnRenderLine( canvas:Canvas,line:Int ) Override
-	
-		Super.OnRenderLine( canvas,line )
-		
-		' draw whitespaces
-		If Not _showWhiteSpaces Return
-		
-		Local text:=Document.Text
-		Local colors:=Document.Colors
-		Local r:Recti
-		
-		For Local word:=Eachin WordIterator.ForLine( Self,line )
-		
-			If text[word.Index]=9 ' tab
-				
-				canvas.Color=_whitespacesColor
-				
-				Local len:=word.Length
-				
-				r=word.Rect
-				Local x0:=r.Left,y0:=r.Top+1,y1:=y0+r.Height
-				Local ww:=r.Width/len
-				Local xx:=x0+ww
-				
-				Local after:=word.Index+len
-				If after < text.Length And text[after] > 32 Then len-=1
-				
-				For Local i:=0 Until len
-					canvas.DrawLine( xx,y0,xx,y1 )
-					xx+=ww
-				Next
-			Endif
-		Next
-
-	End
-	
-'	Function DrawDottedLineVert ( canvas:Canvas,x:Float,y1:Float,y2:Float )
-'		
-'		For Local y:=y1 To y2 Step 6
-'			canvas.DrawLine( x,y,x,y+1 )
-'		Next
-'	End
 	
 End

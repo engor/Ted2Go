@@ -214,7 +214,7 @@ Class ConsoleExt Extends TextView
 	
 	Method OnKeyEvent( event:KeyEvent ) Override
 	
-		If CanCopy And (event.Key = Key.C Or event.Key = Key.Insert) And  event.Type = EventType.KeyDown And event.Modifiers & Modifier.Control
+		If CanCopy And (event.Key = Key.C Or event.Key = Key.Insert) And event.Type = EventType.KeyDown And event.Modifiers & Modifier.Control
 		
 			Copy()
 			Return
@@ -288,11 +288,13 @@ Class ConsoleExt Extends TextView
 		If Not _filter Or text.Find( _filter) <> -1
 			Local cur:=Cursor,anc:=Anchor
 			Local sc:=Scroll
+			Local maxScroll:=LineRect(Document.NumLines-1).Bottom-VisibleRect.Height
+			Local atBottom:=Scroll.y>=maxScroll And cur=anc
 			AppendText( text )
-			Local atBottom:=(Scroll.y-sc.y<=LineRect(Document.NumLines-1).Height) And cur=anc
+			SelectText( Text.Length,Text.Length )
 			If Not atBottom
-				Scroll=sc 'restore
 				SelectText( anc,cur )
+				Scroll=sc 'restore
 			Endif
 			
 		Endif
@@ -300,4 +302,4 @@ Class ConsoleExt Extends TextView
 	
 End
 
-#endif
+#Endif

@@ -4,7 +4,8 @@
 	"colors":{
 
 		"statusbar": "content",
-		"statusbar-active": "#CA5100"
+		"statusbar-active": "#CA5100",
+		"codemap-selection": "#80000000"
 	},
 
 	"styles":{
@@ -96,6 +97,11 @@
 			"extends":"ProgressBar",
 			"margin":[ 6,0 ]
 		},
+		"StatusBarButton":{
+			"extends":"ToolButton",
+			"padding":[ 0 ],
+			"skinColor":"transparent"
+		},
 
 		"CompletionDialog":{
 			"extends":"Dialog"
@@ -109,17 +115,23 @@
 			"backgroundColor":"content"
 		},
 		
-		"StatusBarButton":{
-			"extends":"ToolButton",
-			"padding":[ 0 ],
-			"skinColor":"transparent"
-		},
-		
 		"TextFieldBordered":{
 			"extends":"TextField",
 			"border":[ 1 ],
 			"borderColor":"clear"
-		}
+		},
 		
+		"CodeMapView":{
+			"extends":"TextView",
+			"margin":[ 4,0,0,0 ],
+			"padding":[ 0 ],
+			"border":[ 1,0,0,0 ],
+			"borderColor": "clear"
+		},
+		"CodeMapContent":{
+			"extends":"TextViewContent",
+			"margin":[ 0 ],
+			"padding":[ 4 ]
+		}
 	}
 }

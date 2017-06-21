@@ -24,6 +24,7 @@ Class Prefs
 	Global EditorFontPath:String
 	Global EditorFontSize:=16
 	Global EditorShowEvery10LineNumber:=True
+	Global EditorCodeMapVisible:=True
 	'
 	Global SourceSortByType:=True
 	Global SourceShowInherited:=False

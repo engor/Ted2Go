@@ -379,6 +379,13 @@ Class MainWindowInstance Extends Window
 		
 	End
 	
+	Field PrefsChanged:Void()
+	Method OnPrefsChanged()
+		
+		ArrangeElements()
+		PrefsChanged()
+	End
+	
 	Method ArrangeElements()
 		
 		_contentView.RemoveView( _toolBar )
