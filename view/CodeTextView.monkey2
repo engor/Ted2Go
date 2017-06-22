@@ -9,7 +9,6 @@ Class CodeTextView Extends TextView
 	Field Highlighter:Highlighter
 	
 	Field LineChanged:Void( prevLine:Int,newLine:Int )
-	Field VisualUpdated:Void()
 	Field TextChanged:Void()
 	
 	Method New()
@@ -190,18 +189,8 @@ Class CodeTextView Extends TextView
 	Setter( value:Bool )
 	
 		_showWhiteSpaces=value
-		VisualUpdated()
 	End
 	
-	Property WordWrapped:Bool()
-	
-		Return WordWrap
-	
-	Setter( value:Bool )
-	
-		WordWrap=value
-		VisualUpdated()
-	End
 	
 	Protected
 	

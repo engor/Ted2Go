@@ -94,7 +94,7 @@ Class KeywordsPlugin Extends PluginDependsOnFileType
 	Method Init()
 	
 		Local value:JsonValue
-		If IsNeedLoadFromFile() Then value=JsonUtils.LoadValue( GetWordsFilePath(),GetMainFileType() )
+		If IsNeedLoadFromFile() Then value=Json_LoadValue( GetWordsFilePath(),GetMainFileType() )
 		Local s := (value<>Null ? value.ToString() Else GetInternal())
 		Local words:=s.Split( ";" )
 		_keywords=New Keywords( words )

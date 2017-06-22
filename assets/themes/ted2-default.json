@@ -3,9 +3,11 @@
 	
 	"colors":{
 
+		"transparent": "#0000",
 		"statusbar": "content",
 		"statusbar-active": "#CA5100",
-		"codemap-selection": "#80000000"
+		"codemap-background": "transparent",
+		"codemap-selection": "#48000000"
 	},
 
 	"styles":{
@@ -126,12 +128,8 @@
 			"margin":[ 4,0,0,0 ],
 			"padding":[ 0 ],
 			"border":[ 1,0,0,0 ],
-			"borderColor": "clear"
-		},
-		"CodeMapContent":{
-			"extends":"TextViewContent",
-			"margin":[ 0 ],
-			"padding":[ 4 ]
+			"borderColor": "clear",
+			"backgroundColor":"codemap-background"
 		}
 	}
 }
