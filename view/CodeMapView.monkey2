@@ -15,9 +15,6 @@ Class CodeMapView Extends CodeTextView
 		Style=GetStyle( "CodeMapView" )
 		ContentView.Style=GetStyle( "CodeMapContent" )
 		
-		Layout="float"
-		Gravity=New Vec2f( 1,0 )
-	
 		_codeView=sourceView
 	
 		ReadOnly=True
@@ -40,11 +37,6 @@ Class CodeMapView Extends CodeTextView
 		End
 	End
 	
-	Function GetWidth:Int()
-		
-		Return WIDTH*App.Theme.Scale.x
-	End
-	
 	
 	Protected
 	
@@ -54,7 +46,6 @@ Class CodeMapView Extends CodeTextView
 		Local ww:=WIDTH*App.Theme.Scale.x
 		size.X=ww
 		Return size
-		'Return Super.OnMeasure()
 	End
 	
 	Property OwnerScrollY:Float()
@@ -155,7 +146,32 @@ Class CodeMapView Extends CodeTextView
 		canvas.Translate( 0,-yy*ScrollKoef )
 		canvas.Scale( scale,scale )
 		
-		Super.OnRenderContent( canvas )
+		Local times:=Int(OwnerContentHeight/VisibleHeight)+1
+		Local sc:=_codeView.Scroll
+		Local sc2:=New Vec2i
+		Local dy:=VisibleHeight+_codeView.LineHeight
+		Local whiteSpaces:=_codeView.ShowWhiteSpaces
+		_codeView.ShowWhiteSpaces=False
+		Local top:=-yy*ScrollKoef
+		For Local k:=0 Until times
+			
+			' check visibility area
+			If top+VisibleHeight*scale < 0
+				top+=dy*scale
+				sc2.Y=sc2.y+dy
+				Continue
+			Endif
+			If top>VisibleHeight
+				Exit
+			Endif
+			top+=dy*scale
+			
+			_codeView.Scroll=sc2
+			_codeView.OnRenderContent( canvas )
+			sc2.Y=sc2.y+dy
+		Next
+		_codeView.Scroll=sc
+		_codeView.ShowWhiteSpaces=whiteSpaces
 		
 		canvas.PopMatrix()
 		
@@ -170,9 +186,9 @@ Class CodeMapView Extends CodeTextView
 		Return _maxOwnerScroll > 0 ? _maxSelfScroll/_maxOwnerScroll Else 1.0
 	End
 	
-	Property ContentHeight:Float()
-		
-		Return Max( Float(1.0),Rect.Height*scale ) '1.0 to avoid divByZero
+	Property OwnerContentHeight:Float()
+	
+		Return _codeView.ContentView.Frame.Height
 	End
 	
 	Property BubbleHeight:Float()
@@ -202,9 +218,6 @@ Class CodeMapView Extends CodeTextView
 		Keywords=_codeView.Keywords
 		Highlighter=_codeView.Highlighter
 		Document.TextHighlighter=Highlighter.Painter
-		'Document=_codeView.Document
-		'ShowWhiteSpaces=_codeView.ShowWhiteSpaces
-		'WordWrap=_codeView.WordWrap
 	End
 	
 End
