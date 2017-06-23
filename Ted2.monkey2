@@ -236,3 +236,25 @@ Function IsFileExists:Bool( path:String )
 	
 	Return GetFileType( path ) = FileType.File
 End
+
+Function Exec( exePath:String,args:String="" )
+
+#If __HOSTOS__="windows"
+
+	libc.system( exePath+" "+args )
+	
+#Else If __HOSTOS__="macos"
+
+	libc.system( "open ~q"+exePath+"~q --args "+args )
+
+#Else If __HOSTOS__="linux"
+
+	libc.system( exePath+" "+args+" >/dev/null 2>/dev/null &" )
+
+#Else If __HOSTOS__="raspbian"
+
+	libc.system( exePath+" "+args+" >/dev/null 2>/dev/null &" )
+
+#Endif
+
+End

@@ -55,22 +55,11 @@ Class MainWindowInstance Extends Window
 		
 		'IRC tab
 		_ircView=New IRCView
-		Local nick:=Prefs.IrcNickname
-		Local desc:="freenode"
-		Local server:="irc.freenode.net"
-		Local port:=6667
-		Local serv:IRCServer=_ircView.introScreen.AddServer(nick,desc,server,port)
-		If serv Then 
-			serv.AutoJoinRooms+="#monkey2"
-			'I do not recommend using more rooms when the M2 community is this small
-			'serv.AutoJoinRooms+="#monkey2Ui#monkey23D"
-			_ircView.introScreen.Text="Get live help from other Monkey 2 users"
-			_ircView.introScreen.UpdateInterface()
-		Endif
-		
-		_ircView.introScreen.OnNickChange+=Lambda(nick:String)
+		_ircView.introScreen.Text="Get live help from other Monkey 2 users"
+		_ircView.introScreen.OnNickChange+=Lambda( nick:String )
 			Prefs.IrcNickname=nick
 		End
+		SetupChatTab()
 		
 		'Build tab
 		
@@ -374,7 +363,7 @@ Class MainWindowInstance Extends Window
 		_consolesTabView.AddTab( "Output",_outputConsoleView,False )
 		_consolesTabView.AddTab( "Docs",_helpConsole,False )
 		_consolesTabView.AddTab( "Find",_findConsole,False )
-		_consolesTabView.AddTab( "IRC",_ircView,False )
+		_consolesTabView.AddTab( "Chat",_ircView,False )
 		
 		_statusBar=New StatusBarView
 		
@@ -404,6 +393,9 @@ Class MainWindowInstance Extends Window
 		
 		ArrangeElements()
 		PrefsChanged()
+		
+		SetupChatTab()
+		
 	End
 	
 	Method ArrangeElements()
@@ -431,6 +423,7 @@ Class MainWindowInstance Extends Window
 		_contentView.AddView( _consolesTabView,"bottom",size,True )
 		
 		_contentView.ContentView=_docsTabView
+		
 	End
 	
 	
@@ -964,6 +957,22 @@ Class MainWindowInstance Extends Window
 	Method OnAppClose()
 		
 		_fileActions.quit.Trigger()
+	End
+	
+	Method SetupChatTab()
+		
+		If Not _ircView Return
+		
+		Local intro:=_ircView.introScreen
+		
+		If intro.IsConnected Return
+		
+		Local nick:=Prefs.IrcNickname
+		Local server:=Prefs.IrcServer
+		Local port:=Prefs.IrcPort
+		Local rooms:=Prefs.IrcRooms
+		intro.AddOnlyServer( nick,server,server,port,rooms )
+		
 	End
 	
 	Method LoadState( jobj:JsonObject )

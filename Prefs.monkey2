@@ -19,6 +19,9 @@ Class Prefs
 	Global MainProjectIcons:=True
 	'
 	Global IrcNickname:String
+	Global IrcServer:="irc.freenode.net"
+	Global IrcPort:=6667
+	Global IrcRooms:="#monkey2" '#monkey2Ui#monkey23D
 	'
 	Global EditorToolBarVisible:=False
 	Global EditorGutterVisible:=True
@@ -38,8 +41,10 @@ Class Prefs
 		If json.Contains( "irc" )
 			
 			Local j2:=json["irc"].ToObject()
-			IrcNickname=Json_GetString( j2,"nickname","" )
-      
+			IrcNickname=Json_GetString( j2,"nickname",IrcNickname )
+			IrcServer=Json_GetString( j2,"server",IrcServer )
+			IrcPort=Json_GetInt( j2,"port",IrcPort )
+			IrcRooms=Json_GetString( j2,"rooms",IrcRooms )
 		Endif
 		
 		If json.Contains( "main" )
@@ -97,7 +102,10 @@ Class Prefs
 		
 		j=New JsonObject
 		json["irc"]=j
-    j["nickname"]=New JsonString( IrcNickname )
+		j["nickname"]=New JsonString( IrcNickname )
+		j["server"]=New JsonString( IrcServer )
+		j["port"]=New JsonNumber( IrcPort )
+		j["rooms"]=New JsonString( IrcRooms )
 		
 		j=New JsonObject
 		json["completion"]=j

@@ -133,6 +133,20 @@ Class PrefsDialog Extends DialogExt
 		monkeyPathDock.AddView( _monkeyRootPath,"left" )
 		monkeyPathDock.AddView( btnChooseMonkeyPath,"left" )
 		
+		Local chatTable:=New TableView( 2,4 )
+		_chatNick=New TextField( Prefs.IrcNickname )
+		_chatServer=New TextField( Prefs.IrcServer )
+		_chatPort=New TextField( ""+Prefs.IrcPort )
+		_chatRooms=New TextField( Prefs.IrcRooms )
+		chatTable[0,0]=New Label( "Nickname" )
+		chatTable[1,0]=_chatNick
+		chatTable[0,1]=New Label( "Server" )
+		chatTable[1,1]=_chatServer
+		chatTable[0,2]=New Label( "Port" )
+		chatTable[1,2]=_chatPort
+		chatTable[0,3]=New Label( "Rooms" )
+		chatTable[1,3]=_chatRooms
+		
 		'----------------------------
 		' put into the form
 		'----------------------------
@@ -165,12 +179,16 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( _acUseDot,"top" )
 		docker.AddView( _acKeywordsOnly,"top" )
 		docker.AddView( New Label( " " ),"top" )
+		
+		docker.AddView( New Label( "------ Chat:" ),"top" )
+		docker.AddView( chatTable,"top" )
+		
 		'docker.AddView( New Label( "(Restart IDE to see all changes)" ),"top" )
 		'docker.AddView( New Label( " " ),"top" )
 		
 		ContentView=docker
 		
-		Local apply:=AddAction( "Apply" )
+		Local apply:=AddAction( "Apply changes" )
 		apply.Triggered=OnApply
 		
 		_acShowAfter.Activated+=_acShowAfter.MakeKeyView
@@ -205,6 +223,11 @@ Class PrefsDialog Extends DialogExt
 	
 	Field _monkeyRootPath:TextField
 	
+	Field _chatNick:TextField
+	Field _chatServer:TextField
+	Field _chatPort:TextField
+	Field _chatRooms:TextField
+	
 	Method OnApply()
 	
 		Prefs.AcEnabled=_acEnabled.Checked
@@ -225,7 +248,6 @@ Class PrefsDialog Extends DialogExt
 		Prefs.EditorFontPath=path
 		Local size:=_editorFontSize.Text.Trim()
 		If Not size Then size="16" 'default
-		Print "size '"+size+"'"
 		Prefs.EditorFontSize=Int(size)
 		Prefs.EditorShowEvery10LineNumber=_editorShowEvery10LineNumber.Checked
 		Prefs.EditorCodeMapVisible=_editorCodeMapVisible.Checked
@@ -234,6 +256,11 @@ Class PrefsDialog Extends DialogExt
 		Prefs.MainProjectTabsRight=_mainProjectTabsRight.Checked
 		Prefs.MainProjectIcons=_mainProjectIcons.Checked
 		
+		Prefs.IrcNickname=_chatNick.Text
+		Prefs.IrcServer=_chatServer.Text
+		Prefs.IrcPort=Int(_chatPort.Text)
+		Prefs.IrcRooms=_chatRooms.Text
+		
 		App.ThemeChanged()
 		
 		Hide()
@@ -241,5 +268,5 @@ Class PrefsDialog Extends DialogExt
 		
 		Prefs.SaveLocalState()
 	End
-	
+
 End

@@ -806,6 +806,14 @@ Class IRCView Extends DockingView
 			SendInput(inputField.Text)
 			inputField.Text=Null
 		End
+		App.KeyEventFilter+=Lambda( event:KeyEvent )
+			If App.KeyView=inputField And event.Key=Key.KeypadEnter
+				SendInput(inputField.Text)
+				inputField.Text=Null
+			Endif
+		End
+		
+		
 		bottomDocker.ContentView=inputField
 		
 		'Setup IRC
@@ -1104,14 +1112,9 @@ Class IRCView Extends DockingView
 			'Hide or show topic field or
 			If topicField.Text<>selectedMessageContainer.topic Then
 				topicField.Text=selectedMessageContainer.topic
-				
-				If topicField.Text Then
-					topicField.Visible=True
-				Else
-					topicField.Visible=False
-				Endif
 			Endif
-			If topicField.Visible And Not topicField.Text Then topicField.Visible=False
+			' always hide topic to get more useful space
+			topicField.Visible=False '(topicField.Text.Length>0)
 			
 			'Hide or show user list
 			If selectedMessageContainer.users.Count()>0 Then
@@ -1147,9 +1150,35 @@ Class IRCIntroView Extends DockingView
 		text=str
 	End
 	
+	Property IsConnected:Bool()
+		Return _connected
+	End
+	
 	Method New(owner:IRCView)
 		Super.New()
 		Self.parent=owner
+	End
+	
+	Method AddOnlyServer:IRCServer( nickname:String,name:String,server:String,port:Int,rooms:String )
+		
+		servers.Clear()
+		
+		Local nS:IRCServer
+		
+		For Local s:=Eachin servers
+			If name.ToLower()=s.name.ToLower() Then
+				Notify("Name already exists","A server with this name already exists")
+				Return Null
+			Endif
+		Next
+		
+		nS=New IRCServer(nickname,name,server,port,False)
+		nS.AutoJoinRooms+=rooms
+		
+		servers.AddLast(nS)
+		UpdateInterface()
+		parent.ContentView=Self
+		Return nS
 	End
 	
 	Method AddServer:IRCServer(nickname:String,name:String,server:String,port:Int)
@@ -1171,6 +1200,7 @@ Class IRCIntroView Extends DockingView
 	End
 	
 	Method UpdateInterface()
+		
 		Self.RemoveAllViews()
 		
 		introLabel=New Label(text)
@@ -1214,8 +1244,12 @@ Class IRCIntroView Extends DockingView
 	End
 	
 	Method Connect()
+		
 		'Is nickname set?
-		If Not nickField.Text Then Return
+		If Not nickField.Text Notify( "","Please, enter your nickname." ) ; Return
+		
+		'Local server:=AddServer( _nick,_server,_server,_port )
+		'If server Then server.AutoJoinRooms+=_rooms
 		
 		Local serv:String
 		Local chan:String
@@ -1252,8 +1286,15 @@ Class IRCIntroView Extends DockingView
 		'Set the parent IRC view to display the chat screen now
 		parent.ContentView=parent.chatScreen
 		
+		_connected=True
 		OnConnect()
 	End
+	
+	
+	Private
+	
+	Field _connected:Bool
+	
 End
 
 #rem
