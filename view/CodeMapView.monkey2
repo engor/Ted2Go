@@ -44,13 +44,13 @@ Class CodeMapView Extends View
 			
 			Case EventType.MouseDown
 				
-				_clickedMouseY=posY0
-				_clickedScrollY=OwnerScrollY
-				
 				Local top:=_clickedScrollY*(scale-ScrollKoef)
 				Local inside := posY0>=top And posY0<=top+BubbleHeight
-				_dragging=inside
 				If Not inside Then ScrollTo( posY )
+				
+				_dragging=True
+				_clickedMouseY=posY0
+				_clickedScrollY=OwnerScrollY
 				
 			Case EventType.MouseMove
 				

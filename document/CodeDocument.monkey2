@@ -111,12 +111,11 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		Local color:=canvas.Color
 		Local xx:=Scroll.x
 		' whole current line
-		canvas.Color=_lineColor
 		Local r:=CursorRect
 		r.Left=xx
 		r.Right=Width
+		canvas.Color=_lineColor
 		canvas.DrawRect( r )
-		
 		
 		If _doc._debugLine<>-1
 			
@@ -1238,6 +1237,8 @@ Class CodeDocument Extends Ted2Document
 	
 	Method BgParsing( pathOnDisk:String )
 		
+		If MainWindow.IsTerminating Return
+		
 		ResetErrors()
 		
 		Local errors:=_parser.ParseFile( Path,pathOnDisk,False )
@@ -1305,7 +1306,7 @@ Class CodeDocument Extends Ted2Document
 				DeleteFile( tmp )
 				
 				_timer.Cancel()
-							
+				
 				_timer=Null
 				_parsing=False
 				

@@ -38,7 +38,7 @@ Function Json_GetString:String( json:Map<String,JsonValue>,key:String,def:String
 	Return json[key] ? json[key].ToString() Else def
 End
 
-Function Json_GetInt:Bool( json:Map<String,JsonValue>,key:String,def:Int )
+Function Json_GetInt:Int( json:Map<String,JsonValue>,key:String,def:Int )
 	
 	Return json[key] ? Int(json[key].ToNumber()) Else def
 End

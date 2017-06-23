@@ -222,7 +222,7 @@ Class CodeTextView Extends TextView
 				Endif
 				
 				' select next char in override mode
-				If Cursor=Anchor And MainWindow.OverrideTextMode
+				If Cursor=Anchor And MainWindow.OverwriteTextMode
 				
 					' don't select new-line-char ~n
 					If Cursor < Text.Length And Text[Cursor]<>10

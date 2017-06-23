@@ -50,7 +50,7 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 					Local alt:=(event.Modifiers & Modifier.Alt)
 					
 					If Not shift And Not ctrl And Not alt
-						MainWindow.OverrideTextMode=Not MainWindow.OverrideTextMode
+						MainWindow.OverwriteTextMode=Not MainWindow.OverwriteTextMode
 					Endif
 			End
 			

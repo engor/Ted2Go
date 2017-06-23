@@ -118,7 +118,7 @@ Class Prefs
 		Local json:=JsonObject.Load( AppDir()+"state.json" )
 		If Not json Return
 		
-		If json.Contains( "rootPath" ) Then MonkeyRootPath=json["rootPath"].ToString()
+		MonkeyRootPath=Json_GetString( json.Data,"rootPath","" )
 		
 	End
 	

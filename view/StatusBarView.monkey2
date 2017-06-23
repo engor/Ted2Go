@@ -20,7 +20,7 @@ Class StatusBarView Extends DockingView
 		' DoubleClick
 		_labelIns.DoubleClicked+=Lambda()
 		
-			MainWindow.OverrideTextMode=Not MainWindow.OverrideTextMode
+			MainWindow.OverwriteTextMode=Not MainWindow.OverwriteTextMode
 		End
 		
 		_labelLineInfo=New Label( "0 : 0")

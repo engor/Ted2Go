@@ -21,6 +21,10 @@ Both methods are using Fiber to waiting process finished.
 #end
 Class ProcessReader
 	
+	#rem monkeydoc Tag to identify reader.
+	#end
+	Field Tag:=""
+	
 	#rem monkeydoc Invoked when a process finishes execution.
 	#end
 	Field Finished:Void( output:String,exitCode:Int )
@@ -35,7 +39,7 @@ Class ProcessReader
 	
 	#rem monkeydoc Obtain a reader instance.
 	#end
-	Function Obtain:ProcessReader()
+	Function Obtain:ProcessReader( tag:String="" )
 	
 		Local r:ProcessReader
 		If _recycled.Empty
@@ -47,6 +51,7 @@ Class ProcessReader
 		r.Finished=Null
 		r.PortionRead=Null
 		r.Error=Null
+		r.Tag=tag
 		_items.Add( r )
 		Return r
 	End
@@ -100,7 +105,10 @@ Class ProcessReader
 	#end
 	Method Stop()
 	
-		If _running Then _process.Terminate()
+		If Not _procOpen Return
+		
+		_process.Terminate()
+		_running=False
 	End
 	
 	#rem monkeydoc Is reading currently in progress.
@@ -190,6 +198,7 @@ Class ProcessReader
 		
 		Finished( _output,code )
 		If code<>0 Then Error( code )
+		
 	End
 	
 End

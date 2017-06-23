@@ -448,7 +448,7 @@ Class MainWindowInstance Extends Window
 		Return _modsDir
 	End
 	
-	Property OverrideTextMode:Bool()
+	Property OverwriteTextMode:Bool()
 	
 		Return _ovdMode
 	Setter( value:Bool )
@@ -493,11 +493,11 @@ Class MainWindowInstance Extends Window
 	Method Terminate()
 	
 		_isTerminating=True
-		
 		SaveState()
-		
-		_fileActions.closeAll.Trigger() 'stops all parser's timers on close docs
-		
+		_enableSaving=False
+		OnForceStop() ' kill build process if started
+		ProcessReader.StopAll()
+
 		App.Terminate()
 	End
 
@@ -941,12 +941,8 @@ Class MainWindowInstance Extends Window
 		_docsTabView.EnsureVisibleCurrentTab()
 	End
 	
-	Method OnCloseApp()
+	Method OnAppClose()
 		
-		SaveState()
-		_enableSaving=False
-		OnForceStop() ' kill build process if started
-		ProcessReader.StopAll()
 		_fileActions.quit.Trigger()
 	End
 	
@@ -1033,7 +1029,7 @@ Class MainWindowInstance Extends Window
 
 		Select event.Type
 		Case EventType.WindowClose
-			OnCloseApp()
+			OnAppClose()
 		Default
 			Super.OnWindowEvent( event )
 		End

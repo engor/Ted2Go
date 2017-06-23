@@ -58,8 +58,15 @@ Class PrefsDialog Extends DialogExt
 		
 		Local path:=Prefs.EditorFontPath
 		If Not path Then path=_defaultFont
-		_editorFontPath=New TextField( path )
+		_editorFontPath=New TextField( "" )
+		_editorFontPath.TextChanged+=Lambda()
+			
+			Local enabled:=(_editorFontPath.Text<>_defaultFont)
+			_editorFontSize.Enabled=enabled
+		End
 		_editorFontSize=New TextField( ""+Prefs.EditorFontSize )
+		_editorFontPath.Text=path
+		_editorFontPath.ReadOnly=True
 		
 		Local chooseFont:=New Action( "..." )
 		chooseFont.Triggered+=Lambda()
@@ -76,11 +83,19 @@ Class PrefsDialog Extends DialogExt
 		End
 		Local btnChooseFont:=New PushButton( chooseFont )
 		
+		Local resetFont:=New Action( "reset" )
+		resetFont.Triggered+=Lambda()
+		
+			_editorFontPath.Text=_defaultFont
+		End
+		Local btnResetFont:=New PushButton( resetFont )
+		
 		Local font:=New DockingView
 		font.AddView( New Label( "Font" ),"left" )
 		font.AddView( _editorFontPath,"left" )
-		font.AddView( btnChooseFont,"left" )
 		font.AddView( _editorFontSize,"left","45" )
+		font.AddView( btnChooseFont,"left" )
+		font.AddView( btnResetFont,"left" )
 		
 		Local after:=New DockingView
 		after.AddView( New Label( "Show after" ),"left" )
@@ -210,6 +225,7 @@ Class PrefsDialog Extends DialogExt
 		Prefs.EditorFontPath=path
 		Local size:=_editorFontSize.Text.Trim()
 		If Not size Then size="16" 'default
+		Print "size '"+size+"'"
 		Prefs.EditorFontSize=Int(size)
 		Prefs.EditorShowEvery10LineNumber=_editorShowEvery10LineNumber.Checked
 		Prefs.EditorCodeMapVisible=_editorCodeMapVisible.Checked

@@ -4,12 +4,20 @@
 	"colors":{
 
 		"transparent": "#0000",
+		"textview-cursor-line":"#2000",
+		"textview-whitespaces":"#2aaa",
 		"statusbar": "content",
 		"statusbar-active": "#CA5100",
+		"menu-shortcut":"text-background",
 		"codemap-background": "transparent",
 		"codemap-selection": "#48000000"
 	},
 
+	"fonts":{
+	
+		"editor":"DejaVuSansMono.ttf,14"
+	},
+	
 	"styles":{
 	
 		"GutterView":{
