@@ -78,25 +78,32 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		ShowWhiteSpaces=Prefs.EditorShowWhiteSpaces
 		
-		RemoveView( _gutter )
-		If Prefs.EditorGutterVisible
-			If Not _gutter Then _gutter=New CodeGutterView( _doc )
-			AddView( _gutter,"left" )
-		Endif
+		Local visible:Bool
 		
-		'add codemap
-		RemoveView( _codeMap )
-		'If Prefs.EditorCodeMapVisible
-			If Not _codeMap Then _codeMap=New CodeMapView( _doc )
-			AddView( _codeMap,"right" )
-			_codeMap.Layout="float"
-			_codeMap.Gravity=New Vec2f(1,0)
-		'Endif
+		'gutter view
+		visible=Prefs.EditorGutterVisible
+		If visible
+			If Not _gutter
+				_gutter=New CodeGutterView( _doc )
+				AddView( _gutter,"left" )
+			Endif
+		Endif
+		If _gutter Then _gutter.Visible=visible
+		
+		'codemap view
+		visible=Prefs.EditorCodeMapVisible
+		If visible
+			If Not _codeMap
+				_codeMap=New CodeMapView( Self )
+				AddView( _codeMap,"right" )
+			Endif
+		Endif
+		If _codeMap Then _codeMap.Visible=visible
 		
 		_doc.ArrangeElements()
 	End
 	
-	
+
 	Protected
 	
 	Method OnRenderContent( canvas:Canvas ) Override
@@ -105,7 +112,10 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		Local xx:=Scroll.x
 		' whole current line
 		canvas.Color=_lineColor
-		canvas.DrawRect( xx,Line*LineHeight-1,Width,LineHeight+3 )
+		Local r:=CursorRect
+		r.Left=xx
+		r.Right=Width
+		canvas.DrawRect( r )
 		
 		
 		If _doc._debugLine<>-1
@@ -658,11 +668,6 @@ Class CodeDocument Extends Ted2Document
 	
 		_doc=New TextDocument
 		
-		_doc.TextChanged+=Lambda()
-			Dirty=True
-			OnTextChanged()
-		End
-		
 		_doc.LinesModified+=Lambda( first:Int,removed:Int,inserted:Int )
 		
 			Local put:=0
@@ -690,11 +695,13 @@ Class CodeDocument Extends Ted2Document
 		
 		' Editor
 		_codeView=New CodeDocumentView( Self )
-		_codeView.LineChanged += Lambda( prev:Int,cur:Int )
-			If AutoComplete.IsOpened Then AutoComplete.Hide()
-		End
 		_codeView.LineChanged += OnLineChanged
 		
+		_doc.TextChanged+=Lambda()
+			Dirty=True
+			OnTextChanged()
+			_codeView.TextChanged()
+		End
 		
 		' bar + editor
 		_content=New DockingView
@@ -1220,6 +1227,8 @@ Class CodeDocument Extends Ted2Document
 			_treeView.SelectByScope( scope )
 			_prevScope = scope
 		Endif
+		
+		If AutoComplete.IsOpened Then AutoComplete.Hide()
 	End
 	
 	Method UpdateCodeTree()

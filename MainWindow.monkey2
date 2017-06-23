@@ -141,7 +141,7 @@ Class MainWindowInstance Extends Window
 			ThemeImages.Get( "docbar/home.png" ),
 			Lambda()
 				_helpView.ClearHistory()
-				_helpView.Navigate( "asset::ted2/about.html" )
+				_helpView.Navigate( AboutPagePath )
 			End,
 			"Home" )
 		bar.AddIconicButton(
@@ -169,7 +169,7 @@ Class MainWindowInstance Extends Window
 		_helpConsole.AddView( bar,"top" )
 		_helpConsole.ContentView=_helpView
 		
-		_helpView.Navigate( "asset::ted2/about.html" )
+		_helpView.Navigate( AboutPagePath )
 		
 		_helpTree=New HelpTreeView( _helpView )
 		
@@ -399,6 +399,13 @@ Class MainWindowInstance Extends Window
 		
 	End
 	
+	Field PrefsChanged:Void()
+	Method OnPrefsChanged()
+		
+		ArrangeElements()
+		PrefsChanged()
+	End
+	
 	Method ArrangeElements()
 		
 		_contentView.RemoveView( _toolBar )
@@ -492,6 +499,15 @@ Class MainWindowInstance Extends Window
 	Setter( value:String )
 		
 		_theme=value
+	End
+	
+	Property AboutPagePath:String()
+		
+		Local path:=Prefs.MonkeyRootPath+"ABOUT.HTML"
+'		If Not IsFileExists( path )
+'			path="asset::ted2/about.html"
+'		Endif
+		Return path
 	End
 	
 	Method Terminate()

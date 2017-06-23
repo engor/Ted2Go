@@ -345,7 +345,7 @@ Class FileActions
 					If tv Then tv.UpdatePrefs()
 				Next
 				
-				MainWindow.ArrangeElements()
+				MainWindow.OnPrefsChanged()
 			End
 			
 		Endif

@@ -23,6 +23,12 @@ Class ProjectBrowserView Extends FileBrowserExt
 			
 			If node = RootNode And node.Expanded Then Refresh( True ) ' TRUE - need to refresh icons
 		End
+		
+		App.Activated+=Lambda()
+			New Fiber( Lambda()
+				Refresh()
+			End )
+		End
 	End
 	
 	Method Refresh( update:Bool=True )

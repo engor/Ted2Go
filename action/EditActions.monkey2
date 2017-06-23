@@ -125,7 +125,14 @@ Class EditActions
 	
 		Local tv:=Cast<TextView>( App.KeyView )
 		
-		If tv tv.WordWrap=Not tv.WordWrap
+		If tv
+			Local cur:=tv.Cursor
+			Local anc:=tv.Anchor
+			Local sc:=tv.Scroll
+			tv.WordWrap=Not tv.WordWrap
+			tv.SelectText( cur,anc )
+			tv.Scroll=sc
+		Endif
 	End
 	
 End

@@ -23,7 +23,7 @@ Class HelpActions
 		onlineHelp=New Action( "Online help" )
 		onlineHelp.Triggered=lambda()
 		
-			OpenUrl( "http://monkey2.monkey-x.com/monkey2-docs/" )
+			OpenUrl( MONKEY2_DOMAIN+"/monkey2-docs/" )
 		End
 		
 		viewManuals=New Action( "Browse manuals" )
@@ -35,16 +35,16 @@ Class HelpActions
 		uploadModules=New Action( "Upload module" )
 		uploadModules.Triggered=Lambda()
 		
-			Alert( "Now taking you to the module manager page at monkey2.monkey-x.com~n~nNote: You must have an account at monkey2.monkey-x.com and be logged in to upload modules" )
+			Alert( "Now taking you to the module manager page at "+MONKEY2_DOMAIN+".~n~nNote: You must have an account at "+MONKEY2_DOMAIN+" and be logged in to upload modules." )
 		
-			OpenUrl( RealPath( "http://monkey2.monkey-x.com/module-manager/" ) )
+			OpenUrl( RealPath( MONKEY2_DOMAIN+"/module-manager/" ) )
 		End
 
 		about=New Action( "About monkey2" )
 		about.Triggered=Lambda()
 		
 			Local htmlView:=New HtmlView
-			htmlView.Go( "asset::ted2/about.html" )
+			htmlView.Go( MainWindow.AboutPagePath )
 	
 			Local dialog:=New Dialog( "About monkey2" )
 			dialog.ContentView=htmlView
@@ -81,7 +81,7 @@ Class HelpActions
 		mx2homepage=New Action( "Monkey2 homepage" )
 		mx2homepage.Triggered=lambda()
 		
-			OpenUrl( "http://monkey2.monkey-x.com/" )
+			OpenUrl( MONKEY2_DOMAIN )
 		End
 	End
 

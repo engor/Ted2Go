@@ -2,135 +2,213 @@
 Namespace ted2go
 
 
-Class CodeMapView Extends CodeTextView
-	Field _owner:CodeDocument
-	Field _scale:Float=0.15
-	Field _size:Vec2i
-	Field _dragging:Bool
-	Field _dragOffset:Float
-	Field _smoothScroll:Int=-1
-	Field _smoothScrollSpeed:Float=0.15
-	Field _maxOwnerScroll:Int
-	Field _maxSelfScroll:Int
-	Field _areaSmoothPos:Float
-	Field _areaSmoothSpeed:Float=0.2
+Class CodeMapView Extends View
 	
-	Field _lastTime:Double
-	Field _delta:Double
+	Const WIDTH:=160
+	Const PAD:=3.0
+	Field scale:Float=0.33
 	
-	Method New( owner:CodeDocument )
+	Method New( sourceView:CodeTextView )
+	
 		Super.New()
+	
+		Style=GetStyle( "CodeMapView" )
 		
-		_owner=owner
+		_codeView=sourceView
+	
+		_selColor=App.Theme.GetColor( "codemap-selection" )
+		_padding=PAD*App.Theme.Scale.x
+		App.ThemeChanged+=Lambda()
+			_selColor=App.Theme.GetColor( "codemap-selection" )
+			_padding=PAD*App.Theme.Scale.x
+		End
 		
-		ReadOnly=True
-		ScrollBarsVisible=False
 	End
+	
+	
+	Protected
 	
 	Method OnMeasure:Vec2i() Override
-		_size=New Vec2i(_owner.CodeView.Width*_scale, _owner.CodeView.Height/_scale )
-		_maxOwnerScroll=_owner.CodeView.ContentView.Frame.Height-_owner.CodeView.Height
-		_maxSelfScroll=ContentView.Frame.Height-_size.Y
-		Return _size
+	
+		Local ww:=WIDTH*App.Theme.Scale.x
+		Local size:=New Vec2i( ww,VisibleHeight )
+		Return size
 	End
-
-	Method OnContentMouseEvent( event:MouseEvent ) Override
-		Local visRect:=_owner.CodeView.VisibleRect
+	
+	Method OnMouseEvent( event:MouseEvent ) Override
 		
-		Local sHeight:Float=Min(_owner.CodeView.ContentView.Height, Self.Height)
-		sHeight-=_owner.CodeView.Height
-		sHeight*=_scale
-		
-		Local posY:Float=Float(event.TransformToView(Self).Location.Y+RenderBounds.Top)/sHeight
+		Local posY0:Float=event.TransformToView(Self).Location.Y
+		Local posY:=Max( Float(0.0),posY0-BubbleHeight*.5 )
 		
 		Select event.Type
+			
 			Case EventType.MouseDown
-				'Did we click inside the visible area?
-				If event.Location.Y>=visRect.Top*_scale And event.Location.Y<=visRect.Bottom*_scale
-					'Begin dragging area
-					_dragging=True
-					_smoothScroll=-1
-					_dragOffset=posY
-				Else
-					'Scroll to clicked area
-					_dragging=False
-					_smoothScroll=Max((event.Location.Y/_scale)-visRect.Height*0.5,0.0)
+				
+				_clickedMouseY=posY0
+				_clickedScrollY=OwnerScrollY
+				
+				Local top:=_clickedScrollY*(scale-ScrollKoef)
+				Local inside := posY0>=top And posY0<=top+BubbleHeight
+				_dragging=inside
+				If Not inside Then ScrollTo( posY )
+				
+			Case EventType.MouseMove
+				
+				If _dragging
+					Local dy:=(posY0-_clickedMouseY)
+					Local hh:=Min( VisibleHeight,ContentHeight )
+					Local percent:=dy/(hh-BubbleHeight)
+					Local dy2:=_maxOwnerScroll*percent
+					Local yy:=_clickedScrollY+dy2
+					OwnerScrollY=yy
 				Endif
 				
 			Case EventType.MouseUp
+				
 				_dragging=False
-				
+
 			Case EventType.MouseWheel
-				_owner.TextView.OnContentMouseEvent( event )
 				
-			Case EventType.MouseMove
-				If _dragging And posY<>_dragOffset
-					_owner.CodeView.Scroll=New Vec2i(0, _owner.CodeView.Scroll.Y+_maxOwnerScroll*(posY-_dragOffset))
-					_dragOffset=posY
-				Endif
+				_codeView.Scroll=_codeView.Scroll+New Vec2i( 0, -RenderStyle.Font.Height*event.Wheel.y*12 )
+				
 		End
 		
 		event.Eat()
 	End
 	
-	Method OnMouseEvent( event:MouseEvent ) Override
-		event.Eat()
+	Method OnRender( canvas:Canvas ) Override
+		
+		Super.OnRender( canvas )
+		
+		OnRenderMap( canvas )
+		
+		' selection overlay
+		Local ww:=Rect.Width
+		Local hh:Float=BubbleHeight
+		
+		Local yy:Float=OwnerScrollY*(scale-ScrollKoef)
+		
+		canvas.Color=_selColor
+		canvas.DrawRect( 0,yy,ww,hh )
+		
 	End
 	
-	Method OnRenderContent( canvas:Canvas ) Override
-		'Basic delta timing
-		Local now:Double=Now()
-		_delta=(now-_lastTime)*100.0
-		_lastTime=now
-		
-		'Do smooth scrolling
-		If _smoothScroll>=0 Then
-			'Always move one pixel
-			_owner.CodeView.Scroll=New Vec2i(0,_owner.CodeView.Scroll.Y+Sgn(_smoothScroll-_owner.CodeView.Scroll.Y))
-			'Smooth movement
-			_owner.CodeView.Scroll=New Vec2i(0,_owner.CodeView.Scroll.Y+(_smoothScroll-_owner.CodeView.Scroll.Y)*(_smoothScrollSpeed*_delta))
-			
-			'At target
-			If _owner.CodeView.Scroll.Y=_smoothScroll Then _smoothScroll=-1
-		Endif
-		
-		'Update our size
-		OnMeasure()
-		
-		'Update stuff from owner
-		Text=_owner.TextView.Text
-		Formatter=_owner.CodeView.Formatter
-		Keywords=_owner.CodeView.Keywords
-		Highlighter=_owner.CodeView.Highlighter
-		Document.TextHighlighter=_owner.CodeView.Highlighter.Painter
-		ShowWhiteSpaces=_owner.CodeView.ShowWhiteSpaces
-		WordWrap=_owner.CodeView.WordWrap
-		
-		Scroll=New Vec2i(0,(Float(_owner.CodeView.Scroll.Y)/Float(_maxOwnerScroll))*_maxSelfScroll)
-		ContentView.Offset=New Vec2i(0,-ContentView.Style.Padding.Height+(-Scroll.y*_scale))
-		
-		Local areaSmoothPosDist:Float=_owner.TextView.VisibleRect.Top-_areaSmoothPos
-		If Not _dragging Then
-			_areaSmoothPos+=areaSmoothPosDist*(_areaSmoothSpeed*_delta)
-		Else
-			_areaSmoothPos+=areaSmoothPosDist*((_areaSmoothSpeed*2.0)*_delta)
-		Endif
-		
-		'Render
+	
+	Private
+	
+	Field _codeView:CodeTextView
+	Field _maxOwnerScroll:Float=1.0
+	Field _maxSelfScroll:Float=1.0
+	Field _selColor:Color
+	Field _clickedMouseY:Float
+	Field _clickedScrollY:Float
+	Field _dragging:=False
+	Field _padding:Float
+	
+	
+	Property OwnerScrollY:Float()
+	
+		Return _codeView.Scroll.y
+	
+	Setter( value:Float )
+	
+		Local sc:=_codeView.Scroll
+		sc.Y=Int(value)
+		_codeView.Scroll=sc
+	End
+	
+	Property ScrollKoef:Float()
+	
+		Local hh:=_codeView.ContentView.Frame.Height
+		_maxSelfScroll=Max( Float(0.0),hh*scale-VisibleHeight )
+		_maxOwnerScroll=Max( 0.0,hh-VisibleHeight )
+	
+		Return _maxOwnerScroll > 0 ? _maxSelfScroll/_maxOwnerScroll Else 1.0
+	End
+	
+	Property OwnerContentHeight:Float()
+	
+		Return _codeView.ContentView.Frame.Height
+	End
+	
+	Property BubbleHeight:Float()
+	
+		Return VisibleHeight*scale
+	End
+	
+	Property VisibleHeight:Float()
+	
+		Return _codeView.VisibleRect.Height
+	End
+	
+	Property ContentHeight:Float()
+	
+		Return OwnerContentHeight*scale
+	End
+	
+	Method ScrollTo( posY:Float )
+	
+		Local scrl:=_codeView.Scroll
+		Local percent:=posY/(VisibleHeight-BubbleHeight)
+		Local yy:=_maxOwnerScroll*percent
+		scrl.Y=yy
+		_codeView.Scroll=scrl
+	
+	End
+	
+	Method OnRenderMap( canvas:Canvas )
+	
+		Local yy:Float=_codeView.Scroll.y
+	
 		canvas.PushMatrix()
-		canvas.Scale(_scale,_scale)
-		
-		canvas.Alpha=0.5
-		canvas.Color=App.Theme.GetColor( "textview-selection" )
-		canvas.DrawRect(0, _areaSmoothPos, Width/_scale, _owner.TextView.VisibleRect.Height)
-		canvas.Alpha=1
-		
-		Super.OnRenderContent( canvas )
-		
+	
+		canvas.Translate( _padding,-yy*ScrollKoef+_padding )
+		canvas.Scale( scale,scale )
+	
+		Local times:=Int(OwnerContentHeight/VisibleHeight)+1
+		Local sc:=_codeView.Scroll
+		Local sc2:=New Vec2i
+		Local dy:=VisibleHeight+_codeView.LineHeight
+		Local whiteSpaces:=_codeView.ShowWhiteSpaces
+		_codeView.ShowWhiteSpaces=False
+		Local top:=-yy*ScrollKoef
+		For Local k:=0 Until times
+	
+			' check visibility area
+			If top+VisibleHeight*scale < 0
+				top+=dy*scale
+				sc2.Y=sc2.y+dy
+				Continue
+			Endif
+			If top>VisibleHeight
+				Exit
+			Endif
+			top+=dy*scale
+	
+			_codeView.Scroll=sc2
+			CodeTextViewBridge.ProcessRender( _codeView,canvas )
+			sc2.Y=sc2.y+dy
+			
+		Next
+		_codeView.Scroll=sc
+		_codeView.ShowWhiteSpaces=whiteSpaces
+	
 		canvas.PopMatrix()
+	
 	End
 	
-	Method OnRenderLine( canvas:Canvas,line:Int ) Override
-		Super.OnRenderLine( canvas,line )
+End
+
+
+Private
+
+' get access to protected methods w/o inheritance
+
+Class CodeTextViewBridge Extends CodeTextView Abstract
+
+	Function ProcessRender( item:CodeTextView,canvas:Canvas )
+		
+		item.OnRenderContent( canvas )
 	End
+	
 End

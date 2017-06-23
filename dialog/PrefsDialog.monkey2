@@ -53,6 +53,9 @@ Class PrefsDialog Extends DialogExt
 		_editorShowEvery10LineNumber=New CheckButton( "Every 10th line number" )
 		_editorShowEvery10LineNumber.Checked=Prefs.EditorShowEvery10LineNumber
 		
+		_editorCodeMapVisible=New CheckButton( "CodeMap visible" )
+		_editorCodeMapVisible.Checked=Prefs.EditorCodeMapVisible
+		
 		Local path:=Prefs.EditorFontPath
 		If Not path Then path=_defaultFont
 		_editorFontPath=New TextField( path )
@@ -134,6 +137,7 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( _editorShowWhiteSpaces,"top" )
 		docker.AddView( font,"top" )
 		docker.AddView( _editorShowEvery10LineNumber,"top" )
+		docker.AddView( _editorCodeMapVisible,"top" )
 		docker.AddView( New Label( " " ),"top" )
 		
 		docker.AddView( New Label( "------ Completion:" ),"top" )
@@ -178,6 +182,7 @@ Class PrefsDialog Extends DialogExt
 	Field _editorFontPath:TextField
 	Field _editorFontSize:TextField
 	Field _editorShowEvery10LineNumber:CheckButton
+	Field _editorCodeMapVisible:CheckButton
 	
 	Field _mainToolBarVisible:CheckButton
 	Field _mainProjectTabsRight:CheckButton
@@ -207,6 +212,7 @@ Class PrefsDialog Extends DialogExt
 		If Not size Then size="16" 'default
 		Prefs.EditorFontSize=Int(size)
 		Prefs.EditorShowEvery10LineNumber=_editorShowEvery10LineNumber.Checked
+		Prefs.EditorCodeMapVisible=_editorCodeMapVisible.Checked
 		
 		Prefs.MainToolBarVisible=_mainToolBarVisible.Checked
 		Prefs.MainProjectTabsRight=_mainProjectTabsRight.Checked
