@@ -18,6 +18,8 @@ Class Prefs
 	Global MainProjectTabsRight:=True
 	Global MainProjectIcons:=True
 	'
+	Global IrcNickname:String
+	'
 	Global EditorToolBarVisible:=False
 	Global EditorGutterVisible:=True
 	Global EditorShowWhiteSpaces:=False
@@ -33,12 +35,20 @@ Class Prefs
 	
 	Function LoadState( json:JsonObject )
 		
+		If json.Contains( "irc" )
+			
+			Local j2:=json["irc"].ToObject()
+			IrcNickname=Json_GetString( j2,"nickname","" )
+      
+		Endif
+		
 		If json.Contains( "main" )
 			
 			Local j2:=json["main"].ToObject()
 			MainToolBarVisible=Json_GetBool( j2,"toolBarVisible",MainToolBarVisible )
 			MainProjectTabsRight=Json_GetBool( j2,"tabsRight",MainProjectTabsRight )
 			MainProjectIcons=Json_GetBool( j2,"projectIcons",MainProjectIcons )
+      
 		Endif
 		
 		If json.Contains( "completion" )
@@ -84,6 +94,10 @@ Class Prefs
 		j["toolBarVisible"]=New JsonBool( MainToolBarVisible )
 		j["tabsRight"]=New JsonBool( MainProjectTabsRight )
 		j["projectIcons"]=New JsonBool( MainProjectIcons )
+		
+		j=New JsonObject
+		json["irc"]=j
+    j["nickname"]=New JsonString( IrcNickname )
 		
 		j=New JsonObject
 		json["completion"]=j
