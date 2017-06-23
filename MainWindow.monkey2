@@ -52,7 +52,26 @@ Class MainWindowInstance Extends Window
 			If IsTmpPath( doc.Path ) DeleteFile( doc.Path )
 			SaveState()
 		End
-
+		
+		'IRC tab
+		_ircView=New IRCView
+		Local nick:=Prefs.IrcNickname
+		Local desc:="freenode"
+		Local server:="irc.freenode.net"
+		Local port:=6667
+		Local serv:IRCServer=_ircView.introScreen.AddServer(nick,desc,server,port)
+		If serv Then 
+			serv.AutoJoinRooms+="#monkey2"
+			'I do not recommend using more rooms when the M2 community is this small
+			'serv.AutoJoinRooms+="#monkey2Ui#monkey23D"
+			_ircView.introScreen.Text="Get live help from other Monkey 2 users"
+			_ircView.introScreen.UpdateInterface()
+		Endif
+		
+		_ircView.introScreen.OnNickChange+=Lambda(nick:String)
+			Prefs.IrcNickname=nick
+		End
+		
 		'Build tab
 		
 		_buildConsole=New ConsoleExt
@@ -174,7 +193,7 @@ Class MainWindowInstance Extends Window
 		_findActions=New FindActions( _docsManager,_projectView,_findConsole )
 		_helpActions=New HelpActions
 		_viewActions=New ViewActions( _docsManager )
-
+		
 		_tabMenu=New Menu
 		_tabMenu.AddAction( _fileActions.close )
 		_tabMenu.AddAction( _fileActions.closeOthers )
@@ -355,6 +374,7 @@ Class MainWindowInstance Extends Window
 		_consolesTabView.AddTab( "Output",_outputConsoleView,False )
 		_consolesTabView.AddTab( "Docs",_helpConsole,False )
 		_consolesTabView.AddTab( "Find",_findConsole,False )
+		_consolesTabView.AddTab( "IRC",_ircView,False )
 		
 		_statusBar=New StatusBarView
 		
@@ -1053,6 +1073,7 @@ Class MainWindowInstance Extends Window
 	Field _helpActions:HelpActions
 	Field _viewActions:ViewActions
 	
+	Field _ircView:IRCView
 	Field _buildConsole:ConsoleExt
 	Field _outputConsole:ConsoleExt
 	Field _outputConsoleView:DockingView
@@ -1064,7 +1085,8 @@ Class MainWindowInstance Extends Window
 	Field _docBrowser:DockingView
 	Field _debugView:DebugView
 	Field _helpTree:HelpTreeView
-
+	
+	'Field _ircTabView:TabView
 	Field _docsTabView:TabViewExt
 	Field _consolesTabView:TabView
 	Field _browsersTabView:TabView
