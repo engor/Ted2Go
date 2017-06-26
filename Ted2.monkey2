@@ -185,7 +185,7 @@ Function Main()
 	Next
 	
 	App.Run()
-		
+	
 End
 
 Function SetupMonkeyRootPath:String( rootPath:String,searchMode:Bool )
@@ -195,23 +195,22 @@ Function SetupMonkeyRootPath:String( rootPath:String,searchMode:Bool )
 	ChangeDir( rootPath )
 	
 	If searchMode
-		While GetFileType( "bin" )<>FileType.Directory Or GetFileType( "modules" )<>FileType.Directory
+		' search for desired folder
+		Local found:=FindBinFolder( rootPath )
+		' search for AddDir() folder
+		If Not found And rootPath<>AppDir() Then found=FindBinFolder( AppDir() )
+		' search for choosen-by-requester folder
+		While Not found
 	
-			If IsRootDir( CurrentDir() )
-				
-				Local ok:=Confirm( "Initializing","Error initializing - can't find working dir!~nDo you want to specify Monkey2 root folder now?" )
-				If Not ok
-					Return ""
-				End
-				Local s:=requesters.RequestDir( "Choose Monkey2 folder",AppDir() )
-				ChangeDir( s )
-				Continue
-			Endif
-			
-			ChangeDir( ExtractDir( CurrentDir() ) )
+			Local ok:=Confirm( "Initializing","Error initializing - can't find working dir!~nDo you want to specify Monkey2 root folder now?" )
+			If Not ok
+				Return ""
+			End
+			Local s:=requesters.RequestDir( "Choose Monkey2 folder",AppDir() )
+			found=FindBinFolder( s )
 		Wend
 		
-		rootPath=CurrentDir()
+		rootPath=found
 	Else
 		
 		Local ok:= (GetFileType( "bin" )=FileType.Directory And GetFileType( "modules" )=FileType.Directory)
@@ -257,4 +256,29 @@ Function Exec( exePath:String,args:String="" )
 
 #Endif
 
+End
+
+
+Private
+
+Function FindBinFolder:String( startingFolder:String )
+	
+	Local cur:=CurrentDir()
+	Local ok:=True
+	ChangeDir( startingFolder )
+	
+	While GetFileType( "bin" )<>FileType.Directory Or GetFileType( "modules" )<>FileType.Directory
+	
+		If IsRootDir( CurrentDir() )
+			
+			ok=False
+			Exit
+		Endif
+	
+		ChangeDir( ExtractDir( CurrentDir() ) )
+	Wend
+	Local result:=ok ? CurrentDir() Else ""
+	ChangeDir( cur )
+	
+	Return result
 End
