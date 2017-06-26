@@ -56,6 +56,9 @@ Class PrefsDialog Extends DialogExt
 		_editorCodeMapVisible=New CheckButton( "CodeMap visible" )
 		_editorCodeMapVisible.Checked=Prefs.EditorCodeMapVisible
 		
+		_editorAutoIndent=New CheckButton( "Auto indentation" )
+		_editorAutoIndent.Checked=Prefs.EditorAutoIndent
+		
 		Local path:=Prefs.EditorFontPath
 		If Not path Then path=_defaultFont
 		_editorFontPath=New TextField( "" )
@@ -167,6 +170,7 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( font,"top" )
 		docker.AddView( _editorShowEvery10LineNumber,"top" )
 		docker.AddView( _editorCodeMapVisible,"top" )
+		docker.AddView( _editorAutoIndent,"top" )
 		docker.AddView( New Label( " " ),"top" )
 		
 		docker.AddView( New Label( "------ Completion:" ),"top" )
@@ -186,6 +190,16 @@ Class PrefsDialog Extends DialogExt
 		'docker.AddView( New Label( "(Restart IDE to see all changes)" ),"top" )
 		'docker.AddView( New Label( " " ),"top" )
 		
+'		docker.Layout="float"
+'		docker.MaxSize=New Vec2i( 400,100000 )
+'		
+'		Local content:=New ScrollableView
+'		content.ScrollBarsVisible=True
+'		content.ContentView=docker
+'		content.MinSize=New Vec2i( 520,640 )
+'		content.MaxSize=New Vec2i( 520,640 )
+'		
+'		ContentView=content
 		ContentView=docker
 		
 		Local apply:=AddAction( "Apply changes" )
@@ -216,6 +230,7 @@ Class PrefsDialog Extends DialogExt
 	Field _editorFontSize:TextField
 	Field _editorShowEvery10LineNumber:CheckButton
 	Field _editorCodeMapVisible:CheckButton
+	Field _editorAutoIndent:CheckButton
 	
 	Field _mainToolBarVisible:CheckButton
 	Field _mainProjectTabsRight:CheckButton
@@ -251,6 +266,7 @@ Class PrefsDialog Extends DialogExt
 		Prefs.EditorFontSize=Int(size)
 		Prefs.EditorShowEvery10LineNumber=_editorShowEvery10LineNumber.Checked
 		Prefs.EditorCodeMapVisible=_editorCodeMapVisible.Checked
+		Prefs.EditorAutoIndent=_editorAutoIndent.Checked
 		
 		Prefs.MainToolBarVisible=_mainToolBarVisible.Checked
 		Prefs.MainProjectTabsRight=_mainProjectTabsRight.Checked

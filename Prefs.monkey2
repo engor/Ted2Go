@@ -30,6 +30,7 @@ Class Prefs
 	Global EditorFontSize:=16
 	Global EditorShowEvery10LineNumber:=True
 	Global EditorCodeMapVisible:=True
+	Global EditorAutoIndent:=True
 	'
 	Global SourceSortByType:=True
 	Global SourceShowInherited:=False
@@ -80,6 +81,7 @@ Class Prefs
 			EditorFontSize=Json_GetInt( j2,"fontSize",EditorFontSize )
 			EditorShowEvery10LineNumber=Json_GetBool( j2,"showEvery10",EditorShowEvery10LineNumber )
 			EditorCodeMapVisible=Json_GetBool( j2,"codeMapVisible",EditorCodeMapVisible )
+			EditorAutoIndent=Json_GetBool( j2,"autoIndent",EditorAutoIndent )
 			
 		Endif
 		
@@ -127,6 +129,7 @@ Class Prefs
 		j["fontSize"]=New JsonNumber( EditorFontSize )
 		j["showEvery10"]=New JsonBool( EditorShowEvery10LineNumber )
 		j["codeMapVisible"]=New JsonBool( EditorCodeMapVisible )
+		j["autoIndent"]=New JsonBool( EditorAutoIndent )
 		
 		j=New JsonObject
 		json["source"]=j

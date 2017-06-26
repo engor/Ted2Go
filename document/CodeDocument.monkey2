@@ -287,7 +287,8 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 					Local s:=(indent ? text.Slice( 0,indent ) Else "")
 			
-					If Not beforeIndent
+					' auto indentation
+					If Prefs.EditorAutoIndent And Not beforeIndent
 						text=text.Trim().ToLower()
 						If text.StartsWith( "if" )
 							If Not Utils.BatchContains( text,_arrIf,True )
