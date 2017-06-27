@@ -558,6 +558,12 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		Endif
 		
+		' text overwrite mode
+		If event.Key=Key.Insert And Not (shift Or ctrl Or alt)
+			
+			MainWindow.OverwriteTextMode=Not MainWindow.OverwriteTextMode
+		Endif
+		
 	End
 	
 	Method ShowJsonDialog()

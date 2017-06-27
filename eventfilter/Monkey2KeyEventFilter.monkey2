@@ -15,7 +15,7 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 		
 		Local ctrl:=(event.Modifiers & Modifier.Control)
 		Local shift:=(event.Modifiers & Modifier.Shift)
-			
+		
 		Select event.Type
 		Case EventType.KeyDown
 			
@@ -45,13 +45,6 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 						
 					End
 				
-				Case Key.Insert
-					
-					Local alt:=(event.Modifiers & Modifier.Alt)
-					
-					If Not shift And Not ctrl And Not alt
-						MainWindow.OverwriteTextMode=Not MainWindow.OverwriteTextMode
-					Endif
 			End
 			
 		End

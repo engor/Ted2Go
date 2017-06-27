@@ -9,198 +9,31 @@ Class PrefsDialog Extends DialogExt
 		
 		Title="Preferences"
 		
-		_acShowAfter=New TextField( ""+Prefs.AcShowAfter )
+		Local tabView:=New TabView
+		Local docker:DockingView
 		
-		_acEnabled=New CheckButton( "Enabled" )
-		_acEnabled.Checked=Prefs.AcEnabled
-		
-		_acKeywordsOnly=New CheckButton( "Keywords only" )
-		_acKeywordsOnly.Checked=Prefs.AcKeywordsOnly
-		
-		_acUseTab=New CheckButton( "Choose by Tab" )
-		_acUseTab.Checked=Prefs.AcUseTab
-		
-		_acUseEnter=New CheckButton( "Choose by Enter" )
-		_acUseEnter.Checked=Prefs.AcUseEnter
-		
-		_acUseSpace=New CheckButton( "Choose by Space" )
-		_acUseSpace.Checked=Prefs.AcUseSpace
-		
-		_acUseDot=New CheckButton( "Choose by Dot (.)" )
-		_acUseDot.Checked=Prefs.AcUseDot
-		
-		_acNewLineByEnter=New CheckButton( "Add new line (by Enter)" )
-		_acNewLineByEnter.Checked=Prefs.AcNewLineByEnter
-		
-		_editorToolBarVisible=New CheckButton( "ToolBar visible" )
-		_editorToolBarVisible.Checked=Prefs.EditorToolBarVisible
-		
-		_editorGutterVisible=New CheckButton( "Gutter visible" )
-		_editorGutterVisible.Checked=Prefs.EditorGutterVisible
-		
-		_mainToolBarVisible=New CheckButton( "ToolBar visible" )
-		_mainToolBarVisible.Checked=Prefs.MainToolBarVisible
-		
-		_mainProjectTabsRight=New CheckButton( "Project tabs on the right side" )
-		_mainProjectTabsRight.Checked=Prefs.MainProjectTabsRight
-		
-		_mainProjectIcons=New CheckButton( "Project file type icons" )
-		_mainProjectIcons.Checked=Prefs.MainProjectIcons
-		
-		_editorShowWhiteSpaces=New CheckButton( "Whitespaces visible" )
-		_editorShowWhiteSpaces.Checked=Prefs.EditorShowWhiteSpaces
-		
-		_editorShowEvery10LineNumber=New CheckButton( "Every 10th line number" )
-		_editorShowEvery10LineNumber.Checked=Prefs.EditorShowEvery10LineNumber
-		
-		_editorCodeMapVisible=New CheckButton( "CodeMap visible" )
-		_editorCodeMapVisible.Checked=Prefs.EditorCodeMapVisible
-		
-		_editorAutoIndent=New CheckButton( "Auto indentation" )
-		_editorAutoIndent.Checked=Prefs.EditorAutoIndent
-		
-		Local path:=Prefs.EditorFontPath
-		If Not path Then path=_defaultFont
-		_editorFontPath=New TextField( "" )
-		_editorFontPath.TextChanged+=Lambda()
-			
-			Local enabled:=(_editorFontPath.Text<>_defaultFont)
-			_editorFontSize.Enabled=enabled
-		End
-		_editorFontSize=New TextField( ""+Prefs.EditorFontSize )
-		_editorFontPath.Text=path
-		_editorFontPath.ReadOnly=True
-		
-		Local chooseFont:=New Action( "..." )
-		chooseFont.Triggered+=Lambda()
-			
-			Local initDir:=RealPath( AssetsDir() )
-			
-			Local path:=MainWindow.RequestFile( "Choose Font",initDir,False,"Font files:ttf;Any files:*" )
-			If Not path Return
-			
-			path=RealPath( path )
-			path=path.Replace( initDir,"" )
-			
-			_editorFontPath.Text=path
-		End
-		Local btnChooseFont:=New PushButton( chooseFont )
-		
-		Local resetFont:=New Action( "reset" )
-		resetFont.Triggered+=Lambda()
-		
-			_editorFontPath.Text=_defaultFont
-		End
-		Local btnResetFont:=New PushButton( resetFont )
-		
-		Local font:=New DockingView
-		font.AddView( New Label( "Font" ),"left" )
-		font.AddView( _editorFontPath,"left" )
-		font.AddView( _editorFontSize,"left","45" )
-		font.AddView( btnChooseFont,"left" )
-		font.AddView( btnResetFont,"left" )
-		
-		Local after:=New DockingView
-		after.AddView( New Label( "Show after" ),"left" )
-		after.AddView( _acShowAfter,"left" )
-		
-		' monkey path
+		' Main
 		'
-		_monkeyRootPath=New TextField( Prefs.MonkeyRootPath )
-		_monkeyRootPath.Enabled=False
-		Local chooseMonkeyPath:=New Action( "..." )
-		chooseMonkeyPath.Triggered+=Lambda()
+		docker=GetMainDock()
+		tabView.AddTab( "Common",docker,True )
 		
-			Local initDir:=Prefs.MonkeyRootPath
+		' Editor
+		'
+		docker=GetEditorDock()
+		tabView.AddTab( "Editor",docker )
 		
-			Local path:=MainWindow.RequestDir( "Choose Monkey2 root folder",initDir )
-			If Not path Return
-			
-			' check path
-			Local real:=SetupMonkeyRootPath( path,False )
-			If real
-				_monkeyRootPath.Text=path
-				Prefs.MonkeyRootPath=path
-				MainWindow.UpdateToolsPaths()
-				Return
-			Else
-				' restore current
-				ChangeDir( initDir )
-			Endif
-			
-		End
-		Local btnChooseMonkeyPath:=New PushButton( chooseMonkeyPath )
+		' Completion
+		'
+		docker=GetCompletionDock()
+		tabView.AddTab( "AutoComplete",docker )
 		
-		Local monkeyPathDock:=New DockingView
-		monkeyPathDock.AddView( New Label( "Monkey2 root folder" ),"left" )
-		monkeyPathDock.AddView( _monkeyRootPath,"left" )
-		monkeyPathDock.AddView( btnChooseMonkeyPath,"left" )
+		' Chat
+		'
+		docker=GetChatDock()
+		tabView.AddTab( "IRC chat",docker )
 		
-		Local chatTable:=New TableView( 2,4 )
-		_chatNick=New TextField( Prefs.IrcNickname )
-		_chatServer=New TextField( Prefs.IrcServer )
-		_chatPort=New TextField( ""+Prefs.IrcPort )
-		_chatRooms=New TextField( Prefs.IrcRooms )
-		chatTable[0,0]=New Label( "Nickname" )
-		chatTable[1,0]=_chatNick
-		chatTable[0,1]=New Label( "Server" )
-		chatTable[1,1]=_chatServer
-		chatTable[0,2]=New Label( "Port" )
-		chatTable[1,2]=_chatPort
-		chatTable[0,3]=New Label( "Rooms" )
-		chatTable[1,3]=_chatRooms
 		
-		'----------------------------
-		' put into the form
-		'----------------------------
-		Local docker:=New DockingView
-		
-		docker.AddView( monkeyPathDock,"top" )
-		
-		docker.AddView( New Label( "------ Main:" ),"top" )
-		docker.AddView( _mainProjectTabsRight,"top" )
-		docker.AddView( _mainProjectIcons,"top" )
-		docker.AddView( _mainToolBarVisible,"top" )
-		docker.AddView( New Label( " " ),"top" )
-		
-		docker.AddView( New Label( "------ Code Editor:" ),"top" )
-		docker.AddView( _editorToolBarVisible,"top" )
-		docker.AddView( _editorGutterVisible,"top" )
-		docker.AddView( _editorShowWhiteSpaces,"top" )
-		docker.AddView( font,"top" )
-		docker.AddView( _editorShowEvery10LineNumber,"top" )
-		docker.AddView( _editorCodeMapVisible,"top" )
-		docker.AddView( _editorAutoIndent,"top" )
-		docker.AddView( New Label( " " ),"top" )
-		
-		docker.AddView( New Label( "------ Completion:" ),"top" )
-		docker.AddView( _acEnabled,"top" )
-		docker.AddView( after,"top" )
-		docker.AddView( _acUseTab,"top" )
-		docker.AddView( _acUseEnter,"top" )
-		docker.AddView( _acNewLineByEnter,"top" )
-		docker.AddView( _acUseSpace,"top" )
-		docker.AddView( _acUseDot,"top" )
-		docker.AddView( _acKeywordsOnly,"top" )
-		docker.AddView( New Label( " " ),"top" )
-		
-		docker.AddView( New Label( "------ Chat:" ),"top" )
-		docker.AddView( chatTable,"top" )
-		
-		'docker.AddView( New Label( "(Restart IDE to see all changes)" ),"top" )
-		'docker.AddView( New Label( " " ),"top" )
-		
-'		docker.Layout="float"
-'		docker.MaxSize=New Vec2i( 400,100000 )
-'		
-'		Local content:=New ScrollableView
-'		content.ScrollBarsVisible=True
-'		content.ContentView=docker
-'		content.MinSize=New Vec2i( 520,640 )
-'		content.MaxSize=New Vec2i( 520,640 )
-'		
-'		ContentView=content
-		ContentView=docker
+		ContentView=tabView
 		
 		Local apply:=AddAction( "Apply changes" )
 		apply.Triggered=OnApply
@@ -284,5 +117,201 @@ Class PrefsDialog Extends DialogExt
 		
 		Prefs.SaveLocalState()
 	End
-
+	
+	Method GetMainDock:DockingView()
+		
+		_mainToolBarVisible=New CheckButton( "ToolBar visible" )
+		_mainToolBarVisible.Checked=Prefs.MainToolBarVisible
+		
+		_mainProjectTabsRight=New CheckButton( "Project tabs on the right side" )
+		_mainProjectTabsRight.Checked=Prefs.MainProjectTabsRight
+		
+		_mainProjectIcons=New CheckButton( "Project file type icons" )
+		_mainProjectIcons.Checked=Prefs.MainProjectIcons
+		
+		_monkeyRootPath=New TextField( Prefs.MonkeyRootPath )
+		_monkeyRootPath.Enabled=False
+		Local chooseMonkeyPath:=New Action( "..." )
+		chooseMonkeyPath.Triggered+=Lambda()
+		
+			Local initDir:=Prefs.MonkeyRootPath
+		
+			Local path:=MainWindow.RequestDir( "Choose Monkey2 root folder",initDir )
+			If Not path Return
+		
+			' check path
+			Local real:=SetupMonkeyRootPath( path,False )
+			If real
+				_monkeyRootPath.Text=path
+				Prefs.MonkeyRootPath=path
+				MainWindow.UpdateToolsPaths()
+				Return
+			Else
+				' restore current
+				ChangeDir( initDir )
+			Endif
+		
+		End
+		Local btnChooseMonkeyPath:=New PushButton( chooseMonkeyPath )
+		
+		Local docker:=New DockingView
+		Local monkeyPathDock:=New DockingView
+		monkeyPathDock.AddView( New Label( "Monkey2 root folder" ),"left" )
+		monkeyPathDock.AddView( _monkeyRootPath,"left" )
+		monkeyPathDock.AddView( btnChooseMonkeyPath,"left" )
+		
+		docker.AddView( New Label( " " ),"top" )
+		docker.AddView( monkeyPathDock,"top" )
+		
+		docker.AddView( New Label( " " ),"top" )
+		docker.AddView( _mainProjectTabsRight,"top" )
+		docker.AddView( _mainProjectIcons,"top" )
+		docker.AddView( _mainToolBarVisible,"top" )
+		docker.AddView( New Label( " " ),"top" )
+		
+		Return docker
+	End
+	
+	Method GetEditorDock:DockingView()
+		
+		_editorToolBarVisible=New CheckButton( "ToolBar visible" )
+		_editorToolBarVisible.Checked=Prefs.EditorToolBarVisible
+		
+		_editorGutterVisible=New CheckButton( "Gutter visible" )
+		_editorGutterVisible.Checked=Prefs.EditorGutterVisible
+		
+		_editorShowWhiteSpaces=New CheckButton( "Whitespaces visible" )
+		_editorShowWhiteSpaces.Checked=Prefs.EditorShowWhiteSpaces
+		
+		_editorShowEvery10LineNumber=New CheckButton( "Every 10th line number" )
+		_editorShowEvery10LineNumber.Checked=Prefs.EditorShowEvery10LineNumber
+		
+		_editorCodeMapVisible=New CheckButton( "CodeMap visible" )
+		_editorCodeMapVisible.Checked=Prefs.EditorCodeMapVisible
+		
+		_editorAutoIndent=New CheckButton( "Auto indentation" )
+		_editorAutoIndent.Checked=Prefs.EditorAutoIndent
+		
+		Local path:=Prefs.EditorFontPath
+		If Not path Then path=_defaultFont
+		_editorFontPath=New TextField( "" )
+		_editorFontPath.TextChanged+=Lambda()
+		
+			Local enabled:=(_editorFontPath.Text<>_defaultFont)
+			_editorFontSize.Enabled=enabled
+		End
+		_editorFontSize=New TextField( ""+Prefs.EditorFontSize )
+		_editorFontPath.Text=path
+		_editorFontPath.ReadOnly=True
+		
+		Local chooseFont:=New Action( "..." )
+		chooseFont.Triggered+=Lambda()
+		
+			Local initDir:=RealPath( AssetsDir() )
+		
+			Local path:=MainWindow.RequestFile( "Choose Font",initDir,False,"Font files:ttf;Any files:*" )
+			If Not path Return
+		
+			path=RealPath( path )
+			path=path.Replace( initDir,"" )
+		
+			_editorFontPath.Text=path
+		End
+		Local btnChooseFont:=New PushButton( chooseFont )
+		
+		Local resetFont:=New Action( "reset" )
+		resetFont.Triggered+=Lambda()
+		
+			_editorFontPath.Text=_defaultFont
+		End
+		Local btnResetFont:=New PushButton( resetFont )
+		
+		Local font:=New DockingView
+		font.AddView( New Label( "Font" ),"left" )
+		font.AddView( _editorFontPath,"left" )
+		font.AddView( _editorFontSize,"left","45" )
+		font.AddView( btnChooseFont,"left" )
+		font.AddView( btnResetFont,"left" )
+		
+		Local docker:=New DockingView
+		docker.AddView( New Label( " " ),"top" )
+		docker.AddView( _editorToolBarVisible,"top" )
+		docker.AddView( _editorGutterVisible,"top" )
+		docker.AddView( _editorShowWhiteSpaces,"top" )
+		docker.AddView( font,"top" )
+		docker.AddView( _editorShowEvery10LineNumber,"top" )
+		docker.AddView( _editorCodeMapVisible,"top" )
+		docker.AddView( _editorAutoIndent,"top" )
+		docker.AddView( New Label( " " ),"top" )
+		
+		Return docker
+	End
+	
+	Method GetCompletionDock:DockingView()
+		
+		_acShowAfter=New TextField( ""+Prefs.AcShowAfter )
+		
+		Local after:=New DockingView
+		after.AddView( New Label( "Show after" ),"left" )
+		after.AddView( _acShowAfter,"left" )
+		
+		_acEnabled=New CheckButton( "Enabled" )
+		_acEnabled.Checked=Prefs.AcEnabled
+		
+		_acKeywordsOnly=New CheckButton( "Keywords only" )
+		_acKeywordsOnly.Checked=Prefs.AcKeywordsOnly
+		
+		_acUseTab=New CheckButton( "Choose by Tab" )
+		_acUseTab.Checked=Prefs.AcUseTab
+		
+		_acUseEnter=New CheckButton( "Choose by Enter" )
+		_acUseEnter.Checked=Prefs.AcUseEnter
+		
+		_acUseSpace=New CheckButton( "Choose by Space" )
+		_acUseSpace.Checked=Prefs.AcUseSpace
+		
+		_acUseDot=New CheckButton( "Choose by Dot (.)" )
+		_acUseDot.Checked=Prefs.AcUseDot
+		
+		_acNewLineByEnter=New CheckButton( "Add new line (by Enter)" )
+		_acNewLineByEnter.Checked=Prefs.AcNewLineByEnter
+		
+		Local docker:=New DockingView
+		docker.AddView( New Label( " " ),"top" )
+		docker.AddView( _acEnabled,"top" )
+		docker.AddView( after,"top" )
+		docker.AddView( _acUseTab,"top" )
+		docker.AddView( _acUseEnter,"top" )
+		docker.AddView( _acNewLineByEnter,"top" )
+		docker.AddView( _acUseSpace,"top" )
+		docker.AddView( _acUseDot,"top" )
+		docker.AddView( _acKeywordsOnly,"top" )
+		docker.AddView( New Label( " " ),"top" )
+		
+		Return docker
+	End
+	
+	Method GetChatDock:DockingView()
+		
+		Local chatTable:=New TableView( 2,4 )
+		_chatNick=New TextField( Prefs.IrcNickname )
+		_chatServer=New TextField( Prefs.IrcServer )
+		_chatPort=New TextField( ""+Prefs.IrcPort )
+		_chatRooms=New TextField( Prefs.IrcRooms )
+		chatTable[0,0]=New Label( "Nickname" )
+		chatTable[1,0]=_chatNick
+		chatTable[0,1]=New Label( "Server" )
+		chatTable[1,1]=_chatServer
+		chatTable[0,2]=New Label( "Port" )
+		chatTable[1,2]=_chatPort
+		chatTable[0,3]=New Label( "Rooms" )
+		chatTable[1,3]=_chatRooms
+		
+		Local docker:=New DockingView
+		docker.AddView( New Label( " " ),"top" )
+		docker.AddView( chatTable,"top" )
+		
+		Return docker
+	End
+	
 End
