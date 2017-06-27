@@ -13,6 +13,13 @@ Class FindDialog Extends DialogExt
 		_findField.Entered+=Lambda()
 			actions.findNext.Trigger()
 		End
+		_findField.TextChanged+=Lambda(  )
+			
+			Local t:=_findField.Text
+			If t.Length > 1
+				actions.FindByTextChanged()
+			Endif
+		End
 
 		_findField.Tabbed+=_replaceField.MakeKeyView
 

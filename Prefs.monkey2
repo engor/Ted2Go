@@ -9,12 +9,19 @@ Class Prefs
 	Global AcShowAfter:=2
 	Global AcUseTab:=True
 	Global AcUseEnter:=False
-	Global AcUseSpace:=True
+	Global AcUseSpace:=False
 	Global AcUseDot:=False
 	Global AcNewLineByEnter:=True
+	Global AcStrongFirstChar:=True
 	'
 	Global MainToolBarVisible:=True
 	Global MainProjectTabsRight:=True
+	Global MainProjectIcons:=True
+	'
+	Global IrcNickname:String
+	Global IrcServer:="irc.freenode.net"
+	Global IrcPort:=6667
+	Global IrcRooms:="#monkey2" '#monkey2Ui#monkey23D
 	'
 	Global EditorToolBarVisible:=False
 	Global EditorGutterVisible:=True
@@ -22,6 +29,8 @@ Class Prefs
 	Global EditorFontPath:String
 	Global EditorFontSize:=16
 	Global EditorShowEvery10LineNumber:=True
+	Global EditorCodeMapVisible:=True
+	Global EditorAutoIndent:=True
 	'
 	Global SourceSortByType:=True
 	Global SourceShowInherited:=False
@@ -30,12 +39,22 @@ Class Prefs
 	
 	Function LoadState( json:JsonObject )
 		
+		If json.Contains( "irc" )
+			
+			Local j2:=json["irc"].ToObject()
+			IrcNickname=Json_GetString( j2,"nickname",IrcNickname )
+			IrcServer=Json_GetString( j2,"server",IrcServer )
+			IrcPort=Json_GetInt( j2,"port",IrcPort )
+			IrcRooms=Json_GetString( j2,"rooms",IrcRooms )
+		Endif
+		
 		If json.Contains( "main" )
 			
 			Local j2:=json["main"].ToObject()
-			If j2.Contains( "toolBarVisible" ) Then MainToolBarVisible=j2["toolBarVisible"].ToBool()
-			If j2.Contains( "tabsRight" ) Then MainProjectTabsRight=j2["tabsRight"].ToBool()
-		
+			MainToolBarVisible=Json_GetBool( j2,"toolBarVisible",MainToolBarVisible )
+			MainProjectTabsRight=Json_GetBool( j2,"tabsRight",MainProjectTabsRight )
+			MainProjectIcons=Json_GetBool( j2,"projectIcons",MainProjectIcons )
+      
 		Endif
 		
 		If json.Contains( "completion" )
@@ -46,9 +65,9 @@ Class Prefs
 			AcShowAfter=j2["showAfter"].ToNumber()
 			AcUseTab=j2["useTab"].ToBool()
 			AcUseEnter=j2["useEnter"].ToBool()
-			AcUseSpace=GetJsonBool( j2,"useSpace",AcUseSpace )
-			AcUseDot=GetJsonBool( j2,"useDot",AcUseDot )
-			AcNewLineByEnter=j2["newLineByEnter"].ToBool()
+			AcUseSpace=Json_GetBool( j2,"useSpace",AcUseSpace )
+			AcUseDot=Json_GetBool( j2,"useDot",AcUseDot )
+			AcNewLineByEnter=Json_GetBool( j2,"newLineByEnter",AcNewLineByEnter )
 			
 		Endif
 		
@@ -57,10 +76,12 @@ Class Prefs
 			Local j2:=json["editor"].ToObject()
 			EditorToolBarVisible=j2["toolBarVisible"].ToBool()
 			EditorGutterVisible=j2["gutterVisible"].ToBool()
-			EditorShowWhiteSpaces=GetJsonBool( j2,"showWhiteSpaces",EditorShowWhiteSpaces )
-			If j2.Contains("fontPath") Then EditorFontPath=j2["fontPath"].ToString()
-			If j2.Contains("fontSize") Then EditorFontSize=Int( j2["fontSize"].ToNumber() )
-			EditorShowEvery10LineNumber=GetJsonBool( j2,"showEvery10",EditorShowEvery10LineNumber )
+			EditorShowWhiteSpaces=Json_GetBool( j2,"showWhiteSpaces",EditorShowWhiteSpaces )
+			EditorFontPath=Json_GetString( j2,"fontPath", EditorFontPath )
+			EditorFontSize=Json_GetInt( j2,"fontSize",EditorFontSize )
+			EditorShowEvery10LineNumber=Json_GetBool( j2,"showEvery10",EditorShowEvery10LineNumber )
+			EditorCodeMapVisible=Json_GetBool( j2,"codeMapVisible",EditorCodeMapVisible )
+			EditorAutoIndent=Json_GetBool( j2,"autoIndent",EditorAutoIndent )
 			
 		Endif
 		
@@ -76,11 +97,20 @@ Class Prefs
 	Function SaveState( json:JsonObject )
 		
 		Local j:=New JsonObject
+		json["main"]=j
 		j["toolBarVisible"]=New JsonBool( MainToolBarVisible )
 		j["tabsRight"]=New JsonBool( MainProjectTabsRight )
-		json["main"]=j
-		 
+		j["projectIcons"]=New JsonBool( MainProjectIcons )
+		
 		j=New JsonObject
+		json["irc"]=j
+		j["nickname"]=New JsonString( IrcNickname )
+		j["server"]=New JsonString( IrcServer )
+		j["port"]=New JsonNumber( IrcPort )
+		j["rooms"]=New JsonString( IrcRooms )
+		
+		j=New JsonObject
+		json["completion"]=j
 		j["enabled"]=New JsonBool( AcEnabled )
 		j["keywordsOnly"]=New JsonBool( AcKeywordsOnly )
 		j["showAfter"]=New JsonNumber( AcShowAfter )
@@ -89,21 +119,23 @@ Class Prefs
 		j["useSpace"]=New JsonBool( AcUseSpace )
 		j["useDot"]=New JsonBool( AcUseDot )
 		j["newLineByEnter"]=New JsonBool( AcNewLineByEnter )
-		json["completion"]=j
 		
 		j=New JsonObject
+		json["editor"]=j
 		j["toolBarVisible"]=New JsonBool( EditorToolBarVisible )
 		j["gutterVisible"]=New JsonBool( EditorGutterVisible )
 		j["showWhiteSpaces"]=New JsonBool( EditorShowWhiteSpaces )
 		j["fontPath"]=New JsonString( EditorFontPath )
 		j["fontSize"]=New JsonNumber( EditorFontSize )
 		j["showEvery10"]=New JsonBool( EditorShowEvery10LineNumber )
-		json["editor"]=j
+		j["codeMapVisible"]=New JsonBool( EditorCodeMapVisible )
+		j["autoIndent"]=New JsonBool( EditorAutoIndent )
 		
 		j=New JsonObject
+		json["source"]=j
 		j["sortByType"]=New JsonBool( SourceSortByType )
 		j["showInherited"]=New JsonBool( SourceShowInherited )
-		json["source"]=j
+		
 	End
 	
 	Function LoadLocalState()
@@ -111,7 +143,7 @@ Class Prefs
 		Local json:=JsonObject.Load( AppDir()+"state.json" )
 		If Not json Return
 		
-		If json.Contains( "rootPath" ) Then MonkeyRootPath=json["rootPath"].ToString()
+		MonkeyRootPath=Json_GetString( json.Data,"rootPath","" )
 		
 	End
 	
@@ -138,12 +170,9 @@ Class Prefs
 	
 	Function GetCustomFontSize:Int()
 	
-		Return Max( EditorFontSize,6 ) '6 is a minumal
+		Return Max( EditorFontSize,6 ) '6 is a minimum
 	End
 End
 
 
-Function GetJsonBool:Bool( json:Map<String,JsonValue>,key:String,def:Bool )
-	
-	Return json[key] ? json[key].ToBool() Else def
-End
+

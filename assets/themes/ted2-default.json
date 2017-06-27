@@ -3,10 +3,21 @@
 	
 	"colors":{
 
+		"transparent": "#0000",
+		"textview-cursor-line":"#2000",
+		"textview-whitespaces":"#2aaa",
 		"statusbar": "content",
-		"statusbar-active": "#CA5100"
+		"statusbar-active": "#CA5100",
+		"menu-shortcut":"text-background",
+		"codemap-background": "transparent",
+		"codemap-selection": "#48000000"
 	},
 
+	"fonts":{
+	
+		"editor":"DejaVuSansMono.ttf,14"
+	},
+	
 	"styles":{
 	
 		"GutterView":{
@@ -96,6 +107,11 @@
 			"extends":"ProgressBar",
 			"margin":[ 6,0 ]
 		},
+		"StatusBarButton":{
+			"extends":"ToolButton",
+			"padding":[ 0 ],
+			"skinColor":"transparent"
+		},
 
 		"CompletionDialog":{
 			"extends":"Dialog"
@@ -109,17 +125,29 @@
 			"backgroundColor":"content"
 		},
 		
-		"StatusBarButton":{
-			"extends":"ToolButton",
+		"TextFieldBordered":{
+			"extends":"TextField",
+			"border":[ 1 ],
+			"borderColor":"clear"
+		},
+		
+		"CodeMapView":{
+			"extends":"TextView",
+			"margin":[ 4,0,0,0 ],
 			"padding":[ 0 ],
-			"skinColor":"transparent"
+			"border":[ 1,0,0,0 ],
+			"borderColor": "clear",
+			"backgroundColor":"codemap-background"
 		},
 
 		"BananasView":{
+			"extends":"TableView"
+		},
+		"BananasViewItem":{
 			"extends":"Button",
 			"border":[ 1 ],
-			"margin":[ 15,55,0,0 ]
+			"margin":[ 15,55,0,0 ],
+			"skinColor":"transparent"
 		}
-		
 	}
 }

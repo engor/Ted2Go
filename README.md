@@ -1,5 +1,5 @@
 # Ted2Go
-My custom version of Ted2 IDE.
+An IDE for Monkey2 programming language.
 
 ## Benefits & Goals
 * Autocompletion for keywords, modules and user's code (WIP).
@@ -10,7 +10,7 @@ My custom version of Ted2 IDE.
 * Doc's hints directly inside of code area (todo).
 
 ## More info
-Discussion page: http://monkey2.monkey-x.com/forums/topic/ted2go-fork/
+Discussion page: http://monkeycoder.co.nz/forums/topic/ted2go-fork/
 
 ## Monkey <-> money :)
 Support me if you like this project: https://paypal.me/engor

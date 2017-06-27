@@ -535,6 +535,13 @@ Struct CodeItemsSorter Final
 			Endif
 		Next
 		
+		' strong first char
+		If Prefs.AcStrongFirstChar
+			Local lower1:=IsLowercacedFirstChar( ident )
+			Local lower2:=IsLowercacedFirstChar( etalon )
+			If lower1 <> lower2 Then power-=10000
+		End
+		
 		Return power
 	End
 	

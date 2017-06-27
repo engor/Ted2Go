@@ -83,7 +83,7 @@ End
 
 Public
 
-Function EnumValidTargets:StringStack( console:Console )
+Function EnumValidTargets:StringStack( console:ConsoleExt )
 
 	LoadEnv()
 	

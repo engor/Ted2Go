@@ -18,7 +18,7 @@ Public
 
 Class ModuleManager Extends Dialog
 
-	Method New( console:Console )
+	Method New( console:ConsoleExt )
 		Super.New( "Module Manager" )
 		
 		_console=console
@@ -98,14 +98,13 @@ Class ModuleManager Extends Dialog
 	
 	Private
 	
-	'Const downloadUrl:="http://monkey2.monkey-x.com/wp-content/uploads/mx2-modules/public/"
-    Const downloadUrl:="http://monkey2.monkey-x.com/send-file?file="
-    
+    Field downloadUrl:=MONKEY2_DOMAIN+"/send-file?file="
+	
 	Const downloadDir:="modules/module-manager/downloads/"
 	
 	Const backupDir:="modules/module-manager/backups/"
 	
-	Field _console:Console
+	Field _console:ConsoleExt
 	Field _docker:DockingView
 	Field _modules:=New StringMap<Module>
 	Field _filters:=New StringMap<CheckButton>
@@ -412,8 +411,7 @@ Class ModuleManager Extends Dialog
 	
 	Method EnumRemoteModules:Bool()
 	
-'		Local src:="http://localhost/monkey2/module-manager/?modules=1"
-		Local src:="http://monkey2.monkey-x.com/module-manager/?modules=1"
+		Local src:=MONKEY2_DOMAIN+"/module-manager/?modules=1"
 		
 		Local tmp:="tmp/modules.json"
 	
@@ -600,6 +598,12 @@ Class ModuleManager Extends Dialog
 			i+=1
 
 		Next
+		
+		' some bottom pagdding
+		_table.Rows+=1
+		Local label:=New Label( "" )
+		label.MinSize=New Vec2i( 0,30 )
+		_table[0,_table.Rows-1]=label
 		
 		App.RequestRender()
 	
