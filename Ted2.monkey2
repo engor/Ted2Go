@@ -97,6 +97,7 @@
 #Import "view/Monkey2TreeView"
 #Import "view/GutterView"
 #Import "view/MenuExt"
+#Import "view/ScrollableViewExt"
 
 #Import "MainWindow"
 #Import "Plugin"

@@ -7,13 +7,22 @@ Class BananasDocument Extends Ted2Document
 	Method New( path:String )
 		Super.New( path )
 		
-		_list=New ListView
-		_view=New ScrollableView
+		_view=New ScrollableViewExt
 		
 		_table=New TableView( 3,1 )
 		_table.Style=App.Theme.GetStyle( "BananasView" )
 		_table.Layout="float"
+		_table.Gravity=New Vec2f( 0.5,0 )
 		_view.ContentView=_table
+		
+		_filterPanel=New ToolBar
+		_view.AddView( _filterPanel,"bottom" )
+		
+		_list=New ListView
+		_list.ItemDoubleClicked+=Lambda( item:ListView.Item )
+			
+			OpenItem( FindItem( item.Text ) )
+		End
 	End
 
 
@@ -21,9 +30,10 @@ Class BananasDocument Extends Ted2Document
 	
 	Method OnLoad:Bool() Override
 	
+		Reset()
 		Parse()
-		CreateFilterPanel()
 		ShowElements()
+		UpdateFilterPanel()
 		
 		Return True
 	End
@@ -41,17 +51,19 @@ Class BananasDocument Extends Ted2Document
 	
 	Private
 	
-	Const _cellWidth:=300
-	Const _cellHeight:=200
+	Const EMPTY_TAG:="#"
+	Const MAX_WIDTH:=300
+	Const MAX_HEIGHT:=200
 	Field _list:ListView
 	Field _table:TableView
-	Field _view:ScrollableView
+	Field _view:ScrollableViewExt
 	Field _items:=New Stack<Item>
 	Field _views:=New Stack<View>
 	Field _cols:Int,_rows:Int
 	Field _tags:=New StringStack
-	Field _filteredTags:=New StringStack
-	
+	Field _filterTags:=New StringStack
+	Field _filterViews:=New Stack<ToolButtonExt>
+	Field _filterPanel:ToolBar
 	
 	Struct Item
 		
@@ -68,22 +80,55 @@ Class BananasDocument Extends Ted2Document
 	End
 	
 	
-	Method CreateFilterPanel()
+	Method Reset()
 		
-		_tags.Sort()
+		_items.Clear()
+		_views.Clear()
+		_tags.Clear()
+		_filterTags.Clear()
+		_filterViews.Clear()
+	End
+	
+	Method FindItem:Item( title:String )
 		
-		Local panel:=New DockingView
-		For Local tag:=Eachin _tags
-			Local action:=New Action( tag )
-			Local button:=New PushButton( action )
-			action.Triggered+=Lambda()
-				Local contains:=_filteredTags.Contains( tag )
-				If contains Then _filteredTags.Remove( tag ) Else _filteredTags.Add( tag )
-				ShowElements()
-			End
-			panel.AddView( button,"left" )
+		For Local i:=Eachin _items
+			If i.title = title Return i
 		Next
-		_view.AddView( panel,"bottom" )
+		Return Null
+	End
+	
+	Method OpenItem( item:Item )
+		
+		If item<>Null Then MainWindow.OpenDocument( item.sourcePath,True )
+	End
+	
+	Method UpdateFilterPanel()
+		
+		_filterPanel.RemoveAllViews()
+		
+		Local action:=New Action( "Reset" )
+		action.Triggered+=Lambda()
+			_filterTags.Clear()
+			For Local v:=Eachin _filterViews
+				v.IsToggled=False
+			Next
+			OnFilterChanged()
+		End
+		Local button:=New ToolButtonExt( action,"Reset filters" )
+		_filterPanel.AddView( button,"left" )
+		
+		For Local tag:=Eachin _tags
+			action=New Action( tag )
+			button=New ToolButtonExt( action )
+			button.ToggleMode=True
+			button.Toggled+=Lambda( toggled:Bool )
+				If toggled Then _filterTags.Add( tag ) Else _filterTags.Remove( tag )
+				OnFilterChanged()
+			End
+			_filterPanel.AddView( button,"left" )
+			_filterViews.Add( button )
+		Next
+		
 	End
 	
 	Method OnFilterChanged()
@@ -93,12 +138,14 @@ Class BananasDocument Extends Ted2Document
 	
 	Method ShowElements()
 		
-		_table.RemoveAllViews()
+		_table.RemoveAllRows()
+		_list.RemoveAllItems()
 		
 		Local count:=GetVisibleCount()
 		
 		Local cols:=_table.Columns
-		Local rows:=count/cols + 1
+		Local rows:=count/cols
+		If count Mod cols <> 0 Then rows+=1
 		
 		_table.Rows=rows
 		
@@ -106,16 +153,20 @@ Class BananasDocument Extends Ted2Document
 		For Local k:=0 Until _items.Length
 			
 			If Not IsItemVisible( _items[k] ) Continue
+			
 			r=i/cols
 			c=i Mod cols
 			i+=1
 			_table[c,r]=_views[k]
 			
+			_list.AddItem( _items[k].title )
 		Next
 		
 	End
 	
 	Method GetVisibleCount:Int()
+		
+		If _filterTags.Empty Return _items.Length
 		
 		Local count:=0
 		For Local i:=Eachin _items
@@ -126,7 +177,9 @@ Class BananasDocument Extends Ted2Document
 	
 	Method IsItemVisible:Bool( item:Item )
 		
-		For Local tag:=Eachin _filteredTags
+		If _filterTags.Empty Return True
+		
+		For Local tag:=Eachin _filterTags
 			if item.tags.Contains( tag ) Return True
 		Next
 		Return False
@@ -134,7 +187,13 @@ Class BananasDocument Extends Ted2Document
 	
 	Method Parse()
 		
-		'Local json:=stringio.LoadString( Path )
+		ParseFile()
+		'ParseFolder()
+		
+		_tags.Sort()
+	End
+	
+	Method ParseFolder()
 		
 		Local dir:=ExtractDir( Path )
 		Local arr:=LoadDir( dir )
@@ -147,55 +206,12 @@ Class BananasDocument Extends Ted2Document
 		Next
 		
 		For Local file:=Eachin files
-		
-		'Local json:=JsonObject.Load( Path )
-		'Local arr:=json.GetArray( "bananas" )
-		
-		'For Local i:=Eachin arr
-			'Print "parse: "+file
 			Try 
 				Local folder:=ExtractDir( file )
 				
 				Local jsonData:=JsonObject.Load( file ).Data
-				'Local jsonData:=i.ToObject()
 				
-				Local title:=Json_GetString( jsonData,"title","" )
-				Local author:=Json_GetString( jsonData,"author","(unknown)" )
-				Local descr:=Json_GetString( jsonData,"description","" )
-				Local preview:=Json_GetString( jsonData,"preview","" )
-				Local source:=Json_GetString( jsonData,"mainFile","" )
-				Local homepage:=Json_GetString( jsonData,"homepage","" )
-				Local modified:=Json_GetString( jsonData,"modified","" )
-				Local version:=Json_GetString( jsonData,"version","" )
-				Local tags:=ProcessTags( Json_GetString( jsonData,"tags","" ) )
-				
-				If Not author Then author="---"
-				author="by "+author
-				
-				If GetFileType( preview ) <> FileType.File
-					preview=folder+preview
-				Endif
-				If GetFileType( source ) <> FileType.File
-					source=folder+source
-				Endif
-				
-				Local i:=New Item
-				i.title=title
-				i.author=author
-				i.descr=descr
-				i.previewPath=preview
-				i.sourcePath=source
-				i.homepage=homepage
-				i.modified=modified
-				i.version=version
-				i.tags=tags
-				
-				_items.Add( i )
-				
-				Local v:=CreateBananaView( i )
-				_views.Add( v )
-				
-				_list.AddItem( title )
+				ParseItem( jsonData,folder,folder )
 				
 			Catch ex:Throwable
 				
@@ -205,32 +221,123 @@ Class BananasDocument Extends Ted2Document
 		
 	End
 	
+	Method ParseFile()
+	
+		Local json:=JsonObject.Load( Path )
+		
+		Local arr:=json.GetArray( "bananas" )
+		Local bananasFolder:=FixFolder( json.GetString( "bananasFolder" ) )
+		Local previewsFolder:=FixFolder( json.GetString( "previewsFolder" ) )
+		
+		
+		For Local i:=Eachin arr
+			
+			Try 
+				Local jsonData:=i.ToObject()
+				
+				ParseItem( jsonData,bananasFolder,previewsFolder )
+				
+			Catch ex:Throwable
+				
+				Print "catch"
+			End
+			
+		Next
+	
+	End
+	
+	Method ParseItem:Item( jsonData:StringMap<JsonValue>,bananasFolder:String,previewsFolder:String )
+		
+		Local title:=Json_GetString( jsonData,"title","" )
+		Local author:=Json_GetString( jsonData,"author","(unknown)" )
+		Local descr:=Json_GetString( jsonData,"description","" )
+		Local preview:=Json_GetString( jsonData,"preview","" )
+		Local source:=Json_GetString( jsonData,"mainFile","" )
+		Local homepage:=Json_GetString( jsonData,"homepage","" )
+		Local modified:=Json_GetString( jsonData,"modified","" )
+		Local version:=Json_GetString( jsonData,"version","" )
+		Local tags:=ProcessTags( Json_GetString( jsonData,"tags","" ) )
+		
+		'If Not author Then author="(unknown)"
+		If author Then author="by "+author
+		
+		If GetFileType( preview ) <> FileType.File
+			preview=previewsFolder+preview
+		Endif
+		If GetFileType( source ) <> FileType.File
+			source=bananasFolder+source
+		Endif
+		
+		Local i:=New Item
+		i.title=title
+		i.author=author
+		i.descr=descr
+		i.previewPath=preview
+		i.sourcePath=source
+		i.homepage=homepage
+		i.modified=modified
+		i.version=version
+		i.tags=tags
+		
+		_items.Add( i )
+		
+		Local v:=CreateBananaView( i )
+		_views.Add( v )
+		
+		Return i
+	End
+	
+	Method FixFolder:String( folder:String )
+		
+		If GetFileType( folder )<>FileType.Directory Then folder=AppDir()+folder
+		Return folder
+	End
+	
 	Method CreateBananaView:View( item:Item )
 		
 		Local dock:=New DockingView
-		dock.Style=App.Theme.GetStyle( "BananasView" )
+		dock.Style=App.Theme.GetStyle( "BananasCard" )
 		
 		' preview
 		Local img:=Image.Load( item.previewPath )
-		AdjustImageScale( img,_cellWidth,_cellHeight )
-		Local lab:=New Label( "",img )
+		AdjustImageScale( img,MAX_WIDTH,MAX_HEIGHT )
+		Local lab:=New Label( " ",img )
 		dock.AddView( lab,"top" )
 		
 		' title and open button
 		Local titleDock:=New DockingView
 		Local btn:=New Button( "Open" )
+		btn.Style=App.Theme.GetStyle( "BananasButton" )
 		btn.Clicked+=Lambda()
-			MainWindow.OpenDocument( item.sourcePath,True )
+			OpenItem( item )
 		End
-		titleDock.ContentView=New Label( item.title)
+		lab=New Label( item.title)
+		lab.Style=App.Theme.GetStyle( "BananasTitle" )
+		titleDock.ContentView=lab
 		titleDock.AddView( btn,"right" )
 		dock.AddView( titleDock,"top" )
+		' homepage
+		If item.homepage
+			btn=New Button( "Web" )
+			btn.Style=App.Theme.GetStyle( "BananasButton" )
+			btn.Clicked+=Lambda()
+				OpenUrl( item.homepage )
+			End
+			titleDock.AddView( btn,"right" )
+		Endif
 		
 		' description
-		dock.AddView( New Label( item.descr ),"top" )
+		Local tv:=New TextView( item.descr )
+		Local ww:=tv.Style.Font.TextWidth( item.descr )
+		Local lines:=1+Max( 1.0, ww/(MAX_WIDTH-40) )
+		tv.WordWrap=True
+		tv.ReadOnly=True
+		Local hh:=Min( 96.0,lines*tv.Style.Font.Height+20)
+		tv.MinSize=New Vec2i( 0,hh )
+		dock.AddView( tv,"top" )
 		
 		' authors
-		dock.AddView( New Label( item.author ),"top" )
+		If item.author Then dock.AddView( New Label( item.author ),"top" )
 		
 		' version and modified
 		Local vers:=item.version
@@ -242,7 +349,7 @@ Class BananasDocument Extends Ted2Document
 		If vers Then dock.AddView( New Label( vers ),"top" )
 		
 		'tags
-		If item.tags Then dock.AddView( New Label( item.tags ),"top" )
+		If item.tags<>EMPTY_TAG Then dock.AddView( New Label( item.tags ),"top" )
 		
 		Return dock
 	End
@@ -254,8 +361,9 @@ Class BananasDocument Extends Ted2Document
 		Local iw:=img.Width
 		Local ih:=img.Height
 		Local kw:=fitWidth/iw
-		Local kh:=fitHeight/ih
-		Local k:=Max( kw,kh )
+		'Local kh:=fitHeight/ih
+		'Local k:=Max( kw,kh )
+		Local k:=kw
 		
 		img.Scale=App.Theme.Scale*k
 	End
@@ -270,9 +378,8 @@ Class BananasDocument Extends Ted2Document
 			
 			tagsStr+=t+" "
 			'
-			If Not _tags.Contains( t )
+			If Not( t=EMPTY_TAG Or _tags.Contains( t ) )
 				_tags.Add( t )
-				_filteredTags.Add( t )
 			Endif
 		Next
 		

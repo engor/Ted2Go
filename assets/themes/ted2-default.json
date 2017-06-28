@@ -15,7 +15,8 @@
 
 	"fonts":{
 	
-		"editor":"DejaVuSansMono.ttf,14"
+		"editor":"DejaVuSansMono.ttf,14",
+		"bananas-title":"DejaVuSansMono.ttf,20"
 	},
 	
 	"styles":{
@@ -141,13 +142,21 @@
 		},
 
 		"BananasView":{
-			"extends":"TableView"
+			"border":[ 0 ],
+			"padding":[ 0 ]
 		},
-		"BananasViewItem":{
-			"extends":"Button",
+		"BananasCard":{
+			"margin":[ 10,15,10,15 ],
 			"border":[ 1 ],
-			"margin":[ 15,55,0,0 ],
-			"skinColor":"transparent"
+			"borderColor":"clear"
+		},
+		"BananasTitle":{
+			"extends": "Label",
+			"font": "bananas-title"
+		},
+		"BananasButton":{
+			"extends": "Button",
+			"margin": [ 4,0,0,0 ]
 		}
 	}
 }
