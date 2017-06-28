@@ -484,7 +484,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		If isSelf Or isSuper
 		
-			item=scope.NearestClassScope
+			If scope Then item=scope.NearestClassScope
 			
 		Else ' not 'self' ident
 			

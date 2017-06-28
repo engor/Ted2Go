@@ -335,6 +335,7 @@ Class BananasDocument Extends Ted2Document
 		
 		' description
 		Local tv:=New TextView( item.descr )
+		tv.Style=App.Theme.GetStyle( "BananasDescription" )
 		Local ww:=tv.Style.Font.TextWidth( item.descr )
 		Local lines:=1+Max( 1.0, ww/(MAX_WIDTH-40) )
 		tv.WordWrap=True
