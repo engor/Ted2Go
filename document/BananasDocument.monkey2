@@ -7,16 +7,23 @@ Class BananasDocument Extends Ted2Document
 	Method New( path:String )
 		Super.New( path )
 		
-		_view=New ScrollableViewExt
+		Local scrollView:=New ScrollableViewExt
+		scrollView.Style=App.Theme.GetStyle( "BananasView" )
+		_view=scrollView
 		
 		_table=New TableView( 3,1 )
-		_table.Style=App.Theme.GetStyle( "BananasView" )
 		_table.Layout="float"
 		_table.Gravity=New Vec2f( 0.5,0 )
-		_view.ContentView=_table
+		scrollView.ContentView=_table
 		
 		_filterPanel=New ToolBar
-		_view.AddView( _filterPanel,"bottom" )
+		scrollView.AddView( _filterPanel,"bottom" )
+		
+		Local lab:=New Label( "Bananas Showcase" )
+		lab.Style=App.Theme.GetStyle( "BananasTitle" )
+		lab.Gravity=New Vec2f( 0.5,0 )
+		lab.Layout="float"
+		scrollView.AddView( lab,"top" )
 		
 		_list=New ListView
 		_list.ItemDoubleClicked+=Lambda( item:ListView.Item )
@@ -56,7 +63,7 @@ Class BananasDocument Extends Ted2Document
 	Const MAX_HEIGHT:=200
 	Field _list:ListView
 	Field _table:TableView
-	Field _view:ScrollableViewExt
+	Field _view:View
 	Field _items:=New Stack<Item>
 	Field _views:=New Stack<View>
 	Field _cols:Int,_rows:Int
@@ -349,7 +356,7 @@ Class BananasDocument Extends Ted2Document
 		If vers Then dock.AddView( New Label( vers ),"top" )
 		
 		'tags
-		If item.tags<>EMPTY_TAG Then dock.AddView( New Label( item.tags ),"top" )
+		If item.tags Then dock.AddView( New Label( item.tags ),"top" )
 		
 		Return dock
 	End
@@ -374,8 +381,10 @@ Class BananasDocument Extends Ted2Document
 		tagsStr=""
 		For Local i:=0 Until arr.Length
 			
-			Local t:="#"+arr[i].Trim()
+			Local t:=arr[i].Trim()
+			If Not t Continue
 			
+			t="#"+t
 			tagsStr+=t+" "
 			'
 			If Not( t=EMPTY_TAG Or _tags.Contains( t ) )

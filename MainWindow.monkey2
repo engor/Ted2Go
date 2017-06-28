@@ -385,7 +385,7 @@ Class MainWindowInstance Extends Window
 		
 		App.Idle+=OnAppIdle
 		
-		If GetFileType( "bin/ted2.state.json" )=FileType.None _helpActions.about.Trigger()
+		CheckFirstStart()
 		
 		_enableSaving=True
 		
@@ -418,11 +418,11 @@ Class MainWindowInstance Extends Window
 		Local location:=Prefs.MainProjectTabsRight ? "right" Else "left"
 		
 		Local size:=_browsersTabView.Rect.Width
-		If size=0 Then size=250
+		If size=0 Then size=300
 		_contentView.AddView( _browsersTabView,location,size,True )
 		
 		size=_consolesTabView.Rect.Height
-		If size=0 Then size=200
+		If size=0 Then size=150
 		_contentView.AddView( _consolesTabView,"bottom",size,True )
 		
 		_contentView.ContentView=_docsTabView
@@ -698,6 +698,15 @@ Class MainWindowInstance Extends Window
 		Next
 		
 	End
+	
+	Method CheckFirstStart()
+		
+		If GetFileType( "bin/ted2.state.json" )=FileType.None
+			_helpActions.about.Trigger()
+			OpenDocument( Prefs.MonkeyRootPath+"bananas/!showcase/all.bananas" )
+		Endif
+	End
+	
 	
 	Public
 	

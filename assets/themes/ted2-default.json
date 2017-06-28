@@ -143,7 +143,8 @@
 
 		"BananasView":{
 			"border":[ 0 ],
-			"padding":[ 0 ]
+			"padding":[ 0 ],
+			"backgroundColor":"content"
 		},
 		"BananasCard":{
 			"margin":[ 10,15,10,15 ],

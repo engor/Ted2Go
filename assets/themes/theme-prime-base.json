@@ -1,6 +1,7 @@
 //Theme by @Hezkore
-
 {
+	"extends":"ted2-default",
+	
 	"fonts":{
 	
 		"normal":"Roboto-Medium.ttf,16",
