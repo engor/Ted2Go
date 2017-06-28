@@ -144,10 +144,12 @@ Class Prefs
 		If Not json Return
 		
 		MonkeyRootPath=Json_GetString( json.Data,"rootPath","" )
-		
+		If Not MonkeyRootPath.EndsWith( "/" ) Then MonkeyRootPath+="/"
 	End
 	
 	Function SaveLocalState()
+		
+		If Not MonkeyRootPath.EndsWith( "/" ) Then MonkeyRootPath+="/"
 		
 		Local json:=New JsonObject
 		json["rootPath"]=New JsonString( MonkeyRootPath )

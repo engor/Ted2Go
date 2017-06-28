@@ -26,7 +26,7 @@ End
 
 Interface IModuleBuilder
 	
-	Method BuildModules:Bool( clean:Bool,modules:String="" )
+	Method BuildModules:Bool( clean:Bool,modules:String="",configs:String="debug release" )
 	
 End
 
@@ -298,7 +298,7 @@ Class BuildActions Implements IModuleBuilder
 		moduleManager.Enabled=idle
 	End
 
-	Method BuildModules:Bool( clean:Bool,modules:String="" )
+	Method BuildModules:Bool( clean:Bool,modules:String="",configs:String="debug release" )
 	
 		Local targets:=New StringStack
 	
@@ -312,7 +312,9 @@ Class BuildActions Implements IModuleBuilder
 		Local prefix:=clean ? "Rebuild" Else "Update"
 		Local text:="Modules: "
 		If modules Then text+=modules.Replace( " ",", " ) Else text+="All"
-		text+="~n~nSelect target:"
+		text+="~n~n"
+		text+="Configs: "+configs+"~n~n"
+		text+="Select target:"
 	
 		Local i:=TextDialog.Run( prefix+" modules",text,targets.ToArray(),0,targets.Length-1 )
 	
@@ -323,12 +325,12 @@ Class BuildActions Implements IModuleBuilder
 			Return False
 		Case targets.Length-2	'All!
 			For Local i:=0 Until targets.Length-2
-				If BuildModules( clean,targets[i],modules ) Continue
+				If BuildModules( clean,targets[i],modules,configs ) Continue
 				result=False
 				Exit
 			Next
 		Default
-			result=BuildModules( clean,targets[i],modules )
+			result=BuildModules( clean,targets[i],modules,configs )
 		End
 	
 		If result
@@ -493,13 +495,14 @@ Class BuildActions Implements IModuleBuilder
 		Return _console.ExitCode=0
 	End
 
-	Method BuildModules:Bool( clean:Bool,target:String,modules:String )
-	
+	Method BuildModules:Bool( clean:Bool,target:String,modules:String,configs:String="debug release" )
+		
 		Local msg:=(clean ? "Rebuilding ~ " Else "Updating ~ ")+target
 		
-		For Local config:=0 Until 2
+		Local arr:=configs.Split( " " )
+		For Local cfg:=Eachin arr
 		
-			Local cfg:=(config ? "debug" Else "release")
+			'Local cfg:=(config ? "debug" Else "release")
 			
 			Local cmd:=MainWindow.Mx2ccPath+" makemods -target="+target
 			If clean cmd+=" -clean"

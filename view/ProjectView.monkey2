@@ -172,6 +172,31 @@ Class ProjectView Extends ScrollView
 				
 				Endif
 				
+				' update all modules
+				Local path2:=MainWindow.ModsPath
+				If path2.EndsWith( "/" ) Then path2=path2.Slice( 0,path2.Length-1 )
+				
+				If path = path2
+					
+					menu.AddSeparator()
+					
+					menu.AddAction( "Update modules /debug+release" ).Triggered=Lambda()
+					
+						_builder.BuildModules( False,"","debug release" )
+					End
+					
+					menu.AddAction( "Update modules /release" ).Triggered=Lambda()
+					
+						_builder.BuildModules( False,"","release" )
+					End
+					
+					menu.AddAction( "Update modules /debug" ).Triggered=Lambda()
+					
+						_builder.BuildModules( True,"","debug" )
+					End
+				
+				Endif
+				
 			Case FileType.File
 			
 				menu.AddAction( "Open on Desktop" ).Triggered=Lambda()
