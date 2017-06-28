@@ -300,16 +300,27 @@ Class BuildActions Implements IModuleBuilder
 
 	Method BuildModules:Bool( clean:Bool,modules:String="",configs:String="debug release" )
 	
+		#Rem
 		Local targets:=New StringStack
 	
 		For Local target:=Eachin _validTargets
 			targets.Push( target="ios" ? "iOS" Else target.Capitalize() )
 		Next
 	
-		targets.Push( "All!" )
+		targets.Push( "All targets" )
 		targets.Push( "Cancel" )
-	
-		Local prefix:=clean ? "Rebuild" Else "Update"
+		#End
+		
+		'Local title:=clean ? "Rebuild" Else "Update"
+		
+		Local dialog:=New UpdateModulesDialog( _validTargets )
+		
+		'Local r:=Dialog.Run( "Update modules",UpdateModulesDialog.GetView( modules,_validTargets ),New String[]("Update","Cancel"),0,1 )
+		
+		dialog.Show( modules )
+		
+		Local result:=True
+		#Rem
 		Local text:="Modules: "
 		If modules Then text+=modules.Replace( " ",", " ) Else text+="All"
 		text+="~n~n"
@@ -323,7 +334,7 @@ Class BuildActions Implements IModuleBuilder
 		Select i
 		Case targets.Length-1	'Cancel
 			Return False
-		Case targets.Length-2	'All!
+		Case targets.Length-2	'All targets
 			For Local i:=0 Until targets.Length-2
 				If BuildModules( clean,targets[i],modules,configs ) Continue
 				result=False
@@ -339,6 +350,8 @@ Class BuildActions Implements IModuleBuilder
 			_console.Write( "~n"+prefix+" modules failed.~n" )
 		Endif
 	
+		#End
+		
 		Return result
 	End
 	
@@ -366,6 +379,7 @@ Class BuildActions Implements IModuleBuilder
 	
 	Field _validTargets:StringStack
 	Field _timing:Long
+	
 	
 	Method BuildDoc:CodeDocument()
 		
