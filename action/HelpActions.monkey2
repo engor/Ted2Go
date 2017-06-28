@@ -12,6 +12,7 @@ Class HelpActions
 	Field aboutTed2go:Action
 	Field makeBetter:Action
 	Field mx2homepage:Action
+	Field bananas:Action
 	
 
 	Method New()
@@ -82,6 +83,12 @@ Class HelpActions
 		mx2homepage.Triggered=lambda()
 		
 			OpenUrl( MONKEY2_DOMAIN )
+		End
+		
+		bananas=New Action( "Bananas showcase" )
+		bananas.Triggered=lambda()
+		
+			MainWindow.ShowBananasShowcase()
 		End
 	End
 

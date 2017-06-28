@@ -333,6 +333,7 @@ Class MainWindowInstance Extends Window
 		_helpMenu=New MenuExt( "Help" )
 		_helpMenu.AddAction( _helpActions.quickHelp )
 		_helpMenu.AddAction( _helpActions.viewManuals )
+		_helpMenu.AddAction( _helpActions.bananas )
 		_helpMenu.AddSeparator()
 		_helpMenu.AddAction( _buildActions.rebuildHelp )
 		_helpMenu.AddSeparator()
@@ -703,7 +704,7 @@ Class MainWindowInstance Extends Window
 		
 		If GetFileType( "bin/ted2.state.json" )=FileType.None
 			_helpActions.about.Trigger()
-			OpenDocument( Prefs.MonkeyRootPath+"bananas/!showcase/all.bananas" )
+			ShowBananasShowcase()
 		Endif
 	End
 	
@@ -815,6 +816,10 @@ Class MainWindowInstance Extends Window
 	
 	Method UpdateHelpTree()
 		_helpTree.Update()
+	End
+	
+	Method ShowBananasShowcase()
+		OpenDocument( Prefs.MonkeyRootPath+"bananas/!showcase/all.bananas" )
 	End
 	
 	Method ReadError( path:String )
