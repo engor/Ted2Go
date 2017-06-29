@@ -33,7 +33,6 @@
 #Import "dialog/DialogExt"
 #Import "dialog/NoTitleDialog"
 #Import "dialog/FindInFilesDialog"
-#Import "dialog/UpdateModulesDialog"
 
 #Import "document/DocumentManager"
 #Import "document/Ted2Document"
@@ -99,6 +98,7 @@
 #Import "view/GutterView"
 #Import "view/MenuExt"
 #Import "view/ScrollableViewExt"
+#Import "view/UpdateModulesView"
 
 #Import "MainWindow"
 #Import "Plugin"

@@ -313,11 +313,16 @@ Class BuildActions Implements IModuleBuilder
 		
 		'Local title:=clean ? "Rebuild" Else "Update"
 		
-		Local dialog:=New UpdateModulesDialog( _validTargets )
+		'Local dialog:=New UpdateModulesDialog( _validTargets )
 		
-		'Local r:=Dialog.Run( "Update modules",UpdateModulesDialog.GetView( modules,_validTargets ),New String[]("Update","Cancel"),0,1 )
+		'Local targets:=New StringStack( _validTargets )
+		'targets.Add( "all" )
 		
-		dialog.Show( modules )
+		Local view:=New UpdateModulesView( _validTargets,modules,configs,clean )
+		
+		Local r:=Dialog.Run( "Update modules",view,New String[]("Update","Cancel"),0,1 )
+		
+		'dialog.Show( modules )
 		
 		Local result:=True
 		#Rem

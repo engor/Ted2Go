@@ -1,0 +1,148 @@
+
+Namespace ted2go
+
+
+Class UpdateModulesView Extends DockingView
+	
+	Method New( targets:StringStack,selectedModules:String,configs:String,clean:Bool )
+		
+		_modsNames.Clear()
+		GetModulesNames( _modsNames )
+		
+		Local dock:=Self
+		
+		Local modsDock:=New DockingView
+		modsDock.AddView( New Label( "Modules:" ),"left" )
+		' select all modules
+		Local btn:=New Button( "All" )
+		btn.Clicked+=Lambda()
+		
+		End
+		modsDock.AddView( btn,"right" )
+		' select none modules
+		btn=New Button( "None" )
+		btn.Clicked+=Lambda()
+		
+		End
+		modsDock.AddView( New Label( " " ),"right" )
+		modsDock.AddView( btn,"right" )
+		
+		dock.AddView( modsDock,"top" )
+		
+		' table with modules
+		Local cols:=4
+		Local table:=New TableView( cols,1 )
+		table.Rows=(_modsNames.Length/cols)+1
+		Local r:=0,c:=0,i:=0
+		For Local m:=Eachin _modsNames
+		
+			r=i/cols
+			c=i Mod cols
+			i+=1
+		
+			Local chb:=New CheckButton( m )
+			chb.Checked=(Not selectedModules Or selectedModules.Contains( " "+m ) Or selectedModules.Contains( m+" " ))
+			table[c,r]=chb
+			_modulesViews.Add( chb )
+		Next
+		dock.AddView( table,"top" )
+		dock.AddView( New Label( " " ),"top" )
+		
+		dock.AddView( New Label( "Targets:" ),"top" )
+		Local targetDock:=New DockingView
+		For Local t:=Eachin targets
+			Local chb:=New CheckButton( t )
+			targetDock.AddView( chb,"left" )
+			_targetsViews.Add( chb )
+		Next
+		dock.AddView( targetDock,"top" )
+		dock.AddView( New Label( " " ),"top" )
+		
+		dock.AddView( New Label( "Configs:" ),"top" )
+		Local configDock:=New DockingView
+		'
+		_releaseView=New CheckButton( "release" )
+		_releaseView.Checked=configs.Contains( "release" )
+		configDock.AddView( _releaseView,"left" )
+		'
+		_debugView=New CheckButton( "debug" )
+		_debugView.Checked=configs.Contains( "debug" )
+		configDock.AddView( _debugView,"left" )
+		
+		dock.AddView( configDock,"top" )
+		dock.AddView( New Label( " " ),"top" )
+		
+		_cleanView=New CheckButton( "Clean existing data (rebuild)" )
+		_cleanView.Layout="float"
+		dock.AddView( _cleanView,"top" )
+		dock.AddView( New Label( " " ),"top" )
+		
+	End
+	
+	Property SelectedModules:StringStack()
+		
+		Local out:=New StringStack
+		Local list:=_modulesViews
+		For Local v:=Eachin list
+			
+			If v.Checked Then out.Add( v.Text )
+		Next
+		Return out
+	End
+	
+	Property SelectedTargets:StringStack()
+	
+		Local out:=New StringStack
+		Local list:=_targetsViews
+		For Local v:=Eachin list
+	
+			If v.Checked Then out.Add( v.Text )
+		Next
+		Return out
+	End
+	
+	Property SelectedConfigs:String()
+	
+		Local out:=""
+		If _releaseView.Checked Then out="release"
+		If _debugView.Checked
+			If out Then out+=" "
+			out+="debug"
+		Endif
+		Return out
+	End
+	
+	Property NeedClean:Bool()
+	
+		Return _cleanView.Checked
+	End
+	
+	
+	Private
+	
+	Field _modulesViews:=New Stack<CheckButton>
+	Field _targetsViews:=New Stack<CheckButton>
+	Field _releaseView:CheckButton,_debugView:CheckButton
+	Field _cleanView:CheckButton
+	
+	Global _modsNames:=New StringStack
+	
+	
+	Function GetModulesNames( out:StringStack )
+	
+		Local modsPath:=MainWindow.ModsPath
+	
+		Local dd:=LoadDir( modsPath )
+	
+		For Local d:=Eachin dd
+			If GetFileType( modsPath+d ) = FileType.Directory
+				Local file:=modsPath + d + "/module.json"
+				If GetFileType( file ) = FileType.File
+					out.Add( d )
+				Endif
+			Endif
+		Next
+	End
+	
+	
+End
