@@ -183,16 +183,18 @@ Class ProjectView Extends ScrollView
 				Endif
 				
 				' bananas showcase
-				path2=Prefs.MonkeyRootPath+"bananas"
-				If path = path2
-				
-					menu.AddSeparator()
-				
-					menu.AddAction( "Open bananas showcase" ).Triggered=Lambda()
-				
-						MainWindow.ShowBananasShowcase()
-					End
-				
+				If IsBananasShowcaseAvailable()
+					path2=Prefs.MonkeyRootPath+"bananas"
+					If path = path2
+					
+						menu.AddSeparator()
+					
+						menu.AddAction( "Open bananas showcase" ).Triggered=Lambda()
+					
+							MainWindow.ShowBananasShowcase()
+						End
+					
+					Endif
 				Endif
 				
 			Case FileType.File

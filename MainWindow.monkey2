@@ -331,7 +331,7 @@ Class MainWindowInstance Extends Window
 		_helpMenu=New MenuExt( "Help" )
 		_helpMenu.AddAction( _helpActions.quickHelp )
 		_helpMenu.AddAction( _helpActions.viewManuals )
-		_helpMenu.AddAction( _helpActions.bananas )
+		If IsBananasShowcaseAvailable() Then _helpMenu.AddAction( _helpActions.bananas )
 		_helpMenu.AddSeparator()
 		_helpMenu.AddAction( _buildActions.rebuildHelp )
 		_helpMenu.AddSeparator()
