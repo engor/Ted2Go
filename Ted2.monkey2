@@ -33,6 +33,7 @@
 #Import "dialog/DialogExt"
 #Import "dialog/NoTitleDialog"
 #Import "dialog/FindInFilesDialog"
+#Import "dialog/UpdateModulesDialog"
 
 #Import "document/DocumentManager"
 #Import "document/Ted2Document"
