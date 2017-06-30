@@ -310,8 +310,6 @@ Class MainWindowInstance Extends Window
 		_buildMenu.AddAction( _buildActions.lockBuildFile )
 		_buildMenu.AddSeparator()
 		_buildMenu.AddAction( _buildActions.updateModules )
-		_buildMenu.AddAction( _buildActions.rebuildModules )
-		_buildMenu.AddSeparator()
 		_buildMenu.AddAction( _buildActions.moduleManager )
 		
 		'Window menu

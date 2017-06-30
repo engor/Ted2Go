@@ -2,27 +2,31 @@
 Namespace ted2go
 
 
-Class UpdateModulesView Extends DockingView
+Class UpdateModulesDialog Extends DialogExt
 	
 	Method New( targets:StringStack,selectedModules:String,configs:String,clean:Bool )
 		
 		_modsNames.Clear()
 		GetModulesNames( _modsNames )
 		
-		Local dock:=Self
+		Local dock:=New DockingView
 		
 		Local modsDock:=New DockingView
 		modsDock.AddView( New Label( "Modules:" ),"left" )
 		' select all modules
 		Local btn:=New Button( "All" )
 		btn.Clicked+=Lambda()
-		
+			For Local v:=Eachin _modulesViews
+				v.Checked=True
+			Next
 		End
 		modsDock.AddView( btn,"right" )
 		' select none modules
 		btn=New Button( "None" )
 		btn.Clicked+=Lambda()
-		
+			For Local v:=Eachin _modulesViews
+				v.Checked=False
+			Next
 		End
 		modsDock.AddView( New Label( " " ),"right" )
 		modsDock.AddView( btn,"right" )
@@ -30,6 +34,8 @@ Class UpdateModulesView Extends DockingView
 		dock.AddView( modsDock,"top" )
 		
 		' table with modules
+		Local selMods:=New StringStack( selectedModules.Split( " " ) )
+		
 		Local cols:=4
 		Local table:=New TableView( cols,1 )
 		table.Rows=(_modsNames.Length/cols)+1
@@ -41,7 +47,7 @@ Class UpdateModulesView Extends DockingView
 			i+=1
 		
 			Local chb:=New CheckButton( m )
-			chb.Checked=(Not selectedModules Or selectedModules.Contains( " "+m ) Or selectedModules.Contains( m+" " ))
+			chb.Checked=(Not selectedModules Or selMods.Contains( m ))
 			table[c,r]=chb
 			_modulesViews.Add( chb )
 		Next
@@ -54,6 +60,7 @@ Class UpdateModulesView Extends DockingView
 			Local chb:=New CheckButton( t )
 			targetDock.AddView( chb,"left" )
 			_targetsViews.Add( chb )
+			chb.Checked=(t="desktop")
 		Next
 		dock.AddView( targetDock,"top" )
 		dock.AddView( New Label( " " ),"top" )
@@ -73,19 +80,48 @@ Class UpdateModulesView Extends DockingView
 		dock.AddView( New Label( " " ),"top" )
 		
 		_cleanView=New CheckButton( "Clean existing data (rebuild)" )
+		_cleanView.Checked=clean
 		_cleanView.Layout="float"
 		dock.AddView( _cleanView,"top" )
 		dock.AddView( New Label( " " ),"top" )
 		
+		Local actUpdate:=New Action( "Update" )
+		actUpdate.Triggered+=Lambda()
+			
+			If Not SelectedModules
+				ShowMessage( "","Please, select at least one module to update." )
+				Return
+			Endif
+			If SelectedTargets.Empty
+				ShowMessage( "","Please, select at least one target." )
+				Return
+			Endif
+			If Not SelectedConfigs
+				ShowMessage( "","Please, select at least one config." )
+				Return
+			Endif
+			
+			HideWithResult( True )
+		End
+		AddAction( actUpdate )
+		
+		Local actCancel:=New Action( "Cancel" )
+		actCancel.Triggered+=Lambda()
+			HideWithResult( False )
+		End
+		AddAction( actCancel )
+		
+		ContentView=dock
+		
 	End
 	
-	Property SelectedModules:StringStack()
+	Property SelectedModules:String()
 		
-		Local out:=New StringStack
+		Local out:=""
 		Local list:=_modulesViews
 		For Local v:=Eachin list
 			
-			If v.Checked Then out.Add( v.Text )
+			If v.Checked Then out+=v.Text+" "
 		Next
 		Return out
 	End
@@ -144,5 +180,8 @@ Class UpdateModulesView Extends DockingView
 		Next
 	End
 	
-	
+	Function ShowMessage( title:String,msg:String,okButton:String="  OK  " )
+		
+		Dialog.Run( title,New Label( msg ),New String[](okButton),0,0 )
+	End
 End

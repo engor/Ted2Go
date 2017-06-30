@@ -160,16 +160,11 @@ Class ProjectView Extends ScrollView
 					
 					menu.AddSeparator()
 					
-					menu.AddAction( "Update module" ).Triggered=Lambda()
+					menu.AddAction( "Update / Rebuild "+name ).Triggered=Lambda()
 						
-						_builder.BuildModules( False,name )
-					End
-					
-					menu.AddAction( "Rebuild module" ).Triggered=Lambda()
-				
 						_builder.BuildModules( True,name )
 					End
-				
+					
 				Endif
 				
 				' update all modules
@@ -180,21 +175,11 @@ Class ProjectView Extends ScrollView
 					
 					menu.AddSeparator()
 					
-					menu.AddAction( "Update modules /debug+release" ).Triggered=Lambda()
+					menu.AddAction( "Update / Rebuild modules" ).Triggered=Lambda()
 					
-						_builder.BuildModules( False,"","debug release" )
+						_builder.BuildModules( False )
 					End
 					
-					menu.AddAction( "Update modules /release" ).Triggered=Lambda()
-					
-						_builder.BuildModules( False,"","release" )
-					End
-					
-					menu.AddAction( "Update modules /debug" ).Triggered=Lambda()
-					
-						_builder.BuildModules( True,"","debug" )
-					End
-				
 				Endif
 				
 				' bananas showcase

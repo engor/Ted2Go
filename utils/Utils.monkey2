@@ -176,3 +176,15 @@ Function DirectoryExists:Bool( path:String )
 	
 	Return GetFileType( path )=FileType.Directory
 End
+
+Function FormatTime:String( millis:Long,format:String="{min} m {sec} s" )
+	
+	millis/=1000
+	Local mins:=millis/60
+	Local secs:=millis Mod 60
+	
+	Local s:=format.Replace( "{min}",""+mins )
+	s=s.Replace( "{sec}",""+secs )
+	
+	Return s
+End
