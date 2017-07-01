@@ -16,6 +16,7 @@ Class FindActions
 		
 		_docs=docs
 		_findConsole=findConsole
+		_projView=projView
 		
 		find=New Action( "Find / Replace" )
 		find.Triggered=OnFind
@@ -60,9 +61,9 @@ Class FindActions
 		replaceAll.Enabled=tv
 	End
 	
-	Method FindByTextChanged()
+	Method FindByTextChanged( entireProject:Bool )
 		
-		OnFindNext( False )
+		If Not entireProject Then OnFindNext( False )
 	End
 	
 	
@@ -74,6 +75,7 @@ Class FindActions
 	Field _findInFilesDialog:FindInFilesDialog
 	Field _findConsole:TreeViewExt
 	Field _cursorPos:=0
+	Field _projView:ProjectView
 	
 	Method OnFind()
 		
@@ -106,40 +108,150 @@ Class FindActions
 		Endif
 	End
 	
+	Field _storedTextView:TextView
+	Field _storedWhat:String
+	Field _storedCaseSens:Bool
+	Field _storedEntireProject:Bool
+	Field _results:Stack<FileJumpData>
+	Field _resultIndex:Int=-1
+	
 	Method OnFindNext( changeCursorPos:Bool=True )
 	
-		Local tv:=_docs.CurrentTextView
+		Local doc:=_docs.CurrentDocument
+		If Not doc Return
+		
+		Local tv:=doc.TextView
 		If Not tv Return
 		
-		Local text:=_findDialog.FindText
-		If Not text Return
+		Local what:=_findDialog.FindText
+		If Not what Return
 		
-		Local tvtext:=tv.Text
+		Local sens:=_findDialog.CaseSensitive
+		
+		If Not sens
+			what=what.ToLower()
+		Endif
+		
+		Local entire:=_findDialog.EntireProject
+		
+		' when typing request word we should everytime find from current cursor
 		Local cursor:=_cursorPos
 		If changeCursorPos
 			cursor=Max( tv.Anchor,tv.Cursor )
 			_cursorPos=cursor
 		Endif
 		
-		If Not _findDialog.CaseSensitive
-			tvtext=tvtext.ToLower()
-			text=text.ToLower()
+		Local theSame:=(what=_storedWhat And sens=_storedCaseSens And entire=_storedEntireProject)
+		
+		If Not entire Then theSame=theSame And tv=_storedTextView
+		
+		_storedWhat=what
+		_storedTextView=tv
+		_storedCaseSens=sens
+		_storedEntireProject=entire
+		
+		If Not theSame Then _results=Null
+		
+		If _results
+			' use current search results
+			If Not _results.Empty
+				_resultIndex=(_resultIndex+1) Mod _results.Length
+			Endif
+			
+		Else
+			
+			_resultIndex=-1
+			
+			' start new search
+			If entire
+				
+				Local proj:=""
+				For Local p:=Eachin _projView.OpenProjects
+					If doc.Path.Contains( p )
+						proj=p
+						Exit
+					Endif
+				End
+				Local map:=FindInProject( what,proj,sens )
+				If map Then CreateResultTree( _findConsole.RootNode,map,what,proj )
+					
+				If Not map.Empty
+					_results=New Stack<FileJumpData>
+					For Local items:=Eachin map.Values
+						_results.AddAll( items )
+					End
+					_resultIndex=0
+				Endif
+				
+			Else
+				
+				_results=FindInFile( "",what,sens,tv.Document )
+				
+				If Not _results.Empty
+					' take the first result accordingly to cursor
+					For Local i:=0 Until _results.Length
+						Local jump:=_results[i]
+						If jump.pos>=cursor
+							_resultIndex=i
+							Exit
+						Endif
+					Next
+					If _resultIndex=-1 Then _resultIndex=0 ' take from top of doc
+				Endif
+				
+			Endif
+			
 		Endif
 		
-		Local i:=tvtext.Find( text,cursor )
-		If i=-1
-			i=tvtext.Find( text )
-			If i=-1 Return
+		If _resultIndex>=0
+			
+			Local jump:=_results[_resultIndex]
+			
+			If _storedEntireProject
+				MainWindow.OpenDocument( jump.path )
+				tv=_docs.CurrentTextView
+			Endif
+			
+			If tv Then tv.SelectText( jump.pos,jump.pos+jump.len )
+			
 		Endif
 		
-		tv.SelectText( i,i+text.Length )
+	End
+	
+	Method OnFindPrevious()
+		
+		If _resultIndex>=0
+			
+			Local tv:=_docs.CurrentTextView
+			If Not tv Return
+			
+			_resultIndex-=1
+			If _resultIndex<0 Then _resultIndex=_results.Length-1
+			
+			Local jump:=_results[_resultIndex]
+			
+			If _storedEntireProject
+				MainWindow.OpenDocument( jump.path )
+				tv=_docs.CurrentTextView
+			Endif
+			
+			If tv Then tv.SelectText( jump.pos,jump.pos+jump.len )
+			
+		Endif
+	
 	End
 	
 	Method OnFindAllInFiles()
 	
-		If Not _findInFilesDialog.FindText Return
+		If Not _findInFilesDialog.FindText
+			ShowMessage( "","Please, enter text to find what." )
+			Return
+		Endif
 		
-		If Not _findInFilesDialog.SelectedProject Return
+		If Not _findInFilesDialog.SelectedProject
+			ShowMessage( "","Please, select project in the list." )
+			Return
+		Endif
 		
 		_findInFilesDialog.Hide()
 		MainWindow.ShowFindResults()
@@ -148,119 +260,136 @@ Class FindActions
 			
 			New Fiber( Lambda()
 			
-				FindInFilesInternal()
+				Local what:=_findInFilesDialog.FindText
+				Local proj:=_findInFilesDialog.SelectedProject
+				Local sens:=_findInFilesDialog.CaseSensitive
+				Local filter:=_findInFilesDialog.FilterText
+				
+				Local result:=FindInProject( what,proj,sens,filter )
+				
+				If result Then CreateResultTree( _findConsole.RootNode,result,what,proj )
 			End)
 		End
 		
 	End
 	
-	Method FindInFilesInternal()
+	Const DEFAULT_FILES_FILTER:="monkey2" ',txt,htm,html,h,cpp,json,xml,ini"
+	
+	Method FindInProject:StringMap<Stack<FileJumpData>>( what:String,projectPath:String,caseSensitive:Bool,filesFilter:String=DEFAULT_FILES_FILTER )
 		
-		Local what:=_findInFilesDialog.FindText
-		If Not what Return
+		If Not filesFilter Then filesFilter="monkey2"
 		
-		Local proj:=_findInFilesDialog.SelectedProject
-		If Not proj Return
+		Local exts:=filesFilter.Split( "," )
 		
-		Local filter:=_findInFilesDialog.FilterText
-		If Not filter Then filter="monkey2"
+		projectPath+="/"
 		
-		Local exts:=filter.Split( "," )
-		
-		proj+="/"
-		
-		Local sens:=_findInFilesDialog.CaseSensitive
-		
-		If Not sens Then what=what.ToLower()
+		If Not caseSensitive Then what=what.ToLower()
 		
 		Local files:=New Stack<String>
-		Utils.GetAllFiles( proj,exts,files )
+		Utils.GetAllFiles( projectPath,exts,files )
 		
-		Local root:=_findConsole.RootNode
-		root.RemoveAllChildren()
-		
-		root.Text="Results for '"+what+"'"
-		
-		Local subRoot:TreeView.Node
-		Local items:=New Stack<FileJumpData>
 		Local len:=what.Length
+		
+		Local result:=New StringMap<Stack<FileJumpData>>
 		
 		Local doc:=New TextDocument 'use it to get line number
 		For Local f:=Eachin files
 		
 			Local text:=LoadString( f )
 		
-			If Not sens Then text=text.ToLower()
+			If Not caseSensitive Then text=text.ToLower()
 			text=text.Replace( "~r~n","~n" )
 			text=text.Replace( "~r","~n" )
 		
 			doc.Text=text
 		
 			Local i:=0
-			items.Clear()
-		
+			Local items:=New Stack<FileJumpData>
+			
 			Repeat
 				i=text.Find( what,i )
 				If i=-1 Exit
-		
+				
 				Local data:=New FileJumpData
 				data.path=f
 				data.pos=i
 				data.len=len
 				data.line=doc.FindLine( i )+1
-		
+				
 				items.Add( data )
-		
+				
 				i+=len
 			Forever
+			
+			If Not items.Empty Then result[f]=items
+			
+		Next
 		
-			If Not items.Empty
+		Return result
+	End
+	
+	Method FindInFile:Stack<FileJumpData>( filePath:String,what:String,caseSensitive:Bool,doc:TextDocument=Null )
+	
+		Local len:=what.Length
+		Local text:String
 		
-				subRoot=New TreeView.Node( f.Replace( proj,"" )+" ("+items.Length+")",root )
+		If Not doc
+			doc=New TextDocument
+			text=LoadString( filePath )
+			If Not caseSensitive Then text=text.ToLower()
+			text=text.Replace( "~r~n","~n" )
+			text=text.Replace( "~r","~n" )
+			doc.Text=text
+		Else
+			text=doc.Text
+		Endif
 		
-				For Local d:=Eachin items
-					Local node:=New NodeWithData<FileJumpData>( " at line "+d.line,subRoot )
-					node.data=d
-				Next
+		Local i:=0
+		Local result:=New Stack<FileJumpData>
 		
-			Endif
+		Repeat
+			i=text.Find( what,i )
+			If i=-1 Exit
+
+			Local data:=New FileJumpData
+			data.path=filePath
+			data.pos=i
+			data.len=len
+			data.line=doc.FindLine( i )+1
+
+			result.Add( data )
+
+			i+=len
+		Forever
+
+		Return result
+	End
+	
+	Method CreateResultTree( root:TreeView.Node,map:StringMap<Stack<FileJumpData>>,what:String,projectPath:String )
+		
+		root.RemoveAllChildren()
+		
+		root.Text="Results for '"+what+"'"
+		
+		Local subRoot:TreeView.Node
+		
+		For Local file:=Eachin map.Keys
+			
+			Local items:=map[file]
+			
+			subRoot=New TreeView.Node( file.Replace( projectPath+"/","" )+" ("+items.Length+")",root )
+	
+			For Local d:=Eachin items
+				Local node:=New NodeWithData<FileJumpData>( " at line "+d.line,subRoot )
+				node.data=d
+			Next
+		
 		Next
 		
 		If root.NumChildren=0 Then New TreeView.Node( "not found :(",root )
 		
 		root.Expanded=True
-	End
-	
-	Method OnFindPrevious()
-	
-		Local tv:=_docs.CurrentTextView
-		If Not tv Return
-
-		Local text:=_findDialog.FindText
-		If Not text Return
-
-		Local tvtext:=tv.Text
-		Local cursor:=Min( tv.Anchor,tv.Cursor )
 		
-		If Not _findDialog.CaseSensitive
-			tvtext=tvtext.ToLower()
-			text=text.ToLower()
-		Endif
-		
-		Local i:=tvtext.Find( text )
-		If i=-1 Return
-		
-		If i>=cursor
-			i=tvtext.FindLast( text )
-		Else
-			Repeat
-				Local n:=tvtext.Find( text,i+text.Length )
-				If n>=cursor Exit
-				i=n
-			Forever
-		End
-		
-		tv.SelectText( i,i+text.Length )
 	End
 	
 	Method OnReplace()
