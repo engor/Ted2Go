@@ -58,7 +58,7 @@ Class MainWindowInstance Extends Window
 		
 		'IRC tab
 		_ircView=New IRCView
-		_ircView.introScreen.Text="Get live help from other Monkey 2 users"
+		_ircView.introScreen.Text="Hang out with other Monkey 2 users"
 		_ircView.introScreen.OnNickChange+=Lambda( nick:String )
 			Prefs.IrcNickname=nick
 		End
