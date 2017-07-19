@@ -61,7 +61,8 @@
 		},
 
 		"GutterView":{
-			"border":[0],
+			"border":[0,0,1,0],
+			"borderColor":"textview-whitespaces",
 			"extends":"TextView",
 			"textColor":"text-disabled"
 		},
