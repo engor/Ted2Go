@@ -58,7 +58,7 @@ Class MainWindowInstance Extends Window
 		
 		'IRC tab
 		_ircView=New IRCView
-		_ircView.introScreen.Text="Get live help from other Monkey 2 users"
+		_ircView.introScreen.Text="Hang out with other Monkey 2 users"
 		_ircView.introScreen.OnNickChange+=Lambda( nick:String )
 			Prefs.IrcNickname=nick
 		End
@@ -366,6 +366,8 @@ Class MainWindowInstance Extends Window
 		_consolesTabView.AddTab( "Docs",_helpConsole,False )
 		_consolesTabView.AddTab( "Find",_findConsole,False )
 		_consolesTabView.AddTab( "Chat",_ircView,False )
+		
+		_consolesTabView.CurrentChanged+=OnChatClicked
 		
 		_statusBar=New StatusBarView
 		
@@ -995,6 +997,8 @@ Class MainWindowInstance Extends Window
 		
 		If Not _ircView Return
 		
+		_ircView.ircHandler.OnMessage+=Self.OnChatMessage
+		
 		Local intro:=_ircView.introScreen
 		
 		If intro.IsConnected Return
@@ -1005,6 +1009,19 @@ Class MainWindowInstance Extends Window
 		Local rooms:=Prefs.IrcRooms
 		intro.AddOnlyServer( nick,server,server,port,rooms )
 		
+	End
+	
+	Method OnChatClicked()
+		If _consolesTabView.CurrentView = _ircView Then
+			_consolesTabView.SetTabIcon( _ircView, Null )
+		Endif
+	End
+	
+	Method OnChatMessage( message:IRCMessage, container:IRCMessageContainer, server:IRCServer )
+		
+		If _consolesTabView.CurrentView <> _ircView And message.type = "PRIVMSG" Then
+			_consolesTabView.SetTabIcon( _ircView, App.Theme.OpenImage( "irc/notice.png" ) )
+		Endif
 	End
 	
 	Method LoadState( jobj:JsonObject )
