@@ -18,7 +18,7 @@ Function InitKeywords()
 
 	Local kws:=""
 	kws+="Namespace;Using;Import;Extern;"
-	kws+="Public;Private;Protected;Friend;"
+	kws+="Public;Private;Protected;Internal;Friend;"
 	kws+="Void;Bool;Byte;UByte;Short;UShort;Int;UInt;Long;ULong;Float;Double;String;CString;Variant;TypeInfo;DeclInfo;Object;Continue;Exit;"
 	kws+="New;Self;Super;Eachin;True;False;Null;Where;"
 	kws+="Alias;Const;Local;Global;Field;Method;Function;Property;Getter;Setter;Operator;Lambda;"
