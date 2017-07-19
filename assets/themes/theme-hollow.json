@@ -1,52 +1,52 @@
 //Theme by @Hezkore
+//Inspired by gruvbox
 {
 	"extends":"ted2-default",
 	
 	"fonts":{
 	
 		"normal":"Roboto-Medium.ttf,16",
-		"fixedWidth":"RobotoMono-Medium.ttf,18",
-		"small":"Roboto-Medium.ttf,13",
-		"editor":"MesloLGSDZ-Bold.ttf,18"
+		"fixedWidth":"RobotoMono-Medium.ttf,19",
+		"small":"Roboto-Medium.ttf,14",
+		"editor":"MesloLGSDZ-Bold.ttf,19"
 	},
 
 	"colors":{
 
-		// "accent": "",
-		// "accentDark": ""
+		"border": "#121111",
 
 		"transparent": "#0000",
-		"darkest": "#010101",
-		"darker": "#171717",
-		"dark": "#1A1A1A",
-		"bright": "#222222",
-		"brighter": "#2D2D2D",
-		"brightest": "#333333",
-		
-		"text-default": "#AAAAAA",
+		"darkest": "#222020",
+		"darker": "#32302F",
+		"dark": "#3C3836",
+		"bright": "#504945",
+		"brighter": "#665C54",
+		"brightest": "#7C6F64",
+
+		"text-default": "#CECECE",
 		"text-highlight": "#FFFFFF",
-		"text-disabled": "#555555",
-		"text-background": "#888",
+		"text-disabled": "#6F6F6F",
+		"text-background": "#969696",
 		
-		"textview-cursor":"#fff",
-		"textview-selection":"accentDark",
-		"textview-cursor-line":"#2A2A2A",
-		"textview-whitespaces":"#2A2A2A",
+		"textview-cursor":"textview-color1",
+		"textview-selection":"brightest",
+		"textview-cursor-line":"dark",
+		"textview-whitespaces":"bright",
 
 		"textview-color0":"#FF00FF", 	//When is this used?
-		"textview-color1": "#ECF0F1",	//identifiers
-		"textview-color2": "#2ECC71",	//keywords
-		"textview-color3": "#F1C410",	//strings
-		"textview-color4": "#6C71C4",	//numbers
-		"textview-color5": "#606060",	//comment
-		"textview-color6": "#E74C31",	//preproc
-		"textview-color7": "#3298DB",
+		"textview-color1": "#EBDAB4",	//identifiers
+		"textview-color2": "#FB4934",	//keywords
+		"textview-color3": "#B8BB26",	//strings
+		"textview-color4": "#B087D2",	//numbers
+		"textview-color5": "#6F665E",	//comment
+		"textview-color6": "#FABD2F",	//preproc
+		"textview-color7": "#8EC07C",
 		
-		"windowClearColor":"bright",
+		"windowClearColor":"darkest",
 		"menu-shortcut":"text-background",
 
-		"statusbar": "#010101",
-		"statusbar-active": "accentDark"
+		"statusbar": "darkest",
+		"statusbar-active": "darkest"
 	},
 	
 	"styles":{
@@ -63,18 +63,23 @@
 			}
 		},
 
+		"CodeMapView":{
+			"extends":"TextView",
+			"margin":[ 4,0,0,0 ]
+		},
+
 		"GutterView":{
 			"padding":[ -16,0,16,0 ],
 			"extends":"TextView",
 			"textColor":"text-disabled",
-			"backgroundColor":"bright",
+			"backgroundColor":"darkest",
 			"font":"editor"
 		},
 		
 		"DebugToolBar":{
 			"extends":"ToolBar",
 			"border":[ 1 ],
-			"borderColor":"bright",
+			"borderColor":"darker",
 			"icons":"debug_icons.png"
 		},
 		
@@ -85,8 +90,8 @@
 
 		"Hint":{
 			"font":"small",
-			"textColor":"accent",
-			"backgroundColor":"darkest"
+			"textColor":"text-default",
+			"backgroundColor":"border"
 		},
 
 		"ToolBarExt":{
@@ -106,48 +111,33 @@
 		},
 
 		"SourceToolBar":{
-			"extends":"ToolBarExt"
-		},
-
-		"ToolButton":{
-			"extends":"Button",
-			"backgroundColor":"dark",
-			"padding":[ 2,0 ],
-			"margin":[ 2,0 ],
-
-			"states":{
-				"hover":{
-					"backgroundColor":"bright"
-				},
-				"active":{
-					"backgroundColor":"brighter"
-				},
-				"selected":{
-					"backgroundColor":"brighter"
-				}
-			}
+			"extends":"ToolBarExt",
+			"backgroundColor":"darker"
 		},
 
 		"TabViewArrowPrev":{
 			"extends":"Button",
+			"textColor":"text-background",
 			"padding":[ 8,4 ],
 			"margin":[ 2,0,2,0 ]
 		},
 
 		"TabViewArrowNext":{
 			"extends":"Button",
+			"textColor":"text-background",
 			"padding":[ 8,4 ],
 			"margin":[ 2,0,12,0 ]
 		},
 
 		"ProgressBar":{
-			"iconColor":"accent",
-			"icons":"prime_assets/progressbar_icons.png"
+			"icons":"hollow_assets/progressbar_icons.png"
 		},
 
 		"StatusBar":{
 			"extends":"DockingView",
 			"padding":[ 0,8,0,8 ],
+			"border":[0,1,0,0],
+			"borderColor":"border",
 			"backgroundColor":"statusbar"
 		},
 		"StatusBarText":{
@@ -193,20 +183,40 @@
 		"Button":{
 			"extends":"Label",
 			"padding":[4,2],
-			"backgroundColor":"darker",
+			"backgroundColor":"dark",
+			"textColor":"text-default",
 			
 			"states":{
 				"hover":{
-					"textColor":"accent",
-					"backgroundColor":"dark"
+					"textColor":"text-highlight",
+					"backgroundColor":"bright"
 				},
 				"active":{
-					"textColor":"accent",
-					"backgroundColor":"dark"
+					"textColor":"text-highlight",
+					"backgroundColor":"brighter"
 				},
 				"selected":{
-					"textColor":"accent",
-					"backgroundColor":"dark"
+					"textColor":"text-highlight",
+					"backgroundColor":"brightest"
+				}
+			}
+		},
+
+		"ToolButton":{
+			"extends":"Button",
+			"backgroundColor":"dark",
+			"padding":[ 2,0 ],
+			"margin":[ 2,0 ],
+
+			"states":{
+				"hover":{
+					"backgroundColor":"bright"
+				},
+				"active":{
+					"backgroundColor":"brighter"
+				},
+				"selected":{
+					"backgroundColor":"brighter"
 				}
 			}
 		},
@@ -221,8 +231,8 @@
 		},
 		
 		"CheckBox":{
-			"icons":"prime_assets/checkbox_icons.png",
-			"iconColor":"accent",
+			"icons":"hollow_assets/checkbox_icons.png",
+			"iconColor":"textview-color7",
 			"margin":[0,0,0,0]
 		},
 		
@@ -230,19 +240,19 @@
 		},
 		
 		"ScrollBar":{
-			"backgroundColor":"bright"
+			"backgroundColor":"darker"
 		},
 		
 		"ScrollKnob":{
 			"padding":[ 6 ],
 			"border":[ 0 ],
-			"backgroundColor":"brightest",
+			"backgroundColor":"dark",
 			"states":{
 				"hover":{
-					"backgroundColor":"brighter"
+					"backgroundColor":"bright"
 				},
 				"active":{
-					"backgroundColor":"brightest"
+					"backgroundColor":"brighter"
 				}
 			}
 		},
@@ -250,7 +260,7 @@
 		"TextView":{
 			"font":"editor",
 			"textColor":"textview-color7",
-			"backgroundColor":"dark"
+			"backgroundColor":"darker"
 		},
 		
 		"TextViewContent":{
@@ -259,7 +269,7 @@
 		
 		"TextField":{
 			"font":"normal",
-			"padding":[ 4 ],
+			"padding":[ 2 ],
 			"margin":[ 2 ],
 			"backgroundColor":"darker"
 		},
@@ -272,13 +282,13 @@
 		
 		"DockKnob":{
 			"padding":[ 3 ],
-			"backgroundColor":"darker",
+			"backgroundColor":"darkest",
 			"states":{
 				"hover":{
-					"backgroundColor":"accentDark"
+					"backgroundColor":"bright"
 				},
 				"active":{
-					"backgroundColor":"accent"
+					"backgroundColor":"brightest"
 				}
 			}
 		},
@@ -291,24 +301,23 @@
 		"Menu":{
 			"extends":"DockingView",
 			"padding":[ 0 ],
-			"skin":"prime_assets/dialog_skin.png",
-			"skinColor":"darkest"
+			"skin":"hollow_assets/dialog_skin.png",
+			"skinColor":"dark"
 		},
 		
 		"MenuButton":{
 			"extends":"Label",
 			"padding":[8,3],
+			"textColor":"text-default",
 			"states":{
 				"hover":{
-					"textColor":"accent",
+					"textColor":"text-highlight",
 					"backgroundColor":"brightest"
 				},
 				"active":{
-					"textColor":"accent",
 					"backgroundColor":"brightest"
 				},
 				"selected":{
-					"textColor":"accent",
 					"backgroundColor":"brightest"
 				}
 			}
@@ -316,7 +325,9 @@
 		
 		"MenuBar":{
 			"extends":"ToolBar",
-			"backgroundColor":"darkest",
+			"backgroundColor":"border",
+			"border":[ 0,0,0,1 ],
+			"backgroundColor":"dark",
 			"margin":[ 0 ]
 		},
 		
@@ -332,42 +343,42 @@
 		"TabBar":{
 			"extends":"ToolBar",
 			"padding":[ 0,0,0,0 ],
-			"backgroundColor":"bright"
+			"backgroundColor":"windowClearColor"
 		},
 		
 		"TabButton":{
-            "backgroundColor":"brighter",
 			"extends":"Button",
 			"font":"small",
-			"padding":[14,12,14,12],
-			"border":[0,0,0,4],
-			"borderColor":"accentDark",
-			"textColor":"text-background",
+			"padding":[10],
+			"textColor":"text-disabled",
+			"backgroundColor":"darkest",
+			"borderColor":"darkest",
+			"border":[0,2,0,0],
 			"states":{
 				"hover":{
-					"textColor":"text-default"
+					"textColor":"text-background"
 				},
 				"active":{
-					"textColor":"text-default"
+					"textColor":"text-background"
 				},
 				"selected":{
-					"backgroundColor":"brightest",
-					"textColor":"text-highlight",
-					"borderColor":"accent"
+					"borderColor":"textview-color7",
+					"backgroundColor":"darker",
+					"textColor":"text-default"
 				}
 			}
 		},
 		
 		"TabClose":{
 			"margin":[32,0,0,0 ],
-			"icons":"prime_assets/tabclose_icons.png",
+			"icons":"hollow_assets/tabclose_icons.png",
 			"iconColor":"text-disabled",
 			"states":{
 				"hover":{
-					"iconColor":"accent"
+					"iconColor":"text-background"
 				},
 				"active":{
-					"iconColor":"accent"
+					"iconColor":"text-highlight"
 				}
 			}
 		},
@@ -386,9 +397,9 @@
 		},
 		
 		"TreeView":{
-			"backgroundColor":"dark",
-			"icons":"prime_assets/treeview_icons.png",
-			"iconColor":"#8fff"
+			"backgroundColor":"darker",
+			"icons":"hollow_assets/treeview_icons.png",
+			"iconColor":"text-background"
 		},
 		
 		"TreeViewContent":{
@@ -397,15 +408,14 @@
 
 		"TreeViewNode":{
 			"font":"small",
+			"textColor":"text-background",
 			"padding":[0,2,0,2],
 			"states":{
 				"hover":{
-					// "backgroundColor":"darker",
-					"textColor":"text-highlight"
+					"textColor":"text-default"
 				},
 				"selected":{
-					// "backgroundColor":"darker",
-					"textColor":"text-highlight"
+					"textColor":"text-default"
 				}
 			}
 		},
@@ -439,11 +449,11 @@
 		},
 		
 		"Console":{
-			"backgroundColor":"dark"
+			"backgroundColor":"darker"
 		},
 		
 		"Dialog":{
-			"skin":"prime_assets/dialog_skin.png",
+			"skin":"hollow_assets/dialog_skin.png",
 			"skinColor":"bright"
 		},
 		
