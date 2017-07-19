@@ -21,7 +21,7 @@ Class Monkey2Keywords Extends KeywordsPlugin
 	Method GetInternal:String() Override
 		Local s:=""
 		s+="Namespace;Using;Import;Extern;"
-		s+="Public;Private;Protected;Friend;"
+		s+="Public;Private;Protected;Internal;Friend;"
 		s+="Void;Bool;Byte;UByte;Short;UShort;Int;UInt;Long;ULong;Float;Double;String;CString;Variant;TypeInfo;DeclInfo;Object;Continue;Exit;"
 		s+="New;Self;Super;Eachin;True;False;Null;Where;"
 		s+="Alias;Const;Local;Global;Field;Method;Function;Property;Getter;Setter;Operator;Lambda;"
