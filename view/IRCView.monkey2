@@ -3,8 +3,6 @@
 
 Namespace ted2go
 
-#Import "assets/"
-
 '=MODULE=
 
 'This class is the main class
@@ -56,12 +54,12 @@ Class IRCServer Extends IRCMessageContainer
 	Field serverPort:Int
 	Field sendBuffer:DataBuffer
 	Field receiveBuffer:DataBuffer=New DataBuffer(512)
-	Field fiberSleep:Float=0.26 'Lower value gets internet messages faster but uses more CPU
+	Field fiberSleep:Float=0.35 'Lower value gets internet messages faster but uses more CPU
 	Field updateFiber:Fiber 'Fiber for updating internet mesages
 	Field socket:Socket
 	Field stream:SocketStream
 	Field nickname:String
-	Field realname:String="KoreIRC"
+	Field realname:String="KoreIRC 1.0"
 	Field messageContainers:=New List<IRCMessageContainer>
 	Field skipContainers:=New String[]("chanserv","nickserv","services","*") 'Make sure these are lower case!
 	
@@ -464,11 +462,19 @@ Class IRCServer Extends IRCMessageContainer
 		nC.type=type
 		messageContainers.AddLast(nC)
 		parent.OnNewContainer(nC,Self)
+		
+		'Load history for chat rooms
+		If nC.name.StartsWith("#") Then nC.LoadHistory()
+		
 		Return nC
 	End
 	
 	'Remove a specific message container
 	Method RemoveMessageContainer(container:IRCMessageContainer)
+		
+		'Save history for chat rooms
+		If container.name.StartsWith("#") Then container.SaveHistory()
+		
 		messageContainers.Remove(container)
 		If parent Then parent.OnRemoveContainer(container,Self)
 	End
@@ -507,6 +513,50 @@ Class IRCMessageContainer
 	Field gotUsers:Bool 'Have we gotten users before?
 	Field messages:=New List<IRCMessage>
 	
+	Method LogPath:String()
+		
+		Return AppDir() + "/logs/" + parent.serverAddress + "/" + name + ".txt"
+		
+	End
+	
+	Method LoadHistory()
+		Local file:String=LoadString( Self.LogPath() )
+		If Not file Then Return
+		
+		Local lines:=file.Split( "~n" )
+		Local type:String
+		Local time:String
+		Local user:String
+		Local message:String
+		
+		For Local s:=Eachin lines
+			If Not s.Contains( ">" ) Or Not s.Contains( " " ) Or Not s.Contains( ":" ) Then Continue
+			
+			type=s.Split( ">" )[0]
+			time=s.Split( ">" )[1].Split( " " )[0]
+			user=s.Split( ">" )[1].Split( " " )[1].Split( ":" )[0]
+			message=s.Split( type + ">" + time + " " + user + ":" )[1]
+			
+			Self.AddMessage( message, user, Self.name, type.ToUpper() ).time=time
+		Next
+		
+	End
+	
+	Method SaveHistory()
+		Local log:String
+		
+		For Local m:=Eachin Self.messages
+			If m.type<>"PRIVMSG" And m.type<>"QUIT" And m.type<>"PART" And m.type<>"JOIN" And m.type<>"NICK" Then Continue
+			
+			log+=m.type+">"+m.time+" "+m.fromUser+":"+m.text+"~n"
+		Next
+		
+		If log.Length>2 Then
+			CreateFile( LogPath(), True )
+			SaveString( log, LogPath() )
+		Endif
+	End
+	
 	Method Remove() Virtual
 		parent.messageContainers.Remove(Self)
 	End
@@ -520,7 +570,7 @@ Class IRCMessageContainer
 	End
 	
 	'Add a message to this container
-	Method AddMessage(msg:String,fromUser:String="",toUser:String="",type:String="",hostname:string="")
+	Method AddMessage:IRCMessage(msg:String,fromUser:String="",toUser:String="",type:String="",hostname:string="")
 		Local nM:=New IRCMessage
 		nM.parent=Self
 		nM.text=msg
@@ -529,6 +579,7 @@ Class IRCMessageContainer
 		nM.type=type
 		nM.hostname=hostname
 		messages.AddLast(nM)
+		Return nM
 	End
 	
 	'Sort the userlist
@@ -597,6 +648,8 @@ Class IRCView Extends DockingView
 	Field selectedTreeNode:TreeView.Node
 	Field selectedServer:IRCServer
 	Field selectedMessageContainer:IRCMessageContainer
+	
+	Field maxHistory:Int=50
 	
 	Property Intro:IRCIntroView()
 		Return introScreen
@@ -859,12 +912,29 @@ Class IRCView Extends DockingView
 			selectedMessageContainer.AddMessage(selectedServer.nickname+": "+text)
 		Else
 			'Yep, add PRIVMSG and send!
-			selectedMessageContainer.AddMessage(selectedServer.nickname+": "+text)
+			selectedMessageContainer.AddMessage( text, selectedServer.nickname, selectedMessageContainer.name, "PRIVMSG" )
 			text="PRIVMSG "+selectedMessageContainer.name+" :"+text
 		Endif
 		
 		ircHandler.servers.First.SendString(text)
 		AddChatMessage(selectedMessageContainer.messages.Last)
+	End
+	
+	Method SaveAllHistory()
+		For Local s:IRCServer=Eachin Self.ircHandler.servers
+		For Local c:IRCMessageContainer=Eachin s.messageContainers
+			c.SaveHistory()
+		Next
+		Next
+	End
+	
+	Method Quit(message:String=Null)
+		SaveAllHistory()
+		
+		For Local s:IRCServer=Eachin Self.ircHandler.servers
+			s.SendString("QUIT :"+message)
+			s.Disconnect()
+		Next
 	End
 	
 	Method OnMessageIRC(message:IRCMessage,container:IRCMessageContainer,server:IRCServer)
@@ -877,48 +947,38 @@ Class IRCView Extends DockingView
 				
 			Case "JOIN"
 				If message.fromUser=server.nickname Then
+					UpdateHistory()
 					container.AddMessage("You are now talking in "+container.name)
+					
 				Else
-					container.AddMessage(message.fromUser+" joined "+container.name)
+					container.AddMessage( message.text, message.fromUser, container.name, message.type)
 				Endif
 				
 			Case "PART"
-				If message.text Then
-					container.AddMessage(message.fromUser+" left "+container.name+" (reason: "+message.text+")")
-				Else
-					container.AddMessage(message.fromUser+" left "+container.name)
-				Endif
+				container.AddMessage( message.text, message.fromUser, container.name, message.type)
 				
 			Case "QUIT"
-				If message.text Then
-					container.AddMessage(message.fromUser+" quit (reason: "+message.text+")")
-				Else
-					container.AddMessage(message.fromUser+" quit")
-				Endif
+				container.AddMessage( message.text, message.fromUser, container.name, message.type)
 				
 			Case "NICK"
-				If nicknameLabel.Text.Left(nicknameLabel.Text.Length-1) Then
-					container.AddMessage("You are now known as "+message.toUser)
-				Else
-					container.AddMessage(message.fromUser+" is now known as "+message.toUser)
-				Endif
+				container.AddMessage( message.text, message.fromUser, message.toUser, message.type)
 				
 			Case "PRIVMSG"
-				container.AddMessage(message.fromUser+": "+message.text)
+				container.AddMessage( message.text, message.fromUser, container.name, message.type)
 				doNotify=True
 			
 			Case "NOTICE"
 				container.AddMessage("NOTICE >"+message.fromUser+"<: "+message.text)
 			
 			Default
-				container.AddMessage(message.fromUser+": "+message.text)
+				container.AddMessage( message.text, message.fromUser, container.name, message.type)
 				doNotify=True
 		End
 		
 		'Display message if we're in that container right now
 		If container=selectedMessageContainer Then
 			AddChatMessage(container.messages.Last)
-		Elseif doNotify Then 'Notify user perhaps?
+		Elseif doNotify Then
 			Local node:TreeView.Node=GetMessageContainerNode(container.name,server.name)
 			If node Then node.Icon=App.Theme.OpenImage("irc/notice.png")
 		Endif
@@ -1095,14 +1155,51 @@ Class IRCView Extends DockingView
 	
 	Method UpdateHistory()
 		historyField.Clear()
+		
 		If Not selectedMessageContainer Then Return
+		
+		'Limit message count
+		While selectedMessageContainer.messages.Count()>maxHistory
+			selectedMessageContainer.messages.Remove(selectedMessageContainer.messages.First)
+		Wend
+		
 		For Local m:=Eachin selectedMessageContainer.messages
 			AddChatMessage(m)
 		Next
 	End
 	
 	Method AddChatMessage(message:IRCMessage)
-		historyField.AppendText("["+message.time+"]~t"+message.text+"~n")
+		Local time:String="["+message.time+"]~t"
+		
+		Select message.type.ToUpper()
+			
+			Case "JOIN"
+				historyField.AppendText( time + message.fromUser + " joined " + message.toUser + "~n" )
+				
+			Case "PART"
+				If message.text Then
+					historyField.AppendText( time + message.fromUser + " left " + message.toUser + "(Reason: " + message.text + ")~n" )
+				Else
+					historyField.AppendText( time + message.fromUser + " left " + message.toUser + "~n" )
+				Endif
+				
+			Case "QUIT"
+				If message.text Then
+					historyField.AppendText( time + message.fromUser + " quit (Reason: " + message.text + ")~n" )
+				Else
+					historyField.AppendText( time + message.fromUser + " quit~n" )
+				Endif
+				
+			Case "NICK"
+				historyField.AppendText( time + message.fromUser + " is now known as " + message.text + "~n" )
+				
+			Case "PRIVMSG"
+				historyField.AppendText( time + message.fromUser + ": " + message.text + "~n" )
+				
+			Default
+				historyField.AppendText( time + message.text + "~n" )
+		End
+		
 	End
 	
 	Method OnRender(canvas:Canvas) Override
