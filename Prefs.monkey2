@@ -21,7 +21,8 @@ Class Prefs
 	Global IrcNickname:String
 	Global IrcServer:="irc.freenode.net"
 	Global IrcPort:=6667
-	Global IrcRooms:="#monkey2" '#monkey2Ui#monkey23D
+	Global IrcRooms:="#monkey2" '#mojox#mojo2d
+	Global IrcConnect:Bool=False
 	'
 	Global EditorToolBarVisible:=False
 	Global EditorGutterVisible:=True
@@ -46,6 +47,8 @@ Class Prefs
 			IrcServer=Json_GetString( j2,"server",IrcServer )
 			IrcPort=Json_GetInt( j2,"port",IrcPort )
 			IrcRooms=Json_GetString( j2,"rooms",IrcRooms )
+			IrcConnect=Json_GetBool( j2,"connect",IrcConnect )
+			
 		Endif
 		
 		If json.Contains( "main" )
@@ -108,6 +111,7 @@ Class Prefs
 		j["server"]=New JsonString( IrcServer )
 		j["port"]=New JsonNumber( IrcPort )
 		j["rooms"]=New JsonString( IrcRooms )
+		j["connect"]=New JsonBool( IrcConnect )
 		
 		j=New JsonObject
 		json["completion"]=j
