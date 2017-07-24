@@ -384,10 +384,10 @@ Class IRCServer Extends IRCMessageContainer
 					Endif
 					
 				Case "NICK" 'Changing names
-					'Update local name
+					'Was local name?
 					Local wasSelf:Bool
 					If GetNickname(fromUser)=nickname Then
-						wasSelf=true
+						wasSelf=True
 						nickname=msg
 					Endif
 					
@@ -397,8 +397,12 @@ Class IRCServer Extends IRCMessageContainer
 							If u.name=GetNickname(fromUser) Then
 								u.name=msg
 								container.SortUsers()
-								TriggerOnMessage(msg,fromUser,msg,type,container)
-								parent.OnUserUpdate(container,Self)
+								
+								If Not wasSelf Then 
+									TriggerOnMessage(msg,fromUser,msg,type,container)
+									parent.OnUserUpdate(container,Self)
+								Endif
+								
 								Exit
 							Endif
 						Next
@@ -631,6 +635,75 @@ End
 
 '=IRC VIEW=
 
+'Highlighter for IRC history text
+Function IrcTextHighlighter:Int( text:String,colors:Byte[],sol:Int,eol:Int,state:Int )
+	Local i0:=sol
+	Local msgStep:Int
+	Local userColor:Int
+	Local userStart:Int
+	Local userEnd:Int
+	Local userDone:Bool
+	
+	While i0<eol
+		Local chr:=text[i0]
+		
+		If userDone Then 
+			colors[i0]=0
+		Else
+			colors[i0]=1
+		Endif
+		
+		'Reset
+		If chr=110 And msgStep=6 Then 'n
+			msgStep=0
+			userDone=False
+		Elseif msgStep=6 And chr<>110
+			msgStep=5
+		Endif
+		If chr=126 And msgStep=5 Then '~
+			msgStep=6
+		Endif
+		
+		'Detect username
+		If chr=9 And msgStep=2 Then 'Tab
+			userStart=i0
+			msgStep=3
+			userColor=0
+		Elseif msgStep=2 And chr<>9 Then
+			msgStep=5
+		Endif
+		If chr=32 And msgStep=4 Then 'Space after :
+			userEnd=i0-1
+			msgStep=5
+			userDone=True
+			For Local i1:Int=userStart Until userEnd
+				colors[i1]=2 + (userColor Mod 5)
+			Next
+		Elseif msgStep=4 And chr<>32 Then
+			msgStep=5
+		Endif
+		If chr=58 And msgStep=3 Then ':
+			msgStep=4
+		Endif
+		
+		If msgStep=3 Then userColor+=chr
+		
+		'Detect time
+		If chr=91 And msgStep=0 Then '[
+			msgStep=1
+		Endif
+		If msgStep=1 Then colors[i0]=1
+		
+		If chr=93 And msgStep=1 Then ']
+			msgStep=2
+		Endif
+		
+		i0+=1
+	Wend
+	
+	Return state
+End
+
 'This is a pre-made IRC client, ready to be used in any MojoX application
 Class IRCView Extends DockingView
 	Field ircHandler:IRC
@@ -668,6 +741,7 @@ Class IRCView Extends DockingView
 		
 		'Chat history field
 		historyField=New TextView
+		historyField.Document.TextHighlighter=IrcTextHighlighter
 		historyField.ReadOnly=True
 		historyField.WordWrap=True
 		chatScreen.ContentView=historyField
@@ -949,7 +1023,6 @@ Class IRCView Extends DockingView
 				If message.fromUser=server.nickname Then
 					UpdateHistory()
 					container.AddMessage("You are now talking in "+container.name)
-					
 				Else
 					container.AddMessage( message.text, message.fromUser, container.name, message.type)
 				Endif
@@ -961,14 +1034,22 @@ Class IRCView Extends DockingView
 				container.AddMessage( message.text, message.fromUser, container.name, message.type)
 				
 			Case "NICK"
+				Local wasSelf:Bool
+				If container=server And selectedMessageContainer Then
+					wasSelf=true
+					container=selectedMessageContainer
+				Endif
+				
 				container.AddMessage( message.text, message.fromUser, message.toUser, message.type)
+				
+				If wasSelf Then UpdateUsers()
 				
 			Case "PRIVMSG"
 				container.AddMessage( message.text, message.fromUser, container.name, message.type)
 				doNotify=True
 			
 			Case "NOTICE"
-				container.AddMessage("NOTICE >"+message.fromUser+"<: "+message.text)
+				container.AddMessage( message.text, message.fromUser, container.name, message.type)
 			
 			Default
 				container.AddMessage( message.text, message.fromUser, container.name, message.type)
@@ -1168,8 +1249,18 @@ Class IRCView Extends DockingView
 		Next
 	End
 	
+	Function PadTime:String(timeStr:String)
+		If Not timeStr.Contains(":") Return timeStr
+		
+		Local t:=timeStr.Split(":")
+		If t[0].Length<=1 Then t[0]="0"+t[0]
+		If t[1].Length<=1 Then t[1]="0"+t[1]
+		
+		Return t[0]+":"+t[1]
+	End
+	
 	Method AddChatMessage(message:IRCMessage)
-		Local time:String="["+message.time+"]~t"
+		Local time:String="["+PadTime(message.time)+"]~t"
 		
 		Select message.type.ToUpper()
 			
@@ -1178,14 +1269,14 @@ Class IRCView Extends DockingView
 				
 			Case "PART"
 				If message.text Then
-					historyField.AppendText( time + message.fromUser + " left " + message.toUser + "(Reason: " + message.text + ")~n" )
+					historyField.AppendText( time + message.fromUser + " left " + message.toUser + " (Reason " + message.text + ")~n" )
 				Else
 					historyField.AppendText( time + message.fromUser + " left " + message.toUser + "~n" )
 				Endif
 				
 			Case "QUIT"
 				If message.text Then
-					historyField.AppendText( time + message.fromUser + " quit (Reason: " + message.text + ")~n" )
+					historyField.AppendText( time + message.fromUser + " quit (Reason '" + message.text + "')~n" )
 				Else
 					historyField.AppendText( time + message.fromUser + " quit~n" )
 				Endif
@@ -1193,11 +1284,18 @@ Class IRCView Extends DockingView
 			Case "NICK"
 				historyField.AppendText( time + message.fromUser + " is now known as " + message.text + "~n" )
 				
-			Case "PRIVMSG"
-				historyField.AppendText( time + message.fromUser + ": " + message.text + "~n" )
+			Case "MODE"
+				'historyField.AppendText( time + message.fromUser + " sets MODE " + message.text + "~n" )
+				
+			Case "NOTICE"
+				historyField.AppendText( time + message.fromUser + ": <NOTICE> " + message.text + "~n" )
 				
 			Default
-				historyField.AppendText( time + message.text + "~n" )
+				If message.fromUser Then
+					historyField.AppendText( time + message.fromUser + ": " + message.text + "~n" )
+				Else
+					historyField.AppendText( time + message.text + "~n" )
+				Endif
 		End
 		
 	End
