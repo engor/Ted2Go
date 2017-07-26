@@ -1020,21 +1020,41 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Method OnChatClicked()
+		
 		If _consolesTabView.CurrentView<>_ircView Then Return
 		
 		_consolesTabView.SetTabIcon( _ircView, Null )
+		
 		_ircNotifyIcon=0
+		
+		HideHint()
+		
 	End
 	
 	Method OnChatMessage( message:IRCMessage, container:IRCMessageContainer, server:IRCServer )
+		
 		If message.type<>"PRIVMSG" Or _consolesTabView.CurrentView=_ircView Then Return
 		
 		'Show notice icon
 		If message.text.Contains(server.nickname) Then
-			If _ircNotifyIcon<=1 Then _ircNotifyIcon=2
-	
+			
+			If _ircNotifyIcon<=1 Then
+				
+				_ircNotifyIcon=2
+				
+				Local mentionStr:String
+				mentionStr=server.nickname+" was mentioned by "
+				mentionStr+=message.fromUser+" in "
+				mentionStr+=container.name
+				
+				ShowHint( mentionStr, New Vec2i( 0, -GetStyle( "Hint" ).Font.Height*4 ), _consolesTabView, 20000 )
+				
+			Endif
+			
 		Else
+			
 			If _ircNotifyIcon<=0 Then _ircNotifyIcon=1
+			
 		Endif
 		
 	End
