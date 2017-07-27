@@ -195,8 +195,9 @@ End
 Function SetupMonkeyRootPath:String( rootPath:String,searchMode:Bool )
 	
 #If __DESKTOP_TARGET__
-	
-	ChangeDir( rootPath )
+
+'	Not needed, and messes up default dir on first run.	
+'	ChangeDir( rootPath )
 	
 	If searchMode
 		' search for desired folder
