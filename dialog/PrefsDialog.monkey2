@@ -75,6 +75,7 @@ Class PrefsDialog Extends DialogExt
 	Field _chatServer:TextField
 	Field _chatPort:TextField
 	Field _chatRooms:TextField
+	Field _chatAutoConnect:CheckButton
 	
 	Method OnApply()
 	
@@ -109,6 +110,7 @@ Class PrefsDialog Extends DialogExt
 		Prefs.IrcServer=_chatServer.Text
 		Prefs.IrcPort=Int(_chatPort.Text)
 		Prefs.IrcRooms=_chatRooms.Text
+		Prefs.IrcConnect=_chatAutoConnect.Checked
 		
 		App.ThemeChanged()
 		
@@ -293,11 +295,13 @@ Class PrefsDialog Extends DialogExt
 	
 	Method GetChatDock:DockingView()
 		
-		Local chatTable:=New TableView( 2,4 )
+		Local chatTable:=New TableView( 2,5 )
 		_chatNick=New TextField( Prefs.IrcNickname )
 		_chatServer=New TextField( Prefs.IrcServer )
 		_chatPort=New TextField( ""+Prefs.IrcPort )
 		_chatRooms=New TextField( Prefs.IrcRooms )
+		_chatAutoConnect=New CheckButton( "Auto connect at start" )
+		_chatAutoConnect.Checked=Prefs.IrcConnect
 		chatTable[0,0]=New Label( "Nickname" )
 		chatTable[1,0]=_chatNick
 		chatTable[0,1]=New Label( "Server" )
@@ -306,6 +310,7 @@ Class PrefsDialog Extends DialogExt
 		chatTable[1,2]=_chatPort
 		chatTable[0,3]=New Label( "Rooms" )
 		chatTable[1,3]=_chatRooms
+		chatTable[0,4]=_chatAutoConnect
 		
 		Local docker:=New DockingView
 		docker.AddView( New Label( " " ),"top" )

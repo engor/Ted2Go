@@ -11,6 +11,7 @@ Namespace ted2go
 
 #Import "assets/fonts/@/fonts"
 
+#Import "assets/themes/irc/@/themes/irc"
 
 Global MainWindow:MainWindowInstance
 
@@ -57,12 +58,16 @@ Class MainWindowInstance Extends Window
 		End
 		
 		'IRC tab
+		
 		_ircView=New IRCView
-		_ircView.introScreen.Text="Get live help from other Monkey 2 users"
+		_ircView.introScreen.Text="Hang out with other Monkey 2 users"
 		_ircView.introScreen.OnNickChange+=Lambda( nick:String )
 			Prefs.IrcNickname=nick
 		End
+		
 		SetupChatTab()
+		
+		If Prefs.IrcConnect Then _ircView.introScreen.Connect()
 		
 		'Build tab
 		
@@ -367,6 +372,8 @@ Class MainWindowInstance Extends Window
 		_consolesTabView.AddTab( "Find",_findConsole,False )
 		_consolesTabView.AddTab( "Chat",_ircView,False )
 		
+		_consolesTabView.CurrentChanged+=OnChatClicked
+		
 		_statusBar=New StatusBarView
 		
 		_contentView=New DockingView
@@ -506,13 +513,14 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Method Terminate()
-	
+		
 		_isTerminating=True
 		SaveState()
 		_enableSaving=False
 		OnForceStop() ' kill build process if started
 		ProcessReader.StopAll()
-
+		If _ircView Then _ircView.Quit("Closing Ted2Go")
+		
 		App.Terminate()
 	End
 
@@ -956,7 +964,7 @@ Class MainWindowInstance Extends Window
 	Field _helpIdent:String
 	
 	Method OnRender( canvas:Canvas ) Override
-	
+		
 		If Not _inited
 			_inited=True
 			OnInit()
@@ -968,6 +976,8 @@ Class MainWindowInstance Extends Window
 			_resized=False
 			SizeChanged()
 		Endif
+		
+		UpdateIrcIcon()
 		
 		Rendered()
 		Rendered=Null
@@ -995,6 +1005,8 @@ Class MainWindowInstance Extends Window
 		
 		If Not _ircView Return
 		
+		_ircView.ircHandler.OnMessage+=Self.OnChatMessage
+		
 		Local intro:=_ircView.introScreen
 		
 		If intro.IsConnected Return
@@ -1004,6 +1016,49 @@ Class MainWindowInstance Extends Window
 		Local port:=Prefs.IrcPort
 		Local rooms:=Prefs.IrcRooms
 		intro.AddOnlyServer( nick,server,server,port,rooms )
+		
+	End
+	
+	Method OnChatClicked()
+		If _consolesTabView.CurrentView<>_ircView Then Return
+		
+		_consolesTabView.SetTabIcon( _ircView, Null )
+		_ircNotifyIcon=0
+	End
+	
+	Method OnChatMessage( message:IRCMessage, container:IRCMessageContainer, server:IRCServer )
+		If message.type<>"PRIVMSG" Or _consolesTabView.CurrentView=_ircView Then Return
+		
+		'Show notice icon
+		If message.text.Contains(server.nickname) Then
+			If _ircNotifyIcon<=1 Then _ircNotifyIcon=2
+	
+		Else
+			If _ircNotifyIcon<=0 Then _ircNotifyIcon=1
+		Endif
+		
+	End
+	
+	Method UpdateIrcIcon()
+		If _ircNotifyIcon<=0 Then Return
+		
+		Local time:Int=Int(Millisecs()*0.0025)
+		
+		If time=_ircIconBlink Then Return
+		_ircIconBlink=time
+		
+		If time Mod 2 Then
+			Select _ircNotifyIcon
+				
+				Case 1
+					_consolesTabView.SetTabIcon( _ircView, App.Theme.OpenImage( "irc/notice.png" ) )
+					
+				Case 2
+					_consolesTabView.SetTabIcon( _ircView, App.Theme.OpenImage( "irc/important.png" ) )
+			End
+		Else
+			_consolesTabView.SetTabIcon( _ircView, App.Theme.OpenImage( "irc/blink.png" ) )
+		Endif
 		
 	End
 	
@@ -1136,6 +1191,9 @@ Class MainWindowInstance Extends Window
 	Field _docsTabView:TabViewExt
 	Field _consolesTabView:TabView
 	Field _browsersTabView:TabView
+	
+	Field _ircNotifyIcon:Int
+	Field _ircIconBlink:Int
 	
 	Field _forceStop:Action
 
