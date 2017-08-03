@@ -929,6 +929,7 @@ Class IRCView Extends DockingView
 		inputField.BlockCursor=False
 		inputField.CursorType=CursorType.Line
 		inputField.CursorBlinkRate=2.5
+		inputField.MaxLength=512
 		inputField.Entered+=Lambda()
 			SendInput(inputField.Text)
 			inputField.Text=Null
