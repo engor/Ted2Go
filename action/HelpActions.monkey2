@@ -36,9 +36,7 @@ Class HelpActions
 		uploadModules=New Action( "Upload module" )
 		uploadModules.Triggered=Lambda()
 		
-			Alert( "Now taking you to the module manager page at "+MONKEY2_DOMAIN+".~n~nNote: You must have an account at "+MONKEY2_DOMAIN+" and be logged in to upload modules." )
-		
-			OpenUrl( RealPath( MONKEY2_DOMAIN+"/module-manager/" ) )
+			GotoUploadModulesPage()
 		End
 
 		about=New Action( "About monkey2" )
@@ -101,5 +99,14 @@ Class HelpActions
 	
 		MainWindow.ShowQuickHelp()
 	End
+	
+End
+
+
+Function GotoUploadModulesPage()
+	
+	Alert( "Now taking you to the module manager page at "+MONKEY2_DOMAIN+".~n~nNote: You must have an account at "+MONKEY2_DOMAIN+" and be logged in to upload modules." )
+	
+	OpenUrl( RealPath( MONKEY2_DOMAIN+"/module-manager/" ) )
 	
 End

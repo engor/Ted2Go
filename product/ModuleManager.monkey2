@@ -72,7 +72,11 @@ Class ModuleManager Extends Dialog
 			
 			UpdateTable()
 		End
-			
+		
+		Local upload:=New Button( "Upload module" )
+		upload.Clicked+=GotoUploadModulesPage
+		buttons.AddView( upload,"right" )
+		
 		_docker.AddView( buttons,"bottom" )
 		
 		ContentView=_docker
