@@ -17,7 +17,7 @@ Class FindDialog Extends DialogExt
 			
 			Local t:=_findField.Text
 			If t.Length > 1
-				actions.FindByTextChanged()
+				actions.FindByTextChanged( EntireProject )
 			Endif
 		End
 
@@ -28,8 +28,15 @@ Class FindDialog Extends DialogExt
 		_caseSensitive=New CheckButton( "Case sensitive" )
 		_caseSensitive.Layout="float"
 		
-'		_escapedText=New CheckButton( "Escaped text" )
-
+		_entireProject=New CheckButton( "Entire project" )
+		_entireProject.Layout="float"
+		
+		Local entireHint:=New Label( "(use 'Find next' button for entire-project-mode)" )
+		entireHint.Visible=False
+		_entireProject.Clicked+=Lambda()
+			entireHint.Visible=_entireProject.Checked
+		End
+		
 		Local table:=New TableView( 2,2 )
 		table[0,0]=New Label( "Find" )
 		table[1,0]=_findField
@@ -39,10 +46,11 @@ Class FindDialog Extends DialogExt
 		_docker=New DockingView
 		_docker.AddView( table,"top" )
 		_docker.AddView( _caseSensitive,"top" )
-'		_docker.AddView( _escapedText,"top" )
+		_docker.AddView( _entireProject,"top" )
+		_docker.AddView( entireHint,"top" )
 		_docker.AddView( New Label( " " ),"top" )
 		
-		Title="Find/Replace"
+		Title="Find / Replace"
 		
 		MaxSize=New Vec2i( 512,0 )
 		
@@ -77,6 +85,11 @@ Class FindDialog Extends DialogExt
 		Return _caseSensitive.Checked
 	End
 	
+	Property EntireProject:Bool()
+	
+		Return _entireProject.Checked
+	End
+	
 	Method SetInitialText( find:String )
 		
 		_findField.Text=find
@@ -89,7 +102,7 @@ Class FindDialog Extends DialogExt
 	Field _findField:TextField
 	Field _replaceField:TextField
 	Field _caseSensitive:CheckButton
-	Field _escapedText:CheckButton
+	Field _entireProject:CheckButton
 
 	Field _docker:DockingView
 

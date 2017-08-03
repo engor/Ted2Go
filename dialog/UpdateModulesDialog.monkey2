@@ -180,8 +180,4 @@ Class UpdateModulesDialog Extends DialogExt
 		Next
 	End
 	
-	Function ShowMessage( title:String,msg:String,okButton:String="  OK  " )
-		
-		Dialog.Run( title,New Label( msg ),New String[](okButton),0,0 )
-	End
 End
