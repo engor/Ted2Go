@@ -31,7 +31,7 @@ Class FindDialog Extends DialogExt
 		_entireProject=New CheckButton( "Entire project" )
 		_entireProject.Layout="float"
 		
-		Local entireHint:=New Label( "(press 'Find next' button first)" )
+		Local entireHint:=New Label( "(use 'Find next' button for entire-project-mode)" )
 		entireHint.Visible=False
 		_entireProject.Clicked+=Lambda()
 			entireHint.Visible=_entireProject.Checked
@@ -50,7 +50,7 @@ Class FindDialog Extends DialogExt
 		_docker.AddView( entireHint,"top" )
 		_docker.AddView( New Label( " " ),"top" )
 		
-		Title="Find/Replace"
+		Title="Find / Replace"
 		
 		MaxSize=New Vec2i( 512,0 )
 		

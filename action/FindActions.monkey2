@@ -18,7 +18,7 @@ Class FindActions
 		_findConsole=findConsole
 		_projView=projView
 		
-		find=New Action( "Find / Replace" )
+		find=New Action( "Find / Replace..." )
 		find.Triggered=OnFind
 		find.HotKey=Key.F
 		find.HotKeyModifiers=Modifier.Menu
@@ -173,10 +173,25 @@ Class FindActions
 					Endif
 				End
 				Local map:=FindInProject( what,proj,sens )
-				If map Then CreateResultTree( _findConsole.RootNode,map,what,proj )
-					
+				If map
+					CreateResultTree( _findConsole.RootNode,map,what,proj )
+					MainWindow.ShowFindResults()
+				Endif
+				
 				If Not map.Empty
+					
 					_results=New Stack<FileJumpData>
+					
+					' make current opened document as a first results
+					Local curPath:=_docs.CurrentDocument ? _docs.CurrentDocument.Path Else ""
+					If curPath
+						Local vals:=map[curPath]
+						If vals
+							_results.AddAll( vals )
+							map.Remove( curPath )
+						Endif
+					Endif
+					
 					For Local items:=Eachin map.Values
 						_results.AddAll( items )
 					End
@@ -277,7 +292,7 @@ Class FindActions
 	
 	Method FindInProject:StringMap<Stack<FileJumpData>>( what:String,projectPath:String,caseSensitive:Bool,filesFilter:String=DEFAULT_FILES_FILTER )
 		
-		If Not filesFilter Then filesFilter="monkey2"
+		If Not filesFilter Then filesFilter=DEFAULT_FILES_FILTER
 		
 		Local exts:=filesFilter.Split( "," )
 		
@@ -298,10 +313,9 @@ Class FindActions
 			Local text:=LoadString( f )
 		
 			If Not caseSensitive Then text=text.ToLower()
-			text=text.Replace( "~r~n","~n" )
-			text=text.Replace( "~r","~n" )
 		
-			doc.Text=text
+			doc.Text=text 'any needed replacing is here (\r\n -> \n)
+			text=doc.Text
 		
 			Local i:=0
 			Local items:=New Stack<FileJumpData>
@@ -337,8 +351,6 @@ Class FindActions
 			doc=New TextDocument
 			text=LoadString( filePath )
 			If Not caseSensitive Then text=text.ToLower()
-			text=text.Replace( "~r~n","~n" )
-			text=text.Replace( "~r","~n" )
 			doc.Text=text
 		Else
 			text=doc.Text
