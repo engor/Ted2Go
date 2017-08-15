@@ -653,15 +653,33 @@ Class MainWindowInstance Extends Window
 		Local checkTitle:=GetActionTextWithShortcut( _buildActions.semant )
 		Local findTitle:=GetActionTextWithShortcut( _findActions.find )
 		Local debugTitle:=GetActionTextWithShortcut( _buildActions.debugApp )
+		Local cutTitle:=GetActionTextWithShortcut( _editActions.cut )
+		Local copyTitle:=GetActionTextWithShortcut( _editActions.copy )
+		Local pasteTitle:=GetActionTextWithShortcut( _editActions.paste )
 		
 		_toolBar=New ToolBarExt
 		_toolBar.Style=GetStyle( "MainToolBar" )
 		_toolBar.MaxSize=New Vec2i( 10000,40 )
 		
+		Local goBack:=Lambda()
+			Navigator.TryBack()
+		End
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/back.png" ),goBack,"Go back (Alt+Left)" )
+		
+		Local goForw:=Lambda()
+			Navigator.TryForward()
+		End
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/forward.png" ),goForw,"Go forward (Alt+Right)" )
+		_toolBar.AddSeparator()
+		
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/new_file.png" ),_fileActions.new_.Triggered,newTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_file.png" ),_fileActions.open.Triggered,openTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_project.png" ),_projectView.openProject.Triggered,"Open project..." )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/save_all.png" ),_fileActions.saveAll.Triggered,saveAllTitle )
+		_toolBar.AddSeparator()
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/cut.png" ),_editActions.cut.Triggered,cutTitle )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/copy.png" ),_editActions.copy.Triggered,copyTitle )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/paste.png" ),_editActions.paste.Triggered,pasteTitle )
 		_toolBar.AddSeparator()
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/undo.png" ),_editActions.undo.Triggered,undoTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/redo.png" ),_editActions.redo.Triggered,redoTitle )
@@ -678,17 +696,6 @@ Class MainWindowInstance Extends Window
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/options.png" ),act,"Target settings" )
 		_toolBar.AddSeparator()
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/find.png" ),_findActions.find.Triggered,findTitle )
-		_toolBar.AddSeparator()
-		
-		Local goBack:=Lambda()
-			Navigator.TryBack()
-		End
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/back.png" ),goBack,"Go back (Alt+Left)" )
-		
-		Local goForw:=Lambda()
-			Navigator.TryForward()
-		End
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/forward.png" ),goForw,"Go forward (Alt+Right)" )
 		
 		Return _toolBar
 	End
