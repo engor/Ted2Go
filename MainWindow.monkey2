@@ -187,10 +187,7 @@ Class MainWindowInstance Extends Window
 			AddRecentProject( dir )
 			SaveState()
 		End
-		_projectView.ProjectClosed+=Lambda( dir:String )
-			UpdateCloseProjectMenu( dir )
-			SaveState()
-		End
+		_projectView.ProjectClosed+=OnProjectClosed
 		
 		_fileActions=New FileActions( _docsManager )
 		_editActions=New EditActions( _docsManager )
@@ -1021,6 +1018,21 @@ Class MainWindowInstance Extends Window
 	Method OnAppClose()
 		
 		_fileActions.quit.Trigger()
+	End
+	
+	Method OnProjectClosed( dir:String )
+		
+		UpdateCloseProjectMenu( dir )
+		
+		Local list:=New Stack<Ted2Document>
+		' close all related files
+		For Local doc:=Eachin _docsManager.OpenDocuments
+			If doc.Path.StartsWith( dir ) Then list.Add( doc )
+		Next
+		
+		_fileActions.CloseFiles( list.ToArray() )
+		
+		SaveState()
 	End
 	
 	Method OnResized()

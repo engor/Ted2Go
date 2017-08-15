@@ -47,7 +47,9 @@ Class FileActions
 		closeToRight.Triggered=OnCloseToRight
 		
 		closeAll=New Action( "Close all tabs" )
-		closeAll.Triggered=OnCloseAll
+		closeAll.Triggered=Lambda()
+			CloseFiles( _docs.OpenDocuments )
+		End
 		
 		save=New Action( "Save" )
 		save.HotKey=Key.S
@@ -107,6 +109,23 @@ Class FileActions
 		save.Enabled=doc And (doc.Dirty Or MainWindow.IsTmpPath( doc.Path ))
 		saveAs.Enabled=doc
 		saveAll.Enabled=anyDirty
+	End
+	
+	Method CloseFiles( docs:Ted2Document[] )
+		
+		If Not docs.Length Return
+		
+		_saveAllFlag=False
+		_discardAllFlag=False
+	
+		For Local doc:=Eachin docs
+			If Not CanClose( doc,True ) Return
+		Next
+	
+		For Local doc:=Eachin docs
+			doc.Close()
+		Next
+	
 	End
 	
 	
@@ -210,7 +229,7 @@ Class FileActions
 		If Not doc Return
 		
 		doc=CanClose( doc )
-		If Not doc return
+		If Not doc Return
 		
 		doc.Close()
 	End
@@ -260,23 +279,6 @@ Class FileActions
 			Else
 				If doc=current close=True
 			Endif
-		Next
-		
-	End
-	
-	Method OnCloseAll()
-
-		_saveAllFlag=False
-		_discardAllFlag=False
-		
-		Local docs:=_docs.OpenDocuments
-		
-		For Local doc:=Eachin docs
-			If Not CanClose( doc,True ) Return
-		Next
-		
-		For Local doc:=Eachin docs
-			doc.Close()
 		Next
 		
 	End
