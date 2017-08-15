@@ -350,11 +350,10 @@ Class FindActions
 		If Not doc
 			doc=New TextDocument
 			text=LoadString( filePath )
-			If Not caseSensitive Then text=text.ToLower()
-			doc.Text=text
-		Else
-			text=doc.Text
+			doc.Text=text 'any needed replacing is here (\r\n -> \n)
 		Endif
+		text=doc.Text
+		If Not caseSensitive Then text=text.ToLower()
 		
 		Local i:=0
 		Local result:=New Stack<FileJumpData>
