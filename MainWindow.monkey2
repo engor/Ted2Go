@@ -79,16 +79,6 @@ Class MainWindowInstance Extends Window
 		Local bar:=New ToolBarExt
 		bar.MaxSize=New Vec2i( 300,30 )
 		
-		bar.AddIconicButton(
-			ThemeImages.Get( "outputbar/clean.png" ),
-			Lambda()
-				_outputConsole.ClearAll()
-			End,
-			"Clear all" )
-		
-		'bar.AddSeparator()
-		'bar.AddSeparator()
-			
 		Local label:=New Label( "Filter:" )
 		bar.AddView( label,"left" )
 		Local editFilter:=New TextField()
@@ -101,6 +91,23 @@ Class MainWindowInstance Extends Window
 			Local t:=editFilter.Text
 			_outputConsole.SetFilter( t )
 		End
+		
+		bar.AddSeparator()
+		
+		bar.AddIconicButton(
+			ThemeImages.Get( "outputbar/clean.png" ),
+			Lambda()
+				_outputConsole.ClearAll()
+			End,
+			"Clear all" )
+		
+		Local it:=bar.AddIconicButton(
+			ThemeImages.Get( "outputbar/wrap.png" ),
+			Lambda()
+				_outputConsole.WordWrap=Not _outputConsole.WordWrap
+			End,
+			"Word wrap" )
+		it.ToggleMode=True
 		
 		_outputConsoleView=New DockingView
 		_outputConsoleView.AddView( bar,"top" )
