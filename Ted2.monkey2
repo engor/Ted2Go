@@ -99,6 +99,7 @@
 #Import "view/GutterView"
 #Import "view/MenuExt"
 #Import "view/ScrollableViewExt"
+#Import "view/BuildErrorListViewItem"
 
 #Import "MainWindow"
 #Import "Plugin"

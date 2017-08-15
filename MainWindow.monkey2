@@ -181,6 +181,16 @@ Class MainWindowInstance Extends Window
 		
 		
 		_buildActions=New BuildActions( _docsManager,_buildConsole,_debugView )
+		_buildActions.ErrorsOccured+=Lambda( errors:BuildError[] )
+			ShowBuildConsole( True )
+			_buildActions.GotoError( errors[0] )
+			
+			_buildErrorsList.Clear()
+			For Local err:=Eachin errors
+				_buildErrorsList.AddItem( New BuildErrorListViewItem( err ) )
+			Next
+			_buildErrorsList.Visible=True
+		End
 		
 		_projectView=New ProjectView( _docsManager,_buildActions )
 		_projectView.ProjectOpened+=Lambda( dir:String )
@@ -303,7 +313,8 @@ Class MainWindowInstance Extends Window
 		_forceStop.HotKeyModifiers=Modifier.Shift
 		
 		'
-		_buildActions.PreBuild+=OnForceStop
+		_buildActions.PreBuild+=OnPreBuild
+		_buildActions.PreSemant+=OnPreSemant
 		
 		_buildMenu=New MenuExt( "Build" )
 		_buildMenu.AddAction( _buildActions.buildAndRun )
@@ -370,7 +381,18 @@ Class MainWindowInstance Extends Window
 		_browsersTabView.AddTab( "Debug",_debugView,False )
 		_browsersTabView.AddTab( "Help",_helpTree,False )
 		
-		_consolesTabView.AddTab( "Build",_buildConsole,True )
+		_buildErrorsList=New ListViewExt
+		_buildErrorsList.Visible=False
+		_buildErrorsList.OnItemChoosen+=Lambda()
+			Local item:=Cast<BuildErrorListViewItem>( _buildErrorsList.CurrentItem )
+			_buildActions.GotoError( item.error )
+		End
+		
+		_buildConsoleView=New DockingView
+		_buildConsoleView.AddView( _buildErrorsList,"right","400",True )
+		_buildConsoleView.ContentView=_buildConsole
+		
+		_consolesTabView.AddTab( "Build",_buildConsoleView,True )
 		_consolesTabView.AddTab( "Output",_outputConsoleView,False )
 		_consolesTabView.AddTab( "Docs",_helpConsole,False )
 		_consolesTabView.AddTab( "Find",_findConsole,False )
@@ -739,7 +761,7 @@ Class MainWindowInstance Extends Window
 	Method ShowBuildConsole( vis:Bool=True )
 		
 		If vis _consolesTabView.Visible=True
-		_consolesTabView.CurrentView=_buildConsole
+		_consolesTabView.CurrentView=_buildConsoleView
 	End
 	
 	Method ShowOutputConsole( vis:Bool=True )
@@ -1020,6 +1042,17 @@ Class MainWindowInstance Extends Window
 		_fileActions.quit.Trigger()
 	End
 	
+	Method OnPreBuild()
+		
+		OnForceStop()
+		_buildErrorsList.Visible=False
+	End
+	
+	Method OnPreSemant()
+	
+		_buildErrorsList.Visible=False
+	End
+	
 	Method OnProjectClosed( dir:String )
 		
 		UpdateCloseProjectMenu( dir )
@@ -1237,6 +1270,8 @@ Class MainWindowInstance Extends Window
 	
 	Field _ircView:IRCView
 	Field _buildConsole:ConsoleExt
+	Field _buildErrorsList:ListViewExt
+	Field _buildConsoleView:DockingView
 	Field _outputConsole:ConsoleExt
 	Field _outputConsoleView:DockingView
 	Field _helpView:HtmlViewExt
@@ -1475,7 +1510,7 @@ Class MainWindowInstance Extends Window
 		Select _consolesTabView.CurrentView
 			Case _outputConsoleView
 				Return "output"
-			Case _buildConsole
+			Case _buildConsoleView
 				Return "build"
 			Case _helpConsole
 				Return "docs"
@@ -1492,7 +1527,7 @@ Class MainWindowInstance Extends Window
 			Case "output"
 				view=_outputConsoleView
 			Case "build"
-				view=_buildConsole
+				view=_buildConsoleView
 			Case "docs"
 				view=_helpConsole
 			Case "find"
