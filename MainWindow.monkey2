@@ -827,6 +827,21 @@ Class MainWindowInstance Extends Window
 		_helpView.Scroll=New Vec2i( 0,0 )
 	End
 	
+	Method ShowEditorMenu( tv:TextView )
+		
+		If Not tv Then tv=_docsManager.CurrentTextView
+		If Not tv Return
+		
+		If Not _editorMenu
+			_editorMenu=New MenuExt
+			_editorMenu.AddAction( _editActions.cut )
+			_editorMenu.AddAction( _editActions.copy )
+			_editorMenu.AddAction( _editActions.paste )
+		Endif
+		
+		_editorMenu.Open()
+	End
+	
 	Method UpdateHelpTree()
 		_helpTree.Update()
 	End
@@ -1234,7 +1249,7 @@ Class MainWindowInstance Extends Window
 	Field _windowMenu:MenuExt
 	Field _helpMenu:MenuExt
 	Field _menuBar:MenuBarExt
-	
+	Field _editorMenu:MenuExt
 	Field _themesMenu:MenuExt
 	
 	Field _theme:="default"

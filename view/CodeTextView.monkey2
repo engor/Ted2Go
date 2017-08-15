@@ -202,6 +202,19 @@ Class CodeTextView Extends TextView
 		
 				Scroll-=New Vec2i( 0,RenderStyle.Font.Height*event.Wheel.Y*3 )
 				Return
+			
+			Case EventType.MouseDown 'prevent selection by dragging with right-button
+				
+				If event.Button = MouseButton.Right Return
+				
+				
+			Case EventType.MouseUp
+				
+				If event.Button = MouseButton.Right
+					
+					MainWindow.ShowEditorMenu( Self )
+					Return
+				Endif
 				
 		End
 
