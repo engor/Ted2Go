@@ -1,0 +1,13 @@
+{
+    ".monkey2":{
+        "ifn": "If ${Cursor} = Null\n\t\nEndif",
+        "inn": "If ${Cursor} <> Null\n\t\nEndif",
+        "st": "String",
+        "me": "Method ${Cursor}()\n\t\n\t\nEnd",
+        "mes": "Method ${Cursor}:String()\n\t\n\tReturn \nEnd",
+        "fu": "Function ${Cursor}()\n\t\n\t\nEnd",
+        "fus": "Function ${Cursor}:String()\n\t\n\tReturn \nEnd",
+        "prop": "Property ${Cursor}()\n\tReturn \nSetter( value: )\n\t\n\t=value\nEnd",
+        "get": "Property ${Cursor}()\n\tReturn \nEnd"
+    }
+}

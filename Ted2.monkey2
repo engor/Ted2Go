@@ -35,6 +35,7 @@
 #Import "dialog/FindInFilesDialog"
 #Import "dialog/UpdateModulesDialog"
 #Import "dialog/GenerateClassDialog"
+#Import "dialog/LiveTemplateDialog"
 
 #Import "document/DocumentManager"
 #Import "document/Ted2Document"
@@ -104,11 +105,12 @@
 #Import "view/BuildErrorListViewItem"
 #Import "view/TextFieldExt"
 
-#Import "MainWindow"
 #Import "Plugin"
 #Import "ThemeImages"
 #Import "Prefs"
 #Import "ProcessReader"
+#Import "LiveTemplates"
+#Import "MainWindow"
 
 
 Namespace ted2go

@@ -105,6 +105,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 		ContentView=_view
 		
 		_keywords=New StringMap<List<ListViewItem>>
+		_templates=New StringMap<List<ListViewItem>>
 		_parsers=New StringMap<ICodeParser>
 		
 		_view.OnItemChoosen+=Lambda()
@@ -288,6 +289,17 @@ Class AutocompleteDialog Extends NoTitleDialog
 		
 		If lastIdent Then CodeItemsSorter.SortByIdent( result,lastIdent )
 		
+		'-----------------------------
+		' live templates
+		'-----------------------------
+		If onlyOne
+			For Local i:=Eachin GetTemplates( fileType )
+				If i.Text.StartsWith( lastIdent )
+					result.Insert( 0,i )
+				Endif
+			Next
+		Endif
+		
 		_view.Reset()'reset selIndex
 		_view.SetItems( result )
 		
@@ -301,6 +313,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 	
 	Field _view:AutocompleteListView
 	Field _keywords:StringMap<List<ListViewItem>>
+	Field _templates:StringMap<List<ListViewItem>>
 	Field _lastIdentPart:String,_fullIdent:String
 	Field _parsers:StringMap<ICodeParser>
 	Field _listForExtract:=New List<CodeItem>
@@ -315,6 +328,11 @@ Class AutocompleteDialog Extends NoTitleDialog
 	Method GetKeywords:List<ListViewItem>( fileType:String )
 		If _keywords[fileType] = Null Then UpdateKeywords( fileType )
 		Return _keywords[fileType]
+	End
+	
+	Method GetTemplates:List<ListViewItem>( fileType:String )
+		If _templates[fileType] = Null Then UpdateTemplates( fileType )
+		Return _templates[fileType]
 	End
 	
 	Method IsItemInScope:Bool( item:CodeItem,scope:CodeItem )
@@ -390,13 +408,17 @@ Class AutocompleteDialog Extends NoTitleDialog
 	
 	Method OnItemChoosen( item:ListViewItem,bySpace:Bool=False )
 		
-		Local si:=Cast<CodeListViewItem>( item )
+		Local siCode:=Cast<CodeListViewItem>( item )
+		Local siTempl:=Cast<TemplateListViewItem>( item )
 		Local ident:="",text:=""
 		Local code:CodeItem=Null
-		If si <> Null
-			ident=si.CodeItem.Ident
-			text=si.CodeItem.TextForInsert
-			code=si.CodeItem
+		If siCode
+			ident=siCode.CodeItem.Ident
+			text=siCode.CodeItem.TextForInsert
+			code=siCode.CodeItem
+		Elseif siTempl
+			ident=siTempl.name
+			text=siTempl.value
 		Else
 			ident=item.Text
 			text=item.Text
@@ -428,6 +450,23 @@ Class AutocompleteDialog Extends NoTitleDialog
 			list.AddLast( New ListViewItem( i ) )
 		Next
 		_keywords[fileType]=list
+	End
+	
+	Method UpdateTemplates( fileType:String )
+	
+		'live templates
+		Local templates:=LiveTemplates.All( fileType )
+		Local list:=New List<ListViewItem>
+		If templates <> Null
+			For Local i:=Eachin templates
+				Local si:=New TemplateListViewItem( i.Key,i.Value )
+				list.AddLast( si )
+			Next
+			list.Sort( Lambda:Int(l:ListViewItem,r:ListViewItem)
+				Return l.Text<=>r.Text
+			End )
+		Endif
+		_templates[fileType]=list
 	End
 	
 	Method UpdateParsers( fileType:String )

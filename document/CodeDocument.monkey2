@@ -370,6 +370,10 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 					If Cursor = Anchor 'has no selection
 			
+						' live templates by tab!
+						If ProcessLiveTemplates() Return
+						
+						' usual tab behaviour
 						If Not shift
 							ReplaceText( "~t" )
 						Else
@@ -661,6 +665,24 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		If Not newFont Then newFont=App.Theme.GetStyle( Style.Name ).Font
 		
 		RenderStyle.Font=newFont
+	End
+	
+	Method ProcessLiveTemplates:Bool()
+		
+		Local ident:=IdentBeforeCursor()
+		Local templ:=LiveTemplates[FileType,ident]
+		If templ
+			templ=templ.Replace( "~r~n","~n" ).Replace( "~r","~n" )
+			Local start:=Cursor-ident.Length
+			Local cursorOffset:=templ.Find( "${Cursor}" )
+			If cursorOffset <> -1 Then templ=templ.Replace( "${Cursor}","" )
+			SelectText( start,Cursor )
+			SmartPaste( templ )
+			If cursorOffset <> -1 Then SelectText( start+cursorOffset,start+cursorOffset )
+			Return True
+		Endif
+		
+		Return False
 	End
 	
 End

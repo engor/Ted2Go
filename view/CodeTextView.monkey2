@@ -372,7 +372,7 @@ Class CodeTextView Extends TextView
 		Endif
 	End
 	
-	Method SmartPaste()
+	Method SmartPaste( customText:String=Null )
 	
 		' get indent of cursor's line
 		Local cur:=Min( Cursor,Anchor )
@@ -381,7 +381,7 @@ Class CodeTextView Extends TextView
 		Local posInLine:=cur-Document.StartOfLine( line )
 		indent=Min( indent,posInLine )
 	
-		Local txt:=App.ClipboardText
+		Local txt:= customText ? customText Else App.ClipboardText
 		txt=txt.Replace( "~r~n","~n" )
 		txt=txt.Replace( "~r","~n" )
 		Local lines:=txt.Split( "~n" )

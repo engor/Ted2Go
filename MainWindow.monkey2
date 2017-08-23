@@ -27,6 +27,7 @@ Class MainWindowInstance Extends Window
 		
 		UpdateToolsPaths()
 		
+		LiveTemplates.LoadDefault()
 		
 		_docsTabView=New TabViewExt( TabViewFlags.DraggableTabs|TabViewFlags.ClosableTabs )
 		
