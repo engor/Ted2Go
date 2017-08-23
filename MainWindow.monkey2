@@ -28,9 +28,6 @@ Class MainWindowInstance Extends Window
 		UpdateToolsPaths()
 		
 		
-		New LiveTemplates( "asset::liveTemplates.json" )
-		
-		
 		_docsTabView=New TabViewExt( TabViewFlags.DraggableTabs|TabViewFlags.ClosableTabs )
 		
 		_browsersTabView=New TabView( TabViewFlags.DraggableTabs )
