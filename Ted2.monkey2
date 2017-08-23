@@ -34,6 +34,7 @@
 #Import "dialog/NoTitleDialog"
 #Import "dialog/FindInFilesDialog"
 #Import "dialog/UpdateModulesDialog"
+#Import "dialog/GenerateClassDialog"
 
 #Import "document/DocumentManager"
 #Import "document/Ted2Document"
@@ -93,6 +94,7 @@
 #Import "view/ProjectView"
 #Import "view/HelpTreeView"
 #Import "view/Ted2TextView"
+#Import "view/Ted2CodeTextView"
 #Import "view/JsonTreeView"
 #Import "view/XmlTreeView"
 #Import "view/Monkey2TreeView"
@@ -100,6 +102,7 @@
 #Import "view/MenuExt"
 #Import "view/ScrollableViewExt"
 #Import "view/BuildErrorListViewItem"
+#Import "view/TextFieldExt"
 
 #Import "MainWindow"
 #Import "Plugin"
@@ -233,11 +236,6 @@ End
 Function GetActionTextWithShortcut:String( action:Action )
 
 	Return action.Text+" ("+action.HotKeyText+")"
-End
-
-Function IsFileExists:Bool( path:String )
-	
-	Return GetFileType( path ) = FileType.File
 End
 
 Function Exec( exePath:String,args:String="" )

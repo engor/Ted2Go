@@ -193,3 +193,16 @@ Function ShowMessage( title:String,msg:String,okButton:String="  OK  " )
 
 	Dialog.Run( title,New Label( msg ),New String[](okButton),0,0 )
 End
+
+Function IsIdentStr:Bool( str:String )
+	
+	If Not str Return False
+	
+	If IsDigit( str[0] ) Return False
+	
+	For Local c:=Eachin str
+		If Not IsIdent( c ) Return False
+	Next
+	
+	Return True
+End
