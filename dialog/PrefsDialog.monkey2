@@ -1,3 +1,4 @@
+
 Namespace ted2go
 
 
@@ -32,6 +33,10 @@ Class PrefsDialog Extends DialogExt
 		docker=GetChatDock()
 		tabView.AddTab( "IRC chat",docker )
 		
+		' Live Templates
+		'
+		docker=GetLiveTemplatesDock()
+		tabView.AddTab( "Templates",docker )
 		
 		ContentView=tabView
 		
@@ -41,6 +46,8 @@ Class PrefsDialog Extends DialogExt
 		_acShowAfter.Activated+=_acShowAfter.MakeKeyView
 		
 		Deactivated+=MainWindow.UpdateKeyView
+		
+		MinSize=New Vec2i( 300,500 )
 	End
 	
 	
@@ -76,6 +83,9 @@ Class PrefsDialog Extends DialogExt
 	Field _chatPort:TextField
 	Field _chatRooms:TextField
 	Field _chatAutoConnect:CheckButton
+	
+	Field _codeView:Ted2CodeTextView
+	Field _treeView:TreeViewExt
 	
 	Method OnApply()
 	
@@ -118,6 +128,8 @@ Class PrefsDialog Extends DialogExt
 		Apply()
 		
 		Prefs.SaveLocalState()
+		
+		LiveTemplates.NotifyDataChanged()
 	End
 	
 	Method GetMainDock:DockingView()
@@ -317,6 +329,154 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( chatTable,"top" )
 		
 		Return docker
+	End
+	
+	Method GetLiveTemplatesDock:DockingView()
+	
+		Local treeDock:=New DockingView
+		Local tree:=New TreeViewExt
+		_treeView=tree
+		
+		Local dockButtons:=New DockingView
+		Local st:=dockButtons.Style.Copy()
+		st.Margin=New Recti( 0,-5,0,0 )
+		dockButtons.Style=st
+		
+		Local btn:=New ToolButtonExt( New Action( "Add" ),"Add new template" )
+		btn.Clicked=Lambda()
+			New Fiber( Lambda()
+				Local name:=RequestString( "New template name:","" )
+				name=name.Trim()
+				If name AddTemplate( name )
+			End )
+		End
+		dockButtons.AddView( btn,"right" )
+		
+		btn=New ToolButtonExt( New Action( "Clone" ),"Clone selected" )
+		btn.Clicked=Lambda()
+			New Fiber( Lambda()
+				If Not TemplateSelName
+					Alert( "Please, select an item to clone from!" )
+					Return
+				Endif
+				Local name:=RequestString( "New template name:","" )
+				name=name.Trim()
+				If name CloneTemplate( name )
+			End )
+		End
+		dockButtons.AddView( btn,"right" )
+		
+		btn=New ToolButtonExt( New Action( "Del" ),"Remove selected" )
+		btn.Clicked=Lambda()
+			RemoveTemplate()
+		End
+		dockButtons.AddView( btn,"right" )
+		
+		treeDock.ContentView=tree
+		treeDock.AddView( dockButtons,"bottom" )
+		
+		Local docker1:=New DockingView
+		docker1.AddView( treeDock,"left","160",True)
+		
+		_codeView=New Ted2CodeTextView
+		docker1.ContentView=_codeView
+		
+		Local docker2:=New DockingView
+		docker2.AddView( New Label( " " ),"top" )
+		docker2.ContentView=docker1
+		
+		PrepareTree( tree )
+		
+		Return docker2
+	End
+	
+	Method ShowTemplate( lang:String,name:String )
+			
+		If _codeView.FileType<>lang Then _codeView.FileType=lang
+		_codeView.Text=LiveTemplates[lang,name]
+		_codeView.SelectText( 0,0 )
+	End
+	
+	Method PrepareTree( tree:TreeViewExt)
+		
+		tree.RootNodeVisible=False
+		tree.RootNode.Expanded=True
+		tree.SelectedChanged+=Lambda( node:TreeView.Node )
+		
+			If Not node Return
+		
+			If node.Parent=tree.RootNode Return
+		
+			ShowTemplate( node.Parent.Text,node.Text )
+		End
+		
+		For Local map:=Eachin LiveTemplates.All()
+			Local node:=New TreeView.Node( map.Key,tree.RootNode )
+			For Local i:=Eachin map.Value.All()
+				New TreeView.Node( i.Key,node )
+			Next
+		Next
+		
+		Local n:=tree.RootNode
+		If n.NumChildren > 0
+			n=n.Children[0]
+			If n.NumChildren > 0
+				_treeView.Selected=n.Children[0]
+			Endif
+		Endif
+	End
+	
+	Method AddTemplate( name:String )
+		
+		Local lang:=TemplateSelLang
+		If LiveTemplates[lang,name]
+			Alert( "Such name already exists!" )
+			Return
+		Endif
+		AddTemplateInternal( lang,name,"" )
+	End
+	
+	Method CloneTemplate( name:String )
+	
+		Local lang:=TemplateSelLang
+		If LiveTemplates[lang,name]
+			Alert( "Such name already exists!" )
+			Return
+		Endif
+		AddTemplateInternal( lang,name,LiveTemplates[lang,TemplateSelName] )
+	End
+	
+	Method RemoveTemplate()
+		
+		If Not TemplateSelName
+			Alert( "Have no selected item to remove!" )
+			Return
+		Endif
+		
+		LiveTemplates[TemplateSelLang].Remove( TemplateSelName )
+		'_treeView.RootNode.
+	End
+	
+	Method AddTemplateInternal( lang:String,name:String,value:String )
+		
+		LiveTemplates[lang,name]=value
+		Local n:=_treeView.FindSubNode( lang,_treeView.RootNode )
+		Local n2:=New TreeView.Node( name,n )
+		_treeView.Selected=n2
+	End
+	
+	Property TemplateSelLang:String()
+		
+		Local sel:=_treeView.Selected
+		Return (sel.Parent=_treeView.RootNode) ? sel.Text Else sel.Parent.Text
+	End
+	
+	Property TemplateSelName:String()
+		
+		Local sel:=_treeView.Selected
+		If Not sel Return Null
+		
+		Return (sel.Parent=_treeView.RootNode) ? Null Else sel.Text
 	End
 	
 End

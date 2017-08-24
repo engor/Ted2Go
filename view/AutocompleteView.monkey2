@@ -85,6 +85,7 @@ Struct AutocompleteResult
 	Field text:String
 	Field item:CodeItem
 	Field bySpace:Bool
+	Field isTemplate:Bool
 	
 End
 
@@ -331,7 +332,14 @@ Class AutocompleteDialog Extends NoTitleDialog
 	End
 	
 	Method GetTemplates:List<ListViewItem>( fileType:String )
-		If _templates[fileType] = Null Then UpdateTemplates( fileType )
+		If _templates[fileType] = Null
+			UpdateTemplates( fileType )
+			LiveTemplates.DataChanged+=Lambda( lang:String )
+				If _templates[lang] 'recreate items only if them were in use
+					UpdateTemplates( lang )
+				Endif
+			End
+		Endif
 		Return _templates[fileType]
 	End
 	
@@ -348,44 +356,61 @@ Class AutocompleteDialog Extends NoTitleDialog
 			
 			Case EventType.KeyDown,EventType.KeyRepeat
 				
+				Local curItem:=_view.CurrentItem
+				Local templ:=Cast<TemplateListViewItem>( curItem )
+				
 				Select event.Key
 				Case Key.Escape
 					Hide()
 					event.Eat()
+					
 				Case Key.Up
 					_view.SelectPrev()
 					event.Eat()
+					
 				Case Key.Down
 					_view.SelectNext()
 					event.Eat()
+					
 				Case Key.PageUp
 					_view.PageUp()
 					event.Eat()
+					
 				Case Key.PageDown
 					_view.PageDown()
 					event.Eat()
+					
 				Case Key.Enter,Key.KeypadEnter
-					If Prefs.AcUseEnter
-						OnItemChoosen( _view.CurrentItem )
-						If Not Prefs.AcNewLineByEnter Then event.Eat()
-					Else
-						Hide() 'hide by enter
+					If Not templ
+						If Prefs.AcUseEnter
+							OnItemChoosen( curItem )
+							If Not Prefs.AcNewLineByEnter Then event.Eat()
+						Else
+							Hide() 'hide by enter
+						Endif
 					Endif
+					
 				Case Key.Tab
-					If Prefs.AcUseTab
-						OnItemChoosen( _view.CurrentItem )
+					If Prefs.AcUseTab Or templ
+						OnItemChoosen( curItem )
 						event.Eat()
 					Endif
+					
 				Case Key.Space
-					Local ctrl:=event.Modifiers & Modifier.Control
-					If Prefs.AcUseSpace And Not ctrl
-						OnItemChoosen( _view.CurrentItem,True )
-						event.Eat()
+					If Not templ
+						Local ctrl:=event.Modifiers & Modifier.Control
+						If Prefs.AcUseSpace And Not ctrl
+							OnItemChoosen( curItem,True )
+							event.Eat()
+						Endif
 					Endif
+					
 				Case Key.Period
-					If Prefs.AcUseDot
-						OnItemChoosen( _view.CurrentItem )
-						event.Eat()
+					If Not templ
+						If Prefs.AcUseDot
+							OnItemChoosen( curItem )
+							event.Eat()
+						Endif
 					Endif
 				
 				Case Key.Backspace
@@ -412,6 +437,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 		Local siTempl:=Cast<TemplateListViewItem>( item )
 		Local ident:="",text:=""
 		Local code:CodeItem=Null
+		Local templ:=False
 		If siCode
 			ident=siCode.CodeItem.Ident
 			text=siCode.CodeItem.TextForInsert
@@ -419,6 +445,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 		Elseif siTempl
 			ident=siTempl.name
 			text=siTempl.value
+			templ=True
 		Else
 			ident=item.Text
 			text=item.Text
@@ -428,6 +455,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 		result.text=text
 		result.item=code
 		result.bySpace=bySpace
+		result.isTemplate=templ
 		OnChoosen( result )
 		Hide()
 	End

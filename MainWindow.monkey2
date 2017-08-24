@@ -13,6 +13,7 @@ Namespace ted2go
 
 #Import "assets/themes/irc/@/themes/irc"
 
+
 Global MainWindow:MainWindowInstance
 
 Class MainWindowInstance Extends Window

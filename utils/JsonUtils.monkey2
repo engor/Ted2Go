@@ -2,6 +2,16 @@
 Namespace ted2go
 
 
+Function Json_LoadObject:JsonObject( filePath:String )
+	
+	If GetFileType(filePath) <> FileType.File Return Null
+	
+	'Local txt:=LoadString( filePath ).Replace( "\n","~n" ).Replace( "\t","~t" ).Replace( "\r","~r" )
+	
+	'Return JsonObject.Parse( txt )
+	Return JsonObject.Load( filePath )
+End
+
 Function Json_LoadValue:JsonValue( filePath:String,key:String )
 	
 	If GetFileType(filePath) <> FileType.File Return Null

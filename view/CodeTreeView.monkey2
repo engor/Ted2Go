@@ -13,7 +13,7 @@ Class CodeTreeView Extends TreeViewExt
 		_expander=New TreeViewExpander( Self )
 	End
 	
-	Method Fill( fileType:String,path:String )
+	Method Fill( fileType:String,path:String,expandIfOnlyOneItem:Bool=True )
 	
 		_expander.Store()
 		
@@ -35,6 +35,9 @@ Class CodeTreeView Extends TreeViewExt
 			AddTreeItem( i,node,parser )
 		Next
 		
+		If expandIfOnlyOneItem And RootNode.NumChildren=1
+			RootNode.Children[0].Expanded=True
+		Endif
 	End
 	
 	Method SelectByScope( scope:CodeItem )

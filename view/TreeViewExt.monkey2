@@ -4,6 +4,8 @@ Namespace ted2go
 
 Class TreeViewExt Extends TreeView
 
+	Field SelectedChanged:Void( selNode:TreeView.Node )
+	
 	Method New()
 		Super.New()
 		
@@ -21,8 +23,29 @@ Class TreeViewExt Extends TreeView
 	Property Selected:TreeView.Node()
 		Return _sel
 	Setter( value:TreeView.Node )
+		
+		If _sel = value Return
 		_sel = value
 		EnsureVisible( _sel )
+		SelectedChanged( _sel )
+	End
+	
+	Method FindSubNode:TreeView.Node( text:String,whereNode:TreeView.Node,recursive:Bool=False )
+		
+		If whereNode.Text=text Return whereNode
+		
+		Local list:=whereNode.Children
+		If Not list Return Null
+		
+		For Local i:=Eachin list
+			If i.Text=text Return i
+			If recursive And i.Children
+				Local n:=FindSubNode( text,i,recursive )
+				If n Return n
+			Endif
+		Next
+		
+		Return Null
 	End
 	
 	

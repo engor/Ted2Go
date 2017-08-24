@@ -1,6 +1,8 @@
 {
     ".monkey2":{
         "ifn": "If ${Cursor} = Null\n\t\nEndif",
+        "ifb": "If ${Cursor}\n\t\nEndif",
+        "ife": "If ${Cursor}\n\t\nElse\n\t\nEndif",
         "inn": "If ${Cursor} <> Null\n\t\nEndif",
         "st": "String",
         "me": "Method ${Cursor}()\n\t\n\t\nEnd",
@@ -8,6 +10,15 @@
         "fu": "Function ${Cursor}()\n\t\n\t\nEnd",
         "fus": "Function ${Cursor}:String()\n\t\n\tReturn \nEnd",
         "prop": "Property ${Cursor}()\n\tReturn \nSetter( value: )\n\t\n\t=value\nEnd",
-        "get": "Property ${Cursor}()\n\tReturn \nEnd"
+        "get": "Property ${Cursor}()\n\tReturn \nEnd",
+        "prnt": "Print \"${Cursor}\"",
+        "fori": "For Local ${Cursor}:=0 until _\n\t\nNext",
+        "each": "For Local ${Cursor}:=Eachin _\n\t\nNext",
+        "whi": "While ${Cursor}\n\t\nWend",
+        "sel": "Select ${Cursor}\n\tCase \n\t\nEnd",
+        "seld": "Select ${Cursor}\n\tCase \n\t\nDefault \n\t\nEnd",
+        "try": "Try\n\t${Cursor}\nCatch _\n\t\nEnd",
+        "tryf": "Try\n\t${Cursor}\nCatch _\n\t\nFinally\n\t\nEnd",
+        "fib": "New Fiber( Lambda()\n\t${Cursor}\nEnd )"
     }
 }

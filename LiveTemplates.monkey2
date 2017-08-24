@@ -8,25 +8,32 @@ Const LiveTemplates:=New LiveTemplatesClass
 
 Class LiveTemplatesClass
 	
+	Field DataChanged:Void( lang:String )
+	
 	Method Load( jsonPath:String )
 		
-		Local txt:=LoadString( jsonPath ).Replace( "\n","~n" ).Replace( "\t","~t" )
-		'Local txt
-		Local langs:=JsonObject.Parse( txt ).All()
+		Local langs:=Json_LoadObject( jsonPath ).All()
 		For Local i:=Eachin langs
+			Local lang:=i.Key
 			Local map:=New StringMap<String>
-			_items[i.Key]=map
+			_items[lang]=map
 			Local all:=i.Value.ToObject().All()
 			For Local j:=Eachin all
 				'Print j.Key+" <-> "+j.Value.ToString()
-				map[j.Key]=j.Value.ToString()
+				map[j.Key]=j.Value.ToString().Replace( "~r~n","~n" ).Replace( "~r","~n" )
 			Next
 		Next
+		NotifyDataChanged()
 	End
 	
 	Method LoadDefault()
 		
 		Load( "asset::liveTemplates.json" )
+	End
+	
+	Operator []:StringMap<String>( fileType:String )
+	
+		Return _items[fileType]
 	End
 		
 	Operator []:String( fileType:String,name:String )
@@ -38,7 +45,15 @@ Class LiveTemplatesClass
 	Operator []=( fileType:String,name:String,value:String )
 	
 		Local map:=_items[fileType]
-		If map Then map[name]=value
+		If map
+			map[name]=value
+			OnChanged( fileType )
+		Endif
+	End
+	
+	Method All:StringMap<StringMap<String>>.Iterator()
+	
+		Return _items.All()
 	End
 	
 	Method All:StringMap<String>.Iterator( fileType:String )
@@ -50,19 +65,39 @@ Class LiveTemplatesClass
 	Method Add( fileType:String,name:String,value:String )
 	
 		Local map:=_items[fileType]
-		If map Then map.Add( name,value )
+		If map 
+			map[name]=value
+			OnChanged( fileType )
+		Endif
 	End
 	
 	Method Remove( fileType:String,name:String )
 	
 		Local map:=_items[fileType]
-		If map Then map.Remove( name )
+		If map
+			map.Remove( name )
+			OnChanged( fileType )
+		Endif
+	End
+	
+	Method NotifyDataChanged()
+		
+		For Local it:=Eachin All()
+			DataChanged( it.Key )
+		Next
+		_dirty=False
 	End
 	
 	
 	Private
 	
 	Field _items:=New StringMap<StringMap<String>>
+	Field _dirty:Bool
+	
+	Method OnChanged( lang:String )
+		
+		_dirty=True
+	End
 	
 End
 
@@ -74,10 +109,18 @@ Class TemplateListViewItem Extends ListViewItem
 	
 	Method New( name:String,value:String )
 		
-		Super.New( name+"   (template)" )
+		Super.New( GetCaption( name,value ) )
 		
 		Self.name=name
 		Self.value=value
 	End
 	
+	
+	Private
+	
+	Method GetCaption:String( name:String,value:String )
+		
+		Local s:=value.Replace( "~n"," ... " ).Replace( "~t","" ).Replace( "${Cursor}","" )
+		Return name+"   "+s
+	End
 End

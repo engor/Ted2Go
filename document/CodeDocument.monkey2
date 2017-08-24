@@ -51,13 +51,20 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				
 				Local ident:=result.ident
 				Local text:=result.text
-				Local item:=result.item
-				Local bySpace:=result.bySpace
 				
-				text=_doc.PrepareForInsert( ident,text,Not bySpace,LineTextAtCursor,PosInLineAtCursor,item )
-				
-				SelectText( Cursor,Cursor-AutoComplete.LastIdentPart.Length )
-				ReplaceText( text )
+				If result.isTemplate
+					
+					InsertLiveTemplate( AutoComplete.LastIdentPart,text )
+					
+				Else
+					
+					Local item:=result.item
+					Local bySpace:=result.bySpace
+					
+					text=_doc.PrepareForInsert( ident,text,Not bySpace,LineTextAtCursor,PosInLineAtCursor,item )
+					SelectText( Cursor,Cursor-AutoComplete.LastIdentPart.Length )
+					ReplaceText( text )
+				Endif
 			Endif
 		End
 		
@@ -371,7 +378,8 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					If Cursor = Anchor 'has no selection
 			
 						' live templates by tab!
-						If ProcessLiveTemplates() Return
+						Local ident:=IdentBeforeCursor()
+						If InsertLiveTemplate( ident ) Return
 						
 						' usual tab behaviour
 						If Not shift
@@ -667,12 +675,10 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		RenderStyle.Font=newFont
 	End
 	
-	Method ProcessLiveTemplates:Bool()
+	Method InsertLiveTemplate:Bool( ident:String,templ:String=Null )
 		
-		Local ident:=IdentBeforeCursor()
-		Local templ:=LiveTemplates[FileType,ident]
+		If Not templ Then templ=LiveTemplates[FileType,ident]
 		If templ
-			templ=templ.Replace( "~r~n","~n" ).Replace( "~r","~n" )
 			Local start:=Cursor-ident.Length
 			Local cursorOffset:=templ.Find( "${Cursor}" )
 			If cursorOffset <> -1 Then templ=templ.Replace( "${Cursor}","" )

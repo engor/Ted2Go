@@ -14,7 +14,7 @@ Class BuildErrorListViewItem Extends ListViewItem
 	Method New( err:BuildError )
 	
 		Super.New( err.msg )
-		Text="["+(err.line+1)+"] "+err.msg.Trim()+" ("+err.path+")"
+		Text="~q"+err.msg.Trim()+"~q at line "+(err.line+1)+" ("+err.path+")"
 		error=err
 	End
 	
