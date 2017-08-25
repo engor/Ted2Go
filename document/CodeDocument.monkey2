@@ -679,11 +679,12 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		If Not templ Then templ=LiveTemplates[FileType,ident]
 		If templ
+			templ=PrepareSmartPaste( templ )
 			Local start:=Cursor-ident.Length
 			Local cursorOffset:=templ.Find( "${Cursor}" )
 			If cursorOffset <> -1 Then templ=templ.Replace( "${Cursor}","" )
 			SelectText( start,Cursor )
-			SmartPaste( templ )
+			ReplaceText( templ )
 			If cursorOffset <> -1 Then SelectText( start+cursorOffset,start+cursorOffset )
 			Return True
 		Endif

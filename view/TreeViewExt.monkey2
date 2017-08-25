@@ -26,8 +26,9 @@ Class TreeViewExt Extends TreeView
 		
 		If _sel = value Return
 		_sel = value
-		EnsureVisible( _sel )
 		SelectedChanged( _sel )
+		
+		EnsureVisible( _sel )
 	End
 	
 	Method FindSubNode:TreeView.Node( text:String,whereNode:TreeView.Node,recursive:Bool=False )
@@ -46,6 +47,12 @@ Class TreeViewExt Extends TreeView
 		Next
 		
 		Return Null
+	End
+	
+	Method RemoveNode( node:Node )
+		
+		node.Remove()
+		If node=Selected Then Selected=Null
 	End
 	
 	
@@ -88,6 +95,8 @@ Class TreeViewExt Extends TreeView
 	Field _selColor:Color
 	
 	Method EnsureVisible( node:TreeView.Node )
+		
+		If Not node Return
 		
 		Local n:=node
 		While n

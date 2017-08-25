@@ -10,25 +10,33 @@ Class LiveTemplatesClass
 	
 	Field DataChanged:Void( lang:String )
 	
-	Method Load( jsonPath:String )
+	Method Load()
 		
-		Local langs:=Json_LoadObject( jsonPath ).All()
-		For Local i:=Eachin langs
-			Local lang:=i.Key
-			Local map:=New StringMap<String>
-			_items[lang]=map
-			Local all:=i.Value.ToObject().All()
-			For Local j:=Eachin all
-				'Print j.Key+" <-> "+j.Value.ToString()
-				map[j.Key]=j.Value.ToString().Replace( "~r~n","~n" ).Replace( "~r","~n" )
-			Next
-		Next
-		NotifyDataChanged()
+		' merge two files
+		Load( DefaultPath )
+		If FileExists( CustomPath ) Then Load( CustomPath )
 	End
 	
-	Method LoadDefault()
+	Method Save()
 		
-		Load( "asset::liveTemplates.json" )
+		If Not _dirty Return
+		
+		_dirty=False
+		NotifyDataChanged()
+		
+		Local json:=New JsonObject
+		
+		For Local map:=Eachin _items.All()
+			Local obj:=New JsonObject
+			json[map.Key]=obj
+			For Local i:=Eachin map.Value.All()
+				obj[i.Key]=New JsonString( i.Value )
+			Next
+		Next
+		
+		Local txt:=json.ToJson()
+		SaveString( txt,DefaultPath )
+		SaveString( txt,CustomPath )
 	End
 	
 	Operator []:StringMap<String>( fileType:String )
@@ -80,23 +88,46 @@ Class LiveTemplatesClass
 		Endif
 	End
 	
-	Method NotifyDataChanged()
-		
-		For Local it:=Eachin All()
-			DataChanged( it.Key )
-		Next
-		_dirty=False
-	End
-	
 	
 	Private
 	
 	Field _items:=New StringMap<StringMap<String>>
 	Field _dirty:Bool
 	
+	Property DefaultPath:String()
+		Return "asset::liveTemplates.json"
+	End
+	
+	Property CustomPath:String()
+		Return Prefs.IdeHomeDir+"customTemplates.json"
+	End
+	
+	Method Load( jsonPath:String )
+		
+		Local langs:=Json_LoadObject( jsonPath ).All()
+		For Local i:=Eachin langs
+			Local lang:=i.Key
+			Local map:=New StringMap<String>
+			_items[lang]=map
+			Local all:=i.Value.ToObject().All()
+			For Local j:=Eachin all
+				'Print j.Key+" <-> "+j.Value.ToString()
+				map[j.Key]=j.Value.ToString().Replace( "~r~n","~n" ).Replace( "~r","~n" )
+			Next
+		Next
+		NotifyDataChanged()
+	End
+	
 	Method OnChanged( lang:String )
 		
 		_dirty=True
+	End
+	
+	Method NotifyDataChanged()
+	
+		For Local it:=Eachin All()
+			DataChanged( it.Key )
+		Next
 	End
 	
 End

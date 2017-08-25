@@ -18,6 +18,7 @@ Class CodeTextView Extends TextView
 		BlockCursor=False
 		
 		CursorMoved += OnCursorMoved
+		Document.TextChanged += TextChanged
 		
 		UpdateThemeColors()
 	End
@@ -374,6 +375,14 @@ Class CodeTextView Extends TextView
 	
 	Method SmartPaste( customText:String=Null )
 	
+		Local txt:= customText ? customText Else App.ClipboardText
+	
+		ReplaceText( PrepareSmartPaste( txt ) )
+		
+	End
+	
+	Method PrepareSmartPaste:String( txt:String )
+	
 		' get indent of cursor's line
 		Local cur:=Min( Cursor,Anchor )
 		Local line:=Document.FindLine( cur )
@@ -381,7 +390,6 @@ Class CodeTextView Extends TextView
 		Local posInLine:=cur-Document.StartOfLine( line )
 		indent=Min( indent,posInLine )
 	
-		Local txt:= customText ? customText Else App.ClipboardText
 		txt=txt.Replace( "~r~n","~n" )
 		txt=txt.Replace( "~r","~n" )
 		Local lines:=txt.Split( "~n" )
@@ -401,8 +409,7 @@ Class CodeTextView Extends TextView
 			result+=lines[i]
 		Next
 	
-		ReplaceText( result )
-	
+		Return result
 	End
 	
 	Method DoFormat( all:Bool )

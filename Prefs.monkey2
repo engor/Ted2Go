@@ -13,6 +13,7 @@ Class Prefs
 	Global AcUseDot:=False
 	Global AcNewLineByEnter:=True
 	Global AcStrongFirstChar:=True
+	Global AcUseLiveTemplates:=True
 	'
 	Global MainToolBarVisible:=True
 	Global MainProjectTabsRight:=True
@@ -37,6 +38,7 @@ Class Prefs
 	Global SourceShowInherited:=False
 	'
 	Global MonkeyRootPath:String
+	Global IdeHomeDir:String
 	
 	Function LoadState( json:JsonObject )
 		
@@ -71,6 +73,7 @@ Class Prefs
 			AcUseSpace=Json_GetBool( j2,"useSpace",AcUseSpace )
 			AcUseDot=Json_GetBool( j2,"useDot",AcUseDot )
 			AcNewLineByEnter=Json_GetBool( j2,"newLineByEnter",AcNewLineByEnter )
+			AcUseLiveTemplates=Json_GetBool( j2,"useLiveTemplates",AcUseLiveTemplates )
 			
 		Endif
 		
@@ -123,6 +126,7 @@ Class Prefs
 		j["useSpace"]=New JsonBool( AcUseSpace )
 		j["useDot"]=New JsonBool( AcUseDot )
 		j["newLineByEnter"]=New JsonBool( AcNewLineByEnter )
+		j["useLiveTemplates"]=New JsonBool( AcUseLiveTemplates )
 		
 		j=New JsonObject
 		json["editor"]=j
@@ -143,6 +147,9 @@ Class Prefs
 	End
 	
 	Function LoadLocalState()
+		
+		IdeHomeDir=HomeDir()+"Ted2Go/"
+		CreateDir( IdeHomeDir )
 		
 		Local json:=JsonObject.Load( AppDir()+"state.json" )
 		If Not json Return

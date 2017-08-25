@@ -293,7 +293,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 		'-----------------------------
 		' live templates
 		'-----------------------------
-		If onlyOne
+		If onlyOne And Prefs.AcUseLiveTemplates
 			For Local i:=Eachin GetTemplates( fileType )
 				If i.Text.StartsWith( lastIdent )
 					result.Insert( 0,i )

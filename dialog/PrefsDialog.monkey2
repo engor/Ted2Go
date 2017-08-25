@@ -36,7 +36,7 @@ Class PrefsDialog Extends DialogExt
 		' Live Templates
 		'
 		docker=GetLiveTemplatesDock()
-		tabView.AddTab( "Templates",docker )
+		tabView.AddTab( "CodeTemplates",docker )
 		
 		ContentView=tabView
 		
@@ -62,6 +62,7 @@ Class PrefsDialog Extends DialogExt
 	Field _acNewLineByEnter:CheckButton
 	Field _acKeywordsOnly:CheckButton
 	Field _acShowAfter:TextField
+	Field _acUseLiveTemplates:CheckButton
 	
 	Field _editorToolBarVisible:CheckButton
 	Field _editorGutterVisible:CheckButton
@@ -98,6 +99,7 @@ Class PrefsDialog Extends DialogExt
 		Prefs.AcKeywordsOnly=_acKeywordsOnly.Checked
 		Local count:=Max( 1,Int( _acShowAfter.Text ) )
 		Prefs.AcShowAfter=count
+		Prefs.AcUseLiveTemplates=_acUseLiveTemplates.Checked
 		
 		Prefs.EditorToolBarVisible=_editorToolBarVisible.Checked
 		Prefs.EditorGutterVisible=_editorGutterVisible.Checked
@@ -129,7 +131,7 @@ Class PrefsDialog Extends DialogExt
 		
 		Prefs.SaveLocalState()
 		
-		LiveTemplates.NotifyDataChanged()
+		LiveTemplates.Save()
 	End
 	
 	Method GetMainDock:DockingView()
@@ -290,6 +292,9 @@ Class PrefsDialog Extends DialogExt
 		_acNewLineByEnter=New CheckButton( "Add new line (by Enter)" )
 		_acNewLineByEnter.Checked=Prefs.AcNewLineByEnter
 		
+		_acUseLiveTemplates=New CheckButton( "Show live templates" )
+		_acUseLiveTemplates.Checked=Prefs.AcUseLiveTemplates
+		
 		Local docker:=New DockingView
 		docker.AddView( New Label( " " ),"top" )
 		docker.AddView( _acEnabled,"top" )
@@ -300,6 +305,7 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( _acUseSpace,"top" )
 		docker.AddView( _acUseDot,"top" )
 		docker.AddView( _acKeywordsOnly,"top" )
+		docker.AddView( _acUseLiveTemplates,"top" )
 		docker.AddView( New Label( " " ),"top" )
 		
 		Return docker
@@ -307,7 +313,7 @@ Class PrefsDialog Extends DialogExt
 	
 	Method GetChatDock:DockingView()
 		
-		Local chatTable:=New TableView( 2,5 )
+		Local chatTable:=New TableView( 2,6 )
 		_chatNick=New TextField( Prefs.IrcNickname )
 		_chatServer=New TextField( Prefs.IrcServer )
 		_chatPort=New TextField( ""+Prefs.IrcPort )
@@ -323,6 +329,7 @@ Class PrefsDialog Extends DialogExt
 		chatTable[0,3]=New Label( "Rooms" )
 		chatTable[1,3]=_chatRooms
 		chatTable[0,4]=_chatAutoConnect
+		chatTable[0,5]=New Label( "" ) 'bottom padding hack
 		
 		Local docker:=New DockingView
 		docker.AddView( New Label( " " ),"top" )
@@ -372,17 +379,29 @@ Class PrefsDialog Extends DialogExt
 		End
 		dockButtons.AddView( btn,"right" )
 		
+		btn=New ToolButtonExt( New Action( "..." ),"Open containing folder (customTemplates.json)" )
+		btn.Clicked=Lambda()
+			OpenUrl( Prefs.IdeHomeDir )
+		End
+		dockButtons.AddView( btn,"right" )
+		
 		treeDock.ContentView=tree
 		treeDock.AddView( dockButtons,"bottom" )
 		
 		Local docker1:=New DockingView
-		docker1.AddView( treeDock,"left","160",True)
+		docker1.AddView( treeDock,"left","170",True)
 		
 		_codeView=New Ted2CodeTextView
+		_codeView.ShowWhiteSpaces=True
+		_codeView.Document.TextChanged+=Lambda()
+			
+			Local name:=TemplateSelName
+			If name Then LiveTemplates[TemplateSelLang,name]=_codeView.Text
+		End
 		docker1.ContentView=_codeView
 		
 		Local docker2:=New DockingView
-		docker2.AddView( New Label( " " ),"top" )
+		docker2.AddView( New Label( "Press 'Tab' in completion list or editor to insert template." ),"top" )
 		docker2.ContentView=docker1
 		
 		PrepareTree( tree )
@@ -391,7 +410,7 @@ Class PrefsDialog Extends DialogExt
 	End
 	
 	Method ShowTemplate( lang:String,name:String )
-			
+		
 		If _codeView.FileType<>lang Then _codeView.FileType=lang
 		_codeView.Text=LiveTemplates[lang,name]
 		_codeView.SelectText( 0,0 )
@@ -453,8 +472,10 @@ Class PrefsDialog Extends DialogExt
 			Return
 		Endif
 		
+		DebugStop()
 		LiveTemplates[TemplateSelLang].Remove( TemplateSelName )
-		'_treeView.RootNode.
+		_treeView.RemoveNode( _treeView.Selected )
+		_codeView.Text=""
 	End
 	
 	Method AddTemplateInternal( lang:String,name:String,value:String )
@@ -463,11 +484,15 @@ Class PrefsDialog Extends DialogExt
 		Local n:=_treeView.FindSubNode( lang,_treeView.RootNode )
 		Local n2:=New TreeView.Node( name,n )
 		_treeView.Selected=n2
+		
+		_codeView.MakeKeyView()
 	End
 	
 	Property TemplateSelLang:String()
 		
 		Local sel:=_treeView.Selected
+		If Not sel Return Null
+		
 		Return (sel.Parent=_treeView.RootNode) ? sel.Text Else sel.Parent.Text
 	End
 	
