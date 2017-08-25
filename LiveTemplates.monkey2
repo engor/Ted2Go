@@ -14,7 +14,7 @@ Class LiveTemplatesClass
 		
 		' merge two files
 		Load( DefaultPath )
-		If FileExists( CustomPath ) Then Load( CustomPath )
+		Load( CustomPath )
 	End
 	
 	Method Save()
@@ -104,6 +104,8 @@ Class LiveTemplatesClass
 	
 	Method Load( jsonPath:String )
 		
+		If Not FileExists( jsonPath ) Return
+			
 		Local langs:=Json_LoadObject( jsonPath ).All()
 		For Local i:=Eachin langs
 			Local lang:=i.Key
@@ -111,7 +113,6 @@ Class LiveTemplatesClass
 			_items[lang]=map
 			Local all:=i.Value.ToObject().All()
 			For Local j:=Eachin all
-				'Print j.Key+" <-> "+j.Value.ToString()
 				map[j.Key]=j.Value.ToString().Replace( "~r~n","~n" ).Replace( "~r","~n" )
 			Next
 		Next

@@ -9,6 +9,9 @@ Class ToolButtonExt Extends ToolButton
 	Method New( action:Action,hint:String=Null )
 		
 		Super.New( action )
+		
+		Style=GetStyle( "ColoredToolButton" )
+		
 		PushButtonMode=True
 		_hint=hint
 		
