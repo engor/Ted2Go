@@ -197,6 +197,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Endif
 				
 				Case Key.Backspace
+					
 					If AutoComplete.IsOpened
 						Local ident:=IdentBeforeCursor()
 						ident=ident.Slice( 0,ident.Length-1 )
@@ -205,6 +206,15 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						Else
 							_doc.HideAutocomplete()
 						Endif
+						
+					Else
+						
+						#If __TARGET__="macos"
+						If ctrl
+							DeleteLineAtCursor()
+						Endif
+						#Endif
+						
 					Endif
 				
 				Case Key.F11
@@ -215,9 +225,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				#If __TARGET__="windows"
 				Case Key.E 'delete whole line
 					If ctrl
-						Local line:=Document.FindLine( Cursor )
-						SelectText( Document.StartOfLine( line ),Document.EndOfLine( line )+1 )
-						ReplaceText( "" )
+						DeleteLineAtCursor()
 						Return
 					Endif
 				#Endif
@@ -690,6 +698,13 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		Endif
 		
 		Return False
+	End
+	
+	Method DeleteLineAtCursor()
+		
+		Local line:=Document.FindLine( Cursor )
+		SelectText( Document.StartOfLine( line ),Document.EndOfLine( line )+1 )
+		ReplaceText( "" )
 	End
 	
 End
