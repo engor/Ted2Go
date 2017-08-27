@@ -704,7 +704,8 @@ Class MainWindowInstance Extends Window
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/new_file.png" ),_fileActions.new_.Triggered,newTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_file.png" ),_fileActions.open.Triggered,openTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_project.png" ),_projectView.openProject.Triggered,"Open project..." )
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/save_all.png" ),_fileActions.saveAll.Triggered,saveAllTitle )
+		Local icons:=New Image[]( ThemeImages.Get( "toolbar/save_all.png" ),ThemeImages.Get( "toolbar/save_dirty.png" ) )
+		_saveAllItem=_toolBar.AddIconicButton( icons,_fileActions.saveAll.Triggered,saveAllTitle )
 		_toolBar.AddSeparator()
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/cut.png" ),_editActions.cut.Triggered,cutTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/copy.png" ),_editActions.copy.Triggered,copyTitle )
@@ -1263,6 +1264,7 @@ Class MainWindowInstance Extends Window
 	Field _modsDir:String
 	
 	Field _toolBar:ToolBarExt
+	Field _saveAllItem:MultiIconToolButton
 	Field _docsManager:DocumentManager
 	Field _fileActions:FileActions
 	Field _editActions:EditActions
@@ -1503,6 +1505,8 @@ Class MainWindowInstance Extends Window
 		
 		_forceStop.Enabled=_buildConsole.Running Or _outputConsole.Running
 	
+		_saveAllItem.SetIcon( _fileActions.saveAll.Enabled ? 1 Else 0 )
+		
 		App.Idle+=OnAppIdle
 		
 		GCCollect()	'thrash that GC!

@@ -20,7 +20,7 @@ Class FileActions
 	
 		_docs=docs
 		
-		new_=New Action( "New" )
+		new_=New Action( "New file" )
 #if __TARGET__="macos"
 		new_.HotKey=Key.T
 		new_.HotKeyModifiers=Modifier.Menu
@@ -30,7 +30,7 @@ Class FileActions
 #endif
 		new_.Triggered=OnNew
 		
-		open=New Action( "Open" )
+		open=New Action( "Open file" )
 		open.HotKey=Key.O
 		open.HotKeyModifiers=Modifier.Menu
 		open.Triggered=OnOpen
