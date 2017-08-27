@@ -11,6 +11,7 @@ Class FileBrowserExt Extends TreeView
 	Field FileDoubleClicked:Void( path:String )
 	
 	Method New( rootPath:String="." )
+		
 		Style=GetStyle( "FileBrowser" )
 		
 		GetFileTypeIcons()
@@ -27,6 +28,8 @@ Class FileBrowserExt Extends TreeView
 		NodeCollapsed=OnNodeCollapsed
 		
 		RootNode=_rootNode
+		
+		_expander=New TreeViewExpander( Self )
 		
 		Update()
 	End
@@ -49,7 +52,11 @@ Class FileBrowserExt Extends TreeView
 	#end
 	Method Update()
 	
+		_expander.Store()
+		
 		UpdateNode( _rootNode,_rootPath,True )
+		
+		_expander.Restore()
 	End
 	
 	Protected
@@ -82,6 +89,8 @@ Class FileBrowserExt Extends TreeView
 	
 	Field _dirIcon:Image
 	Field _fileIcon:Image
+	
+	Field _expander:TreeViewExpander
 	
 	Method OnNodeClicked( tnode:TreeView.Node )
 	

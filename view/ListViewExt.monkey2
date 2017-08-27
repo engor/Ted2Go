@@ -9,7 +9,7 @@ Class ListViewItem
 	Setter( value:String )
 		_text=value
 	End
-	
+
 	Property Icon:Image()
 		Return _icon
 	Setter( value:Image )
@@ -30,7 +30,7 @@ Class ListViewItem
 		canvas.Color=App.Theme.DefaultStyle.TextColor
 		canvas.DrawText( _text,x+dx,y,handleX,handleY )
 	End
-	
+
 	
 	Private
 	
@@ -43,6 +43,10 @@ End
 Class ListViewExt Extends ScrollableView
 
 	Field OnItemChoosen:Void()
+	
+	Method New()
+		Self.New( 20,50 )
+	End
 	
 	Method New( lineHeight:Int,maxLines:Int )
 		
@@ -67,8 +71,21 @@ Class ListViewExt Extends ScrollableView
 		_visibleCount=Min( _maxLines,_count )
 	End
 	
+	Method AddItem( item:ListViewItem )
+	
+		_items.AddLast( item )
+		_count=_items.Count()
+		_visibleCount=Min( _maxLines,_count )
+	End
+	
 	Method SetItems<T>( items:Stack<T> ) Where T Extends ListViewItem
 		
+		_items.Clear()
+		AddItems( items )
+	End
+	
+	Method SetItems<T>( items:T[] ) Where T Extends ListViewItem
+	
 		_items.Clear()
 		AddItems( items )
 	End
@@ -77,6 +94,12 @@ Class ListViewExt Extends ScrollableView
 		
 		_selIndex=0
 		Scroll=New Vec2i
+	End
+	
+	Method Clear()
+	
+		Reset()
+		_items.Clear()
 	End
 	
 	Property LineHeight:Float()
@@ -154,9 +177,6 @@ Class ListViewExt Extends ScrollableView
 	
 	
 	Protected
-	
-	Method New()
-	End
 	
 	Method SelectPrevInternal( ensureVis:Bool )
 	
@@ -271,13 +291,17 @@ Class ListViewExt Extends ScrollableView
 		
 			Local index:=(MouseLocation.y+Scroll.y)/_lineH
 			
+			If index < 0 Or index >= _count Return
+			
 			_selIndex=index
 			OnItemChoosen()
 			
 		Case EventType.MouseClick
 		
 			Local index:=(MouseLocation.y+Scroll.y)/_lineH
-		
+			
+			If index < 0 Or index >= _count Return
+			
 			_selIndex=index
 			OnItemChoosen()
 			

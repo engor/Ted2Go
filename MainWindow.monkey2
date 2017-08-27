@@ -13,6 +13,7 @@ Namespace ted2go
 
 #Import "assets/themes/irc/@/themes/irc"
 
+
 Global MainWindow:MainWindowInstance
 
 Class MainWindowInstance Extends Window
@@ -26,6 +27,8 @@ Class MainWindowInstance Extends Window
 		MainWindow=Self
 		
 		UpdateToolsPaths()
+		
+		LiveTemplates.Load()
 		
 		_docsTabView=New TabViewExt( TabViewFlags.DraggableTabs|TabViewFlags.ClosableTabs )
 		
@@ -79,16 +82,6 @@ Class MainWindowInstance Extends Window
 		Local bar:=New ToolBarExt
 		bar.MaxSize=New Vec2i( 300,30 )
 		
-		bar.AddIconicButton(
-			ThemeImages.Get( "outputbar/clean.png" ),
-			Lambda()
-				_outputConsole.ClearAll()
-			End,
-			"Clear all" )
-		
-		'bar.AddSeparator()
-		'bar.AddSeparator()
-			
 		Local label:=New Label( "Filter:" )
 		bar.AddView( label,"left" )
 		Local editFilter:=New TextField()
@@ -101,6 +94,23 @@ Class MainWindowInstance Extends Window
 			Local t:=editFilter.Text
 			_outputConsole.SetFilter( t )
 		End
+		
+		bar.AddSeparator()
+		
+		bar.AddIconicButton(
+			ThemeImages.Get( "outputbar/clean.png" ),
+			Lambda()
+				_outputConsole.ClearAll()
+			End,
+			"Clear all" )
+		
+		Local it:=bar.AddIconicButton(
+			ThemeImages.Get( "outputbar/wrap.png" ),
+			Lambda()
+				_outputConsole.WordWrap=Not _outputConsole.WordWrap
+			End,
+			"Word wrap" )
+		it.ToggleMode=True
 		
 		_outputConsoleView=New DockingView
 		_outputConsoleView.AddView( bar,"top" )
@@ -174,16 +184,23 @@ Class MainWindowInstance Extends Window
 		
 		
 		_buildActions=New BuildActions( _docsManager,_buildConsole,_debugView )
+		_buildActions.ErrorsOccured+=Lambda( errors:BuildError[] )
+			ShowBuildConsole( True )
+			_buildActions.GotoError( errors[0] )
+			
+			_buildErrorsList.Clear()
+			For Local err:=Eachin errors
+				_buildErrorsList.AddItem( New BuildErrorListViewItem( err ) )
+			Next
+			_buildErrorsList.Visible=True
+		End
 		
 		_projectView=New ProjectView( _docsManager,_buildActions )
 		_projectView.ProjectOpened+=Lambda( dir:String )
 			AddRecentProject( dir )
 			SaveState()
 		End
-		_projectView.ProjectClosed+=Lambda( dir:String )
-			UpdateCloseProjectMenu( dir )
-			SaveState()
-		End
+		_projectView.ProjectClosed+=OnProjectClosed
 		
 		_fileActions=New FileActions( _docsManager )
 		_editActions=New EditActions( _docsManager )
@@ -299,7 +316,8 @@ Class MainWindowInstance Extends Window
 		_forceStop.HotKeyModifiers=Modifier.Shift
 		
 		'
-		_buildActions.PreBuild+=OnForceStop
+		_buildActions.PreBuild+=OnPreBuild
+		_buildActions.PreSemant+=OnPreSemant
 		
 		_buildMenu=New MenuExt( "Build" )
 		_buildMenu.AddAction( _buildActions.buildAndRun )
@@ -366,7 +384,18 @@ Class MainWindowInstance Extends Window
 		_browsersTabView.AddTab( "Debug",_debugView,False )
 		_browsersTabView.AddTab( "Help",_helpTree,False )
 		
-		_consolesTabView.AddTab( "Build",_buildConsole,True )
+		_buildErrorsList=New ListViewExt
+		_buildErrorsList.Visible=False
+		_buildErrorsList.OnItemChoosen+=Lambda()
+			Local item:=Cast<BuildErrorListViewItem>( _buildErrorsList.CurrentItem )
+			_buildActions.GotoError( item.error )
+		End
+		
+		_buildConsoleView=New DockingView
+		_buildConsoleView.AddView( _buildErrorsList,"right","400",True )
+		_buildConsoleView.ContentView=_buildConsole
+		
+		_consolesTabView.AddTab( "Build",_buildConsoleView,True )
 		_consolesTabView.AddTab( "Output",_outputConsoleView,False )
 		_consolesTabView.AddTab( "Docs",_helpConsole,False )
 		_consolesTabView.AddTab( "Find",_findConsole,False )
@@ -653,15 +682,34 @@ Class MainWindowInstance Extends Window
 		Local checkTitle:=GetActionTextWithShortcut( _buildActions.semant )
 		Local findTitle:=GetActionTextWithShortcut( _findActions.find )
 		Local debugTitle:=GetActionTextWithShortcut( _buildActions.debugApp )
+		Local cutTitle:=GetActionTextWithShortcut( _editActions.cut )
+		Local copyTitle:=GetActionTextWithShortcut( _editActions.copy )
+		Local pasteTitle:=GetActionTextWithShortcut( _editActions.paste )
 		
 		_toolBar=New ToolBarExt
 		_toolBar.Style=GetStyle( "MainToolBar" )
 		_toolBar.MaxSize=New Vec2i( 10000,40 )
 		
+		Local goBack:=Lambda()
+			Navigator.TryBack()
+		End
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/back.png" ),goBack,"Go back (Alt+Left)" )
+		
+		Local goForw:=Lambda()
+			Navigator.TryForward()
+		End
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/forward.png" ),goForw,"Go forward (Alt+Right)" )
+		_toolBar.AddSeparator()
+		
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/new_file.png" ),_fileActions.new_.Triggered,newTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_file.png" ),_fileActions.open.Triggered,openTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_project.png" ),_projectView.openProject.Triggered,"Open project..." )
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/save_all.png" ),_fileActions.saveAll.Triggered,saveAllTitle )
+		Local icons:=New Image[]( ThemeImages.Get( "toolbar/save_all.png" ),ThemeImages.Get( "toolbar/save_dirty.png" ) )
+		_saveAllItem=_toolBar.AddIconicButton( icons,_fileActions.saveAll.Triggered,saveAllTitle )
+		_toolBar.AddSeparator()
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/cut.png" ),_editActions.cut.Triggered,cutTitle )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/copy.png" ),_editActions.copy.Triggered,copyTitle )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/paste.png" ),_editActions.paste.Triggered,pasteTitle )
 		_toolBar.AddSeparator()
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/undo.png" ),_editActions.undo.Triggered,undoTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/redo.png" ),_editActions.redo.Triggered,redoTitle )
@@ -678,17 +726,6 @@ Class MainWindowInstance Extends Window
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/options.png" ),act,"Target settings" )
 		_toolBar.AddSeparator()
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/find.png" ),_findActions.find.Triggered,findTitle )
-		_toolBar.AddSeparator()
-		
-		Local goBack:=Lambda()
-			Navigator.TryBack()
-		End
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/back.png" ),goBack,"Go back (Alt+Left)" )
-		
-		Local goForw:=Lambda()
-			Navigator.TryForward()
-		End
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/forward.png" ),goForw,"Go forward (Alt+Right)" )
 		
 		Return _toolBar
 	End
@@ -728,7 +765,7 @@ Class MainWindowInstance Extends Window
 	Method ShowBuildConsole( vis:Bool=True )
 		
 		If vis _consolesTabView.Visible=True
-		_consolesTabView.CurrentView=_buildConsole
+		_consolesTabView.CurrentView=_buildConsoleView
 	End
 	
 	Method ShowOutputConsole( vis:Bool=True )
@@ -818,6 +855,21 @@ Class MainWindowInstance Extends Window
 		ShowHelpView()
 		_helpView.Navigate( url )
 		_helpView.Scroll=New Vec2i( 0,0 )
+	End
+	
+	Method ShowEditorMenu( tv:TextView )
+		
+		If Not tv Then tv=_docsManager.CurrentTextView
+		If Not tv Return
+		
+		If Not _editorMenu
+			_editorMenu=New MenuExt
+			_editorMenu.AddAction( _editActions.cut )
+			_editorMenu.AddAction( _editActions.copy )
+			_editorMenu.AddAction( _editActions.paste )
+		Endif
+		
+		_editorMenu.Open()
 	End
 	
 	Method UpdateHelpTree()
@@ -992,6 +1044,32 @@ Class MainWindowInstance Extends Window
 	Method OnAppClose()
 		
 		_fileActions.quit.Trigger()
+	End
+	
+	Method OnPreBuild()
+		
+		OnForceStop()
+		_buildErrorsList.Visible=False
+	End
+	
+	Method OnPreSemant()
+	
+		_buildErrorsList.Visible=False
+	End
+	
+	Method OnProjectClosed( dir:String )
+		
+		UpdateCloseProjectMenu( dir )
+		
+		Local list:=New Stack<Ted2Document>
+		' close all related files
+		For Local doc:=Eachin _docsManager.OpenDocuments
+			If doc.Path.StartsWith( dir ) Then list.Add( doc )
+		Next
+		
+		_fileActions.CloseFiles( list.ToArray() )
+		
+		SaveState()
 	End
 	
 	Method OnResized()
@@ -1186,6 +1264,7 @@ Class MainWindowInstance Extends Window
 	Field _modsDir:String
 	
 	Field _toolBar:ToolBarExt
+	Field _saveAllItem:MultiIconToolButton
 	Field _docsManager:DocumentManager
 	Field _fileActions:FileActions
 	Field _editActions:EditActions
@@ -1196,6 +1275,8 @@ Class MainWindowInstance Extends Window
 	
 	Field _ircView:IRCView
 	Field _buildConsole:ConsoleExt
+	Field _buildErrorsList:ListViewExt
+	Field _buildConsoleView:DockingView
 	Field _outputConsole:ConsoleExt
 	Field _outputConsoleView:DockingView
 	Field _helpView:HtmlViewExt
@@ -1227,7 +1308,7 @@ Class MainWindowInstance Extends Window
 	Field _windowMenu:MenuExt
 	Field _helpMenu:MenuExt
 	Field _menuBar:MenuBarExt
-	
+	Field _editorMenu:MenuExt
 	Field _themesMenu:MenuExt
 	
 	Field _theme:="default"
@@ -1424,6 +1505,8 @@ Class MainWindowInstance Extends Window
 		
 		_forceStop.Enabled=_buildConsole.Running Or _outputConsole.Running
 	
+		_saveAllItem.SetIcon( _fileActions.saveAll.Enabled ? 1 Else 0 )
+		
 		App.Idle+=OnAppIdle
 		
 		GCCollect()	'thrash that GC!
@@ -1434,7 +1517,7 @@ Class MainWindowInstance Extends Window
 		Select _consolesTabView.CurrentView
 			Case _outputConsoleView
 				Return "output"
-			Case _buildConsole
+			Case _buildConsoleView
 				Return "build"
 			Case _helpConsole
 				Return "docs"
@@ -1451,7 +1534,7 @@ Class MainWindowInstance Extends Window
 			Case "output"
 				view=_outputConsoleView
 			Case "build"
-				view=_buildConsole
+				view=_buildConsoleView
 			Case "docs"
 				view=_helpConsole
 			Case "find"
