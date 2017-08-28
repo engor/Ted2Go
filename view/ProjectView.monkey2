@@ -94,7 +94,7 @@ Class ProjectView Extends ScrollView
 					Local file:=RequestString( "New file name:" )
 					If Not file Return
 					
-					Local tpath:=path+"/"+dir
+					Local tpath:=path+"/"+file
 					
 					CreateFileInternal( tpath )
 					
