@@ -44,7 +44,11 @@ Class MainWindowInstance Extends Window
 		
 		_docsManager=New DocumentManager( _docsTabView,_docBrowser )
 
-		_docsManager.CurrentDocumentChanged+=UpdateKeyView
+		_docsManager.CurrentDocumentChanged+=Lambda()
+			
+			UpdateKeyView()
+			CodeDocument.HideAutocomplete()
+		End
 		
 		App.FileDropped+=Lambda( path:String )
 			_docsManager.OpenDocument( path,True )
@@ -674,6 +678,7 @@ Class MainWindowInstance Extends Window
 		'
 		Local newTitle:=GetActionTextWithShortcut( _fileActions.new_ )
 		Local openTitle:=GetActionTextWithShortcut( _fileActions.open )
+		Local saveTitle:=GetActionTextWithShortcut( _fileActions.save )
 		Local saveAllTitle:=GetActionTextWithShortcut( _fileActions.saveAll )
 		Local undoTitle:=GetActionTextWithShortcut( _editActions.undo )
 		Local redoTitle:=GetActionTextWithShortcut( _editActions.redo )
@@ -704,7 +709,9 @@ Class MainWindowInstance Extends Window
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/new_file.png" ),_fileActions.new_.Triggered,newTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_file.png" ),_fileActions.open.Triggered,openTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_project.png" ),_projectView.openProject.Triggered,"Open project..." )
-		Local icons:=New Image[]( ThemeImages.Get( "toolbar/save_all.png" ),ThemeImages.Get( "toolbar/save_dirty.png" ) )
+		Local icons:=New Image[]( ThemeImages.Get( "toolbar/save.png" ),ThemeImages.Get( "toolbar/save_dirty.png" ) )
+		_saveItem=_toolBar.AddIconicButton( icons,_fileActions.save.Triggered,saveTitle )
+		icons=New Image[]( ThemeImages.Get( "toolbar/save_all.png" ),ThemeImages.Get( "toolbar/save_all_dirty.png" ) )
 		_saveAllItem=_toolBar.AddIconicButton( icons,_fileActions.saveAll.Triggered,saveAllTitle )
 		_toolBar.AddSeparator()
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/cut.png" ),_editActions.cut.Triggered,cutTitle )
@@ -1264,6 +1271,7 @@ Class MainWindowInstance Extends Window
 	Field _modsDir:String
 	
 	Field _toolBar:ToolBarExt
+	Field _saveItem:MultiIconToolButton
 	Field _saveAllItem:MultiIconToolButton
 	Field _docsManager:DocumentManager
 	Field _fileActions:FileActions
@@ -1505,6 +1513,7 @@ Class MainWindowInstance Extends Window
 		
 		_forceStop.Enabled=_buildConsole.Running Or _outputConsole.Running
 	
+		_saveItem.SetIcon( _fileActions.save.Enabled ? 1 Else 0 )
 		_saveAllItem.SetIcon( _fileActions.saveAll.Enabled ? 1 Else 0 )
 		
 		App.Idle+=OnAppIdle
