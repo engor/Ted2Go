@@ -16,17 +16,17 @@ Class CodeMapView Extends View
 		
 		_codeView=sourceView
 	
-		_selColor=App.Theme.GetColor( "codemap-selection" )
-		_padding=PAD*App.Theme.Scale.x
-		App.ThemeChanged+=Lambda()
-			_selColor=App.Theme.GetColor( "codemap-selection" )
-			_padding=PAD*App.Theme.Scale.x
-		End
-		
+		OnThemeChanged()
 	End
 	
 	
 	Protected
+	
+	Method OnThemeChanged() Override
+		
+		_selColor=App.Theme.GetColor( "codemap-selection" )
+		_padding=PAD*App.Theme.Scale.x
+	End
 	
 	Method OnMeasure:Vec2i() Override
 	
@@ -119,7 +119,7 @@ Class CodeMapView Extends View
 	
 	Property ScrollKoef:Float()
 	
-		Local hh:=_codeView.ContentView.Frame.Height
+		Local hh:=OwnerContentHeight
 		_maxSelfScroll=Max( Float(0.0),hh*scale-VisibleHeight )
 		_maxOwnerScroll=Max( 0.0,hh-VisibleHeight )
 	
@@ -129,6 +129,11 @@ Class CodeMapView Extends View
 	Property OwnerContentHeight:Float()
 	
 		Return _codeView.ContentView.Frame.Height
+	End
+	
+	Property OwnerContentWidht:Float()
+	
+		Return _codeView.ContentView.Frame.Width
 	End
 	
 	Property BubbleHeight:Float()
@@ -164,37 +169,19 @@ Class CodeMapView Extends View
 	
 		canvas.Translate( _padding,-yy*ScrollKoef+_padding )
 		canvas.Scale( scale,scale )
-	
-		Local times:=Int(OwnerContentHeight/VisibleHeight)+1
-		Local sc:=_codeView.Scroll
-		Local sc2:=New Vec2i
-		Local dy:=VisibleHeight+_codeView.LineHeight
+		
 		Local whiteSpaces:=_codeView.ShowWhiteSpaces
+		
 		_codeView.ShowWhiteSpaces=False
-		Local top:=-yy*ScrollKoef
-		For Local k:=0 Until times
-	
-			' check visibility area
-			If top+VisibleHeight*scale < 0
-				top+=dy*scale
-				sc2.Y=sc2.y+dy
-				Continue
-			Endif
-			If top>VisibleHeight
-				Exit
-			Endif
-			top+=dy*scale
-	
-			_codeView.Scroll=sc2
-			CodeTextViewBridge.ProcessRender( _codeView,canvas )
-			sc2.Y=sc2.y+dy
-			
-		Next
-		_codeView.Scroll=sc
+		Local top:=yy*ScrollKoef/scale
+		
+		Local r:=New Recti( 0,top,OwnerContentWidht,top+VisibleHeight/scale )
+		CodeTextViewBridge.ProcessRender( _codeView,r,canvas )
+		
 		_codeView.ShowWhiteSpaces=whiteSpaces
-	
+		
 		canvas.PopMatrix()
-	
+		
 	End
 	
 End
@@ -206,9 +193,9 @@ Private
 
 Class CodeTextViewBridge Extends CodeTextView Abstract
 
-	Function ProcessRender( item:CodeTextView,canvas:Canvas )
+	Function ProcessRender( item:CodeTextView,rect:Recti,canvas:Canvas )
 		
-		item.OnRenderContent( canvas )
+		item.OnRenderContent( canvas,rect )
 	End
 	
 End

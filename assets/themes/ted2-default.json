@@ -20,8 +20,7 @@
 	},
 	
 	"styles":{
-		
-		
+				
 
 		"GutterView":{
 			"extends":"TextView",
@@ -170,6 +169,21 @@
 		"BananasDescription":{
 			"extends":"TextView",
 			"font":"normal"
+		},
+
+		"MenuButton":{
+			"extends":"Label",
+			"states":{
+				"hover":{
+					"backgroundColor":"hover"
+				},
+				"active":{
+					"backgroundColor":"active"
+				},
+				"selected":{
+					"backgroundColor":"active"
+				}
+			}
 		}
 	}
 }
