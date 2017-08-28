@@ -98,10 +98,12 @@ Class AutocompleteDialog Extends NoTitleDialog
 		
 		Super.New()
 		
-		_view=New AutocompleteListView( 20,15 )
+		Local lineHg:=20,linesCount:=15
+		
+		_view=New AutocompleteListView( lineHg,linesCount )
 		_view.MoveCyclic=True
 		
-		_view.MaxSize=New Vec2i( 500,20*15 )
+		_etalonMaxSize=New Vec2i( 500,lineHg*linesCount )
 		
 		ContentView=_view
 		
@@ -121,6 +123,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 			_disableUsingsFilter=False
 		End
 		
+		OnThemeChanged()
 	End
 	
 	Property DisableUsingsFilter:Bool()
@@ -310,8 +313,16 @@ Class AutocompleteDialog Extends NoTitleDialog
 	End
 	
 	
+	Protected
+	
+	Method OnThemeChanged() Override
+		
+		_view.MaxSize=_etalonMaxSize*App.Theme.Scale
+	End
+	
 	Private
 	
+	Field _etalonMaxSize:Vec2i
 	Field _view:AutocompleteListView
 	Field _keywords:StringMap<List<ListViewItem>>
 	Field _templates:StringMap<List<ListViewItem>>

@@ -50,7 +50,7 @@ Class ListViewExt Extends ScrollableView
 	
 	Method New( lineHeight:Int,maxLines:Int )
 		
-		_lineH=lineHeight
+		_lineHeightEtalon=lineHeight
 		_maxLines=maxLines
 		
 		_items=New List<ListViewItem>
@@ -60,6 +60,7 @@ Class ListViewExt Extends ScrollableView
 		_selColor=App.Theme.GetColor( "content" )
 		_hoverColor=App.Theme.GetColor( "knob" )
 		
+		OnThemeChanged()
 	End
 	
 	Method AddItems( items:Stack<ListViewItem> )
@@ -177,6 +178,11 @@ Class ListViewExt Extends ScrollableView
 	
 	
 	Protected
+	
+	Method OnThemeChanged() Override
+	
+		_lineH=_lineHeightEtalon*App.Theme.Scale.y
+	End
 	
 	Method SelectPrevInternal( ensureVis:Bool )
 	
@@ -315,7 +321,7 @@ Class ListViewExt Extends ScrollableView
 	Private
 	
 	Field _items:List<ListViewItem>
-	Field _lineH:Int
+	Field _lineH:Int,_lineHeightEtalon:Int
 	Field _count:Int,_visibleCount:Int
 	Field _maxLines:Int
 	Field _selIndex:Int
