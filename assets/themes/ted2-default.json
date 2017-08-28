@@ -10,7 +10,7 @@
 		"statusbar-active": "#CA5100",
 		"menu-shortcut":"text-background",
 		"codemap-background": "transparent",
-		"codemap-selection": "#48000000"
+		"codemap-selection": "#48000000"		
 	},
 
 	"fonts":{
@@ -20,7 +20,8 @@
 	},
 	
 	"styles":{
-	
+				
+
 		"GutterView":{
 			"extends":"TextView",
 			"textColor":"text-disabled",
@@ -51,7 +52,8 @@
 			"margin":[ 0 ],
 			"backgroundColor":"content",
 			"border":[ 0,0,0,1 ],
-			"borderColor":"clear"
+			"borderColor":"clear",
+			"iconColor":"#f00"
 		},
 
 		"MainToolBar":{
@@ -70,6 +72,11 @@
 			"extends":"Button",
 			"padding":[ 2,0 ],
 			"margin":[ 3,0 ]
+		},
+
+		"ColoredToolButton":{
+			"extends":"ToolButton",
+			"iconColor":"#6A92CF"
 		},
 
 		"TabViewArrowPrev":{
@@ -162,6 +169,21 @@
 		"BananasDescription":{
 			"extends":"TextView",
 			"font":"normal"
+		},
+
+		"MenuButton":{
+			"extends":"Label",
+			"states":{
+				"hover":{
+					"backgroundColor":"hover"
+				},
+				"active":{
+					"backgroundColor":"active"
+				},
+				"selected":{
+					"backgroundColor":"active"
+				}
+			}
 		}
 	}
 }

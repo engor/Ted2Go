@@ -48,6 +48,8 @@ Class BuildActions Implements IModuleBuilder
 	
 	
 	Field PreBuild:Void()
+	Field PreSemant:Void()
+	Field ErrorsOccured:Void(errors:BuildError[])
 	
 	Method New( docs:DocumentManager,console:ConsoleExt,debugView:DebugView )
 	
@@ -326,6 +328,19 @@ Class BuildActions Implements IModuleBuilder
 		Return result
 	End
 	
+	Method GotoError( err:BuildError )
+	
+		Local doc:=Cast<CodeDocument>( _docs.OpenDocument( err.path,True ) )
+		If Not doc Return
+	
+		Local tv := doc.TextView
+		If Not tv Return
+	
+		MainWindow.UpdateWindow( False )
+	
+		tv.GotoLine( err.line )
+	End
+	
 	
 	Private
 	
@@ -379,19 +394,6 @@ Class BuildActions Implements IModuleBuilder
 
 	End
 
-	Method GotoError( err:BuildError )
-	
-		Local doc:=Cast<CodeDocument>( _docs.OpenDocument( err.path,True ) )
-		If Not doc Return
-		
-		Local tv := doc.TextView
-		If Not tv Return
-		
-		MainWindow.UpdateWindow( False )
-		
-		tv.GotoLine( err.line )
-	End
-	
 	Method BuildMx2:Bool( cmd:String,progressText:String,action:String="build",showElapsedTime:Bool=False )
 	
 		ClearErrors()
@@ -445,10 +447,10 @@ Class BuildActions Implements IModuleBuilder
 						
 						If doc
 							doc.AddError( err )
-							If _errors.Empty 
-								MainWindow.ShowBuildConsole( True )
-								GotoError( err )
-							Endif
+							'If _errors.Empty
+							'	MainWindow.ShowBuildConsole( True )
+							'	GotoError( err )
+							'Endif
 							_errors.Add( err )
 						Endif
 						
@@ -464,6 +466,10 @@ Class BuildActions Implements IModuleBuilder
 			_console.Write( stdout )
 		
 		Forever
+		
+		If Not _errors.Empty
+			ErrorsOccured( _errors.ToArray() )
+		Endif
 		
 		MainWindow.HideStatusBarProgress()
 		
@@ -591,6 +597,8 @@ Class BuildActions Implements IModuleBuilder
 	
 	Method OnSemant()
 	
+		PreSemant()
+		
 		If _console.Running Return
 	
 		BuildApp( _buildConfig,_buildTarget,"semant" )

@@ -72,28 +72,36 @@ Class ProjectView Extends ScrollView
 				
 				menu.AddSeparator()
 				
+				menu.AddAction( "New class..." ).Triggered=Lambda()
+				
+					Local d:=New GenerateClassDialog( path )
+					d.Generated+=Lambda( filePath:String,fileContent:String )
+						
+						If CreateFileInternal( filePath,fileContent )
+						
+							MainWindow.OpenDocument( filePath )
+							browser.Refresh()
+						Endif
+					End
+					d.ShowModal()
+					Return
+				End
+				
+				menu.AddSeparator()
+				
 				menu.AddAction( "New file" ).Triggered=Lambda()
 				
 					Local file:=RequestString( "New file name:" )
 					If Not file Return
 					
-					If ExtractExt(file)="" Then file+=".monkey2"
+					Local tpath:=path+"/"+dir
 					
-					Local tpath:=path+"/"+file
-					
-					If GetFileType( tpath )<>FileType.None
-						Alert( "A file or directory already exists at '"+tpath+"'" )
-						Return
-					End
-					
-					If Not CreateFile( tpath )
-						Alert( "Failed to create file '"+file+"'" )
-					Endif
+					CreateFileInternal( tpath )
 					
 					browser.Refresh()
 					Return
 				End
-		
+				
 				menu.AddAction( "New folder" ).Triggered=Lambda()
 				
 					Local dir:=RequestString( "New folder name:" )
@@ -358,6 +366,25 @@ Class ProjectView Extends ScrollView
 		MainWindow.ShowStatusBarText( s )
 		
 		Return succ>0
+	End
+	
+	Method CreateFileInternal:Bool( path:String,content:String=Null )
+		
+		If ExtractExt(path)="" Then path+=".monkey2"
+		
+		If GetFileType( path )<>FileType.None
+			Alert( "A file or directory already exists at '"+path+"'" )
+			Return False
+		End
+		
+		If Not CreateFile( path )
+			Alert( "Failed to create file '"+StripDir( path )+"'" )
+			Return False
+		Endif
+		
+		If content Then SaveString( content,path )
+		
+		Return True
 	End
 	
 End

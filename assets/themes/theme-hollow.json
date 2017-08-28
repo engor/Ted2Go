@@ -173,7 +173,8 @@
 		"StatusBarButton":{
 			"extends":"ToolButton",
 			"padding":[ 0 ],
-			"skinColor":"transparent"
+			"skinColor":"transparent",
+			"backgroundColor":"transparent"
 		},
 		
 		"Label":{
@@ -469,6 +470,11 @@
 		
 		"DialogActions":{
 			"padding":[ 8,4,8,4 ]
+		},
+		
+		"ColoredToolButton":{
+			"extends":"ToolButton",
+			"iconColor":"text-default"
 		}
 	}
 }

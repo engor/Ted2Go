@@ -9,7 +9,7 @@ Class ListViewItem
 	Setter( value:String )
 		_text=value
 	End
-	
+
 	Property Icon:Image()
 		Return _icon
 	Setter( value:Image )
@@ -30,7 +30,7 @@ Class ListViewItem
 		canvas.Color=App.Theme.DefaultStyle.TextColor
 		canvas.DrawText( _text,x+dx,y,handleX,handleY )
 	End
-	
+
 	
 	Private
 	
@@ -44,9 +44,13 @@ Class ListViewExt Extends ScrollableView
 
 	Field OnItemChoosen:Void()
 	
+	Method New()
+		Self.New( 20,50 )
+	End
+	
 	Method New( lineHeight:Int,maxLines:Int )
 		
-		_lineH=lineHeight
+		_lineHeightEtalon=lineHeight
 		_maxLines=maxLines
 		
 		_items=New List<ListViewItem>
@@ -56,6 +60,7 @@ Class ListViewExt Extends ScrollableView
 		_selColor=App.Theme.GetColor( "content" )
 		_hoverColor=App.Theme.GetColor( "knob" )
 		
+		OnThemeChanged()
 	End
 	
 	Method AddItems( items:Stack<ListViewItem> )
@@ -67,8 +72,21 @@ Class ListViewExt Extends ScrollableView
 		_visibleCount=Min( _maxLines,_count )
 	End
 	
+	Method AddItem( item:ListViewItem )
+	
+		_items.AddLast( item )
+		_count=_items.Count()
+		_visibleCount=Min( _maxLines,_count )
+	End
+	
 	Method SetItems<T>( items:Stack<T> ) Where T Extends ListViewItem
 		
+		_items.Clear()
+		AddItems( items )
+	End
+	
+	Method SetItems<T>( items:T[] ) Where T Extends ListViewItem
+	
 		_items.Clear()
 		AddItems( items )
 	End
@@ -77,6 +95,12 @@ Class ListViewExt Extends ScrollableView
 		
 		_selIndex=0
 		Scroll=New Vec2i
+	End
+	
+	Method Clear()
+	
+		Reset()
+		_items.Clear()
 	End
 	
 	Property LineHeight:Float()
@@ -155,7 +179,9 @@ Class ListViewExt Extends ScrollableView
 	
 	Protected
 	
-	Method New()
+	Method OnThemeChanged() Override
+	
+		_lineH=_lineHeightEtalon*App.Theme.Scale.y
 	End
 	
 	Method SelectPrevInternal( ensureVis:Bool )
@@ -271,13 +297,17 @@ Class ListViewExt Extends ScrollableView
 		
 			Local index:=(MouseLocation.y+Scroll.y)/_lineH
 			
+			If index < 0 Or index >= _count Return
+			
 			_selIndex=index
 			OnItemChoosen()
 			
 		Case EventType.MouseClick
 		
 			Local index:=(MouseLocation.y+Scroll.y)/_lineH
-		
+			
+			If index < 0 Or index >= _count Return
+			
 			_selIndex=index
 			OnItemChoosen()
 			
@@ -291,7 +321,7 @@ Class ListViewExt Extends ScrollableView
 	Private
 	
 	Field _items:List<ListViewItem>
-	Field _lineH:Int
+	Field _lineH:Int,_lineHeightEtalon:Int
 	Field _count:Int,_visibleCount:Int
 	Field _maxLines:Int
 	Field _selIndex:Int

@@ -7,9 +7,15 @@ Class CodeTreeView Extends TreeViewExt
 	Field SortByType:=True
 	Field ShowInherited:=False
 	
-	Method Fill( fileType:String,path:String )
 	
-		StoreTreeExpands()
+	Method New()
+		
+		_expander=New TreeViewExpander( Self )
+	End
+	
+	Method Fill( fileType:String,path:String,expandIfOnlyOneItem:Bool=True )
+	
+		_expander.Store()
 		
 		Local stack:=New Stack<TreeView.Node>
 		Local parser:=ParsersManager.Get( fileType )
@@ -29,6 +35,9 @@ Class CodeTreeView Extends TreeViewExt
 			AddTreeItem( i,node,parser )
 		Next
 		
+		If expandIfOnlyOneItem And RootNode.NumChildren=1
+			RootNode.Children[0].Expanded=True
+		Endif
 	End
 	
 	Method SelectByScope( scope:CodeItem )
@@ -42,7 +51,7 @@ Class CodeTreeView Extends TreeViewExt
 	
 	Private
 	
-	Field _expands:=New StringMap<Bool>
+	Field _expander:TreeViewExpander
 	
 	
 	Method FindNode:TreeView.Node( treeNode:TreeView.Node,item:CodeItem )
@@ -62,53 +71,12 @@ Class CodeTreeView Extends TreeViewExt
 		Return Null
 	End
 	
-	Method StoreTreeExpands()
-	
-		_expands.Clear()
-		StoreNodeExpand( RootNode )
-		
-	End
-	
-	Method StoreNodeExpand( node:TreeView.Node )
-		
-		If Not node.Expanded Return
-		
-		Local key:=GetNodePath( node )
-		_expands[key]=node.Expanded
-		
-		If node.Children = Null Return
-		
-		For Local i:=Eachin node.Children
-			StoreNodeExpand( i )
-		Next
-		
-	End
-	
-	Method RestoreNodeExpand( node:TreeView.Node )
-	
-		Local key:=GetNodePath( node )
-		node.Expanded=_expands[key]
-		
-	End
-	
-	Method GetNodePath:String( node:TreeView.Node )
-	
-		Local s:=node.Text
-		Local i:=node.Parent
-		While i <> Null
-			s=i.Text+"\"+s
-			i=i.Parent
-		Wend
-		Return s
-		
-	End
-		
 	Method AddTreeItem( item:CodeItem,node:TreeView.Node,parser:ICodeParser )
 	
 		Local n:=New CodeTreeNode( item,node )
 		
 		' restore expand state
-		RestoreNodeExpand( n )
+		_expander.RestoreNode( n )
 		
 		If item.Children = Null And Not ShowInherited Return
 		
@@ -210,3 +178,67 @@ Class CodeTreeNode Extends TreeView.Node
 	Field _code:CodeItem
 	
 End
+
+
+Class TreeViewExpander
+	
+	Method New( tree:TreeView )
+		
+		_tree=tree
+	End
+	
+	Method Store()
+	
+		_expands.Clear()
+		StoreNode( _tree.RootNode )
+	End
+	
+	Method Restore()
+	
+		RestoreNode( _tree.RootNode )
+	End
+	
+	Method RestoreNode( node:TreeView.Node )
+	
+		Local key:=GetNodePath( node )
+		node.Expanded=_expands[key]
+		
+		If node.Children = Null Return
+		
+		For Local i:=Eachin node.Children
+			RestoreNode( i )
+		Next
+	End
+	
+	Private
+	
+	Field _tree:TreeView
+	Field _expands:=New StringMap<Bool>
+	
+	Method GetNodePath:String( node:TreeView.Node )
+	
+		Local s:=node.Text
+		Local i:=node.Parent
+		While i <> Null
+			s=i.Text+"\"+s
+			i=i.Parent
+		Wend
+		Return s
+	End
+	
+	Method StoreNode( node:TreeView.Node )
+	
+		If Not node.Expanded Return
+	
+		Local key:=GetNodePath( node )
+		_expands[key]=node.Expanded
+	
+		If node.Children = Null Return
+	
+		For Local i:=Eachin node.Children
+			StoreNode( i )
+		Next
+	End
+	
+End
+

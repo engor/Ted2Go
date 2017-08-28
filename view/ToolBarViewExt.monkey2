@@ -2,6 +2,36 @@
 Namespace ted2go
 
 
+Class ToolBarExt Extends ToolBar
+
+	Method New()
+		
+		Super.New()
+		MinSize=New Vec2i( 0,42 )
+		Style=GetStyle( "ToolBarExt" )
+	End
+	
+	Method AddIconicButton:ToolButtonExt( icon:Image,trigger:Void(),hint:String=Null )
+		
+		Local act:=New Action( Null,icon )
+		act.Triggered=trigger
+		Local b:=New ToolButtonExt( act,hint )
+		AddView( b )
+		Return b
+	End
+	
+	Method AddIconicButton:MultiIconToolButton( icons:Image[],trigger:Void(),hint:String=Null )
+	
+		Local act:=New Action( Null )
+		act.Triggered=trigger
+		Local b:=New MultiIconToolButton( act,icons,hint )
+		AddView( b )
+		Return b
+	End
+	
+End
+
+
 Class ToolButtonExt Extends ToolButton
 
 	Field Toggled:Void( state:Bool )
@@ -9,6 +39,9 @@ Class ToolButtonExt Extends ToolButton
 	Method New( action:Action,hint:String=Null )
 		
 		Super.New( action )
+		
+		Style=GetStyle( "ColoredToolButton" )
+		
 		PushButtonMode=True
 		_hint=hint
 		
@@ -88,23 +121,25 @@ Class ToolButtonExt Extends ToolButton
 End
 
 
-Class ToolBarExt Extends ToolBar
-
-	Method New()
+Class MultiIconToolButton Extends ToolButtonExt
+	
+	Method New( action:Action,icons:Image[],hint:String=Null )
 		
-		Super.New()
-		MinSize=New Vec2i( 0,42 )
-		Style=GetStyle( "ToolBarExt" )
+		Super.New( action,hint )
+		
+		_icns=icons
+		Icon=icons[0]
 	End
 	
-	Method AddIconicButton:ToolButtonExt( icon:Image,trigger:Void(),hint:String=Null )
+	Method SetIcon( index:Int )
 		
-		Local act:=New Action( Null,icon )
-		act.Triggered=trigger
-		Local b:=New ToolButtonExt( act,hint )
-		AddView( b )
-		Return b
+		Icon=_icns[index]
 	End
+	
+	
+	Private
+	
+	Field _icns:Image[]
 	
 End
 

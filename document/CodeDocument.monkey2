@@ -51,13 +51,20 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				
 				Local ident:=result.ident
 				Local text:=result.text
-				Local item:=result.item
-				Local bySpace:=result.bySpace
 				
-				text=_doc.PrepareForInsert( ident,text,Not bySpace,LineTextAtCursor,PosInLineAtCursor,item )
-				
-				SelectText( Cursor,Cursor-AutoComplete.LastIdentPart.Length )
-				ReplaceText( text )
+				If result.isTemplate
+					
+					InsertLiveTemplate( AutoComplete.LastIdentPart,text )
+					
+				Else
+					
+					Local item:=result.item
+					Local bySpace:=result.bySpace
+					
+					text=_doc.PrepareForInsert( ident,text,Not bySpace,LineTextAtCursor,PosInLineAtCursor,item )
+					SelectText( Cursor,Cursor-AutoComplete.LastIdentPart.Length )
+					ReplaceText( text )
+				Endif
 			Endif
 		End
 		
@@ -190,6 +197,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Endif
 				
 				Case Key.Backspace
+					
 					If AutoComplete.IsOpened
 						Local ident:=IdentBeforeCursor()
 						ident=ident.Slice( 0,ident.Length-1 )
@@ -198,6 +206,15 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						Else
 							_doc.HideAutocomplete()
 						Endif
+						
+					Else
+						
+						#If __TARGET__="macos"
+						If ctrl
+							DeleteLineAtCursor()
+						Endif
+						#Endif
+						
 					Endif
 				
 				Case Key.F11
@@ -208,9 +225,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				#If __TARGET__="windows"
 				Case Key.E 'delete whole line
 					If ctrl
-						Local line:=Document.FindLine( Cursor )
-						SelectText( Document.StartOfLine( line ),Document.EndOfLine( line )+1 )
-						ReplaceText( "" )
+						DeleteLineAtCursor()
 						Return
 					Endif
 				#Endif
@@ -370,6 +385,11 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 					If Cursor = Anchor 'has no selection
 			
+						' live templates by tab!
+						Local ident:=IdentBeforeCursor()
+						If InsertLiveTemplate( ident ) Return
+						
+						' usual tab behaviour
 						If Not shift
 							ReplaceText( "~t" )
 						Else
@@ -661,6 +681,30 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		If Not newFont Then newFont=App.Theme.GetStyle( Style.Name ).Font
 		
 		RenderStyle.Font=newFont
+	End
+	
+	Method InsertLiveTemplate:Bool( ident:String,templ:String=Null )
+		
+		If Not templ Then templ=LiveTemplates[FileType,ident]
+		If templ
+			templ=PrepareSmartPaste( templ )
+			Local start:=Cursor-ident.Length
+			Local cursorOffset:=templ.Find( "${Cursor}" )
+			If cursorOffset <> -1 Then templ=templ.Replace( "${Cursor}","" )
+			SelectText( start,Cursor )
+			ReplaceText( templ )
+			If cursorOffset <> -1 Then SelectText( start+cursorOffset,start+cursorOffset )
+			Return True
+		Endif
+		
+		Return False
+	End
+	
+	Method DeleteLineAtCursor()
+		
+		Local line:=Document.FindLine( Cursor )
+		SelectText( Document.StartOfLine( line ),Document.EndOfLine( line )+1 )
+		ReplaceText( "" )
 	End
 	
 End
@@ -1044,7 +1088,7 @@ Class CodeDocument Extends Ted2Document
 		
 	End
 	
-	Method HideAutocomplete()
+	Function HideAutocomplete()
 		AutoComplete.Hide()
 	End
 	

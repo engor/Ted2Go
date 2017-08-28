@@ -85,6 +85,7 @@ Struct AutocompleteResult
 	Field text:String
 	Field item:CodeItem
 	Field bySpace:Bool
+	Field isTemplate:Bool
 	
 End
 
@@ -97,14 +98,17 @@ Class AutocompleteDialog Extends NoTitleDialog
 		
 		Super.New()
 		
-		_view=New AutocompleteListView( 20,15 )
+		Local lineHg:=20,linesCount:=15
+		
+		_view=New AutocompleteListView( lineHg,linesCount )
 		_view.MoveCyclic=True
 		
-		_view.MaxSize=New Vec2i( 500,20*15 )
+		_etalonMaxSize=New Vec2i( 500,lineHg*linesCount )
 		
 		ContentView=_view
 		
 		_keywords=New StringMap<List<ListViewItem>>
+		_templates=New StringMap<List<ListViewItem>>
 		_parsers=New StringMap<ICodeParser>
 		
 		_view.OnItemChoosen+=Lambda()
@@ -119,6 +123,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 			_disableUsingsFilter=False
 		End
 		
+		OnThemeChanged()
 	End
 	
 	Property DisableUsingsFilter:Bool()
@@ -288,6 +293,17 @@ Class AutocompleteDialog Extends NoTitleDialog
 		
 		If lastIdent Then CodeItemsSorter.SortByIdent( result,lastIdent )
 		
+		'-----------------------------
+		' live templates
+		'-----------------------------
+		If onlyOne And Prefs.AcUseLiveTemplates
+			For Local i:=Eachin GetTemplates( fileType )
+				If i.Text.StartsWith( lastIdent )
+					result.Insert( 0,i )
+				Endif
+			Next
+		Endif
+		
 		_view.Reset()'reset selIndex
 		_view.SetItems( result )
 		
@@ -297,10 +313,19 @@ Class AutocompleteDialog Extends NoTitleDialog
 	End
 	
 	
+	Protected
+	
+	Method OnThemeChanged() Override
+		
+		_view.MaxSize=_etalonMaxSize*App.Theme.Scale
+	End
+	
 	Private
 	
+	Field _etalonMaxSize:Vec2i
 	Field _view:AutocompleteListView
 	Field _keywords:StringMap<List<ListViewItem>>
+	Field _templates:StringMap<List<ListViewItem>>
 	Field _lastIdentPart:String,_fullIdent:String
 	Field _parsers:StringMap<ICodeParser>
 	Field _listForExtract:=New List<CodeItem>
@@ -317,6 +342,18 @@ Class AutocompleteDialog Extends NoTitleDialog
 		Return _keywords[fileType]
 	End
 	
+	Method GetTemplates:List<ListViewItem>( fileType:String )
+		If _templates[fileType] = Null
+			UpdateTemplates( fileType )
+			LiveTemplates.DataChanged+=Lambda( lang:String )
+				If _templates[lang] 'recreate items only if them were in use
+					UpdateTemplates( lang )
+				Endif
+			End
+		Endif
+		Return _templates[fileType]
+	End
+	
 	Method IsItemInScope:Bool( item:CodeItem,scope:CodeItem )
 		If scope = Null Return False
 		Return item.ScopeStartPos.x >= scope.ScopeStartPos.x And item.ScopeEndPos.x <= scope.ScopeEndPos.x
@@ -330,44 +367,61 @@ Class AutocompleteDialog Extends NoTitleDialog
 			
 			Case EventType.KeyDown,EventType.KeyRepeat
 				
+				Local curItem:=_view.CurrentItem
+				Local templ:=Cast<TemplateListViewItem>( curItem )
+				
 				Select event.Key
 				Case Key.Escape
 					Hide()
 					event.Eat()
+					
 				Case Key.Up
 					_view.SelectPrev()
 					event.Eat()
+					
 				Case Key.Down
 					_view.SelectNext()
 					event.Eat()
+					
 				Case Key.PageUp
 					_view.PageUp()
 					event.Eat()
+					
 				Case Key.PageDown
 					_view.PageDown()
 					event.Eat()
+					
 				Case Key.Enter,Key.KeypadEnter
-					If Prefs.AcUseEnter
-						OnItemChoosen( _view.CurrentItem )
-						If Not Prefs.AcNewLineByEnter Then event.Eat()
-					Else
-						Hide() 'hide by enter
+					If Not templ
+						If Prefs.AcUseEnter
+							OnItemChoosen( curItem )
+							If Not Prefs.AcNewLineByEnter Then event.Eat()
+						Else
+							Hide() 'hide by enter
+						Endif
 					Endif
+					
 				Case Key.Tab
-					If Prefs.AcUseTab
-						OnItemChoosen( _view.CurrentItem )
+					If Prefs.AcUseTab Or templ
+						OnItemChoosen( curItem )
 						event.Eat()
 					Endif
+					
 				Case Key.Space
-					Local ctrl:=event.Modifiers & Modifier.Control
-					If Prefs.AcUseSpace And Not ctrl
-						OnItemChoosen( _view.CurrentItem,True )
-						event.Eat()
+					If Not templ
+						Local ctrl:=event.Modifiers & Modifier.Control
+						If Prefs.AcUseSpace And Not ctrl
+							OnItemChoosen( curItem,True )
+							event.Eat()
+						Endif
 					Endif
+					
 				Case Key.Period
-					If Prefs.AcUseDot
-						OnItemChoosen( _view.CurrentItem )
-						event.Eat()
+					If Not templ
+						If Prefs.AcUseDot
+							OnItemChoosen( curItem )
+							event.Eat()
+						Endif
 					Endif
 				
 				Case Key.Backspace
@@ -390,13 +444,19 @@ Class AutocompleteDialog Extends NoTitleDialog
 	
 	Method OnItemChoosen( item:ListViewItem,bySpace:Bool=False )
 		
-		Local si:=Cast<CodeListViewItem>( item )
+		Local siCode:=Cast<CodeListViewItem>( item )
+		Local siTempl:=Cast<TemplateListViewItem>( item )
 		Local ident:="",text:=""
 		Local code:CodeItem=Null
-		If si <> Null
-			ident=si.CodeItem.Ident
-			text=si.CodeItem.TextForInsert
-			code=si.CodeItem
+		Local templ:=False
+		If siCode
+			ident=siCode.CodeItem.Ident
+			text=siCode.CodeItem.TextForInsert
+			code=siCode.CodeItem
+		Elseif siTempl
+			ident=siTempl.name
+			text=siTempl.value
+			templ=True
 		Else
 			ident=item.Text
 			text=item.Text
@@ -406,6 +466,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 		result.text=text
 		result.item=code
 		result.bySpace=bySpace
+		result.isTemplate=templ
 		OnChoosen( result )
 		Hide()
 	End
@@ -428,6 +489,23 @@ Class AutocompleteDialog Extends NoTitleDialog
 			list.AddLast( New ListViewItem( i ) )
 		Next
 		_keywords[fileType]=list
+	End
+	
+	Method UpdateTemplates( fileType:String )
+	
+		'live templates
+		Local templates:=LiveTemplates.All( fileType )
+		Local list:=New List<ListViewItem>
+		If templates <> Null
+			For Local i:=Eachin templates
+				Local si:=New TemplateListViewItem( i.Key,i.Value )
+				list.AddLast( si )
+			Next
+			list.Sort( Lambda:Int(l:ListViewItem,r:ListViewItem)
+				Return l.Text<=>r.Text
+			End )
+		Endif
+		_templates[fileType]=list
 	End
 	
 	Method UpdateParsers( fileType:String )

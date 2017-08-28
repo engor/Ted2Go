@@ -34,6 +34,8 @@
 #Import "dialog/NoTitleDialog"
 #Import "dialog/FindInFilesDialog"
 #Import "dialog/UpdateModulesDialog"
+#Import "dialog/GenerateClassDialog"
+#Import "dialog/LiveTemplateDialog"
 
 #Import "document/DocumentManager"
 #Import "document/Ted2Document"
@@ -93,18 +95,22 @@
 #Import "view/ProjectView"
 #Import "view/HelpTreeView"
 #Import "view/Ted2TextView"
+#Import "view/Ted2CodeTextView"
 #Import "view/JsonTreeView"
 #Import "view/XmlTreeView"
 #Import "view/Monkey2TreeView"
 #Import "view/GutterView"
 #Import "view/MenuExt"
 #Import "view/ScrollableViewExt"
+#Import "view/BuildErrorListViewItem"
+#Import "view/TextFieldExt"
 
-#Import "MainWindow"
 #Import "Plugin"
 #Import "ThemeImages"
 #Import "Prefs"
 #Import "ProcessReader"
+#Import "LiveTemplates"
+#Import "MainWindow"
 
 
 Namespace ted2go
@@ -117,7 +123,7 @@ Using tinyxml2..
 
 Const MONKEY2_DOMAIN:="http://monkeycoder.co.nz"
 
-Global AppTitle:="Ted2Go v2.4"
+Global AppTitle:="Ted2Go v2.5"
 
 
 Function Main()
@@ -229,11 +235,6 @@ End
 Function GetActionTextWithShortcut:String( action:Action )
 
 	Return action.Text+" ("+action.HotKeyText+")"
-End
-
-Function IsFileExists:Bool( path:String )
-	
-	Return GetFileType( path ) = FileType.File
 End
 
 Function Exec( exePath:String,args:String="" )

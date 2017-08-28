@@ -18,6 +18,7 @@ Class CodeTextView Extends TextView
 		BlockCursor=False
 		
 		CursorMoved += OnCursorMoved
+		Document.TextChanged += TextChanged
 		
 		UpdateThemeColors()
 	End
@@ -202,6 +203,19 @@ Class CodeTextView Extends TextView
 		
 				Scroll-=New Vec2i( 0,RenderStyle.Font.Height*event.Wheel.Y*3 )
 				Return
+			
+			Case EventType.MouseDown 'prevent selection by dragging with right-button
+				
+				If event.Button = MouseButton.Right Return
+				
+				
+			Case EventType.MouseUp
+				
+				If event.Button = MouseButton.Right
+					
+					MainWindow.ShowEditorMenu( Self )
+					Return
+				Endif
 				
 		End
 
@@ -359,7 +373,15 @@ Class CodeTextView Extends TextView
 		Endif
 	End
 	
-	Method SmartPaste()
+	Method SmartPaste( customText:String=Null )
+	
+		Local txt:= customText ? customText Else App.ClipboardText
+	
+		ReplaceText( PrepareSmartPaste( txt ) )
+		
+	End
+	
+	Method PrepareSmartPaste:String( txt:String )
 	
 		' get indent of cursor's line
 		Local cur:=Min( Cursor,Anchor )
@@ -368,7 +390,6 @@ Class CodeTextView Extends TextView
 		Local posInLine:=cur-Document.StartOfLine( line )
 		indent=Min( indent,posInLine )
 	
-		Local txt:=App.ClipboardText
 		txt=txt.Replace( "~r~n","~n" )
 		txt=txt.Replace( "~r","~n" )
 		Local lines:=txt.Split( "~n" )
@@ -388,8 +409,7 @@ Class CodeTextView Extends TextView
 			result+=lines[i]
 		Next
 	
-		ReplaceText( result )
-	
+		Return result
 	End
 	
 	Method DoFormat( all:Bool )
