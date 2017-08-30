@@ -183,7 +183,8 @@
 		"StatusBarButton":{
 			"extends":"ToolButton",
 			"padding":[ 0 ],
-			"skinColor":"transparent"
+			"skinColor":"transparent",
+			"backgroundColor":"transparent"
 		},
 		
 		"Label":{
