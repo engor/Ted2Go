@@ -49,6 +49,7 @@ Class BuildActions Implements IModuleBuilder
 	
 	Field PreBuild:Void()
 	Field PreSemant:Void()
+	Field PreBuildModules:Void()
 	Field ErrorsOccured:Void(errors:BuildError[])
 	
 	Method New( docs:DocumentManager,console:ConsoleExt,debugView:DebugView )
@@ -305,6 +306,7 @@ Class BuildActions Implements IModuleBuilder
 		
 		Local targets:=dialog.SelectedTargets
 		modules=dialog.SelectedModules
+		
 		clean=dialog.NeedClean
 		configs=dialog.SelectedConfigs
 		
@@ -488,6 +490,8 @@ Class BuildActions Implements IModuleBuilder
 
 	Method BuildModules:Bool( clean:Bool,target:String,modules:String,configs:String="debug release" )
 		
+		PreBuildModules()
+		
 		Local msg:=(clean ? "Rebuilding ~ " Else "Updating ~ ")+target
 		
 		Local arr:=configs.Split( " " )
@@ -644,7 +648,7 @@ Class BuildActions Implements IModuleBuilder
 	End
 	
 	Method OnUpdateModules()
-	
+		
 		If _console.Running Return
 	
 		BuildModules( False )

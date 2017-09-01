@@ -322,6 +322,7 @@ Class MainWindowInstance Extends Window
 		'
 		_buildActions.PreBuild+=OnPreBuild
 		_buildActions.PreSemant+=OnPreSemant
+		_buildActions.PreBuildModules+=OnPreBuildModules
 		
 		_buildMenu=New MenuExt( "Build" )
 		_buildMenu.AddAction( _buildActions.buildAndRun )
@@ -1060,6 +1061,11 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Method OnPreSemant()
+	
+		_buildErrorsList.Visible=False
+	End
+	
+	Method OnPreBuildModules()
 	
 		_buildErrorsList.Visible=False
 	End

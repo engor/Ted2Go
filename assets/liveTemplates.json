@@ -12,7 +12,7 @@
 		"ife":"If ${Cursor}\n\t\nElse\n\t\nEndif",
 		"ifn":"If ${Cursor} = Null\n\t\nEndif",
 		"inn":"If ${Cursor} <> Null\n\t\nEndif",
-		"last":"[_${Cursor}.Lenght-1]",
+		"last":"[_${Cursor}.Length-1]",
 		"lo":"Local ${Cursor}:=",
 		"me":"Method ${Cursor}()\n\t\n\t\nEnd",
 		"meb":"Method ${Cursor}:Bool()\n\t\n\t\nEnd",
