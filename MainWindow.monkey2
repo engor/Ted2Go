@@ -51,7 +51,8 @@ Class MainWindowInstance Extends Window
 		End
 		
 		App.FileDropped+=Lambda( path:String )
-			_docsManager.OpenDocument( path,True )
+			
+			OnFileDropped( path )
 		End
 
 		_docsManager.DocumentAdded+=Lambda( doc:Ted2Document )
@@ -1047,6 +1048,15 @@ Class MainWindowInstance Extends Window
 		
 		' need to make visible after layout
 		_docsTabView.EnsureVisibleCurrentTab()
+	End
+	
+	Method OnFileDropped( path:String )
+		
+		If FileExists( path )
+			_docsManager.OpenDocument( path,True )
+		Else
+			_projectView.OpenProject( path )
+		Endif
 	End
 	
 	Method OnAppClose()
