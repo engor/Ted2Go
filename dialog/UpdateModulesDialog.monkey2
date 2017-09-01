@@ -1,4 +1,3 @@
-
 Namespace ted2go
 
 
@@ -163,7 +162,73 @@ Class UpdateModulesDialog Extends DialogExt
 	
 	Global _modsNames:=New StringStack
 	
+	#rem MARK WAS HERE!!!!!
 	
+	EnumModules code lifted from mx2cc.monkey2
+	
+	This sorts modules into dependancy order.
+	
+	#end
+	Function EnumModules( out:StringStack,cur:String,deps:StringMap<StringStack> )
+		If out.Contains( cur ) Return
+		
+		For Local dep:=Eachin deps[cur]
+			EnumModules( out,dep,deps )
+		Next
+		
+		out.Push( cur )
+	End
+	
+	Function EnumModules:String[]()
+	
+		Local mods:=New StringMap<StringStack>
+		
+		Local modsPath:=MainWindow.ModsPath
+	
+		For Local f:=Eachin LoadDir( modsPath )
+		
+			Local dir:=modsPath+f+"/"
+			If GetFileType( dir )<>FileType.Directory Continue
+			
+			Local str:=LoadString( dir+"module.json" )
+			If Not str Continue
+			
+			Local obj:=JsonObject.Parse( str )
+			If Not obj 
+				Print "Error parsing json:"+dir+"module.json"
+				Continue
+			Endif
+			
+			Local name:=obj["module"].ToString()
+			If name<>f Continue
+			
+			Local deps:=New StringStack
+			If name<>"monkey" deps.Push( "monkey" )
+			
+			Local jdeps:=obj["depends"]
+			If jdeps
+				For Local dep:=Eachin jdeps.ToArray()
+					deps.Push( dep.ToString() )
+				Next
+			Endif
+			
+			mods[name]=deps
+		Next
+		
+		Local out:=New StringStack
+		For Local cur:=Eachin mods.Keys
+			EnumModules( out,cur,mods )
+		Next
+		
+		Return out.ToArray()
+	End
+	
+	Function GetModulesNames( out:StringStack )
+		
+		out.AddAll( EnumModules() )
+	End
+
+#rem	
 	Function GetModulesNames( out:StringStack )
 	
 		Local modsPath:=MainWindow.ModsPath
@@ -179,5 +244,6 @@ Class UpdateModulesDialog Extends DialogExt
 			Endif
 		Next
 	End
+#end
 	
 End

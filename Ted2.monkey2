@@ -133,17 +133,15 @@ Function Main()
 	Local root:=Prefs.MonkeyRootPath
 	If Not root Then root=AppDir()
 	
-	' return real folder or empty string
-	Local path:=SetupMonkeyRootPath( root,True )
-	If Not path
-		libc.exit_( 1 )
-		Return
-	Endif
+	root=SetupMonkeyRootPath( root,True )
+	If Not root libc.exit_( 1 )
 	
-	If path<>root
-		Prefs.MonkeyRootPath=path
+	If root<>Prefs.MonkeyRootPath
+		Prefs.MonkeyRootPath=root
 		Prefs.SaveLocalState()
 	Endif
+	
+	ChangeDir( root )
 	
 	'load ted2 state
 	'
@@ -154,7 +152,8 @@ Function Main()
 	
 	'initial theme
 	'
-	If Not jobj.Contains( "theme" ) jobj["theme"]=New JsonString( "theme-classic-dark" )
+	If Not jobj.Contains( "theme" ) jobj["theme"]=New JsonString( "theme-prime-blue" )
+
 	If Not jobj.Contains( "themeScale" ) jobj["themeScale"]=New JsonNumber( 1 )
 	
 	Local config:=New StringMap<String>
@@ -200,9 +199,7 @@ End
 Function SetupMonkeyRootPath:String( rootPath:String,searchMode:Bool )
 	
 #If __DESKTOP_TARGET__
-	
-	ChangeDir( rootPath )
-	
+
 	If searchMode
 		' search for desired folder
 		Local found:=FindBinFolder( rootPath )
