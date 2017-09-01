@@ -194,14 +194,20 @@ Function ShowMessage( title:String,msg:String,okButton:String="  OK  " )
 	Dialog.Run( title,New Label( msg ),New String[](okButton),0,0 )
 End
 
-Function IsIdentStr:Bool( str:String )
+Function IsIdentStr:Bool( str:String,skipDots:Bool=True )
 	
 	If Not str Return False
 	
 	If IsDigit( str[0] ) Return False
 	
+	If str[0]=Chars.DOT Or str[str.Length-1]=Chars.DOT Return False
+	
 	For Local c:=Eachin str
-		If Not IsIdent( c ) Return False
+		If c=Chars.DOT
+			If Not skipDots Return False
+		Else
+			If Not IsIdent( c ) Return False
+		Endif
 	Next
 	
 	Return True

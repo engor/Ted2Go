@@ -127,7 +127,7 @@ Class GenerateClassDialog Extends DialogExt
 	
 	Method OnGenerate()
 		
-		If Not IsIdentStr( ClassName )
+		If Not IsIdentStr( ClassName,False )
 			Alert( "Class name is invalid or empty!",Title )
 			Return
 		Endif
