@@ -217,8 +217,8 @@ Class ProjectView Extends ScrollView
 				menu.AddAction( "Rename" ).Triggered=Lambda()
 				
 					Local oldName:=StripDir( path )
-					Local name:=RequestString( "Enter new name:","Ranaming '"+oldName+"'" )
-					If name=oldName Return
+					Local name:=RequestString( "Enter new name:","Ranaming '"+oldName+"'",oldName )
+					If Not name Or name=oldName Return
 					
 					Local newPath:=ExtractDir( path )+name
 					If CopyFile( path,newPath )

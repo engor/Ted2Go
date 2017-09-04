@@ -1001,6 +1001,7 @@ Class MainWindowInstance Extends Window
 	
 		_docsManager.OpenDocument( path,True )
 		If lockIt Then _buildActions.LockBuildFile()
+		UpdateWindow( True )
 	End
 	
 	Method GetActionFind:Action()
