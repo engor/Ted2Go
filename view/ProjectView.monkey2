@@ -8,6 +8,8 @@ Class ProjectView Extends ScrollView
 	
 	Field ProjectOpened:Void( dir:String )
 	Field ProjectClosed:Void( dir:String )
+	
+	Field RequestedFindInFolder:Void( folder:String )
 
 	Method New( docs:DocumentManager,builder:IModuleBuilder )
 	
@@ -65,9 +67,9 @@ Class ProjectView Extends ScrollView
 			Select GetFileType( path )
 			Case FileType.Directory
 			
-				menu.AddAction( "Open on Desktop" ).Triggered=Lambda()
+				menu.AddAction( "Find..." ).Triggered=Lambda()
 				
-					requesters.OpenUrl( path )
+					RequestedFindInFolder( path )
 				End
 				
 				menu.AddSeparator()
@@ -84,7 +86,6 @@ Class ProjectView Extends ScrollView
 						Endif
 					End
 					d.ShowModal()
-					Return
 				End
 				
 				menu.AddSeparator()
@@ -99,7 +100,6 @@ Class ProjectView Extends ScrollView
 					CreateFileInternal( tpath )
 					
 					browser.Refresh()
-					Return
 				End
 				
 				menu.AddAction( "New folder" ).Triggered=Lambda()
@@ -120,7 +120,6 @@ Class ProjectView Extends ScrollView
 					Endif
 					
 					browser.Refresh()
-					Return
 				End
 				
 				menu.AddAction( "Delete" ).Triggered=Lambda()
@@ -204,6 +203,14 @@ Class ProjectView Extends ScrollView
 					
 					Endif
 				Endif
+				
+				menu.AddSeparator()
+				
+				menu.AddAction( "Open on Desktop" ).Triggered=Lambda()
+				
+					requesters.OpenUrl( path )
+				End
+				
 				
 			Case FileType.File
 			

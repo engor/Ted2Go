@@ -54,17 +54,36 @@ Class FindInFilesDialog Extends DialogExt
 		Deactivated+=MainWindow.UpdateKeyView
 		
 		OnShow+=Lambda()
+			
+			If CustomFolder Return
+			
 			Local projs:=projView.OpenProjects
 			If Not projs Return
+			
 			_projList.RemoveAllItems()
+			
 			Local sel:ListView.Item=Null
 			For Local p:=Eachin projs
 				Local it:=_projList.AddItem( p )
 				If Not sel Then sel=it
 			Next
 			_projList.Selected=sel
+			
 		End
 		
+	End
+	
+	Property CustomFolder:String()
+		
+		Return _customFolder
+		
+	Setter( value:String )
+		
+		_customFolder=value
+		If Not _customFolder Return
+		
+		_projList.RemoveAllItems()
+		_projList.Selected=_projList.AddItem( _customFolder )
 	End
 	
 	Property FindText:String()
@@ -101,5 +120,6 @@ Class FindInFilesDialog Extends DialogExt
 	Field _caseSensitive:CheckButton
 	Field _projList:ListView
 	Field _docker:DockingView
+	Field _customFolder:String
 	
 End

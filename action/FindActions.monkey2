@@ -41,7 +41,9 @@ Class FindActions
 		replaceAll.Triggered=OnReplaceAll
 		
 		findInFiles=New Action( "Find in files..." )
-		findInFiles.Triggered=OnFindInFiles
+		findInFiles.Triggered=Lambda()
+			OnFindInFiles()
+		End
 		findInFiles.HotKey=Key.F
 		findInFiles.HotKeyModifiers=Modifier.Menu|Modifier.Shift
 		
@@ -64,6 +66,11 @@ Class FindActions
 	Method FindByTextChanged( entireProject:Bool )
 		
 		If Not entireProject Then OnFindNext( False )
+	End
+	
+	Method FindInFiles( folder:String )
+	
+		OnFindInFiles( folder )
 	End
 	
 	
@@ -97,9 +104,7 @@ Class FindActions
 		_findDialog.Show()
 	End
 	
-	Method OnFindInFiles()
-	
-		_findInFilesDialog.Show()
+	Method OnFindInFiles( folder:String=Null )
 	
 		Local tv:=_docs.CurrentTextView
 		If tv <> Null
@@ -110,6 +115,9 @@ Class FindActions
 				_findInFilesDialog.SetInitialText( s )
 			Endif
 		Endif
+		
+		_findInFilesDialog.CustomFolder=folder
+		_findInFilesDialog.Show()
 	End
 	
 	Field _storedTextView:TextView
@@ -310,7 +318,7 @@ Class FindActions
 			Return
 		Endif
 		
-		_findInFilesDialog.Hide()
+		'_findInFilesDialog.Hide()
 		MainWindow.ShowFindResults()
 		
 		New Fiber( Lambda()
