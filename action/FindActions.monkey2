@@ -186,38 +186,45 @@ Class FindActions
 			' start new search
 			If entire
 				
-				Local proj:=""
-				For Local p:=Eachin _projView.OpenProjects
-					If doc.Path.Contains( p )
-						proj=p
-						Exit
-					Endif
-				End
-				Local map:=FindInProject( what,proj,sens )
-				If map
-					CreateResultTree( _findConsole.RootNode,map,what,proj )
-					MainWindow.ShowFindResults()
-				Endif
+				New Fiber( Lambda()
 				
-				If Not map.Empty
-					
-					_results=New Stack<FileJumpData>
-					
-					' make current opened document as a first results
-					Local curPath:=_docs.CurrentDocument ? _docs.CurrentDocument.Path Else ""
-					If curPath
-						Local vals:=map[curPath]
-						If vals
-							_results.AddAll( vals )
-							map.Remove( curPath )
+					Local proj:=""
+					For Local p:=Eachin _projView.OpenProjects
+						If doc.Path.Contains( p )
+							proj=p
+							Exit
 						Endif
+					End
+					Local map:=FindInProject( what,proj,sens )
+					If map
+						CreateResultTree( _findConsole.RootNode,map,what,proj )
+						MainWindow.ShowFindResults()
 					Endif
 					
-					For Local items:=Eachin map.Values
-						_results.AddAll( items )
-					End
+					If Not map.Empty
+						
+						_results=New Stack<FileJumpData>
+						
+						' make current opened document as a first results
+						Local curPath:=_docs.CurrentDocument ? _docs.CurrentDocument.Path Else ""
+						If curPath
+							Local vals:=map[curPath]
+							If vals
+								_results.AddAll( vals )
+								map.Remove( curPath )
+							Endif
+						Endif
+						
+						For Local items:=Eachin map.Values
+							_results.AddAll( items )
+						End
+						
+					Endif
 					
-				Endif
+					Jump( NXT )
+				End )
+				
+				Return
 				
 			Else
 				
@@ -306,20 +313,17 @@ Class FindActions
 		_findInFilesDialog.Hide()
 		MainWindow.ShowFindResults()
 		
-		App.Idle+=Lambda()
+		New Fiber( Lambda()
+		
+			Local what:=_findInFilesDialog.FindText
+			Local proj:=_findInFilesDialog.SelectedProject
+			Local sens:=_findInFilesDialog.CaseSensitive
+			Local filter:=_findInFilesDialog.FilterText
 			
-			New Fiber( Lambda()
+			Local result:=FindInProject( what,proj,sens,filter )
 			
-				Local what:=_findInFilesDialog.FindText
-				Local proj:=_findInFilesDialog.SelectedProject
-				Local sens:=_findInFilesDialog.CaseSensitive
-				Local filter:=_findInFilesDialog.FilterText
-				
-				Local result:=FindInProject( what,proj,sens,filter )
-				
-				If result Then CreateResultTree( _findConsole.RootNode,result,what,proj )
-			End)
-		End
+			If result Then CreateResultTree( _findConsole.RootNode,result,what,proj )
+		End)
 		
 	End
 	
@@ -336,12 +340,12 @@ Class FindActions
 		If Not caseSensitive Then what=what.ToLower()
 		
 		Local files:=New Stack<String>
-		Utils.GetAllFiles( projectPath,exts,files )
-		
+		Utils.GetAllFiles( projectPath,exts,files,20 )
 		Local len:=what.Length
 		
 		Local result:=New StringMap<Stack<FileJumpData>>
 		
+		Local counter:=1
 		Local doc:=New TextDocument 'use it to get line number
 		For Local f:=Eachin files
 		
@@ -371,6 +375,11 @@ Class FindActions
 			Forever
 			
 			If Not items.Empty Then result[f]=items
+			
+			If counter Mod 10 = 0
+				' process 10 files per frame to save app responsibility
+				App.WaitIdle()
+			Endif
 			
 		Next
 		
