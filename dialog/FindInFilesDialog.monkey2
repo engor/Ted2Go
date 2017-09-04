@@ -14,7 +14,7 @@ Class FindInFilesDialog Extends DialogExt
 		
 		_projList=New ListView
 		_projList.MaxSize=New Vec2i( 500,120 )
-		_filterField=New TextField( "monkey2,txt" )
+		_filterField=New TextField( Prefs.FindFilesFilter )
 		
 		_caseSensitive=New CheckButton( "Case sensitive" )
 		_caseSensitive.Layout="float"
@@ -39,7 +39,11 @@ Class FindInFilesDialog Extends DialogExt
 		
 		ContentView=_docker
 		
-		AddAction( actions.findAllInFiles )
+		Local findAll:=AddAction( actions.findAllInFiles.Text )
+		findAll.Triggered=Lambda()
+			actions.findAllInFiles.Trigger()
+			Prefs.FindFilesFilter=_filterField.Text.Trim()
+		End
 		
 		Local close:=AddAction( "Close" )
 		SetKeyAction( Key.Escape,close )
@@ -48,7 +52,7 @@ Class FindInFilesDialog Extends DialogExt
 		_findField.Activated+=_findField.MakeKeyView
 		
 		Deactivated+=MainWindow.UpdateKeyView
-				
+		
 		OnShow+=Lambda()
 			Local projs:=projView.OpenProjects
 			If Not projs Return

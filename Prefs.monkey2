@@ -1,46 +1,56 @@
 Namespace ted2go
 
 
-Class Prefs
+Const Prefs:=New PrefsInstance
+
+Class PrefsInstance
 	
 	' AutoCompletion
-	Global AcEnabled:=True
-	Global AcKeywordsOnly:=False
-	Global AcShowAfter:=2
-	Global AcUseTab:=True
-	Global AcUseEnter:=False
-	Global AcUseSpace:=False
-	Global AcUseDot:=False
-	Global AcNewLineByEnter:=True
-	Global AcStrongFirstChar:=True
-	Global AcUseLiveTemplates:=True
+	Field AcEnabled:=True
+	Field AcKeywordsOnly:=False
+	Field AcShowAfter:=2
+	Field AcUseTab:=True
+	Field AcUseEnter:=False
+	Field AcUseSpace:=False
+	Field AcUseDot:=False
+	Field AcNewLineByEnter:=True
+	Field AcStrongFirstChar:=True
+	Field AcUseLiveTemplates:=True
 	'
-	Global MainToolBarVisible:=True
-	Global MainProjectTabsRight:=True
-	Global MainProjectIcons:=True
+	Field MainToolBarVisible:=True
+	Field MainProjectTabsRight:=True
+	Field MainProjectIcons:=True
 	'
-	Global IrcNickname:String
-	Global IrcServer:="irc.freenode.net"
-	Global IrcPort:=6667
-	Global IrcRooms:="#monkey2" '#mojox#mojo2d
-	Global IrcConnect:Bool=False
+	Field IrcNickname:String
+	Field IrcServer:="irc.freenode.net"
+	Field IrcPort:=6667
+	Field IrcRooms:="#monkey2" '#mojox#mojo2d
+	Field IrcConnect:Bool=False
 	'
-	Global EditorToolBarVisible:=False
-	Global EditorGutterVisible:=True
-	Global EditorShowWhiteSpaces:=False
-	Global EditorFontPath:String
-	Global EditorFontSize:=16
-	Global EditorShowEvery10LineNumber:=True
-	Global EditorCodeMapVisible:=True
-	Global EditorAutoIndent:=True
+	Field EditorToolBarVisible:=False
+	Field EditorGutterVisible:=True
+	Field EditorShowWhiteSpaces:=False
+	Field EditorFontPath:String
+	Field EditorFontSize:=16
+	Field EditorShowEvery10LineNumber:=True
+	Field EditorCodeMapVisible:=True
+	Field EditorAutoIndent:=True
 	'
-	Global SourceSortByType:=True
-	Global SourceShowInherited:=False
+	Field SourceSortByType:=True
+	Field SourceShowInherited:=False
 	'
-	Global MonkeyRootPath:String
-	Global IdeHomeDir:String
+	Field MonkeyRootPath:String
+	Field IdeHomeDir:String
 	
-	Function LoadState( json:JsonObject )
+	Property FindFilesFilter:String()
+		Return _findFilter
+	Setter( value:String )
+		
+		_findFilter=value
+		SaveLocalState()
+	End
+	
+	Method LoadState( json:JsonObject )
 		
 		If json.Contains( "irc" )
 			
@@ -100,7 +110,7 @@ Class Prefs
 		Endif
 	End
 	
-	Function SaveState( json:JsonObject )
+	Method SaveState( json:JsonObject )
 		
 		Local j:=New JsonObject
 		json["main"]=j
@@ -146,7 +156,7 @@ Class Prefs
 		
 	End
 	
-	Function LoadLocalState()
+	Method LoadLocalState()
 		
 		IdeHomeDir=HomeDir()+"Ted2Go/"
 		CreateDir( IdeHomeDir )
@@ -156,19 +166,22 @@ Class Prefs
 		
 		MonkeyRootPath=Json_GetString( json.Data,"rootPath","" )
 		If Not MonkeyRootPath.EndsWith( "/" ) Then MonkeyRootPath+="/"
+		
+		FindFilesFilter=Json_GetString( json.Data,"findFilesFilter","monkey2,txt" )
 	End
 	
-	Function SaveLocalState()
+	Method SaveLocalState()
 		
 		If Not MonkeyRootPath.EndsWith( "/" ) Then MonkeyRootPath+="/"
 		
 		Local json:=New JsonObject
 		json["rootPath"]=New JsonString( MonkeyRootPath )
+		json["findFilesFilter"]=New JsonString( FindFilesFilter )
 		json.Save( AppDir()+"state.json" )
 		
 	End
 	
-	Function GetCustomFontPath:String()
+	Method GetCustomFontPath:String()
 		
 		If Not EditorFontPath Return ""
 		If Not EditorFontPath.Contains( ".ttf" ) Return ""
@@ -181,10 +194,16 @@ Class Prefs
 		Return path
 	End
 	
-	Function GetCustomFontSize:Int()
+	Method GetCustomFontSize:Int()
 	
 		Return Max( EditorFontSize,6 ) '6 is a minimum
 	End
+	
+	
+	Private 
+	
+	Field _findFilter:String
+	
 End
 
 

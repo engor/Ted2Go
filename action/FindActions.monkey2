@@ -240,7 +240,7 @@ Class FindActions
 	
 	Method Jump( nxtOrPrev:Int )
 		
-		If Not _results Return
+		If Not _results Or _results.Length=0 Return
 		
 		If nxtOrPrev=NXT
 			_resultIndex=(_resultIndex+1) Mod _results.Length
@@ -340,12 +340,12 @@ Class FindActions
 		If Not caseSensitive Then what=what.ToLower()
 		
 		Local files:=New Stack<String>
-		Utils.GetAllFiles( projectPath,exts,files,20 )
+		Utils.GetAllFiles( projectPath,exts,files )
 		Local len:=what.Length
 		
 		Local result:=New StringMap<Stack<FileJumpData>>
 		
-		Local counter:=1
+		'Local counter:=1
 		Local doc:=New TextDocument 'use it to get line number
 		For Local f:=Eachin files
 		
@@ -376,10 +376,10 @@ Class FindActions
 			
 			If Not items.Empty Then result[f]=items
 			
-			If counter Mod 10 = 0
-				' process 10 files per frame to save app responsibility
-				App.WaitIdle()
-			Endif
+			'If counter Mod 10 = 0
+			'	' process 10 files per frame to save app responsibility
+			'	App.WaitIdle()
+			'Endif
 			
 		Next
 		
