@@ -14,7 +14,7 @@ Class FindInFilesDialog Extends DialogExt
 		
 		_projList=New ListView
 		_projList.MaxSize=New Vec2i( 500,120 )
-		_filterField=New TextField( "monkey2,txt" )
+		_filterField=New TextField( Prefs.FindFilesFilter )
 		
 		_caseSensitive=New CheckButton( "Case sensitive" )
 		_caseSensitive.Layout="float"
@@ -39,7 +39,11 @@ Class FindInFilesDialog Extends DialogExt
 		
 		ContentView=_docker
 		
-		AddAction( actions.findAllInFiles )
+		Local findAll:=AddAction( actions.findAllInFiles.Text )
+		findAll.Triggered=Lambda()
+			actions.findAllInFiles.Trigger()
+			Prefs.FindFilesFilter=_filterField.Text.Trim()
+		End
 		
 		Local close:=AddAction( "Close" )
 		SetKeyAction( Key.Escape,close )
@@ -48,19 +52,38 @@ Class FindInFilesDialog Extends DialogExt
 		_findField.Activated+=_findField.MakeKeyView
 		
 		Deactivated+=MainWindow.UpdateKeyView
-				
+		
 		OnShow+=Lambda()
+			
+			If CustomFolder Return
+			
 			Local projs:=projView.OpenProjects
 			If Not projs Return
+			
 			_projList.RemoveAllItems()
+			
 			Local sel:ListView.Item=Null
 			For Local p:=Eachin projs
 				Local it:=_projList.AddItem( p )
 				If Not sel Then sel=it
 			Next
 			_projList.Selected=sel
+			
 		End
 		
+	End
+	
+	Property CustomFolder:String()
+		
+		Return _customFolder
+		
+	Setter( value:String )
+		
+		_customFolder=value
+		If Not _customFolder Return
+		
+		_projList.RemoveAllItems()
+		_projList.Selected=_projList.AddItem( _customFolder )
 	End
 	
 	Property FindText:String()
@@ -97,5 +120,6 @@ Class FindInFilesDialog Extends DialogExt
 	Field _caseSensitive:CheckButton
 	Field _projList:ListView
 	Field _docker:DockingView
+	Field _customFolder:String
 	
 End

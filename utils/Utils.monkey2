@@ -87,9 +87,9 @@ Class Utils
 		Return result
 	End
 	
-	Function GetAllFiles( rootDir:String,filterExts:String[],target:Stack<String> )
+	Function GetAllFiles( rootDir:String,filterExts:String[],target:Stack<String>,idleAppEachN:Int=-1 )
 		
-		GetAllFilesInternal( rootDir,filterExts,target )
+		GetAllFilesInternal( rootDir,filterExts,target,idleAppEachN )
 	End
 	
 	#Rem monkeydoc If 'any' is true - check at least one starts, else - check all.
@@ -148,10 +148,12 @@ Class Utils
 	Method New()
 	End
 	
-	Function GetAllFilesInternal( dir:String,filterExts:String[],target:Stack<String> )
+	Function GetAllFilesInternal( dir:String,filterExts:String[],target:Stack<String>,idleAppEachN:Int=-1 )
 		
 		Local files:=LoadDir( dir )
+		Local ii:=0
 		For Local f:=Eachin files
+			If idleAppEachN>0 And ii Mod idleAppEachN = 0 Then App.WaitIdle()
 			f=dir+f
 			If GetFileType( f )=FileType.Directory
 				GetAllFilesInternal( f+"/",filterExts,target )
@@ -165,7 +167,6 @@ Class Utils
 	End
 	
 End
-
 
 Function FileExists:Bool( path:String )
 	
