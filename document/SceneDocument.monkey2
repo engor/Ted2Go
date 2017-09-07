@@ -33,28 +33,44 @@ Class SceneDocumentView Extends View
 		
 		RequestRender()
 		
-		If Keyboard.KeyDown( Key.Up )
-			model.RotateX( 3 )
-		Else If Keyboard.KeyDown( Key.Down )
-			model.RotateX( -3 )
-		Endif
+		Global _anim:Float=0
 		
-		If Keyboard.KeyDown( Key.Left )
-			model.RotateY( 3,True )
-		Else If Keyboard.KeyDown( Key.Right )
-			model.RotateY( -3,True )
-		Endif
-
 		If Keyboard.KeyDown( Key.A )
-			_doc.Camera.MoveZ( .1 )
-		Else If Keyboard.KeyDown( Key.Z )
-			_doc.Camera.MoveZ( -.1 )
+			If _doc.Model.Animator
+				_anim+=12.0/60.0
+				_doc.Model.Animator.Animate( 0,_anim )
+			Endif
+		Else
+			_anim=0
 		Endif
 		
 		_doc.Scene.Render( canvas,_doc.Camera )
 	End
 	
 	Method OnMouseEvent( event:MouseEvent ) Override
+		
+		If Not _doc.Model Return
+		
+		Global _v:Vec2i
+		Global _f:Bool
+		
+		Select event.Type
+		Case EventType.MouseDown
+			_v=event.Location
+			_f=True
+		Case EventType.MouseMove
+			If _f
+				Local dv:=event.Location-_v
+				Local rx:=Float(dv.x)/Height * +180.0
+				Local ry:=Float(dv.y)/Height * -180.0
+				_doc.Model.Rotate( ry,rx,0 )
+				_v=event.Location
+			Endif
+		Case EventType.MouseUp
+			_f=False
+		Case EventType.MouseWheel
+			_doc.Camera.MoveZ( Float(event.Wheel.y)*-.1 )
+		End
 	End
 	
 	Method OnKeyEvent( event:KeyEvent ) Override
@@ -66,6 +82,8 @@ Class SceneDocumentView Extends View
 				_doc.Model.Rotation=New Vec3f(0,0,0)
 			Case Key.S
 				_doc.Light.ShadowsEnabled=Not _doc.Light.ShadowsEnabled
+			Case Key.A
+				
 			End
 		Endif
 		
@@ -88,8 +106,8 @@ Class SceneDocument Extends Ted2Document
 		Scene.SetCurrent( _scene )
 		
 		_camera=New Camera
-		_camera.Near=.1
-		_camera.Far=100
+		_camera.Near=.01
+		_camera.Far=10
 		_camera.MoveZ( -2.5 )
 			
 		_light=New Light
@@ -134,11 +152,7 @@ Class SceneDocument Extends Ted2Document
 		
 		Scene.SetCurrent( Null )
 
-		If _model
-			
-			_model.Mesh.FitVertices( New Boxf( -1,1 ) )
-			
-		Endif
+		If _model _model.Mesh.FitVertices( New Boxf( -1,1 ) )
 	
 		Return True
 	End
@@ -179,7 +193,7 @@ Class SceneDocumentType Extends Ted2DocumentType
 	Method New()
 		AddPlugin( Self )
 		
-		Extensions=New String[]( ".b3d",".3ds",".obj",".dae",".fbx",".blend",".x" )
+		Extensions=New String[]( ".gltf",".b3d",".3ds",".obj",".dae",".fbx",".blend",".x" )
 	End
 	
 	Method OnCreateDocument:Ted2Document( path:String ) Override
