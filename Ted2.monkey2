@@ -46,6 +46,7 @@
 #Import "document/JsonDocument"
 #Import "document/XmlDocument"
 #Import "document/BananasDocument"
+#Import "document/SceneDocument"
 
 #Import "eventfilter/TextViewKeyEventFilter"
 #Import "eventfilter/Monkey2KeyEventFilter"
