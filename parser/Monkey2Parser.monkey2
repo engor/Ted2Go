@@ -165,7 +165,14 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Local imports:=jobj["imports"].ToArray()
 			For Local jfile:=Eachin imports
 				Local file:=jfile.ToString()
-				If file.StartsWith( "<" ) Or Not file.EndsWith( ".monkey2" ) Continue 'skip modules and not .monkey2
+				If file.StartsWith( "<" ) Continue 'skip modules
+				If Not file.EndsWith( ".monkey2" )
+					If FileExists( folder+file+".monkey2") 
+						file+=".monkey2"
+					Else
+						Continue 'skip not .monkey2
+					Endif
+				Endif
 				file=folder+file
 				'Print "parse import: "+file+"  mod: "+Int(isModule)
 				ParseFile( file,file,isModule )

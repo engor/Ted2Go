@@ -200,12 +200,20 @@ Class MainWindowInstance Extends Window
 			_buildErrorsList.Visible=True
 		End
 		
+		' ProjectView
+		'
 		_projectView=New ProjectView( _docsManager,_buildActions )
+		' project opened
 		_projectView.ProjectOpened+=Lambda( dir:String )
 			AddRecentProject( dir )
 			SaveState()
 		End
+		' project closed
 		_projectView.ProjectClosed+=OnProjectClosed
+		' find in folder
+		_projectView.RequestedFindInFolder+=Lambda( folder:String )
+			_findActions.FindInFiles( folder )
+		End
 		
 		_fileActions=New FileActions( _docsManager )
 		_editActions=New EditActions( _docsManager )
@@ -1001,6 +1009,7 @@ Class MainWindowInstance Extends Window
 	
 		_docsManager.OpenDocument( path,True )
 		If lockIt Then _buildActions.LockBuildFile()
+		UpdateWindow( True )
 	End
 	
 	Method GetActionFind:Action()
