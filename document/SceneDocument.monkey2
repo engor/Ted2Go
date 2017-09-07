@@ -1,4 +1,5 @@
-Namespace ted2
+
+Namespace ted2go
 
 #Import "<mojo3d>"
 #Import "<mojo3d-loaders>"
