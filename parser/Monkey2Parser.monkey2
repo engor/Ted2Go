@@ -935,7 +935,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 					Exit
 				Endif
 			Next
-			If result <> Null Then GetAllItems( result,target,isSuper )
+			If result <> Null Then GetAllItems( result,target,False )
 		Next
 		
 	End
