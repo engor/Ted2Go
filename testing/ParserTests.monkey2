@@ -4,13 +4,22 @@ Namespace ted2go
 
 Private
 
+Struct Vec2i Extension
+	
+	Const One := New Vec2i( 1,1 )
+End
+
+
+Function vTest( v:Vec2i,e:Entity )
+	
+End
+
 
 Interface ITest
 
 	Method abs()
 	Property bpp()
 	
-		
 End
 
 

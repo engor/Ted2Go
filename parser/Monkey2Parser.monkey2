@@ -233,6 +233,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Local t:=New CodeType
 				t.kind=kind
 				t.ident=ident
+				
+				item.IsExtension=IsExtension( flags )
 			Else
 				Local t:=ParseType( jobj )
 				item.Type=t
@@ -275,10 +277,16 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Next
 			Endif
 			
+			
 			If parent
 				item.SetParent( parent )
+				If parent.IsExtension
+					AddExtensionItem( parent,item )
+				Endif
 			Else
-				resultContainer.Add( item )
+				If Not item.IsExtension
+					resultContainer.Add( item )
+				Endif
 			Endif
 			
 			If jobj.Contains( "members" )
@@ -342,7 +350,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local item:CodeItem=Null
 		Local isSelf:=(firstIdent.ToLower()="self")
 		Local isSuper:=(firstIdent.ToLower()="super")
-		Local items:=New List<CodeItem>
+		Local items:=New Stack<CodeItem>
 	
 		If isSelf Or isSuper
 	
@@ -481,13 +489,13 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local scope:=rootScope
 		
 		'-----------------------------
-		' what the first ident is?	
+		' what the first ident is?
 		'-----------------------------
 		Local firstIdent:=idents[0]
 		Local item:CodeItem=Null
 		Local isSelf:=(firstIdent.ToLower()="self")
 		Local isSuper:=(firstIdent.ToLower()="super")
-		Local items:=New List<CodeItem>
+		Local items:=New Stack<CodeItem>
 		
 		If isSelf Or isSuper
 		
@@ -535,22 +543,32 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		' and check in global scope
 		If item = Null Or onlyOne
-			For Local i:=Eachin Items
+			
+			item=_aliases[ident]
+			If item
 				
-				If Not CheckUsingsFilter( i,usingsFilter ) Continue
+				'TODO
+				'Print "it's alias"
 				
-				'Print "global 1: "+i.Scope
-				If Not CheckIdent( i.Ident,firstIdent,onlyOne ) Continue
-				If Not CheckAccessInGlobal( i,filePath ) Continue
-				If IsLocalMember( i ) And i.ScopeStartPos.x > docLine Continue
-				'Print "global 2"
-				If Not onlyOne
-					item=i
-					Exit
-				Else
-					target.AddLast( i )
-				Endif
-			Next
+			Else
+				
+				For Local i:=Eachin Items
+					
+					If Not CheckUsingsFilter( i,usingsFilter ) Continue
+					
+					'Print "global 1: "+i.Scope
+					If Not CheckIdent( i.Ident,firstIdent,onlyOne ) Continue
+					If Not CheckAccessInGlobal( i,filePath ) Continue
+					If IsLocalMember( i ) And i.ScopeStartPos.x > docLine Continue
+					'Print "global 2"
+					If Not onlyOne
+						item=i
+						Exit
+					Else
+						target.AddLast( i )
+					Endif
+				Next
+			Endif
 		Endif
 		
 		'If item Print "item: "+item.Scope
@@ -564,10 +582,11 @@ Class Monkey2Parser Extends CodeParserPlugin
 			' start from the second ident part here
 			For Local k:=1 Until idents.Length
 				
-				Local staticOnly:=(Not isSelf And Not isSuper And (item.Kind = CodeItemKind.Class_ Or item.Kind = CodeItemKind.Struct_))
+				Local staticOnly:=(Not isSelf And Not isSuper And (item.Kind = CodeItemKind.Class_ Or item.Kind = CodeItemKind.Struct_ Or item.Parent=Null))
 				
 				' need to check by ident type
 				Local type:=item.Type.ident
+				Local tmpItem:=item
 				
 				Select item.Kind
 					
@@ -575,10 +594,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 						' don't touch 'item'
 					
 					Default
+						
 						item=Null
 						' is it alias?
-						Local al:=_aliases[type]
-						If al Then type=al.Type.ident
+						type=FixItemType( type )
 						'
 						For Local i:=Eachin Items
 							If i.Ident = type
@@ -596,6 +615,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				' extract all items from item
 				items.Clear()
 				GetAllItems( item,items,isSuper )
+				ExtractExtensionItems( tmpItem,items )
 				
 				If Not items.Empty
 					For Local i:=Eachin items
@@ -631,11 +651,66 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Field _filesTime:=New StringMap<Long>
 	Field _aliases:=New StringMap<CodeItem>
 	Field _modsPath:String,_mx2ccPath:String
+	Field _extensions:=New StringMap<Stack<CodeItem>>
 	
 	Method New()
 	
 		Super.New()
 		_types=New String[](".monkey2")
+	End
+	
+	Method FixItemType:String( typeName:String )
+		
+		Local al:=_aliases[typeName]
+		Return al ? al.Type.ident Else typeName
+	End
+	
+	Method AddExtensionItem( parent:CodeItem,item:CodeItem )
+	
+		Local key:=parent.Ident
+		Local list:=_extensions[key]
+		If Not list
+			list=New Stack<CodeItem>
+			_extensions[key]=list
+		Endif
+		For Local i:=Eachin list
+			If i.Text=item.Text
+				list.Remove( i )
+				Exit
+			Endif
+		Next
+		item.IsExtension=True
+		list.Add( item )
+	End
+
+	Method RemoveExtensions( filePath:String )
+		
+		For Local list:=Eachin _extensions.Values.All()
+			Local it:=list.All()
+			While Not it.AtEnd
+				Local i:=it.Current
+				If i.FilePath=filePath
+					it.Erase()
+				Else
+					it.Bump()
+				Endif
+			Wend
+		Next
+	End
+	
+	Method ExtractExtensionItems( item:CodeItem,target:Stack<CodeItem> )
+	
+		If _extensions.Empty Return
+		
+		Local type:=item.Type.ident
+		Local list:=_extensions[type]
+		If Not list
+			type=item.Ident
+			list=_extensions[type]
+		Endif
+		If list
+			AddItems( list,target,True )
+		Endif
 	End
 	
 	Method StartParsing:String( pathOnDisk:String,isModule:Bool )
@@ -888,33 +963,39 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return False
 	End
 	
-	Method GetAllItems( item:CodeItem,target:List<CodeItem>,isSuper:Bool=False )
+	Method AddItems( items:Stack<CodeItem>,target:Stack<CodeItem>,checkUnique:Bool )
+		
+		If Not items Return
+		
+		If checkUnique' need to add unique
+			For Local i:=Eachin items
+		
+				Local s:=i.Text
+				Local exists:=False
+				For Local ii:=Eachin target
+					If ii.Text = s
+						exists=True
+						Exit
+					Endif
+				End
+				If Not exists
+					target.Add( i )
+				Endif
+			Next
+		Else
+			target.AddAll( items )
+		Endif
+	End
+	
+	Method GetAllItems( item:CodeItem,target:Stack<CodeItem>,isSuper:Bool=False )
 		
 		Local checkUnique:=Not target.Empty
 		
 		If Not isSuper
 			' add children
-			Local items:=item.Children
-			If items
-				If checkUnique' need to add unique
-					For Local i:=Eachin items
-						
-						Local s:=i.Text
-						Local exists:=False
-						For Local ii:=Eachin target
-							If ii.Text = s
-								exists=True
-								Exit
-							Endif
-						End
-						If Not exists
-							target.AddLast( i )
-						Endif
-					Next
-				Else
-					target.AddAll( items )
-				Endif
-			Endif
+			AddItems( item.Children,target,checkUnique )
+			'
+			'ExtractExtensionItems( item,target )
 		End
 		
 		' add from super classes / ifaces
@@ -1039,6 +1120,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return (flags & Flags.DECL_OPERATOR)<>0
 	End
 	
+	Function IsExtension:Bool( flags:Int )
+		Return (flags & Flags.DECL_EXTENSION)<>0
+	End
+	
 	Function GetAccess:AccessMode( flags:Int )
 		
 		If flags & Flags.DECL_PRIVATE Return AccessMode.Private_
@@ -1105,6 +1190,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		ItemsMap.Remove( path )
 		
+		RemoveExtensions( path )
 	End
 	
 	

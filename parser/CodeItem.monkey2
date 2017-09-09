@@ -87,9 +87,9 @@ Class CodeItem
 		
 	End
 	
-	Property Children:List<CodeItem>()
+	Property Children:Stack<CodeItem>()
 		Return _children
-	Setter( value:List<CodeItem> )
+	Setter( value:Stack<CodeItem> )
 		_children=value
 	End
 	
@@ -152,10 +152,11 @@ Class CodeItem
 	End
 	
 	Method SetParent( parent:CodeItem )
-		If Parent <> Null Then Parent.Children.Remove( Self )
+		
+		If Parent Then Parent.Children.Remove( Self )
 		_parent=parent
-		If _parent.Children = Null Then _parent.Children = New List<CodeItem>
-		_parent.Children.AddLast( Self )
+		If Not _parent.Children Then _parent.Children = New Stack<CodeItem>
+		_parent.Children.Add( Self )
 	End
 	
 	Method AddChild( item:CodeItem )
@@ -186,6 +187,12 @@ Class CodeItem
 			Return True
 		End
 		Return False
+	End
+	
+	Property IsExtension:Bool()
+		Return _isExtension
+	Setter( value:Bool )
+		_isExtension=value
 	End
 	
 	Method AddSuperType( type:CodeType )
@@ -261,7 +268,7 @@ Class CodeItem
 	Field _access:=AccessMode.Public_
 	Field _text:String
 	Field _parent:CodeItem
-	Field _children:List<CodeItem>
+	Field _children:Stack<CodeItem>
 	Field _namespace:String
 	Field _filePath:String
 	Field _scopeStartPos:Vec2i=New Vec2i,_scopeEndPos:Vec2i=New Vec2i
@@ -269,6 +276,7 @@ Class CodeItem
 	Field _params:CodeParam[]
 	Field _paramsStr:String
 	Field _isModuleMember:=-1
+	Field _isExtension:Bool
 	
 	
 	Private

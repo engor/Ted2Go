@@ -92,7 +92,7 @@ Class CodeTreeView Extends TreeViewExt
 			SortItems( list )
 			
 			If ShowInherited
-				Local lst:=New List<CodeItem>
+				Local lst:=New Stack<CodeItem>
 				GetInherited( item,parser,lst )
 				If lst<>Null And Not lst.Empty
 					inherRoot=New CodeItem( "[ Inherited members ]" )
@@ -129,7 +129,7 @@ Class CodeTreeView Extends TreeViewExt
 		End
 	End
 	
-	Method GetInherited:List<CodeItem>( item:CodeItem,parser:ICodeParser,result:List<CodeItem> )
+	Method GetInherited:Stack<CodeItem>( item:CodeItem,parser:ICodeParser,result:Stack<CodeItem> )
 	
 		If item.SuperTypesStr=Null Return Null
 	
