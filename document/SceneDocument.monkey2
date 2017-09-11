@@ -81,7 +81,7 @@ Class SceneDocumentView Extends View
 				_doc.Camera.Position=New Vec3f(0,0,-2.5)
 				_doc.Model.Rotation=New Vec3f(0,0,0)
 			Case Key.S
-				_doc.Light.ShadowsEnabled=Not _doc.Light.ShadowsEnabled
+				_doc.Light.CastsShadow=Not _doc.Light.CastsShadow
 			Case Key.A
 				
 			End
