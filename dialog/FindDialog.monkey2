@@ -17,7 +17,9 @@ Class FindDialog Extends DialogExt
 			
 			Local t:=_findField.Text
 			If t.Length > 1
-				actions.FindByTextChanged( EntireProject )
+				If Not Prefs.SiblyMode			
+					actions.FindByTextChanged( EntireProject )
+				Endif
 			Endif
 		End
 
@@ -91,8 +93,9 @@ Class FindDialog Extends DialogExt
 	End
 	
 	Method SetInitialText( find:String )
-		
+If Not Prefs.SiblyMode
 		_findField.Text=find
+Endif
 		_findField.SelectAll()
 	End
 	

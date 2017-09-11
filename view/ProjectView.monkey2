@@ -54,11 +54,21 @@ Class ProjectView Extends ScrollView
 			
 		End
 		
-		browser.FileDoubleClicked+=Lambda( path:String )
+		If Prefs.SiblyMode
 		
-			OnOpenDocument( path )
+			browser.FileClicked+=Lambda( path:String )
+			
+				OnOpenDocument( path )
+			End
 		
-		End
+		Else 
+		
+			browser.FileDoubleClicked+=Lambda( path:String )
+			
+				OnOpenDocument( path )
+			End
+		
+		Endif
 		
 		browser.FileRightClicked+=Lambda( path:String )
 		

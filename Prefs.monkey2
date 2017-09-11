@@ -41,6 +41,8 @@ Class PrefsInstance
 	'
 	Field MonkeyRootPath:String
 	Field IdeHomeDir:String
+	'	
+	Field SiblyMode:Bool
 	
 	Property FindFilesFilter:String()
 		Return _findFilter
@@ -108,6 +110,12 @@ Class PrefsInstance
 			SourceShowInherited=j2["showInherited"].ToBool()
 			
 		Endif
+		
+		If json.Contains( "siblyMode" )
+		
+			SiblyMode=json["siblyMode"].ToBool()
+		End
+	
 	End
 	
 	Method SaveState( json:JsonObject )
@@ -154,6 +162,8 @@ Class PrefsInstance
 		j["sortByType"]=New JsonBool( SourceSortByType )
 		j["showInherited"]=New JsonBool( SourceShowInherited )
 		
+		If SiblyMode json["siblyMode"]=JsonBool.TrueValue
+		
 	End
 	
 	Method LoadLocalState()
@@ -199,12 +209,8 @@ Class PrefsInstance
 		Return Max( EditorFontSize,6 ) '6 is a minimum
 	End
 	
-	
 	Private 
 	
 	Field _findFilter:String
 	
 End
-
-
-

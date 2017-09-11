@@ -1,7 +1,6 @@
 
 Namespace ted2go
 
-
 Class MenuExt Extends DockingView
 
 	#rem monkeydoc Creates a new menu.
@@ -79,7 +78,9 @@ Class MenuExt Extends DockingView
 		
 		button.Clicked=Lambda()
 			If menu.Visible
-				menu.Close()
+				If Not Prefs.SiblyMode
+					menu.Close()
+				Endif
 			Else
 				Local location:=New Vec2i( button.Bounds.Right,button.Bounds.Top )
 				menu.Open( location,button,Self )
@@ -180,15 +181,28 @@ Class MenuExt Extends DockingView
 					'
 					If view=_hovered Return
 					_hovered=view
-					Local sub:=menu._subs[view]
 					If _timer Then _timer.Cancel()
-					If _sub And menu<>_sub
-						_sub.Close()
-						_sub=Null
+					
+					Local sub:=menu._subs[view]
+					
+					If Not Prefs.SiblyMode
+						If _sub And menu<>_sub
+							_sub.Close()
+							_sub=Null
+						Endif
 					Endif
+					
 					If sub
 						_timer=New Timer( 1.8,Lambda()
 							Local location:=New Vec2i( view.Bounds.Right,view.Bounds.Top )
+							
+							If Prefs.SiblyMode
+								If _sub And menu<>_sub
+									_sub.Close()
+									_sub=Null
+								Endif
+							Endif
+							
 							If sub.Visible Then sub.Close()
 							sub.Open( location,view,menu )
 							_sub=sub

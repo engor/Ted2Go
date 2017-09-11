@@ -434,7 +434,7 @@ Class EmscriptenProduct Extends BuildProduct
 
 		AddExts( New String[]( ".html" ) )
 		
-		AddVar( "Application Type","asmjs","options:asmjs|wasm|wasm+asmjs" )
+		AddVar( "Application Type","wasm","options:wasm|wasm+asmjs|asmjs" )
 	End
 	
 	Protected
