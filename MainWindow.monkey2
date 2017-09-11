@@ -625,12 +625,16 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Method StoreConsoleVisibility()
+	
+		If Prefs.SiblyMode return
 		
 		_storedConsoleVisible=_consolesTabView.Visible
 		_consoleVisibleCounter=0
 	End
 	
 	Method RestoreConsoleVisibility()
+	
+		If Prefs.SiblyMode Return
 	
 		If _consoleVisibleCounter > 0 Return
 		_consolesTabView.Visible=_storedConsoleVisible
