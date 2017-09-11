@@ -77,11 +77,7 @@ Class MenuExt Extends DockingView
 		_subs[button]=menu
 		
 		button.Clicked=Lambda()
-			If menu.Visible
-				If Not Prefs.SiblyMode
-					menu.Close()
-				Endif
-			Else
+			If Not menu.Visible
 				Local location:=New Vec2i( button.Bounds.Right,button.Bounds.Top )
 				menu.Open( location,button,Self )
 			Endif
@@ -155,6 +151,7 @@ Class MenuExt Extends DockingView
 	Global _hovered:View
 	Global _timer:Timer
 	Global _sub:MenuExt
+	Global _seq:Int
 	
 	Global _open:=New Stack<MenuExt>
 	
@@ -185,31 +182,32 @@ Class MenuExt Extends DockingView
 					
 					Local sub:=menu._subs[view]
 					
-					If Not Prefs.SiblyMode
-						If _sub And menu<>_sub
-							_sub.Close()
-							_sub=Null
-						Endif
-					Endif
-					
-					If sub
-						_timer=New Timer( 1.8,Lambda()
-							Local location:=New Vec2i( view.Bounds.Right,view.Bounds.Top )
-							
-							If Prefs.SiblyMode
-								If _sub And menu<>_sub
-									_sub.Close()
-									_sub=Null
-								Endif
+					_seq=0
+					_timer=New Timer( 3.6,Lambda()
+						
+						' close previous
+						If _seq=0
+							If _sub And menu<>_sub
+								_sub.Close()
+								_sub=Null
 							Endif
+							_seq+=1
+							Return
+						Endif
+						
+						' open submenu
+						If sub
+							Local location:=New Vec2i( view.Bounds.Right,view.Bounds.Top )
 							
 							If sub.Visible Then sub.Close()
 							sub.Open( location,view,menu )
 							_sub=sub
-							_timer.Cancel()
-							_timer=Null
-						End )
-					Endif
+						Endif
+						
+						_timer.Cancel()
+						_timer=Null
+						
+					End )
 				Endif
 				
 				Return
