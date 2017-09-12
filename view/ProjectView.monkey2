@@ -57,7 +57,7 @@ Class ProjectView Extends ScrollView
 		
 			browser.FileClicked+=Lambda( path:String )
 			
-				OnOpenDocument( path )
+				OnOpenDocument( path,False )
 			End
 		
 		Else 
@@ -371,12 +371,29 @@ Class ProjectView Extends ScrollView
 		OpenProject( dir )
 	End
 	
-	Method OnOpenDocument( path:String )
+	Method OnOpenDocument( path:String,runExec:Bool=True )
 		
 		If GetFileType( path )=FileType.File
-		
+			
 			New Fiber( Lambda()
+				
+				Local ext:=ExtractExt( path )
+				Local exe:=(ext=".exe")
+				If runExec
+					If exe Or ext=".bat" Or ext=".sh"
+						Local s:="Do you want to execute this file?"
+						If Not exe s+="~nPress 'Cancel' to open file in editor."
+						If RequestOkay( s,StripDir( path ) )
+							OpenUrl( path )
+							Return
+						Endif
+					Endif
+				Endif
+				
+				If exe Return 'never open .exe
+				
 				_docs.OpenDocument( path,True )
+				
 			End )
 		
 		Endif
