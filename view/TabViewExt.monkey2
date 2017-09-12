@@ -340,6 +340,8 @@ Class TabViewExt Extends DockingView
 	
 		If Not tab Return
 		
+		MainWindow.UpdateWindow( False )
+		
 		Local scroll:=_scrollView.Scroll
 		Local xx:=GetTabPosX( tab )
 		Local L:=xx-scroll.x
