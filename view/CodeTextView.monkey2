@@ -21,6 +21,10 @@ Class CodeTextView Extends TextView
 		Document.TextChanged += TextChanged
 		
 		UpdateThemeColors()
+		
+		If Not _cursorBeam
+			_cursorBeam=SDL_CreateSystemCursor( SDL_SYSTEM_CURSOR_IBEAM )
+		Endif
 	End
 	
 	Method IsCursorAtTheEndOfLine:Bool()
@@ -227,11 +231,20 @@ Class CodeTextView Extends TextView
 					MainWindow.ShowEditorMenu( Self )
 					Return
 				Endif
+			
+			Case EventType.MouseEnter
+				
+				_cursorStored=SDL_GetCursor()
+				SDL_SetCursor( _cursorBeam )
+				
+			Case EventType.MouseLeave
+				
+				SDL_SetCursor( _cursorStored )
 				
 		End
 
 		Super.OnContentMouseEvent( event )
-					
+		
 	End
 	
 	Method OnKeyEvent(event:KeyEvent) Override
@@ -268,6 +281,8 @@ Class CodeTextView Extends TextView
 	Protected
 	
 	Field _typing:Bool
+	Global _cursorStored:SDL_Cursor Ptr
+	Global _cursorBeam:SDL_Cursor Ptr
 	
 	Method OnCut( wholeLine:Bool=False )
 	
