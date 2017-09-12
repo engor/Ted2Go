@@ -529,6 +529,8 @@ Struct CodeItemsSorter Final
 		Local len:=etalon.Length
 		Local power:=0
 		Local ch:=etalon[0],index:=0
+		Local eqFirstChar:=False
+		
 		For Local i:=0 Until ident.Length
 			Local s:=ident.Slice( i,i+1 )
 			Local eq1:=(s[0]=ch)
@@ -540,6 +542,7 @@ Struct CodeItemsSorter Final
 				index+=1
 				ch = index>=len ? -1 Else etalon[index]
 				If ch=-1 Exit
+				If i=0 Then eqFirstChar=True
 			Endif
 		Next
 		
@@ -547,7 +550,13 @@ Struct CodeItemsSorter Final
 		If Prefs.AcStrongFirstChar
 			Local lower1:=IsLowercacedFirstChar( ident )
 			Local lower2:=IsLowercacedFirstChar( etalon )
-			If lower1 <> lower2 Then power-=10000
+			If lower1 <> lower2 ' if first chars cases aren't equals
+				If Not eqFirstChar ' and letters are different
+					power-=10000
+				Else
+					power-=100
+				Endif
+			Endif
 		End
 		
 		Return power

@@ -68,6 +68,7 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 		Local i2:=Max( textView.Cursor,textView.Anchor )
 		Local line1:=doc.FindLine( i1 )
 		Local line2:=doc.FindLine( i2 )
+		
 		Local result:=""
 		Local made:=False
 		For Local line:=line1 To line2
@@ -88,6 +89,8 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 			i2=doc.EndOfLine( line2 )
 			textView.SelectText( i1,i2 )
 			textView.ReplaceText( result )
+			' select commented / uncommented lines
+			textView.SelectText( i1,i1+result.Length )
 		Endif
 	End
 	
