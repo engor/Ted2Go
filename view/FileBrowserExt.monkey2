@@ -2,7 +2,7 @@
 Namespace ted2go
 
 
-Class FileBrowserExt Extends TreeView
+Class FileBrowserExt Extends TreeViewExt
 
 	Field FileClicked:Void( path:String )
 
@@ -20,12 +20,12 @@ Class FileBrowserExt Extends TreeView
 		
 		RootPath=rootPath
 
-		NodeClicked=OnNodeClicked
-		NodeRightClicked=OnNodeRightClicked
-		NodeDoubleClicked=OnNodeDoubleClicked
+		NodeClicked+=OnNodeClicked
+		NodeRightClicked+=OnNodeRightClicked
+		NodeDoubleClicked+=OnNodeDoubleClicked
 		
-		NodeExpanded=OnNodeExpanded
-		NodeCollapsed=OnNodeCollapsed
+		NodeExpanded+=OnNodeExpanded
+		NodeCollapsed+=OnNodeCollapsed
 		
 		RootNode=_rootNode
 		
@@ -70,13 +70,17 @@ Class FileBrowserExt Extends TreeView
 		_dirIcon=_fileTypeIcons["._dir"]
 		_fileIcon=_fileTypeIcons["._file"]
 	End
-
+	
 	Private
 	
 	Class Node Extends TreeView.Node
 	
 		Method New( parent:Node )
 			Super.New( "",parent )
+		End
+		
+		Property Path:String()
+			Return _path
 		End
 		
 		Private

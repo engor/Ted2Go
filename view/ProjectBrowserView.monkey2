@@ -3,7 +3,8 @@ Namespace ted2go
 
 
 Class ProjectBrowserView Extends FileBrowserExt
-
+	
+	Field RequestedDelete:Void( path:String )
 	
 	Method New( rootPath:String )
 		
@@ -52,6 +53,22 @@ Class ProjectBrowserView Extends FileBrowserExt
 			Filter( filter,type )
 		Next
 		
+	End
+	
+	
+	Protected
+	
+	Method OnKeyEvent( event:KeyEvent ) Override
+		
+		If Selected And event.Type=EventType.KeyDown And event.Key=Key.KeyDelete
+			
+			Local node:=Cast<FileBrowserExt.Node>( Selected )
+			RequestedDelete( node.Path )
+			event.Eat()
+			Return
+		Endif
+		
+		Super.OnKeyEvent( event )
 	End
 	
 	

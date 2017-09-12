@@ -460,7 +460,7 @@ End
 Struct CodeItemsSorter Final
 	
 	
-	Function SortByType( list:List<CodeItem>,inverse:Bool=False,checkIdent:Bool=False )
+	Function SortByType( list:Stack<CodeItem>,inverse:Bool=False,checkIdent:Bool=False )
 		
 		_checkIdent=checkIdent
 		
@@ -483,7 +483,7 @@ Struct CodeItemsSorter Final
 		list.Sort( _sorterByType )
 	End
 	
-	Function SortByPosition( list:List<CodeItem> )
+	Function SortByPosition( list:Stack<CodeItem> )
 	
 		If _sorterByPosition = Null
 			_sorterByPosition=Lambda:Int( lhs:CodeItem,rhs:CodeItem )

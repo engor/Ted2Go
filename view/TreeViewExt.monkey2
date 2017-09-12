@@ -11,6 +11,12 @@ Class TreeViewExt Extends TreeView
 		
 		NodeClicked+=Lambda( node:TreeView.Node )
 			Selected=node
+			App.KeyView=Self
+		End
+		
+		NodeRightClicked+=Lambda( node:TreeView.Node )
+			Selected=node
+			App.KeyView=Self
 		End
 		
 		_selColor=App.Theme.GetColor( "panel" )
@@ -29,6 +35,8 @@ Class TreeViewExt Extends TreeView
 		SelectedChanged( _sel )
 		
 		EnsureVisible( _sel )
+		
+		RequestRender()
 	End
 	
 	Method FindSubNode:TreeView.Node( text:String,whereNode:TreeView.Node,recursive:Bool=False )

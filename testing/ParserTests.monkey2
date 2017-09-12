@@ -12,6 +12,7 @@ End
 
 Function vTest( v:Vec2i,e:Entity )
 	
+	v*=Vec2i.One
 End
 
 

@@ -1006,9 +1006,8 @@ Class CodeDocument Extends Ted2Document
 		Local ident:=_codeView.FullIdentAtCursor()
 		Local line:=TextDocument.FindLine( _codeView.Cursor )
 		Local item:=_parser.ItemAtScope( ident,Path,line )
-		Print "go decl: "+ident
+		
 		If item
-			Print "item found"
 			Local pos:=item.ScopeStartPos
 			JumpToPosition( item.FilePath,pos )
 		Endif

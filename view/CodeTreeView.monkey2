@@ -80,7 +80,7 @@ Class CodeTreeView Extends TreeViewExt
 		
 		If item.Children = Null And Not ShowInherited Return
 		
-		Local list:=New List<CodeItem>
+		Local list:=New Stack<CodeItem>
 		
 		If item.Children<>Null Then list.AddAll( item.Children )
 		
@@ -98,7 +98,7 @@ Class CodeTreeView Extends TreeViewExt
 					inherRoot=New CodeItem( "[ Inherited members ]" )
 					inherRoot.Children=lst
 					inherRoot.KindStr="inherited"
-					list.AddFirst( inherRoot )
+					list.Insert( 0,inherRoot )
 					'For Local i:=Eachin lst
 					'	Local children:=i.Children
 					'	
@@ -120,7 +120,7 @@ Class CodeTreeView Extends TreeViewExt
 		
 	End
 	
-	Method SortItems( list:List<CodeItem> )
+	Method SortItems( list:Stack<CodeItem> )
 	
 		If SortByType
 			CodeItemsSorter.SortByType( list,False,True )

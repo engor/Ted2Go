@@ -478,6 +478,14 @@ Class MainWindowInstance Extends Window
 		
 	End
 	
+	Method GainFocus()
+		
+		'Local event:=New WindowEvent( EventType.WindowGainedFocus,Self )
+		'OnWindowEvent( event )
+		
+		'SendWindowEvent( event )
+		'SDL_RaiseWindow( SDLWindow )
+	End
 	
 	Method OnFind()
 		_findActions.find.Trigger()
@@ -867,12 +875,13 @@ Class MainWindowInstance Extends Window
 		Else
 			
 			_helpTree.QuickHelp( ident )
-				
+			
 		Endif
 		
 	End
 	
-	Method ShowHelp( url:String  )
+	Method ShowHelp( url:String )
+		
 		ShowHelpView()
 		_helpView.Navigate( url )
 		_helpView.Scroll=New Vec2i( 0,0 )

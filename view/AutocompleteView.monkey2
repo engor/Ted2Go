@@ -107,8 +107,8 @@ Class AutocompleteDialog Extends NoTitleDialog
 		
 		ContentView=_view
 		
-		_keywords=New StringMap<List<ListViewItem>>
-		_templates=New StringMap<List<ListViewItem>>
+		_keywords=New StringMap<Stack<ListViewItem>>
+		_templates=New StringMap<Stack<ListViewItem>>
 		_parsers=New StringMap<ICodeParser>
 		
 		_view.OnItemChoosen+=Lambda()
@@ -324,12 +324,12 @@ Class AutocompleteDialog Extends NoTitleDialog
 	
 	Field _etalonMaxSize:Vec2i
 	Field _view:AutocompleteListView
-	Field _keywords:StringMap<List<ListViewItem>>
-	Field _templates:StringMap<List<ListViewItem>>
+	Field _keywords:StringMap<Stack<ListViewItem>>
+	Field _templates:StringMap<Stack<ListViewItem>>
 	Field _lastIdentPart:String,_fullIdent:String
 	Field _parsers:StringMap<ICodeParser>
-	Field _listForExtract:=New List<CodeItem>
-	Field _listForExtract2:=New List<CodeItem>
+	Field _listForExtract:=New Stack<CodeItem>
+	Field _listForExtract2:=New Stack<CodeItem>
 	Field _disableUsingsFilter:Bool
 	
 	Method GetParser:ICodeParser( fileType:String )
@@ -337,12 +337,12 @@ Class AutocompleteDialog Extends NoTitleDialog
 		Return _parsers[fileType]
 	End
 	
-	Method GetKeywords:List<ListViewItem>( fileType:String )
+	Method GetKeywords:Stack<ListViewItem>( fileType:String )
 		If _keywords[fileType] = Null Then UpdateKeywords( fileType )
 		Return _keywords[fileType]
 	End
 	
-	Method GetTemplates:List<ListViewItem>( fileType:String )
+	Method GetTemplates:Stack<ListViewItem>( fileType:String )
 		If _templates[fileType] = Null
 			UpdateTemplates( fileType )
 			LiveTemplates.DataChanged+=Lambda( lang:String )
@@ -475,18 +475,18 @@ Class AutocompleteDialog Extends NoTitleDialog
 		
 		'keywords
 		Local kw:=KeywordsManager.Get( fileType )
-		Local list:=New List<ListViewItem>
+		Local list:=New Stack<ListViewItem>
 		Local ic:=CodeItemIcons.GetKeywordsIcon()
 		For Local i:=Eachin kw.Values()
 			Local si:=New ListViewItem( i,ic )
-			list.AddLast( si )
+			list.Add( si )
 		Next
 		'preprocessor
 		'need to load it like keywords
 		Local s:="#If ,#Rem,#End,#Endif,#Else,#Else If ,#Import ,monkeydoc,__TARGET__,__MOBILE_TARGET__,__DESKTOP_TARGET__,__HOSTOS__"
 		Local arr:=s.Split( "," )
 		For Local i:=Eachin arr
-			list.AddLast( New ListViewItem( i ) )
+			list.Add( New ListViewItem( i ) )
 		Next
 		_keywords[fileType]=list
 	End
@@ -495,11 +495,11 @@ Class AutocompleteDialog Extends NoTitleDialog
 	
 		'live templates
 		Local templates:=LiveTemplates.All( fileType )
-		Local list:=New List<ListViewItem>
+		Local list:=New Stack<ListViewItem>
 		If templates <> Null
 			For Local i:=Eachin templates
 				Local si:=New TemplateListViewItem( i.Key,i.Value )
-				list.AddLast( si )
+				list.Add( si )
 			Next
 			list.Sort( Lambda:Int(l:ListViewItem,r:ListViewItem)
 				Return l.Text<=>r.Text

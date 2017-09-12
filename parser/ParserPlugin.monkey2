@@ -8,11 +8,11 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 		Return "CodeParserPlugin"
 	End
 	
-	Property Items:List<CodeItem>()
+	Property Items:Stack<CodeItem>()
 		Return _items
 	End
 	
-	Property ItemsMap:StringMap<List<CodeItem>>()
+	Property ItemsMap:StringMap<Stack<CodeItem>>()
 		Return _itemsMap
 	End
 	
@@ -38,8 +38,8 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 	
 	Private
 	
-	Field _items:=New List<CodeItem>
-	Field _itemsMap:=New StringMap<List<CodeItem>>
+	Field _items:=New Stack<CodeItem>
+	Field _itemsMap:=New StringMap<Stack<CodeItem>>
 	Field _usingsMap:=New StringMap<UsingInfo>
 	
 End

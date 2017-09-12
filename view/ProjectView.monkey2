@@ -48,10 +48,9 @@ Class ProjectView Extends ScrollView
 	
 		Local browser:=New ProjectBrowserView( dir )
 		
-		browser.FileClicked+=Lambda( path:String )
+		browser.RequestedDelete+=Lambda( path:String )
 		
-			'OnOpenDocument( path )
-			
+			DeleteItem( browser,path )
 		End
 		
 		If Prefs.SiblyMode
@@ -134,14 +133,7 @@ Class ProjectView Extends ScrollView
 				
 				menu.AddAction( "Delete" ).Triggered=Lambda()
 
-					If Not RequestOkay( "Really delete folder '"+path+"'?" ) Return
-					
-					If DeleteDir( path,True )
-						browser.Refresh()
-						Return
-					Endif
-					
-					Alert( "Failed to delete folder '"+path+"'" )
+					DeleteItem( browser,path )
 				End
 				
 				menu.AddSeparator()
@@ -252,20 +244,8 @@ Class ProjectView Extends ScrollView
 				menu.AddSeparator()
 			
 				menu.AddAction( "Delete" ).Triggered=Lambda()
-				
-					If Not RequestOkay( "Really delete file '"+path+"'?" ) return
-				
-					If DeleteFile( path )
 					
-						Local doc:=_docs.FindDocument( path )
-						
-						If doc doc.Close()
-					
-						browser.Refresh()
-						Return
-					Endif
-					
-					Alert( "Failed to delete file: '"+path+"'" )
+					DeleteItem( browser,path )
 				End
 				
 			Default
@@ -344,7 +324,45 @@ Class ProjectView Extends ScrollView
 	Field _docker:=New DockingView
 	Field _projects:=New StringMap<FileBrowserExt>
 	Field _builder:IModuleBuilder
-
+	
+	Method DeleteItem( browser:ProjectBrowserView,path:String )
+		
+		Local work:=Lambda()
+			
+			If DirectoryExists( path )
+			
+				If Not RequestOkay( "Really delete folder '"+path+"'?" ) Return
+				
+				If DeleteDir( path,True )
+					browser.Refresh()
+					Return
+				Endif
+				
+				Alert( "Failed to delete folder '"+path+"'" )
+				
+			Else
+				
+				If Not RequestOkay( "Really delete file '"+path+"'?" ) Print "1111" ; Return
+				
+				If DeleteFile( path )
+				
+					Local doc:=_docs.FindDocument( path )
+				
+					If doc doc.Close()
+				
+					browser.Refresh()
+					Return
+				Endif
+				
+				Alert( "Failed to delete file: '"+path+"'" )
+				
+			Endif
+			
+		End
+		
+		New Fiber( work )
+	End
+	
 	Method OnOpenProject()
 	
 		Local dir:=MainWindow.RequestDir( "Select Project Directory...","" )

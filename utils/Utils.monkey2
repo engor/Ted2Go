@@ -213,3 +213,19 @@ Function IsIdentStr:Bool( str:String,skipDots:Bool=True )
 	
 	Return True
 End
+
+Function TODO( message:String )
+	
+	Print "Not implemented yet: '"+message+"'"
+	DebugStop()
+	MainWindow.GainFocus()
+End
+
+Function DoInNotMainFiber( work:Void() )
+	
+	If Fiber.Current()=Fiber.Main()
+		New Fiber( work )
+	Else
+		work()
+	End
+End

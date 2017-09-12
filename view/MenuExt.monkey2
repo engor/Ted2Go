@@ -183,7 +183,7 @@ Class MenuExt Extends DockingView
 					Local sub:=menu._subs[view]
 					
 					_seq=0
-					_timer=New Timer( 3.6,Lambda()
+					_timer=New Timer( 4,Lambda()
 						
 						' close previous
 						If _seq=0

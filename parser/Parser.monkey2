@@ -43,13 +43,13 @@ Interface ICodeParser
 	Method GetScope:CodeItem( docPath:String,docLine:Int )
 	Method ItemAtScope:CodeItem( ident:String,filePath:String,docLine:Int )
 	
-	Method GetItemsForAutocomplete( ident:String,filePath:String,docLine:Int,target:List<CodeItem>,usingsFilter:Stack<String> =Null )
+	Method GetItemsForAutocomplete( ident:String,filePath:String,docLine:Int,target:Stack<CodeItem>,usingsFilter:Stack<String> =Null )
 	Method CheckStartsWith:Bool( ident1:String,ident2:String )
 	
 	Method GetItem:CodeItem( ident:String )
 	
-	Property Items:List<CodeItem>()
-	Property ItemsMap:StringMap<List<CodeItem>>()
+	Property Items:Stack<CodeItem>()
+	Property ItemsMap:StringMap<Stack<CodeItem>>()
 	Property UsingsMap:StringMap<UsingInfo>()
 	
 End
@@ -83,11 +83,11 @@ Private
 
 Class EmptyParser Implements ICodeParser
 
-	Property Items:List<CodeItem>()
+	Property Items:Stack<CodeItem>()
 		Return _items
 	End
 	
-	Property ItemsMap:StringMap<List<CodeItem>>()
+	Property ItemsMap:StringMap<Stack<CodeItem>>()
 		Return _itemsMap
 	End
 	
@@ -113,7 +113,7 @@ Class EmptyParser Implements ICodeParser
 	End
 	Method RefineRawType( item:CodeItem )
 	End
-	Method GetItemsForAutocomplete( ident:String,filePath:String,docLine:Int,target:List<CodeItem>,usingsFilter:Stack<String> =Null )
+	Method GetItemsForAutocomplete( ident:String,filePath:String,docLine:Int,target:Stack<CodeItem>,usingsFilter:Stack<String> =Null )
 	End
 	Method CheckStartsWith:Bool( ident1:String,ident2:String )
 		Return False
@@ -125,8 +125,8 @@ Class EmptyParser Implements ICodeParser
 	
 	Private
 	
-	Field _items:=New List<CodeItem>
-	Field _itemsMap:=New StringMap<List<CodeItem>>
+	Field _items:=New Stack<CodeItem>
+	Field _itemsMap:=New StringMap<Stack<CodeItem>>
 	Field _usingsMap:=New StringMap<UsingInfo>
 	
 End
