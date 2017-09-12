@@ -48,6 +48,10 @@ Class MainWindowInstance Extends Window
 			
 			UpdateKeyView()
 			CodeDocument.HideAutocomplete()
+			
+			Local doc:=Cast<CodeTextView>( _docsManager.CurrentTextView )
+			Local mode:=doc ? doc.OverwriteMode Else False
+			OverwriteTextMode=mode
 		End
 		
 		App.FileDropped+=Lambda( path:String )
@@ -528,6 +532,14 @@ Class MainWindowInstance Extends Window
 		
 		If value=_ovdMode Return
 		_ovdMode=value
+		
+		Local doc:=Cast<CodeTextView>( _docsManager.CurrentTextView )
+		If doc
+			doc.OverwriteMode=_ovdMode
+		Else
+			_ovdMode=False
+		Endif
+		
 		SetStatusBarInsertMode( Not _ovdMode )
 	End
 	

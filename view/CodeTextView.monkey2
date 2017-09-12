@@ -192,6 +192,17 @@ Class CodeTextView Extends TextView
 		_showWhiteSpaces=value
 	End
 	
+	Property OverwriteMode:Bool()
+	
+		Return _overwriteMode
+	
+	Setter( value:Bool )
+	
+		_overwriteMode=value
+		
+		BlockCursor=_overwriteMode
+	End
+	
 	
 	Protected
 	
@@ -235,8 +246,8 @@ Class CodeTextView Extends TextView
 					If _typing Then DoFormat( False )
 				Endif
 				
-				' select next char in override mode
-				If Cursor=Anchor And MainWindow.OverwriteTextMode
+				' select next char in overwrite mode
+				If Cursor=Anchor And _overwriteMode
 				
 					' don't select new-line-char ~n
 					If Cursor < Text.Length And Text[Cursor]<>10
@@ -475,7 +486,7 @@ Class CodeTextView Extends TextView
 	Field _charw:Int
 	Field _charh:Int
 	Field _tabw:Int
-	
+	Field _overwriteMode:Bool
 	
 	Method OnCursorMoved()
 		

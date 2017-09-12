@@ -331,21 +331,21 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				#If __TARGET__="macos"
 				Case Key.Left 'smart Home behaviour
 			
-					If event.Modifiers & Modifier.Menu
+					If event.Modifiers & Modifier.Alt
 						SmartHome( shift )
 						Return
 					Endif
 			
 				Case Key.Right
 			
-					If event.Modifiers & Modifier.Menu
+					If event.Modifiers & Modifier.Alt
 						SmartEnd( shift )
 						Return
 					Endif
 			
 				Case Key.Up '
 			
-					If event.Modifiers & Modifier.Menu
+					If event.Modifiers & Modifier.Alt
 						If shift 'selection
 							SelectText( 0,Anchor )
 						Else
@@ -356,7 +356,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 				Case Key.Down '
 			
-					If event.Modifiers & Modifier.Menu
+					If event.Modifiers & Modifier.Alt
 						If shift 'selection
 							SelectText( Anchor,Text.Length )
 						Else
