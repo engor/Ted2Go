@@ -16,7 +16,6 @@ Class FindActions
 		
 		_docs=docs
 		_findConsole=findConsole
-		_projView=projView
 		
 		find=New Action( "Find / Replace..." )
 		find.Triggered=OnFind
@@ -85,7 +84,6 @@ Class FindActions
 	Field _findInFilesDialog:FindInFilesDialog
 	Field _findConsole:TreeViewExt
 	Field _cursorPos:=0
-	Field _projView:ProjectView
 	
 	Method OnFind()
 		
@@ -196,13 +194,7 @@ Class FindActions
 				
 				New Fiber( Lambda()
 				
-					Local proj:=""
-					For Local p:=Eachin _projView.OpenProjects
-						If doc.Path.Contains( p )
-							proj=p
-							Exit
-						Endif
-					End
+					Local proj:=ProjectView.FindProjectByFile( doc.Path )
 					Local map:=FindInProject( what,proj,sens )
 					If map
 						CreateResultTree( _findConsole.RootNode,map,what,proj )

@@ -361,9 +361,14 @@ Class BuildActions Implements IModuleBuilder
 		Return _locked
 	End
 	
-	Method SaveAll:Bool()
-	
+	Method SaveAll:Bool( buildFile:String )
+		
+		If Not buildFile Return True
+		Local proj:=ProjectView.FindProjectByFile( buildFile )
+		
 		For Local doc:=Eachin _docs.OpenDocuments
+			' save docs only for built project
+			If proj And Not doc.Path.StartsWith( proj ) Continue
 			If Not doc.Save() Return False
 		Next
 		
@@ -381,7 +386,7 @@ Class BuildActions Implements IModuleBuilder
 
 	End
 
-	Method BuildMx2:Bool( cmd:String,progressText:String,action:String="build",showElapsedTime:Bool=False )
+	Method BuildMx2:Bool( cmd:String,progressText:String,action:String="build",buildFile:String="",showElapsedTime:Bool=False )
 	
 		ClearErrors()
 		
@@ -391,7 +396,7 @@ Class BuildActions Implements IModuleBuilder
 		
 		MainWindow.ShowBuildConsole()
 		
-		If Not SaveAll() Return False
+		If Not SaveAll( buildFile ) Return False
 		
 		_timing=Millisecs()
 		
@@ -500,7 +505,7 @@ Class BuildActions Implements IModuleBuilder
 	
 	Method MakeDocs:Bool()
 	
-		Return BuildMx2( MainWindow.Mx2ccPath+" makedocs","Rebuilding documentation...","build",True )
+		Return BuildMx2( MainWindow.Mx2ccPath+" makedocs","Rebuilding documentation...","build","",True )
 	End
 	
 	Method BuildApp:Bool( config:String,target:String,sourceAction:String )
@@ -526,7 +531,7 @@ Class BuildActions Implements IModuleBuilder
 		Local title := sourceAction="build" ? "Building" Else (sourceAction="run" ? "Running" Else "Checking")
 		Local msg:=title+" ~ "+target+" ~ "+config+" ~ "+StripDir( buildDoc.Path )
 		
-		If Not BuildMx2( cmd,msg,sourceAction,True ) Return False
+		If Not BuildMx2( cmd,msg,sourceAction,buildDoc.Path,True ) Return False
 		
 		_console.Write("~nDone.")
 		

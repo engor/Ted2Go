@@ -38,6 +38,16 @@ Class ProjectView Extends ScrollView
 		Return projs.ToArray()
 	End
 	
+	Function FindProjectByFile:String( filePath:String )
+		
+		For Local p:=Eachin _projects.Keys
+			If filePath.Contains( p )
+				Return p
+			Endif
+		End
+		Return ""
+	End
+	
 	Method OpenProject:Bool( dir:String )
 	
 		dir=StripSlashes( dir )
@@ -322,7 +332,7 @@ Class ProjectView Extends ScrollView
 	
 	Field _docs:DocumentManager
 	Field _docker:=New DockingView
-	Field _projects:=New StringMap<FileBrowserExt>
+	Global _projects:=New StringMap<FileBrowserExt>
 	Field _builder:IModuleBuilder
 	
 	Method DeleteItem( browser:ProjectBrowserView,path:String )
