@@ -383,7 +383,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 		'check current scope
 		Local rootScope:=GetScope( filePath,docLine )
 		Local scope:=rootScope
-	
+		
+		'If scope Print scope.Text
+		
 		'-----------------------------
 		' what the first ident is?
 		'-----------------------------
@@ -443,16 +445,16 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 			item=_aliases[ident]
 			If item
-	
+				
 				target.Add( item )
 				If resultLimit>0 And target.Length=resultLimit Return
 				
 			Else
-	
+				
 				For Local i:=Eachin Items
-	
+					
 					If Not CheckUsingsFilter( i,usingsFilter ) Continue
-	
+					
 					'Print "global 1: "+i.Scope
 					If Not CheckIdent( i.Ident,firstIdent,onlyOne ) Continue
 					If Not CheckAccessInGlobal( i,filePath ) Continue
@@ -469,7 +471,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Endif
 		Endif
 	
-		'If item Print "item: "+item.Scope
+		'If item Print "item: "+item.Scope+", kind: "+item.KindStr
+		'DebugStop()
 	
 		' var1.var2.var3...
 		If Not onlyOne And item <> Null
@@ -480,7 +483,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			' start from the second ident part here
 			For Local k:=1 Until idents.Length
 	
-				Local staticOnly:=(Not isSelf And Not isSuper And (item.Kind = CodeItemKind.Class_ Or item.Kind = CodeItemKind.Struct_ Or item.Parent=Null))
+				Local staticOnly:=(Not isSelf And Not isSuper And (item.Kind = CodeItemKind.Class_ Or item.Kind = CodeItemKind.Struct_ Or item.Kind = CodeItemKind.Alias_))
 	
 				' need to check by ident type
 				Local type:=item.Type.ident
@@ -517,6 +520,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 				If Not items.Empty
 					For Local i:=Eachin items
+						
+						' skip constructors
+						If Not (isSelf Or isSuper) And i.Kind=CodeItemKind.Method_ And i.Ident="New" Continue
+						
 						If Not CheckIdent( i.Ident,identPart,last )
 							'Print "continue 1: "+i.Ident
 							Continue
