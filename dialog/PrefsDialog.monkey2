@@ -47,7 +47,8 @@ Class PrefsDialog Extends DialogExt
 		
 		Deactivated+=MainWindow.UpdateKeyView
 		
-		MinSize=New Vec2i( 300,500 )
+		MinSize=New Vec2i( 550,500 )
+		MaxSize=New Vec2i( 550,600 )
 	End
 	
 	
