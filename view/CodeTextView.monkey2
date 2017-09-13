@@ -21,10 +21,6 @@ Class CodeTextView Extends TextView
 		Document.TextChanged += TextChanged
 		
 		UpdateThemeColors()
-		
-		If Not _cursorBeam
-			_cursorBeam=SDL_CreateSystemCursor( SDL_SYSTEM_CURSOR_IBEAM )
-		Endif
 	End
 	
 	Method IsCursorAtTheEndOfLine:Bool()
@@ -234,15 +230,18 @@ Class CodeTextView Extends TextView
 			
 			Case EventType.MouseEnter
 				
-				_cursorStored=SDL_GetCursor()
-				SDL_SetCursor( _cursorBeam )
+				SystemCursor.Store( Self )
+				SystemCursor.Set( SystemCursor.Kind.Beam )
 				
 			Case EventType.MouseLeave
 				
-				SDL_SetCursor( _cursorStored )
+				SystemCursor.Restore( Self )
 				
 		End
-
+		
+		' correct click position for beam cursor
+		event=event.Copy( event.Location+New Vec2i( 6,3 ) ) 'magic offset
+		
 		Super.OnContentMouseEvent( event )
 		
 	End
@@ -281,8 +280,6 @@ Class CodeTextView Extends TextView
 	Protected
 	
 	Field _typing:Bool
-	Global _cursorStored:SDL_Cursor Ptr
-	Global _cursorBeam:SDL_Cursor Ptr
 	
 	Method OnCut( wholeLine:Bool=False )
 	
@@ -517,4 +514,13 @@ Class CodeTextView Extends TextView
 	End
 	
 	
+End
+
+
+Class MouseEvent Extension
+	
+	Method Copy:MouseEvent( location:Vec2i )
+		
+		Return New MouseEvent( Self.Type,Self.View,location,Self.Button,Self.Wheel,Self.Modifiers,Self.Clicks )
+	End
 End

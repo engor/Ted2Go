@@ -875,7 +875,8 @@ Class MainWindowInstance Extends Window
 			Else
 				Local nmspace:=item.Namespac
 				If parentIdent Then nmspace+="."+parentIdent
-				ShowStatusBarText( "("+item.KindStr+") "+item.Text+"    |  "+nmspace+"  |  "+StripDir( item.FilePath )+"  |  line "+(item.ScopeStartPos.x+1) )
+				Local ext:=item.IsExtension ? "(ext) " Else ""
+				ShowStatusBarText( ext+"("+item.KindStr+") "+item.Text+"    |  "+nmspace+"  |  "+StripDir( item.FilePath )+"  |  line "+(item.ScopeStartPos.x+1) )
 			Endif
 			
 			_helpIdent=ident
@@ -954,6 +955,7 @@ Class MainWindowInstance Extends Window
 		UpdateWindow( False )
 		
 		tv.GotoPosition( pos )
+		tv.MakeKeyView()
 	End
 	
 	Method GotoDeclaration()
@@ -962,6 +964,7 @@ Class MainWindowInstance Extends Window
 		If Not doc Return
 		
 		doc.GotoDeclaration()
+		doc.TextView.MakeKeyView()
 	End
 	
 	Method GotoLine()
