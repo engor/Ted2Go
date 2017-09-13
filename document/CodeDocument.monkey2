@@ -1091,7 +1091,7 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Function HideAutocomplete()
-		AutoComplete.Hide()
+		If AutoComplete AutoComplete.Hide()
 	End
 	
 	Method GoBack()
