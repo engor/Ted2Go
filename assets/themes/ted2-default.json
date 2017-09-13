@@ -184,6 +184,11 @@
 					"backgroundColor":"active"
 				}
 			}
+		},
+
+		"FindReplaceView":{
+			"extends":"DockingView",
+			"padding":[ 0,4,0,2 ]
 		}
 	}
 }

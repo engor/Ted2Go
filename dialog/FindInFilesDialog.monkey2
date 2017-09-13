@@ -6,7 +6,7 @@ Class FindInFilesDialog Extends DialogExt
 	
 	Method New( actions:FindActions,projView:ProjectView )
 		
-		_findField=New TextField
+		_findField=New TextFieldExt
 		
 		_findField.Entered+=Lambda()
 			actions.findNext.Trigger()
@@ -115,7 +115,7 @@ Class FindInFilesDialog Extends DialogExt
 	
 	Private
 	
-	Field _findField:TextField
+	Field _findField:TextFieldExt
 	Field _filterField:TextField
 	Field _caseSensitive:CheckButton
 	Field _projList:ListView

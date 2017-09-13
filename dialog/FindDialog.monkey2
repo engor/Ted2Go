@@ -14,13 +14,14 @@ Class FindDialog Extends DialogExt
 			actions.findNext.Trigger()
 		End
 		_findField.TextChanged+=Lambda(  )
-			
+			#Rem
 			Local t:=_findField.Text
 			If t.Length > 1
-				If Not Prefs.SiblyMode			
+				If Not Prefs.SiblyMode
 					actions.FindByTextChanged( EntireProject )
 				Endif
 			Endif
+			#End
 		End
 
 		_findField.Tabbed+=_replaceField.MakeKeyView

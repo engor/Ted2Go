@@ -36,6 +36,15 @@ Class TextFieldExt Extends TextField 'Implements IKeyView
 		MakeKeyView()
 	End
 	
+	Protected
+	
+	Method OnMeasureContent:Vec2i() Override
+		
+		Local size:=Super.OnMeasureContent()
+		size=size+New Vec2i( 0,2 ) ' 2px to fix underline character '_' visibility
+		Return size
+	End
+	
 	Private
 	
 	Field _next:TextFieldExt,_prev:TextFieldExt
@@ -52,6 +61,14 @@ Class TextFieldExt Extends TextField 'Implements IKeyView
 				Return True
 			Endif
 		Endif
+		
+		If event.Key=Key.Enter Or event.Key=Key.KeypadEnter
+			If event.Type=EventType.KeyDown
+				Entered()
+			Endif
+			Return True
+		Endif
+		
 		Return False
 	End
 	

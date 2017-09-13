@@ -306,10 +306,9 @@ Class MainWindowInstance Extends Window
 		'
 		_findMenu=New MenuExt( "Find" )
 		_findMenu.AddAction( _findActions.find )
+		_findMenu.AddAction( _findActions.replace )
 		_findMenu.AddAction( _findActions.findNext )
 		_findMenu.AddAction( _findActions.findPrevious )
-		'_findMenu.AddAction( _findActions.replace )
-		'_findMenu.AddAction( _findActions.replaceAll )
 		_findMenu.AddSeparator()
 		_findMenu.AddAction( _findActions.findInFiles )
 		
@@ -460,6 +459,7 @@ Class MainWindowInstance Extends Window
 		_contentView.RemoveView( _statusBar )
 		_contentView.RemoveView( _browsersTabView )
 		_contentView.RemoveView( _consolesTabView )
+		_contentView.RemoveView( _findReplaceView )
 		
 		If Prefs.MainToolBarVisible
 			_toolBar=GetMainToolBar()
@@ -476,7 +476,11 @@ Class MainWindowInstance Extends Window
 		
 		size=_consolesTabView.Rect.Height
 		If size=0 Then size=150
+		
 		_contentView.AddView( _consolesTabView,"bottom",size,True )
+		Local d:=GetFindDock()
+		d.Visible=False
+		_contentView.AddView( d,"bottom" )
 		
 		_contentView.ContentView=_docsTabView
 		
@@ -489,6 +493,28 @@ Class MainWindowInstance Extends Window
 		
 		'SendWindowEvent( event )
 		'SDL_RaiseWindow( SDLWindow )
+	End
+	
+	Method ShowFind( what:String="" )
+	
+		If _findReplaceView.Visible And Not what
+			what=_findReplaceView.FindText
+		Endif
+		_findReplaceView.Visible=True
+		_findReplaceView.FindText=what
+		_findReplaceView.Mode=FindReplaceView.Kind.Find
+		_findReplaceView.Activate()
+	End
+	
+	Method ShowReplace( what:String="" )
+		
+		If _findReplaceView.Visible And Not what
+			what=_findReplaceView.FindText
+		Endif
+		_findReplaceView.Visible=True
+		_findReplaceView.FindText=what
+		_findReplaceView.Mode=FindReplaceView.Kind.Replace
+		_findReplaceView.Activate()
 	End
 	
 	Method OnFind()
@@ -703,6 +729,35 @@ Class MainWindowInstance Extends Window
 	
 	
 	Private
+	
+	Method GetFindDock:DockingView()
+		
+		If _findReplaceView Return _findReplaceView
+		
+		_findReplaceView=New FindReplaceView( _findActions )
+		
+		_findReplaceView.RequestedFind+=Lambda( opt:FindOptions )
+			
+			_findActions.options=opt
+			If opt.goNext
+				_findActions.findNext.Triggered()
+			Else
+				_findActions.findPrevious.Triggered()
+			Endif
+		End
+		
+		_findReplaceView.RequestedReplace+=Lambda( opt:FindOptions )
+		
+			_findActions.options=opt
+			If opt.all
+				_findActions.replaceAll.Triggered()
+			Else
+				_findActions.replaceNext.Triggered()
+			Endif
+		End
+		
+		Return _findReplaceView
+	End
 	
 	Method GetMainToolBar:ToolBarExt()
 		
@@ -1288,6 +1343,11 @@ Class MainWindowInstance Extends Window
 		Case EventType.KeyDown
 			Select event.Key
 			Case Key.Escape
+				If _findReplaceView.Visible
+					_findReplaceView.Visible=False
+					UpdateKeyView()
+					Return
+				Endif
 				If event.Modifiers & Modifier.Shift
 					_browsersTabView.Visible=Not _browsersTabView.Visible
 				Else
@@ -1393,7 +1453,7 @@ Class MainWindowInstance Extends Window
 	Field _enableSaving:Bool
 	Field _resized:Bool
 	Field _browsersSize:=0,_consolesSize:=0
-
+	Field _findReplaceView:FindReplaceView
 	
 	Method ToJson:JsonValue( rect:Recti )
 		Return New JsonArray( New JsonValue[]( New JsonNumber( rect.min.x ),New JsonNumber( rect.min.y ),New JsonNumber( rect.max.x ),New JsonNumber( rect.max.y ) ) )

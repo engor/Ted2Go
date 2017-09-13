@@ -105,6 +105,8 @@
 #Import "view/ScrollableViewExt"
 #Import "view/BuildErrorListViewItem"
 #Import "view/TextFieldExt"
+#Import "view/SpacerView"
+#Import "view/FindReplaceView"
 
 #Import "Plugin"
 #Import "ThemeImages"

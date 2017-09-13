@@ -47,10 +47,6 @@ Class ToolButtonExt Extends ToolButton
 		
 		UpdateColors()
 		
-		App.ThemeChanged+=Lambda()
-			UpdateColors()
-		End
-		
 		Clicked+=Lambda()
 			If ToggleMode Then IsToggled=Not IsToggled
 		End
@@ -81,6 +77,10 @@ Class ToolButtonExt Extends ToolButton
 		
 		
 	Protected
+	
+	Method OnThemeChanged() Override
+		UpdateColors()
+	End
 	
 	Method OnMouseEvent( event:MouseEvent ) Override
 		

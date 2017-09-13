@@ -8,24 +8,25 @@ Class FindActions
 	Field findNext:Action
 	field findPrevious:Action
 	Field replace:Action
+	Field replaceNext:Action
 	Field replaceAll:Action
 	Field findInFiles:Action
 	Field findAllInFiles:Action
+	
+	Field options:FindOptions
 	
 	Method New( docs:DocumentManager,projView:ProjectView,findConsole:TreeViewExt )
 		
 		_docs=docs
 		_findConsole=findConsole
 		
-		find=New Action( "Find / Replace..." )
+		find=New Action( "Find..." )
 		find.Triggered=OnFind
 		find.HotKey=Key.F
 		find.HotKeyModifiers=Modifier.Menu
 		
 		findNext=New Action( "Find next" )
-		findNext.Triggered=Lambda()
-			OnFindNext()
-		End
+		findNext.Triggered=OnFindNext
 		findNext.HotKey=Key.F3
 		
 		findPrevious=New Action( "Find previous" )
@@ -33,8 +34,13 @@ Class FindActions
 		findPrevious.HotKey=Key.F3
 		findPrevious.HotKeyModifiers=Modifier.Shift
 		
-		replace=New Action( "Replace" )
+		replace=New Action( "Replace..." )
 		replace.Triggered=OnReplace
+		replace.HotKey=Key.H
+		replace.HotKeyModifiers=Modifier.Menu
+		
+		replaceNext=New Action( "Replace next" )
+		replaceNext.Triggered=OnReplaceNext
 		
 		replaceAll=New Action( "Replace all" )
 		replaceAll.Triggered=OnReplaceAll
@@ -61,11 +67,12 @@ Class FindActions
 		replace.Enabled=tv
 		replaceAll.Enabled=tv
 	End
-	
+	#Rem
 	Method FindByTextChanged( entireProject:Bool )
 		
 		If Not entireProject Then OnFindNext( False )
 	End
+	#End
 	
 	Method FindInFiles( folder:String )
 	
@@ -87,19 +94,23 @@ Class FindActions
 	
 	Method OnFind()
 		
-		Local tv:=_docs.CurrentTextView
-		If tv <> Null
-			_cursorPos=Min( tv.Cursor,tv.Anchor )
-			Local s:=""
-			If tv.Cursor <> tv.Anchor
-				Local min:=Min( tv.Cursor,tv.Anchor )
-				Local max:=Max( tv.Cursor,tv.Anchor )
-				s=tv.Text.Slice( min,max )
-			Endif
-			_findDialog.SetInitialText( s )
-		Endif
+		Local s:=GetInitialText()
+		MainWindow.ShowFind( s )
+	End
+	
+	Method GetInitialText:String()
 		
-		_findDialog.Show()
+		Local tv:=_docs.CurrentTextView
+		If tv = Null Return ""
+		
+		_cursorPos=Min( tv.Cursor,tv.Anchor )
+		
+		If tv.Cursor <> tv.Anchor And Not Prefs.SiblyMode
+			Local min:=Min( tv.Cursor,tv.Anchor )
+			Local max:=Max( tv.Cursor,tv.Anchor )
+			Return tv.Text.Slice( min,max )
+		Endif
+		Return ""
 	End
 	
 	Method OnFindInFiles( folder:String=Null )
@@ -118,6 +129,7 @@ Class FindActions
 		_findInFilesDialog.Show()
 	End
 	
+	#Rem
 	Field _storedTextView:TextView
 	Field _storedWhat:String
 	Field _storedCaseSens:Bool
@@ -139,7 +151,84 @@ Class FindActions
 			_cursorPos=Min( tv.Cursor,tv.Anchor )
 		Endif
 	End
+	#End
 	
+	Method OnFindNext()
+		
+		Local tv:=_docs.CurrentTextView
+		If Not tv Return
+		
+		If Not options Return
+		
+		Local doc:=_docs.CurrentDocument
+		
+		Local what:=options.findText
+		If Not what Return
+		
+		Local text:=tv.Text
+		Local sens:=options.caseSensitive
+		
+		If Not sens
+			what=what.ToLower()
+			text=text.ToLower()
+		Endif
+		
+		Local cursor:=Max( tv.Anchor,tv.Cursor )
+		
+		Local i:=text.Find( what,cursor )
+		If i=-1
+			If options.wrapAround
+				i=text.Find( what )
+				If i=-1 Return
+			Else
+				Return
+			Endif
+		Endif
+		
+		tv.SelectText( i,i+what.Length )
+		
+	End
+	
+	Method OnFindPrevious()
+		
+		Local tv:=_docs.CurrentTextView
+		If Not tv Return
+		
+		If Not options Return
+		
+		Local doc:=_docs.CurrentDocument
+		
+		Local what:=options.findText
+		If Not what Return
+		
+		Local text:=tv.Text
+		Local sens:=options.caseSensitive
+		
+		If Not sens
+			what=what.ToLower()
+			text=text.ToLower()
+		Endif
+		
+		Local cursor:=Min( tv.Anchor,tv.Cursor )
+		
+		Local i:=text.Find( what )
+		If i=-1 Return
+		
+		If i>=cursor
+			If Not options.wrapAround Return
+			i=text.FindLast( what )
+		Else
+			Repeat
+				Local n:=text.Find( what,i+what.Length )
+				If n>=cursor Exit
+				i=n
+			Forever
+		End
+		
+		tv.SelectText( i,i+what.Length )
+	End
+	
+	#Rem
 	Method OnFindNext( changeCursorPos:Bool=True )
 	
 		Local tv:=_docs.CurrentTextView
@@ -298,6 +387,8 @@ Class FindActions
 		Jump( PREV )
 	End
 	
+	#End
+	
 	Method OnFindAllInFiles()
 	
 		If Not _findInFilesDialog.FindText
@@ -386,6 +477,7 @@ Class FindActions
 		Return result
 	End
 	
+	#Rem
 	Method FindInFile:Stack<FileJumpData>( filePath:String,what:String,caseSensitive:Bool,doc:TextDocument=Null )
 	
 		Local len:=what.Length
@@ -419,6 +511,7 @@ Class FindActions
 
 		Return result
 	End
+	#End
 	
 	Method CreateResultTree( root:TreeView.Node,map:StringMap<Stack<FileJumpData>>,what:String,projectPath:String )
 		
@@ -448,26 +541,32 @@ Class FindActions
 	End
 	
 	Method OnReplace()
+		
+		Local s:=GetInitialText()
+		MainWindow.ShowReplace( s )
+	End
+	
+	Method OnReplaceNext()
 	
 		Local tv:=_docs.CurrentTextView
 		If Not tv Return
 		
-		Local text:=_findDialog.FindText
-		If Not text Return
-		
 		Local min:=Min( tv.Anchor,tv.Cursor )
 		Local max:=Max( tv.Anchor,tv.Cursor )
 		
-		Local tvtext:=tv.Text.Slice( min,max )
+		Local text:=tv.Text.Slice( min,max )
+		Local what:=options.findText
+		
+		If Not text Return
 
-		If Not _findDialog.CaseSensitive
-			tvtext=tvtext.ToLower()
+		If Not options.caseSensitive
 			text=text.ToLower()
+			what=what.ToLower()
 		Endif
 		
-		If tvtext<>text Return
+		If text<>what Return
 		
-		tv.ReplaceText( _findDialog.ReplaceText )
+		tv.ReplaceText( options.replaceText )
 		
 		OnFindNext()
 
@@ -478,16 +577,16 @@ Class FindActions
 		Local tv:=_docs.CurrentTextView
 		If Not tv Return
 		
-		Local text:=_findDialog.FindText
-		If Not text Return
+		Local what:=options.findText
+		If Not what Return
 		
-		Local rtext:=_findDialog.ReplaceText
+		Local repl:=options.replaceText
 		
-		Local tvtext:=tv.Text
+		Local text:=tv.Text
 
-		If Not _findDialog.CaseSensitive
-			tvtext=tvtext.ToLower()
+		If Not options.caseSensitive
 			text=text.ToLower()
+			what=what.ToLower()
 		Endif
 		
 		Local anchor:=tv.Anchor
@@ -496,14 +595,14 @@ Class FindActions
 		Local i:=0,t:=0
 		Repeat
 		
-			i=tvtext.Find( text,i )
+			i=text.Find( what,i )
 			If i=-1 Exit
 			
-			tv.SelectText( i+t,i+text.Length+t )
-			tv.ReplaceText( rtext )
+			tv.SelectText( i+t,i+what.Length+t )
+			tv.ReplaceText( repl )
 			
-			t+=rtext.Length-text.Length
-			i+=text.Length
+			t+=repl.Length-what.Length
+			i+=what.Length
 			
 		Forever
 		
