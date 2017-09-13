@@ -1016,7 +1016,10 @@ Class CodeDocument Extends Ted2Document
 	Method JumpToPosition( filePath:String,pos:Vec2i )
 		
 		Local cur:=_codeView.CursorPos
-		If pos=cur Return
+		If pos=cur
+			_codeView.MakeKeyView()
+			Return
+		Endif
 		
 		' store navOp
 		Local nav:=New NavCode

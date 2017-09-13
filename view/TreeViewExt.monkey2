@@ -11,12 +11,12 @@ Class TreeViewExt Extends TreeView
 		
 		NodeClicked+=Lambda( node:TreeView.Node )
 			Selected=node
-			App.KeyView=Self
+			Self.MakeKeyView()
 		End
 		
 		NodeRightClicked+=Lambda( node:TreeView.Node )
 			Selected=node
-			App.KeyView=Self
+			Self.MakeKeyView()
 		End
 		
 		_selColor=App.Theme.GetColor( "panel" )

@@ -148,11 +148,15 @@ Class CodeTextView Extends TextView
 	
 		If pos.y = 0
 			GotoLine( pos.x )
-			Return
+		Else
+			Local dest:=Document.StartOfLine( pos.x )+pos.y
+			SelectText( dest,dest )
 		Endif
 		
-		Local dest:=Document.StartOfLine( pos.x )+pos.y
-		SelectText( dest,dest )
+		' scroll to view center
+		Local yy:=CursorRect.Top-Scroll.y
+		Local dy:=yy-Frame.Height*.5
+		Scroll=Scroll+New Vec2i( 0,dy )
 	End
 	
 	Property LineTextAtCursor:String()
