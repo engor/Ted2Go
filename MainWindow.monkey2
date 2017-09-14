@@ -372,7 +372,7 @@ Class MainWindowInstance Extends Window
 		_helpMenu.AddSeparator()
 		_helpMenu.AddAction( _buildActions.rebuildHelp )
 		_helpMenu.AddSeparator()
-		_helpMenu.AddAction( _helpActions.onlineHelp )
+'		_helpMenu.AddAction( _helpActions.onlineHelp )
 		_helpMenu.AddAction( _helpActions.mx2homepage )
 		_helpMenu.AddAction( _helpActions.uploadModules )
 		_helpMenu.AddSeparator()
@@ -898,7 +898,7 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Method ShowBananasShowcase()
-		OpenDocument( Prefs.MonkeyRootPath+"bananas/!showcase/all.bananas" )
+		OpenDocument( Prefs.MonkeyRootPath+"bananas/ted2go-showcase/all.bananas" )
 	End
 	
 	Method ReadError( path:String )

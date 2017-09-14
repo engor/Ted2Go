@@ -4,7 +4,7 @@ Namespace ted2go
 
 Function IsBananasShowcaseAvailable:Bool()
 	
-	Return GetFileType( Prefs.MonkeyRootPath+"bananas/!showcase/all.bananas" )=FileType.File
+	Return GetFileType( Prefs.MonkeyRootPath+"bananas/ted2go-showcase/all.bananas" )=FileType.File
 End
 
 Class BananasDocument Extends Ted2Document
