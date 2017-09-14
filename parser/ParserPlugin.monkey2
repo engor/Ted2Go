@@ -28,6 +28,13 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 		Return ident1.StartsWith( ident2 )
 	End
 	
+	Operator []:CodeItem( ident:String )
+		
+		For Local i:=Eachin _items
+			If i.Ident=ident Return i
+		Next
+		Return Null
+	End
 	
 	Protected
 	

@@ -16,7 +16,7 @@ Class FindReplaceView Extends DockingView
 		
 		Super.New()
 		
-		Style=GetStyle( "FindReplaceView" )
+		Style=GetStyle( "FindReplaceView","DockingView" )
 		
 		Local mainDock:=New DockingView
 		

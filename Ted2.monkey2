@@ -107,6 +107,7 @@
 #Import "view/TextFieldExt"
 #Import "view/SpacerView"
 #Import "view/FindReplaceView"
+#Import "view/ViewExtensions"
 
 #Import "Plugin"
 #Import "ThemeImages"
@@ -127,7 +128,7 @@ Using tinyxml2..
 
 Const MONKEY2_DOMAIN:="http://monkeycoder.co.nz"
 
-Global AppTitle:="Ted2Go v2.5"
+Global AppTitle:="Ted2Go v2.6"
 
 
 Function Main()

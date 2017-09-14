@@ -86,6 +86,11 @@ Class AAA Extends TestClass
 		'arr2[i].start
 	End
 	
+	Function TestParentFunc()
+		
+		
+	End
+	
 	Method anstrMethod() Abstract
 	
 End
