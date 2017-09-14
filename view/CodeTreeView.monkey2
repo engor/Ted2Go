@@ -25,13 +25,27 @@ Class CodeTreeView Extends TreeViewExt
 		node.Expanded=True
 		node.RemoveAllChildren()
 		
+		_stack.Clear()
+		
+		' extract all items in file
 		Local list:=parser.ItemsMap[path]
-		If list = Null Return
+		If list Then _stack.AddAll( list )
+		
+		' extensions are here too
+		For Local lst:=Eachin parser.ExtraItemsMap.Values.All()
+			For Local i:=Eachin lst
+				If i.FilePath=path
+					If Not _stack.Contains( i.Parent ) Then _stack.Add( i.Parent )
+				Endif
+			Next
+		Next
+		
+		If _stack.Empty Return
 		
 		' sorting
-		SortItems( list )
+		SortItems( _stack )
 		
-		For Local i:=Eachin list
+		For Local i:=Eachin _stack
 			AddTreeItem( i,node,parser )
 		Next
 		
@@ -52,7 +66,7 @@ Class CodeTreeView Extends TreeViewExt
 	Private
 	
 	Field _expander:TreeViewExpander
-	
+	Field _stack:=New Stack<CodeItem>
 	
 	Method FindNode:TreeView.Node( treeNode:TreeView.Node,item:CodeItem )
 	

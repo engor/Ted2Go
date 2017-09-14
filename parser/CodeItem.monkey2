@@ -297,8 +297,11 @@ Class CodeItem
 					s+="()"
 				Endif
 		
-			Case CodeItemKind.Class_,CodeItemKind.Interface_,CodeItemKind.Struct_,CodeItemKind.Enum_
-				' nothing
+			Case CodeItemKind.Class_,CodeItemKind.Interface_,CodeItemKind.Struct_,CodeItemKind.Enum_,CodeItemKind.Alias_
+				
+				If _isExtension
+					s+=" (ext)"
+				Endif
 		
 			Case CodeItemKind.Inner_,CodeItemKind.EnumMember_
 				' nothing

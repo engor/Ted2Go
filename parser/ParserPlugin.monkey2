@@ -20,6 +20,10 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 		Return _usingsMap
 	End
 	
+	Property ExtraItemsMap:StringMap<Stack<CodeItem>>()
+		Return _extraItemsMap
+	End
+	
 	Method CheckStartsWith:Bool( ident1:String,ident2:String ) Virtual
 	
 		ident1=ident1.ToLower()
@@ -48,5 +52,6 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 	Field _items:=New Stack<CodeItem>
 	Field _itemsMap:=New StringMap<Stack<CodeItem>>
 	Field _usingsMap:=New StringMap<UsingInfo>
+	Field _extraItemsMap:=New StringMap<Stack<CodeItem>>
 	
 End

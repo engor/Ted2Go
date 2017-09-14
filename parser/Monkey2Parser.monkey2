@@ -332,7 +332,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 		Else
 			' try to find in extension members
-			For Local list:=Eachin _extensions.Values.All()
+			For Local list:=Eachin ExtraItemsMap.Values.All()
 				For Local i:=Eachin list
 					If i.FilePath<>docPath Continue
 					If docLine > i.ScopeStartPos.x And docLine < i.ScopeEndPos.x
@@ -587,10 +587,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Method AddExtensionItem( parent:CodeItem,item:CodeItem )
 	
 		Local key:=parent.Ident
-		Local list:=_extensions[key]
+		Local list:=ExtraItemsMap[key]
 		If Not list
 			list=New Stack<CodeItem>
-			_extensions[key]=list
+			ExtraItemsMap[key]=list
 		Endif
 		For Local i:=Eachin list
 			If i.Text=item.Text
@@ -604,7 +604,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 
 	Method RemoveExtensions( filePath:String )
 		
-		For Local list:=Eachin _extensions.Values.All()
+		For Local list:=Eachin ExtraItemsMap.Values.All()
 			Local it:=list.All()
 			While Not it.AtEnd
 				Local i:=it.Current
@@ -619,13 +619,13 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Method ExtractExtensionItems( item:CodeItem,target:Stack<CodeItem> )
 	
-		If _extensions.Empty Return
+		If ExtraItemsMap.Empty Return
 		
 		Local type:=item.Type.ident
-		Local list:=_extensions[type]
+		Local list:=ExtraItemsMap[type]
 		If Not list
 			type=item.Ident
-			list=_extensions[type]
+			list=ExtraItemsMap[type]
 		Endif
 		If list
 			AddItems( list,target,True )

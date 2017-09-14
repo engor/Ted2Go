@@ -51,6 +51,7 @@ Interface ICodeParser
 	Property Items:Stack<CodeItem>()
 	Property ItemsMap:StringMap<Stack<CodeItem>>()
 	Property UsingsMap:StringMap<UsingInfo>()
+	Property ExtraItemsMap:StringMap<Stack<CodeItem>>()
 	
 End
 
@@ -95,6 +96,10 @@ Class EmptyParser Implements ICodeParser
 		Return _usingsMap
 	End
 	
+	Property ExtraItemsMap:StringMap<Stack<CodeItem>>()
+		Return _extraItemsMap
+	End
+	
 	Method ParseFile:String( filePath:String,pathOnDisk:String,isModule:Bool )
 		'do nothing
 		Return Null
@@ -128,5 +133,5 @@ Class EmptyParser Implements ICodeParser
 	Field _items:=New Stack<CodeItem>
 	Field _itemsMap:=New StringMap<Stack<CodeItem>>
 	Field _usingsMap:=New StringMap<UsingInfo>
-	
+	Field _extraItemsMap:=New StringMap<Stack<CodeItem>>
 End
