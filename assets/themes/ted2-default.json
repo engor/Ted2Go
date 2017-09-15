@@ -189,6 +189,11 @@
 		"FindReplaceView":{
 			"extends":"DockingView",
 			"padding":[ 0,4,0,2 ]
+		},
+
+		"TabsDropArea":{
+			"extends":"Label",
+			"backgroundColor":"#5009"
 		}
 	}
 }

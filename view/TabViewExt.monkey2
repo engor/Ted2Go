@@ -31,7 +31,7 @@ Class ScrollViewTabs Extends ScrollView
 End
 
 
-' full copy of mojox.TextView
+' full copy of mojox.TabView
 ' can't extend it, all I need is private there
 '
 Class TabViewExt Extends DockingView
@@ -62,7 +62,7 @@ Class TabViewExt Extends DockingView
 
 	#rem monkeydoc Creates a new tab view.
 	#end
-	Method New( flags:TabViewFlags=Null )
+	Method New( flags:TabViewFlags=TabViewFlags.DraggableTabs )
 	
 		_flags=flags
 		
@@ -71,28 +71,41 @@ Class TabViewExt Extends DockingView
 		_tabBar=New TabBar
 		
 		' add scrollbar here
-		Local topview:=New DockingView
-		Local nxt:=New PushButton( ">" )
-		nxt.Style=App.Theme.GetStyle( "TabViewArrowNext" )
-		topview.AddView( nxt,"right" )
+		Local headerDock:=New DockingView
+		_nxt=New PushButton( ">" )
+		_nxt.Style=App.Theme.GetStyle( "TabViewArrowNext" )
+		headerDock.AddView( _nxt,"right" )
+		_nxt.Visible=False
 		
-		Local prev:=New PushButton( "<" )
-		prev.Style=App.Theme.GetStyle( "TabViewArrowPrev" )
-		topview.AddView( prev,"right" )
+		_prev=New PushButton( "<" )
+		_prev.Style=App.Theme.GetStyle( "TabViewArrowPrev" )
+		headerDock.AddView( _prev,"right" )
+		_prev.Visible=False
 		
 		_scrollView=New ScrollViewTabs( _tabBar )
 		_scrollView.ScrollBarsVisible=False
-		topview.ContentView=_scrollView
-		AddView( topview,"top" )
+		headerDock.ContentView=_scrollView
+		AddView( headerDock,"top" )
 		
-		nxt.Clicked+=Lambda()
+		_nxt.Clicked+=Lambda()
 			Local s:=_scrollView.Scroll
 			_scrollView.Scroll=s+New Vec2i( 200,0 )
 		End
-		prev.Clicked+=Lambda()
+		_prev.Clicked+=Lambda()
 			Local s:=_scrollView.Scroll
 			_scrollView.Scroll=s-New Vec2i( 200,0 )
 		End
+		
+		MinSize=New Vec2i( 50,50 )
+		
+		If Not _listener Then _listener=New DraggableTabsListener
+	End
+	
+	Function CreateDraggableTab:TabButtonExt( text:String,view:View,possibleParents:TabViewExt[],icon:Image=Null,closable:Bool=False )
+		
+		Local tab:=New TabButtonExt( text,icon,view,closable,Null )
+		tab.PossibleParentDocks=possibleParents
+		Return tab
 	End
 	
 	#rem monkeydoc Tab view flags.
@@ -118,7 +131,7 @@ Class TabViewExt Extends DockingView
 		Return -1
 		
 	Setter( currentIndex:Int )
-	
+		
 		MakeCurrent( _tabs[currentIndex],False )
 	End
 	
@@ -156,17 +169,26 @@ Class TabViewExt Extends DockingView
 
 	#rem monkeydoc Adds a tab.
 	#end	
-	Method AddTab:Int( text:String,view:View,makeCurrent:Bool=False )
+	Method AddTab:TabButtonExt( text:String,view:View,makeCurrent:Bool=False )
 	
 		Return AddTab( text,Null,view,makeCurrent )
 	End
 
-	Method AddTab:Int( text:String,icon:Image,view:View,makeCurrent:Bool=False )
-	
-		Assert( TabIndex( view )=-1,"View has already been added to TabView" )
-	
-		Local tab:=New TabButton( text,icon,view,_flags & TabViewFlags.ClosableTabs )
+	Method AddTab:TabButtonExt( text:String,icon:Image,view:View,makeCurrent:Bool=False )
 		
+		Local tab:=New TabButtonExt( text,icon,view,_flags & TabViewFlags.ClosableTabs,Self )
+		
+		AddTab( tab,makeCurrent )
+		
+		Return tab
+	End
+	
+	Method AddTab( tab:TabButtonExt,makeCurrent:Bool=False )
+	
+		Assert( TabIndex( tab.View )=-1,"View has already been added to TabView" )
+		
+		TabButtonExt_Bridge.SetTabParent( tab,Self )
+	
 		tab.Clicked=Lambda()
 		
 			MakeCurrent( tab,True )
@@ -188,9 +210,9 @@ Class TabViewExt Extends DockingView
 			DoubleClicked()
 		End
 		
-		tab.Dragged+=Lambda( v:Vec2i )
+		tab.Dragged=Lambda( v:Vec2i )
 		
-			If Not (_flags & TabViewFlags.DraggableTabs) return
+			If Not (_flags & TabViewFlags.DraggableTabs) Return
 
 			Local mx:=_tabBar.MouseLocation.x
 			If mx<0 Return
@@ -241,26 +263,40 @@ Class TabViewExt Extends DockingView
 		
 		If makeCurrent MakeCurrent( tab,True ) 'CurrentIndex=index
 		
-		Return index
 	End
 	
 	#rem monkeydoc Removes a tab.
 	#end
 	Method RemoveTab( index:Int )
-	
-		If _current=_tabs[index]
+		
+		Local tab:=_tabs[index]
+		If _current=tab
 			_current.Selected=False
 			_current=Null
 			ContentView=Null
 		Endif
 		
-		_tabBar.RemoveView( _tabs[index] )
+		_tabBar.RemoveView( tab )
 		_tabs.Erase( index )
+		
+		tab.Clicked=Null
+		tab.RightClicked=Null
+		tab.DoubleClicked=Null
+		tab.Dragged=Null
+		tab.CloseClicked=Null
+		
+		If index>=NumTabs Then index-=1
+		If index>=0 Then CurrentIndex=index
 	End
 	
 	Method RemoveTab( view:View )
 	
 		RemoveTab( TabIndex( view ) )
+	End
+	
+	Method RemoveTab( tab:TabButton )
+	
+		RemoveTab( TabIndex( tab.View ) )
 	End
 	
 	Method SetTabView( index:Int,view:View )
@@ -304,19 +340,74 @@ Class TabViewExt Extends DockingView
 		EnsureVisibleTab( _current )
 	End
 	
+	Method MakeCurrent( tabCaption:String )
+		
+		For Local t:=Eachin _tabs
+			If t.Text=tabCaption
+				MakeCurrent( t,True )
+				Return
+			Endif
+		Next
+	End
+	
+	Method ShowDragPlaceHolder()
+		
+		_dragDropMode=True
+		_curIndex=CurrentIndex
+		Visible=True
+		If Not _placeHolderTab
+			Local v:=New Label '("[Drop tab here]")
+			v.Style=GetStyle( "TabsDropArea","Label" )
+			v.Layout="fill"
+			v.Gravity=New Vec2f( .5,.5 )
+			_placeHolderTab=AddTab( "[+]",v,True )
+		Else
+			AddTab( _placeHolderTab,True )
+		Endif
+	End
+	
+	Method HideDragPlaceHolder()
+		
+		If Not _dragDropMode Return
+		
+		_dragDropMode=False
+		
+		RemoveTab( _placeHolderTab )
+		_placeHolderTab=Null
+'		
+		Visible=NumTabs>0
+		
+		If _curIndex>=0 Then CurrentIndex=_curIndex
+	End
+	
+	
+	Protected
+	
+	Method OnMeasure:Vec2i() Override
+		
+		Local size:=Super.OnMeasure()
+		' show / hide navigation buttons
+		Local ww:=GetTabsWidth()
+		Local vis:=(ww>_scrollView.Frame.Width)
+		_nxt.Visible=vis
+		_prev.Visible=vis
+		
+		Return size
+	End
+	
 	
 	Private
 	
 	Field _flags:TabViewFlags
-	
 	Field _tabBar:TabBar
-	
-	Field _tabs:=New Stack<TabButton>
-	
+	Field _tabs:=New Stack<TabButtonExt>
 	Field _current:TabButton
-	
 	Field _scrollView:ScrollView
-	
+	Field _nxt:PushButton,_prev:PushButton
+	Field _placeHolderTab:TabButtonExt
+	Field _curIndex:Int
+	Field _dragDropMode:Bool
+	Global _listener:DraggableTabsListener
 	
 	Method MakeCurrent( tab:TabButton,notify:Bool )
 	
@@ -369,4 +460,219 @@ Class TabViewExt Extends DockingView
 		Return xx
 	End
 	
+	Method GetTabsWidth:Int()
+	
+		Local xx:=0
+		For Local view:=Eachin _tabs
+			xx+=view.Frame.Width
+		Next
+		Return xx
+	End
+	
 End
+
+
+Class TabButtonExt Extends TabButton
+	
+	Method New( text:String,icon:Image,view:View,closable:Bool,parentDock:TabViewExt )
+		
+		Super.New( text,icon,view,closable )
+		_parentDock=parentDock
+	End
+	
+	Property Detachable:Bool()
+		Return PossibleParentDocks<>Null
+	End
+	
+	Property ParentDock:TabViewExt()
+		Return _parentDock
+	End
+	
+	Property PossibleParentDocks:TabViewExt[]()
+		Return _possibleParentDocks
+	Setter( value:TabViewExt[] )
+		_possibleParentDocks=value
+	End
+	
+	Method Activate()
+		
+		Local dock:=ParentDock
+		If dock Then dock.MakeCurrent( Text )
+	End
+	
+	Method TryDropTo( tabDock:TabViewExt )
+		
+		If Not CanDropTo( tabDock )
+			tabDock=_parentDock
+		Endif
+		
+		_parentDock.Visible=(_parentDock.NumTabs>0)
+		_parentDock=tabDock
+		tabDock.AddTab( Self )
+		tabDock.Visible=True
+		
+		Activate()
+	End
+	
+	
+	Protected
+	
+	Field _parentDock:TabViewExt
+	
+	
+	Private
+	
+	Field _possibleParentDocks:TabViewExt[]
+	
+	Method CanDropTo:Bool( tabDock:TabViewExt,skipSelfParent:Bool=True )
+	
+		If Not tabDock Return False
+		If Not _possibleParentDocks Return False
+	
+		For Local d:=Eachin _possibleParentDocks
+	
+			If skipSelfParent And d=_parentDock Continue
+			If d=tabDock Return True
+		Next
+		Return False
+	End
+	
+End
+
+
+Private 
+
+Class TabButtonExt_Bridge Extends TabButtonExt Abstract
+
+	Function SetTabParent( tab:TabButtonExt,parent:TabViewExt )
+		
+		tab._parentDock=parent
+	End
+	
+	Private
+	
+	Method New( text:String,icon:Image,view:View,closable:Bool,parentDock:TabViewExt )
+		
+		Super.New( text,icon,view,closable,parentDock )
+	End
+	
+	
+End
+
+
+Class DraggableTabsListener
+	
+	Method New()
+		
+		App.MouseEventFilter+=OnMouseEvent
+	End
+	
+	Private
+	
+	Global _label:Label
+	Global _tab:TabButtonExt
+	Global _pressedPos:Vec2i
+	Global _detached:Bool
+	
+	Function OnMouseEvent( event:MouseEvent )
+	
+		Select event.Type
+			
+			Case EventType.MouseDown
+				
+				_tab=Cast<TabButtonExt>( event.View )
+				If Not _tab Return
+				
+				If Not _tab.Detachable
+					_tab=Null
+					Return
+				Endif
+				
+				_pressedPos=Mouse.Location
+				
+			
+			Case EventType.MouseMove
+			
+				If Not _tab Return
+				
+				If _detached
+					Local r:=_tab.Frame
+					Local sz:=r.Size
+					r.TopLeft=Mouse.Location+New Vec2i( 0,-10 )
+					r.BottomRight=r.TopLeft+sz
+					_tab.Frame=r
+					
+					Mouse.Cursor=MouseCursor.Arrow 'force it
+					
+					Return
+				Endif
+				
+				Local dy:Float=Abs(Mouse.Y-_pressedPos.y)
+				Print dy
+				If dy>10.0*App.Theme.Scale.y
+					Detach()
+				Endif
+				
+				
+			Case EventType.MouseUp
+				
+				If Not _detached Return
+				
+				Local dock:TabViewExt=Null
+				Local v:=App.ActiveViewAtMouseLocation()
+				While v
+					Local d:=Cast<TabViewExt>( v )
+					If d
+						dock=d
+						Exit
+					Endif
+					v=v.Parent
+				Wend
+				
+				If _tab.PossibleParentDocks
+					For Local d:=Eachin _tab.PossibleParentDocks
+						d.HideDragPlaceHolder()
+					Next
+				Endif
+				
+				MainWindow.RemoveChildView( _tab )
+				
+				_tab.TryDropTo( dock )
+				
+				_tab=Null
+				_detached=False
+			
+		End
+	
+	End
+	
+	Function Detach()
+		
+		_detached=True
+		
+'		If Not _label
+'			_label=New Label
+'			_label.Layout="float"
+'			_label.MaxSize=New Vec2i( 40,100 )
+'			MainWindow.AddChildView( _label )
+'		Endif
+'		_label.Text=_tab.Text
+'		_label.Visible=True
+		'Local size:=_label.MeasureLayoutSize()
+		'_label.Frame=New Recti( Mouse.Location,Mouse.Location+size)
+		
+		_tab.ParentDock.RemoveTab( _tab )
+		MainWindow.AddChildView( _tab )
+		_tab.Selected=True
+		
+		If Not _tab.PossibleParentDocks Return
+		
+		For Local d:=Eachin _tab.PossibleParentDocks
+			d.ShowDragPlaceHolder()
+		Next
+		
+	End
+	
+	
+End
+	

@@ -491,24 +491,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Endif
 			
 				#If __TARGET__="macos"
-				'smart Home behaviour
-				Case Key.Left
-			
-					If event.Modifiers & Modifier.Menu
-						SmartHome( True )
-			
-						Return
-					Endif
-			
-			
-				Case Key.Right
-			
-					If event.Modifiers & Modifier.Menu
-						SmartHome( False )
-			
-						Return
-					Endif
-			
+				
 				Case Key.Z
 			
 					If event.Modifiers & Modifier.Menu
@@ -579,7 +562,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		Endif
 		
 		' text overwrite mode
-		If event.Key=Key.Insert And Not (shift Or ctrl Or alt)
+		If event.Type=EventType.KeyDown And event.Key=Key.Insert And Not (shift Or ctrl Or alt)
 			
 			MainWindow.OverwriteTextMode=Not MainWindow.OverwriteTextMode
 		Endif

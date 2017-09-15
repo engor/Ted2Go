@@ -108,6 +108,7 @@
 #Import "view/SpacerView"
 #Import "view/FindReplaceView"
 #Import "view/ViewExtensions"
+#Import "view/DockingViewExt"
 
 #Import "Plugin"
 #Import "ThemeImages"
@@ -115,6 +116,7 @@
 #Import "ProcessReader"
 #Import "LiveTemplates"
 #Import "SystemCursor"
+#Import "DraggableTabs"
 #Import "MainWindow"
 
 
