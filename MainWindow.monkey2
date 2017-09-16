@@ -30,6 +30,8 @@ Class MainWindowInstance Extends Window
 		
 		LiveTemplates.Load()
 		
+		_tabsWrap=New DraggableTabs
+		
 		_docsTabView=New TabViewExt( TabViewFlags.DraggableTabs|TabViewFlags.ClosableTabs )
 		
 		'_browsersTabView=New TabView( TabViewFlags.DraggableTabs )
@@ -639,21 +641,19 @@ Class MainWindowInstance Extends Window
 	
 	Method StoreConsoleVisibility()
 	
-		If Prefs.SiblyMode return
+		'If Prefs.SiblyMode return
 		
-		'TODO
 		'_storedConsoleVisible=_consolesTabView.Visible
-		_consoleVisibleCounter=0
+		'_consoleVisibleCounter=0
 	End
 	
 	Method RestoreConsoleVisibility()
 	
-		If Prefs.SiblyMode Return
+		'If Prefs.SiblyMode Return
 	
-		If _consoleVisibleCounter > 0 Return
-		'TODO
+		'If _consoleVisibleCounter > 0 Return
 		'_consolesTabView.Visible=_storedConsoleVisible
-		RequestRender()
+		'RequestRender()
 	End
 	
 	Method IsTmpPath:Bool( path:String )
@@ -820,37 +820,41 @@ Class MainWindowInstance Extends Window
 	Public
 	
 	Method ShowProjectView()
-		'TODO
-		'_browsersTabView.CurrentView=_projectView
+		
+		_tabsWrap.tabs["Project"].Activate()
 	End
 	
 	Method ShowDebugView()
-		'TODO
-		'_browsersTabView.CurrentView=_debugView
+		
+		_tabsWrap.tabs["Debug"].Activate()
 	End
 	
 	Method ShowBuildConsole( vis:Bool=True )
-		'TODO
-		'If vis _consolesTabView.Visible=True
-		'_consolesTabView.CurrentView=_buildConsoleView
+		
+		Local tab:=_tabsWrap.tabs["Build"]
+		tab.Activate()
+		If vis tab.ParentDock.Visible=True
 	End
 	
 	Method ShowOutputConsole( vis:Bool=True )
-		'TODO
-		'If vis _consolesTabView.Visible=True
-		'_consolesTabView.CurrentView=_outputConsoleView
+		
+		Local tab:=_tabsWrap.tabs["Output"]
+		tab.Activate()
+		If vis tab.ParentDock.Visible=True
 	End
 	
 	Method ShowHelpView()
-		'TODO
-		'_consolesTabView.Visible=True
-		'_consolesTabView.CurrentView=_helpConsole
+		
+		Local tab:=_tabsWrap.tabs["Docs"]
+		tab.Activate()
+		tab.ParentDock.Visible=True
 	End
 	
 	Method ShowFindResults()
-		'TODO
-		'_consolesTabView.Visible=True
-		'_consolesTabView.CurrentView=_findConsole
+		
+		Local tab:=_tabsWrap.tabs["Find"]
+		tab.Activate()
+		tab.ParentDock.Visible=True
 	End
 	
 	Method ShowQuickHelp()
@@ -1013,7 +1017,6 @@ Class MainWindowInstance Extends Window
 		
 	End
 	
-	
 	Method SaveState()
 	
 		If Not _enableSaving Return
@@ -1022,22 +1025,7 @@ Class MainWindowInstance Extends Window
 		
 		jobj["windowRect"]=ToJson( Frame )
 		
-		Local vis:Bool
-		'TODO
-		'vis=_browsersTabView.Visible
-		'jobj["browserVisible"]=New JsonBool( vis )
-		'jobj["browserTab"]=New JsonString( GetBrowsersTabAsString() )
-		'TODO
-		'If vis Then _browsersSize=Int( _contentView.GetViewSize( _browsersTabView ) )
-		'If _browsersSize > 0 Then jobj["browserSize"]=New JsonNumber( _browsersSize )
-		
-		'TODO
-		'vis=_consolesTabView.Visible
-		'jobj["consoleVisible"]=New JsonBool( vis )
-		'jobj["consoleTab"]=New JsonString( GetConsolesTabAsString() )
-		'TODO
-		'If vis Then _consolesSize=Int( _contentView.GetViewSize( _consolesTabView ) ) 
-		'If _consolesSize > 0 Then jobj["consoleSize"]=New JsonNumber( _consolesSize )
+		SaveTabsState( jobj )
 		
 		Local recent:=New JsonArray
 		For Local path:=Eachin _recentFiles
@@ -1190,10 +1178,12 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Method OnChatClicked()
-		'TODO
-		'If _consolesTabView.CurrentView<>_ircView Then Return
 		
-		'_consolesTabView.SetTabIcon( _ircView, Null )
+		Local tab:=_tabsWrap.tabs["Chat"]
+		
+		If Not tab.IsActive Return
+		
+		tab.Icon=Null
 		
 		_ircNotifyIcon=0
 		
@@ -1202,8 +1192,8 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Method OnChatMessage( message:IRCMessage, container:IRCMessageContainer, server:IRCServer )
-		'TODO
-		'If message.type<>"PRIVMSG" Or _consolesTabView.CurrentView=_ircView Then Return
+		
+		If message.type<>"PRIVMSG" Or _tabsWrap.tabs["Chat"].IsActive Return
 		
 		'Show notice icon
 		If message.text.Contains(server.nickname) Then
@@ -1216,8 +1206,9 @@ Class MainWindowInstance Extends Window
 				mentionStr=server.nickname+" was mentioned by "
 				mentionStr+=message.fromUser+" in "
 				mentionStr+=container.name
-				'TODO
-				'ShowHint( mentionStr, New Vec2i( 0, -GetStyle( "Hint" ).Font.Height*4 ), _consolesTabView, 20000 )
+				
+				Local dock:=_tabsWrap.tabs["Chat"].ParentDock '_tabsWrap.docks["bottom"]
+				ShowHint( mentionStr, New Vec2i( 0, -GetStyle( "Hint" ).Font.Height*4 ), dock, 20000 )
 				
 			Endif
 			
@@ -1230,6 +1221,7 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Method UpdateIrcIcon()
+		
 		If _ircNotifyIcon<=0 Then Return
 		
 		Local time:Int=Int(Millisecs()*0.0025)
@@ -1237,52 +1229,48 @@ Class MainWindowInstance Extends Window
 		If time=_ircIconBlink Then Return
 		_ircIconBlink=time
 		
+		Local tab:=_tabsWrap.tabs["Chat"]
+		
 		If time Mod 2 Then
 			Select _ircNotifyIcon
 				
 				Case 1
-					'TODO
-					'_consolesTabView.SetTabIcon( _ircView, App.Theme.OpenImage( "irc/notice.png" ) )
+					tab.Icon=App.Theme.OpenImage( "irc/notice.png" )
 					
 				Case 2
-					'TODO
-					'_consolesTabView.SetTabIcon( _ircView, App.Theme.OpenImage( "irc/important.png" ) )
+					tab.Icon=App.Theme.OpenImage( "irc/important.png" )
 			End
 		Else
-			'TODO
-			'_consolesTabView.SetTabIcon( _ircView, App.Theme.OpenImage( "irc/blink.png" ) )
+			tab.Icon=App.Theme.OpenImage( "irc/blink.png" )
 		Endif
 		
 	End
 	
 	Method InitTabs()
 		
-		Local tabs:=_tabsWrap.tabs
+		If Not _tabsWrap.tabs.Empty Return
 		
-		If Not tabs.Empty Return
-		
-		Local docks:=New TabViewExt[]( _tabsWrap.leftDock,_tabsWrap.rightDock,_tabsWrap.bottomDock )
-		
-		tabs["Project"]=TabViewExt.CreateDraggableTab( "Project",_projectView,docks )
-		tabs["Debug"]=TabViewExt.CreateDraggableTab( "Debug",_debugView,docks )
-		tabs["Help"]=TabViewExt.CreateDraggableTab( "Help",_helpView,docks )
-		tabs["Source"]=TabViewExt.CreateDraggableTab( "Source",_docBrowser,docks )
-		tabs["Build"]=TabViewExt.CreateDraggableTab( "Build",_buildConsoleView,docks )
-		tabs["Output"]=TabViewExt.CreateDraggableTab( "Output",_outputConsoleView,docks )
-		tabs["Docs"]=TabViewExt.CreateDraggableTab( "Docs",_helpConsole,docks )
-		tabs["Find"]=TabViewExt.CreateDraggableTab( "Find",_findConsole,docks )
-		tabs["Chat"]=TabViewExt.CreateDraggableTab( "Chat",_ircView,docks )
+		_tabsWrap.AddTab( "Project",_projectView )
+		_tabsWrap.AddTab( "Debug",_debugView )
+		_tabsWrap.AddTab( "Help",_helpTree )
+		_tabsWrap.AddTab( "Source",_docBrowser )
+		_tabsWrap.AddTab( "Build",_buildConsoleView )
+		_tabsWrap.AddTab( "Output",_outputConsoleView )
+		_tabsWrap.AddTab( "Docs",_helpConsole )
+		_tabsWrap.AddTab( "Find",_findConsole )
+		_tabsWrap.AddTab( "Chat",_ircView )
 		
 	End
 	
 	Method ArrangeElements()
 		
+		InitTabs()
+		
 		_contentView.RemoveView( _toolBar )
 		_contentView.RemoveView( _statusBar )
 		_contentView.RemoveView( _findReplaceView )
-		_contentView.RemoveView( _tabsWrap.leftDock )
-		_contentView.RemoveView( _tabsWrap.rightDock )
-		_contentView.RemoveView( _tabsWrap.bottomDock )
+		
+		_tabsWrap.DetachFromParent( _contentView )
 		
 		If Prefs.MainToolBarVisible
 			_toolBar=GetMainToolBar()
@@ -1291,30 +1279,8 @@ Class MainWindowInstance Extends Window
 		
 		_contentView.AddView( _statusBar,"bottom" )
 		
-		Local left:=New TabViewExt
-		Local right:=New TabViewExt
-		Local bottom:=New TabViewExt
+		_tabsWrap.AttachToParent( _contentView )
 		
-		_contentView.AddView( left,"left",300,True )
-		_contentView.AddView( right,"right",300,True )
-		_contentView.AddView( bottom,"bottom",150,True )
-		
-		_tabsWrap.leftDock=left
-		_tabsWrap.rightDock=right
-		_tabsWrap.rightDock=bottom
-		'Local location:=Prefs.MainProjectTabsRight ? "right" Else "left"
-		
-		'TODO
-		'Local size:Int
-'		size=_browsersTabView.Rect.Width
-'		If size=0 Then size=300
-'		_contentView.AddView( _browsersTabView,location,size,True )
-'		
-'		size=_consolesTabView.Rect.Height
-'		If size=0 Then size=150
-		
-		'TODO
-		'_contentView.AddView( _consolesTabView,"bottom",size,True )
 		Local d:=GetFindDock()
 		d.Visible=False
 		_contentView.AddView( d,"bottom" )
@@ -1322,88 +1288,107 @@ Class MainWindowInstance Extends Window
 		_contentView.ContentView=_docsTabView
 		
 		
-'		_leftTabsDock.AddTab( "Project",_projectView,True )
-'		_leftTabsDock.AddTab( "Debug",_debugView,False )
-'		_leftTabsDock.AddTab( "Help",_helpTree,False )
-'		
-'		_leftTabsDock.AddTab( "Source",_docBrowser,True )
-'		'_rightTabsDock.AddTab( "Source",_docBrowser,True )
-'		
-'		_bottomTabsDock.AddTab( "Build",_buildConsoleView,True )
-'		_bottomTabsDock.AddTab( "Output",_outputConsoleView,False )
-'		_bottomTabsDock.AddTab( "Docs",_helpConsole,False )
-'		Local tab:=_bottomTabsDock.AddTab( "Find",_findConsole,False )
-'		_bottomTabsDock.AddTab( "Chat",_ircView,False )
-'		
-'		tab.Activate()
-		
 	End
 	
 	Method LoadTabsState( jobj:JsonObject )
 		
-		Global places:StringMap<String>
-		If Not places
-			places=New StringMap<String>
-			
-			places["Project"]="right"
-			places["Source"]="right"
-			places["Debug"]="right"
-			places["Help"]="right"
-			
-			places["Build"]="bottom"
-			places["Output"]="bottom"
-			places["Docs"]="bottom"
-			places["Find"]="bottom"
-			places["Chat"]="bottom"
-		Endif
+		Global places:=New StringMap<StringStack>
+		' defaults
+		Local s:=""
+		places["left"]=New StringStack
+		s="Project,Source,Debug,Help"
+		places["right"]=New StringStack( s.Split( "," ) )
+		s="Build,Output,Docs,Find,Chat"
+		places["bottom"]=New StringStack( s.Split( "," ) )
 		
-		Local edges:=New String[]( "left","right","bottom" )
+'		places["Project"]="right"
+'		places["Source"]="right"
+'		places["Debug"]="right"
+'		places["Help"]="right"
+'		
+'		places["Build"]="bottom"
+'		places["Output"]="bottom"
+'		places["Docs"]="bottom"
+'		places["Find"]="bottom"
+'		places["Chat"]="bottom"
 		
-		' read places
+		Global actives:=New StringMap<String>
+		' defaults
+		actives["left"]="Project"
+		actives["right"]="Project"
+		actives["bottom"]="Docs"
+		
+			
+		Local edges:=DraggableTabs.Edges
+		
+		' put views
 		For Local edge:=Eachin edges
 			Local val:=Json_FindValue( jobj.Data,"tabsDocks/"+edge+"Tabs" )
-			If val
+			If val And val<>JsonValue.NullValue
 				For Local v:=Eachin val.ToArray().All()
-					' overwrite defaults
-					places[v.ToString()]=edge
+					Local key:=v.ToString()
+					' remove from defaults
+					For Local e:=Eachin edges
+						places[e].Remove( key )
+					Next
+					'
+					Local tab:=_tabsWrap.tabs[key]
+					If tab Then _tabsWrap.docks[edge].AddTab( tab )
 				Next
 			Endif
 		Next
 		
-		' put views into docks
-		For Local key:=Eachin places.Keys.All()
-			Local tab:=_tabsWrap.tabs[key]
-			If tab Then _tabsWrap[places[key]].AddTab( tab )
+		' put default if any
+		For Local edge:=Eachin edges
+			For Local name:=Eachin places[edge]
+				Local tab:=_tabsWrap.tabs[name]
+				If tab Then _tabsWrap.docks[edge].AddTab( tab )
+			Next
 		Next
 		
 		For Local edge:=Eachin edges
 			' set active
 			Local val:=Json_FindValue( jobj.Data,"tabsDocks/"+edge+"Active" )
 			If val
-				Local tab:=_tabsWrap.tabs[val.ToString()]
-				If tab Then tab.Activate()
+				actives[edge]=val.ToString()
 			Endif
+			Local tab:=_tabsWrap.tabs[actives[edge]]
+			If tab Then tab.Activate()
 			' set sizes
 			Local sz:=Json_FindValue( jobj.Data,"tabsDocks/"+edge+"Size" )
 			If sz
 				Local size:=Int( sz.ToNumber() )
 				If size>0 Then _tabsWrap.sizes[edge]=size
 			Endif
-			_contentView.SetViewSize( _tabsWrap[edge],_tabsWrap.sizes[edge] )
+			Local dock:=_tabsWrap.docks[edge]
+			_contentView.SetViewSize( dock,""+_tabsWrap.sizes[edge] )
 			' set visibility
 			Local vis:=Json_FindValue( jobj.Data,"tabsDocks/"+edge+"Visible" )
 			If vis
-				_tabsWrap[edge].Visible=vis.ToBool()
-			Else
-				_tabsWrap[edge].Visible=(_tabsWrap[edge].NumTabs>0)
+				dock.Visible=vis.ToBool()
 			Endif
+			dock.Visible=dock.Visible And (dock.NumTabs>0)
 		Next
 		
 	End
 	
 	Method SaveTabsState( jobj:JsonObject )
 	
-	
+		Local jj:=New JsonObject
+		jobj["tabsDocks"]=jj
+		
+		Local edges:=DraggableTabs.Edges
+		
+		For Local edge:=Eachin edges
+			Local dock:=_tabsWrap.docks[edge]
+			jj[edge+"Tabs"]=JsonArray.Create( dock.TabsNames )
+			jj[edge+"Active"]=New JsonString( dock.ActiveName )
+			jj[edge+"Visible"]=New JsonBool( dock.Visible )
+			Local size:=(edge="bottom") ? dock.Frame.Height Else dock.Frame.Width
+			If size > 0
+				jj[edge+"Size"]=New JsonNumber( size )
+			Endif
+		Next
 	End
 	
 	Method LoadState( jobj:JsonObject )
@@ -1460,22 +1445,35 @@ Class MainWindowInstance Extends Window
 	
 		Select event.Type
 		Case EventType.KeyDown
+			
 			Select event.Key
 			Case Key.Escape
+				
+				' hide find / replace panel
 				If _findReplaceView.Visible
 					_findReplaceView.Visible=False
 					UpdateKeyView()
 					Return
 				Endif
+				
+				Local dock:TabViewExt
+				' show / hide left & right docks
 				If event.Modifiers & Modifier.Shift
-					'TODO
-					'_browsersTabView.Visible=Not _browsersTabView.Visible
-				Else
-					'TODO
-					'_consolesTabView.Visible=Not _consolesTabView.Visible
+					
+					dock=_tabsWrap.docks["left"]
+					If dock.NumTabs>0 Then dock.Visible=Not dock.Visible
+					
+					dock=_tabsWrap.docks["right"]
+					If dock.NumTabs>0 Then dock.Visible=Not dock.Visible
+					
+				Else ' bottom dock
+					
+					dock=_tabsWrap.docks["bottom"]
+					If dock.NumTabs>0 Then dock.Visible=Not dock.Visible
+					
 					_consoleVisibleCounter+=1
 				Endif
-			Case Key.Keypad1
+				
 			End
 		End
 	End
@@ -1760,32 +1758,53 @@ Private
 
 Class DraggableTabs
 	
+	Const Edges:=New String[]( "left","right","bottom" )
+	
 	Field tabs:=New StringMap<TabButtonExt>
+	Field docks:=New StringMap<TabViewExt>
 	Field sizes:=New StringMap<Int>
-	Field leftDock:TabViewExt
-	Field rightDock:TabViewExt
-	Field bottomDock:TabViewExt
 	
 	Method New()
 		
 		sizes["left"]=300
 		sizes["right"]=300
-		sizes["bottom"]=150
+		sizes["bottom"]=250
 		
+		_docksArray=New TabViewExt[Edges.Length]
+		Local i:=0
+		For Local edge:=Eachin Edges
+			docks[edge]=New TabViewExt
+			_docksArray[i]=docks[edge]
+			i+=1
+		Next
 	End
 	
-	Operator []:TabViewExt( edge:String )
+	Method AttachToParent( view:DockingView )
 		
-		Select edge
-			Case "left"
-				Return leftDock
-			Case "right"
-				Return rightDock
-			Case "bottom"
-				Return bottomDock
-		End
-		Return Null
+		For Local edge:=Eachin Edges
+			view.AddView( docks[edge],edge,sizes[edge],True )
+		Next
 	End
+	
+	Method DetachFromParent( view:DockingView )
+	
+		For Local edge:=Eachin Edges
+			view.RemoveView( docks[edge] )
+		Next
+	End
+	
+	Method AddTab( name:String,view:View )
+		
+		tabs[name]=TabViewExt.CreateDraggableTab( name,view,_docksArray )
+	End
+	
+	Property AllDocks:TabViewExt[]()
+		Return _docksArray
+	End
+	
+	Private
+	
+	Field _docksArray:TabViewExt[]
 	
 End
 

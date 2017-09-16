@@ -166,7 +166,24 @@ Class TabViewExt Extends DockingView
 
 		Return -1
 	End
-
+	
+	Property Tabs:TabButtonExt[]()
+		Return _tabs.ToArray()
+	End
+	
+	Property TabsNames:String[]()
+		
+		Local arr:=New String[NumTabs]
+		For Local i:=0 Until _tabs.Length
+			arr[i]=_tabs[i].Text
+		Next
+		Return arr
+	End
+	
+	Property ActiveName:String()
+		Return _current ? _current.Text Else ""
+	End
+	
 	#rem monkeydoc Adds a tab.
 	#end	
 	Method AddTab:TabButtonExt( text:String,view:View,makeCurrent:Bool=False )
@@ -514,6 +531,9 @@ Class TabButtonExt Extends TabButton
 		Activate()
 	End
 	
+	Property IsActive:Bool()
+		Return _parentDock.ActiveName=Text
+	End
 	
 	Protected
 	
@@ -601,14 +621,11 @@ Class DraggableTabsListener
 					r.TopLeft=Mouse.Location+New Vec2i( 0,-10 )
 					r.BottomRight=r.TopLeft+sz
 					_tab.Frame=r
-					
-					Mouse.Cursor=MouseCursor.Arrow 'force it
-					
+					App.RequestRender()
 					Return
 				Endif
 				
 				Local dy:Float=Abs(Mouse.Y-_pressedPos.y)
-				Print dy
 				If dy>10.0*App.Theme.Scale.y
 					Detach()
 				Endif
@@ -616,7 +633,10 @@ Class DraggableTabsListener
 				
 			Case EventType.MouseUp
 				
-				If Not _detached Return
+				If Not _detached 
+					_tab=Null
+					Return
+				Endif
 				
 				Local dock:TabViewExt=Null
 				Local v:=App.ActiveViewAtMouseLocation()
