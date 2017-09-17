@@ -466,30 +466,50 @@ Class CodeTextView Extends TextView
 		Local text:=Document.Text
 		Local colors:=Document.Colors
 		Local r:Recti
-	
+		Local start:=Document.StartOfLine( line )
+		
 		For Local word:=Eachin WordIterator.ForLine( Self,line )
-	
+			
 			If text[word.Index]=9 ' tab
-	
+				
+				Local ind:=word.Index-1
+				Local cnt:=0
+				' ckeck tab width
+				While ind>=start
+					If text[ind]=9 Exit
+					cnt+=1
+					ind-=1
+				Wend
+				
+				cnt = cnt Mod TabStop
+				
 				canvas.Color=_whitespacesColor
-	
+				
 				Local len:=word.Length
-	
+				
 				r=word.Rect
 				Local x0:=r.Left,y0:=r.Top+1,y1:=y0+r.Height
-				Local ww:=r.Width/len
-				Local xx:=x0+ww
-	
+				
+				Local xx:=x0 + (cnt=0 ? _tabw Else Float(TabStop-cnt)/Float(TabStop)*_tabw)
+				
 				Local after:=word.Index+len
 				If after < text.Length And text[after] > 32 Then len-=1
-	
+				
 				For Local i:=0 Until len
 					canvas.DrawLine( xx,y0,xx,y1 )
-					xx+=ww
+					xx+=_tabw
 				Next
 			Endif
 		Next
 	
+	End
+	
+	Method OnValidateStyle() Override
+		
+		Super.OnValidateStyle()
+		
+		Local style:=RenderStyle
+		_tabw=style.Font.TextWidth( "X" )*TabStop
 	End
 	
 	
@@ -498,9 +518,6 @@ Class CodeTextView Extends TextView
 	Field _line:Int
 	Field _whitespacesColor:Color
 	Field _showWhiteSpaces:Bool
-	Field _font:Font
-	Field _charw:Int
-	Field _charh:Int
 	Field _tabw:Int
 	Field _overwriteMode:Bool
 	
