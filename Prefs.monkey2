@@ -18,7 +18,7 @@ Class PrefsInstance
 	Field AcUseLiveTemplates:=True
 	'
 	Field MainToolBarVisible:=True
-	Field MainProjectTabsRight:=True
+	'Field MainProjectTabsRight:=True
 	Field MainProjectIcons:=True
 	'
 	Field IrcNickname:String
@@ -69,7 +69,6 @@ Class PrefsInstance
 			
 			Local j2:=json["main"].ToObject()
 			MainToolBarVisible=Json_GetBool( j2,"toolBarVisible",MainToolBarVisible )
-			MainProjectTabsRight=Json_GetBool( j2,"tabsRight",MainProjectTabsRight )
 			MainProjectIcons=Json_GetBool( j2,"projectIcons",MainProjectIcons )
       
 		Endif
@@ -123,7 +122,6 @@ Class PrefsInstance
 		Local j:=New JsonObject
 		json["main"]=j
 		j["toolBarVisible"]=New JsonBool( MainToolBarVisible )
-		j["tabsRight"]=New JsonBool( MainProjectTabsRight )
 		j["projectIcons"]=New JsonBool( MainProjectIcons )
 		
 		j=New JsonObject

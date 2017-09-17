@@ -75,7 +75,6 @@ Class PrefsDialog Extends DialogExt
 	Field _editorAutoIndent:CheckButton
 	
 	Field _mainToolBarVisible:CheckButton
-	Field _mainProjectTabsRight:CheckButton
 	Field _mainProjectIcons:CheckButton
 	
 	Field _monkeyRootPath:TextField
@@ -116,7 +115,6 @@ Class PrefsDialog Extends DialogExt
 		Prefs.EditorAutoIndent=_editorAutoIndent.Checked
 		
 		Prefs.MainToolBarVisible=_mainToolBarVisible.Checked
-		Prefs.MainProjectTabsRight=_mainProjectTabsRight.Checked
 		Prefs.MainProjectIcons=_mainProjectIcons.Checked
 		
 		Prefs.IrcNickname=_chatNick.Text
@@ -139,9 +137,6 @@ Class PrefsDialog Extends DialogExt
 		
 		_mainToolBarVisible=New CheckButton( "ToolBar visible" )
 		_mainToolBarVisible.Checked=Prefs.MainToolBarVisible
-		
-		_mainProjectTabsRight=New CheckButton( "Project tabs on the right side" )
-		_mainProjectTabsRight.Checked=Prefs.MainProjectTabsRight
 		
 		_mainProjectIcons=New CheckButton( "Project file type icons" )
 		_mainProjectIcons.Checked=Prefs.MainProjectIcons
@@ -181,7 +176,6 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( monkeyPathDock,"top" )
 		
 		docker.AddView( New Label( " " ),"top" )
-		docker.AddView( _mainProjectTabsRight,"top" )
 		docker.AddView( _mainProjectIcons,"top" )
 		docker.AddView( _mainToolBarVisible,"top" )
 		docker.AddView( New Label( " " ),"top" )

@@ -472,12 +472,27 @@ Class Monkey2Parser Extends CodeParserPlugin
 				
 				For Local i:=Eachin Items
 					
-					If Not CheckUsingsFilter( i,usingsFilter ) Continue
+					If Not CheckUsingsFilter( i,usingsFilter )
+						'Print "skip 1 "+i.Ident
+						Continue
+					Endif
 					
 					'Print "global 1: "+i.Scope
-					If Not CheckIdent( i.Ident,firstIdent,onlyOne ) Continue
-					If Not CheckAccessInGlobal( i,filePath ) Continue
-					If IsLocalMember( i ) And i.ScopeStartPos.x > docLine Continue
+					If Not CheckIdent( i.Ident,firstIdent,onlyOne )
+						'Print "skip 2 "+i.Ident
+						Continue
+					Endif
+					
+					If Not CheckAccessInGlobal( i,filePath )
+						'Print "skip 3 "+i.Ident
+						Continue
+					Endif
+					
+					If IsLocalMember( i ) And i.ScopeStartPos.x > docLine
+						'Print "skip 4 "+i.Ident
+						Continue
+					Endif
+					
 					'Print "global 2"
 					If Not onlyOne
 						item=i

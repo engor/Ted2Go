@@ -686,8 +686,11 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	Method DeleteLineAtCursor()
 		
 		Local line:=Document.FindLine( Cursor )
+		Local pos:=Cursor
 		SelectText( Document.StartOfLine( line ),Document.EndOfLine( line )+1 )
 		ReplaceText( "" )
+		pos=Min( pos,Document.EndOfLine( line ) )
+		SelectText( pos,pos )
 	End
 	
 End

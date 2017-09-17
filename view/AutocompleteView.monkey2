@@ -244,6 +244,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 					If info.usings Then usings.AddAll( info.usings )
 				Endif
 				
+				If Not usings.Contains( "monkey.." ) Then usings.Add( "monkey.." )
 			Endif
 			
 			_listForExtract.Clear()

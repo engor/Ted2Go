@@ -99,7 +99,6 @@ Class BuildActions Implements IModuleBuilder
 #Endif
 		semant.Triggered=OnSemant
 		
-		
 		buildSettings=New Action( "Product settings..." )
 		buildSettings.Triggered=OnBuildFileSettings
 		
@@ -321,12 +320,12 @@ Class BuildActions Implements IModuleBuilder
 		Local doc:=Cast<CodeDocument>( _docs.OpenDocument( err.path,True ) )
 		If Not doc Return
 	
-		Local tv := doc.TextView
+		Local tv := doc.CodeView
 		If Not tv Return
 	
 		MainWindow.UpdateWindow( False )
 	
-		tv.GotoLine( err.line )
+		tv.GotoPosition( New Vec2i( err.line,0 ) )
 	End
 	
 	
