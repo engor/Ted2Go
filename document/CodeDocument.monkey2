@@ -508,7 +508,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 			End
 			
-				
+			
 		Case EventType.KeyChar
 			
 			If event.Key = Key.Space And event.Modifiers & Modifier.Control
@@ -517,6 +517,70 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					If ident Then _doc.ShowAutocomplete( ident,True )
 				Endif
 				Return
+			Endif
+			
+			' try to auto-pair chars
+			If Prefs.EditorAutoPairs
+				
+				Local txt:=event.Text
+				
+				Local k1:=(txt="~q")
+				Local k2:=(txt="(")
+				Local k3:=(txt="[")
+				Local k21:=(txt=")")
+				Local k31:=(txt="]")
+				
+				If k1 Or k2 Or k3 Or k21 Or k31
+					
+					Local s:=LineTextAtCursor
+					Local p:=PosInLineAtAnchor
+					
+					' skip if this char is already right after cursor
+					If p<s.Length
+						If (k1 And s[p]=Chars.DOUBLE_QUOTE) Or (k21 And s[p]=Chars.CLOSED_ROUND_BRACKET) Or (k31 And s[p]=Chars.CLOSED_SQUARE_BRACKET)
+							SelectText( Cursor+1,Cursor+1 )
+							Return
+						Endif
+					Endif
+					
+					' just insert our char
+					ReplaceText( txt )
+					
+					If k21 Or k31 Return
+					
+					Local skip:=False
+					If k1
+						skip=_doc.Parser.IsPosInsideOfQuotes( s,p )
+					Elseif k2
+						skip=p<s.Length And s[p]=Chars.CLOSED_ROUND_BRACKET
+					Elseif k3
+						skip=p<s.Length And s[p]=Chars.CLOSED_SQUARE_BRACKET
+					Endif
+					If Not skip ' auto-pair it
+						Local ins:=k1 ? "~q" Else (k2 ? ")" Else "]")
+						ReplaceText( ins )
+						SelectText( Cursor-1,Cursor-1 )
+					Endif
+					
+					Return
+					
+				Else
+'					
+'					
+'					Local skip:=False
+'					If k21
+'						skip=p<s.Length And s[p]=Chars.CLOSED_ROUND_BRACKET
+'					If k3
+'						skip=p<s.Length And s[p]=Chars.CLOSED_SQUARE_BRACKET
+'					Endif
+'					If Not skip ' auto-pair it
+'						Local ins:=k1 ? "~q" Else (k2 ? ")" Else "]")
+'						ReplaceText( ins )
+'						SelectText( Cursor-1,Cursor-1 )
+'					Endif
+					
+				Endif
+			
 			Endif
 			
 		End

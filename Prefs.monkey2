@@ -18,7 +18,6 @@ Class PrefsInstance
 	Field AcUseLiveTemplates:=True
 	'
 	Field MainToolBarVisible:=True
-	'Field MainProjectTabsRight:=True
 	Field MainProjectIcons:=True
 	'
 	Field IrcNickname:String
@@ -35,6 +34,7 @@ Class PrefsInstance
 	Field EditorShowEvery10LineNumber:=True
 	Field EditorCodeMapVisible:=True
 	Field EditorAutoIndent:=True
+	Field EditorAutoPairs:=True
 	'
 	Field SourceSortByType:=True
 	Field SourceShowInherited:=False
@@ -99,6 +99,7 @@ Class PrefsInstance
 			EditorShowEvery10LineNumber=Json_GetBool( j2,"showEvery10",EditorShowEvery10LineNumber )
 			EditorCodeMapVisible=Json_GetBool( j2,"codeMapVisible",EditorCodeMapVisible )
 			EditorAutoIndent=Json_GetBool( j2,"autoIndent",EditorAutoIndent )
+			EditorAutoPairs=Json_GetBool( j2,"autoPairs",EditorAutoPairs )
 			
 		Endif
 		
@@ -154,6 +155,7 @@ Class PrefsInstance
 		j["showEvery10"]=New JsonBool( EditorShowEvery10LineNumber )
 		j["codeMapVisible"]=New JsonBool( EditorCodeMapVisible )
 		j["autoIndent"]=New JsonBool( EditorAutoIndent )
+		j["autoPairs"]=New JsonBool( EditorAutoPairs )
 		
 		j=New JsonObject
 		json["source"]=j
