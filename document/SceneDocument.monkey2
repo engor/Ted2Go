@@ -144,8 +144,6 @@ Class SceneDocument Extends Ted2Document
 		
 		If _model _model.Destroy()
 		
-		Print "Loading model:"+Path
-
 		Scene.SetCurrent( _scene )
 		
 		_model=Model.Load( Path )

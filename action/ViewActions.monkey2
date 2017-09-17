@@ -18,12 +18,12 @@ Class ViewActions
 		goBack=New Action( "Go back" )
 		goBack.Triggered=OnGoBack
 		goBack.HotKey=Key.Left
-		goBack.HotKeyModifiers=Modifier.Alt
+		goBack.HotKeyModifiers=Modifier.Alt|Modifier.Menu
 		
 		goForward=New Action( "Go forward" )
 		goForward.Triggered=OnGoForward
 		goForward.HotKey=Key.Right
-		goForward.HotKeyModifiers=Modifier.Alt
+		goForward.HotKeyModifiers=Modifier.Alt|Modifier.Menu
 		
 		comment=New Action( "Comment block" )
 		comment.Triggered=OnComment

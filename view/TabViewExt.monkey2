@@ -371,6 +371,7 @@ Class TabViewExt Extends DockingView
 		
 		_dragDropMode=True
 		_curIndex=CurrentIndex
+		_vis=Visible
 		Visible=True
 		If Not _placeHolderTab
 			Local v:=New Label '("[Drop tab here]")
@@ -392,7 +393,7 @@ Class TabViewExt Extends DockingView
 		RemoveTab( _placeHolderTab )
 		_placeHolderTab=Null
 '		
-		Visible=NumTabs>0
+		Visible=(_vis And NumTabs>0)
 		
 		If _curIndex>=0 Then CurrentIndex=_curIndex
 	End
@@ -424,6 +425,7 @@ Class TabViewExt Extends DockingView
 	Field _placeHolderTab:TabButtonExt
 	Field _curIndex:Int
 	Field _dragDropMode:Bool
+	Field _vis:Bool
 	Global _listener:DraggableTabsListener
 	
 	Method MakeCurrent( tab:TabButton,notify:Bool )
