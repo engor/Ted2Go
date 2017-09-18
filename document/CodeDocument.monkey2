@@ -62,7 +62,16 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Local bySpace:=result.bySpace
 					
 					text=_doc.PrepareForInsert( ident,text,Not bySpace,LineTextAtCursor,PosInLineAtCursor,item )
-					SelectText( Cursor,Cursor-AutoComplete.LastIdentPart.Length )
+					Local i1:=Cursor-AutoComplete.LastIdentPart.Length
+					Local i2:=Cursor
+					If result.byTab
+						Local i:=Cursor
+						While i<Text.Length And IsIdent( Text[i] )
+							i+=1
+						Wend
+						i2=i
+					Endif
+					SelectText( i1,i2 )
 					ReplaceText( text )
 				Endif
 			Endif

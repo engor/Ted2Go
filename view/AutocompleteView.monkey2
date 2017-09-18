@@ -85,6 +85,7 @@ Struct AutocompleteResult
 	Field text:String
 	Field item:CodeItem
 	Field bySpace:Bool
+	Field byTab:Bool
 	Field isTemplate:Bool
 	
 End
@@ -112,7 +113,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 		_parsers=New StringMap<ICodeParser>
 		
 		_view.OnItemChoosen+=Lambda()
-			OnItemChoosen( _view.CurrentItem )
+			OnItemChoosen( _view.CurrentItem,Key.None )
 		End
 		
 		App.KeyEventFilter+=Lambda( event:KeyEvent )
@@ -371,7 +372,8 @@ Class AutocompleteDialog Extends NoTitleDialog
 				Local curItem:=_view.CurrentItem
 				Local templ:=Cast<TemplateListViewItem>( curItem )
 				
-				Select event.Key
+				Local key:=event.Key
+				Select key
 				Case Key.Escape
 					Hide()
 					event.Eat()
@@ -395,7 +397,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 				Case Key.Enter,Key.KeypadEnter
 					If Not templ
 						If Prefs.AcUseEnter
-							OnItemChoosen( curItem )
+							OnItemChoosen( curItem,key )
 							If Not Prefs.AcNewLineByEnter Then event.Eat()
 						Else
 							Hide() 'hide by enter
@@ -404,7 +406,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 					
 				Case Key.Tab
 					If Prefs.AcUseTab Or templ
-						OnItemChoosen( curItem )
+						OnItemChoosen( curItem,key )
 						event.Eat()
 					Endif
 					
@@ -412,7 +414,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 					If Not templ
 						Local ctrl:=event.Modifiers & Modifier.Control
 						If Prefs.AcUseSpace And Not ctrl
-							OnItemChoosen( curItem,True )
+							OnItemChoosen( curItem,key )
 							event.Eat()
 						Endif
 					Endif
@@ -420,7 +422,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 				Case Key.Period
 					If Not templ
 						If Prefs.AcUseDot
-							OnItemChoosen( curItem )
+							OnItemChoosen( curItem,key )
 							event.Eat()
 						Endif
 					Endif
@@ -443,7 +445,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 		
 	End
 	
-	Method OnItemChoosen( item:ListViewItem,bySpace:Bool=False )
+	Method OnItemChoosen( item:ListViewItem,key:Key )
 		
 		Local siCode:=Cast<CodeListViewItem>( item )
 		Local siTempl:=Cast<TemplateListViewItem>( item )
@@ -466,7 +468,8 @@ Class AutocompleteDialog Extends NoTitleDialog
 		result.ident=ident
 		result.text=text
 		result.item=code
-		result.bySpace=bySpace
+		result.bySpace=(key=Key.Space)
+		result.byTab=(key=Key.Tab)
 		result.isTemplate=templ
 		OnChoosen( result )
 		Hide()
