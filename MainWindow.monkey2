@@ -34,10 +34,6 @@ Class MainWindowInstance Extends Window
 		
 		_docsTabView=New TabViewExt( TabViewFlags.DraggableTabs|TabViewFlags.ClosableTabs )
 		
-		'_browsersTabView=New TabView( TabViewFlags.DraggableTabs )
-		'_browsersTabView.Style=GetStyle( "ProjectTabView" )
-		'_consolesTabView=New TabView( TabViewFlags.DraggableTabs )
-		
 		_recentFilesMenu=New MenuExt( "Recent files" )
 		_recentProjectsMenu=New MenuExt( "Recent projects" )
 		_closeProjectMenu=New MenuExt( "Close project" )
@@ -152,7 +148,7 @@ Class MainWindowInstance Extends Window
 		'Help tab
 		
 		_helpView=New HtmlViewExt
-		_helpConsole=New DockingView
+		_docsConsole=New DockingView
 		bar=New ToolBarExt
 		bar.MaxSize=New Vec2i( 300,30 )
 		bar.AddIconicButton(
@@ -177,22 +173,36 @@ Class MainWindowInstance Extends Window
 		bar.AddSeparator()
 		bar.AddSeparator()
 		label=New Label
-		bar.AddView( label,"left" )
+		
+		bar.ContentView=label
 		
 		_helpView.Navigated+=Lambda( url:String )
 			
 			label.Text=url
 		End
 		
-		_helpConsole.AddView( bar,"top" )
-		_helpConsole.ContentView=_helpView
+		_helpTree=New HelpTreeView( _helpView )
+		_docsConsole.AddView( _helpTree,"right",250,True )
+		
+		_docsConsole.AddView( bar,"top" )
+		_docsConsole.ContentView=_helpView
+		
+		_helpSwitcher=New ToolButtonExt( New Action( "<" ) )
+		bar.AddView( New SpacerView( 6,0 ),"right" ) ' right offset
+		bar.AddView( _helpSwitcher,"right" )
+		_helpSwitcher.Clicked=Lambda()
+			App.Idle+=Lambda()
+				_helpTree.Visible=Not _helpTree.Visible
+				_helpSwitcher.Text=_helpTree.Visible ? ">" Else "<"
+				_helpSwitcher.Hint=_helpTree.Visible ? "Hide docs index" Else "Show docs index"
+			End
+		End
+		_helpSwitcher.Clicked() 'hide at startup
 		
 		_helpView.Navigate( AboutPagePath )
 		
-		_helpTree=New HelpTreeView( _helpView )
 		
 		_debugView=New DebugView( _docsManager,_outputConsole )
-		
 		
 		_buildActions=New BuildActions( _docsManager,_buildConsole,_debugView )
 		_buildActions.ErrorsOccured+=Lambda( errors:BuildError[] )
@@ -857,12 +867,25 @@ Class MainWindowInstance Extends Window
 		tab.ParentDock.Visible=True
 	End
 	
+	Method ShowFindInDocs()
+		
+		Local doc:=Cast<CodeDocumentView>( _docsManager.CurrentTextView )
+		If Not doc Return
+		
+		Local ident:=doc.WordAtCursor
+		Print "ident: "+ident
+		_helpTree.QuickHelp( ident )
+		_helpTree.Visible=False
+		_helpSwitcher.Clicked()
+		_tabsWrap.tabs["Docs"].Activate()
+	End
+	
 	Method ShowQuickHelp()
 		
 		Local doc:=Cast<CodeDocumentView>( _docsManager.CurrentTextView )
 		If Not doc Return
 		
-		Local ident:=doc.FullIdentAtCursor()
+		Local ident:=doc.FullIdentAtCursor
 		
 		If Not ident Return
 		
@@ -914,13 +937,13 @@ Class MainWindowInstance Extends Window
 			
 			_helpIdent=ident
 			
-		Elseif KeywordsManager.Get( doc.FileType ).Contains( ident )
+		ElseIf KeywordsManager.Get( doc.FileType ).Contains( ident )
 			
 			ShowStatusBarText( "(keyword) "+ident )
 		
 		Else
 			
-			_helpTree.QuickHelp( ident )
+			ShowFindInDocs()
 			
 		Endif
 		
@@ -1252,11 +1275,11 @@ Class MainWindowInstance Extends Window
 		
 		_tabsWrap.AddTab( "Project",_projectView )
 		_tabsWrap.AddTab( "Debug",_debugView )
-		_tabsWrap.AddTab( "Help",_helpTree )
+		'_tabsWrap.AddTab( "Help",_helpTree )
 		_tabsWrap.AddTab( "Source",_docBrowser )
 		_tabsWrap.AddTab( "Build",_buildConsoleView )
 		_tabsWrap.AddTab( "Output",_outputConsoleView )
-		_tabsWrap.AddTab( "Docs",_helpConsole )
+		_tabsWrap.AddTab( "Docs",_docsConsole )
 		_tabsWrap.AddTab( "Find",_findConsole )
 		_tabsWrap.AddTab( "Chat",_ircView )
 		
@@ -1301,24 +1324,12 @@ Class MainWindowInstance Extends Window
 		s="Build,Output,Docs,Find,Chat"
 		places["bottom"]=New StringStack( s.Split( "," ) )
 		
-'		places["Project"]="right"
-'		places["Source"]="right"
-'		places["Debug"]="right"
-'		places["Help"]="right"
-'		
-'		places["Build"]="bottom"
-'		places["Output"]="bottom"
-'		places["Docs"]="bottom"
-'		places["Find"]="bottom"
-'		places["Chat"]="bottom"
-		
 		Global actives:=New StringMap<String>
 		' defaults
 		actives["left"]="Project"
 		actives["right"]="Project"
 		actives["bottom"]="Docs"
 		
-			
 		Local edges:=DraggableTabs.Edges
 		
 		' put views
@@ -1520,13 +1531,14 @@ Class MainWindowInstance Extends Window
 	Field _outputConsole:ConsoleExt
 	Field _outputConsoleView:DockingView
 	Field _helpView:HtmlViewExt
-	Field _helpConsole:DockingView
+	Field _docsConsole:DockingView
 	Field _findConsole:TreeViewExt
 	
 	Field _projectView:ProjectView
 	Field _docBrowser:DockingView
 	Field _debugView:DebugView
 	Field _helpTree:HelpTreeView
+	Field _helpSwitcher:ToolButtonExt
 	
 	'Field _ircTabView:TabView
 	Field _docsTabView:TabViewExt

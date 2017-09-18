@@ -1053,7 +1053,7 @@ Class CodeDocument Extends Ted2Document
 	
 	Method GotoDeclaration()
 	
-		Local ident:=_codeView.FullIdentAtCursor()
+		Local ident:=_codeView.FullIdentAtCursor
 		Local line:=TextDocument.FindLine( _codeView.Cursor )
 		Local item:=_parser.ItemAtScope( ident,Path,line )
 		

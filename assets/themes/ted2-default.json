@@ -127,12 +127,7 @@
 		"CompletionDialogContent":{
 			"padding":[ 1 ]
 		},
-		
-		"ProjectTabView":{
-			"extends":"TabView",
-			"backgroundColor":"content"
-		},
-		
+				
 		"TextFieldBordered":{
 			"extends":"TextField",
 			"border":[ 1 ],

@@ -75,6 +75,9 @@ Class FindReplaceView Extends DockingView
 		dock.AddView( New SpacerView( 5,0 ),"left" )
 		dock.AddView( _chbWrap,"left" )
 		
+		' don't want to fix padding-right for TabClose style
+		findDock.AddView( New SpacerView( 6,0 ),"right" )
+		
 		Local close:=New Button
 		close.Style=GetStyle( "TabClose" )
 		close.Icon=close.Style.Icons[0]

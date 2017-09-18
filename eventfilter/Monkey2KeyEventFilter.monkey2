@@ -23,7 +23,11 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 				
 				Case Key.F1
 					
-					MainWindow.ShowQuickHelp()
+					If ctrl
+						MainWindow.ShowFindInDocs()
+					Else
+						MainWindow.ShowQuickHelp()
+					Endif
 					event.Eat()
 					
 				Case Key.F2
