@@ -231,12 +231,11 @@ Class CodeTextView Extends TextView
 			
 			Case EventType.MouseEnter
 				
-				SystemCursor.Store( Self )
-				SystemCursor.Set( SystemCursor.Kind.Beam )
+				Mouse.Cursor=MouseCursor.IBeam
 				
 			Case EventType.MouseLeave
 				
-				SystemCursor.Restore( Self )
+				Mouse.Cursor=MouseCursor.Arrow
 				
 		End
 		
