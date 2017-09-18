@@ -519,6 +519,24 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				Return
 			Endif
 			
+			If CanCopy
+				' surround selection 
+				Local txt:=event.Text
+				
+				Local k1:=(txt="~q")
+				Local k2:=(txt="(")
+				Local k3:=(txt="[")
+				
+				If k1 Or k2 Or k3
+					Local ins:=k1 ? "~q" Else (k2 ? ")" Else "]")
+					Local i1:=Min( Anchor,Cursor )
+					Local i2:=Max( Anchor,Cursor )
+					ReplaceText( txt + Text.Slice( i1,i2 ) + ins )
+					Return
+				Endif
+				
+			Endif
+			
 			' try to auto-pair chars
 			If Prefs.EditorAutoPairs
 				
