@@ -75,6 +75,15 @@ Class FindReplaceView Extends DockingView
 		dock.AddView( New SpacerView( 5,0 ),"left" )
 		dock.AddView( _chbWrap,"left" )
 		
+		Local close:=New Button
+		close.Style=GetStyle( "TabClose" )
+		close.Icon=close.Style.Icons[0]
+		close.Clicked=Lambda()
+			Visible=False
+			MainWindow.UpdateKeyView() 'dirty
+		End
+		
+		findDock.AddView( close,"right" )
 		
 		' REPLACE
 		'

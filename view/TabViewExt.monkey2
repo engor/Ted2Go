@@ -72,28 +72,31 @@ Class TabViewExt Extends DockingView
 		
 		' add scrollbar here
 		Local headerDock:=New DockingView
-		_nxt=New PushButton( ">" )
-		_nxt.Style=App.Theme.GetStyle( "TabViewArrowNext" )
-		headerDock.AddView( _nxt,"right" )
-		_nxt.Visible=False
 		
-		_prev=New PushButton( "<" )
-		_prev.Style=App.Theme.GetStyle( "TabViewArrowPrev" )
-		headerDock.AddView( _prev,"right" )
-		_prev.Visible=False
+		_prevNextDock=New DockingView
+		_prevNextDock.Visible=False
+		Local nxt:=New PushButton( ">" )
+		nxt.Style=App.Theme.GetStyle( "TabViewArrowNext" )
+		_prevNextDock.AddView( nxt,"right" )
+		
+		Local prev:=New PushButton( "<" )
+		prev.Style=App.Theme.GetStyle( "TabViewArrowPrev" )
+		_prevNextDock.AddView( prev,"right" )
+		
+		headerDock.AddView( _prevNextDock,"right" )
 		
 		_scrollView=New ScrollViewTabs( _tabBar )
 		_scrollView.ScrollBarsVisible=False
 		headerDock.ContentView=_scrollView
 		AddView( headerDock,"top" )
 		
-		_nxt.Clicked+=Lambda()
+		nxt.Clicked+=Lambda()
 			Local s:=_scrollView.Scroll
-			_scrollView.Scroll=s+New Vec2i( 200,0 )
+			_scrollView.Scroll=s+New Vec2i( 150,0 )
 		End
-		_prev.Clicked+=Lambda()
+		prev.Clicked+=Lambda()
 			Local s:=_scrollView.Scroll
-			_scrollView.Scroll=s-New Vec2i( 200,0 )
+			_scrollView.Scroll=s-New Vec2i( 150,0 )
 		End
 		
 		MinSize=New Vec2i( 50,50 )
@@ -374,11 +377,12 @@ Class TabViewExt Extends DockingView
 		_vis=Visible
 		Visible=True
 		If Not _placeHolderTab
-			Local v:=New Label '("[Drop tab here]")
+			Local v:=New Label ("[Drop tab here]")
 			v.Style=GetStyle( "TabsDropArea","Label" )
 			v.Layout="fill"
 			v.Gravity=New Vec2f( .5,.5 )
 			_placeHolderTab=AddTab( "[+]",v,True )
+			_placeHolderContent=v
 		Else
 			AddTab( _placeHolderTab,True )
 		Endif
@@ -406,11 +410,15 @@ Class TabViewExt Extends DockingView
 		Local size:=Super.OnMeasure()
 		' show / hide navigation buttons
 		Local ww:=GetTabsWidth()
-		Local vis:=(ww>_scrollView.Frame.Width)
-		_nxt.Visible=vis
-		_prev.Visible=vis
+		Local vis:=(ww>Frame.Width)
+		_prevNextDock.Visible=vis
 		
 		Return size
+	End
+	
+	Method OnThemeChanged() Override
+		
+		If _placeHolderContent Then _placeHolderContent.Style=GetStyle( "TabsDropArea","Label" )
 	End
 	
 	
@@ -421,8 +429,10 @@ Class TabViewExt Extends DockingView
 	Field _tabs:=New Stack<TabButtonExt>
 	Field _current:TabButton
 	Field _scrollView:ScrollView
-	Field _nxt:PushButton,_prev:PushButton
+	'Field _nxt:PushButton,_prev:PushButton
 	Field _placeHolderTab:TabButtonExt
+	Field _placeHolderContent:View
+	Field _prevNextDock:DockingView
 	Field _curIndex:Int
 	Field _dragDropMode:Bool
 	Field _vis:Bool
@@ -546,16 +556,16 @@ Class TabButtonExt Extends TabButton
 	
 	Field _possibleParentDocks:TabViewExt[]
 	
-	Method CanDropTo:Bool( tabDock:TabViewExt,skipSelfParent:Bool=True )
+	Method CanDropTo:Bool( tabDock:TabViewExt )
 	
-		If Not tabDock Return False
-		If Not _possibleParentDocks Return False
+		If Not tabDock Print "if 1" ; Return False
+		If Not _possibleParentDocks Print "if 1" ; Return False
 	
 		For Local d:=Eachin _possibleParentDocks
 	
-			If skipSelfParent And d=_parentDock Continue
 			If d=tabDock Return True
 		Next
+		Print "false"
 		Return False
 	End
 	
@@ -640,6 +650,8 @@ Class DraggableTabsListener
 					Return
 				Endif
 				
+				MainWindow.RemoveChildView( _tab )
+				
 				Local dock:TabViewExt=Null
 				Local v:=App.ActiveViewAtMouseLocation()
 				While v
@@ -656,8 +668,6 @@ Class DraggableTabsListener
 						d.HideDragPlaceHolder()
 					Next
 				Endif
-				
-				MainWindow.RemoveChildView( _tab )
 				
 				_tab.TryDropTo( dock )
 				
