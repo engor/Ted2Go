@@ -411,6 +411,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local isSelf:=(firstIdent.ToLower()="self")
 		Local isSuper:=(firstIdent.ToLower()="super")
 		Local items:=New Stack<CodeItem>
+		Local fullyMatched:CodeItem=Null
+		
+		'Print "idents: "+firstIdent+" - "+lastIdent
 		
 		If isSelf Or isSuper
 			
@@ -424,8 +427,14 @@ Class Monkey2Parser Extends CodeParserPlugin
 				
 				GetAllItems( scope,items )
 				
+				'If scope.Parent=Null
+				'	ExtractExtensionItems( scope,items )
+				'Endif
+				
 				If Not items.Empty
+					
 					For Local i:=Eachin items
+						'Print "item at scope: "+i.Text
 						If Not CheckIdent( i.Ident,firstIdent,onlyOne )
 							'Print "cont1: "+i.Ident
 							Continue
@@ -439,16 +448,33 @@ Class Monkey2Parser Extends CodeParserPlugin
 							'Print "cont3: "+i.Ident
 							Continue
 						Endif
+						If i=scope
+							'Print "cont4: "+i.Ident
+							Continue
+						Endif
 						If Not onlyOne
 							item=i
 							Exit
 						Else
 							If Not staticOnly Or IsStaticMember( i,False )
+								'Print "if 4: "+i.Ident
 								target.Add( i )
-								If resultLimit>0 And target.Length=resultLimit Return
+								If i.Ident=firstIdent Then fullyMatched=i
+								If fullyMatched And resultLimit>0 And target.Length=resultLimit Exit
 							Endif
 						Endif
 					Next
+					
+					If fullyMatched
+						If resultLimit>0 And target.Length>=resultLimit
+							target.Slice( 0,resultLimit )
+							target.Remove( fullyMatched )
+							target.Insert( 0,fullyMatched )
+							'Print "matched 1"
+							Return
+						Endif
+					Endif
+					
 				Endif
 				'found item
 				If item <> Null Exit
@@ -499,10 +525,24 @@ Class Monkey2Parser Extends CodeParserPlugin
 						Exit
 					Else
 						target.Add( i )
-						If resultLimit>0 And target.Length=resultLimit Return
+						'Print "from globals: "+i.Ident
+						If i.Ident=firstIdent Then fullyMatched=i
+						If fullyMatched And resultLimit>0 And target.Length=resultLimit Exit
 					Endif
 				Next
+				
+				If fullyMatched
+					If resultLimit>0 And target.Length>=resultLimit
+						target.Slice( 0,resultLimit )
+						target.Remove( fullyMatched )
+						target.Insert( 0,fullyMatched )
+						'Print "matched 2"
+						Return
+					Endif
+				Endif
+				
 			Endif
+			
 		Endif
 		
 		'If item Print "item: "+item.Scope+", kind: "+item.KindStr
