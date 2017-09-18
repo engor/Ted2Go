@@ -187,7 +187,12 @@ Class DocumentManager
 		
 		Local docs:=New JsonArray
 		For Local doc:=Eachin _openDocs
-			docs.Add( New JsonString( doc.Path ) )
+			Local s:=doc.Path
+			Local tv:=doc.TextView
+			If tv And (tv.Cursor>0 Or tv.Anchor>0)
+				s+=",,,"+tv.Cursor+",,,"+tv.Anchor
+			Endif
+			docs.Add( New JsonString( s ) )
 		Next
 		jobj["openDocuments"]=docs
 		
@@ -199,12 +204,20 @@ Class DocumentManager
 		If Not jobj.Contains( "openDocuments" ) Return
 		
 		For Local doc:=Eachin jobj.GetArray( "openDocuments" )
-		
-			Local path:=doc.ToString()
+			
+			Local arr:=doc.ToString().Split( ",,," )
+			Local path:=arr[0]
 			If GetFileType( path )<>FileType.File Continue
 			
-			Local tdoc:=OpenDocument( doc.ToString() )
-			If tdoc And MainWindow.IsTmpPath( path ) tdoc.Dirty=True
+			Local tdoc:=OpenDocument( path,True )
+			If tdoc
+				tdoc.Dirty=MainWindow.IsTmpPath( path )
+				If arr.Length>1
+					Local cursor:=Int( arr[1] )
+					Local anchor:=Int( arr[2] )
+					tdoc.TextView.SelectText( anchor,cursor,True )
+				Endif
+			Endif
 		Next
 		
 		Local path:=jobj.GetString( "currentDocument" )

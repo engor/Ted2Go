@@ -153,10 +153,7 @@ Class CodeTextView Extends TextView
 			SelectText( dest,dest )
 		Endif
 		
-		' scroll to view center
-		Local yy:=CursorRect.Top-Scroll.y
-		Local dy:=yy-Frame.Height*.5
-		Scroll=Scroll+New Vec2i( 0,dy )
+		MakeCentered()
 	End
 	
 	Property LineTextAtCursor:String()
