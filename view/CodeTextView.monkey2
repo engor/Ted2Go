@@ -58,7 +58,7 @@ Class CodeTextView Extends TextView
 		UpdateThemeColors()
 	End
 	
-	Method IsCursorAtTheEndOfLine:Bool()
+	Property IsCursorAtTheEndOfLine:Bool()
 		
 		Local line:=Document.FindLine( Cursor )
 		Local pos:=Document.EndOfLine( line )

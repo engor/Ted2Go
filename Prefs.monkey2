@@ -35,6 +35,7 @@ Class PrefsInstance
 	Field EditorCodeMapVisible:=True
 	Field EditorAutoIndent:=True
 	Field EditorAutoPairs:=True
+	Field EditorSurroundSelection:=True
 	'
 	Field SourceSortByType:=True
 	Field SourceShowInherited:=False
@@ -100,6 +101,7 @@ Class PrefsInstance
 			EditorCodeMapVisible=Json_GetBool( j2,"codeMapVisible",EditorCodeMapVisible )
 			EditorAutoIndent=Json_GetBool( j2,"autoIndent",EditorAutoIndent )
 			EditorAutoPairs=Json_GetBool( j2,"autoPairs",EditorAutoPairs )
+			EditorSurroundSelection=Json_GetBool( j2,"surroundSelection",EditorSurroundSelection )
 			
 		Endif
 		
@@ -156,13 +158,14 @@ Class PrefsInstance
 		j["codeMapVisible"]=New JsonBool( EditorCodeMapVisible )
 		j["autoIndent"]=New JsonBool( EditorAutoIndent )
 		j["autoPairs"]=New JsonBool( EditorAutoPairs )
+		j["surroundSelection"]=New JsonBool( EditorSurroundSelection )
 		
 		j=New JsonObject
 		json["source"]=j
 		j["sortByType"]=New JsonBool( SourceSortByType )
 		j["showInherited"]=New JsonBool( SourceShowInherited )
 		
-		If SiblyMode json["siblyMode"]=JsonBool.TrueValue
+		If "SiblyMode" json["siblyMode"]=JsonBool.TrueValue
 		
 	End
 	

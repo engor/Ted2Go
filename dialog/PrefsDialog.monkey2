@@ -74,6 +74,7 @@ Class PrefsDialog Extends DialogExt
 	Field _editorCodeMapVisible:CheckButton
 	Field _editorAutoIndent:CheckButton
 	Field _editorAutoPairs:CheckButton
+	Field _editorSurround:CheckButton
 	
 	Field _mainToolBarVisible:CheckButton
 	Field _mainProjectIcons:CheckButton
@@ -115,6 +116,7 @@ Class PrefsDialog Extends DialogExt
 		Prefs.EditorCodeMapVisible=_editorCodeMapVisible.Checked
 		Prefs.EditorAutoIndent=_editorAutoIndent.Checked
 		Prefs.EditorAutoPairs=_editorAutoPairs.Checked
+		Prefs.EditorSurroundSelection=_editorSurround.Checked
 		
 		Prefs.MainToolBarVisible=_mainToolBarVisible.Checked
 		Prefs.MainProjectIcons=_mainProjectIcons.Checked
@@ -208,6 +210,9 @@ Class PrefsDialog Extends DialogExt
 		_editorAutoPairs=New CheckButton( "Auto pair quotes and brackets: ~q~q, (), []" )
 		_editorAutoPairs.Checked=Prefs.EditorAutoPairs
 		
+		_editorSurround=New CheckButton( "Surround selected text with ~q~q, (), []" )
+		_editorSurround.Checked=Prefs.EditorSurroundSelection
+		
 		Local path:=Prefs.EditorFontPath
 		If Not path Then path=_defaultFont
 		_editorFontPath=New TextField( "" )
@@ -259,6 +264,7 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( _editorCodeMapVisible,"top" )
 		docker.AddView( _editorAutoIndent,"top" )
 		docker.AddView( _editorAutoPairs,"top" )
+		docker.AddView( _editorSurround,"top" )
 		docker.AddView( New Label( " " ),"top" )
 		
 		Return docker

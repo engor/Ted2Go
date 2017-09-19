@@ -526,7 +526,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				Return
 			Endif
 			
-			If CanCopy
+			If CanCopy And Prefs.EditorSurroundSelection
 				' surround selection 
 				Local txt:=event.Text
 				
@@ -576,8 +576,9 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Local skip:=False
 					If k1
 						skip=_doc.Parser.IsPosInsideOfQuotes( s,p )
-					Elseif k2
-						skip=p<s.Length And s[p]=Chars.CLOSED_ROUND_BRACKET
+					ElseIf k2
+						'skip=p<s.Length And s[p]=Chars.CLOSED_ROUND_BRACKET
+						skip=Not IsCursorAtTheEndOfLine
 					Elseif k3
 						skip=p<s.Length And s[p]=Chars.CLOSED_SQUARE_BRACKET
 					Endif
