@@ -29,7 +29,7 @@ Class FindReplaceView Extends DockingView
 		findDock.AddView( what,"left" )
 		
 		_editFind=New TextFieldExt
-		_editFind.MaxSize=New Vec2i( 140,24 )
+		_editFind.MaxSize=New Vec2i( 160,24 )
 		_editFind.Entered+=Lambda()
 			OnFindNext()
 		End
@@ -40,11 +40,21 @@ Class FindReplaceView Extends DockingView
 		findDock.AddView( dock,"left" )
 		
 		_chbCase=New CheckButton( "Case sens." )
+		_chbSel=New CheckButton( "Sel. text only" )
 		_chbWrap=New CheckButton( "Wrap around" )
 		_chbWrap.Checked=True
 		
 		_chbCase.Clicked+=Lambda()
 			_options.caseSensitive=_chbCase.Checked
+		End
+		
+		_chbSel.Clicked+=Lambda()
+			Local sel:=_chbSel.Checked
+			If Not _tv Or Not _tv.CanCopy Then sel=False ; _chbSel.Checked=False
+			_options.selectionOnly=sel
+			If _tv
+				If sel Then _tv.MarkSelectionAsExtraSelection() Else _tv.ResetExtraSelection()
+			Endif
 		End
 		
 		_chbWrap.Clicked+=Lambda()
@@ -61,7 +71,7 @@ Class FindReplaceView Extends DockingView
 		act=New Action( "< Prev" )
 		act.Triggered+=Lambda()
 			
-			_options.Set( _editFind.Text,"",_chbCase.Checked,_chbWrap.Checked,False )
+			_options.Set( _editFind.Text,"",_chbCase.Checked,_chbWrap.Checked,False,_chbSel.Checked )
 			RequestedFind( _options )
 		End
 		_buttonFindPrev=New ToolButtonExt( act,GetActionTextWithShortcut( actions.findPrevious ) )
@@ -73,6 +83,8 @@ Class FindReplaceView Extends DockingView
 		dock.AddView( New SpacerView( 5,0 ),"left" )
 		dock.AddView( _chbCase,"left" )
 		dock.AddView( New SpacerView( 5,0 ),"left" )
+		dock.AddView( _chbSel,"left" )
+		dock.AddView( New SpacerView( 5,0 ),"left" )
 		dock.AddView( _chbWrap,"left" )
 		
 		' don't want to fix padding-right for TabClose style
@@ -82,8 +94,7 @@ Class FindReplaceView Extends DockingView
 		close.Style=GetStyle( "TabClose" )
 		close.Icon=close.Style.Icons[0]
 		close.Clicked=Lambda()
-			Visible=False
-			MainWindow.UpdateKeyView() 'dirty
+			MainWindow.HideFindPanel() 'dirty
 		End
 		
 		findDock.AddView( close,"right" )
@@ -97,7 +108,7 @@ Class FindReplaceView Extends DockingView
 		_replaceDock.AddView( with,"left" )
 		
 		_editReplace=New TextFieldExt
-		_editReplace.MaxSize=New Vec2i( 140,24 )
+		_editReplace.MaxSize=New Vec2i( 160,24 )
 		_replaceDock.AddView( _editReplace,"left" )
 		
 		dock=New DockingView
@@ -106,7 +117,7 @@ Class FindReplaceView Extends DockingView
 		act=New Action( "Replace" )
 		act.Triggered+=Lambda()
 			
-			_options.Set( _editFind.Text,_editReplace.Text,_chbCase.Checked,_chbWrap.Checked,True )
+			_options.Set( _editFind.Text,_editReplace.Text,_chbCase.Checked,_chbWrap.Checked,True,_chbSel.Checked )
 			RequestedReplace( _options )
 		End
 		_buttonReplace=New ToolButtonExt( act )
@@ -114,7 +125,7 @@ Class FindReplaceView Extends DockingView
 		act=New Action( "Replace all" )
 		act.Triggered+=Lambda()
 			
-			_options.Set( _editFind.Text,_editReplace.Text,_chbCase.Checked,_chbWrap.Checked,True,True )
+			_options.Set( _editFind.Text,_editReplace.Text,_chbCase.Checked,_chbWrap.Checked,True,_chbSel.Checked,True )
 			RequestedReplace( _options )
 		End
 		_buttonReplaceAll=New ToolButtonExt( act )
@@ -147,6 +158,21 @@ Class FindReplaceView Extends DockingView
 		_editFind.SelectAll()
 	End
 	
+	Property CodeView:CodeTextView()
+		Return _tv
+	Setter( value:CodeTextView )
+		If _tv=value Return
+		If _tv Then _tv.ResetExtraSelection()
+		_tv=value
+		If _tv And _chbSel.Checked
+			If _tv.CanCopy
+				_tv.MarkSelectionAsExtraSelection()
+			Else
+				_chbSel.Checked=False
+			Endif
+		Endif
+	End
+	
 	Method Activate()
 		
 		MainWindow.UpdateWindow( False ) 'hack
@@ -162,17 +188,19 @@ Class FindReplaceView Extends DockingView
 	Field _editReplace:TextFieldExt
 	Field _chbCase:CheckButton
 	Field _chbWrap:CheckButton
+	Field _chbSel:CheckButton
 	Field _buttonFindNext:ToolButtonExt
 	Field _buttonFindPrev:ToolButtonExt
 	Field _buttonReplace:ToolButtonExt
 	Field _buttonReplaceAll:ToolButtonExt
 	Field _replaceDock:DockingView
+	Field _tv:CodeTextView
 	
 	Field _options:=New FindOptions
 	
 	Method OnFindNext()
 		
-		_options.Set( _editFind.Text,"",_chbCase.Checked,_chbWrap.Checked,True )
+		_options.Set( _editFind.Text,"",_chbCase.Checked,_chbWrap.Checked,True,_chbSel.Checked )
 		RequestedFind( _options )
 	End
 End
@@ -186,16 +214,18 @@ Class FindOptions
 	Field wrapAround:Bool
 	Field goNext:Bool
 	Field all:Bool
+	Field selectionOnly:Bool
 	
 	Method New()
 	End
 	
-	Method Set( find:String,replace:String,caseSens:Bool,wrap:Bool,goNext:Bool,all:Bool=False )
+	Method Set( find:String,replace:String,caseSens:Bool,wrap:Bool,goNext:Bool,selOnly:Bool,all:Bool=False )
 
 		findText=find
 		replaceText=replace
 		caseSensitive=caseSens
 		wrapAround=wrap
+		selectionOnly=selOnly
 		Self.goNext=goNext
 		Self.all=all
 	End

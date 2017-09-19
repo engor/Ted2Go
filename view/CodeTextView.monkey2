@@ -20,6 +20,41 @@ Class CodeTextView Extends TextView
 		CursorMoved += OnCursorMoved
 		Document.TextChanged += TextChanged
 		
+'		Document.LinesModified += Lambda( first:Int,removed:Int,inserted:Int )
+'			
+'			If _extraSelStart=-1 Return
+'			If first>=_extraSelEnd Print "ret" ; Return
+'			
+'			Print "LinesModified: "+first+", "+removed+", "+inserted
+'			
+'			If inserted>0
+'				
+'				If first<_extraSelStart
+'					Print "if 1-1"
+'					_extraSelStart+=inserted
+'				Endif
+'				_extraSelEnd+=inserted
+'				
+'			Else
+'				
+'				If first<=_extraSelStart And first+removed>=_extraSelEnd
+'					ResetExtraSelection()
+'					Print "reset"
+'					Return
+'				Endif
+'				
+'				If first<_extraSelStart
+'					Print "if 2-1"
+'					_extraSelStart-=removed
+'					_extraSelEnd-=removed
+'				Else
+'					Print "if 2-2"
+'					_extraSelEnd-=Min( removed,_extraSelEnd-first )
+'				Endif
+'				
+'			Endif
+'		End
+		
 		UpdateThemeColors()
 	End
 	
@@ -228,6 +263,37 @@ Class CodeTextView Extends TextView
 		BlockCursor=_overwriteMode
 	End
 	
+	Method MarkSelectionAsExtraSelection()
+		
+		_extraSelStart=Anchor
+		_extraSelEnd=Cursor
+		RequestRender()
+	End
+	
+	Method ResetExtraSelection()
+		
+		_extraSelStart=-1
+		_extraSelEnd=-1
+		RequestRender()
+	End
+	
+	Property ExtraSelectionStart:Int()
+		Return _extraSelStart
+	Setter( value:Int )
+		_extraSelStart=value
+		RequestRender()
+	End
+	
+	Property ExtraSelectionEnd:Int()
+		Return _extraSelEnd
+	Setter( value:Int )
+		_extraSelEnd=value
+		RequestRender()
+	End
+	
+	Property HasExtraSelection:Bool()
+		Return _extraSelStart>=0
+	End
 	
 	Protected
 	
@@ -474,10 +540,32 @@ Class CodeTextView Extends TextView
 	Method UpdateThemeColors() Virtual
 	
 		_whitespacesColor=App.Theme.GetColor( "textview-whitespaces" )
+		_extraSelColor=App.Theme.GetColor( "textview-extra-selection" )
+	End
+	
+	Method OnRenderContent( canvas:Canvas,clip:Recti ) Override
+		
+		' extra selection
+		If _extraSelStart<>-1
+			Local min:=CharRect( Min( _extraSelStart,_extraSelEnd ) )
+			Local max:=CharRect( Max( _extraSelStart,_extraSelEnd ) )
+			
+			canvas.Color=_extraSelColor
+			
+			If min.Y=max.Y
+				canvas.DrawRect( min.Left,min.Top,max.Left-min.Left,min.Height )
+			Else
+				canvas.DrawRect( min.Left,min.Top,(clip.Right-min.Left),min.Height )
+				canvas.DrawRect( 0,min.Bottom,clip.Right,max.Top-min.Bottom )
+				canvas.DrawRect( 0,max.Top,max.Left,max.Height )
+			Endif
+		Endif
+		
+		Super.OnRenderContent( canvas,clip )
 	End
 	
 	Method OnRenderLine( canvas:Canvas,line:Int ) Override
-	
+		
 		Super.OnRenderLine( canvas,line )
 	
 		' draw whitespaces
@@ -540,6 +628,8 @@ Class CodeTextView Extends TextView
 	Field _showWhiteSpaces:Bool
 	Field _tabw:Int
 	Field _overwriteMode:Bool
+	Field _extraSelStart:Int=-1,_extraSelEnd:Int
+	Field _extraSelColor:Color=Color.DarkGrey
 	
 	Method OnCursorMoved()
 		
@@ -553,7 +643,6 @@ Class CodeTextView Extends TextView
 		'DoFormat( True )
 		
 	End
-	
 	
 End
 

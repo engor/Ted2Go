@@ -101,16 +101,28 @@ Class FindActions
 	Method GetInitialText:String()
 		
 		Local tv:=_docs.CurrentTextView
-		If tv = Null Return ""
+		If Not tv Return ""
 		
 		_cursorPos=Min( tv.Cursor,tv.Anchor )
 		
-		If tv.Cursor <> tv.Anchor And Not Prefs.SiblyMode
+		If tv.CanCopy And Not Prefs.SiblyMode
 			Local min:=Min( tv.Cursor,tv.Anchor )
 			Local max:=Max( tv.Cursor,tv.Anchor )
 			Return tv.Text.Slice( min,max )
 		Endif
 		Return ""
+	End
+	
+	Method GetRange:Vec2i( tv:TextView )
+		
+		If options.selectionOnly
+			Local code:=Cast<CodeTextView>( tv )
+			If code And code.HasExtraSelection
+				Return New Vec2i( code.ExtraSelectionStart,code.ExtraSelectionEnd )
+			Endif
+		Endif
+		
+		Return New Vec2i( 0,tv.Text.Length )
 	End
 	
 	Method OnFindInFiles( folder:String=Null )
@@ -128,30 +140,6 @@ Class FindActions
 		_findInFilesDialog.CustomFolder=folder
 		_findInFilesDialog.Show()
 	End
-	
-	#Rem
-	Field _storedTextView:TextView
-	Field _storedWhat:String
-	Field _storedCaseSens:Bool
-	Field _storedEntireProject:Bool
-	Field _results:Stack<FileJumpData>
-	Field _resultIndex:Int=-1
-	Field _storedChanges:=0,_changesCounter:=0
-	Field _storedLastCursor:=-1
-	
-	Method OnTextChanged()
-		
-		_changesCounter+=1
-	End
-	
-	Method OnCursorChanged()
-		
-		Local tv:=_docs.CurrentTextView
-		If tv
-			_cursorPos=Min( tv.Cursor,tv.Anchor )
-		Endif
-	End
-	#End
 	
 	Method OnFindNext()
 		
@@ -173,16 +161,19 @@ Class FindActions
 			text=text.ToLower()
 		Endif
 		
+		Local range:=GetRange( tv )
+		
 		Local cursor:=Max( tv.Anchor,tv.Cursor )
 		
+		If cursor<range.x Or cursor>range.y Then cursor=range.x
+		
 		Local i:=text.Find( what,cursor )
-		If i=-1
-			If options.wrapAround
-				i=text.Find( what )
-				If i=-1 Return
-			Else
-				Return
-			Endif
+		
+		If i=-1 Or i+what.Length>range.y
+			If Not options.wrapAround Return
+			
+			i=text.Find( what,range.x )
+			If i=-1 Or i+what.Length>range.y Return
 		Endif
 		
 		tv.SelectText( i,i+what.Length )
@@ -209,14 +200,22 @@ Class FindActions
 			text=text.ToLower()
 		Endif
 		
+		Local range:=GetRange( tv )
+		
+		Local i:=text.Find( what,range.x )
+		If i=-1 Or i+what.Length>range.y Return
+		
 		Local cursor:=Min( tv.Anchor,tv.Cursor )
 		
-		Local i:=text.Find( what )
-		If i=-1 Return
+		If cursor<range.x Or cursor>range.y Then cursor=range.y
 		
 		If i>=cursor
 			If Not options.wrapAround Return
-			i=text.FindLast( what )
+			Repeat
+				Local n:=text.Find( what,i+what.Length )
+				If n>=range.y Exit
+				i=n
+			Forever
 		Else
 			Repeat
 				Local n:=text.Find( what,i+what.Length )
@@ -227,167 +226,6 @@ Class FindActions
 		
 		tv.SelectText( i,i+what.Length )
 	End
-	
-	#Rem
-	Method OnFindNext( changeCursorPos:Bool=True )
-	
-		Local tv:=_docs.CurrentTextView
-		If Not tv Return
-		
-		Local doc:=_docs.CurrentDocument
-		
-		tv.Document.TextChanged-=OnTextChanged
-		tv.Document.TextChanged+=OnTextChanged
-		
-		tv.CursorMoved-=OnCursorChanged
-		tv.CursorMoved+=OnCursorChanged
-		
-		Local what:=_findDialog.FindText
-		If Not what Return
-		
-		Local sens:=_findDialog.CaseSensitive
-		
-		If Not sens
-			what=what.ToLower()
-		Endif
-		
-		Local entire:=_findDialog.EntireProject
-		
-		' when typing request word we should everytime find from current cursor
-		Local cursor:=_cursorPos
-		If changeCursorPos
-			cursor=Min( tv.Anchor,tv.Cursor )
-			_cursorPos=cursor
-		Endif
-		
-		Local theSame:=(what=_storedWhat And sens=_storedCaseSens And entire=_storedEntireProject)
-		theSame = theSame And _storedChanges=_changesCounter
-		
-		If Not entire Then theSame=theSame And tv=_storedTextView
-		
-		_storedWhat=what
-		_storedTextView=tv
-		_storedCaseSens=sens
-		_storedEntireProject=entire
-		_storedChanges=_changesCounter
-		
-		If Not theSame Then _results=Null
-		
-		If Not _results
-			
-			_resultIndex=-1
-			_storedLastCursor=-1
-			
-			' start new search
-			If entire
-				
-				New Fiber( Lambda()
-				
-					Local proj:=ProjectView.FindProjectByFile( doc.Path )
-					Local map:=FindInProject( what,proj,sens )
-					If map
-						CreateResultTree( _findConsole.RootNode,map,what,proj )
-						MainWindow.ShowFindResults()
-					Endif
-					
-					If Not map.Empty
-						
-						_results=New Stack<FileJumpData>
-						
-						' make current opened document as a first results
-						Local curPath:=_docs.CurrentDocument ? _docs.CurrentDocument.Path Else ""
-						If curPath
-							Local vals:=map[curPath]
-							If vals
-								_results.AddAll( vals )
-								map.Remove( curPath )
-							Endif
-						Endif
-						
-						For Local items:=Eachin map.Values
-							_results.AddAll( items )
-						End
-						
-					Endif
-					
-					Jump( NXT )
-				End )
-				
-				Return
-				
-			Else
-				
-				_results=FindInFile( doc.Path,what,sens,tv.Document )
-				
-			Endif
-			
-		Endif
-		
-		Jump( NXT )
-		
-	End
-	
-	Method Jump( nxtOrPrev:Int )
-		
-		If Not _results Or _results.Length=0 Return
-		
-		If nxtOrPrev=NXT
-			_resultIndex=(_resultIndex+1) Mod _results.Length
-		Else
-			_resultIndex-=1
-			If _resultIndex<0 Then _resultIndex=_results.Length-1
-		Endif
-		
-		Local jump:=_results[_resultIndex]
-		
-		If _storedEntireProject
-			MainWindow.OpenDocument( jump.path )
-		Endif
-	
-		Local tv:=_docs.CurrentTextView
-		If tv
-			Local i:=FixResultIndexByCursor( _docs.CurrentDocument,_resultIndex,nxtOrPrev )
-			If i<>_resultIndex
-				_resultIndex=i
-				jump=_results[_resultIndex]
-			Endif
-			tv.SelectText( jump.pos,jump.pos+jump.len )
-			_storedLastCursor=Min( tv.Cursor,tv.Anchor )
-		Endif
-	
-	End
-	
-	Method FixResultIndexByCursor:Int( doc:Ted2Document,index:Int,nxtOrPrev:Int )
-		
-		Local tv:=doc.TextView
-		Local theSameDoc:=(tv=_storedTextView)
-		Local cursor:=Min( tv.Cursor,tv.Anchor )
-		Local findFromCursor:=(theSameDoc And cursor<>_storedLastCursor)
-		
-		If Not findFromCursor Return index
-		
-		' take the first result accordingly to cursor
-		If nxtOrPrev=NXT
-			For Local i:=0 Until _results.Length
-				Local jump:=_results[i]
-				If jump.path=doc.Path And jump.pos>=cursor Return i
-			Next
-			Return 0
-		Else
-			For Local i:=_results.Length-1 To 0 Step -1
-				Local jump:=_results[i]
-				If jump.path=doc.Path And jump.pos<=cursor Return i
-			Next
-			Return _results.Length-1
-		Endif
-	End
-	
-	Method OnFindPrevious()
-		
-		Jump( PREV )
-	End
-	
-	#End
 	
 	Method OnFindAllInFiles()
 	
@@ -566,7 +404,15 @@ Class FindActions
 		
 		If text<>what Return
 		
-		tv.ReplaceText( options.replaceText )
+		Local with:=options.replaceText
+		
+		tv.ReplaceText( with )
+		
+		' temp solution
+		If options.selectionOnly
+			Local code:=Cast<CodeTextView>( tv )
+			If code Then code.ExtraSelectionEnd+=(with.Length-what.Length)
+		Endif
 		
 		OnFindNext()
 
@@ -580,7 +426,7 @@ Class FindActions
 		Local what:=options.findText
 		If Not what Return
 		
-		Local repl:=options.replaceText
+		Local with:=options.replaceText
 		
 		Local text:=tv.Text
 
@@ -592,19 +438,41 @@ Class FindActions
 		Local anchor:=tv.Anchor
 		Local cursor:=tv.Cursor
 		
-		Local i:=0,t:=0
+		Local range:=GetRange( tv )
+		
+		Local lenWhat:=what.Length
+		Local lenWith:=with.Length
+		
+		Local i:=range.x,t:=0
 		Repeat
 		
 			i=text.Find( what,i )
-			If i=-1 Exit
+			If i=-1 Or i+lenWhat>range.y Exit
 			
-			tv.SelectText( i+t,i+what.Length+t )
-			tv.ReplaceText( repl )
+			tv.SelectText( i+t,i+lenWhat+t )
+			tv.ReplaceText( with )
 			
-			t+=repl.Length-what.Length
-			i+=what.Length
+			' select last replacement
+			cursor=tv.Cursor
+			anchor=tv.Cursor-lenWith
+			
+			Local dlen:=lenWith-lenWhat
+			
+			' temp solution
+			If options.selectionOnly
+				Local code:=Cast<CodeTextView>( tv )
+				If code Then code.ExtraSelectionEnd+=dlen
+			Endif
+			
+			t+=dlen
+			i+=lenWhat
 			
 		Forever
+		
+'		If options.selectionOnly
+'			anchor=range.x
+'			cursor=range.x
+'		Endif
 		
 		tv.SelectText( anchor,cursor )
 		

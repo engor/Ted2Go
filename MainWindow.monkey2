@@ -50,6 +50,8 @@ Class MainWindowInstance Extends Window
 			Local doc:=Cast<CodeTextView>( _docsManager.CurrentTextView )
 			Local mode:=doc ? doc.OverwriteMode Else False
 			OverwriteTextMode=mode
+			
+			_findReplaceView.CodeView=Cast<CodeTextView>( _docsManager.CurrentTextView )
 		End
 		
 		App.FileDropped+=Lambda( path:String )
@@ -474,8 +476,26 @@ Class MainWindowInstance Extends Window
 		'SDL_RaiseWindow( SDLWindow )
 	End
 	
-	Method ShowFind( what:String="" )
+	Method HideFindPanel:Bool()
+		
+		If Not _findReplaceView.Visible Return False
+		
+		_findReplaceView.CodeView=Null
+		_findReplaceView.Visible=False
+		UpdateKeyView()
+		
+		Return True
+	End
 	
+	Method ShowFind( what:String="" )
+		
+		_findReplaceView.CodeView=Cast<CodeTextView>( _docsManager.CurrentTextView )
+		
+		Local arr:=what.Split( "~n" )
+		If arr.Length>1
+			what=""
+		Endif
+		
 		If _findReplaceView.Visible And Not what
 			what=_findReplaceView.FindText
 		Endif
@@ -487,13 +507,8 @@ Class MainWindowInstance Extends Window
 	
 	Method ShowReplace( what:String="" )
 		
-		If _findReplaceView.Visible And Not what
-			what=_findReplaceView.FindText
-		Endif
-		_findReplaceView.Visible=True
-		_findReplaceView.FindText=what
+		ShowFind( what )
 		_findReplaceView.Mode=FindReplaceView.Kind.Replace
-		_findReplaceView.Activate()
 	End
 	
 	Method OnFind()
@@ -1461,9 +1476,7 @@ Class MainWindowInstance Extends Window
 			Case Key.Escape
 				
 				' hide find / replace panel
-				If _findReplaceView.Visible
-					_findReplaceView.Visible=False
-					UpdateKeyView()
+				If HideFindPanel()
 					Return
 				Endif
 				
@@ -1581,7 +1594,6 @@ Class MainWindowInstance Extends Window
 	Field _isTerminating:Bool
 	Field _enableSaving:Bool
 	Field _resized:Bool
-	'Field _browsersSize:=0,_consolesSize:=0
 	Field _findReplaceView:FindReplaceView
 	Field _tabsWrap:=New DraggableTabs
 	

@@ -6,6 +6,7 @@
 		"transparent": "#0000",
 		"textview-cursor-line":"#2000",
 		"textview-whitespaces":"#2aaa",
+		"textview-extra-selection":"#5555",
 		"statusbar": "content",
 		"statusbar-active": "#CA5100",
 		"menu-shortcut":"text-background",

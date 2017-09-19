@@ -35,8 +35,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	
 		_doc=doc
 		
-		Document=_doc.TextDocument
-		
 		ContentView.Style.Border=New Recti( -4,-4,4,4 )
 		
 		'very important to set FileType for init
@@ -793,7 +791,13 @@ Class CodeDocument Extends Ted2Document
 		
 		Super.New( path )
 	
-		_doc=New TextDocument
+		_view=New DockingView
+		
+		' Editor
+		_codeView=New CodeDocumentView( Self )
+		_codeView.LineChanged += OnLineChanged
+		
+		_doc=_codeView.Document
 		
 		_doc.LinesModified+=Lambda( first:Int,removed:Int,inserted:Int )
 		
@@ -811,18 +815,12 @@ Class CodeDocument Extends Ted2Document
 				put+=1
 			Next
 			_errors.Resize( put )
-			
+		
 			' also move debug line
 			If _debugLine>=first
 				_debugLine+=(inserted-removed)
 			Endif
 		End
-
-		_view=New DockingView
-		
-		' Editor
-		_codeView=New CodeDocumentView( Self )
-		_codeView.LineChanged += OnLineChanged
 		
 		_doc.TextChanged+=Lambda()
 			Dirty=True
@@ -1415,7 +1413,7 @@ Class CodeDocument Extends Ted2Document
 		
 		If _timer _timer.Cancel()
 		
-		_timer=New Timer( 1,Lambda()
+		_timer=New Timer( 0.5,Lambda()
 		
 			If _parsing Return
 			
