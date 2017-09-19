@@ -109,11 +109,22 @@ Class MenuExt Extends DockingView
 		Endif
 		
 		Local window:=view.Window
-		location=view.TransformPointToView( location,window )
 		
 		window.AddChildView( Self )
-		Offset=location
 		Visible=True
+		
+		location=view.TransformPointToView( location,window )
+		
+		' fit into window area
+		Local size:=MeasureLayoutSize()
+		If location.x+size.x>window.Bounds.Right
+			location=location-New Vec2i( size.x,0 )
+		Endif
+		If location.y+size.y>window.Bounds.Bottom
+			location=location-New Vec2i( 0,size.y )
+		Endif
+		
+		Offset=location
 		
 		_owner=owner
 

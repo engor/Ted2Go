@@ -229,3 +229,21 @@ Function DoInNotMainFiber( work:Void() )
 		work()
 	End
 End
+
+
+Struct Recti Extension
+	
+	Method MoveTo( x:Int,y:Int )
+		
+		Local size:=Self.Size
+		Self.Origin=New Vec2i( x,y )
+		Self.Size=size
+	End
+	
+	Method MoveBy( dx:Int,dy:Int )
+	
+		Local size:=Self.Size
+		Self.Origin=Self.Origin+New Vec2i( dx,dy )
+		Self.Size=size
+	End
+End

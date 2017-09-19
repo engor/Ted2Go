@@ -81,7 +81,7 @@ Class ProjectView Extends ScrollView
 		
 		browser.FileRightClicked+=Lambda( path:String )
 		
-			Local menu:=New Menu
+			Local menu:=New MenuExt
 		
 			Select GetFileType( path )
 			Case FileType.Directory
