@@ -219,7 +219,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 		
 			Local usings:Stack<String>
 			
-			If onlyOne And Not _disableUsingsFilter
+			If Not _disableUsingsFilter 'And onlyOne
 				
 				usings=New Stack<String>
 				

@@ -2,6 +2,36 @@
 Namespace ted2go
 
 
+Enum CodeItemKind
+	Undefine_,
+	Class_,
+	Interface_,
+	Enum_,
+	EnumMember_,
+	Struct_,
+	Field_,
+	Global_,
+	Const_,
+	Method_,
+	Function_,
+	Property_,
+	Param_,
+	Lambda_,
+	Local_,
+	Operator_,
+	Inner_,
+	Alias_,
+	Inherited_
+End
+
+
+Enum AccessMode
+	Private_,
+	Protected_,
+	Public_
+End
+
+
 Class CodeItem
 	
 	Method New( ident:String )

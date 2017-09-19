@@ -1,14 +1,13 @@
 
-Namespace ted2go
+Namespace test2go
 
-
-Private
 
 Struct Vec2i Extension
 	
 	Const One := New Vec2i( 1,1 )
 End
 
+Private
 
 Function vTest( v:Vec2i,e:Entity )
 	

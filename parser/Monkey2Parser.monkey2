@@ -139,7 +139,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		RemovePrevious( filePath )
 
-		Local json:=str.Slice( i )		
+		Local json:=str.Slice( i )
 		Local jobj:=JsonObject.Parse( json )
 		
 		Local nspace:= jobj.Contains( "namespace" ) ? jobj["namespace"].ToString() Else ""
@@ -148,7 +148,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		If jobj.Contains( "members" )
 			Local items:=New Stack<CodeItem>
 			Local members:=jobj["members"].ToArray()
-			ParseJsonMembers( members,Null,filePath,items )
+			ParseJsonMembers( members,Null,filePath,items,nspace )
 			ItemsMap[filePath]=items
 			Items.AddAll( items )
 			
@@ -195,7 +195,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return Null
 	End
 		
-	Method ParseJsonMembers( members:Stack<JsonValue>,parent:CodeItem,filePath:String,resultContainer:Stack<CodeItem> )
+	Method ParseJsonMembers( members:Stack<JsonValue>,parent:CodeItem,filePath:String,resultContainer:Stack<CodeItem>,namespac:String )
 		
 		For Local val:=Eachin members
 		
@@ -226,6 +226,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			item.ScopeStartPos=New Vec2i( Int(arr[0])-1,Int(arr[1]) )
 			arr=endPos.Split( ":" )
 			item.ScopeEndPos=New Vec2i( Int(arr[0])-1,Int(arr[1]) )
+			item.Namespac=namespac
 			
 			'Print "parser. add item: "+item.Scope+" "+kind
 			
@@ -291,7 +292,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			If jobj.Contains( "members" )
 				Local memb:=jobj["members"].ToArray()
-				ParseJsonMembers( memb,item,filePath,resultContainer )
+				ParseJsonMembers( memb,item,filePath,resultContainer,namespac )
 			Endif
 			
 		Next
@@ -488,11 +489,13 @@ Class Monkey2Parser Extends CodeParserPlugin
 		' and check in global scope
 		If item = Null Or onlyOne
 			
-			item=_aliases[ident]
+			item=_aliases[firstIdent]
 			If item
 				
-				target.Add( item )
-				If resultLimit>0 And target.Length=resultLimit Return
+				If CheckUsingsFilter( item,usingsFilter )
+					target.Add( item )
+					If resultLimit>0 And target.Length=resultLimit Return
+				Endif
 				
 			Else
 				
@@ -614,6 +617,12 @@ Class Monkey2Parser Extends CodeParserPlugin
 						Endif
 						If extClass And i.Access=AccessMode.Private_
 							Continue
+						Endif
+						' extensions can be placed in different namespaces
+						If i.IsExtension
+							If Not CheckUsingsFilter( i,usingsFilter )
+								Continue
+							Endif
 						Endif
 						item=i
 						If last
@@ -929,7 +938,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 		For Local u:=Eachin usingsFilter
 			If u.EndsWith( ".." )
 				u=u.Slice( 0,u.Length-2 )
-				If item.Namespac.StartsWith( u ) Return True
+				If item.Namespac=u Return True
+				If item.Namespac.StartsWith( u+"." ) Return True
 			Else
 				If item.Namespac = u Return True
 			Endif
