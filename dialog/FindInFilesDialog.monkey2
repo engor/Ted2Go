@@ -14,7 +14,7 @@ Class FindInFilesDialog Extends DialogExt
 		
 		_projList=New ListView
 		_projList.MaxSize=New Vec2i( 500,120 )
-		_filterField=New TextField( Prefs.FindFilesFilter )
+		_filterField=New TextFieldExt( Prefs.FindFilesFilter )
 		
 		_caseSensitive=New CheckButton( "Case sensitive" )
 		_caseSensitive.Layout="float"
@@ -116,7 +116,7 @@ Class FindInFilesDialog Extends DialogExt
 	Private
 	
 	Field _findField:TextFieldExt
-	Field _filterField:TextField
+	Field _filterField:TextFieldExt
 	Field _caseSensitive:CheckButton
 	Field _projList:ListView
 	Field _docker:DockingView

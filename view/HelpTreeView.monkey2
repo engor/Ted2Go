@@ -61,7 +61,7 @@ Class HelpTreeView Extends TreeViewExt
 		Init()
 	End
 	
-	Property FindField:TextField()
+	Property FindField:TextFieldExt()
 	
 		Return _textField
 	End
@@ -215,7 +215,7 @@ Class HelpTreeView Extends TreeViewExt
 	
 	Method Init()
 
-		_textField=New TextField
+		_textField=New TextFieldExt
 		_textField.Style=GetStyle( "HelpTextField" )
 		
 		_textField.Entered=Lambda()
@@ -246,7 +246,7 @@ Class HelpTreeView Extends TreeViewExt
 				
 	End
 	
-	Field _textField:TextField
+	Field _textField:TextFieldExt
 	
 	Field _matchid:Int
 		

@@ -21,7 +21,7 @@ Class ProductVar
 		Select type
 		Case "string"
 		
-			Local view:=New TextField( value )
+			Local view:=New TextFieldExt( value )
 			
 			view.TextChanged+=Lambda()
 				value=view.Text

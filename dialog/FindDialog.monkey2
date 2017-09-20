@@ -6,9 +6,9 @@ Class FindDialog Extends DialogExt
 
 	Method New( actions:FindActions )
 	
-		_findField=New TextField
+		_findField=New TextFieldExt
 		
-		_replaceField=New TextField
+		_replaceField=New TextFieldExt
 		
 		_findField.Entered+=Lambda()
 			actions.findNext.Trigger()
@@ -103,8 +103,8 @@ Endif
 	
 	Private
 	
-	Field _findField:TextField
-	Field _replaceField:TextField
+	Field _findField:TextFieldExt
+	Field _replaceField:TextFieldExt
 	Field _caseSensitive:CheckButton
 	Field _entireProject:CheckButton
 

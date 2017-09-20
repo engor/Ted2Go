@@ -93,7 +93,7 @@ Class MainWindowInstance Extends Window
 		
 		Local label:=New Label( "Filter:" )
 		bar.AddView( label,"left" )
-		Local editFilter:=New TextField()
+		Local editFilter:=New TextFieldExt
 		editFilter.Style=GetStyle( "TextFieldBordered" )
 		editFilter.CursorType=CursorType.Line
 		editFilter.CursorBlinkRate=2.5
