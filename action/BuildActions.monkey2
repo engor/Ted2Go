@@ -107,7 +107,7 @@ Class BuildActions Implements IModuleBuilder
 		nextError.HotKey=Key.F4
 		
 		lockBuildFile=New Action( "Lock build file" )
-		lockBuildFile.Triggered=OnLockBuildFile
+		lockBuildFile.Triggered=LockBuildFile
 		lockBuildFile.HotKey=Key.L
 		lockBuildFile.HotKeyModifiers=Modifier.Menu
 		
@@ -206,7 +206,8 @@ Class BuildActions Implements IModuleBuilder
 	
 	Method LockBuildFile()
 		
-		OnLockBuildFile()
+		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
+		OnLockBuildFile( doc )
 	End
 	
 	Method SaveState( jobj:JsonObject )
@@ -223,7 +224,7 @@ Class BuildActions Implements IModuleBuilder
 		If jobj.Contains( "lockedDocument" )
 			Local path:=jobj["lockedDocument"].ToString()
 			_locked=Cast<CodeDocument>( _docs.FindDocument( path ) )
-			If _locked _locked.State="+"
+			If _locked Then SetLockedState( _locked,True )
 		Endif
 		
 		If jobj.Contains( "buildConfig" )
@@ -610,13 +611,11 @@ Class BuildActions Implements IModuleBuilder
 		GotoError( _errors.First )
 	End
 	
-	Method OnLockBuildFile()
+	Method OnLockBuildFile( doc:CodeDocument )
 	
-		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
-		
 		If Not doc Return
 		
-		If _locked _locked.State=""
+		If _locked Then SetLockedState( _locked,False )
 		
 		If doc=_locked
 			_locked=Null
@@ -624,8 +623,14 @@ Class BuildActions Implements IModuleBuilder
 		Endif
 		
 		_locked=doc
-		_locked.State="+"
+		SetLockedState( _locked,True )
+	End
+	
+	Method SetLockedState( doc:CodeDocument,locked:Bool )
 		
+		doc.State=locked ? "+" Else ""
+		Local tab:=_docs.FindTab( doc.View )
+		If tab Then tab.SetLockedState( locked )
 	End
 	
 	Method OnBuildFileSettings()

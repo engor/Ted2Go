@@ -54,6 +54,11 @@ Class MainWindowInstance Extends Window
 			_findReplaceView.CodeView=Cast<CodeTextView>( _docsManager.CurrentTextView )
 		End
 		
+		_docsManager.DocumentDoubleClicked+=Lambda( doc:Ted2Document )
+		
+			_buildActions.LockBuildFile()
+		End
+		
 		App.FileDropped+=Lambda( path:String )
 			
 			OnFileDropped( path )

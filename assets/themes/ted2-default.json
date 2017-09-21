@@ -190,6 +190,12 @@
 		"TabsDropArea":{
 			"extends":"Label",
 			"backgroundColor":"#5009"
+		},
+		
+		"TabButtonLocked":{
+			"extends":"TabButton",
+			"borderColor":"#fa22",
+			"border":[ 0,0,0,1 ]
 		}
 	}
 }

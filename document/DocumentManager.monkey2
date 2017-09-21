@@ -11,6 +11,7 @@ Class DocumentManager
 	
 	Field DocumentAdded:Void( doc:Ted2Document )
 	Field DocumentRemoved:Void( doc:Ted2Document )
+	Field DocumentDoubleClicked:Void( doc:Ted2Document )
 
 	Method New( tabView:TabViewExt,browser:DockingView )
 	
@@ -111,7 +112,10 @@ Class DocumentManager
 		InitDoc( doc )
 	
 		_openDocs.Add( doc )
-		_tabView.AddTab( TabText( doc ),doc.View )
+		Local tab:=_tabView.AddTab( TabText( doc ),doc.View )
+		tab.DoubleClicked+=Lambda()
+			DocumentDoubleClicked( doc )
+		End
 		
 		DocumentAdded( doc )
 		
@@ -180,6 +184,14 @@ Class DocumentManager
 			If doc.View=view Return doc
 		Next
 		
+		Return Null
+	End
+	
+	Method FindTab:TabButtonExt( view:View )
+		
+		For Local t:=Eachin _tabView.Tabs
+			If t.View=view Return t
+		Next
 		Return Null
 	End
 	

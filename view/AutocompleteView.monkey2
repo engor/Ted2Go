@@ -374,10 +374,14 @@ Class AutocompleteDialog Extends NoTitleDialog
 				
 				Local key:=event.Key
 				Select key
+				
 				Case Key.Escape
 					Hide()
 					event.Eat()
-					
+				
+				Case Key.Home,Key.KeyEnd
+					Hide()
+				
 				Case Key.Up
 					_view.SelectPrev()
 					event.Eat()
