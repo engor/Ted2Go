@@ -431,14 +431,6 @@ Class MainWindowInstance Extends Window
 		_buildConsoleView.AddView( _buildErrorsList,"right","400",True )
 		_buildConsoleView.ContentView=_buildConsole
 		
-'		_consolesTabView.AddTab( "Build",_buildConsoleView,True )
-'		_consolesTabView.AddTab( "Output",_outputConsoleView,False )
-'		_consolesTabView.AddTab( "Docs",_helpConsole,False )
-'		_consolesTabView.AddTab( "Find",_findConsole,False )
-'		_consolesTabView.AddTab( "Chat",_ircView,False )
-		
-'		_consolesTabView.CurrentChanged+=OnChatClicked
-		
 		_statusBar=New StatusBarView
 		
 		_contentView=New DockingView
@@ -1220,7 +1212,7 @@ Class MainWindowInstance Extends Window
 		
 	End
 	
-	Method OnChatClicked()
+	Method OnChatTabActiveChanged()
 		
 		Local tab:=_tabsWrap.tabs["Chat"]
 		
@@ -1295,7 +1287,6 @@ Class MainWindowInstance Extends Window
 		
 		_tabsWrap.AddTab( "Project",_projectView )
 		_tabsWrap.AddTab( "Debug",_debugView )
-		'_tabsWrap.AddTab( "Help",_helpTree )
 		_tabsWrap.AddTab( "Source",_docBrowser )
 		_tabsWrap.AddTab( "Build",_buildConsoleView )
 		_tabsWrap.AddTab( "Output",_outputConsoleView )
@@ -1303,6 +1294,7 @@ Class MainWindowInstance Extends Window
 		_tabsWrap.AddTab( "Find",_findConsole )
 		_tabsWrap.AddTab( "Chat",_ircView )
 		
+		_tabsWrap.tabs["Chat"].ActiveChanged+=OnChatTabActiveChanged
 	End
 	
 	Method ArrangeElements()

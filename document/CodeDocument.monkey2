@@ -197,7 +197,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			Select key
 			
 				Case Key.Space
-					If event.Modifiers & Modifier.Control
+					If ctrl
 						Return
 					'Else
 					'	if AutoComplete.IsOpened And Prefs.AcUseSpace Return
@@ -206,6 +206,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				Case Key.Backspace
 					
 					If AutoComplete.IsOpened
+						
 						Local ident:=IdentBeforeCursor()
 						ident=ident.Slice( 0,ident.Length-1 )
 						If ident.Length > 0
@@ -336,16 +337,16 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Return
 			
 				#If __TARGET__="macos"
-				Case Key.Left 'smart Home behaviour
+				Case Key.A 'smart Home behaviour
 			
-					If event.Modifiers & Modifier.Menu
+					If ctrl
 						SmartHome( shift )
 						Return
 					Endif
 			
-				Case Key.Right
+				Case Key.E
 			
-					If event.Modifiers & Modifier.Menu
+					If ctrl
 						SmartEnd( shift )
 						Return
 					Endif
@@ -483,20 +484,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Endif
 			
 			
-				Case Key.Insert
-			
-					If CanPaste And shift
-						SmartPaste()
-						Return
-					Endif
-			
-				Case Key.KeyDelete
-			
-					If shift
-						OnCut()
-						Return
-					Endif
-			
 				#If __TARGET__="macos"
 				
 				Case Key.Z
@@ -518,7 +505,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 		Case EventType.KeyChar
 			
-			If event.Key = Key.Space And event.Modifiers & Modifier.Control
+			If event.Key = Key.Space And ctrl
 				If _doc.CanShowAutocomplete()
 					Local ident:=IdentBeforeCursor()
 					If ident Then _doc.ShowAutocomplete( ident,True )

@@ -47,7 +47,8 @@ Class FindActions
 		
 		findInFiles=New Action( "Find in files..." )
 		findInFiles.Triggered=Lambda()
-			OnFindInFiles()
+			Local proj:=projView.FindProjectByFile( docs.CurrentDocument.Path )
+			OnFindInFiles( "",proj )
 		End
 		findInFiles.HotKey=Key.F
 		findInFiles.HotKeyModifiers=Modifier.Menu|Modifier.Shift
@@ -125,18 +126,11 @@ Class FindActions
 		Return New Vec2i( 0,tv.Text.Length )
 	End
 	
-	Method OnFindInFiles( folder:String=Null )
+	Method OnFindInFiles( folder:String=Null,selProj:String=Null )
 	
-		Local tv:=_docs.CurrentTextView
-		If tv <> Null
-			If tv.Cursor <> tv.Anchor
-				Local min:=Min( tv.Cursor,tv.Anchor )
-				Local max:=Max( tv.Cursor,tv.Anchor )
-				Local s:=tv.Text.Slice( min,max )
-				_findInFilesDialog.SetInitialText( s )
-			Endif
-		Endif
-		
+		Local s:=GetInitialText()
+		If s Then _findInFilesDialog.SetInitialText( s )
+		_findInFilesDialog.SetSelectedProject( selProj )
 		_findInFilesDialog.CustomFolder=folder
 		_findInFilesDialog.Show()
 	End
