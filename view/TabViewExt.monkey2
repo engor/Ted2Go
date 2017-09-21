@@ -547,14 +547,28 @@ Class TabButtonExt Extends TabButton
 		Return _parentDock.ActiveName=Text
 	End
 	
+	Method SetLockedState( locked:Bool )
+		
+		_locked=locked
+		OnThemeChanged()
+	End
+	
+	
 	Protected
 	
 	Field _parentDock:TabViewExt
+	
+	Method OnThemeChanged() Override
+		
+		Super.OnThemeChanged()
+		Style=GetStyle( _locked ? "TabButtonLocked" Else "TabButton" )
+	End
 	
 	
 	Private
 	
 	Field _possibleParentDocks:TabViewExt[]
+	Field _locked:Bool
 	
 	Method CanDropTo:Bool( tabDock:TabViewExt )
 	
