@@ -1459,7 +1459,7 @@ Class MainWindowInstance Extends Window
 		_docsManager.LoadState( jobj )
 		_buildActions.LoadState( jobj )
 		_projectView.LoadState( jobj )
-		
+		 
 		If Not _projectView.OpenProjects _projectView.OpenProject( CurrentDir() )
 		
 		UpdateRecentFilesMenu()

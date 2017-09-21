@@ -213,13 +213,13 @@ Class FindActions
 			If Not options.wrapAround Return
 			Repeat
 				Local n:=text.Find( what,i+what.Length )
-				If n>=range.y Exit
+				If n=-1 Or n>=range.y Exit
 				i=n
 			Forever
 		Else
 			Repeat
 				Local n:=text.Find( what,i+what.Length )
-				If n>=cursor Exit
+				If n=-1 Or n>=cursor Exit
 				i=n
 			Forever
 		End

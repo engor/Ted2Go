@@ -212,7 +212,7 @@ Class DocumentManager
 	End
 		
 	Method LoadState( jobj:JsonObject )
-		
+		 
 		If Not jobj.Contains( "openDocuments" ) Return
 		
 		For Local doc:=Eachin jobj.GetArray( "openDocuments" )
