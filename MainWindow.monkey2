@@ -524,9 +524,10 @@ Class MainWindowInstance Extends Window
 	
 		If _buildConsole.Running
 			_buildConsole.Terminate()
-			HideStatusBarProgress()
-			RestoreConsoleVisibility()
 		Endif
+		_debugView.KillApp()
+		HideStatusBarProgress()
+		RestoreConsoleVisibility()
 		If _outputConsole.Running
 			_outputConsole.Terminate()
 		Endif

@@ -35,7 +35,7 @@ Class DebugView Extends DockingView
 		
 		End
 
-		'step over		
+		'step over
 		_step=_toolBar.AddAction( "",icons[3] )
 		_step.Triggered=Lambda()
 			If Not _debugging Return
@@ -177,8 +177,12 @@ Class DebugView Extends DockingView
 		
 		OnStopRunning( "Finished debugging app." )
 	End
-
-
+	
+	Method KillApp()
+		
+		_kill.Trigger()
+	End
+	
 	Private
 	
 	Method OnStopRunning( info:String )
