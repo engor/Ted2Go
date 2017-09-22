@@ -363,7 +363,6 @@ Class BuildActions Implements IModuleBuilder
 	
 	Method SaveAll:Bool( buildFile:String )
 		
-		If Not buildFile Return True
 		Local proj:=ProjectView.FindProjectByFile( buildFile )
 		
 		For Local doc:=Eachin _docs.OpenDocuments
