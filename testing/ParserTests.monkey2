@@ -18,7 +18,7 @@ End
 Interface ITest
 
 	Method abs()
-	Property bpp()
+	Property bpp:Bool()
 	
 End
 
