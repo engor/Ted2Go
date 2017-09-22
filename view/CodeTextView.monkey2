@@ -308,8 +308,19 @@ Class CodeTextView Extends TextView
 			
 			Case EventType.MouseDown 'prevent selection by dragging with right-button
 				
-				If event.Button = MouseButton.Right Return
-				
+				If event.Button = MouseButton.Right
+					If Not CanCopy
+						Local cur:=CharAtPoint( event.Location )
+						SelectText( cur,cur )
+					Else
+						Local r:=CursorRect | CharRect( Anchor )
+						If Not r.Contains( event.Location )
+							Local cur:=CharAtPoint( event.Location )
+							SelectText( cur,cur )
+						Endif
+					Endif
+					Return
+				Endif
 				
 			Case EventType.MouseUp
 				

@@ -976,6 +976,8 @@ Class MainWindowInstance Extends Window
 		
 		If Not _editorMenu
 			_editorMenu=New MenuExt
+			_editorMenu.AddAction( _viewActions.gotoDeclaration )
+			_editorMenu.AddSeparator()
 			_editorMenu.AddAction( _editActions.cut )
 			_editorMenu.AddAction( _editActions.copy )
 			_editorMenu.AddAction( _editActions.paste )
