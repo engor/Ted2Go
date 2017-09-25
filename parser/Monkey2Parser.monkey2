@@ -698,7 +698,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Method StartParsing:String( pathOnDisk:String,isModule:Bool )
 		
-		Local proc:=ProcessReader.Obtain()
+		If Not _enabled Return ""
+		
+		Local proc:=ProcessReader.Obtain( pathOnDisk )
 		
 		Local cmd:=_mx2ccPath+" makeapp -parse -geninfo ~q"+pathOnDisk+"~q"
 		Local str:=proc.Run( cmd )

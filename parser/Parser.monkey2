@@ -17,6 +17,8 @@ Interface ICodeParser
 	
 	Method GetItem:CodeItem( ident:String )
 	
+	Method SetEnabled( enabled:Bool )
+	
 	Property Items:Stack<CodeItem>()
 	Property ItemsMap:StringMap<Stack<CodeItem>>()
 	Property UsingsMap:StringMap<UsingInfo>()
@@ -34,6 +36,14 @@ Class ParsersManager
 		Return _empty
 	End
 
+	Function DisableAll()
+		
+		Local plugins:=Plugin.PluginsOfType<CodeParserPlugin>()
+		For Local p:=Eachin plugins
+			p.SetEnabled( False )
+		Next
+	End
+	
 	
 	Private
 	
@@ -95,7 +105,8 @@ Class EmptyParser Implements ICodeParser
 	Method GetItem:CodeItem( ident:String )
 		Return Null
 	End
-	
+	Method SetEnabled( enabled:Bool )
+	End
 	
 	Private
 	

@@ -599,8 +599,15 @@ Class MainWindowInstance Extends Window
 		SaveState()
 		_enableSaving=False
 		OnForceStop() ' kill build process if started
-		ProcessReader.StopAll()
 		If _ircView Then _ircView.Quit("Closing Ted2Go")
+		
+		' waiting for started processes if any
+		ParsersManager.DisableAll()
+		Local future:=New Future<Bool>
+		New Fiber( Lambda()
+			ProcessReader.WaitingForStopAll( future )
+		End )
+		future.Get()
 		
 		App.Terminate()
 	End
