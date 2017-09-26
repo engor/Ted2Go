@@ -77,7 +77,7 @@
 
 		"ColoredToolButton":{
 			"extends":"ToolButton",
-			"iconColor":"#6A92CF"
+			"iconColor":"text-default"
 		},
 
 		"TabViewArrowPrev":{
