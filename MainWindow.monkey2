@@ -189,7 +189,7 @@ Class MainWindowInstance Extends Window
 		End
 		
 		_helpTree=New HelpTreeView( _helpView )
-		_docsConsole.AddView( _helpTree,"right",250,True )
+		_docsConsole.AddView( _helpTree,"right",200,True )
 		
 		_docsConsole.AddView( bar,"top" )
 		_docsConsole.ContentView=_helpView
@@ -198,13 +198,13 @@ Class MainWindowInstance Extends Window
 		bar.AddView( New SpacerView( 6,0 ),"right" ) ' right offset
 		bar.AddView( _helpSwitcher,"right" )
 		_helpSwitcher.Clicked=Lambda()
-			App.Idle+=Lambda()
-				_helpTree.Visible=Not _helpTree.Visible
-				_helpSwitcher.Text=_helpTree.Visible ? ">" Else "<"
-				_helpSwitcher.Hint=_helpTree.Visible ? "Hide docs index" Else "Show docs index"
-			End
+		
+			_helpTree.Visible=Not _helpTree.Visible
+			_helpSwitcher.Text=_helpTree.Visible ? ">" Else "<"
+			_helpSwitcher.Hint=_helpTree.Visible ? "Hide docs index" Else "Show docs index"
 		End
-		_helpSwitcher.Clicked() 'hide at startup
+		_helpTree.Visible=False
+		_helpSwitcher.Clicked() 'show at startup
 		
 		_helpView.Navigate( AboutPagePath )
 		
@@ -1072,6 +1072,12 @@ Class MainWindowInstance Extends Window
 		
 		SaveTabsState( jobj )
 		
+		Local jdocs:=New JsonObject
+		jobj["docsTab"]=jdocs
+		
+		jdocs["indexerVisible"]=New JsonBool( _helpTree.Visible )
+		jdocs["indexerSize"]=New JsonString( _docsConsole.GetViewSize( _helpTree ) )
+		
 		Local recent:=New JsonArray
 		For Local path:=Eachin _recentFiles
 			recent.Add( New JsonString( path ) )
@@ -1315,7 +1321,7 @@ Class MainWindowInstance Extends Window
 		_contentView.RemoveView( _statusBar )
 		_contentView.RemoveView( _findReplaceView )
 		
-		_tabsWrap.DetachFromParent( _contentView )
+		_tabsWrap.DetachFromParent()
 		
 		If Prefs.MainToolBarVisible
 			_toolBar=GetMainToolBar()
@@ -1390,11 +1396,10 @@ Class MainWindowInstance Extends Window
 			' set sizes
 			Local sz:=Json_FindValue( jobj.Data,"tabsDocks/"+edge+"Size" )
 			If sz
-				Local size:=Int( sz.ToNumber() )
-				If size>0 Then _tabsWrap.sizes[edge]=size
+				_tabsWrap.sizes[edge]=sz.ToString()
 			Endif
 			Local dock:=_tabsWrap.docks[edge]
-			_contentView.SetViewSize( dock,""+_tabsWrap.sizes[edge] )
+			_contentView.SetViewSize( dock,_tabsWrap.sizes[edge] )
 			' set visibility
 			Local vis:=Json_FindValue( jobj.Data,"tabsDocks/"+edge+"Visible" )
 			If vis
@@ -1417,16 +1422,22 @@ Class MainWindowInstance Extends Window
 			jj[edge+"Tabs"]=JsonArray.Create( dock.TabsNames )
 			jj[edge+"Active"]=New JsonString( dock.ActiveName )
 			jj[edge+"Visible"]=New JsonBool( dock.Visible )
-			Local size:=(edge="bottom") ? dock.Frame.Height Else dock.Frame.Width
-			If size > 0
-				jj[edge+"Size"]=New JsonNumber( size )
-			Endif
+			jj[edge+"Size"]=New JsonString( _tabsWrap.GetDockSize( dock ) )
 		Next
 	End
 	
 	Method LoadState( jobj:JsonObject )
 	
 		LoadTabsState( jobj )
+		
+		If jobj.Contains( "docsTab" )
+			Local jdocs:=jobj.GetObject( "docsTab" )
+			Local size:=jdocs.GetString( "indexerSize" )
+			_docsConsole.SetViewSize( _helpTree,size )
+			Local vis:=jdocs.GetBool( "indexerVisible" )
+			_helpTree.Visible=Not vis
+			_helpSwitcher.Clicked()
+		Endif
 		
 		If jobj.Contains( "recentFiles" )
 			For Local file:=Eachin jobj.GetArray( "recentFiles" )
@@ -1793,13 +1804,13 @@ Class DraggableTabs
 	
 	Field tabs:=New StringMap<TabButtonExt>
 	Field docks:=New StringMap<TabViewExt>
-	Field sizes:=New StringMap<Int>
+	Field sizes:=New StringMap<String>
 	
 	Method New()
 		
-		sizes["left"]=300
-		sizes["right"]=300
-		sizes["bottom"]=250
+		sizes["left"]="300"
+		sizes["right"]="300"
+		sizes["bottom"]="250"
 		
 		_docksArray=New TabViewExt[Edges.Length]
 		Local i:=0
@@ -1815,18 +1826,26 @@ Class DraggableTabs
 		For Local edge:=Eachin Edges
 			view.AddView( docks[edge],edge,sizes[edge],True )
 		Next
+		_parent=view
 	End
 	
-	Method DetachFromParent( view:DockingView )
-	
+	Method DetachFromParent()
+		
+		If Not _parent Return
+		
 		For Local edge:=Eachin Edges
-			view.RemoveView( docks[edge] )
+			_parent.RemoveView( docks[edge] )
 		Next
 	End
 	
 	Method AddTab( name:String,view:View )
 		
 		tabs[name]=TabViewExt.CreateDraggableTab( name,view,_docksArray )
+	End
+	
+	Method GetDockSize:String( dock:TabViewExt )
+		
+		Return _parent.GetViewSize( dock )
 	End
 	
 	Property AllDocks:TabViewExt[]()
@@ -1836,6 +1855,7 @@ Class DraggableTabs
 	Private
 	
 	Field _docksArray:TabViewExt[]
+	Field _parent:DockingView
 	
 End
 
