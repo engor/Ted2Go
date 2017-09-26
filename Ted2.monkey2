@@ -215,7 +215,7 @@ Function SetupMonkeyRootPath:String( rootPath:String,searchMode:Bool )
 		' search for choosen-by-requester folder
 		While Not found
 	
-			Local ok:=Confirm( "Initializing","Monkey2 root directory isn't set.~nTo continue, you should specify it." )
+			Local ok:=Confirm( "Initializing","Monkey2 root directory isn't set.~nTo continue, you should to specify it." )
 			If Not ok
 				Return ""
 			End
