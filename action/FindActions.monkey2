@@ -38,7 +38,7 @@ Class FindActions
 		replace.Triggered=OnReplace
 		#If __TARGET__="macos"
 		replace.HotKey=Key.F
-		replace.HotKeyModifiers=Modifier.Alt
+		replace.HotKeyModifiers=Modifier.Alt|Modifier.Menu
 		#Else
 		replace.HotKey=Key.H
 		replace.HotKeyModifiers=Modifier.Menu
