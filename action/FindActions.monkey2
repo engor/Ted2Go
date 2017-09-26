@@ -36,9 +36,13 @@ Class FindActions
 		
 		replace=New Action( "Replace..." )
 		replace.Triggered=OnReplace
+		#If __TARGET__="macos"
+		replace.HotKey=Key.F
+		replace.HotKeyModifiers=Modifier.Alt
+		#Else
 		replace.HotKey=Key.H
 		replace.HotKeyModifiers=Modifier.Menu
-		
+		#Endif
 		replaceNext=New Action( "Replace next" )
 		replaceNext.Triggered=OnReplaceNext
 		
