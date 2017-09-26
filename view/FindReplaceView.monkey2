@@ -86,6 +86,15 @@ Class FindReplaceView Extends DockingView
 		dock.AddView( _chbSel,"left" )
 		dock.AddView( New SpacerView( 5,0 ),"left" )
 		dock.AddView( _chbWrap,"left" )
+		dock.AddView( New SpacerView( 10,0 ),"left" )
+		
+		' replace switcher
+		Local act2:=New Action( "R" )
+		act2.Triggered=Lambda()
+			Mode = (_mode=Kind.Find) ? Kind.Replace Else Kind.Find
+		End
+		Local replSwitcher:=New ToolButtonExt( act2,"Show / hide replace panel" )
+		dock.AddView( replSwitcher,"left" )
 		
 		' don't want to fix padding-right for TabClose style
 		findDock.AddView( New SpacerView( 6,0 ),"right" )
