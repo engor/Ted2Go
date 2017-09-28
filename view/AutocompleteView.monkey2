@@ -149,7 +149,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 		
 	End
 	
-	Method Show( ident:String,filePath:String,fileType:String,docLine:Int )
+	Method Show( ident:String,filePath:String,fileType:String,docLineNum:Int,docLineStr:String,docPosInLine:Int )
 		
 		Local dotPos:=ident.FindLast( "." )
 		
@@ -249,7 +249,16 @@ Class AutocompleteDialog Extends NoTitleDialog
 			Endif
 			
 			_listForExtract.Clear()
-			parser.GetItemsForAutocomplete( ident,filePath,docLine,_listForExtract,usings )
+			
+			Global opts:=New ParserRequestOptions
+			opts.ident=ident
+			opts.filePath=filePath
+			opts.docLineNum=docLineNum
+			opts.docLineStr=docLineStr
+			opts.docPosInLine=docPosInLine
+			opts.results=_listForExtract
+			opts.usingsFilter=usings
+			parser.GetItemsForAutocomplete( opts )
 			
 			CodeItemsSorter.SortByType( _listForExtract,True )
 		Endif

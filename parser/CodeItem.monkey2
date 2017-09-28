@@ -34,8 +34,15 @@ End
 
 Class CodeItem
 	
+	Field nspace:NSpace
+	
 	Method New( ident:String )
 		_ident=ident
+	End
+	
+	Method OnRemoved()
+		
+		If nspace Then nspace.items.Remove( Self )
 	End
 	
 	Property Ident:String()

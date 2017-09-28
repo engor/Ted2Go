@@ -1114,19 +1114,21 @@ Class CodeDocument Extends Ted2Document
 		If ident = "" Then ident=_codeView.IdentBeforeCursor()
 		
 		'show
-		Local line:=TextDocument.FindLine( _codeView.Cursor )
+		Local lineNum:=TextDocument.FindLine( _codeView.Cursor )
+		Local lineStr:=TextDocument.GetLine( lineNum )
+		Local posInLine:=_codeView.Cursor-TextDocument.StartOfLine( lineNum )
 		
 		If byCtrlSpace And AutoComplete.IsOpened
 			AutoComplete.DisableUsingsFilter=Not AutoComplete.DisableUsingsFilter
 		Endif
 		
-		AutoComplete.Show( ident,Path,FileExtension,line )
+		AutoComplete.Show( ident,Path,FileExtension,lineNum,lineStr,posInLine )
 		
 		If Not AutoComplete.IsOpened Return
 		
 		Local frame:=AutoComplete.Frame
 		
-		Local w:=frame.Width
+		Local w:=frame.Width+18 'hack: 18px for scroll
 		Local h:=frame.Height
 		
 		Local cursorRect:=_codeView.CursorRect
@@ -1142,12 +1144,8 @@ Class CodeDocument Extends Ted2Document
 		frame.Bottom=frame.Top+h
 		' fit dialog into window
 		If frame.Bottom > MainWindow.RenderRect.Bottom
-			
 			Local dy:=frame.Bottom-MainWindow.RenderRect.Bottom-128
-			frame.Top+=dy
-			frame.Bottom+=dy
-			frame.Left+=50
-			frame.Right+=50
+			frame.MoveBy( 50,dy )
 		Endif
 		AutoComplete.Frame=frame
 		

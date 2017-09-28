@@ -110,6 +110,7 @@
 #Import "view/ViewExtensions"
 #Import "view/DockingViewExt"
 
+#Import "Tuple"
 #Import "Plugin"
 #Import "ThemeImages"
 #Import "Prefs"
@@ -129,7 +130,7 @@ Using tinyxml2..
 
 Const MONKEY2_DOMAIN:="http://monkeycoder.co.nz"
 
-Global AppTitle:="Ted2Go v2.6"
+Global AppTitle:="Ted2Go v2.7a"
 
 
 Function Main()

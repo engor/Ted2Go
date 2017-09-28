@@ -153,8 +153,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Items.AddAll( items )
 			
 			For Local i:=Eachin items
-				i.Namespac=nspace
 				i.IsModuleMember=isModule
+				NSpace.AddItem( nspace,i )
 			Next
 			'Print "file parsed: "+filePath+", items.count: "+items.Count()
 		Endif
@@ -351,9 +351,14 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Method ItemAtScope:CodeItem( ident:String,filePath:String,docLine:Int )
 		
-		Local result:=New Stack<CodeItem>
-		GetItemsInternal( ident,filePath,docLine,result,_lastUsingsFilter,1 )
-		Return (Not result.Empty) ? result[0] Else Null
+		Local opts:=New ParserRequestOptions
+		opts.results=New Stack<CodeItem>
+		opts.ident=ident
+		opts.filePath=filePath
+		opts.docLineNum=docLine
+		opts.usingsFilter=_lastUsingsFilter
+		GetItemsInternal( opts,1 )
+		Return (Not opts.results.Empty) ? opts.results[0] Else Null
 	End
 	
 	Method RefineRawType( item:CodeItem )
@@ -367,9 +372,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return Null
 	End
 	
-	Method GetItemsForAutocomplete( ident:String,filePath:String,docLine:Int,target:Stack<CodeItem>,usingsFilter:Stack<String> =Null )
+	Method GetItemsForAutocomplete( options:ParserRequestOptions )
 		
-		GetItemsInternal( ident,filePath,docLine,target,usingsFilter,-1 )
+		GetItemsInternal( options )
 	End
 	
 	
@@ -388,7 +393,14 @@ Class Monkey2Parser Extends CodeParserPlugin
 		_types=New String[](".monkey2")
 	End
 	
-	Method GetItemsInternal( ident:String,filePath:String,docLine:Int,target:Stack<CodeItem>,usingsFilter:Stack<String> =Null,resultLimit:Int=-1 )
+	Method GetItemsInternal( options:ParserRequestOptions,resultLimit:Int=-1 )
+		
+		Local ident:=options.ident
+		Local filePath:=options.filePath
+		Local docLineNum:=options.docLineNum
+		Local docLineStr:=options.docLineStr
+		Local target:=options.results
+		Local usingsFilter:=options.usingsFilter
 		
 		_lastUsingsFilter=usingsFilter
 		
@@ -399,7 +411,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local onlyOne:=(idents.Length=1)
 	
 		'check current scope
-		Local rootScope:=GetScope( filePath,docLine )
+		Local rootScope:=GetScope( filePath,docLineNum )
 		Local scope:=rootScope
 		
 		'If scope Print scope.Text
@@ -414,7 +426,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local items:=New Stack<CodeItem>
 		Local fullyMatched:CodeItem=Null
 		
-		'Print "idents: "+firstIdent+" - "+lastIdent
+		'Print "idents: "+firstIdent+" - "+lastIdent+" - "+ident
 		
 		If isSelf Or isSuper
 			
@@ -445,7 +457,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 							Continue
 						Endif
 						' additional checking for the first ident
-						If IsLocalMember( i ) And i.ScopeStartPos.x > docLine
+						If IsLocalMember( i ) And i.ScopeStartPos.x > docLineNum
 							'Print "cont3: "+i.Ident
 							Continue
 						Endif
@@ -492,7 +504,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			item=_aliases[firstIdent]
 			If item
 				
-				If CheckUsingsFilter( item,usingsFilter )
+				If CheckUsingsFilter( item.Namespac,usingsFilter )
 					target.Add( item )
 					If resultLimit>0 And target.Length=resultLimit Return
 				Endif
@@ -501,7 +513,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				
 				For Local i:=Eachin Items
 					
-					If Not CheckUsingsFilter( i,usingsFilter )
+					If Not CheckUsingsFilter( i.Namespac,usingsFilter )
 						'Print "skip 1 "+i.Ident
 						Continue
 					Endif
@@ -517,7 +529,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 						Continue
 					Endif
 					
-					If IsLocalMember( i ) And i.ScopeStartPos.x > docLine
+					If IsLocalMember( i ) And i.ScopeStartPos.x > docLineNum
 						'Print "skip 4 "+i.Ident
 						Continue
 					Endif
@@ -550,6 +562,71 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		'If item Print "item: "+item.Scope+", kind: "+item.KindStr
 		'DebugStop()
+		
+		' check namespace qualifier
+		If item = Null
+			
+			Local s:=ident
+			If s.EndsWith( "." ) Then s=s.Slice( 0,s.Length-1 )
+			Local tuple:=NSpace.Find( s,False,usingsFilter )
+			Local ns := tuple ? (tuple.Item1 ? tuple.Item1 Else tuple.Item2) Else Null
+			If ns
+				' check ident after namespace
+				Local needFind:=""
+				Local stripped:=NSpace.StripNSpace( s,ns )
+				If stripped<>s
+					Local i:=stripped.Find( "." )
+					If i>0
+						needFind=stripped.Slice( 0,i )
+					Else
+						needFind=stripped
+					Endif
+				Endif
+				' grab all items from namespace
+				For Local i:=Eachin ns.items
+					If i.Access<>AccessMode.Public_ And i.FilePath<>filePath Continue
+					If needFind And i.Ident<>needFind Continue
+					If needFind
+						item=i
+						Exit
+					Else
+						target.Add( i )
+						If resultLimit>0 And target.Length=resultLimit Return
+					Endif
+				Next
+				' also grab all children namespaces
+				For Local i:=Eachin ns.nspaces
+					' dirty, create fake code items
+					Local code:=New CodeItem( i.name )
+					target.Add( code )
+					' don't check limit here
+					'If resultLimit>0 And target.Length=resultLimit Return
+				Next
+				
+			Elseif onlyOne
+				
+				Local filter:=usingsFilter
+				' don't filter namespaces for 'using xxx.yyy' section
+				If docLineStr.Trim().ToLower().StartsWith( "using " )
+					filter=Null
+				Endif
+				' grab all namespaces by ident
+				For Local n:=Eachin NSpace.ALL.Values.All()
+					Local r:NSpace
+					If n.name.StartsWith( firstIdent )
+						r=n
+					Else
+						r=n.GetNSpace( firstIdent,True,True )
+					Endif
+					If r And CheckUsingsFilter( r.FullName,filter )
+						' dirty, create fake code items
+						Local code:=New CodeItem( r.name )
+						target.Add( code )
+					Endif
+				Next
+				
+			Endif
+		Endif
 		
 		' var1.var2.var3...
 		If Not onlyOne And item <> Null
@@ -620,7 +697,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 						Endif
 						' extensions can be placed in different namespaces
 						If i.IsExtension
-							If Not CheckUsingsFilter( i,usingsFilter )
+							If Not CheckUsingsFilter( i.Namespac,usingsFilter )
 								Continue
 							Endif
 						Endif
@@ -665,7 +742,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		item.IsExtension=True
 		list.Add( item )
 	End
-
+	
 	Method RemoveExtensions( filePath:String )
 		
 		For Local list:=Eachin ExtraItemsMap.Values.All()
@@ -933,17 +1010,17 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
-	Method CheckUsingsFilter:Bool( item:CodeItem,usingsFilter:StringStack )
+	Function CheckUsingsFilter:Bool( nspace:String,usingsFilter:StringStack )
 		
 		If Not usingsFilter Or usingsFilter.Empty Return True
 		
 		For Local u:=Eachin usingsFilter
 			If u.EndsWith( ".." )
 				u=u.Slice( 0,u.Length-2 )
-				If item.Namespac=u Return True
-				If item.Namespac.StartsWith( u+"." ) Return True
+				If nspace=u Return True
+				If nspace.StartsWith( u+"." ) Return True
 			Else
-				If item.Namespac = u Return True
+				If nspace=u Return True
 			Endif
 		Next
 		Return False
@@ -1171,6 +1248,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		For Local i:=Eachin list
 			Items.Remove( i )
+			i.OnRemoved()
 		Next
 		
 		ItemsMap.Remove( path )
@@ -1201,6 +1279,171 @@ Struct Chars
 	Const GRID:=35
 	Const TAB:=9
 	Const SPACE:=32
+	
+End
+
+
+Class NSpace
+	
+	Field parent:NSpace
+	Field name:String
+	Field items:=New Stack<CodeItem>
+	Field nspaces:=New Stack<NSpace>
+	
+	Property NestedLevel:Int()
+		
+		Local level:=0
+		Local par:=parent
+		While par
+			level+=1
+			par=par.parent
+		Wend
+		Return level
+	End
+	
+	Property FullName:String()
+	
+		Local s:=name
+		Local par:=parent
+		While par
+			s=par.name+"."+s
+			par=par.parent
+		Wend
+		Return s
+	End
+	
+	Method GetNSpace:NSpace( name:String,nested:Bool=False,startsWith:Bool=False )
+		
+		Return GetNSpaceInternal( nspaces,name,nested,startsWith )
+	End
+	
+	Const ALL:=New StringMap<NSpace>
+	Const ALL_PARTS:=New Stack<NSpace>
+	
+	Function StripNSpace:String( str:String,ns:NSpace )
+		
+		Local name:=""
+		While ns
+			name=ns.name+"."+name
+			If str.StartsWith( name ) Return str.Slice( name.Length )
+			ns=ns.parent
+		Wend
+		Return str
+	End
+	
+	Function Find:Tuple2<NSpace,NSpace>( fullNameWithDots:String,wholeMatched:Bool=False,usingsFilter:StringStack=Null )
+		
+		Local parts:=fullNameWithDots.Split( "." )
+		
+		If wholeMatched
+			
+			Local ns:=ALL[parts[0]]
+			If Not ns Return Null
+		
+			For Local i:=1 Until parts.Length
+				ns=ns.GetNSpace( parts[i] )
+				If Not ns Exit
+			Next
+			
+			Return New Tuple2<NSpace,NSpace>( ns,Null )
+			
+		Endif
+		
+		' not whole matched
+		Local list:=New Stack<NSpace>
+		Local name:=parts[0]
+		' find all nspaces by first part
+		For Local n:=Eachin ALL.Values.All()
+			Local r:NSpace
+			If n.name=name
+				r=n
+			Else
+				r=n.GetNSpace( name,True )
+			Endif
+			If r Then list.Add( r )
+		Next
+		If list.Empty Return Null
+		
+		list.Sort( Lambda:Int( n1:NSpace,n2:NSpace )
+			Return n1.NestedLevel<=>n2.NestedLevel
+		End )
+		
+		Local lastNs:NSpace
+		For Local i:=1 Until parts.Length
+			For Local k:=0 Until list.Length
+				Local n:=list[k]
+				If Not n Continue
+				Local r:=n.GetNSpace( parts[i] )
+				If r=Null And lastNs=Null
+					lastNs=n
+				Endif
+				list.Set( k,r ) ' "r" can be null here
+			Next
+		Next
+		
+		Local ns:NSpace
+		For Local n:=Eachin list
+			If n And Monkey2Parser.CheckUsingsFilter( n.FullName,usingsFilter )
+				ns=n
+				Exit
+			Endif
+		Next
+		
+		Return New Tuple2<NSpace,NSpace>( ns,lastNs )
+		
+	End
+	
+	Function AddItem( nspace:String,item:CodeItem )
+	
+		item.Namespac=nspace
+		Local parts:=nspace.Split( "." )
+		' root
+		Local ns:NSpace=Null,prev:NSpace=Null
+		Local sumName:=""
+		' hierarchy
+		For Local part:=Eachin parts
+			sumName+=part
+			If ns=Null
+				' add root part into map
+				ns=GetOrCreate<NSpace>( ALL,part )
+			Else
+				Local i:=prev.GetNSpace( part )
+				If i
+					ns=i
+				Else
+					ns=New NSpace
+					ns.parent=prev
+					prev.nspaces.AddUnique( ns )
+				Endif
+			Endif
+			ns.name=part
+			If sumName=nspace
+				ns.items.Add( item )
+				item.nspace=ns
+				Exit
+			Endif
+			sumName+="."
+			prev=ns
+		Next
+	
+	End
+	
+	
+	Private
+	
+	Method GetNSpaceInternal:NSpace( nspaces:Stack<NSpace>,name:String,nested:Bool=False,startsWith:Bool=False )
+	
+		For Local n:=Eachin nspaces
+			If (startsWith And n.name.StartsWith( name )) Or n.name=name Return n
+		Next
+		If nested
+			For Local n:=Eachin nspaces
+				Local r:=GetNSpaceInternal( n.nspaces,name,True,startsWith )
+				If r Return r
+			Next
+		Endif
+		Return Null
+	End
 	
 End
 
@@ -1273,5 +1516,3 @@ Struct Flags
 	Const DECL_IFACEMEMBER:=$080000
 	
 End
-
-

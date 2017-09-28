@@ -15,6 +15,8 @@ Function vTest( v:Vec2i,e:Entity )
 	
 	Local ok:=RequestOkay()
 	
+	std.filesystem.AppDir()
+	filesystem.AppDir()
 End
 
 
