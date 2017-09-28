@@ -47,7 +47,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		_modsPath=MainWindow.ModsPath
 		_mx2ccPath=MainWindow.Mx2ccPath
-				
+		
 		New Fiber( Lambda()
 			
 			Local time:=Millisecs()
@@ -112,9 +112,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		If last = 0 Or time > last
 			_filesTime[filePath]=time
-			'Print "parse file: "+filePath.Replace( "C:/proj/monkey/monkey2fork/","" )+"  "+pathOnDisk.Replace( "C:/proj/monkey/monkey2fork/","" )+"  mod:"+Int(isModule)
+			'Print "parse file: "+filePath.Replace( "C:/proj/monkey2/monkey2fork/","" )+"  "+pathOnDisk.Replace( "C:/proj/monkey/monkey2fork/","" )+"  mod:"+Int(isModule)
 		Else
-			'Print "parse file, not modified: "+filePath.Replace( "C:/proj/monkey/monkey2fork/","" )+"  "+pathOnDisk.Replace( "C:/proj/monkey/monkey2fork/","" )+"  mod:"+Int(isModule)
+			'Print "parse file, not modified: "+filePath.Replace( "C:/proj/monkey2/monkey2fork/","" )+"  "+pathOnDisk.Replace( "C:/proj/monkey/monkey2fork/","" )+"  mod:"+Int(isModule)
 			Return Null
 		Endif
 		

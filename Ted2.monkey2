@@ -115,7 +115,6 @@
 #Import "Prefs"
 #Import "ProcessReader"
 #Import "LiveTemplates"
-#Import "SystemCursor"
 #Import "DraggableTabs"
 #Import "MainWindow"
 

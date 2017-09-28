@@ -244,17 +244,17 @@ Class ConsoleExt Extends TextView
 		'Super.OnKeyEvent( event )
 	End
 	
-	Method OnContentMouseEvent( event:MouseEvent ) Override
-		
-		'select whole line by double click
-		If event.Type = EventType.MouseDoubleClick
-			Local line:=Document.FindLine( Cursor )
-			SelectText( Document.StartOfLine( line ),Document.EndOfLine( line ) )
-			Return
-		Endif
-		
-		Super.OnContentMouseEvent( event )
-	End
+'	Method OnContentMouseEvent( event:MouseEvent ) Override
+'		
+'		'select whole line by double click
+'		If event.Type = EventType.MouseDoubleClick
+'			Local line:=Document.FindLine( Cursor )
+'			SelectText( Document.StartOfLine( line ),Document.EndOfLine( line ) )
+'			Return
+'		Endif
+'		
+'		Super.OnContentMouseEvent( event )
+'	End
 	
 	
 	Private

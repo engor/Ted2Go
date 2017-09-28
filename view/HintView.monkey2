@@ -6,6 +6,8 @@ Function ShowHint( hint:String,location:Vec2i,sender:View,durationMs:Int=3000 )
 
 	If Not _hint Then _hint=New HintView
 	
+	HideHint()
+	
 	NeedShow( hint,location,sender,durationMs )
 End
 
