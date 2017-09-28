@@ -1349,7 +1349,36 @@ Class CodeDocument Extends Ted2Document
 		_treeView.Fill( FileExtension,Path )
 	End
 	
-	Method BgParsing( pathOnDisk:String )
+	Method ParsingStep()
+		
+		If _parsing Return
+		
+		_parsing=True
+		
+		New Fiber( Lambda()
+		
+			Local tmp:=MainWindow.AllocTmpPath( "_mx2cc_parse_",".monkey2" )
+			Local file:=StripDir( Path )
+			'Print "parsing:"+file+" ("+tmp+")"
+		
+			SaveString( _doc.Text,tmp )
+		
+			ParsingDoc( tmp )
+		
+			'Print "finished:"+file
+		
+			DeleteFile( tmp )
+		
+			_timer.Cancel()
+		
+			_timer=Null
+			_parsing=False
+		
+		End )
+		
+	End
+	
+	Method ParsingDoc( pathOnDisk:String )
 		
 		If MainWindow.IsTerminating Return
 		
@@ -1401,30 +1430,8 @@ Class CodeDocument Extends Ted2Document
 		
 		_timer=New Timer( 0.5,Lambda()
 		
-			If _parsing Return
+			ParsingStep()
 			
-			_parsing=True
-			
-			New Fiber( Lambda()
-			
-				Local tmp:=MainWindow.AllocTmpPath( "_mx2cc_parse_",".monkey2" )
-				Local file:=StripDir( Path )
-				'Print "parsing:"+file+" ("+tmp+")"
-				
-				SaveString( _doc.Text,tmp )
-			
-				BgParsing( tmp )
-				
-				'Print "finished:"+file
-				
-				DeleteFile( tmp )
-				
-				_timer.Cancel()
-				
-				_timer=Null
-				_parsing=False
-				
-			End )
 		End )
 		
 	End
