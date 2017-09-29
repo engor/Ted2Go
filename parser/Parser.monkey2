@@ -33,7 +33,7 @@ Class ParsersManager
 		For Local p:=Eachin plugins
 			If p.CheckFileTypeSuitability( fileType ) Then Return p
 		Next
-		Return _empty
+		Return _fake
 	End
 
 	Function DisableAll()
@@ -44,10 +44,15 @@ Class ParsersManager
 		Next
 	End
 	
+	Function IsFake:Bool( parser:ICodeParser )
+		
+		Return parser=_fake
+	End
+	
 	
 	Private
 	
-	Global _empty:=New EmptyParser
+	Global _fake:=New FakeParser
 	
 End
 
@@ -74,7 +79,7 @@ End
 
 Private
 
-Class EmptyParser Implements ICodeParser
+Class FakeParser Implements ICodeParser
 
 	Property Items:Stack<CodeItem>()
 		Return _items

@@ -1065,7 +1065,9 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Method GotoDeclaration()
-	
+		
+		If Not _parsingEnabled Return
+		
 		Local ident:=_codeView.FullIdentAtCursor
 		Local line:=TextDocument.FindLine( _codeView.Cursor )
 		Local item:=_parser.ItemAtScope( ident,Path,line )
@@ -1206,6 +1208,7 @@ Class CodeDocument Extends Ted2Document
 	Field _parser:ICodeParser
 	Field _prevLine:=-1
 	Field _prevScope:CodeItem
+	Field _parsingEnabled:Bool
 	
 	Field _toolBar:ToolBarExt
 	Field _content:DockingView
@@ -1300,11 +1303,14 @@ Class CodeDocument Extends Ted2Document
 	
 	Method OnLoad:Bool() Override
 	
-		_parser=ParsersManager.Get( FileExtension )
-	
 		Local text:=stringio.LoadString( Path )
 		
 		_doc.Text=text
+		
+		_parser=ParsersManager.Get( FileExtension )
+		_parsingEnabled=Not ParsersManager.IsFake( _parser )
+		
+		ParsingDoc() 'start parsing right after loading, not by timer
 		
 		Return True
 	End
@@ -1331,7 +1337,11 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Method OnLineChanged:Void( prevLine:Int,newLine:Int )
-	
+		
+		If AutoComplete.IsOpened Then AutoComplete.Hide()
+		
+		If Not _parsingEnabled Return
+		
 		Local scope:=_parser.GetScope( Path,_codeView.LineNumAtCursor+1 )	
 		If scope And scope <> _prevScope
 			Local classs := (_prevScope And scope.IsLikeClass And scope = _prevScope.Parent)
@@ -1341,7 +1351,6 @@ Class CodeDocument Extends Ted2Document
 			_prevScope = scope
 		Endif
 		
-		If AutoComplete.IsOpened Then AutoComplete.Hide()
 	End
 	
 	Method UpdateCodeTree()
@@ -1349,7 +1358,24 @@ Class CodeDocument Extends Ted2Document
 		_treeView.Fill( FileExtension,Path )
 	End
 	
-	Method ParsingStep()
+	Method ParsingOnTextChanged()
+		
+		If _timer
+			_timer.Cancel()
+			_timer=Null
+		Endif
+		
+		If Not _parsingEnabled Return
+		
+		_timer=New Timer( 0.75,Lambda()
+		
+			ParsingDoc()
+		
+		End )
+		
+	End
+	
+	Method ParsingDoc()
 		
 		If _parsing Return
 		
@@ -1359,26 +1385,25 @@ Class CodeDocument Extends Ted2Document
 		
 			Local tmp:=MainWindow.AllocTmpPath( "_mx2cc_parse_",".monkey2" )
 			Local file:=StripDir( Path )
-			'Print "parsing:"+file+" ("+tmp+")"
-		
+			
 			SaveString( _doc.Text,tmp )
 		
-			ParsingDoc( tmp )
-		
-			'Print "finished:"+file
+			ParsingFile( tmp )
 		
 			DeleteFile( tmp )
 		
-			_timer.Cancel()
-		
-			_timer=Null
+			If _timer
+				_timer.Cancel()
+				_timer=Null
+			Endif
+			
 			_parsing=False
 		
 		End )
 		
 	End
 	
-	Method ParsingDoc( pathOnDisk:String )
+	Method ParsingFile( pathOnDisk:String )
 		
 		If MainWindow.IsTerminating Return
 		
@@ -1423,16 +1448,7 @@ Class CodeDocument Extends Ted2Document
 		' -----------------------------------
 		' catch for parsing
 		
-		If FileExtension <> ".monkey2" Return
-
-		
-		If _timer _timer.Cancel()
-		
-		_timer=New Timer( 0.5,Lambda()
-		
-			ParsingStep()
-			
-		End )
+		ParsingOnTextChanged()
 		
 	End
 	
