@@ -279,15 +279,18 @@ Class CodeItem
 		Return _params
 	Setter( value:CodeParam[] )
 		_params=value
+		If _params=Null Print "params set to null: "+Ident
 	End
 	
 	Property ParamsStr:String()
 		
-		If Not _params Return Null
+		Local params:=_params
+		If Not params Return Null
 		If _paramsStr Return _paramsStr
 		
+		Print "_params.Length: "+params.Length+" "+Ident
 		_paramsStr=""
-		For Local p:=Eachin _params
+		For Local p:=Eachin params
 			If _paramsStr<>"" Then _paramsStr+=","
 			_paramsStr+=p.ToString()
 		Next

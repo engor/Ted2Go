@@ -1355,20 +1355,29 @@ Class CodeDocument Extends Ted2Document
 	
 	Method UpdateCodeTree()
 		
-		_treeView.Fill( FileExtension,Path )
+		App.Idle+=Lambda()
+			'_treeView.Fill( FileExtension,Path )
+		End
+		
 	End
 	
+	Field _timeTextChanged:=0
+	Field _timeDocParsed:=0
 	Method ParsingOnTextChanged()
-		
-		If _timer
-			_timer.Cancel()
-			_timer=Null
-		Endif
 		
 		If Not _parsingEnabled Return
 		
-		_timer=New Timer( 0.75,Lambda()
+		_timeTextChanged=Millisecs()
 		
+		If Not _timer Then _timer=New Timer( 1,Lambda()
+		
+			If _parsing Print "wait while parsing" ; Return
+			
+			Local msec:=Millisecs()
+			If msec<_timeDocParsed+1000 Print "wait after parsing" ; Return
+			If _timeTextChanged=0 Or msec<_timeTextChanged+1000 Print "wait after typing" ; Return
+			_timeTextChanged=0
+			
 			ParsingDoc()
 		
 		End )
@@ -1383,22 +1392,20 @@ Class CodeDocument Extends Ted2Document
 		
 		New Fiber( Lambda()
 		
+			Print "work 1"
 			Local tmp:=MainWindow.AllocTmpPath( "_mx2cc_parse_",".monkey2" )
 			Local file:=StripDir( Path )
-			
+			Print "work 2"
 			SaveString( _doc.Text,tmp )
-		
+			Print "work 3"
 			ParsingFile( tmp )
 		
 			DeleteFile( tmp )
-		
-			If _timer
-				_timer.Cancel()
-				_timer=Null
-			Endif
 			
 			_parsing=False
-		
+			
+			_timeDocParsed=Millisecs()
+			
 		End )
 		
 	End
@@ -1409,7 +1416,9 @@ Class CodeDocument Extends Ted2Document
 		
 		ResetErrors()
 		
+		Print "parse1 "+StripDir( pathOnDisk )
 		Local errors:=_parser.ParseFile( Path,pathOnDisk,False )
+		Print "parse2 "+StripDir( pathOnDisk )
 		
 		If MainWindow.IsTerminating Return
 		
@@ -1487,7 +1496,7 @@ Class CodeDocument Extends Ted2Document
 		Local event:=New KeyEvent( EventType.KeyDown,_codeView,Key.Tab,Key.Tab,Modifier.None,"~t" )
 		_codeView.OnKeyEvent( event )
 	End
-				
+	
 End
 
 

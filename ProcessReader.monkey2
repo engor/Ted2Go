@@ -182,6 +182,7 @@ Class ProcessReader
 		
 		process.StdoutReady=Lambda()
 			'Print "proc.stdoutReady: "+Tag
+			Try
 			Local stdout:=process.ReadStdout()
 			
 			If stdout
@@ -192,6 +193,12 @@ Class ProcessReader
 				_stdoutOpen=False
 				UpdateRunning()
 			Endif
+			
+			Catch ex:Throwable
+				App.Idle+=Lambda()
+					Print "ERROR!!"
+				End
+			End
 		End
 		
 		If Not process.Start( cmd ) Return False

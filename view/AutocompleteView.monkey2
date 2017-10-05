@@ -258,6 +258,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 			opts.docPosInLine=docPosInLine
 			opts.results=_listForExtract
 			opts.usingsFilter=usings
+			
 			parser.GetItemsForAutocomplete( opts )
 			
 			CodeItemsSorter.SortByType( _listForExtract,True )
