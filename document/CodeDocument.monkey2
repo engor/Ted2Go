@@ -1368,11 +1368,11 @@ Class CodeDocument Extends Ted2Document
 		
 		If Not _timer Then _timer=New Timer( 1,Lambda()
 		
-			If _parsing Print "wait while parsing" ; Return
+			If _parsing Return
 			
 			Local msec:=Millisecs()
-			If msec<_timeDocParsed+1000 Print "wait after parsing" ; Return
-			If _timeTextChanged=0 Or msec<_timeTextChanged+1000 Print "wait after typing" ; Return
+			If msec<_timeDocParsed+1000 Return
+			If _timeTextChanged=0 Or msec<_timeTextChanged+1000 Return
 			_timeTextChanged=0
 			
 			ParsingDoc()

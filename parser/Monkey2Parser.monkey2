@@ -1015,6 +1015,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Function CheckUsingsFilter:Bool( nspace:String,usingsFilter:StringStack )
 		
 		If Not usingsFilter Or usingsFilter.Empty Return True
+		If Not nspace Return True
 		
 		For Local u:=Eachin usingsFilter
 			If u.EndsWith( ".." )
