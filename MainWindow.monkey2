@@ -414,12 +414,6 @@ Class MainWindowInstance Extends Window
 		_menuBar.AddMenu( _windowMenu )
 		_menuBar.AddMenu( _helpMenu )
 		
-		
-		'_browsersTabView.AddTab( "Project",_projectView,True )
-		'_browsersTabView.AddTab( "Source",_docBrowser,False )
-		'_browsersTabView.AddTab( "Debug",_debugView,False )
-		'_browsersTabView.AddTab( "Help",_helpTree,False )
-		
 		_buildErrorsList=New ListViewExt
 		_buildErrorsList.Visible=False
 		_buildErrorsList.OnItemChoosen+=Lambda()
@@ -1462,18 +1456,21 @@ Class MainWindowInstance Extends Window
 			_mx2cc=_mx2ccDir+StripDir( _mx2cc )
 		Endif
 		
-		
-		_docsManager.LoadState( jobj )
-		_buildActions.LoadState( jobj )
-		_projectView.LoadState( jobj )
+		App.Idle+=Lambda() 'delay execution
+			
+			_docsManager.LoadState( jobj )
+			_buildActions.LoadState( jobj )
+			_projectView.LoadState( jobj )
 		 
-		If Not _projectView.OpenProjects _projectView.OpenProject( CurrentDir() )
-		
-		UpdateRecentFilesMenu()
-		UpdateRecentProjectsMenu()
-		UpdateCloseProjectMenu()
+			If Not _projectView.OpenProjects _projectView.OpenProject( CurrentDir() )
+			
+			UpdateRecentFilesMenu()
+			UpdateRecentProjectsMenu()
+			UpdateCloseProjectMenu()
 
-		DeleteTmps()
+			DeleteTmps()
+			
+		End
 	End
 	
 	

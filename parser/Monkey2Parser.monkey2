@@ -52,7 +52,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			Local time:=Millisecs()
 			
-			'ParseModules()
+			ParseModules()
 			
 			time=Millisecs()-time
 			'Print "parse modules: "+time+" ms"
@@ -121,6 +121,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 		' start parsing process
 		Local str:=StartParsing( pathOnDisk,isModule )
 		
+		If Not str Return "#" 'special kind of error
+		
 '		If Not isModule
 '			Print "-----"
 '			Print str
@@ -133,7 +135,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		' return errors
 		If hasErrors Return (i > 0) ? str.Slice( 0,i ) Else str
-		If i=-1 Return "" ' not a valid json
+		If i=-1 Return "#" ' not a valid json
 		
 		'----------
 		

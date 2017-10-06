@@ -41,17 +41,17 @@ Class ProcessReader
 	#end
 	Function Obtain:ProcessReader( tag:String )
 	
-		Local r:=New ProcessReader
-'		If _recycled.Empty
-'			r=New ProcessReader
-'		Else
-'			r=_recycled[0]
-'			_recycled.Remove( r )
-'			r.Finished=Null
-'			r.PortionRead=Null
-'			r.Error=Null
-'			r._running=False
-'		Endif
+		Local r:ProcessReader
+		If _recycled.Empty
+			r=New ProcessReader
+		Else
+			r=_recycled[0]
+			_recycled.Remove( r )
+			r.Finished=Null
+			r.PortionRead=Null
+			r.Error=Null
+			r._running=False
+		Endif
 		r.Tag=tag
 		_items.Add( r )
 		Return r
@@ -62,8 +62,8 @@ Class ProcessReader
 	Function Recycle( r:ProcessReader )
 	
 		_items.Remove( r )
-		'r.Stop()
-		'_recycled.Add( r )
+		r.Stop()
+		_recycled.Add( r )
 	End
 	
 	#rem monkeydoc Stops all obtained readers if them are running and not recycled.
@@ -121,7 +121,6 @@ Class ProcessReader
 		If Not _procOpen
 '			If _stdoutWaiting
 '				_stdoutWaiting.Set( False )
-'				_stdoutWaiting=Null
 '			Endif
 			Return
 		Endif
@@ -225,7 +224,6 @@ Class ProcessReader
 		
 		If _stdoutWaiting
 			_stdoutWaiting.Set( True )
-			_stdoutWaiting=Null
 		Endif
 	End
 	

@@ -1355,10 +1355,7 @@ Class CodeDocument Extends Ted2Document
 	
 	Method UpdateCodeTree()
 		
-		App.Idle+=Lambda()
-			'_treeView.Fill( FileExtension,Path )
-		End
-		
+		_treeView.Fill( FileExtension,Path )
 	End
 	
 	Field _timeTextChanged:=0
@@ -1392,12 +1389,11 @@ Class CodeDocument Extends Ted2Document
 		
 		New Fiber( Lambda()
 		
-			Print "work 1"
 			Local tmp:=MainWindow.AllocTmpPath( "_mx2cc_parse_",".monkey2" )
 			Local file:=StripDir( Path )
-			Print "work 2"
+			
 			SaveString( _doc.Text,tmp )
-			Print "work 3"
+			
 			ParsingFile( tmp )
 		
 			DeleteFile( tmp )
@@ -1416,13 +1412,15 @@ Class CodeDocument Extends Ted2Document
 		
 		ResetErrors()
 		
-		Print "parse1 "+StripDir( pathOnDisk )
 		Local errors:=_parser.ParseFile( Path,pathOnDisk,False )
-		Print "parse2 "+StripDir( pathOnDisk )
 		
 		If MainWindow.IsTerminating Return
 		
 		If errors
+			
+			If errors="#"
+				Return
+			Endif
 			
 			Local arr:=errors.Split( "~n" )
 			For Local s:=Eachin arr
