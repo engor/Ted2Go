@@ -39,34 +39,20 @@ Class ProcessReader
 	
 	#rem monkeydoc Obtain a reader instance.
 	#end
-	Function Obtain:ProcessReader( tag:String )
+	Method New( tag:String="" )
 	
-		Local r:ProcessReader
-		If _recycled.Empty
-			r=New ProcessReader
-		Else
-			r=_recycled[0]
-			_recycled.Remove( r )
-			r.Finished=Null
-			r.PortionRead=Null
-			r.Error=Null
-			r._running=False
-		Endif
-		r.Tag=tag
-		_items.Add( r )
-		Return r
+		Tag=tag
+		_items.Add( Self )
 	End
 	
-	#rem monkeydoc Recycle a reader instance. So we can get it again using Obtain.
-	#end
-	Function Recycle( r:ProcessReader )
+	Function StopAll()
 	
-		_items.Remove( r )
-		r.Stop()
-		_recycled.Add( r )
+		For Local r:=Eachin _items
+			r.Stop()
+		Next
 	End
 	
-	#rem monkeydoc Stops all obtained readers if them are running and not recycled.
+	#rem monkeydoc
 	#end
 	Function WaitingForStopAll( wait:Future<Bool> )
 		
@@ -126,7 +112,8 @@ Class ProcessReader
 		Endif
 		
 		_process.Terminate()
-		_running=False
+		
+		OnStop()
 	End
 	
 	#rem monkeydoc Is reading currently in progress.
@@ -136,10 +123,6 @@ Class ProcessReader
 		Return _running
 	End
 	
-	Protected
-	
-	Method New()
-	End
 	
 	Private
 	
@@ -149,7 +132,6 @@ Class ProcessReader
 	Field _stdoutWaiting:Future<Bool>
 	Field _stdoutOpen:Bool,_procOpen:Bool
 	Global _items:=New Stack<ProcessReader>
-	Global _recycled:=New Stack<ProcessReader>
 	Global _stopSize:Int,_stopCounter:Int
 	
 	Method RunInternal:String( cmd:String )
@@ -181,7 +163,6 @@ Class ProcessReader
 		
 		process.StdoutReady=Lambda()
 			'Print "proc.stdoutReady: "+Tag
-			Try
 			Local stdout:=process.ReadStdout()
 			
 			If stdout
@@ -192,12 +173,6 @@ Class ProcessReader
 				_stdoutOpen=False
 				UpdateRunning()
 			Endif
-			
-			Catch ex:Throwable
-				App.Idle+=Lambda()
-					Print "ERROR!!"
-				End
-			End
 		End
 		
 		If Not process.Start( cmd ) Return False
@@ -215,7 +190,7 @@ Class ProcessReader
 	
 		If Not _running Or _procOpen Or _stdoutOpen Return
 	
-		_running=False
+		OnStop()
 		
 		Local code:=_process.ExitCode
 		
@@ -225,6 +200,12 @@ Class ProcessReader
 		If _stdoutWaiting
 			_stdoutWaiting.Set( True )
 		Endif
+	End
+	
+	Method OnStop()
+		
+		_running=False
+		_items.Remove( Self )
 	End
 	
 End

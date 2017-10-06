@@ -779,12 +779,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		If Not _enabled Return ""
 		
-		Local proc:=ProcessReader.Obtain( pathOnDisk )
+		Local proc:=New ProcessReader( pathOnDisk )
 		
 		Local cmd:=_mx2ccPath+" makeapp -parse -geninfo ~q"+pathOnDisk+"~q"
 		Local str:=proc.Run( cmd )
-		
-		ProcessReader.Recycle( proc )
 		
 		Return str
 	End
