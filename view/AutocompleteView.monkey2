@@ -329,7 +329,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 	
 	Method OnThemeChanged() Override
 		
-		_view.MaxSize=_etalonMaxSize*App.Theme.Scale
+		_view.MaxSize=(App.Theme.Scale.x>1) ? _etalonMaxSize*App.Theme.Scale Else _etalonMaxSize
 	End
 	
 	Private

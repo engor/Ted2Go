@@ -120,6 +120,11 @@ Class CodeDocumentView Extends Ted2CodeTextView
 
 	Protected
 	
+	Method OnThemeChanged() Override
+		
+		_doc.HideAutocomplete()
+	End
+	
 	Method OnRenderContent( canvas:Canvas ) Override
 	
 		Local color:=canvas.Color
@@ -1132,24 +1137,24 @@ Class CodeDocument Extends Ted2Document
 		
 		Local frame:=AutoComplete.Frame
 		
-		Local w:=frame.Width+18 'hack: 18px for scroll
+		Local w:=frame.Width+ScaledVal( 18 ) 'hack: 18px for scroll
 		Local h:=frame.Height
 		
 		Local cursorRect:=_codeView.CursorRect
 		Local scroll:=_codeView.Scroll
 		Local tvFrame:=_codeView.RenderRect
 		Local yy:=tvFrame.Top+cursorRect.Top-scroll.y
-		yy+=30 'magic offset :)
+		yy+=ScaledVal( 26 ) 'magic offset :)
 		Local xx:=tvFrame.Left+cursorRect.Left-scroll.x'+100
-		xx+=46 'magic
+		xx+=ScaledVal( 46 ) 'magic
 		frame.Left=xx
 		frame.Right=frame.Left+w
 		frame.Top=yy
 		frame.Bottom=frame.Top+h
 		' fit dialog into window
 		If frame.Bottom > MainWindow.RenderRect.Bottom
-			Local dy:=frame.Bottom-MainWindow.RenderRect.Bottom-128
-			frame.MoveBy( 50,dy )
+			Local dy:=frame.Bottom-MainWindow.RenderRect.Bottom-ScaledVal( 128 )
+			frame.MoveBy( ScaledVal( 50 ),dy )
 		Endif
 		AutoComplete.Frame=frame
 		
@@ -1749,3 +1754,7 @@ Class NavCode
 	
 End
 
+Function ScaledVal:Int( val:Int )
+	
+	Return val*App.Theme.Scale.x
+End
