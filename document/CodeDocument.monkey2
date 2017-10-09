@@ -1100,6 +1100,11 @@ Class CodeDocument Extends Ted2Document
 		If Not Prefs.AcEnabled Return False
 		
 		Local line:=TextDocument.FindLine( _codeView.Cursor )
+		
+		' is inside of comment?
+		Local state:=TextDocument.LineState( line )
+		If state & 255 <> 255 Return False
+		
 		Local text:=TextDocument.GetLine( line )
 		Local posInLine:=_codeView.Cursor-TextDocument.StartOfLine( line )
 		
