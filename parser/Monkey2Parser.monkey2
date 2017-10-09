@@ -1277,7 +1277,7 @@ Struct Chars
 	Const DIGIT_0:=48
 	Const DIGIT_9:=57
 	Const AT:=64
-	Const GRID:=35
+	Const GRID:=35 ' #
 	Const TAB:=9
 	Const SPACE:=32
 	

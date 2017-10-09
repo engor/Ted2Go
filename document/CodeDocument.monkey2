@@ -194,6 +194,8 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				End
 			Endif
 			
+			CheckFormat( event,key )
+			
 			Select key
 			
 				Case Key.Space
@@ -292,8 +294,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 			
 				Case Key.Enter,Key.KeypadEnter 'auto indent
-			
-					If _typing Then DoFormat( False )
 			
 					Local line:=CursorLine
 					Local text:=Document.GetLine( line )
@@ -471,11 +471,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Return
 			
 			
-				Case Key.Up,Key.Down
-			
-					DoFormat( True )
-			
-			
 				Case Key.V
 			
 					If CanPaste And ctrl
@@ -504,6 +499,8 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 			
 		Case EventType.KeyChar
+			
+			CheckFormat( event,event.Key )
 			
 			If event.Key = Key.Space And ctrl
 				If _doc.CanShowAutocomplete()

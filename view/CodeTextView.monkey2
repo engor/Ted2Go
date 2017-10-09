@@ -147,9 +147,9 @@ Class CodeTextView Extends TextView
 		
 		While n >= start
 			
-			If text[n] = 46 'dot
+			If text[n] = Chars.DOT 'dot
 				
-			ElseIf Not (IsIdent( text[n] ) Or text[n] = 35) '35 => #
+			ElseIf Not (IsIdent( text[n] ) Or text[n] = Chars.GRID) '#
 				Exit
 			Endif
 			
@@ -297,6 +297,33 @@ Class CodeTextView Extends TextView
 	
 	Protected
 	
+	Method CheckFormat( event:KeyEvent,key:Key )
+		
+		Select event.Type
+		
+			Case EventType.KeyChar
+				
+				If IsIdent( event.Text[0] )
+					_typing=True
+				Else
+					If _typing Then FormatWord()
+				Endif
+		
+			Case EventType.KeyDown
+				
+				Select key
+		
+					Case Key.Tab
+						If _typing Then FormatWord() ' like for Key.Space
+		
+					Case Key.Backspace,Key.KeyDelete,Key.Enter,Key.KeypadEnter
+						_typing=True
+		
+				End
+		
+		End
+	End
+	
 	Method OnContentMouseEvent( event:MouseEvent ) Override
 		
 		Select event.Type
@@ -353,12 +380,6 @@ Class CodeTextView Extends TextView
 			
 			Case EventType.KeyChar
 				
-				If IsIdent( event.Text[0] )
-					_typing=True
-				Else
-					If _typing Then DoFormat( False )
-				Endif
-				
 				' select next char in overwrite mode
 				If Cursor=Anchor And _overwriteMode
 				
@@ -367,6 +388,7 @@ Class CodeTextView Extends TextView
 						SelectText( Cursor,Cursor+1 )
 					Endif
 				Endif
+			
 		End
 		
 		Super.OnKeyEvent( event )
@@ -379,8 +401,6 @@ Class CodeTextView Extends TextView
 	
 	
 	Protected
-	
-	Field _typing:Bool
 	
 	Method OnCut( wholeLine:Bool=False )
 	
@@ -536,12 +556,6 @@ Class CodeTextView Extends TextView
 		Return result
 	End
 	
-	Method DoFormat( all:Bool )
-	
-		_typing=False
-		If Formatter Then Formatter.Format( Self,all )
-	End
-	
 	Method OnThemeChanged() Override
 		
 		Super.OnThemeChanged()
@@ -641,18 +655,37 @@ Class CodeTextView Extends TextView
 	Field _overwriteMode:Bool
 	Field _extraSelStart:Int=-1,_extraSelEnd:Int
 	Field _extraSelColor:Color=Color.DarkGrey
+	Field _storedCursor:Int
+	Field _typing:Bool
 	
 	Method OnCursorMoved()
 		
 		Local line:=Document.FindLine( Cursor )
 		If line <> _line
+			If _typing Then FormatLine( _line )
+			
 			LineChanged( _line,line )
 			_line=line
 		Endif
-				
-		'If Cursor <> Anchor Return
-		'DoFormat( True )
 		
+		_storedCursor=Cursor
+	End
+	
+	Method FormatWord( customCursor:Int=-1 )
+	
+		_typing=False
+		If Formatter
+			Local cur:=(customCursor<>-1) ? customCursor Else _storedCursor
+			Formatter.FormatWord( Self,cur )
+		Endif
+	End
+	
+	Method FormatLine( line:Int )
+	
+		_typing=False
+		If Formatter
+			Formatter.FormatLine( Self,line )
+		Endif
 	End
 	
 End
