@@ -149,7 +149,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 		
 	End
 	
-	Method Show( ident:String,filePath:String,fileType:String,docLine:Int )
+	Method Show( ident:String,filePath:String,fileType:String,docLineNum:Int,docLineStr:String,docPosInLine:Int )
 		
 		Local dotPos:=ident.FindLast( "." )
 		
@@ -249,7 +249,17 @@ Class AutocompleteDialog Extends NoTitleDialog
 			Endif
 			
 			_listForExtract.Clear()
-			parser.GetItemsForAutocomplete( ident,filePath,docLine,_listForExtract,usings )
+			
+			Global opts:=New ParserRequestOptions
+			opts.ident=ident
+			opts.filePath=filePath
+			opts.docLineNum=docLineNum
+			opts.docLineStr=docLineStr
+			opts.docPosInLine=docPosInLine
+			opts.results=_listForExtract
+			opts.usingsFilter=usings
+			
+			parser.GetItemsForAutocomplete( opts )
 			
 			CodeItemsSorter.SortByType( _listForExtract,True )
 		Endif
@@ -319,7 +329,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 	
 	Method OnThemeChanged() Override
 		
-		_view.MaxSize=_etalonMaxSize*App.Theme.Scale
+		_view.MaxSize=(App.Theme.Scale.x>1) ? _etalonMaxSize*App.Theme.Scale Else _etalonMaxSize
 	End
 	
 	Private
@@ -374,10 +384,14 @@ Class AutocompleteDialog Extends NoTitleDialog
 				
 				Local key:=event.Key
 				Select key
+				
 				Case Key.Escape
 					Hide()
 					event.Eat()
-					
+				
+				Case Key.Home,Key.KeyEnd
+					Hide()
+				
 				Case Key.Up
 					_view.SelectPrev()
 					event.Eat()

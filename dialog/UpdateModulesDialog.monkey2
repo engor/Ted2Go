@@ -105,7 +105,6 @@ Class UpdateModulesDialog Extends DialogExt
 		AddAction( actUpdate )
 		
 		Local actCancel:=New Action( "Cancel" )
-		actCancel.HotKey=Key.Escape
 		actCancel.Triggered+=Lambda()
 			HideWithResult( False )
 		End

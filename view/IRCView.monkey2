@@ -711,10 +711,10 @@ Class IRCView Extends DockingView
 	Field introScreen:IRCIntroView
 	Field chatScreen:DockingView
 	
-	Field topicField:TextField
+	Field topicField:TextFieldExt
 	Field historyField:TextView
 	Field bottomDocker:DockingView
-	Field inputField:TextField
+	Field inputField:TextFieldExt
 	Field nicknameLabel:Label
 	Field userList:ListView
 	Field serverTree:TreeView
@@ -901,7 +901,7 @@ Class IRCView Extends DockingView
 		End
 		
 		'Topic field
-		topicField=New TextField()
+		topicField=New TextFieldExt
 		topicField.BlockCursor=False
 		topicField.CursorType=CursorType.Line
 		topicField.ReadOnly=True
@@ -925,7 +925,7 @@ Class IRCView Extends DockingView
 		End
 		
 		'User input field
-		inputField=New TextField
+		inputField=New TextFieldExt
 		inputField.BlockCursor=False
 		inputField.CursorType=CursorType.Line
 		inputField.CursorBlinkRate=2.5
@@ -1332,7 +1332,7 @@ Class IRCIntroView Extends DockingView
 	Field servers:=New List<IRCServer>
 	Field roomScroller:ScrollableView
 	Field nickBox:DockingView
-	Field nickField:TextField
+	Field nickField:TextFieldExt
 	Field nickLabel:Label
 	Field checkboxes:=New List<CheckButton>
 	Field connectButton:Button
@@ -1410,7 +1410,7 @@ Class IRCIntroView Extends DockingView
 		nickLabel=New Label("Nickname")
 		nickBox.AddView(nickLabel,"left")
 		
-		nickField=New TextField
+		nickField=New TextFieldExt
 		nickField.BlockCursor=False
 		nickField.TextChanged+=Lambda()
 			OnNickChange(nickField.Text)

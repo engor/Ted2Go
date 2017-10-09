@@ -4,10 +4,13 @@ Namespace ted2go
 
 Interface ICodeFormatter
 
-	Method Format( document:CodeTextView,all:Bool )
+	Method FormatWord( document:CodeTextView,customCursor:Int=-1 )
+	Method FormatLine( document:CodeTextView,line:Int )
 	
 End
+#Rem
 
+#End
 
 'base wrapper for code formatter
 Class CodeFormatterPlugin Extends PluginDependsOnFileType Implements ICodeFormatter
@@ -49,7 +52,11 @@ Private
 
 Class EmptyFormatter Implements ICodeFormatter
 	
-	Method Format( document:CodeTextView,all:Bool )
+	Method FormatWord( document:CodeTextView,customCursor:Int=-1 )
+		'do nothing
+	End
+	
+	Method FormatLine( document:CodeTextView,line:Int )
 		'do nothing
 	End
 	

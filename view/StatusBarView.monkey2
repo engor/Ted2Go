@@ -36,7 +36,8 @@ Class StatusBarView Extends DockingView
 		Local act:=New Action( Null,ThemeImages.Get( "cancel.png" ) )
 		act.Triggered=OnCancel
 		
-		_progressCancel=New ToolButtonExt( act,"" ) '"Stop process" )
+		_progressCancel=New ToolButtonExt( act,"" )
+		_progressCancel.Hint="Stop process"
 		_progressCancel.Style=GetStyle( "StatusBarButton" )
 		AddView( _progressCancel,"right" )
 		

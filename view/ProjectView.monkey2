@@ -40,8 +40,10 @@ Class ProjectView Extends ScrollView
 	
 	Function FindProjectByFile:String( filePath:String )
 		
+		If Not filePath Return ""
+		
 		For Local p:=Eachin _projects.Keys
-			If filePath.Contains( p )
+			If filePath.StartsWith( p )
 				Return p
 			Endif
 		End

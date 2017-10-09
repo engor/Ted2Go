@@ -54,6 +54,11 @@ Class MainWindowInstance Extends Window
 			_findReplaceView.CodeView=Cast<CodeTextView>( _docsManager.CurrentTextView )
 		End
 		
+		_docsManager.DocumentDoubleClicked+=Lambda( doc:Ted2Document )
+		
+			_buildActions.LockBuildFile()
+		End
+		
 		App.FileDropped+=Lambda( path:String )
 			
 			OnFileDropped( path )
@@ -93,7 +98,7 @@ Class MainWindowInstance Extends Window
 		
 		Local label:=New Label( "Filter:" )
 		bar.AddView( label,"left" )
-		Local editFilter:=New TextField()
+		Local editFilter:=New TextFieldExt
 		editFilter.Style=GetStyle( "TextFieldBordered" )
 		editFilter.CursorType=CursorType.Line
 		editFilter.CursorBlinkRate=2.5
@@ -184,7 +189,7 @@ Class MainWindowInstance Extends Window
 		End
 		
 		_helpTree=New HelpTreeView( _helpView )
-		_docsConsole.AddView( _helpTree,"right",250,True )
+		_docsConsole.AddView( _helpTree,"right",200,True )
 		
 		_docsConsole.AddView( bar,"top" )
 		_docsConsole.ContentView=_helpView
@@ -193,13 +198,13 @@ Class MainWindowInstance Extends Window
 		bar.AddView( New SpacerView( 6,0 ),"right" ) ' right offset
 		bar.AddView( _helpSwitcher,"right" )
 		_helpSwitcher.Clicked=Lambda()
-			App.Idle+=Lambda()
-				_helpTree.Visible=Not _helpTree.Visible
-				_helpSwitcher.Text=_helpTree.Visible ? ">" Else "<"
-				_helpSwitcher.Hint=_helpTree.Visible ? "Hide docs index" Else "Show docs index"
-			End
+		
+			_helpTree.Visible=Not _helpTree.Visible
+			_helpSwitcher.Text=_helpTree.Visible ? ">" Else "<"
+			_helpSwitcher.Hint=_helpTree.Visible ? "Hide docs index" Else "Show docs index"
 		End
-		_helpSwitcher.Clicked() 'hide at startup
+		_helpTree.Visible=False
+		_helpSwitcher.Clicked() 'show at startup
 		
 		_helpView.Navigate( AboutPagePath )
 		
@@ -409,12 +414,6 @@ Class MainWindowInstance Extends Window
 		_menuBar.AddMenu( _windowMenu )
 		_menuBar.AddMenu( _helpMenu )
 		
-		
-		'_browsersTabView.AddTab( "Project",_projectView,True )
-		'_browsersTabView.AddTab( "Source",_docBrowser,False )
-		'_browsersTabView.AddTab( "Debug",_debugView,False )
-		'_browsersTabView.AddTab( "Help",_helpTree,False )
-		
 		_buildErrorsList=New ListViewExt
 		_buildErrorsList.Visible=False
 		_buildErrorsList.OnItemChoosen+=Lambda()
@@ -425,14 +424,6 @@ Class MainWindowInstance Extends Window
 		_buildConsoleView=New DockingView
 		_buildConsoleView.AddView( _buildErrorsList,"right","400",True )
 		_buildConsoleView.ContentView=_buildConsole
-		
-'		_consolesTabView.AddTab( "Build",_buildConsoleView,True )
-'		_consolesTabView.AddTab( "Output",_outputConsoleView,False )
-'		_consolesTabView.AddTab( "Docs",_helpConsole,False )
-'		_consolesTabView.AddTab( "Find",_findConsole,False )
-'		_consolesTabView.AddTab( "Chat",_ircView,False )
-		
-'		_consolesTabView.CurrentChanged+=OnChatClicked
 		
 		_statusBar=New StatusBarView
 		
@@ -527,9 +518,10 @@ Class MainWindowInstance Extends Window
 	
 		If _buildConsole.Running
 			_buildConsole.Terminate()
-			HideStatusBarProgress()
-			RestoreConsoleVisibility()
 		Endif
+		_debugView.KillApp()
+		HideStatusBarProgress()
+		RestoreConsoleVisibility()
 		If _outputConsole.Running
 			_outputConsole.Terminate()
 		Endif
@@ -601,8 +593,15 @@ Class MainWindowInstance Extends Window
 		SaveState()
 		_enableSaving=False
 		OnForceStop() ' kill build process if started
-		ProcessReader.StopAll()
 		If _ircView Then _ircView.Quit("Closing Ted2Go")
+		
+		' waiting for started processes if any
+		ParsersManager.DisableAll()
+		Local future:=New Future<Bool>
+		New Fiber( Lambda()
+			ProcessReader.WaitingForStopAll( future )
+		End )
+		future.Get()
 		
 		App.Terminate()
 	End
@@ -773,22 +772,16 @@ Class MainWindowInstance Extends Window
 		Local cutTitle:=GetActionTextWithShortcut( _editActions.cut )
 		Local copyTitle:=GetActionTextWithShortcut( _editActions.copy )
 		Local pasteTitle:=GetActionTextWithShortcut( _editActions.paste )
+		Local goBackTitle:=GetActionTextWithShortcut( _viewActions.goBack )
+		Local goForwTitle:=GetActionTextWithShortcut( _viewActions.goForward )
 		
 		_toolBar=New ToolBarExt
 		_toolBar.Style=GetStyle( "MainToolBar" )
 		_toolBar.MaxSize=New Vec2i( 10000,40 )
 		
-		Local goBack:=Lambda()
-			Navigator.TryBack()
-		End
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/back.png" ),goBack,"Go back (Alt+Left)" )
-		
-		Local goForw:=Lambda()
-			Navigator.TryForward()
-		End
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/forward.png" ),goForw,"Go forward (Alt+Right)" )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/back.png" ),_viewActions.goBack.Triggered,goBackTitle )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/forward.png" ),_viewActions.goForward.Triggered,goForwTitle )
 		_toolBar.AddSeparator()
-		
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/new_file.png" ),_fileActions.new_.Triggered,newTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_file.png" ),_fileActions.open.Triggered,openTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_project.png" ),_projectView.openProject.Triggered,"Open project..." )
@@ -978,6 +971,8 @@ Class MainWindowInstance Extends Window
 		
 		If Not _editorMenu
 			_editorMenu=New MenuExt
+			_editorMenu.AddAction( _viewActions.gotoDeclaration )
+			_editorMenu.AddSeparator()
 			_editorMenu.AddAction( _editActions.cut )
 			_editorMenu.AddAction( _editActions.copy )
 			_editorMenu.AddAction( _editActions.paste )
@@ -1064,6 +1059,12 @@ Class MainWindowInstance Extends Window
 		jobj["windowRect"]=ToJson( Frame )
 		
 		SaveTabsState( jobj )
+		
+		Local jdocs:=New JsonObject
+		jobj["docsTab"]=jdocs
+		
+		jdocs["indexerVisible"]=New JsonBool( _helpTree.Visible )
+		jdocs["indexerSize"]=New JsonString( _docsConsole.GetViewSize( _helpTree ) )
 		
 		Local recent:=New JsonArray
 		For Local path:=Eachin _recentFiles
@@ -1215,7 +1216,7 @@ Class MainWindowInstance Extends Window
 		
 	End
 	
-	Method OnChatClicked()
+	Method OnChatTabActiveChanged()
 		
 		Local tab:=_tabsWrap.tabs["Chat"]
 		
@@ -1290,7 +1291,6 @@ Class MainWindowInstance Extends Window
 		
 		_tabsWrap.AddTab( "Project",_projectView )
 		_tabsWrap.AddTab( "Debug",_debugView )
-		'_tabsWrap.AddTab( "Help",_helpTree )
 		_tabsWrap.AddTab( "Source",_docBrowser )
 		_tabsWrap.AddTab( "Build",_buildConsoleView )
 		_tabsWrap.AddTab( "Output",_outputConsoleView )
@@ -1298,6 +1298,7 @@ Class MainWindowInstance Extends Window
 		_tabsWrap.AddTab( "Find",_findConsole )
 		_tabsWrap.AddTab( "Chat",_ircView )
 		
+		_tabsWrap.tabs["Chat"].ActiveChanged+=OnChatTabActiveChanged
 	End
 	
 	Method ArrangeElements()
@@ -1308,7 +1309,7 @@ Class MainWindowInstance Extends Window
 		_contentView.RemoveView( _statusBar )
 		_contentView.RemoveView( _findReplaceView )
 		
-		_tabsWrap.DetachFromParent( _contentView )
+		_tabsWrap.DetachFromParent()
 		
 		If Prefs.MainToolBarVisible
 			_toolBar=GetMainToolBar()
@@ -1383,11 +1384,10 @@ Class MainWindowInstance Extends Window
 			' set sizes
 			Local sz:=Json_FindValue( jobj.Data,"tabsDocks/"+edge+"Size" )
 			If sz
-				Local size:=Int( sz.ToNumber() )
-				If size>0 Then _tabsWrap.sizes[edge]=size
+				_tabsWrap.sizes[edge]=sz.ToString()
 			Endif
 			Local dock:=_tabsWrap.docks[edge]
-			_contentView.SetViewSize( dock,""+_tabsWrap.sizes[edge] )
+			_contentView.SetViewSize( dock,_tabsWrap.sizes[edge] )
 			' set visibility
 			Local vis:=Json_FindValue( jobj.Data,"tabsDocks/"+edge+"Visible" )
 			If vis
@@ -1410,16 +1410,22 @@ Class MainWindowInstance Extends Window
 			jj[edge+"Tabs"]=JsonArray.Create( dock.TabsNames )
 			jj[edge+"Active"]=New JsonString( dock.ActiveName )
 			jj[edge+"Visible"]=New JsonBool( dock.Visible )
-			Local size:=(edge="bottom") ? dock.Frame.Height Else dock.Frame.Width
-			If size > 0
-				jj[edge+"Size"]=New JsonNumber( size )
-			Endif
+			jj[edge+"Size"]=New JsonString( _tabsWrap.GetDockSize( dock ) )
 		Next
 	End
 	
 	Method LoadState( jobj:JsonObject )
 	
 		LoadTabsState( jobj )
+		
+		If jobj.Contains( "docsTab" )
+			Local jdocs:=jobj.GetObject( "docsTab" )
+			Local size:=jdocs.GetString( "indexerSize" )
+			_docsConsole.SetViewSize( _helpTree,size )
+			Local vis:=jdocs.GetBool( "indexerVisible" )
+			_helpTree.Visible=Not vis
+			_helpSwitcher.Clicked()
+		Endif
 		
 		If jobj.Contains( "recentFiles" )
 			For Local file:=Eachin jobj.GetArray( "recentFiles" )
@@ -1450,18 +1456,21 @@ Class MainWindowInstance Extends Window
 			_mx2cc=_mx2ccDir+StripDir( _mx2cc )
 		Endif
 		
-		
-		_docsManager.LoadState( jobj )
-		_buildActions.LoadState( jobj )
-		_projectView.LoadState( jobj )
-		
-		If Not _projectView.OpenProjects _projectView.OpenProject( CurrentDir() )
-		
-		UpdateRecentFilesMenu()
-		UpdateRecentProjectsMenu()
-		UpdateCloseProjectMenu()
+		App.Idle+=Lambda() 'delay execution
+			
+			_docsManager.LoadState( jobj )
+			_buildActions.LoadState( jobj )
+			_projectView.LoadState( jobj )
+		 
+			If Not _projectView.OpenProjects _projectView.OpenProject( CurrentDir() )
+			
+			UpdateRecentFilesMenu()
+			UpdateRecentProjectsMenu()
+			UpdateCloseProjectMenu()
 
-		DeleteTmps()
+			DeleteTmps()
+			
+		End
 	End
 	
 	
@@ -1786,13 +1795,13 @@ Class DraggableTabs
 	
 	Field tabs:=New StringMap<TabButtonExt>
 	Field docks:=New StringMap<TabViewExt>
-	Field sizes:=New StringMap<Int>
+	Field sizes:=New StringMap<String>
 	
 	Method New()
 		
-		sizes["left"]=300
-		sizes["right"]=300
-		sizes["bottom"]=250
+		sizes["left"]="300"
+		sizes["right"]="300"
+		sizes["bottom"]="250"
 		
 		_docksArray=New TabViewExt[Edges.Length]
 		Local i:=0
@@ -1808,18 +1817,26 @@ Class DraggableTabs
 		For Local edge:=Eachin Edges
 			view.AddView( docks[edge],edge,sizes[edge],True )
 		Next
+		_parent=view
 	End
 	
-	Method DetachFromParent( view:DockingView )
-	
+	Method DetachFromParent()
+		
+		If Not _parent Return
+		
 		For Local edge:=Eachin Edges
-			view.RemoveView( docks[edge] )
+			_parent.RemoveView( docks[edge] )
 		Next
 	End
 	
 	Method AddTab( name:String,view:View )
 		
 		tabs[name]=TabViewExt.CreateDraggableTab( name,view,_docksArray )
+	End
+	
+	Method GetDockSize:String( dock:TabViewExt )
+		
+		Return _parent.GetViewSize( dock )
 	End
 	
 	Property AllDocks:TabViewExt[]()
@@ -1829,6 +1846,7 @@ Class DraggableTabs
 	Private
 	
 	Field _docksArray:TabViewExt[]
+	Field _parent:DockingView
 	
 End
 

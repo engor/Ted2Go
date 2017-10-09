@@ -427,7 +427,7 @@ Class TabViewExt Extends DockingView
 	Field _flags:TabViewFlags
 	Field _tabBar:TabBar
 	Field _tabs:=New Stack<TabButtonExt>
-	Field _current:TabButton
+	Field _current:TabButtonExt
 	Field _scrollView:ScrollView
 	'Field _nxt:PushButton,_prev:PushButton
 	Field _placeHolderTab:TabButtonExt
@@ -438,17 +438,24 @@ Class TabViewExt Extends DockingView
 	Field _vis:Bool
 	Global _listener:DraggableTabsListener
 	
-	Method MakeCurrent( tab:TabButton,notify:Bool )
+	Method MakeCurrent( tab:TabButtonExt,notify:Bool )
 	
 		If tab=_current Return
 		
-		If _current _current.Selected=False
+		Local prev:=_current
 		
 		ContentView=tab.View
 		
 		_current=tab
 		
-		If _current _current.Selected=True
+		If prev
+			prev.Selected=False
+			prev.ActiveChanged()
+		Endif
+		If _current
+			_current.Selected=True
+			_current.ActiveChanged()
+		Endif
 		
 		If notify CurrentChanged()
 		
@@ -503,6 +510,8 @@ End
 
 Class TabButtonExt Extends TabButton
 	
+	Field ActiveChanged:Void()
+	
 	Method New( text:String,icon:Image,view:View,closable:Bool,parentDock:TabViewExt )
 		
 		Super.New( text,icon,view,closable )
@@ -547,14 +556,28 @@ Class TabButtonExt Extends TabButton
 		Return _parentDock.ActiveName=Text
 	End
 	
+	Method SetLockedState( locked:Bool )
+		
+		_locked=locked
+		OnThemeChanged()
+	End
+	
+	
 	Protected
 	
 	Field _parentDock:TabViewExt
+	
+	Method OnThemeChanged() Override
+		
+		Super.OnThemeChanged()
+		Style=GetStyle( _locked ? "TabButtonLocked" Else "TabButton" )
+	End
 	
 	
 	Private
 	
 	Field _possibleParentDocks:TabViewExt[]
+	Field _locked:Bool
 	
 	Method CanDropTo:Bool( tabDock:TabViewExt )
 	

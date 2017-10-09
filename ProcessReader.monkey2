@@ -39,34 +39,12 @@ Class ProcessReader
 	
 	#rem monkeydoc Obtain a reader instance.
 	#end
-	Function Obtain:ProcessReader( tag:String="" )
+	Method New( tag:String="" )
 	
-		Local r:ProcessReader
-		If _recycled.Empty
-			r=New ProcessReader
-		Else
-			r=_recycled[0]
-			_recycled.Remove( r )
-		Endif
-		r.Finished=Null
-		r.PortionRead=Null
-		r.Error=Null
-		r.Tag=tag
-		_items.Add( r )
-		Return r
+		Tag=tag
+		_items.Add( Self )
 	End
 	
-	#rem monkeydoc Recycle a reader instance. So we can get it again using Obtain.
-	#end
-	Function Recycle( r:ProcessReader )
-	
-		_items.Remove( r )
-		r.Stop()
-		_recycled.Add( r )
-	End
-	
-	#rem monkeydoc Stops all obtained readers if them are running and not recycled.
-	#end
 	Function StopAll()
 	
 		For Local r:=Eachin _items
@@ -74,6 +52,27 @@ Class ProcessReader
 		Next
 	End
 	
+	#rem monkeydoc
+	#end
+	Function WaitingForStopAll( wait:Future<Bool> )
+		
+		_stopSize=0
+		_stopCounter=0
+		
+		For Local r:=Eachin _items
+			If r.IsRunning
+				_stopSize+=1
+				r.Finished+=Lambda( s:String,c:Int )
+					_stopCounter+=1
+					If _stopCounter=_stopSize Then wait.Set( True )
+				End
+			Endif
+		Next
+		If _stopSize=0
+			wait.Set( True )
+			Return
+		Endif
+	End
 	
 	#rem monkeydoc Async reading of process. You should to subscribe on (at least) Finished event to get result.
 	This method can be used without creation of new Fiber.
@@ -104,24 +103,26 @@ Class ProcessReader
 	#rem monkeydoc Terminate process execution.
 	#end
 	Method Stop()
-	
-		If Not _procOpen Return
+		
+		If Not _procOpen
+'			If _stdoutWaiting
+'				_stdoutWaiting.Set( False )
+'			Endif
+			Return
+		Endif
 		
 		_process.Terminate()
-		_running=False
+		
+		OnStop()
 	End
 	
 	#rem monkeydoc Is reading currently in progress.
 	#end
-	Method IsRunning:Bool()
+	Property IsRunning:Bool()
 	
 		Return _running
 	End
 	
-	Protected
-	
-	Method New()
-	End
 	
 	Private
 	
@@ -131,7 +132,7 @@ Class ProcessReader
 	Field _stdoutWaiting:Future<Bool>
 	Field _stdoutOpen:Bool,_procOpen:Bool
 	Global _items:=New Stack<ProcessReader>
-	Global _recycled:=New Stack<ProcessReader>
+	Global _stopSize:Int,_stopCounter:Int
 	
 	Method RunInternal:String( cmd:String )
 	
@@ -155,13 +156,13 @@ Class ProcessReader
 		Local process:=New Process
 	
 		process.Finished=Lambda()
-			
+			'Print "proc.finished: "+Tag
 			_procOpen=False
 			UpdateRunning()
 		End
 		
 		process.StdoutReady=Lambda()
-		
+			'Print "proc.stdoutReady: "+Tag
 			Local stdout:=process.ReadStdout()
 			
 			If stdout
@@ -177,7 +178,6 @@ Class ProcessReader
 		If Not process.Start( cmd ) Return False
 		
 		_process=process
-		
 		_running=True
 		_procOpen=True
 		_stdoutOpen=True
@@ -190,27 +190,22 @@ Class ProcessReader
 	
 		If Not _running Or _procOpen Or _stdoutOpen Return
 	
-		_running=False
-		
-		If _stdoutWaiting Then _stdoutWaiting.Set( True )
+		OnStop()
 		
 		Local code:=_process.ExitCode
 		
 		Finished( _output,code )
 		If code<>0 Then Error( code )
 		
+		If _stdoutWaiting
+			_stdoutWaiting.Set( True )
+		Endif
 	End
 	
-End
-
-
-Private
-
-' Extends ProcessReader - to get access to protected New()
-Class ProcessBridge Extends ProcessReader
-
-	Function Create:ProcessReader()
+	Method OnStop()
 		
-		Return New ProcessReader
+		_running=False
+		_items.Remove( Self )
 	End
+	
 End

@@ -32,6 +32,11 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 		Return ident1.StartsWith( ident2 )
 	End
 	
+	Method SetEnabled( enabled:Bool )
+		
+		_enabled=enabled
+	End
+	
 	Operator []:CodeItem( ident:String )
 		
 		For Local i:=Eachin _items
@@ -41,6 +46,8 @@ Class CodeParserPlugin Extends PluginDependsOnFileType Implements ICodeParser
 	End
 	
 	Protected
+	
+	Field _enabled:=True
 	
 	Method New()
 		AddPlugin( Self )

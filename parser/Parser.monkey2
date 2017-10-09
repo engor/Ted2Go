@@ -12,10 +12,12 @@ Interface ICodeParser
 	Method GetScope:CodeItem( docPath:String,docLine:Int )
 	Method ItemAtScope:CodeItem( ident:String,filePath:String,docLine:Int )
 	
-	Method GetItemsForAutocomplete( ident:String,filePath:String,docLine:Int,target:Stack<CodeItem>,usingsFilter:Stack<String> =Null )
+	Method GetItemsForAutocomplete( options:ParserRequestOptions )
 	Method CheckStartsWith:Bool( ident1:String,ident2:String )
 	
 	Method GetItem:CodeItem( ident:String )
+	
+	Method SetEnabled( enabled:Bool )
 	
 	Property Items:Stack<CodeItem>()
 	Property ItemsMap:StringMap<Stack<CodeItem>>()
@@ -31,13 +33,26 @@ Class ParsersManager
 		For Local p:=Eachin plugins
 			If p.CheckFileTypeSuitability( fileType ) Then Return p
 		Next
-		Return _empty
+		Return _fake
 	End
 
+	Function DisableAll()
+		
+		Local plugins:=Plugin.PluginsOfType<CodeParserPlugin>()
+		For Local p:=Eachin plugins
+			p.SetEnabled( False )
+		Next
+	End
+	
+	Function IsFake:Bool( parser:ICodeParser )
+		
+		Return parser=_fake
+	End
+	
 	
 	Private
 	
-	Global _empty:=New EmptyParser
+	Global _fake:=New FakeParser
 	
 End
 
@@ -49,9 +64,22 @@ Function StripGenericType:String( ident:String )
 End
 
 
+Class ParserRequestOptions Final
+	
+	Field ident:String
+	Field filePath:String
+	Field docLineNum:Int
+	Field results:Stack<CodeItem>
+	Field usingsFilter:Stack<String>
+	Field docLineStr:String
+	Field docPosInLine:Int
+	
+End
+
+
 Private
 
-Class EmptyParser Implements ICodeParser
+Class FakeParser Implements ICodeParser
 
 	Property Items:Stack<CodeItem>()
 		Return _items
@@ -87,7 +115,7 @@ Class EmptyParser Implements ICodeParser
 	End
 	Method RefineRawType( item:CodeItem )
 	End
-	Method GetItemsForAutocomplete( ident:String,filePath:String,docLine:Int,target:Stack<CodeItem>,usingsFilter:Stack<String> =Null )
+	Method GetItemsForAutocomplete( options:ParserRequestOptions )
 	End
 	Method CheckStartsWith:Bool( ident1:String,ident2:String )
 		Return False
@@ -95,7 +123,8 @@ Class EmptyParser Implements ICodeParser
 	Method GetItem:CodeItem( ident:String )
 		Return Null
 	End
-	
+	Method SetEnabled( enabled:Bool )
+	End
 	
 	Private
 	

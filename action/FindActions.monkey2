@@ -36,9 +36,13 @@ Class FindActions
 		
 		replace=New Action( "Replace..." )
 		replace.Triggered=OnReplace
+		#If __TARGET__="macos"
+		replace.HotKey=Key.F
+		replace.HotKeyModifiers=Modifier.Alt|Modifier.Menu
+		#Else
 		replace.HotKey=Key.H
 		replace.HotKeyModifiers=Modifier.Menu
-		
+		#Endif
 		replaceNext=New Action( "Replace next" )
 		replaceNext.Triggered=OnReplaceNext
 		
@@ -47,7 +51,8 @@ Class FindActions
 		
 		findInFiles=New Action( "Find in files..." )
 		findInFiles.Triggered=Lambda()
-			OnFindInFiles()
+			Local proj:=projView.FindProjectByFile( docs.CurrentDocument.Path )
+			OnFindInFiles( "",proj )
 		End
 		findInFiles.HotKey=Key.F
 		findInFiles.HotKeyModifiers=Modifier.Menu|Modifier.Shift
@@ -125,18 +130,11 @@ Class FindActions
 		Return New Vec2i( 0,tv.Text.Length )
 	End
 	
-	Method OnFindInFiles( folder:String=Null )
+	Method OnFindInFiles( folder:String=Null,selProj:String=Null )
 	
-		Local tv:=_docs.CurrentTextView
-		If tv <> Null
-			If tv.Cursor <> tv.Anchor
-				Local min:=Min( tv.Cursor,tv.Anchor )
-				Local max:=Max( tv.Cursor,tv.Anchor )
-				Local s:=tv.Text.Slice( min,max )
-				_findInFilesDialog.SetInitialText( s )
-			Endif
-		Endif
-		
+		Local s:=GetInitialText()
+		If s Then _findInFilesDialog.SetInitialText( s )
+		_findInFilesDialog.SetSelectedProject( selProj )
 		_findInFilesDialog.CustomFolder=folder
 		_findInFilesDialog.Show()
 	End
@@ -213,13 +211,13 @@ Class FindActions
 			If Not options.wrapAround Return
 			Repeat
 				Local n:=text.Find( what,i+what.Length )
-				If n>=range.y Exit
+				If n=-1 Or n>=range.y Exit
 				i=n
 			Forever
 		Else
 			Repeat
 				Local n:=text.Find( what,i+what.Length )
-				If n>=cursor Exit
+				If n=-1 Or n>=cursor Exit
 				i=n
 			Forever
 		End

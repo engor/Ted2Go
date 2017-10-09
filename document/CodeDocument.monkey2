@@ -120,6 +120,11 @@ Class CodeDocumentView Extends Ted2CodeTextView
 
 	Protected
 	
+	Method OnThemeChanged() Override
+		
+		_doc.HideAutocomplete()
+	End
+	
 	Method OnRenderContent( canvas:Canvas ) Override
 	
 		Local color:=canvas.Color
@@ -194,10 +199,12 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				End
 			Endif
 			
+			CheckFormat( event,key )
+			
 			Select key
 			
 				Case Key.Space
-					If event.Modifiers & Modifier.Control
+					If ctrl
 						Return
 					'Else
 					'	if AutoComplete.IsOpened And Prefs.AcUseSpace Return
@@ -206,6 +213,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				Case Key.Backspace
 					
 					If AutoComplete.IsOpened
+						
 						Local ident:=IdentBeforeCursor()
 						ident=ident.Slice( 0,ident.Length-1 )
 						If ident.Length > 0
@@ -292,8 +300,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 				Case Key.Enter,Key.KeypadEnter 'auto indent
 			
-					If _typing Then DoFormat( False )
-			
 					Local line:=CursorLine
 					Local text:=Document.GetLine( line )
 					Local indent:=GetIndent( text )
@@ -336,16 +342,16 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Return
 			
 				#If __TARGET__="macos"
-				Case Key.Left 'smart Home behaviour
+				Case Key.A 'smart Home behaviour
 			
-					If event.Modifiers & Modifier.Menu
+					If ctrl
 						SmartHome( shift )
 						Return
 					Endif
 			
-				Case Key.Right
+				Case Key.E
 			
-					If event.Modifiers & Modifier.Menu
+					If ctrl
 						SmartEnd( shift )
 						Return
 					Endif
@@ -470,11 +476,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Return
 			
 			
-				Case Key.Up,Key.Down
-			
-					DoFormat( True )
-			
-			
 				Case Key.V
 			
 					If CanPaste And ctrl
@@ -482,20 +483,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						Return
 					Endif
 			
-			
-				Case Key.Insert
-			
-					If CanPaste And shift
-						SmartPaste()
-						Return
-					Endif
-			
-				Case Key.KeyDelete
-			
-					If shift
-						OnCut()
-						Return
-					Endif
 			
 				#If __TARGET__="macos"
 				
@@ -518,7 +505,9 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 		Case EventType.KeyChar
 			
-			If event.Key = Key.Space And event.Modifiers & Modifier.Control
+			CheckFormat( event,event.Key )
+			
+			If event.Key = Key.Space And ctrl
 				If _doc.CanShowAutocomplete()
 					Local ident:=IdentBeforeCursor()
 					If ident Then _doc.ShowAutocomplete( ident,True )
@@ -1078,7 +1067,9 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Method GotoDeclaration()
-	
+		
+		If Not _parsingEnabled Return
+		
 		Local ident:=_codeView.FullIdentAtCursor
 		Local line:=TextDocument.FindLine( _codeView.Cursor )
 		Local item:=_parser.ItemAtScope( ident,Path,line )
@@ -1114,6 +1105,11 @@ Class CodeDocument Extends Ted2Document
 		If Not Prefs.AcEnabled Return False
 		
 		Local line:=TextDocument.FindLine( _codeView.Cursor )
+		
+		' is inside of comment?
+		Local state:=TextDocument.LineState( line )
+		If state & 255 <> 255 Return False
+		
 		Local text:=TextDocument.GetLine( line )
 		Local posInLine:=_codeView.Cursor-TextDocument.StartOfLine( line )
 		
@@ -1127,40 +1123,38 @@ Class CodeDocument Extends Ted2Document
 		If ident = "" Then ident=_codeView.IdentBeforeCursor()
 		
 		'show
-		Local line:=TextDocument.FindLine( _codeView.Cursor )
+		Local lineNum:=TextDocument.FindLine( _codeView.Cursor )
+		Local lineStr:=TextDocument.GetLine( lineNum )
+		Local posInLine:=_codeView.Cursor-TextDocument.StartOfLine( lineNum )
 		
 		If byCtrlSpace And AutoComplete.IsOpened
 			AutoComplete.DisableUsingsFilter=Not AutoComplete.DisableUsingsFilter
 		Endif
 		
-		AutoComplete.Show( ident,Path,FileExtension,line )
+		AutoComplete.Show( ident,Path,FileExtension,lineNum,lineStr,posInLine )
 		
 		If Not AutoComplete.IsOpened Return
 		
 		Local frame:=AutoComplete.Frame
 		
-		Local w:=frame.Width
+		Local w:=frame.Width+ScaledVal( 18 ) 'hack: 18px for scroll
 		Local h:=frame.Height
 		
 		Local cursorRect:=_codeView.CursorRect
 		Local scroll:=_codeView.Scroll
 		Local tvFrame:=_codeView.RenderRect
 		Local yy:=tvFrame.Top+cursorRect.Top-scroll.y
-		yy+=30 'magic offset :)
+		yy+=ScaledVal( 26 ) 'magic offset :)
 		Local xx:=tvFrame.Left+cursorRect.Left-scroll.x'+100
-		xx+=46 'magic
+		xx+=ScaledVal( 46 ) 'magic
 		frame.Left=xx
 		frame.Right=frame.Left+w
 		frame.Top=yy
 		frame.Bottom=frame.Top+h
 		' fit dialog into window
 		If frame.Bottom > MainWindow.RenderRect.Bottom
-			
-			Local dy:=frame.Bottom-MainWindow.RenderRect.Bottom-128
-			frame.Top+=dy
-			frame.Bottom+=dy
-			frame.Left+=50
-			frame.Right+=50
+			Local dy:=frame.Bottom-MainWindow.RenderRect.Bottom-ScaledVal( 128 )
+			frame.MoveBy( ScaledVal( 50 ),dy )
 		Endif
 		AutoComplete.Frame=frame
 		
@@ -1221,6 +1215,7 @@ Class CodeDocument Extends Ted2Document
 	Field _parser:ICodeParser
 	Field _prevLine:=-1
 	Field _prevScope:CodeItem
+	Field _parsingEnabled:Bool
 	
 	Field _toolBar:ToolBarExt
 	Field _content:DockingView
@@ -1315,11 +1310,14 @@ Class CodeDocument Extends Ted2Document
 	
 	Method OnLoad:Bool() Override
 	
-		_parser=ParsersManager.Get( FileExtension )
-	
 		Local text:=stringio.LoadString( Path )
 		
 		_doc.Text=text
+		
+		_parser=ParsersManager.Get( FileExtension )
+		_parsingEnabled=Not ParsersManager.IsFake( _parser )
+		
+		ParsingDoc() 'start parsing right after loading, not by timer
 		
 		Return True
 	End
@@ -1346,7 +1344,11 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Method OnLineChanged:Void( prevLine:Int,newLine:Int )
-	
+		
+		If AutoComplete.IsOpened Then AutoComplete.Hide()
+		
+		If Not _parsingEnabled Return
+		
 		Local scope:=_parser.GetScope( Path,_codeView.LineNumAtCursor+1 )	
 		If scope And scope <> _prevScope
 			Local classs := (_prevScope And scope.IsLikeClass And scope = _prevScope.Parent)
@@ -1356,7 +1358,6 @@ Class CodeDocument Extends Ted2Document
 			_prevScope = scope
 		Endif
 		
-		If AutoComplete.IsOpened Then AutoComplete.Hide()
 	End
 	
 	Method UpdateCodeTree()
@@ -1364,7 +1365,55 @@ Class CodeDocument Extends Ted2Document
 		_treeView.Fill( FileExtension,Path )
 	End
 	
-	Method BgParsing( pathOnDisk:String )
+	Field _timeTextChanged:=0
+	Field _timeDocParsed:=0
+	Method ParsingOnTextChanged()
+		
+		If Not _parsingEnabled Return
+		
+		_timeTextChanged=Millisecs()
+		
+		If Not _timer Then _timer=New Timer( 1,Lambda()
+		
+			If _parsing Return
+			
+			Local msec:=Millisecs()
+			If msec<_timeDocParsed+1000 Return
+			If _timeTextChanged=0 Or msec<_timeTextChanged+1000 Return
+			_timeTextChanged=0
+			
+			ParsingDoc()
+		
+		End )
+		
+	End
+	
+	Method ParsingDoc()
+		
+		If _parsing Return
+		
+		_parsing=True
+		
+		New Fiber( Lambda()
+		
+			Local tmp:=MainWindow.AllocTmpPath( "_mx2cc_parse_",".monkey2" )
+			Local file:=StripDir( Path )
+			
+			SaveString( _doc.Text,tmp )
+			
+			ParsingFile( tmp )
+		
+			DeleteFile( tmp )
+			
+			_parsing=False
+			
+			_timeDocParsed=Millisecs()
+			
+		End )
+		
+	End
+	
+	Method ParsingFile( pathOnDisk:String )
 		
 		If MainWindow.IsTerminating Return
 		
@@ -1375,6 +1424,10 @@ Class CodeDocument Extends Ted2Document
 		If MainWindow.IsTerminating Return
 		
 		If errors
+			
+			If errors="#"
+				Return
+			Endif
 			
 			Local arr:=errors.Split( "~n" )
 			For Local s:=Eachin arr
@@ -1409,38 +1462,7 @@ Class CodeDocument Extends Ted2Document
 		' -----------------------------------
 		' catch for parsing
 		
-		If FileExtension <> ".monkey2" Return
-
-		
-		If _timer _timer.Cancel()
-		
-		_timer=New Timer( 0.5,Lambda()
-		
-			If _parsing Return
-			
-			_parsing=True
-			
-			New Fiber( Lambda()
-			
-				Local tmp:=MainWindow.AllocTmpPath( "_mx2cc_parse_",".monkey2" )
-				Local file:=StripDir( Path )
-				'Print "parsing:"+file+" ("+tmp+")"
-				
-				SaveString( _doc.Text,tmp )
-			
-				BgParsing( tmp )
-				
-				'Print "finished:"+file
-				
-				DeleteFile( tmp )
-				
-				_timer.Cancel()
-				
-				_timer=Null
-				_parsing=False
-				
-			End )
-		End )
+		ParsingOnTextChanged()
 		
 	End
 	
@@ -1479,7 +1501,7 @@ Class CodeDocument Extends Ted2Document
 		Local event:=New KeyEvent( EventType.KeyDown,_codeView,Key.Tab,Key.Tab,Modifier.None,"~t" )
 		_codeView.OnKeyEvent( event )
 	End
-				
+	
 End
 
 
@@ -1732,3 +1754,7 @@ Class NavCode
 	
 End
 
+Function ScaledVal:Int( val:Int )
+	
+	Return val*App.Theme.Scale.x
+End

@@ -230,6 +230,31 @@ Function DoInNotMainFiber( work:Void() )
 	End
 End
 
+Function GetOrCreate<T>:T( map:StringMap<T>,key:String )
+	
+	Local item:=map[key]
+	If Not item
+		item=New T
+		map[key]=item
+	Endif
+	Return item
+End
+
+'Function SplitToCombinations:String[]( str:String,splitter:String="." )
+'	
+'	
+'End
+
+
+Class Stack<T> Extension
+	
+	Method AddUnique( value:T )
+		
+		If Not Self.Contains( value ) Then Self.Add( value )
+	End
+	
+End
+
 
 Struct Recti Extension
 	

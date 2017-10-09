@@ -62,14 +62,14 @@ Class PrefsDialog Extends DialogExt
 	Field _acUseDot:CheckButton
 	Field _acNewLineByEnter:CheckButton
 	Field _acKeywordsOnly:CheckButton
-	Field _acShowAfter:TextField
+	Field _acShowAfter:TextFieldExt
 	Field _acUseLiveTemplates:CheckButton
 	
 	Field _editorToolBarVisible:CheckButton
 	Field _editorGutterVisible:CheckButton
 	Field _editorShowWhiteSpaces:CheckButton
-	Field _editorFontPath:TextField
-	Field _editorFontSize:TextField
+	Field _editorFontPath:TextFieldExt
+	Field _editorFontSize:TextFieldExt
 	Field _editorShowEvery10LineNumber:CheckButton
 	Field _editorCodeMapVisible:CheckButton
 	Field _editorAutoIndent:CheckButton
@@ -79,12 +79,12 @@ Class PrefsDialog Extends DialogExt
 	Field _mainToolBarVisible:CheckButton
 	Field _mainProjectIcons:CheckButton
 	
-	Field _monkeyRootPath:TextField
+	Field _monkeyRootPath:TextFieldExt
 	
-	Field _chatNick:TextField
-	Field _chatServer:TextField
-	Field _chatPort:TextField
-	Field _chatRooms:TextField
+	Field _chatNick:TextFieldExt
+	Field _chatServer:TextFieldExt
+	Field _chatPort:TextFieldExt
+	Field _chatRooms:TextFieldExt
 	Field _chatAutoConnect:CheckButton
 	
 	Field _codeView:Ted2CodeTextView
@@ -145,7 +145,7 @@ Class PrefsDialog Extends DialogExt
 		_mainProjectIcons=New CheckButton( "Project file type icons" )
 		_mainProjectIcons.Checked=Prefs.MainProjectIcons
 		
-		_monkeyRootPath=New TextField( Prefs.MonkeyRootPath )
+		_monkeyRootPath=New TextFieldExt( Prefs.MonkeyRootPath )
 		_monkeyRootPath.Enabled=False
 		Local chooseMonkeyPath:=New Action( "..." )
 		chooseMonkeyPath.Triggered+=Lambda()
@@ -215,13 +215,13 @@ Class PrefsDialog Extends DialogExt
 		
 		Local path:=Prefs.EditorFontPath
 		If Not path Then path=_defaultFont
-		_editorFontPath=New TextField( "" )
+		_editorFontPath=New TextFieldExt( "" )
 		_editorFontPath.TextChanged+=Lambda()
 		
 			Local enabled:=(_editorFontPath.Text<>_defaultFont)
 			_editorFontSize.Enabled=enabled
 		End
-		_editorFontSize=New TextField( ""+Prefs.EditorFontSize )
+		_editorFontSize=New TextFieldExt( ""+Prefs.EditorFontSize )
 		_editorFontPath.Text=path
 		_editorFontPath.ReadOnly=True
 		
@@ -272,7 +272,7 @@ Class PrefsDialog Extends DialogExt
 	
 	Method GetCompletionDock:DockingView()
 		
-		_acShowAfter=New TextField( ""+Prefs.AcShowAfter )
+		_acShowAfter=New TextFieldExt( ""+Prefs.AcShowAfter )
 		
 		Local after:=New DockingView
 		after.AddView( New Label( "Show after" ),"left" )
@@ -321,10 +321,10 @@ Class PrefsDialog Extends DialogExt
 	Method GetChatDock:DockingView()
 		
 		Local chatTable:=New TableView( 2,6 )
-		_chatNick=New TextField( Prefs.IrcNickname )
-		_chatServer=New TextField( Prefs.IrcServer )
-		_chatPort=New TextField( ""+Prefs.IrcPort )
-		_chatRooms=New TextField( Prefs.IrcRooms )
+		_chatNick=New TextFieldExt( Prefs.IrcNickname )
+		_chatServer=New TextFieldExt( Prefs.IrcServer )
+		_chatPort=New TextFieldExt( ""+Prefs.IrcPort )
+		_chatRooms=New TextFieldExt( Prefs.IrcRooms )
 		_chatAutoConnect=New CheckButton( "Auto connect at start" )
 		_chatAutoConnect.Checked=Prefs.IrcConnect
 		chatTable[0,0]=New Label( "Nickname" )

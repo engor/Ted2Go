@@ -44,6 +44,8 @@ Class CodeMapView Extends View
 			
 			Case EventType.MouseDown
 				
+				If posY0>ContentHeight Return 'small content height
+				
 				Local top:=_clickedScrollY*(scale-ScrollKoef)
 				Local inside := posY0>=top And posY0<=top+BubbleHeight
 				If Not inside Then ScrollTo( posY )
@@ -154,7 +156,8 @@ Class CodeMapView Extends View
 	Method ScrollTo( posY:Float )
 	
 		Local scrl:=_codeView.Scroll
-		Local percent:=posY/(VisibleHeight-BubbleHeight)
+		Local hg:=Min( VisibleHeight,ContentHeight )
+		Local percent:=posY/(hg-BubbleHeight)
 		Local yy:=_maxOwnerScroll*percent
 		scrl.Y=yy
 		_codeView.Scroll=scrl

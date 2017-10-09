@@ -4,6 +4,25 @@ Namespace ted2go
 
 Class TextFieldExt Extends TextField 'Implements IKeyView
 	
+	Method New()
+		
+		Super.New()
+		CursorBlinkRate=2.5
+		BlockCursor=False
+	End
+	
+	Method New( maxLength:Int )
+		
+		Self.New()
+		MaxLength=maxLength
+	End
+	
+	Method New( text:String,maxLength:Int=80 )
+		
+		Self.New( maxLength )
+		Text=text
+	End
+	
 	Property NextView:TextFieldExt()
 		
 		Return _next
