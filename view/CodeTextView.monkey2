@@ -109,9 +109,8 @@ Class CodeTextView Extends TextView
 			n-=1
 		Wend
 		n+=1
-		Local ident:=(n < cur) ? text.Slice( n,cur ) Else ""
 		
-		Return ident.Replace( "?.","." )
+		Return (n < cur) ? text.Slice( n,cur ).Replace( "?.","." ) Else ""
 	End
 	
 	Property WordAtCursor:String()
