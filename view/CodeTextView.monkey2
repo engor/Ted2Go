@@ -98,9 +98,11 @@ Class CodeTextView Extends TextView
 		
 		While n >= start
 			
-			If text[n] = 46 'dot
+			Local q:=(text[n] = "?"[0])
+			If text[n] = Chars.DOT Or q ' . or ?.
 				If Not withDots Exit
-			ElseIf Not (IsIdent( text[n] ) Or text[n] = 35) '35 => #
+				If q And text[n+1] <> Chars.DOT Exit
+			ElseIf Not (IsIdent( text[n] ) Or text[n] = Chars.GRID) ' #
 				Exit
 			Endif
 			
@@ -109,7 +111,7 @@ Class CodeTextView Extends TextView
 		n+=1
 		Local ident:=(n < cur) ? text.Slice( n,cur ) Else ""
 		
-		Return ident
+		Return ident.Replace( "?.","." )
 	End
 	
 	Property WordAtCursor:String()
