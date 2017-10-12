@@ -98,7 +98,7 @@ Class Monkey2CodeFormatter Extends CodeFormatterPlugin
 		
 		While i<term
 			
-			Local isIdent:=IsIdent( text[i] )
+			Local isIdent:=IsIdent( text[i] ) And doc.Colors[i]=Highlighter.COLOR_KEYWORD
 			Local isLastPart:=(i=term-1)
 			If isIdent
 				If identStart=-1 Then identStart=i
