@@ -224,6 +224,15 @@ Class TreeViewExpander
 		Next
 	End
 	
+	Method SetExpandedState( node:TreeView.Node )
+		
+		Local key:=GetNodePath( node )
+		If _expands.Contains( key )
+			node.Expanded=_expands[key]
+		Endif
+	End
+	
+	
 	Private
 	
 	Field _tree:TreeView
@@ -246,8 +255,6 @@ Class TreeViewExpander
 	
 		Local key:=GetNodePath( node )
 		_expands[key]=node.Expanded
-	
-		If node.Children = Null Return
 	
 		For Local i:=Eachin node.Children
 			StoreNode( i )

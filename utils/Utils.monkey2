@@ -253,6 +253,16 @@ Class Stack<T> Extension
 		If Not Self.Contains( value ) Then Self.Add( value )
 	End
 	
+	Operator+=( item:T )
+		
+		Self.Add( item )
+	End
+	
+	Operator-=( item:T )
+	
+		Self.Remove( item )
+	End
+	
 End
 
 
