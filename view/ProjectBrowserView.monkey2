@@ -2,64 +2,141 @@
 Namespace ted2go
 
 
-Class ProjectBrowserView Extends FileBrowserExt
+Class ProjectBrowserView Extends TreeViewExt
 	
-	Field RequestedDelete:Void( path:String )
+	Field RequestedDelete:Void( node:Node )
+	Field FileClicked:Void( node:Node )
+	Field FileRightClicked:Void( node:Node )
+	Field FileDoubleClicked:Void( node:Node )
 	
-	Method New( rootPath:String )
+	Method New()
 		
-		Super.New( rootPath )
+		Super.New()
 		
-		RootNode.Text=StripDir( rootPath )+" ("+rootPath+")"
-		UpdateRootIcon()
+		Style=GetStyle( "FileBrowser" )
 		
-		NodeExpanded+=Lambda( node:TreeView.Node )
-			
-			If node.Expanded Then Refresh( node )
-		End
+		_rootNode=New Node( Null )
+		RootNode=_rootNode
+		RootNode.Expanded=True
+		RootNodeVisible=False
 		
-		NodeDoubleClicked+=Lambda( node:TreeView.Node )
-			
-			If node.NumChildren=0 Return
-			
-			node.Expanded=Not node.Expanded
-			
-			If node.Expanded Then Refresh( node ) ' TRUE - need to refresh icons
-			
-			RequestRender()
-		End
+		NodeClicked+=OnNodeClicked
+		NodeRightClicked+=OnNodeRightClicked
+		NodeDoubleClicked+=OnNodeDoubleClicked
+		
+		NodeExpanded+=OnNodeExpanded
+		NodeCollapsed+=OnNodeCollapsed
 		
 		App.Activated+=Lambda()
 		
-			Refresh()
+			UpdateAllNodes()
 		End
 		
-		ApplyFilter( RootNode )
+		UpdateFileTypeIcons()
 		
 	End
 	
-	Method Refresh()
-	
-		Refresh( RootNode )
-	End
-	
-	Method Refresh( node:TreeView.Node )
+	Method AddProject( dir:String )
 		
-		Local n:=Cast<FileBrowserExt.Node>( node )
-		If n Then UpdateNode( n )
+		Local node:=New Node( _rootNode )
+		Local s:=StripDir( dir )+" ("+dir+")"
+		node.Text=s
+		node._path=dir
+		UpdateProjIcon( node )
+		_expander.Restore( node )
 		
+		UpdateNode( node )
 		ApplyFilter( node )
+	End
+	
+	Method RemoveProject( dir:String )
+	
+		Local s:=StripDir( dir )+" ("+dir+")"
+		Local toRemove:TreeView.Node=Null
+		For Local n:=Eachin RootNode.Children
+			If n.Text=s
+				toRemove=n
+				Exit
+			Endif
+		Next
+		If toRemove Then toRemove.Remove()
+	End
+	
+	Method UpdateAllNodes()
+	
+		Local selPath:=Selected ? GetNodePath( Selected ) Else ""
+	
+		For Local n:=Eachin _rootNode.Children
+			Local nn:=Cast<Node>( n )
+			_expander.Restore( nn )
+			UpdateNode( nn,True )
+			ApplyFilter( nn )
+		Next
+		
+		If selPath Then SelectByPath( selPath )
+	
+	End
+	
+	Method IsProjectNode:Bool( node:Node )
+		
+		Return node.Parent=_rootNode
+	End
+	
+	Method Refresh( node:Node )
+	
+		UpdateNode( node,True )
+	End
+	
+	Method Refresh( tnode:TreeView.Node )
+		
+		Local node:=Cast<Node>( tnode )
+		If node then UpdateNode( node,True )
 	End
 	
 	
 	Protected
 	
+	Class Node Extends TreeView.Node
+	
+		Method New( parent:Node )
+			Super.New( "",parent )
+		End
+	
+		Property Path:String()
+			Return _path
+		End
+		
+		Private
+	
+		Field _path:String
+	End
+	
+	Method GetFileTypeIcon:Image( path:String ) Virtual
+	
+		Local ext:=ExtractExt( path )
+		If Not ext Return Null
+	
+		Return _fileTypeIcons[ext.ToLower()]
+	End
+	
+	Method OnValidateStyle() Override
+	
+		Super.OnValidateStyle()
+		
+		UpdateFileTypeIcons()
+	
+		_dirIcon=_fileTypeIcons["._dir"]
+		_fileIcon=_fileTypeIcons["._file"]
+		
+		UpdateAllProjIcons()
+	End
+	
 	Method OnKeyEvent( event:KeyEvent ) Override
 		
 		If Selected And event.Type=EventType.KeyDown And event.Key=Key.KeyDelete
 			
-			Local node:=Cast<FileBrowserExt.Node>( Selected )
-			RequestedDelete( node.Path )
+			Local node:=Cast<Node>( Selected )
+			RequestedDelete( node )
 			event.Eat()
 			Return
 		Endif
@@ -70,30 +147,52 @@ Class ProjectBrowserView Extends FileBrowserExt
 	
 	Private
 	
-	Field _filters:=New Stack<TextFilter>
-	Field _fileTime:Long
+	Global _fileTypeIcons:StringMap<Image>
 	
-	Method ApplyFilter( node:TreeView.Node )
+	Field _rootNode:Node
+	Field _filters:=New StringMap<Stack<TextFilter>>
+	Field _filtersFileTimes:=New StringMap<Long>
+	
+	Field _dirIcon:Image
+	Field _fileIcon:Image
+	
+	
+	Method FindProjectNode:Node( node:TreeView.Node )
 		
-		UpdateFilterItems()
-		If _filters.Length>0 And node.Expanded
+		Local result:TreeView.Node
+		While node
+			result=node
+			node=node.Parent
+			If node=_rootNode Exit
+		Wend
+		Return result ? Cast<Node>( result ) Else Null
+	End
+	
+	Method ApplyFilter( node:Node )
+		
+		Local projNode:=FindProjectNode( node )
+		UpdateFilterItems( projNode )
+		
+		Local list:=_filters[projNode.Text]
+		If list And list.Length>0 And node.Expanded
 			For Local n:=Eachin node.Children
-				Filter( n )
+				Filter( n,list )
 			Next
 		Endif
 	End
 	
-	Method Filtered:Bool( text:String )
+	Method Filtered:Bool( node:TreeView.Node,filters:Stack<TextFilter> )
 	
-		For Local f:=Eachin _filters
+		Local text:=node.Text
+		For Local f:=Eachin filters
 			If f.Filtered( text ) Return True
 		Next
 		Return False
 	End
 	
-	Method Filter( node:TreeView.Node )
+	Method Filter( node:TreeView.Node,filters:Stack<TextFilter> )
 		
-		If Filtered( node.Text )
+		If Filtered( node,filters )
 			node.Remove()
 			Return
 		Endif
@@ -101,45 +200,187 @@ Class ProjectBrowserView Extends FileBrowserExt
 		If Not node.Expanded Return
 		
 		For Local n:=Eachin node.Children
-			Filter( n )
+			Filter( n,filters )
 		Next
 	End
 	
-	Method UpdateFilterItems()
+	Method UpdateFilterItems( projNode:Node )
 		
-		Local path:=RootPath+"/project.json"
+		Local path:=projNode.Path+"/project.json"
 		If GetFileType( path ) <> FileType.File Return
 		
+		Local projName:=projNode.Text
+		
 		Local t:=GetFileTime( path )
-		If t=_fileTime Return
+		If t=_filtersFileTimes[projName] Return
 		
-		_fileTime=t
+		_filtersFileTimes[projName]=t
 		
-		_filters.Clear()
+		Local list:=GetOrCreate( _filters,projName )
+		list.Clear()
 		
 		Local json:=JsonObject.Load( path )
 		If json.Contains( "exclude" )
 			For Local i:=Eachin json["exclude"].ToArray()
 				Local f:=New TextFilter( i.ToString() )
-				_filters+=f
+				list+=f
 			Next
 		Endif
 	End
 	
-	Method OnThemeChanged() Override
-		
-		Super.OnThemeChanged()
-		UpdateRootIcon()
-		Refresh()
+	Method UpdateProjIcon( node:TreeView.Node )
+	
+		node.Icon = Prefs.MainProjectIcons ? ThemeImages.Get( "project/package.png" ) Else Null
 	End
 	
-	Method UpdateRootIcon()
-		If Prefs.MainProjectIcons Then 'Only load icon if settings say so
-			RootNode.Icon=ThemeImages.Get( "project/package.png" )
-		Else
-			RootNode.Icon=Null
-		Endif
+	Method UpdateAllProjIcons()
+		
+		For Local n:=Eachin RootNode.Children
+			UpdateProjIcon( n )
+		Next
 	End
+	
+	Method UpdateNode( node:Node,recurse:Bool=True )
+		
+		Local path:=node._path
+		'Print "update node: "+path
+		If Not path.EndsWith( "/" ) path+="/"
+		Local dir:=filesystem.LoadDir( path )
+	
+		Local dirs:=New Stack<String>
+		Local files:=New Stack<String>
+	
+		For Local f:=Eachin dir
+	
+			Local fpath:=path+f
+	
+			Select GetFileType( fpath )
+			Case FileType.Directory
+				dirs.Add( f )
+			Default
+				files.Add( f )
+			End
+		Next
+	
+		dirs.Sort()
+		files.Sort()
+	
+		Local i:=0,children:=node.Children
+	
+		While i<dir.Length
+	
+			Local f:=""
+			If i<dirs.Length f=dirs[i] Else f=files[i-dirs.Length]
+	
+			Local child:Node
+	
+			If i<children.Length
+				child=Cast<Node>( children[i] )
+				child.RemoveAllChildren()
+			Else
+				child=New Node( node )
+			Endif
+	
+			Local fpath:=path+f
+	
+			child.Text=f
+			child._path=fpath
+	
+			Local icon:Image
+			If Prefs.MainProjectIcons 'Only load icon if settings say so
+				icon=GetFileTypeIcon( fpath )
+			Endif
+	
+			If i<dirs.Length
+				If Not icon And Prefs.MainProjectIcons Then icon=_dirIcon
+				child.Icon=icon
+	
+				_expander.Restore( child )
+	
+				If child.Expanded Or recurse
+					UpdateNode( child,child.Expanded )
+				Endif
+			Else
+				If Not icon And Prefs.MainProjectIcons Then icon=_fileIcon
+				child.Icon=icon
+				child.RemoveAllChildren()
+			Endif
+	
+			i+=1
+		Wend
+	
+		node.RemoveChildren( i )
+	
+	End
+	
+	Method OnNodeClicked( tnode:TreeView.Node )
+		
+		Local node:=Cast<Node>( tnode )
+		If Not node Return
+		Print "OnNodeClicked"
+		FileClicked( node )
+	End
+	
+	Method OnNodeRightClicked( tnode:TreeView.Node )
+	
+		Local node:=Cast<Node>( tnode )
+		If Not node Return
+		
+		FileRightClicked( node )
+	End
+	
+	Method OnNodeDoubleClicked( tnode:TreeView.Node )
+		
+		Local node:=Cast<Node>( tnode )
+		If Not node Return
+		Print "OnNodeDoubleClicked"
+		FileDoubleClicked( node )
+	End
+	
+	Method OnNodeExpanded( tnode:TreeView.Node )
+	
+		Local node:=Cast<Node>( tnode )
+		If Not node Return
+		
+		UpdateNode( node,True )
+		ApplyFilter( node )
+	End
+	
+	Method OnNodeCollapsed( tnode:TreeView.Node )
+	
+	End
+	
+	Function UpdateFileTypeIcons()
+	
+		If _fileTypeIcons Return
+		
+		_fileTypeIcons=New StringMap<Image>
+		
+		Local dir:="theme::filetype_icons/"
+		
+		Local types:=stringio.LoadString( dir+"filetypes.txt" ).Split( "~n" )
+	
+		For Local type:=Eachin types
+		
+			type=type.Trim()
+			If Not type Continue
+			
+			Local icon:=Image.Load( dir+type )
+			If Not icon Continue
+			
+			icon.Scale=App.Theme.Scale
+			
+			_fileTypeIcons[ "."+StripExt(type) ]=icon
+		Next
+		
+		App.ThemeChanged+=Lambda()
+			For Local image:=Eachin _fileTypeIcons.Values
+				image.Scale=App.Theme.Scale
+			Next
+		End
+		
+	End
+	
 	
 End
 

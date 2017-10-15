@@ -7,16 +7,8 @@ Class CodeTreeView Extends TreeViewExt
 	Field SortByType:=True
 	Field ShowInherited:=False
 	
-	
-	Method New()
-		
-		_expander=New TreeViewExpander( Self )
-	End
-	
 	Method Fill( fileType:String,path:String,expandIfOnlyOneItem:Bool=True )
 	
-		_expander.Store()
-		
 		Local stack:=New Stack<TreeView.Node>
 		Local parser:=ParsersManager.Get( fileType )
 		Local node:=RootNode
@@ -65,7 +57,6 @@ Class CodeTreeView Extends TreeViewExt
 	
 	Private
 	
-	Field _expander:TreeViewExpander
 	Field _stack:=New Stack<CodeItem>
 	
 	Method FindNode:TreeView.Node( treeNode:TreeView.Node,item:CodeItem )
@@ -90,7 +81,7 @@ Class CodeTreeView Extends TreeViewExt
 		Local n:=New CodeTreeNode( item,node )
 		
 		' restore expand state
-		_expander.RestoreNode( n )
+		_expander.Restore( n )
 		
 		If item.Children = Null And Not ShowInherited Return
 		
@@ -192,74 +183,3 @@ Class CodeTreeNode Extends TreeView.Node
 	Field _code:CodeItem
 	
 End
-
-
-Class TreeViewExpander
-	
-	Method New( tree:TreeView )
-		
-		_tree=tree
-	End
-	
-	Method Store()
-	
-		_expands.Clear()
-		StoreNode( _tree.RootNode )
-	End
-	
-	Method Restore()
-	
-		RestoreNode( _tree.RootNode )
-	End
-	
-	Method RestoreNode( node:TreeView.Node )
-	
-		Local key:=GetNodePath( node )
-		node.Expanded=_expands[key]
-		
-		If node.Children = Null Return
-		
-		For Local i:=Eachin node.Children
-			RestoreNode( i )
-		Next
-	End
-	
-	Method SetExpandedState( node:TreeView.Node )
-		
-		Local key:=GetNodePath( node )
-		If _expands.Contains( key )
-			node.Expanded=_expands[key]
-		Endif
-	End
-	
-	
-	Private
-	
-	Field _tree:TreeView
-	Field _expands:=New StringMap<Bool>
-	
-	Method GetNodePath:String( node:TreeView.Node )
-	
-		Local s:=node.Text
-		Local i:=node.Parent
-		While i <> Null
-			s=i.Text+"\"+s
-			i=i.Parent
-		Wend
-		Return s
-	End
-	
-	Method StoreNode( node:TreeView.Node )
-	
-		If Not node.Expanded Return
-	
-		Local key:=GetNodePath( node )
-		_expands[key]=node.Expanded
-	
-		For Local i:=Eachin node.Children
-			StoreNode( i )
-		Next
-	End
-	
-End
-

@@ -13,17 +13,7 @@ Class FindDialog Extends DialogExt
 		_findField.Entered+=Lambda()
 			actions.findNext.Trigger()
 		End
-		_findField.TextChanged+=Lambda(  )
-			#Rem
-			Local t:=_findField.Text
-			If t.Length > 1
-				If Not Prefs.SiblyMode
-					actions.FindByTextChanged( EntireProject )
-				Endif
-			Endif
-			#End
-		End
-
+		
 		_findField.Tabbed+=_replaceField.MakeKeyView
 
 		_replaceField.Tabbed+=_findField.MakeKeyView
@@ -94,9 +84,10 @@ Class FindDialog Extends DialogExt
 	End
 	
 	Method SetInitialText( find:String )
-If Not Prefs.SiblyMode
-		_findField.Text=find
-Endif
+
+		If Not Prefs.SiblyMode
+			_findField.Text=find
+		Endif
 		_findField.SelectAll()
 	End
 	

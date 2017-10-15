@@ -165,7 +165,7 @@ Class PrefsInstance
 		j["sortByType"]=New JsonBool( SourceSortByType )
 		j["showInherited"]=New JsonBool( SourceShowInherited )
 		
-		If "SiblyMode" json["siblyMode"]=JsonBool.TrueValue
+		If SiblyMode json["siblyMode"]=JsonBool.TrueValue
 		
 	End
 	
