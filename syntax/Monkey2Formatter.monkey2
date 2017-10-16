@@ -84,6 +84,7 @@ Class Monkey2CodeFormatter Extends CodeFormatterPlugin
 	Method FormatLine( view:CodeTextView,line:Int )
 		
 		Local doc:=view.Document
+		If line>=doc.NumLines Return
 		
 		'ignore comments...
 		'
