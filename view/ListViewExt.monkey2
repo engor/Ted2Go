@@ -254,7 +254,7 @@ Class ListViewExt Extends ScrollableView
 		For Local i:=Eachin _items
 			w=Max( w,Int(RenderStyle.Font.TextWidth( i.Text )) )
 		Next
-		w+=20 '+20 for icons
+		w+=50 '+20 for icons
 		_width=w
 		
 		Local h:=_items.Length*_lineH
