@@ -124,7 +124,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 			_disableUsingsFilter=False
 		End
 		
-		OnThemeChanged()
+		OnValidateStyle()
 	End
 	
 	Property DisableUsingsFilter:Bool()
@@ -150,6 +150,8 @@ Class AutocompleteDialog Extends NoTitleDialog
 	End
 	
 	Method Show( ident:String,filePath:String,fileType:String,docLineNum:Int,docLineStr:String,docPosInLine:Int )
+		
+		OnValidateStyle()
 		
 		Local dotPos:=ident.FindLast( "." )
 		
@@ -327,14 +329,14 @@ Class AutocompleteDialog Extends NoTitleDialog
 	
 	Protected
 	
-	Method OnThemeChanged() Override
+	Method OnValidateStyle() Override
 		
 		_view.MaxSize=(App.Theme.Scale.x>1) ? _etalonMaxSize*App.Theme.Scale Else _etalonMaxSize
 	End
 	
 	Private
 	
-	Field _etalonMaxSize:Vec2i
+	Field _etalonMaxSize:Vec2f
 	Field _view:AutocompleteListView
 	Field _keywords:StringMap<Stack<ListViewItem>>
 	Field _templates:StringMap<Stack<ListViewItem>>

@@ -1120,7 +1120,7 @@ Class CodeDocument Extends Ted2Document
 		
 		Local frame:=AutoComplete.Frame
 		
-		Local w:=frame.Width+ScaledVal( 18 ) 'hack: 18px for scroll
+		Local w:=frame.Width
 		Local h:=frame.Height
 		
 		Local cursorRect:=_codeView.CursorRect
