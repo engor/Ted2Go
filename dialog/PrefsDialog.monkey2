@@ -78,6 +78,7 @@ Class PrefsDialog Extends DialogExt
 	
 	Field _mainToolBarVisible:CheckButton
 	Field _mainProjectIcons:CheckButton
+	Field _mainProjectSingleClickExpanding:CheckButton
 	
 	Field _monkeyRootPath:TextFieldExt
 	
@@ -120,6 +121,7 @@ Class PrefsDialog Extends DialogExt
 		
 		Prefs.MainToolBarVisible=_mainToolBarVisible.Checked
 		Prefs.MainProjectIcons=_mainProjectIcons.Checked
+		Prefs.MainProjectSingleClickExpanding=_mainProjectSingleClickExpanding.Checked
 		
 		Prefs.IrcNickname=_chatNick.Text
 		Prefs.IrcServer=_chatServer.Text
@@ -144,6 +146,9 @@ Class PrefsDialog Extends DialogExt
 		
 		_mainProjectIcons=New CheckButton( "Project file type icons" )
 		_mainProjectIcons.Checked=Prefs.MainProjectIcons
+		
+		_mainProjectSingleClickExpanding=New CheckButton( "Project tree single-click mode" )
+		_mainProjectSingleClickExpanding.Checked=Prefs.MainProjectSingleClickExpanding
 		
 		_monkeyRootPath=New TextFieldExt( Prefs.MonkeyRootPath )
 		_monkeyRootPath.Enabled=False
@@ -182,6 +187,7 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( New Label( " " ),"top" )
 		docker.AddView( _mainProjectIcons,"top" )
 		docker.AddView( _mainToolBarVisible,"top" )
+		docker.AddView( _mainProjectSingleClickExpanding,"top" )
 		docker.AddView( New Label( " " ),"top" )
 		
 		Return docker

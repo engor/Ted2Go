@@ -35,6 +35,15 @@ Class ProjectView Extends ScrollView
 		Return _projects.ToArray()
 	End
 	
+	Property SingleClickExpanding:Bool()
+	
+		Return _projBrowser.SingleClickExpanding
+	
+	Setter( value:Bool )
+		
+		_projBrowser.SingleClickExpanding=value
+	End
+	
 	Function FindProjectByFile:String( filePath:String )
 		
 		If Not filePath Return ""
@@ -253,7 +262,7 @@ Class ProjectView Extends ScrollView
 	Method InitProjBrowser()
 		
 		Local browser:=New ProjectBrowserView()
-		browser.OneClickExpanding=Prefs.SiblyMode 'special
+		browser.SingleClickExpanding=Prefs.MainProjectSingleClickExpanding
 		_projBrowser=browser
 		_docker.AddView( browser,"top" )
 		
@@ -262,17 +271,15 @@ Class ProjectView Extends ScrollView
 			DeleteItem( browser,node.Path,node )
 		End
 		
-		If browser.OneClickExpanding
-			browser.FileClicked+=Lambda( node:ProjectBrowserView.Node )
-				
-				OnOpenDocument( node.Path )
-			End
-		Else
-			browser.FileDoubleClicked+=Lambda( node:ProjectBrowserView.Node )
-				
-				OnOpenDocument( node.Path )
-			End
-		Endif
+		browser.FileClicked+=Lambda( node:ProjectBrowserView.Node )
+			
+			If browser.SingleClickExpanding Then OnOpenDocument( node.Path )
+		End
+		
+		browser.FileDoubleClicked+=Lambda( node:ProjectBrowserView.Node )
+			
+			If Not browser.SingleClickExpanding Then OnOpenDocument( node.Path )
+		End
 		
 		browser.FileRightClicked+=Lambda( node:ProjectBrowserView.Node )
 		

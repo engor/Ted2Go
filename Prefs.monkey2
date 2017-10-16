@@ -19,6 +19,7 @@ Class PrefsInstance
 	'
 	Field MainToolBarVisible:=True
 	Field MainProjectIcons:=True
+	Field MainProjectSingleClickExpanding:=False
 	'
 	Field IrcNickname:String
 	Field IrcServer:="irc.freenode.net"
@@ -71,7 +72,8 @@ Class PrefsInstance
 			Local j2:=json["main"].ToObject()
 			MainToolBarVisible=Json_GetBool( j2,"toolBarVisible",MainToolBarVisible )
 			MainProjectIcons=Json_GetBool( j2,"projectIcons",MainProjectIcons )
-      
+      		MainProjectSingleClickExpanding=Json_GetBool( j2,"singleClickExpanding",MainProjectSingleClickExpanding )
+      		
 		Endif
 		
 		If json.Contains( "completion" )
@@ -126,6 +128,7 @@ Class PrefsInstance
 		json["main"]=j
 		j["toolBarVisible"]=New JsonBool( MainToolBarVisible )
 		j["projectIcons"]=New JsonBool( MainProjectIcons )
+		j["singleClickExpanding"]=New JsonBool( MainProjectSingleClickExpanding )
 		
 		j=New JsonObject
 		json["irc"]=j

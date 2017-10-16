@@ -129,6 +129,8 @@ Class ProjectBrowserView Extends TreeViewExt
 		_fileIcon=_fileTypeIcons["._file"]
 		
 		UpdateAllProjIcons()
+		
+		UpdateAllNodes()
 	End
 	
 	Method OnKeyEvent( event:KeyEvent ) Override

@@ -17,7 +17,7 @@ Class TreeViewExt Extends TreeView
 		
 		Super.NodeClicked+=Lambda( node:Node )
 			
-			If _oneClickExpanding
+			If _singleClickExpanding
 				If TrySwitchExpandingState( node ) Return
 			Endif
 			
@@ -71,13 +71,13 @@ Class TreeViewExt Extends TreeView
 		RequestRender()
 	End
 	
-	Property OneClickExpanding:Bool()
+	Property SingleClickExpanding:Bool()
 	
-		Return _oneClickExpanding
+		Return _singleClickExpanding
 	
 	Setter( value:Bool )
 	
-		_oneClickExpanding=value
+		_singleClickExpanding=value
 		
 	End
 	
@@ -177,7 +177,7 @@ Class TreeViewExt Extends TreeView
 	
 	Field _sel:TreeView.Node
 	Field _selColor:Color
-	Field _oneClickExpanding:Bool
+	Field _singleClickExpanding:Bool
 	
 	Method TrySwitchExpandingState:Bool( node:TreeView.Node )
 		

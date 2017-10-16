@@ -134,7 +134,7 @@ Class MainWindowInstance Extends Window
 		'Find tab
 		
 		_findConsole=New TreeViewExt
-		_findConsole.OneClickExpanding=True
+		_findConsole.SingleClickExpanding=True
 		_findConsole.NodeClicked+=Lambda( node:TreeView.Node )
 		
 			Local n:=Cast<NodeWithData<FileJumpData>>( node )
@@ -449,6 +449,7 @@ Class MainWindowInstance Extends Window
 		
 		SetupChatTab()
 		
+		_projectView.SingleClickExpanding=Prefs.MainProjectSingleClickExpanding
 	End
 	
 	Method GainFocus()
