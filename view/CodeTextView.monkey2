@@ -298,7 +298,8 @@ Class CodeTextView Extends TextView
 	
 	Protected
 	
-	Method CheckFormat( event:KeyEvent,key:Key )
+	Method CheckFormat( event:KeyEvent )
+		
 		
 		Select event.Type
 		
@@ -309,19 +310,20 @@ Class CodeTextView Extends TextView
 				Else
 					If _typing Then FormatWord()
 				Endif
-		
+				
 			Case EventType.KeyDown
 				
+				local key:=FixNumpadKeys( event )
 				Select key
-		
+					
 					Case Key.Tab
 						If _typing Then FormatWord() ' like for Key.Space
-		
+					
 					Case Key.Backspace,Key.KeyDelete,Key.Enter,Key.KeypadEnter
 						_typing=True
-		
+					
 				End
-		
+				
 		End
 	End
 	
@@ -698,4 +700,24 @@ Class MouseEvent Extension
 		
 		Return New MouseEvent( Self.Type,Self.View,location,Self.Button,Self.Wheel,Self.Modifiers,Self.Clicks )
 	End
+End
+
+
+Function FixNumpadKeys:Key( event:KeyEvent )
+	
+	Local key:=event.Key
+	If Not (event.Modifiers & Modifier.NumLock)
+		Select key
+		Case Key.Keypad1 key=Key.KeyEnd
+		Case Key.Keypad2 key=Key.Down
+		Case Key.Keypad3 key=Key.PageDown
+		Case Key.Keypad4 key=Key.Left
+		Case Key.Keypad6 key=Key.Right
+		Case Key.Keypad7 key=Key.Home
+		Case Key.Keypad8 key=Key.Up
+		Case Key.Keypad9 key=Key.PageUp
+		Case Key.Keypad0 key=Key.Insert
+		End
+	Endif
+	Return key
 End

@@ -182,24 +182,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		Select event.Type
 		Case EventType.KeyDown,EventType.KeyRepeat
 			
-			Local key:=event.Key
-			
-			'map keypad nav keys...
-			If Not (event.Modifiers & Modifier.NumLock)
-				Select key
-				Case Key.Keypad1 key=Key.KeyEnd
-				Case Key.Keypad2 key=Key.Down
-				Case Key.Keypad3 key=Key.PageDown
-				Case Key.Keypad4 key=Key.Left
-				Case Key.Keypad6 key=Key.Right
-				Case Key.Keypad7 key=Key.Home
-				Case Key.Keypad8 key=Key.Up
-				Case Key.Keypad9 key=Key.PageUp
-				Case Key.Keypad0 key=Key.Insert
-				End
-			Endif
-			
-			CheckFormat( event,key )
+			Local key:=FixNumpadKeys( event )
 			
 			Select key
 			
@@ -476,6 +459,9 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						Endif
 			
 					Endif
+					
+					CheckFormat( event )
+					
 					Return
 			
 			
@@ -507,8 +493,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 			
 		Case EventType.KeyChar
-			
-			CheckFormat( event,event.Key )
 			
 			If event.Key = Key.Space And ctrl
 				If _doc.CanShowAutocomplete()
@@ -605,9 +589,11 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		Super.OnKeyEvent( event )
 		
+		CheckFormat( event )
+		
 		'show autocomplete list after some typed chars
 		If event.Type = EventType.KeyChar
-		
+			
 			If _doc.CanShowAutocomplete()
 				'preprocessor
 				If event.Text = "#"
