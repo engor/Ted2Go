@@ -296,12 +296,13 @@ Class NodeWithData<T> Extends TreeView.Node
 End
 
 
-Struct FileJumpData
+Class FileJumpData
 
 	Field path:String
 	Field pos:Int
 	Field len:Int
 	Field line:Int
+	Field posInLine:Int
 	
 End
 

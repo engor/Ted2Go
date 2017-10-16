@@ -20,6 +20,7 @@ Class CodeTextView Extends TextView
 		CursorMoved += OnCursorMoved
 		Document.TextChanged += TextChanged
 		
+		
 '		Document.LinesModified += Lambda( first:Int,removed:Int,inserted:Int )
 '			
 '			If _extraSelStart=-1 Return
@@ -204,14 +205,14 @@ Class CodeTextView Extends TextView
 		Return n
 	End
 
-	Method GotoPosition( pos:Vec2i )
+	Method GotoPosition( pos:Vec2i,lenToSelect:Int=0 )
 	
-		If pos.y = 0
-			GotoLine( pos.x )
-		Else
+		'If pos.y = 0
+		'	GotoLine( pos.x )
+		'Else
 			Local dest:=Document.StartOfLine( pos.x )+pos.y
-			SelectText( dest,dest )
-		Endif
+			SelectText( dest,dest+lenToSelect )
+		'Endif
 		
 		MakeCentered()
 	End

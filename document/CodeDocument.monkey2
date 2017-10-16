@@ -793,6 +793,8 @@ Class CodeDocument Extends Ted2Document
 			If _debugLine>=first
 				_debugLine+=(inserted-removed)
 			Endif
+			
+			MainWindow.OnDocumentLinesModified( Self,first,removed,inserted )
 		End
 		
 		_doc.TextChanged+=Lambda()

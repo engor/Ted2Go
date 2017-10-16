@@ -14,6 +14,7 @@ Class FindActions
 	Field findAllInFiles:Action
 	
 	Field options:FindOptions
+	Field lastFindResults:FindResults
 	
 	Method New( docs:DocumentManager,projView:ProjectView,findConsole:TreeViewExt )
 		
@@ -248,6 +249,7 @@ Class FindActions
 			Local filter:=_findInFilesDialog.FilterText
 			
 			Local result:=FindInProject( what,proj,sens,filter )
+			lastFindResults=result
 			
 			If result Then CreateResultTree( _findConsole.RootNode,result,what,proj )
 		End)
@@ -256,7 +258,7 @@ Class FindActions
 	
 	Const DEFAULT_FILES_FILTER:="monkey2" ',txt,htm,html,h,cpp,json,xml,ini"
 	
-	Method FindInProject:StringMap<Stack<FileJumpData>>( what:String,projectPath:String,caseSensitive:Bool,filesFilter:String=DEFAULT_FILES_FILTER )
+	Method FindInProject:FindResults( what:String,projectPath:String,caseSensitive:Bool,filesFilter:String=DEFAULT_FILES_FILTER )
 		
 		If Not filesFilter Then filesFilter=DEFAULT_FILES_FILTER
 		
@@ -270,7 +272,7 @@ Class FindActions
 		Utils.GetAllFiles( projectPath,exts,files )
 		Local len:=what.Length
 		
-		Local result:=New StringMap<Stack<FileJumpData>>
+		Local result:=New FindResults
 		
 		'Local counter:=1
 		Local doc:=New TextDocument 'use it to get line number
@@ -295,6 +297,7 @@ Class FindActions
 				data.pos=i
 				data.len=len
 				data.line=doc.FindLine( i )+1
+				data.posInLine=i-doc.StartOfLine( data.line )
 				
 				items.Add( data )
 				
@@ -349,7 +352,7 @@ Class FindActions
 	End
 	#End
 	
-	Method CreateResultTree( root:TreeView.Node,map:StringMap<Stack<FileJumpData>>,what:String,projectPath:String )
+	Method CreateResultTree( root:TreeView.Node,results:FindResults,what:String,projectPath:String )
 		
 		root.RemoveAllChildren()
 		
@@ -357,9 +360,9 @@ Class FindActions
 		
 		Local subRoot:TreeView.Node
 		
-		For Local file:=Eachin map.Keys
+		For Local file:=Eachin results.Files
 			
-			Local items:=map[file]
+			Local items:=results[file]
 			
 			subRoot=New TreeView.Node( file.Replace( projectPath+"/","" )+" ("+items.Length+")",root )
 	
@@ -477,3 +480,43 @@ Class FindActions
 	End
 	
 End
+
+
+Class FindResults
+	
+	Operator[]:Stack<FileJumpData>( filePath:String )
+		
+		Return _map[filePath]
+	End
+	
+	Operator[]=( filePath:String,results:Stack<FileJumpData> )
+	
+		_map[filePath]=results
+	End
+	
+	Property Files:StringMap<Stack<FileJumpData>>.KeyIterator()
+		
+		Return _map.Keys.All()
+	End
+	
+	Method ProcessLinesModified( filePath:String,first:Int,removed:Int,inserted:Int )
+		
+		Local list:=_map[filePath]
+		If Not list Return
+		
+		For Local d:=Eachin list
+			If d.line>first Then d.line+=(inserted-removed)
+		Next
+	End
+	
+	Method Empty:Bool()
+		
+		Return _map.Empty
+	End
+	
+	
+	Private
+	
+	Field _map:=New StringMap<Stack<FileJumpData>>
+End
+

@@ -134,22 +134,15 @@ Class MainWindowInstance Extends Window
 		'Find tab
 		
 		_findConsole=New TreeViewExt
+		_findConsole.OneClickExpanding=True
 		_findConsole.NodeClicked+=Lambda( node:TreeView.Node )
 		
 			Local n:=Cast<NodeWithData<FileJumpData>>( node )
 			If Not n Return
 			
 			Local data:=n.data
-			
-			Local doc:=_docsManager.OpenDocument( data.path,True )
-			If Not doc Return
-			
-			Local tv:=doc.TextView
-			If Not tv Return
-			
-			UpdateWindow( False )
-			
-			tv.SelectText( data.pos,data.pos+data.len ) 'set cursor here
+			Local pos:=New Vec2i( data.line,data.posInLine )
+			GotoCodePosition( data.path,pos,data.len )
 		End
 		
 		'Help tab
@@ -525,6 +518,14 @@ Class MainWindowInstance Extends Window
 		If _outputConsole.Running
 			_outputConsole.Terminate()
 		Endif
+	End
+	
+	Method OnDocumentLinesModified( doc:Ted2Document,first:Int,removed:Int,inserted:Int )
+		
+		Local res:=_findActions.lastFindResults
+		If Not res Return
+		
+		res.ProcessLinesModified( doc.Path,first,removed,inserted )
 	End
 	
 	Property Mx2ccPath:String()
@@ -1010,7 +1011,7 @@ Class MainWindowInstance Extends Window
 		Endif
 	End
 	
-	Method GotoCodePosition( docPath:String, pos:Vec2i )
+	Method GotoCodePosition( docPath:String,pos:Vec2i,lenToSelect:Int=0 )
 		
 		Local doc:=Cast<CodeDocument>( _docsManager.OpenDocument( docPath,True ) )
 		If Not doc Return
@@ -1020,7 +1021,7 @@ Class MainWindowInstance Extends Window
 		
 		UpdateWindow( False )
 		
-		tv.GotoPosition( pos )
+		tv.GotoPosition( pos,lenToSelect )
 		tv.MakeKeyView()
 	End
 	
