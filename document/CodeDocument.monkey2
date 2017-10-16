@@ -266,8 +266,11 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 					If shift
 						SmartPaste()
-					Elseif ctrl And CanCopy
-						OnCopy()
+					Elseif ctrl
+						If CanCopy Then OnCopy()
+					Elseif Not alt
+						' text overwrite mode
+						MainWindow.OverwriteTextMode=Not MainWindow.OverwriteTextMode
 					Endif
 					Return
 			
@@ -638,12 +641,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Endif
 			End
 		
-		Endif
-		
-		' text overwrite mode
-		If event.Type=EventType.KeyDown And event.Key=Key.Insert And Not (shift Or ctrl Or alt)
-			
-			MainWindow.OverwriteTextMode=Not MainWindow.OverwriteTextMode
 		Endif
 		
 	End
