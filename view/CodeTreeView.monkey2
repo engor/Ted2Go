@@ -51,6 +51,12 @@ Class CodeTreeView Extends TreeViewExt
 		Local node:=FindNode( RootNode,scope )
 		If Not node Return
 		
+		If scope.IsLikeClass
+			node.Expanded=True
+			NodeExpanded( node )
+			Return
+		Endif
+		
 		Selected=node
 	End
 	
@@ -61,7 +67,7 @@ Class CodeTreeView Extends TreeViewExt
 	
 	Method FindNode:TreeView.Node( treeNode:TreeView.Node,item:CodeItem )
 	
-		Local node:=Cast<CodeTreeNode>(treeNode)
+		Local node:=Cast<CodeTreeNode>( treeNode )
 		
 		If node And node.CodeItem = item Return node
 	

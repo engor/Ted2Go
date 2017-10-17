@@ -319,7 +319,7 @@ Class ProjectBrowserView Extends TreeViewExt
 		
 		Local node:=Cast<Node>( tnode )
 		If Not node Return
-		Print "OnNodeClicked"
+		
 		FileClicked( node )
 	End
 	
@@ -335,7 +335,7 @@ Class ProjectBrowserView Extends TreeViewExt
 		
 		Local node:=Cast<Node>( tnode )
 		If Not node Return
-		Print "OnNodeDoubleClicked"
+		
 		FileDoubleClicked( node )
 	End
 	

@@ -1198,7 +1198,6 @@ Class CodeDocument Extends Ted2Document
 	Field _timer:Timer
 	Field _parser:ICodeParser
 	Field _prevLine:=-1
-	Field _prevScope:CodeItem
 	Field _parsingEnabled:Bool
 	
 	Field _toolBar:ToolBarExt
@@ -1339,20 +1338,21 @@ Class CodeDocument Extends Ted2Document
 		
 		If Not _parsingEnabled Return
 		
-		Local scope:=_parser.GetScope( Path,_codeView.LineNumAtCursor+1 )	
-		If scope And scope <> _prevScope
-			Local classs := (_prevScope And scope.IsLikeClass And scope = _prevScope.Parent)
-			_prevScope = scope
-			If classs Return 'don't select parent class scope if we are inside of it
-			_treeView.SelectByScope( scope )
-			_prevScope = scope
-		Endif
+		OnUpdateCurrentScope()
+	End
+	
+	Method OnUpdateCurrentScope()
 		
+		Local scope:=_parser.GetScope( Path,_codeView.LineNumAtCursor+1 )
+		If scope
+			_treeView.SelectByScope( scope )
+		Endif
 	End
 	
 	Method UpdateCodeTree()
 		
 		_treeView.Fill( FileExtension,Path )
+		OnUpdateCurrentScope()
 	End
 	
 	Field _timeTextChanged:=0

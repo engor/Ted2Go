@@ -245,7 +245,7 @@ Class TreeViewExpander
 	
 		Local key:=GetNodePath( node )
 		
-		If _expands.Contains( key ) Then node.Expanded=_expands[key]
+		node.Expanded = _expands.Contains( key ) ? True Else False
 		
 		If Not recurse Return
 		
