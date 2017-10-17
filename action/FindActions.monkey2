@@ -175,7 +175,7 @@ Class FindActions
 			If i=-1 Or i+what.Length>range.y Return
 		Endif
 		
-		tv.SelectText( i,i+what.Length )
+		OnSelectText( tv,i,i+what.Length )
 		
 	End
 	
@@ -223,7 +223,15 @@ Class FindActions
 			Forever
 		End
 		
-		tv.SelectText( i,i+what.Length )
+		OnSelectText( tv,i,i+what.Length )
+	End
+	
+	Method OnSelectText( tv:TextView,anchor:Int,cursor:Int )
+		
+		tv.SelectText( anchor,cursor )
+		
+		Local code:=Cast<CodeTextView>( tv )
+		If code Then code.MakeCentered()
 	End
 	
 	Method OnFindAllInFiles()
@@ -470,12 +478,7 @@ Class FindActions
 			
 		Forever
 		
-'		If options.selectionOnly
-'			anchor=range.x
-'			cursor=range.x
-'		Endif
-		
-		tv.SelectText( anchor,cursor )
+		OnSelectText( tv,anchor,cursor )
 		
 	End
 	

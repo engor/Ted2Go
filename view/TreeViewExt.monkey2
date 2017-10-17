@@ -182,7 +182,7 @@ Class TreeViewExt Extends TreeView
 	Method TrySwitchExpandingState:Bool( node:TreeView.Node )
 		
 		If node.Children.Length=0 Return False
-			
+		
 		node.Expanded=Not node.Expanded
 		If node.Expanded
 			Super.NodeExpanded( node )
