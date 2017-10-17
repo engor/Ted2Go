@@ -273,7 +273,7 @@ Class MainWindowInstance Extends Window
 				Local path:=AllocTmpPath( "untitled",ExtractExt( f ) )
 				If Not path Return
 				SaveString( src,path )
-				Local doc:=_docsManager.OpenDocument( path,True )
+				OpenDocument( path,True )
 			End
 		Next
 		
