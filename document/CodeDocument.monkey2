@@ -794,7 +794,6 @@ Class CodeDocument Extends Ted2Document
 				_debugLine+=(inserted-removed)
 			Endif
 			
-			MainWindow.OnDocumentLinesModified( Self,first,removed,inserted )
 		End
 		
 		_doc.TextChanged+=Lambda()
@@ -1303,6 +1302,12 @@ Class CodeDocument Extends Ted2Document
 		_parsingEnabled=Not ParsersManager.IsFake( _parser )
 		
 		ParsingDoc() 'start parsing right after loading, not by timer
+		
+		' grab lines after load
+		_doc.LinesModified+=Lambda( first:Int,removed:Int,inserted:Int )
+			
+			MainWindow.OnDocumentLinesModified( Self,first,removed,inserted )
+		End
 		
 		Return True
 	End
