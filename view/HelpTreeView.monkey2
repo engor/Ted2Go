@@ -1,7 +1,6 @@
 
 Namespace ted2go
 
-
 Private
 
 Function EnumModules:String[]()
@@ -77,8 +76,12 @@ Class HelpTreeView Extends TreeViewExt
 	End
 	
 	Method PageUrl:String( page:String )
+
+		'old doc system		
+		'Return RealPath( "modules/"+page.Replace( ":","/docs/__PAGES__/" ).Replace( ".","-" )+".html" )
 		
-		Return RealPath( "modules/"+page.Replace( ":","/docs/__PAGES__/" ).Replace( ".","-" )+".html" )
+		'new doc system
+		Return RealPath( "docs/"+page )
 	End
 	
 	Method Update()
@@ -86,9 +89,13 @@ Class HelpTreeView Extends TreeViewExt
 		RootNode.RemoveAllChildren()
 
 		For Local modname:=Eachin EnumModules()
-		
-			Local index:="modules/"+modname+"/docs/__PAGES__/index.js"
 
+			'old doc system		
+			'Local index:="modules/"+modname+"/docs/__PAGES__/index.js"
+
+			'new doc system
+			Local index:="docs/modules/"+modname+"/module/index.js"
+		
 			Local obj:=JsonObject.Load( index )
 			If Not obj Continue
 			
