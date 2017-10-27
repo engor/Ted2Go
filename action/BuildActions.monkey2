@@ -363,7 +363,7 @@ Class BuildActions Implements IModuleBuilder
 	
 	Method SaveAll:Bool( buildFile:String )
 		
-		Local proj:=ProjectView.FindProjectByFile( buildFile )
+		Local proj:="" 'ProjectView.FindProjectByFile( buildFile )
 		
 		For Local doc:=Eachin _docs.OpenDocuments
 			' save docs only for built project

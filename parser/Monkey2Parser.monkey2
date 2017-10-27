@@ -17,18 +17,10 @@ Function FixTypeIdent:String( ident:String )
 	Select ident
 	Case "new","bool","byte","double","float","int","long","object","short","string","throwable","variant","void","array"
 		Return ident.Slice( 0,1 ).ToUpper()+ident.Slice( 1 )
+	Case "cstring","ubyte","uint","ulong","ushort"
+		Return ident.Slice( 0,2 ).ToUpper()+ident.Slice( 2 )
 	Case "typeinfo"
 		Return "TypeInfo"
-	Case "cstring"
-		Return "CString"
-	Case "ubyte"
-		Return "UByte"
-	Case "uint"
-		Return "UInt"
-	Case "ulong"
-		Return "ULong"
-	Case "ushort"
-		Return "UShort"
 	End
 	Return ident
 End
@@ -859,7 +851,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				t.kind=kind
 				t.ident=type["ident"].ToString()
 				Return t
-										
+				
 			Case "functype"
 				'retType
 				'params
@@ -875,7 +867,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 					Endif
 				Endif
 				Return t
-						
+				
 			Case "generic"
 				'expr
 				'args
@@ -897,7 +889,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Endif
 				
 				Return t
-					
+				
 			Case "member"
 			
 				Local t:=ParseMember( type )
@@ -922,14 +914,14 @@ Class Monkey2Parser Extends CodeParserPlugin
 					Local tp:=type["type"].ToObject()
 					Local t:=ParseType( tp )
 					If t<>Null
-						t.ident+=" Ptr"
+						t.isPointer=True
 						Return t
 					Endif
 				Endif
-					
+				
 			Default
 			
-				
+			
 		End
 		
 		Return Null
@@ -1263,23 +1255,23 @@ End
 
 Struct Chars
 	
-	Const SINGLE_QUOTE:=39
-	Const DOUBLE_QUOTE:=34
-	Const COMMA:=44
-	Const DOT:=46
-	Const EQUALS:=61
-	Const LESS_BRACKET:=60
-	Const MORE_BRACKET:=62
-	Const OPENED_SQUARE_BRACKET:=91
-	Const CLOSED_SQUARE_BRACKET:=93
-	Const OPENED_ROUND_BRACKET:=40
-	Const CLOSED_ROUND_BRACKET:=41
-	Const DIGIT_0:=48
-	Const DIGIT_9:=57
-	Const AT:=64
-	Const GRID:=35 ' #
-	Const TAB:=9
-	Const SPACE:=32
+	Const SINGLE_QUOTE:="'"[0] '39
+	Const DOUBLE_QUOTE:="~q"[0] '34
+	Const COMMA:=","[0] '44
+	Const DOT:="."[0] '46
+	Const EQUALS:="="[0] '61
+	Const LESS_BRACKET:="<"[0] '60
+	Const MORE_BRACKET:=">"[0] '62
+	Const OPENED_SQUARE_BRACKET:="["[0] '91
+	Const CLOSED_SQUARE_BRACKET:="]"[0] '93
+	Const OPENED_ROUND_BRACKET:="("[0] '40
+	Const CLOSED_ROUND_BRACKET:=")"[0] '41
+	Const DIGIT_0:="0"[0] '48
+	Const DIGIT_9:="9"[0] '57
+	Const AT:="@"[0] '64
+	Const GRID:="#"[0] '35
+	Const TAB:="~t"[0] '9
+	Const SPACE:=" "[0] '32
 	
 End
 
