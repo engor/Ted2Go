@@ -20,6 +20,7 @@ Class CodeTextView Extends TextView
 		CursorMoved += OnCursorMoved
 		Document.TextChanged += TextChanged
 		
+		
 '		Document.LinesModified += Lambda( first:Int,removed:Int,inserted:Int )
 '			
 '			If _extraSelStart=-1 Return
@@ -98,10 +99,16 @@ Class CodeTextView Extends TextView
 		
 		While n >= start
 			
-			Local q:=(text[n] = "?"[0])
-			If text[n] = Chars.DOT Or q ' . or ?.
+			Local more:=(text[n]=Chars.MORE_BRACKET)
+			
+			If text[n] = Chars.DOT Or more ' . | ?. | ->
 				If Not withDots Exit
-				If q And text[n+1] <> Chars.DOT Exit
+				If more
+					If n>0 And text[n-1]<>"-"[0] Exit
+					n-=1 ' skip '-'
+				Else
+					If n>0 And text[n-1]="?"[0] Then n-=1 ' skip '?'
+				Endif
 			ElseIf Not (IsIdent( text[n] ) Or text[n] = Chars.GRID) ' #
 				Exit
 			Endif
@@ -110,7 +117,11 @@ Class CodeTextView Extends TextView
 		Wend
 		n+=1
 		
-		Return (n < cur) ? text.Slice( n,cur ).Replace( "?.","." ) Else ""
+		Local s:=""
+		If n < cur
+			s=text.Slice( n,cur ).Replace( "?.","." ).Replace( "->","." )
+		Endif
+		Return s
 	End
 	
 	Property WordAtCursor:String()
@@ -204,14 +215,14 @@ Class CodeTextView Extends TextView
 		Return n
 	End
 
-	Method GotoPosition( pos:Vec2i )
+	Method GotoPosition( pos:Vec2i,lenToSelect:Int=0 )
 	
-		If pos.y = 0
-			GotoLine( pos.x )
-		Else
+		'If pos.y = 0
+		'	GotoLine( pos.x )
+		'Else
 			Local dest:=Document.StartOfLine( pos.x )+pos.y
-			SelectText( dest,dest )
-		Endif
+			SelectText( dest,dest+lenToSelect )
+		'Endif
 		
 		MakeCentered()
 	End
@@ -298,7 +309,8 @@ Class CodeTextView Extends TextView
 	
 	Protected
 	
-	Method CheckFormat( event:KeyEvent,key:Key )
+	Method CheckFormat( event:KeyEvent )
+		
 		
 		Select event.Type
 		
@@ -309,19 +321,20 @@ Class CodeTextView Extends TextView
 				Else
 					If _typing Then FormatWord()
 				Endif
-		
+				
 			Case EventType.KeyDown
 				
+				local key:=FixNumpadKeys( event )
 				Select key
-		
+					
 					Case Key.Tab
 						If _typing Then FormatWord() ' like for Key.Space
-		
+					
 					Case Key.Backspace,Key.KeyDelete,Key.Enter,Key.KeypadEnter
 						_typing=True
-		
+					
 				End
-		
+				
 		End
 	End
 	
@@ -698,4 +711,24 @@ Class MouseEvent Extension
 		
 		Return New MouseEvent( Self.Type,Self.View,location,Self.Button,Self.Wheel,Self.Modifiers,Self.Clicks )
 	End
+End
+
+
+Function FixNumpadKeys:Key( event:KeyEvent )
+	
+	Local key:=event.Key
+	If Not (event.Modifiers & Modifier.NumLock)
+		Select key
+		Case Key.Keypad1 key=Key.KeyEnd
+		Case Key.Keypad2 key=Key.Down
+		Case Key.Keypad3 key=Key.PageDown
+		Case Key.Keypad4 key=Key.Left
+		Case Key.Keypad6 key=Key.Right
+		Case Key.Keypad7 key=Key.Home
+		Case Key.Keypad8 key=Key.Up
+		Case Key.Keypad9 key=Key.PageUp
+		Case Key.Keypad0 key=Key.Insert
+		End
+	Endif
+	Return key
 End

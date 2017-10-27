@@ -1,4 +1,4 @@
-
+#Rem
 Namespace ted2go
 
 
@@ -11,6 +11,8 @@ Class FileBrowserExt Extends TreeViewExt
 	Field FileDoubleClicked:Void( path:String )
 	
 	Method New( rootPath:String="." )
+		
+		Super.New()
 		
 		Style=GetStyle( "FileBrowser" )
 		
@@ -50,43 +52,51 @@ Class FileBrowserExt Extends TreeViewExt
 	
 	#rem monkeydoc Updates the browser.
 	#end
-	Method Update()
+	Method Update( node:TreeView.Node=Null )
 	
 		_expander.Store()
+		Local selPath:=Selected ? GetNodePath( Selected ) Else ""
 		
-		UpdateNode( _rootNode,_rootPath,True )
+		Local n:=Cast<FileBrowserExt.Node>( node )
+		If Not n Then n=_rootNode
 		
-		_expander.Restore()
+		UpdateNode( n,True )
+		
+		If selPath Then SelectByPath( selPath )
+		
 	End
 	
 	Protected
-	
-	Method OnValidateStyle() Override
-
-		Super.OnValidateStyle()
-			
-		GetFileTypeIcons()
-		
-		_dirIcon=_fileTypeIcons["._dir"]
-		_fileIcon=_fileTypeIcons["._file"]
-	End
-	
-	Private
 	
 	Class Node Extends TreeView.Node
 	
 		Method New( parent:Node )
 			Super.New( "",parent )
 		End
-		
+	
 		Property Path:String()
 			Return _path
 		End
-		
+	
 		Private
-		
+	
 		Field _path:String
 	End
+	
+	
+	
+	Method OnValidateStyle() Override
+
+		Super.OnValidateStyle()
+		
+		GetFileTypeIcons()
+		
+		_dirIcon=_fileTypeIcons["._dir"]
+		_fileIcon=_fileTypeIcons["._file"]
+	End
+	
+	
+	Private
 	
 	Field _rootNode:Node
 	Field _rootPath:String
@@ -95,6 +105,79 @@ Class FileBrowserExt Extends TreeViewExt
 	Field _fileIcon:Image
 	
 	Field _expander:TreeViewExpander
+	
+	Method UpdateNode( node:Node,recurse:Bool=True )
+	
+		Local path:=node._path
+		Print "update node: "+path
+		If Not path.EndsWith( "/" ) path+="/"
+		Local dir:=filesystem.LoadDir( path )
+	
+		Local dirs:=New Stack<String>
+		Local files:=New Stack<String>
+	
+		For Local f:=Eachin dir
+	
+			Local fpath:=path+f
+	
+			Select GetFileType( fpath )
+			Case FileType.Directory
+				dirs.Add( f )
+			Default
+				files.Add( f )
+			End
+		Next
+	
+		dirs.Sort()
+		files.Sort()
+	
+		Local i:=0,children:=node.Children
+	
+		While i<dir.Length
+	
+			Local f:=""
+			If i<dirs.Length f=dirs[i] Else f=files[i-dirs.Length]
+	
+			Local child:Node
+	
+			If i<children.Length
+				child=Cast<Node>( children[i] )
+				child.RemoveAllChildren()
+			Else
+				child=New Node( node )
+			Endif
+	
+			Local fpath:=path+f
+	
+			child.Text=f
+			child._path=fpath
+	
+			Local icon:Image
+			If Prefs.MainProjectIcons 'Only load icon if settings say so
+				icon=GetFileTypeIcon( fpath )
+			Endif
+	
+			If i<dirs.Length
+				If Not icon And Prefs.MainProjectIcons Then icon=_dirIcon
+				child.Icon=icon
+	
+				_expander.SetExpandedState( child )
+	
+				If child.Expanded Or recurse
+					UpdateNode( child,child.Expanded )
+				Endif
+			Else
+				If Not icon And Prefs.MainProjectIcons Then icon=_fileIcon
+				child.Icon=icon
+				child.RemoveAllChildren()
+			Endif
+	
+			i+=1
+		Wend
+	
+		node.RemoveChildren( i )
+	
+	End
 	
 	Method OnNodeClicked( tnode:TreeView.Node )
 	
@@ -113,7 +196,9 @@ Class FileBrowserExt Extends TreeViewExt
 	End
 	
 	Method OnNodeDoubleClicked( tnode:TreeView.Node )
-	
+		
+		If tnode.Children.Length>0 Return
+		
 		Local node:=Cast<Node>( tnode )
 		If Not node Return
 		
@@ -125,84 +210,17 @@ Class FileBrowserExt Extends TreeViewExt
 		Local node:=Cast<Node>( tnode )
 		If Not node Return
 		
-		UpdateNode( node,node._path,True )
+		UpdateNode( node,True )
 	End
 	
 	Method OnNodeCollapsed( tnode:TreeView.Node )
 	
-		Local node:=Cast<Node>( tnode )
-		If Not node Return
-		
-		For Local child:=Eachin node.Children
-			child.RemoveAllChildren()
-		Next
-		
-	End
-	
-	Method UpdateNode( node:Node,path:String,recurse:Bool )
-	
-		If Not path.EndsWith( "/" ) path+="/"
-		Local dir:=filesystem.LoadDir( path )
-		
-		Local dirs:=New Stack<String>
-		Local files:=New Stack<String>
-		
-		For Local f:=Eachin dir
-		
-			Local fpath:=path+f
-			
-			Select GetFileType( fpath )
-			Case FileType.Directory
-				dirs.Push( f )
-			Default
-				files.Push( f )
-			End
-		Next
-		
-		dirs.Sort()
-		files.Sort()
-		
-		Local i:=0,children:=node.Children
-		
-		While i<dir.Length
-		
-			Local f:=""
-			If i<dirs.Length f=dirs[i] Else f=files[i-dirs.Length]
-			
-			Local child:Node
-			
-			If i<children.Length
-				child=Cast<Node>( children[i] )
-			Else
-				child=New Node( node )
-			Endif
-			
-			Local fpath:=path+f
-			
-			child.Text=f
-			child._path=fpath
-			
-			Local icon:Image
-			If Prefs.MainProjectIcons Then 'Only load icon if settings say so
-				icon=GetFileTypeIcon( fpath )
-			Endif
-			
-			If i<dirs.Length
-				If Not icon And Prefs.MainProjectIcons icon=_dirIcon
-				child.Icon=icon
-				If child.Expanded Or recurse
-					UpdateNode( child,fpath,child.Expanded )
-				Endif
-			Else
-				If Not icon And Prefs.MainProjectIcons icon=_fileIcon
-				child.Icon=icon
-				child.RemoveAllChildren()
-			Endif
-			
-			i+=1
-		Wend
-		
-		node.RemoveChildren( i )
+'		Local node:=Cast<Node>( tnode )
+'		If Not node Return
+'		
+'		For Local child:=Eachin node.Children
+'			child.RemoveAllChildren()
+'		Next
 		
 	End
 	
@@ -254,3 +272,4 @@ Class FileBrowserExt Extends TreeViewExt
 	Global _fileTypeIcons:StringMap<Image>
 	
 End
+#End

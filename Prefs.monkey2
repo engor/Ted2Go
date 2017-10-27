@@ -19,6 +19,8 @@ Class PrefsInstance
 	'
 	Field MainToolBarVisible:=True
 	Field MainProjectIcons:=True
+	Field MainProjectSingleClickExpanding:=False
+	Field MainPlaceDocsAtBegin:=True
 	'
 	Field IrcNickname:String
 	Field IrcServer:="irc.freenode.net"
@@ -71,7 +73,9 @@ Class PrefsInstance
 			Local j2:=json["main"].ToObject()
 			MainToolBarVisible=Json_GetBool( j2,"toolBarVisible",MainToolBarVisible )
 			MainProjectIcons=Json_GetBool( j2,"projectIcons",MainProjectIcons )
-      
+      		MainProjectSingleClickExpanding=Json_GetBool( j2,"singleClickExpanding",MainProjectSingleClickExpanding )
+      		MainPlaceDocsAtBegin=Json_GetBool( j2,"placeDocsAtBegin",MainPlaceDocsAtBegin )
+      		
 		Endif
 		
 		If json.Contains( "completion" )
@@ -126,6 +130,8 @@ Class PrefsInstance
 		json["main"]=j
 		j["toolBarVisible"]=New JsonBool( MainToolBarVisible )
 		j["projectIcons"]=New JsonBool( MainProjectIcons )
+		j["singleClickExpanding"]=New JsonBool( MainProjectSingleClickExpanding )
+		j["placeDocsAtBegin"]=New JsonBool( MainPlaceDocsAtBegin )
 		
 		j=New JsonObject
 		json["irc"]=j
@@ -165,7 +171,7 @@ Class PrefsInstance
 		j["sortByType"]=New JsonBool( SourceSortByType )
 		j["showInherited"]=New JsonBool( SourceShowInherited )
 		
-		If "SiblyMode" json["siblyMode"]=JsonBool.TrueValue
+		If SiblyMode json["siblyMode"]=JsonBool.TrueValue
 		
 	End
 	

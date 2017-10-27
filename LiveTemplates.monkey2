@@ -93,6 +93,7 @@ Class LiveTemplatesClass
 	
 	Field _items:=New StringMap<StringMap<String>>
 	Field _dirty:Bool
+	Field _filesTime:=New StringMap<Long>
 	
 	Property DefaultPath:String()
 		Return "asset::liveTemplates.json"
@@ -105,7 +106,12 @@ Class LiveTemplatesClass
 	Method Load( jsonPath:String )
 		
 		If Not FileExists( jsonPath ) Return
-			
+		
+		Local t:=_filesTime[jsonPath]
+		Local t2:=GetFileTime( jsonPath )
+		If t2=t Return
+		_filesTime[jsonPath]=t2
+		
 		Local langs:=Json_LoadObject( jsonPath ).All()
 		For Local i:=Eachin langs
 			Local lang:=i.Key

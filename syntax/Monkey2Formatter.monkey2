@@ -34,6 +34,9 @@ Class Monkey2CodeFormatter Extends CodeFormatterPlugin
 		
 		'find start of ident
 		'
+		While start And Not IsIdent( text[start-1] ) 'skip space/tab/.,(....
+			start-=1
+		Wend
 		While start And IsIdent( text[start-1] )
 			start-=1
 		Wend
@@ -84,6 +87,7 @@ Class Monkey2CodeFormatter Extends CodeFormatterPlugin
 	Method FormatLine( view:CodeTextView,line:Int )
 		
 		Local doc:=view.Document
+		If line>=doc.NumLines Return
 		
 		'ignore comments...
 		'

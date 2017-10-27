@@ -91,7 +91,7 @@ Class DocumentManager
 		Return _openDocs.ToArray()
 	End
 	
-	Method OpenDocument:Ted2Document( path:String,makeCurrent:Bool=False )
+	Method OpenDocument:Ted2Document( path:String,makeCurrent:Bool=False,openByHand:Bool=True )
 	
 		path=RealPath( path )
 		
@@ -112,7 +112,8 @@ Class DocumentManager
 		InitDoc( doc )
 	
 		_openDocs.Add( doc )
-		Local tab:=_tabView.AddTab( TabText( doc ),doc.View )
+		Local addAtBegin:=(openByHand And Prefs.MainPlaceDocsAtBegin)
+		Local tab:=_tabView.AddTab( TabText( doc ),doc.View,False,addAtBegin )
 		tab.DoubleClicked+=Lambda()
 			DocumentDoubleClicked( doc )
 		End
@@ -212,7 +213,7 @@ Class DocumentManager
 	End
 		
 	Method LoadState( jobj:JsonObject )
-		 
+		
 		If Not jobj.Contains( "openDocuments" ) Return
 		
 		For Local doc:=Eachin jobj.GetArray( "openDocuments" )
@@ -221,7 +222,7 @@ Class DocumentManager
 			Local path:=arr[0]
 			If GetFileType( path )<>FileType.File Continue
 			
-			Local tdoc:=OpenDocument( path,True )
+			Local tdoc:=OpenDocument( path,True,False )
 			If tdoc
 				tdoc.Dirty=MainWindow.IsTmpPath( path )
 				If arr.Length>1

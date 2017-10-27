@@ -53,10 +53,6 @@ Class ListViewExt Extends ScrollableView
 		_lineHeightEtalon=lineHeight
 		_maxLines=maxLines
 		
-		_items=New List<ListViewItem>
-		
-		'MaxSize=New Vec2i( width,height )
-		
 		_selColor=App.Theme.GetColor( "content" )
 		_hoverColor=App.Theme.GetColor( "knob" )
 		
@@ -65,18 +61,16 @@ Class ListViewExt Extends ScrollableView
 	
 	Method AddItems( items:Stack<ListViewItem> )
 		
-		For Local i:=Eachin items
-			_items.AddLast( i )
-		Next
-		_count=_items.Count()
-		_visibleCount=Min( _maxLines,_count )
+		_items.AddAll( items )
+		
+		_visibleCount=Min( _maxLines,_items.Length )
 	End
 	
 	Method AddItem( item:ListViewItem )
 	
-		_items.AddLast( item )
-		_count=_items.Count()
-		_visibleCount=Min( _maxLines,_count )
+		_items.Add( item )
+		
+		_visibleCount=Min( _maxLines,_items.Length )
 	End
 	
 	Method SetItems<T>( items:Stack<T> ) Where T Extends ListViewItem
@@ -115,8 +109,8 @@ Class ListViewExt Extends ScrollableView
 	
 	Property CurrentItem:ListViewItem()
 		
-		Assert( _selIndex >= 0 And _selIndex < _count,"Index out of bounds!" )
-		Return Utils.ValueAt<ListViewItem>( _items,_selIndex )
+		Assert( _selIndex >= 0 And _selIndex < _items.Length,"Index out of bounds!" )
+		Return _items[_selIndex]
 	End
 	
 	Property MoveCyclic:Bool()
@@ -143,8 +137,8 @@ Class ListViewExt Extends ScrollableView
 	
 	Method SelectLast()
 		
-		If _selIndex = _count-1 Return
-		_selIndex=_count-1
+		If _selIndex = _items.Length-1 Return
+		_selIndex=_items.Length-1
 		EnsureVisible()
 		RequestRender()
 	End
@@ -161,13 +155,13 @@ Class ListViewExt Extends ScrollableView
 	Method PageDown()
 	
 		_selIndex+=_visibleCount
-		If _selIndex >= _count Then _selIndex=_count-1
+		If _selIndex >= _items.Length Then _selIndex=_items.Length-1
 	
 		EnsureVisible()
 		RequestRender()
 	End
 	
-	Property Items:List<ListViewItem>.Iterator()
+	Property Items:Stack<ListViewItem>.Iterator()
 		Return _items.All()
 	End
 	
@@ -199,7 +193,7 @@ Class ListViewExt Extends ScrollableView
 	
 	Method SelectNextInternal( ensureVis:Bool )
 	
-		If _selIndex >= _count-1
+		If _selIndex >= _items.Length-1
 			If MoveCyclic Then SelectFirst()
 			Return
 		Endif
@@ -213,10 +207,10 @@ Class ListViewExt Extends ScrollableView
 	
 	Method EnsureVisible()
 		
-		Local clip:=VisibleRect
+		Local clip:=ClipRect+Scroll
 		
 		Local firstVisLine:=Max( clip.Top/_lineH,0 )
-		Local lastVisLine:=Min( (clip.Bottom-1)/_lineH,_count )
+		Local lastVisLine:=Min( (clip.Bottom-1)/_lineH,_items.Length )
 		
 		If _selIndex < firstVisLine
 			Local d:=(firstVisLine-_selIndex)*_lineH
@@ -229,30 +223,24 @@ Class ListViewExt Extends ScrollableView
 
 	Method OnRender( canvas:Canvas ) Override
 	
-		Local clip:=VisibleRect
-		
-		'draw mouse hover
-'		If Rect.Contains( MouseLocation ) 
-'			Local yy:Int=MouseLocation.y/_lineH
-'			canvas.Color=_hoverColor
-'			canvas.DrawRect( clip.Left,yy*_lineH,clip.Width,_lineH )
-'		Endif
+		Local clip:=ClipRect+Scroll
 		
 		Local firstVisLine:=Max( clip.Top/_lineH,0 )
-		Local lastVisLine:=Min( (clip.Bottom-1)/_lineH,_count )
+		Local lastVisLine:=Min( (clip.Bottom-1)/_lineH,_items.Length )
 		
 		Local posY:=_lineH/2,k:=0
+		Local left:=clip.Left-Scroll.x*2
 		For Local item:=Eachin _items
 			If k >= firstVisLine
 				If k > lastVisLine Then Return
 				'draw selection
 				If k = _selIndex
 					canvas.Color=_selColor
-					canvas.DrawRect( clip.Left,posY-_lineH/2,clip.Width,_lineH )
+					canvas.DrawRect( left,posY-_lineH/2,_width,_lineH )
 				End
 				'draw item
 				canvas.Color=Color.White
-				DrawItem( item,canvas,clip.Left+5,posY,0,0.5 )
+				DrawItem( item,canvas,left+5,posY,0,0.5 )
 				posY+=_lineH
 			Endif
 			k+=1
@@ -266,19 +254,29 @@ Class ListViewExt Extends ScrollableView
 		For Local i:=Eachin _items
 			w=Max( w,Int(RenderStyle.Font.TextWidth( i.Text )) )
 		Next
-		
-		w=Min( w,MaxSize.x )
+		w+=50 '+20 for icons
 		_width=w
 		
-		Return New Vec2i( w,_count*_lineH )
+		Local h:=_items.Length*_lineH
+		_height=h
+		
+		Return New Vec2i( w,h )
 	End
 	
 	Method OnMeasure:Vec2i() Override
 		
-		Local h:=Min( _visibleCount*_lineH,MaxSize.y )
-		h=(h/_lineH)*_lineH
+		Local maxH:=Min( _visibleCount*_lineH,MaxSize.y )
 		
-		Return New Vec2i( _width+40,h ) '+40 for icon + scrollbar
+		Local sx:=(_width > MaxSize.x)
+		Local sy:=(_height > maxH)
+		Local w:=Min( _width,MaxSize.x )
+		Local h:=_height
+		If sy
+			h=(maxH/_lineH)*_lineH
+		Endif
+		If sx Then h+=_lineH
+		
+		Return New Vec2i( w,h ) '+20 for scrollbar
 	End
 	
 	Method OnContentMouseEvent( event:MouseEvent ) Override
@@ -297,7 +295,7 @@ Class ListViewExt Extends ScrollableView
 		
 			Local index:=(MouseLocation.y+Scroll.y)/_lineH
 			
-			If index < 0 Or index >= _count Return
+			If index < 0 Or index >= _items.Length Return
 			
 			_selIndex=index
 			OnItemChoosen()
@@ -306,7 +304,7 @@ Class ListViewExt Extends ScrollableView
 		
 			Local index:=(MouseLocation.y+Scroll.y)/_lineH
 			
-			If index < 0 Or index >= _count Return
+			If index < 0 Or index >= _items.Length Return
 			
 			_selIndex=index
 			OnItemChoosen()
@@ -320,13 +318,13 @@ Class ListViewExt Extends ScrollableView
 	
 	Private
 	
-	Field _items:List<ListViewItem>
+	Field _items:=New Stack<ListViewItem>
 	Field _lineH:Int,_lineHeightEtalon:Int
-	Field _count:Int,_visibleCount:Int
+	Field _visibleCount:Int
 	Field _maxLines:Int
 	Field _selIndex:Int
 	Field _selColor:Color,_hoverColor:Color
-	Field _width:Int
+	Field _width:Int,_height:Int
 	Field _moveCyclic:Bool
 	
 End

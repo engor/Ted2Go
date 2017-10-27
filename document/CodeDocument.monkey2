@@ -182,24 +182,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		Select event.Type
 		Case EventType.KeyDown,EventType.KeyRepeat
 			
-			Local key:=event.Key
-			
-			'map keypad nav keys...
-			If Not (event.Modifiers & Modifier.NumLock)
-				Select key
-				Case Key.Keypad1 key=Key.KeyEnd
-				Case Key.Keypad2 key=Key.Down
-				Case Key.Keypad3 key=Key.PageDown
-				Case Key.Keypad4 key=Key.Left
-				Case Key.Keypad6 key=Key.Right
-				Case Key.Keypad7 key=Key.Home
-				Case Key.Keypad8 key=Key.Up
-				Case Key.Keypad9 key=Key.PageUp
-				Case Key.Keypad0 key=Key.Insert
-				End
-			Endif
-			
-			CheckFormat( event,key )
+			Local key:=FixNumpadKeys( event )
 			
 			Select key
 			
@@ -266,8 +249,11 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 					If shift
 						SmartPaste()
-					Elseif ctrl And CanCopy
-						OnCopy()
+					Elseif ctrl
+						If CanCopy Then OnCopy()
+					Elseif Not alt
+						' text overwrite mode
+						MainWindow.OverwriteTextMode=Not MainWindow.OverwriteTextMode
 					Endif
 					Return
 			
@@ -473,6 +459,9 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						Endif
 			
 					Endif
+					
+					CheckFormat( event )
+					
 					Return
 			
 			
@@ -504,8 +493,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 			
 		Case EventType.KeyChar
-			
-			CheckFormat( event,event.Key )
 			
 			If event.Key = Key.Space And ctrl
 				If _doc.CanShowAutocomplete()
@@ -602,9 +589,11 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		Super.OnKeyEvent( event )
 		
+		CheckFormat( event )
+		
 		'show autocomplete list after some typed chars
 		If event.Type = EventType.KeyChar
-		
+			
 			If _doc.CanShowAutocomplete()
 				'preprocessor
 				If event.Text = "#"
@@ -638,12 +627,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Endif
 			End
 		
-		Endif
-		
-		' text overwrite mode
-		If event.Type=EventType.KeyDown And event.Key=Key.Insert And Not (shift Or ctrl Or alt)
-			
-			MainWindow.OverwriteTextMode=Not MainWindow.OverwriteTextMode
 		Endif
 		
 	End
@@ -810,6 +793,7 @@ Class CodeDocument Extends Ted2Document
 			If _debugLine>=first
 				_debugLine+=(inserted-removed)
 			Endif
+			
 		End
 		
 		_doc.TextChanged+=Lambda()
@@ -1137,7 +1121,7 @@ Class CodeDocument Extends Ted2Document
 		
 		Local frame:=AutoComplete.Frame
 		
-		Local w:=frame.Width+ScaledVal( 18 ) 'hack: 18px for scroll
+		Local w:=frame.Width
 		Local h:=frame.Height
 		
 		Local cursorRect:=_codeView.CursorRect
@@ -1214,7 +1198,6 @@ Class CodeDocument Extends Ted2Document
 	Field _timer:Timer
 	Field _parser:ICodeParser
 	Field _prevLine:=-1
-	Field _prevScope:CodeItem
 	Field _parsingEnabled:Bool
 	
 	Field _toolBar:ToolBarExt
@@ -1319,6 +1302,12 @@ Class CodeDocument Extends Ted2Document
 		
 		ParsingDoc() 'start parsing right after loading, not by timer
 		
+		' grab lines after load
+		_doc.LinesModified+=Lambda( first:Int,removed:Int,inserted:Int )
+			
+			MainWindow.OnDocumentLinesModified( Self,first,removed,inserted )
+		End
+		
 		Return True
 	End
 	
@@ -1349,20 +1338,21 @@ Class CodeDocument Extends Ted2Document
 		
 		If Not _parsingEnabled Return
 		
-		Local scope:=_parser.GetScope( Path,_codeView.LineNumAtCursor+1 )	
-		If scope And scope <> _prevScope
-			Local classs := (_prevScope And scope.IsLikeClass And scope = _prevScope.Parent)
-			_prevScope = scope
-			If classs Return 'don't select parent class scope if we are inside of it
-			_treeView.SelectByScope( scope )
-			_prevScope = scope
-		Endif
+		OnUpdateCurrentScope()
+	End
+	
+	Method OnUpdateCurrentScope()
 		
+		Local scope:=_parser.GetScope( Path,_codeView.LineNumAtCursor+1 )
+		If scope
+			_treeView.SelectByScope( scope )
+		Endif
 	End
 	
 	Method UpdateCodeTree()
 		
 		_treeView.Fill( FileExtension,Path )
+		OnUpdateCurrentScope()
 	End
 	
 	Field _timeTextChanged:=0

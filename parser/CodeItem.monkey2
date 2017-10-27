@@ -420,11 +420,12 @@ Struct CodeType
 	Field kind:String
 	Field expr:String
 	Field args:CodeType[]
+	Field isPointer:Bool
 	
 	Property ident:String()
 		Return _ident
 	Setter( value:String )
-		_ident = FixTypeIdent( value )
+		_ident=FixTypeIdent( value )
 	End
 	
 	Property IsLikeFunc:Bool()
@@ -449,6 +450,8 @@ Struct CodeType
 		Else
 			_str=ident
 		Endif
+		
+		If isPointer Then _str+=" Ptr"
 		
 		Return _str
 	End

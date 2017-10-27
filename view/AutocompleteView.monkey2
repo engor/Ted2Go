@@ -124,7 +124,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 			_disableUsingsFilter=False
 		End
 		
-		OnThemeChanged()
+		OnValidateStyle()
 	End
 	
 	Property DisableUsingsFilter:Bool()
@@ -150,6 +150,8 @@ Class AutocompleteDialog Extends NoTitleDialog
 	End
 	
 	Method Show( ident:String,filePath:String,fileType:String,docLineNum:Int,docLineStr:String,docPosInLine:Int )
+		
+		OnValidateStyle()
 		
 		Local dotPos:=ident.FindLast( "." )
 		
@@ -298,22 +300,33 @@ Class AutocompleteDialog Extends NoTitleDialog
 		' hide to re-layout on open
 		If IsOpened Then Hide()
 		
-		' nothing to show
-		If result.Empty
-			Return
-		Endif
-		
 		If lastIdent Then CodeItemsSorter.SortByIdent( result,lastIdent )
 		
 		'-----------------------------
 		' live templates
 		'-----------------------------
-		If onlyOne And Prefs.AcUseLiveTemplates
-			For Local i:=Eachin GetTemplates( fileType )
-				If i.Text.StartsWith( lastIdent )
+		If Prefs.AcUseLiveTemplates
+			Local list:=GetTemplates( fileType )
+			For Local i:=Eachin list
+				Local templ:=i.Text
+				Local withDot:=templ.StartsWith( "." )
+				Local withDot2:=templ.StartsWith( ".." )
+				If onlyOne And withDot2 Continue ' skip if it requires instance
+				If Not onlyOne And Not withDot Continue ' skip if it doesn't require instance
+				If withDot2
+					templ=templ.Slice( 2 )
+				Elseif withDot
+					templ=templ.Slice( 1 )
+				Endif
+				If lastIdent And templ.StartsWith( lastIdent )
 					result.Insert( 0,i )
 				Endif
 			Next
+		Endif
+		
+		' nothing to show
+		If result.Empty
+			Return
 		Endif
 		
 		_view.Reset()'reset selIndex
@@ -327,14 +340,14 @@ Class AutocompleteDialog Extends NoTitleDialog
 	
 	Protected
 	
-	Method OnThemeChanged() Override
+	Method OnValidateStyle() Override
 		
 		_view.MaxSize=(App.Theme.Scale.x>1) ? _etalonMaxSize*App.Theme.Scale Else _etalonMaxSize
 	End
 	
 	Private
 	
-	Field _etalonMaxSize:Vec2i
+	Field _etalonMaxSize:Vec2f
 	Field _view:AutocompleteListView
 	Field _keywords:StringMap<Stack<ListViewItem>>
 	Field _templates:StringMap<Stack<ListViewItem>>

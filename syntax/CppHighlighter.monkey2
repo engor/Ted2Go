@@ -15,7 +15,7 @@ Class CppHighlighter Extends HighlighterPlugin
 		
 	Method New()
 		Super.New()
-		_types=New String[]( ".cpp",".h",".hpp",".c" )
+		_types=New String[]( ".cpp",".h",".hpp",".c",".js" )
 		_hl=New Highlighter
 		_hl.Painter=HL
 	End

@@ -26,23 +26,29 @@ Class ProjectView Extends ScrollView
 		openProject.HotKey=Key.O
 		openProject.HotKeyModifiers=Modifier.Menu|Modifier.Shift
 		openProject.Triggered=OnOpenProject
+		
+		InitProjBrowser()
 	End
 	
 	Property OpenProjects:String[]()
 	
-		Local projs:=New StringStack
-		For Local proj:=Eachin _projects.Keys
-			projs.Add( proj )
-		Next
+		Return _projects.ToArray()
+	End
+	
+	Property SingleClickExpanding:Bool()
+	
+		Return _projBrowser.SingleClickExpanding
+	
+	Setter( value:Bool )
 		
-		Return projs.ToArray()
+		_projBrowser.SingleClickExpanding=value
 	End
 	
 	Function FindProjectByFile:String( filePath:String )
 		
 		If Not filePath Return ""
 		
-		For Local p:=Eachin _projects.Keys
+		For Local p:=Eachin _projects
 			If filePath.StartsWith( p )
 				Return p
 			Endif
@@ -54,225 +60,13 @@ Class ProjectView Extends ScrollView
 	
 		dir=StripSlashes( dir )
 		
-		If _projects[dir] Return False
+		If _projects.Contains( dir ) Return False
 		
 		If GetFileType( dir )<>FileType.Directory Return False
-	
-		Local browser:=New ProjectBrowserView( dir )
 		
-		browser.RequestedDelete+=Lambda( path:String )
+		_projects+=dir
 		
-			DeleteItem( browser,path )
-		End
-		
-		If Prefs.SiblyMode
-		
-			browser.FileClicked+=Lambda( path:String )
-			
-				OnOpenDocument( path,False )
-			End
-		
-		Else 
-		
-			browser.FileDoubleClicked+=Lambda( path:String )
-			
-				OnOpenDocument( path )
-			End
-		
-		Endif
-		
-		browser.FileRightClicked+=Lambda( path:String )
-		
-			Local menu:=New MenuExt
-		
-			Select GetFileType( path )
-			Case FileType.Directory
-			
-				menu.AddAction( "Find..." ).Triggered=Lambda()
-				
-					RequestedFindInFolder( path )
-				End
-				
-				menu.AddSeparator()
-				
-				menu.AddAction( "New class..." ).Triggered=Lambda()
-				
-					Local d:=New GenerateClassDialog( path )
-					d.Generated+=Lambda( filePath:String,fileContent:String )
-						
-						If CreateFileInternal( filePath,fileContent )
-						
-							MainWindow.OpenDocument( filePath )
-							browser.Refresh()
-						Endif
-					End
-					d.ShowModal()
-				End
-				
-				menu.AddSeparator()
-				
-				menu.AddAction( "New file" ).Triggered=Lambda()
-				
-					Local file:=RequestString( "New file name:" )
-					If Not file Return
-					
-					Local tpath:=path+"/"+file
-					
-					CreateFileInternal( tpath )
-					
-					browser.Refresh()
-				End
-				
-				menu.AddAction( "New folder" ).Triggered=Lambda()
-				
-					Local dir:=RequestString( "New folder name:" )
-					If Not dir Return
-					
-					Local tpath:=path+"/"+dir
-					
-					If GetFileType( tpath )<>FileType.None
-						Alert( "A file or directory already exists at '"+tpath+"'" )
-						Return
-					End
-					
-					If Not CreateDir( tpath )
-						Alert( "Failed to create folder '"+dir+"'" )
-						Return
-					Endif
-					
-					browser.Refresh()
-				End
-				
-				menu.AddAction( "Delete" ).Triggered=Lambda()
-
-					DeleteItem( browser,path )
-				End
-				
-				menu.AddSeparator()
-				
-				If path = browser.RootPath ' root node
-					
-					menu.AddAction( "Close project" ).Triggered=Lambda()
-					
-						CloseProject( path )
-					End
-					
-					menu.AddAction( "Clean (delete .buildv)" ).Triggered=Lambda()
-						
-						If Not RequestOkay( "Really delete all '.buildv' folders?" ) Return
-						
-						Local changes:=CleanProject( path )
-						If changes Then browser.Refresh()
-					End
-				Else
-					
-					menu.AddAction( "Open as a project" ).Triggered=Lambda()
-					
-						OpenProject( path )
-					End
-				Endif
-				
-				' update / rebuild module
-				path=path.Replace( "\","/" )
-				Local name := path.Slice( path.FindLast( "/")+1 )
-				Local file:=path+"/module.json"
-				
-				If path.Contains( "/modules/") And GetFileType( file )=FileType.File
-					
-					menu.AddSeparator()
-					
-					menu.AddAction( "Update / Rebuild "+name ).Triggered=Lambda()
-						
-						_builder.BuildModules( True,name )
-					End
-					
-				Endif
-				
-				' update all modules
-				Local path2:=MainWindow.ModsPath
-				If path2.EndsWith( "/" ) Then path2=path2.Slice( 0,path2.Length-1 )
-				
-				If path = path2
-					
-					menu.AddSeparator()
-					
-					menu.AddAction( "Update / Rebuild modules" ).Triggered=Lambda()
-					
-						_builder.BuildModules( False )
-					End
-					
-				Endif
-				
-				' bananas showcase
-				If IsBananasShowcaseAvailable()
-					path2=Prefs.MonkeyRootPath+"bananas"
-					If path = path2
-					
-						menu.AddSeparator()
-					
-						menu.AddAction( "Open bananas showcase" ).Triggered=Lambda()
-					
-							MainWindow.ShowBananasShowcase()
-						End
-					
-					Endif
-				Endif
-				
-				menu.AddSeparator()
-				
-				menu.AddAction( "Open on Desktop" ).Triggered=Lambda()
-				
-					requesters.OpenUrl( path )
-				End
-				
-				
-			Case FileType.File
-			
-				menu.AddAction( "Open on Desktop" ).Triggered=Lambda()
-				
-					requesters.OpenUrl( path )
-				End
-				
-				menu.AddSeparator()
-			
-				menu.AddAction( "Rename" ).Triggered=Lambda()
-				
-					Local oldName:=StripDir( path )
-					Local name:=RequestString( "Enter new name:","Ranaming '"+oldName+"'",oldName )
-					If Not name Or name=oldName Return
-					
-					Local newPath:=ExtractDir( path )+name
-					If CopyFile( path,newPath )
-					
-						DeleteFile( path )
-					
-						browser.Refresh()
-						Return
-					Endif
-					
-					Alert( "Failed to rename file: '"+path+"'" )
-				End
-			
-				menu.AddSeparator()
-			
-				menu.AddAction( "Delete" ).Triggered=Lambda()
-					
-					DeleteItem( browser,path )
-				End
-				
-			Default
-			
-				Return
-			End
-			
-			menu.Open()
-		End
-		
-		_docker.AddView( browser,"top" )
-		
-		_projects[dir]=browser
-		
-		browser.Refresh()
+		_projBrowser.AddProject( dir )
 		
 		ProjectOpened( dir )
 
@@ -283,27 +77,38 @@ Class ProjectView Extends ScrollView
 
 		dir=StripSlashes( dir )
 		
-		Local view:=_projects[dir]
-		If Not view Return
+		_projBrowser.RemoveProject( dir )
 		
-		_docker.RemoveView( view )
-		
-		_projects.Remove( dir )
+		_projects-=dir
 		
 		ProjectClosed( dir )
 	End
 	
 	Method SaveState( jobj:JsonObject )
-	
+		
+		Local j:=New JsonObject
+		jobj["projectsExplorer"]=j
+		
 		Local jarr:=New JsonArray
-		For Local it:=Eachin _projects
-			jarr.Add( New JsonString( it.Key ) )
+		For Local p:=Eachin _projects
+			jarr.Add( New JsonString( p ) )
 		Next
-		jobj["openProjects"]=jarr
+		j["openProjects"]=jarr
+		
+		_projBrowser.SaveState( j,"expanded" )
+		
+		Local selPath:=GetNodePath( _projBrowser.Selected )
+		j["selected"]=New JsonString( selPath )
 	End
 	
 	Method LoadState( jobj:JsonObject )
-	
+		
+		If Not jobj.Contains( "projectsExplorer" ) Return
+		
+		jobj=new JsonObject( jobj["projectsExplorer"].ToObject() )
+		
+		_projBrowser.LoadState( jobj,"expanded" )
+		
 		If jobj.Contains( "openProjects" )
 			local arr:=jobj["openProjects"].ToArray()
 			For Local dir:=Eachin arr
@@ -311,6 +116,8 @@ Class ProjectView Extends ScrollView
 			Next
 		Endif
 		
+		Local selPath:=Json_GetString( jobj.Data,"selected","" )
+		If selPath Then _projBrowser.SelectByPath( selPath )
 	End
 	
 	
@@ -334,10 +141,13 @@ Class ProjectView Extends ScrollView
 	
 	Field _docs:DocumentManager
 	Field _docker:=New DockingView
-	Global _projects:=New StringMap<FileBrowserExt>
+	Global _projects:=New StringStack
 	Field _builder:IModuleBuilder
+	Field _projBrowser:ProjectBrowserView
 	
-	Method DeleteItem( browser:ProjectBrowserView,path:String )
+	Method DeleteItem( browser:ProjectBrowserView,path:String,node:TreeView.Node )
+		
+		Local nodeToRefresh:=Cast<ProjectBrowserView.Node>( node.Parent )
 		
 		Local work:=Lambda()
 			
@@ -346,7 +156,7 @@ Class ProjectView Extends ScrollView
 				If Not RequestOkay( "Really delete folder '"+path+"'?" ) Return
 				
 				If DeleteDir( path,True )
-					browser.Refresh()
+					browser.Refresh( nodeToRefresh )
 					Return
 				Endif
 				
@@ -362,7 +172,7 @@ Class ProjectView Extends ScrollView
 				
 					If doc doc.Close()
 				
-					browser.Refresh()
+					browser.Refresh( nodeToRefresh )
 					Return
 				Endif
 				
@@ -385,30 +195,28 @@ Class ProjectView Extends ScrollView
 	
 	Method OnOpenDocument( path:String,runExec:Bool=True )
 		
-		If GetFileType( path )=FileType.File
+		If GetFileType( path )<>FileType.File Return
 			
-			New Fiber( Lambda()
-				
-				Local ext:=ExtractExt( path )
-				Local exe:=(ext=".exe")
-				If runExec
-					If exe Or ext=".bat" Or ext=".sh"
-						Local s:="Do you want to execute this file?"
-						If Not exe s+="~nPress 'Cancel' to open file in editor."
-						If RequestOkay( s,StripDir( path ) )
-							OpenUrl( path )
-							Return
-						Endif
+		New Fiber( Lambda()
+			
+			Local ext:=ExtractExt( path )
+			Local exe:=(ext=".exe")
+			If runExec
+				If exe Or ext=".bat" Or ext=".sh"
+					Local s:="Do you want to execute this file?"
+					If Not exe s+="~nPress 'Cancel' to open file in editor."
+					If RequestOkay( s,StripDir( path ) )
+						OpenUrl( path )
+						Return
 					Endif
 				Endif
-				
-				If exe Return 'never open .exe
-				
-				_docs.OpenDocument( path,True )
-				
-			End )
-		
-		Endif
+			Endif
+			
+			If exe Return 'never open .exe
+			
+			_docs.OpenDocument( path,True )
+			
+		End )
 	End
 	
 	' Return True if there is an actual folder deletion
@@ -449,6 +257,218 @@ Class ProjectView Extends ScrollView
 		If content Then SaveString( content,path )
 		
 		Return True
+	End
+	
+	Method InitProjBrowser()
+		
+		Local browser:=New ProjectBrowserView()
+		browser.SingleClickExpanding=Prefs.MainProjectSingleClickExpanding
+		_projBrowser=browser
+		_docker.AddView( browser,"top" )
+		
+		browser.RequestedDelete+=Lambda( node:ProjectBrowserView.Node )
+		
+			DeleteItem( browser,node.Path,node )
+		End
+		
+		browser.FileClicked+=Lambda( node:ProjectBrowserView.Node )
+			
+			If browser.SingleClickExpanding Then OnOpenDocument( node.Path )
+		End
+		
+		browser.FileDoubleClicked+=Lambda( node:ProjectBrowserView.Node )
+			
+			If Not browser.SingleClickExpanding Then OnOpenDocument( node.Path )
+		End
+		
+		browser.FileRightClicked+=Lambda( node:ProjectBrowserView.Node )
+		
+			Local menu:=New MenuExt
+			Local path:=node.Path
+		
+			Select GetFileType( path )
+			Case FileType.Directory
+		
+				menu.AddAction( "Find..." ).Triggered=Lambda()
+		
+					RequestedFindInFolder( path )
+				End
+		
+				menu.AddSeparator()
+		
+				menu.AddAction( "New class..." ).Triggered=Lambda()
+		
+					Local d:=New GenerateClassDialog( path )
+					d.Generated+=Lambda( filePath:String,fileContent:String )
+		
+						If CreateFileInternal( filePath,fileContent )
+		
+							MainWindow.OpenDocument( filePath )
+							browser.Refresh( node )
+						Endif
+					End
+					d.ShowModal()
+				End
+		
+				menu.AddSeparator()
+		
+				menu.AddAction( "New file" ).Triggered=Lambda()
+		
+					Local file:=RequestString( "New file name:" )
+					If Not file Return
+		
+					Local tpath:=path+"/"+file
+		
+					CreateFileInternal( tpath )
+		
+					browser.Refresh( node )
+				End
+		
+				menu.AddAction( "New folder" ).Triggered=Lambda()
+		
+					Local dir:=RequestString( "New folder name:" )
+					If Not dir Return
+		
+					Local tpath:=path+"/"+dir
+		
+					If GetFileType( tpath )<>FileType.None
+						Alert( "A file or directory already exists at '"+tpath+"'" )
+						Return
+					End
+		
+					If Not CreateDir( tpath )
+						Alert( "Failed to create folder '"+dir+"'" )
+						Return
+					Endif
+		
+					browser.Refresh( node )
+				End
+		
+				menu.AddAction( "Delete" ).Triggered=Lambda()
+		
+					DeleteItem( browser,path,node )
+				End
+		
+				menu.AddSeparator()
+		
+				If browser.IsProjectNode( node ) ' root node
+		
+					menu.AddAction( "Close project" ).Triggered=Lambda()
+		
+						CloseProject( path )
+					End
+		
+					menu.AddAction( "Clean (delete .buildv)" ).Triggered=Lambda()
+		
+						If Not RequestOkay( "Really delete all '.buildv' folders?" ) Return
+		
+						Local changes:=CleanProject( path )
+						If changes Then browser.Refresh( node )
+					End
+				Else
+		
+					menu.AddAction( "Open as a project" ).Triggered=Lambda()
+		
+						OpenProject( path )
+					End
+				Endif
+		
+				' update / rebuild module
+				path=path.Replace( "\","/" )
+				Local name := path.Slice( path.FindLast( "/")+1 )
+				Local file:=path+"/module.json"
+		
+				If path.Contains( "/modules/") And GetFileType( file )=FileType.File
+		
+					menu.AddSeparator()
+		
+					menu.AddAction( "Update / Rebuild "+name ).Triggered=Lambda()
+		
+						_builder.BuildModules( True,name )
+					End
+		
+				Endif
+		
+				' update all modules
+				Local path2:=MainWindow.ModsPath
+				If path2.EndsWith( "/" ) Then path2=path2.Slice( 0,path2.Length-1 )
+		
+				If path = path2
+		
+					menu.AddSeparator()
+		
+					menu.AddAction( "Update / Rebuild modules" ).Triggered=Lambda()
+		
+						_builder.BuildModules( False )
+					End
+		
+				Endif
+		
+				' bananas showcase
+				If IsBananasShowcaseAvailable()
+					path2=Prefs.MonkeyRootPath+"bananas"
+					If path = path2
+		
+						menu.AddSeparator()
+		
+						menu.AddAction( "Open bananas showcase" ).Triggered=Lambda()
+		
+							MainWindow.ShowBananasShowcase()
+						End
+		
+					Endif
+				Endif
+		
+				menu.AddSeparator()
+		
+				menu.AddAction( "Open on Desktop" ).Triggered=Lambda()
+		
+					requesters.OpenUrl( path )
+				End
+		
+		
+			Case FileType.File
+		
+				menu.AddAction( "Open on Desktop" ).Triggered=Lambda()
+		
+					requesters.OpenUrl( path )
+				End
+		
+				menu.AddSeparator()
+		
+				menu.AddAction( "Rename" ).Triggered=Lambda()
+		
+					Local oldName:=StripDir( path )
+					Local name:=RequestString( "Enter new name:","Ranaming '"+oldName+"'",oldName )
+					If Not name Or name=oldName Return
+		
+					Local newPath:=ExtractDir( path )+name
+					If CopyFile( path,newPath )
+		
+						DeleteFile( path )
+		
+						browser.Refresh( node.Parent )
+						Return
+					Endif
+		
+					Alert( "Failed to rename file: '"+path+"'" )
+				End
+		
+				menu.AddSeparator()
+		
+				menu.AddAction( "Delete" ).Triggered=Lambda()
+		
+					DeleteItem( browser,path,node )
+				End
+		
+			Default
+		
+				Return
+			End
+		
+			menu.Open()
+		End
+		
 	End
 	
 End
