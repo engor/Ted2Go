@@ -112,7 +112,7 @@ Class DocumentManager
 		InitDoc( doc )
 	
 		_openDocs.Add( doc )
-		Local tab:=_tabView.AddTab( TabText( doc ),doc.View )
+		Local tab:=_tabView.AddTab( TabText( doc ),doc.View,False,Prefs.MainPlaceDocsAtBegin )
 		tab.DoubleClicked+=Lambda()
 			DocumentDoubleClicked( doc )
 		End

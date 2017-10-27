@@ -20,6 +20,7 @@ Class PrefsInstance
 	Field MainToolBarVisible:=True
 	Field MainProjectIcons:=True
 	Field MainProjectSingleClickExpanding:=False
+	Field MainPlaceDocsAtBegin:=True
 	'
 	Field IrcNickname:String
 	Field IrcServer:="irc.freenode.net"
@@ -73,6 +74,7 @@ Class PrefsInstance
 			MainToolBarVisible=Json_GetBool( j2,"toolBarVisible",MainToolBarVisible )
 			MainProjectIcons=Json_GetBool( j2,"projectIcons",MainProjectIcons )
       		MainProjectSingleClickExpanding=Json_GetBool( j2,"singleClickExpanding",MainProjectSingleClickExpanding )
+      		MainPlaceDocsAtBegin=Json_GetBool( j2,"placeDocsAtBegin",MainPlaceDocsAtBegin )
       		
 		Endif
 		
@@ -129,6 +131,7 @@ Class PrefsInstance
 		j["toolBarVisible"]=New JsonBool( MainToolBarVisible )
 		j["projectIcons"]=New JsonBool( MainProjectIcons )
 		j["singleClickExpanding"]=New JsonBool( MainProjectSingleClickExpanding )
+		j["placeDocsAtBegin"]=New JsonBool( MainPlaceDocsAtBegin )
 		
 		j=New JsonObject
 		json["irc"]=j

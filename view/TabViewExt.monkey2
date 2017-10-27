@@ -189,21 +189,21 @@ Class TabViewExt Extends DockingView
 	
 	#rem monkeydoc Adds a tab.
 	#end	
-	Method AddTab:TabButtonExt( text:String,view:View,makeCurrent:Bool=False )
+	Method AddTab:TabButtonExt( text:String,view:View,makeCurrent:Bool=False,addAtBegin:Bool=False )
 	
-		Return AddTab( text,Null,view,makeCurrent )
+		Return AddTab( text,Null,view,makeCurrent,addAtBegin )
 	End
 
-	Method AddTab:TabButtonExt( text:String,icon:Image,view:View,makeCurrent:Bool=False )
+	Method AddTab:TabButtonExt( text:String,icon:Image,view:View,makeCurrent:Bool=False,addAtBegin:Bool=False )
 		
 		Local tab:=New TabButtonExt( text,icon,view,_flags & TabViewFlags.ClosableTabs,Self )
 		
-		AddTab( tab,makeCurrent )
+		AddTab( tab,makeCurrent,addAtBegin )
 		
 		Return tab
 	End
 	
-	Method AddTab( tab:TabButtonExt,makeCurrent:Bool=False )
+	Method AddTab( tab:TabButtonExt,makeCurrent:Bool=False,addAtBegin:Bool=False )
 	
 		Assert( TabIndex( tab.View )=-1,"View has already been added to TabView" )
 		
@@ -277,9 +277,17 @@ Class TabViewExt Extends DockingView
 		End
 		
 		Local index:=_tabs.Length
-
-		_tabBar.AddView( tab )
-		_tabs.Push( tab )
+		
+		If addAtBegin
+			_tabBar.RemoveAllViews()
+			_tabs.Insert( 0,tab )
+			For Local view:=Eachin _tabs
+				_tabBar.AddView( view )
+			Next
+		Else
+			_tabBar.AddView( tab )
+			_tabs.Add( tab )
+		Endif
 		
 		If makeCurrent MakeCurrent( tab,True ) 'CurrentIndex=index
 		
