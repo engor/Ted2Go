@@ -336,21 +336,23 @@ Class FileActions
 	Field _prefsDialog:PrefsDialog
 	
 	Method OnPrefs()
-	
-		If Not _prefsDialog
-			_prefsDialog=New PrefsDialog
+		
+		If _prefsDialog Then _prefsDialog.Hide()
+		
+		LiveTemplates.Load()
+		
+		_prefsDialog=New PrefsDialog
+		
+		_prefsDialog.Apply+=Lambda()
+		
+			For Local d:=Eachin _docs.OpenDocuments
+				Local tv:=Cast<CodeDocumentView>( d.TextView )
+				If tv Then tv.UpdatePrefs()
+			Next
 			
-			_prefsDialog.Apply+=Lambda()
-			
-				For Local d:=Eachin _docs.OpenDocuments
-					Local tv:=Cast<CodeDocumentView>( d.TextView )
-					If tv Then tv.UpdatePrefs()
-				Next
-				
-				MainWindow.OnPrefsChanged()
-			End
-			
-		Endif
+			MainWindow.OnPrefsChanged()
+		End
+		
 		_prefsDialog.Show()
 	End
 	
