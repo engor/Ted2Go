@@ -353,7 +353,7 @@ Class FileActions
 			MainWindow.OnPrefsChanged()
 		End
 		
-		_prefsDialog.Show()
+		_prefsDialog.ShowModal()
 	End
 	
 End

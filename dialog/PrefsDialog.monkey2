@@ -40,6 +40,10 @@ Class PrefsDialog Extends DialogExt
 		
 		ContentView=tabView
 		
+		Local cancel:=AddAction( "Cancel" )
+		cancel.Triggered=Hide
+		SetKeyAction( Key.Escape,cancel )
+		
 		Local apply:=AddAction( "Apply changes" )
 		apply.Triggered=OnApply
 		
