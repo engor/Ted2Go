@@ -20,7 +20,7 @@ Class PrefsInstance
 	Field MainToolBarVisible:=True
 	Field MainProjectIcons:=True
 	Field MainProjectSingleClickExpanding:=False
-	Field MainPlaceDocsAtBegin:=True
+	Field MainPlaceDocsAtBegin:=False
 	'
 	Field IrcNickname:String
 	Field IrcServer:="irc.freenode.net"
