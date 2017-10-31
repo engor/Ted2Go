@@ -65,6 +65,9 @@ Class PluginDependsOnFileType Extends Plugin Implements IDependsOnFileType
 	End
 
 	Method CheckFileTypeSuitability:Bool( fileType:String )
+		
+		If fileType Then fileType=fileType.ToLower()
+		
 		If GetMainFileType() = "*" Return True 'any files
 		Return Utils.ArrayContains( GetFileTypes(),fileType )
 	End
@@ -73,7 +76,7 @@ Class PluginDependsOnFileType Extends Plugin Implements IDependsOnFileType
 	Protected
 	
 	Field _types:String[]
-			
+	
 End
 
 
