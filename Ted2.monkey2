@@ -84,7 +84,6 @@
 #Import "view/AutocompleteView"
 #Import "view/TreeViewExt"
 #Import "view/CodeTreeView"
-'#Import "view/FileBrowserExt"
 #Import "view/CodeGutterView"
 #Import "view/ToolBarViewExt"
 #Import "view/HintView"
@@ -109,6 +108,7 @@
 #Import "view/FindReplaceView"
 #Import "view/ViewExtensions"
 #Import "view/DockingViewExt"
+#Import "view/DraggableViewListener"
 
 #Import "Tuple"
 #Import "Plugin"
@@ -130,7 +130,7 @@ Using tinyxml2..
 
 Const MONKEY2_DOMAIN:="http://monkeycoder.co.nz"
 
-Global AppTitle:="Ted2Go v2.7"
+Global AppTitle:="Ted2Go v2.8a"
 
 
 Function Main()

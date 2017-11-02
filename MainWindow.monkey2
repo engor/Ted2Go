@@ -853,28 +853,28 @@ Class MainWindowInstance Extends Window
 		
 		Local tab:=_tabsWrap.tabs["Build"]
 		tab.Activate()
-		If vis tab.ParentDock.Visible=True
+		If vis tab.CurrentHolder.Visible=True
 	End
 	
 	Method ShowOutputConsole( vis:Bool=True )
 		
 		Local tab:=_tabsWrap.tabs["Output"]
 		tab.Activate()
-		If vis tab.ParentDock.Visible=True
+		If vis tab.CurrentHolder.Visible=True
 	End
 	
 	Method ShowHelpView()
 		
 		Local tab:=_tabsWrap.tabs["Docs"]
 		tab.Activate()
-		tab.ParentDock.Visible=True
+		tab.CurrentHolder.Visible=True
 	End
 	
 	Method ShowFindResults()
 		
 		Local tab:=_tabsWrap.tabs["Find"]
 		tab.Activate()
-		tab.ParentDock.Visible=True
+		tab.CurrentHolder.Visible=True
 	End
 	
 	Method ShowFindInDocs()
@@ -1248,7 +1248,7 @@ Class MainWindowInstance Extends Window
 				mentionStr+=message.fromUser+" in "
 				mentionStr+=container.name
 				
-				Local dock:=_tabsWrap.tabs["Chat"].ParentDock '_tabsWrap.docks["bottom"]
+				Local dock:=_tabsWrap.tabs["Chat"].CurrentHolder '_tabsWrap.docks["bottom"]
 				ShowHint( mentionStr, New Vec2i( 0, -GetStyle( "Hint" ).Font.Height*4 ), dock, 20000 )
 				
 			Endif
