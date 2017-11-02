@@ -15,18 +15,23 @@ End
 
 Interface IDraggableHolder
 	
-	Method Attach( item:View )
-	Method Detach:View( item:View )
+	Method Attach( item:Object )
+	Method Detach:View( item:Object )
 	
 	Method OnDragStarted() 	' highlight holder here (if needed)
 	Method OnDragEnded() 	' reset highlighting
 	
 End
 
+#Rem Call order: Detach -> OnDragStarted -> Attach -> OnDragEnded
 
+#End
 Class DraggableViewListener<TItem,THolder>
 	
-	Method New(  )
+	Method GetItem:TItem( eventView:View,eventLocation:Vec2i ) Abstract
+	Method GetHolder:THolder( view:View ) Abstract
+	
+	Method New()
 		
 		_window=Window.AllWindows()[0]
 		
@@ -55,14 +60,16 @@ Class DraggableViewListener<TItem,THolder>
 			
 			Case EventType.MouseDown
 				
-				_item=Cast<TItem>( event.View )
+				_item=GetItem( event.View,event.Location )
 				If Not _item Return
 				
+				Print "item!"
 				If Not _item.Detachable
 					_item=Null
 					Return
 				Endif
 				
+				Print "detachable!"
 				_pressedPos=Mouse.Location
 				
 			
@@ -71,11 +78,11 @@ Class DraggableViewListener<TItem,THolder>
 				If Not _item Return
 				
 				If _detached
-					Local r:=_item.Frame
+					Local r:=_view.Frame
 					Local sz:=r.Size
 					r.TopLeft=Mouse.Location+New Vec2i( 0,-10 )
 					r.BottomRight=r.TopLeft+sz
-					_item.Frame=r
+					_view.Frame=r
 					App.RequestRender()
 					Return
 				Endif
@@ -130,16 +137,6 @@ Class DraggableViewListener<TItem,THolder>
 			i.OnDragStarted()
 		Next
 		
-	End
-	
-	Method GetHolder:THolder( view:View )
-		
-		While view
-			Local h:=Cast<THolder>( view )
-			If h Return h
-			view=view.Parent
-		Wend
-		Return Null
 	End
 	
 	Function CanAttach:Bool( item:TItem,holder:THolder )

@@ -111,7 +111,7 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 		Return tab
 	End
 	
-	Method Attach( item:View )
+	Method Attach( item:Object )
 		
 		Local tab:=Cast<TabButtonExt>( item )
 		AddTab( tab )
@@ -121,7 +121,7 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 		_curIndex=CurrentIndex-1 '-1 for [+] tab
 	End
 	
-	Method Detach:View( item:View )
+	Method Detach:View( item:Object )
 		
 		Local tab:=Cast<TabButtonExt>( item )
 		RemoveTab( tab )
@@ -614,5 +614,20 @@ End
 
 
 Class DraggableTabsListener Extends DraggableViewListener<TabButtonExt,TabViewExt>
+	
+	Method GetItem:TabButtonExt( eventView:View,eventLocation:Vec2i ) Override
+		
+		Return Cast<TabButtonExt>( eventView )
+	End
+	
+	Method GetHolder:TabViewExt( view:View ) Override
+		
+		While view
+			Local h:=Cast<TabViewExt>( view )
+			If h Return h
+			view=view.Parent
+		Wend
+		Return Null
+	End
 	
 End

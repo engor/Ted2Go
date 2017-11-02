@@ -2,7 +2,7 @@
 Namespace ted2go
 
 
-Class ProjectBrowserView Extends TreeViewExt
+Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 	
 	Field RequestedDelete:Void( node:Node )
 	Field FileClicked:Void( node:Node )
@@ -15,7 +15,7 @@ Class ProjectBrowserView Extends TreeViewExt
 		
 		Style=GetStyle( "FileBrowser" )
 		
-		_rootNode=New Node( Null )
+		_rootNode=NewNode( Null )
 		RootNode=_rootNode
 		RootNode.Expanded=True
 		RootNodeVisible=False
@@ -34,11 +34,37 @@ Class ProjectBrowserView Extends TreeViewExt
 		
 		UpdateFileTypeIcons()
 		
+		If Not _listener Then _listener=New DraggableProjTreeListener
+	End
+	
+	Method Attach( item:Object )
+		
+		Local node:=Cast<Node>( item )
+	End
+	
+	Method Detach:View( item:Object )
+		
+		' don't remove
+		Local node:=Cast<Node>( item )
+		Return New Label( node.Text )
+	End
+	
+	Method OnDragStarted() 	' highlight holder here (if needed)
+		
+	End
+	
+	Method OnDragEnded() 	' reset highlighting
+		
+	End
+	
+	Method NewNode:Node( parent:Node )
+		
+		Return New Node( parent,Self )
 	End
 	
 	Method AddProject( dir:String )
 		
-		Local node:=New Node( _rootNode )
+		Local node:=NewNode( _rootNode )
 		Local s:=StripDir( dir )+" ("+dir+")"
 		node.Text=s
 		node._path=dir
@@ -96,19 +122,47 @@ Class ProjectBrowserView Extends TreeViewExt
 	
 	Protected
 	
-	Class Node Extends TreeView.Node
+	Class Node Extends TreeView.Node Implements IDraggableItem<ProjectBrowserView>
 	
-		Method New( parent:Node )
+		Method New( parent:Node,view:View )
 			Super.New( "",parent )
+			_view=view
 		End
 	
 		Property Path:String()
 			Return _path
 		End
 		
+		Property Detachable:Bool()
+			Return GetNodeDeepLevel( Self )>1
+		End
+		
+		Property PossibleHolders:ProjectBrowserView[]()
+			Return _holders
+		Setter( value:ProjectBrowserView[] )
+			_holders=value
+		End
+		
+		Property CurrentHolder:ProjectBrowserView()
+			Return _curHolder
+		End
+		
+		Property View:View()
+		
+			Return _view
+		
+		Setter( view:View )
+		
+			_view=view
+		End
+		
 		Private
 	
 		Field _path:String
+		Field _holders:ProjectBrowserView[]
+		Field _curHolder:ProjectBrowserView
+		Field _view:View
+		
 	End
 	
 	Method GetFileTypeIcon:Image( path:String ) Virtual
@@ -158,6 +212,7 @@ Class ProjectBrowserView Extends TreeViewExt
 	Field _dirIcon:Image
 	Field _fileIcon:Image
 	
+	Global _listener:DraggableProjTreeListener
 	
 	Method FindProjectNode:Node( node:TreeView.Node )
 		
@@ -280,7 +335,7 @@ Class ProjectBrowserView Extends TreeViewExt
 				child=Cast<Node>( children[i] )
 				child.RemoveAllChildren()
 			Else
-				child=New Node( node )
+				child=NewNode( node )
 			Endif
 	
 			Local fpath:=path+f
@@ -443,5 +498,22 @@ Class TextFilter
 	
 	Field _pattern:String
 	Field _type:=CheckType.Equals
+	
+End
+
+Class DraggableProjTreeListener Extends DraggableViewListener<ProjectBrowserView.Node,ProjectBrowserView>
+	
+	Method GetItem:ProjectBrowserView.Node( eventView:View,eventLocation:Vec2i ) Override
+		
+		Local projTree:=Cast<ProjectBrowserView>( eventView )
+		
+		Print projTree ? "ok" Else "null"
+		Return Cast<ProjectBrowserView.Node>( projTree?.FindNodeAtPoint( eventLocation ) )
+	End
+	
+	Method GetHolder:ProjectBrowserView( view:View ) Override
+	
+		Return Cast<ProjectBrowserView>( view )
+	End
 	
 End
