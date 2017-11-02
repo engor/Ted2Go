@@ -81,6 +81,16 @@ Class TreeViewExt Extends TreeView
 		
 	End
 	
+	Property ItemsDraggable:Bool()
+	
+		Return _itemsDraggable
+	
+	Setter( value:Bool )
+	
+		_itemsDraggable=value
+	
+	End
+	
 	Method SaveState( jobj:JsonObject,jkey:String )
 		
 		_expander.SaveState( RootNode,jobj,jkey )
@@ -178,6 +188,7 @@ Class TreeViewExt Extends TreeView
 	Field _sel:TreeView.Node
 	Field _selColor:Color
 	Field _singleClickExpanding:Bool
+	Field _itemsDraggable:Bool
 	
 	Method TrySwitchExpandingState:Bool( node:TreeView.Node )
 		
