@@ -37,16 +37,71 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		If Not _listener Then _listener=New DraggableProjTreeListener
 	End
 	
-	Method Attach( item:Object )
+	Method Attach( item:Object,eventLocation:Vec2i )
 		
 		Local node:=Cast<Node>( item )
+		Local node2:=node.CurrentHolder.FindNodeAtPoint( eventLocation )
+		If Not node2 Return
+		
+		Local destNode:=Cast<Node>( node2 )
+		
+		Local srcIsFolder:=GetFileType( node.Path )=FileType.Directory
+		Local destIsFolder:=GetFileType( destNode.Path )=FileType.Directory
+		
+		If Not destIsFolder
+			node2=node2.Parent ' grab destination folder
+			destNode=Cast<Node>( node2 )
+			destIsFolder=True
+		Endif
+		
+		If srcIsFolder
+			If node2=node Or node.Parent=node2 Return
+			' deny to move into child folder
+			Local n:=node2.Parent
+			While n
+				If n=node Return
+				n=n.Parent
+			Wend
+		Else
+			If node.Parent=node2 Return
+		Endif
+		
+		Local ok:Bool=False
+		Local src:=node.Path
+		Local dest:=destNode.Path
+		
+		If Not dest.EndsWith( "/" ) Then dest+="/"
+		dest+=StripDir( src )
+		
+		If srcIsFolder
+			ok=CopyDir( src,dest )
+			If ok DeleteDir( src,True )
+		Else
+			ok=CopyFile( src,dest )
+			If ok DeleteFile( src )
+		Endif
+		If ok
+			node.Remove()
+			destNode.Expanded=True
+			_expander.Store( destNode )
+			OnNodeExpanded( destNode.Parent ) 'update parent folder
+		Endif
 	End
 	
 	Method Detach:View( item:Object )
 		
 		' don't remove
 		Local node:=Cast<Node>( item )
-		Return New Label( node.Text )
+		
+		If Not _draggableView
+			_draggableView=New Button( node.Text,node.Icon )
+			_draggableView.Layout="float"
+		Else
+			_draggableView.Text=node.Text
+			_draggableView.Icon=node.Icon
+		Endif
+		
+		Return _draggableView
 	End
 	
 	Method OnDragStarted() 	' highlight holder here (if needed)
@@ -124,9 +179,11 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 	
 	Class Node Extends TreeView.Node Implements IDraggableItem<ProjectBrowserView>
 	
-		Method New( parent:Node,view:View )
+		Method New( parent:Node,view:ProjectBrowserView )
+			
 			Super.New( "",parent )
 			_view=view
+			_curHolder=view
 		End
 	
 		Property Path:String()
@@ -211,6 +268,8 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 	
 	Field _dirIcon:Image
 	Field _fileIcon:Image
+	
+	Field _draggableView:Button
 	
 	Global _listener:DraggableProjTreeListener
 	
@@ -303,14 +362,14 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		'Print "update node: "+path
 		If Not path.EndsWith( "/" ) path+="/"
 		Local dir:=filesystem.LoadDir( path )
-	
+		
 		Local dirs:=New Stack<String>
 		Local files:=New Stack<String>
-	
+		
 		For Local f:=Eachin dir
-	
+			
 			Local fpath:=path+f
-	
+			
 			Select GetFileType( fpath )
 			Case FileType.Directory
 				dirs.Add( f )
@@ -318,42 +377,42 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 				files.Add( f )
 			End
 		Next
-	
+		
 		dirs.Sort()
 		files.Sort()
-	
+		
 		Local i:=0,children:=node.Children
-	
+		
 		While i<dir.Length
-	
+			
 			Local f:=""
 			If i<dirs.Length f=dirs[i] Else f=files[i-dirs.Length]
-	
+			
 			Local child:Node
-	
+			
 			If i<children.Length
 				child=Cast<Node>( children[i] )
 				child.RemoveAllChildren()
 			Else
 				child=NewNode( node )
 			Endif
-	
+			
 			Local fpath:=path+f
-	
+			
 			child.Text=f
 			child._path=fpath
-	
+			
 			Local icon:Image
 			If Prefs.MainProjectIcons 'Only load icon if settings say so
 				icon=GetFileTypeIcon( fpath )
 			Endif
-	
+			
 			If i<dirs.Length
 				If Not icon And Prefs.MainProjectIcons Then icon=_dirIcon
 				child.Icon=icon
-	
+				
 				_expander.Restore( child )
-	
+				
 				If child.Expanded Or recurse
 					UpdateNode( child,child.Expanded )
 				Endif
@@ -362,12 +421,12 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 				child.Icon=icon
 				child.RemoveAllChildren()
 			Endif
-	
+			
 			i+=1
 		Wend
-	
+		
 		node.RemoveChildren( i )
-	
+		
 	End
 	
 	Method OnNodeClicked( tnode:TreeView.Node )
@@ -505,9 +564,8 @@ Class DraggableProjTreeListener Extends DraggableViewListener<ProjectBrowserView
 	
 	Method GetItem:ProjectBrowserView.Node( eventView:View,eventLocation:Vec2i ) Override
 		
-		Local projTree:=Cast<ProjectBrowserView>( eventView )
+		Local projTree:=FindViewInHierarchy<ProjectBrowserView>( eventView )
 		
-		Print projTree ? "ok" Else "null"
 		Return Cast<ProjectBrowserView.Node>( projTree?.FindNodeAtPoint( eventLocation ) )
 	End
 	

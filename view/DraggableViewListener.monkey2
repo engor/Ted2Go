@@ -15,7 +15,7 @@ End
 
 Interface IDraggableHolder
 	
-	Method Attach( item:Object )
+	Method Attach( item:Object,eventLocation:Vec2i )
 	Method Detach:View( item:Object )
 	
 	Method OnDragStarted() 	' highlight holder here (if needed)
@@ -63,13 +63,11 @@ Class DraggableViewListener<TItem,THolder>
 				_item=GetItem( event.View,event.Location )
 				If Not _item Return
 				
-				Print "item!"
 				If Not _item.Detachable
 					_item=Null
 					Return
 				Endif
 				
-				Print "detachable!"
 				_pressedPos=Mouse.Location
 				
 			
@@ -93,7 +91,7 @@ Class DraggableViewListener<TItem,THolder>
 					Detach()
 				Endif
 				
-				
+			
 			Case EventType.MouseUp
 				
 				If Not _detached 
@@ -107,7 +105,7 @@ Class DraggableViewListener<TItem,THolder>
 				
 				If Not CanAttach( _item,holder ) Then holder=_item.CurrentHolder
 				
-				holder.Attach( _item )
+				holder.Attach( _item,event.Location )
 				
 				If _item.PossibleHolders
 					For Local i:=Eachin _item.PossibleHolders
@@ -117,7 +115,9 @@ Class DraggableViewListener<TItem,THolder>
 				
 				_item=Null
 				_detached=False
-			
+				
+				event.Eat()
+				
 		End
 	
 	End

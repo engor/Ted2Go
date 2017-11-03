@@ -282,3 +282,19 @@ Struct Recti Extension
 		Self.Size=size
 	End
 End
+
+
+Function TypeName<T>:String( obj:T ) Where T Extends Object
+	
+	Return obj ? String.FromCString( obj.typeName() ) Else Null
+End
+
+Function FindViewInHierarchy<T>:T( view:View ) Where T Extends View
+	
+	While view
+		Local r:=Cast<T>( view )
+		If r Return r
+		view=view.Parent
+	Wend
+	Return Null
+End

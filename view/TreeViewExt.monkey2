@@ -15,7 +15,7 @@ Class TreeViewExt Extends TreeView
 		
 		Super.New()
 		
-		Super.NodeClicked+=Lambda( node:Node )
+		NodeClicked2+=Lambda( node:Node )
 			
 			If _singleClickExpanding
 				If TrySwitchExpandingState( node ) Return
@@ -41,12 +41,16 @@ Class TreeViewExt Extends TreeView
 		
 		Super.NodeExpanded+=Lambda( node:Node )
 			
+			_expandStateChanged=True
+			
 			_expander.Store( node )
 			OnSelect( node )
 			NodeExpanded( node )
 		End
 		
 		Super.NodeCollapsed+=Lambda( node:Node )
+			
+			_expandStateChanged=True
 			
 			_expander.Store( node )
 			OnSelect( node )
@@ -165,7 +169,17 @@ Class TreeViewExt Extends TreeView
 				' make scroll little faster
 				Scroll-=New Vec2i( 0,RenderStyle.Font.Height*event.Wheel.Y*2 )
 				Return
-		
+			
+			Case EventType.MouseClick
+				
+				_expandStateChanged=False
+				
+				
+			Case EventType.MouseUp
+				
+				Local node:=FindNodeAtPoint( event.Location )
+				
+				If node And Not _expandStateChanged Then NodeClicked2( node )
 		End
 		
 		Super.OnContentMouseEvent( event )
@@ -178,6 +192,9 @@ Class TreeViewExt Extends TreeView
 	Field _sel:TreeView.Node
 	Field _selColor:Color
 	Field _singleClickExpanding:Bool
+	Field _expandStateChanged:Bool
+	
+	Field NodeClicked2:Void( node:Node )
 	
 	Method TrySwitchExpandingState:Bool( node:TreeView.Node )
 		
