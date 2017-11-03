@@ -40,7 +40,7 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 	Method Attach( item:Object,eventLocation:Vec2i )
 		
 		Local node:=Cast<Node>( item )
-		Local node2:=node.CurrentHolder.FindNodeAtPoint( eventLocation )
+		Local node2:=FindNodeAtPoint( eventLocation )
 		If Not node2 Return
 		
 		Local destNode:=Cast<Node>( node2 )
@@ -66,25 +66,27 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 			If node.Parent=node2 Return
 		Endif
 		
-		Local ok:Bool=False
+		Local ok:=False
 		Local src:=node.Path
 		Local dest:=destNode.Path
 		
 		If Not dest.EndsWith( "/" ) Then dest+="/"
-		dest+=StripDir( src )
+		Local name:=StripDir( src )
+		dest+=name
+		
+		Local move:=(Keyboard.Modifiers & Modifier.Control)=0
 		
 		If srcIsFolder
 			ok=CopyDir( src,dest )
-			If ok DeleteDir( src,True )
+			If ok And move Then DeleteDir( src,True )
 		Else
 			ok=CopyFile( src,dest )
-			If ok DeleteFile( src )
+			If ok And move Then DeleteFile( src )
 		Endif
 		If ok
-			node.Remove()
-			destNode.Expanded=True
-			_expander.Store( destNode )
-			OnNodeExpanded( destNode.Parent ) 'update parent folder
+			If move Then node.Remove()
+			
+			OnDraggedInto( destNode,name )
 		Endif
 	End
 	
@@ -93,23 +95,56 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		' don't remove
 		Local node:=Cast<Node>( item )
 		
+		_draggingText=node.Text
 		If Not _draggableView
-			_draggableView=New Button( node.Text,node.Icon )
+			_draggableView=New Button( "",node.Icon )
 			_draggableView.Layout="float"
 		Else
-			_draggableView.Text=node.Text
 			_draggableView.Icon=node.Icon
 		Endif
+		
+		MakeKeyView() 'wonna catch Ctrl-key
 		
 		Return _draggableView
 	End
 	
-	Method OnDragStarted() 	' highlight holder here (if needed)
+	Method OnDragStarted()
 		
+		_draggingState=True
 	End
 	
-	Method OnDragEnded() 	' reset highlighting
+	Method OnDragEnded()
 		
+		_draggingState=False
+	End
+	
+	Method OnFileDropped:Bool( path:String )
+		
+		Local point:=TransformWindowPointToView( Mouse.Location )
+		Local node:=Cast<Node>( FindNodeAtPoint( point ) )
+		If Not node Return False
+		
+		If GetFileType( node.Path )=FileType.File
+			node=Cast<Node>( node.Parent )
+		Endif
+		
+		Local dest:=node.Path
+		If Not dest.EndsWith( "/" ) Then dest+="/"
+		Local name:=StripDir( path )
+		dest+=name
+		
+		Local ok:=False
+		Local isFolder:=GetFileType( path )=FileType.Directory
+		If isFolder
+			ok=CopyDir( path,dest )
+		Else
+			ok=CopyFile( path,dest )
+		Endif
+		If ok
+			OnDraggedInto( node,name )
+		Endif
+		
+		Return True
 	End
 	
 	Method NewNode:Node( parent:Node )
@@ -166,12 +201,14 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 	Method Refresh( node:Node )
 	
 		UpdateNode( node,True )
+		ApplyFilter( node )
+		Selected=node
 	End
 	
 	Method Refresh( tnode:TreeView.Node )
 		
 		Local node:=Cast<Node>( tnode )
-		If node then UpdateNode( node,True )
+		If node Then Refresh( node )
 	End
 	
 	
@@ -255,6 +292,15 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		Endif
 		
 		Super.OnKeyEvent( event )
+		
+		UpdateDraggingState()
+	End
+	
+	Method OnContentMouseEvent( event:MouseEvent ) Override
+		
+		Super.OnContentMouseEvent( event )
+		
+		UpdateDraggingState()
 	End
 	
 	
@@ -270,8 +316,30 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 	Field _fileIcon:Image
 	
 	Field _draggableView:Button
+	Field _draggingState:Bool
+	Field _draggingText:String
 	
 	Global _listener:DraggableProjTreeListener
+	
+	Method OnDraggedInto( node:Node,name:String )
+		
+		Local path:=node.Text+"\"+name
+		
+		node.Expanded=True
+		_expander.Store( node )
+		Local par:=IsProjectNode( node ) ? node Else node.Parent
+		OnNodeExpanded( par ) 'update parent folder
+		
+		SelectByPathEnds( path )
+		
+	End
+	
+	Method UpdateDraggingState()
+		
+		If _draggingState
+			_draggableView.Text=(Keyboard.Modifiers & Modifier.Control = 0) ? _draggingText Else _draggingText+" (copy)"
+		Endif
+	End
 	
 	Method FindProjectNode:Node( node:TreeView.Node )
 		
@@ -438,7 +506,7 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 	End
 	
 	Method OnNodeRightClicked( tnode:TreeView.Node )
-	
+		
 		Local node:=Cast<Node>( tnode )
 		If Not node Return
 		

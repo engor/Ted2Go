@@ -1150,10 +1150,9 @@ Class MainWindowInstance Extends Window
 	
 	Method OnFileDropped( path:String )
 		
-		If FileExists( path )
+		Local ok:=_projectView.OnFileDropped( path )
+		If Not ok And FileExists( path ) 'file
 			_docsManager.OpenDocument( path,True )
-		Else
-			_projectView.OpenProject( path )
 		Endif
 	End
 	

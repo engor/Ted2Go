@@ -107,8 +107,10 @@ Class DraggableViewListener<TItem,THolder>
 				
 				holder.Attach( _item,event.Location )
 				
+				_item.CurrentHolder.OnDragEnded()
 				If _item.PossibleHolders
 					For Local i:=Eachin _item.PossibleHolders
+						If i=_item.CurrentHolder Continue
 						i.OnDragEnded()
 					Next
 				Endif
@@ -131,9 +133,12 @@ Class DraggableViewListener<TItem,THolder>
 		
 		_window.AddChildView( _view )
 		
+		_item.CurrentHolder.OnDragStarted()
+		
 		If Not _item.PossibleHolders Return
 		
 		For Local i:=Eachin _item.PossibleHolders
+			If i=_item.CurrentHolder Continue
 			i.OnDragStarted()
 		Next
 		

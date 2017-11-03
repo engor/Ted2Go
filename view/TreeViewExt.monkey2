@@ -136,6 +136,16 @@ Class TreeViewExt Extends TreeView
 		If n Then Selected=n
 	End
 	
+	Method SelectByPathEnds( pathEnding:String )
+	
+		Local n:=FindSubNode( RootNode,
+						True,
+						Lambda:Bool( n:TreeView.Node )
+							Return GetNodePath( n ).EndsWith( pathEnding )
+						End )
+	
+		If n Then Selected=n
+	End
 	
 	Protected
 	
@@ -177,9 +187,11 @@ Class TreeViewExt Extends TreeView
 				
 			Case EventType.MouseUp
 				
-				Local node:=FindNodeAtPoint( event.Location )
-				
-				If node And Not _expandStateChanged Then NodeClicked2( node )
+				If event.Button=MouseButton.Left
+					
+					Local node:=FindNodeAtPoint( event.Location )
+					If node And Not _expandStateChanged Then NodeClicked2( node )
+				Endif
 		End
 		
 		Super.OnContentMouseEvent( event )

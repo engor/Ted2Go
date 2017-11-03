@@ -56,6 +56,19 @@ Class ProjectView Extends ScrollView
 		Return ""
 	End
 	
+	Method OnFileDropped:Bool( path:String )
+		
+		Local ok:=_projBrowser.OnFileDropped( path )
+		If Not ok
+			Local isFolder:=GetFileType( path )=FileType.Directory
+			If isFolder
+				ok=True
+				OpenProject( path )
+			Endif
+		Endif
+		Return ok
+	End
+	
 	Method OpenProject:Bool( dir:String )
 	
 		dir=StripSlashes( dir )
