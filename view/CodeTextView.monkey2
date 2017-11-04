@@ -12,6 +12,7 @@ Class CodeTextView Extends TextView
 	Field TextChanged:Void()
 	
 	Method New()
+		
 		Super.New()
 		
 		CursorBlinkRate=2.5
@@ -573,11 +574,12 @@ Class CodeTextView Extends TextView
 	Method OnThemeChanged() Override
 		
 		Super.OnThemeChanged()
+		
 		UpdateThemeColors()
 	End
 	
 	Method UpdateThemeColors() Virtual
-	
+		
 		_whitespacesColor=App.Theme.GetColor( "textview-whitespaces" )
 		_extraSelColor=App.Theme.GetColor( "textview-extra-selection" )
 	End
