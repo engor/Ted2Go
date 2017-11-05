@@ -158,6 +158,64 @@ Class ProjectView Extends ScrollView
 	Field _builder:IModuleBuilder
 	Field _projBrowser:ProjectBrowserView
 	
+	Field _cutPath:String,_copyPath:String
+	
+	Method OnCut( path:String )
+		
+		_copyPath=""
+		_cutPath=path
+	End
+	
+	Method OnCopy( path:String )
+		
+		_cutPath=""
+		_copyPath=path
+	End
+	
+	Method OnPaste:Bool( path:String )
+		
+		Local ok:=True
+		
+		If Not path.EndsWith( "/" ) Then path+="/"
+		
+		Local cut:=(_cutPath<>"")
+		Local srcPath:=cut ? _cutPath Else _copyPath
+		
+		Local isFolder:=(GetFileType( srcPath )=FileType.Directory)
+		
+		If isFolder And path.StartsWith( srcPath )
+			
+			Alert( "Can't paste into the same or nested folder!","Paste element" )
+			Return False
+		Endif
+		
+		Local name:=StripDir( srcPath )
+		
+		Local dest:=path+name
+		Local exists:=(GetFileType( dest )<>FileType.None)
+		
+		If exists
+			Local s:=RequestString( "New name:","Element already exists",name )
+			If Not s Or s=name Return False
+			name=s
+			dest=path+name
+		Endif
+		
+		If isFolder
+			ok=CopyDir( srcPath,dest )
+			If ok And cut Then DeleteDir( srcPath,True )
+		Else
+			ok=CopyFile( srcPath,dest )
+			If ok And cut Then DeleteFile( srcPath )
+		Endif
+		
+		If Not ok Then Alert( "Can't copy~n"+srcPath+"~ninto~n"+dest,"Paste element" )
+		
+		_cutPath=""
+		
+		Return ok
+	End
+	
 	Method DeleteItem( browser:ProjectBrowserView,path:String,node:TreeView.Node )
 		
 		Local nodeToRefresh:=Cast<ProjectBrowserView.Node>( node.Parent )
@@ -298,187 +356,219 @@ Class ProjectView Extends ScrollView
 		
 			Local menu:=New MenuExt
 			Local path:=node.Path
-		
+			Local pasteAction:Action
+			Local isFolder:=False
+			
 			Select GetFileType( path )
 			Case FileType.Directory
-		
+				
+				isFolder=True
+				
 				menu.AddAction( "Find..." ).Triggered=Lambda()
-		
+					
 					RequestedFindInFolder( path )
 				End
-		
+				
 				menu.AddSeparator()
-		
+				
 				menu.AddAction( "New class..." ).Triggered=Lambda()
-		
+					
 					Local d:=New GenerateClassDialog( path )
 					d.Generated+=Lambda( filePath:String,fileContent:String )
-		
+						
 						If CreateFileInternal( filePath,fileContent )
-		
+							
 							MainWindow.OpenDocument( filePath )
 							browser.Refresh( node )
 						Endif
 					End
 					d.ShowModal()
 				End
-		
+				
 				menu.AddSeparator()
-		
+				
 				menu.AddAction( "New file" ).Triggered=Lambda()
-		
+					
 					Local file:=RequestString( "New file name:" )
 					If Not file Return
-		
+					
 					Local tpath:=path+"/"+file
-		
+					
 					CreateFileInternal( tpath )
-		
+					
 					browser.Refresh( node )
 				End
-		
+				
 				menu.AddAction( "New folder" ).Triggered=Lambda()
-		
+					
 					Local dir:=RequestString( "New folder name:" )
 					If Not dir Return
-		
+					
 					Local tpath:=path+"/"+dir
-		
+					
 					If GetFileType( tpath )<>FileType.None
 						Alert( "A file or directory already exists at '"+tpath+"'" )
 						Return
 					End
-		
+					
 					If Not CreateDir( tpath )
 						Alert( "Failed to create folder '"+dir+"'" )
 						Return
 					Endif
-		
+					
 					browser.Refresh( node )
 				End
-		
+				
 				menu.AddAction( "Delete" ).Triggered=Lambda()
-		
+					
 					DeleteItem( browser,path,node )
 				End
-		
+				
 				menu.AddSeparator()
-		
+				
 				If browser.IsProjectNode( node ) ' root node
-		
+					
 					menu.AddAction( "Close project" ).Triggered=Lambda()
-		
+						
 						CloseProject( path )
 					End
-		
+					
 					menu.AddAction( "Clean (delete .buildv)" ).Triggered=Lambda()
-		
+						
 						If Not RequestOkay( "Really delete all '.buildv' folders?" ) Return
-		
+						
 						Local changes:=CleanProject( path )
 						If changes Then browser.Refresh( node )
 					End
 				Else
-		
+					
 					menu.AddAction( "Open as a project" ).Triggered=Lambda()
-		
+					
 						OpenProject( path )
 					End
 				Endif
-		
+				
 				' update / rebuild module
 				path=path.Replace( "\","/" )
 				Local name := path.Slice( path.FindLast( "/")+1 )
 				Local file:=path+"/module.json"
-		
+				
 				If path.Contains( "/modules/") And GetFileType( file )=FileType.File
-		
+					
 					menu.AddSeparator()
-		
+					
 					menu.AddAction( "Update / Rebuild "+name ).Triggered=Lambda()
-		
+						
 						_builder.BuildModules( True,name )
 					End
-		
+					
 				Endif
-		
+				
 				' update all modules
 				Local path2:=MainWindow.ModsPath
 				If path2.EndsWith( "/" ) Then path2=path2.Slice( 0,path2.Length-1 )
-		
+				
 				If path = path2
-		
+					
 					menu.AddSeparator()
-		
+					
 					menu.AddAction( "Update / Rebuild modules" ).Triggered=Lambda()
-		
+						
 						_builder.BuildModules( False )
 					End
-		
+					
 				Endif
-		
+				
 				' bananas showcase
 				If IsBananasShowcaseAvailable()
 					path2=Prefs.MonkeyRootPath+"bananas"
 					If path = path2
-		
+						
 						menu.AddSeparator()
-		
+						
 						menu.AddAction( "Open bananas showcase" ).Triggered=Lambda()
-		
+							
 							MainWindow.ShowBananasShowcase()
 						End
-		
+						
 					Endif
 				Endif
-		
+				
 				menu.AddSeparator()
-		
+				
 				menu.AddAction( "Open on Desktop" ).Triggered=Lambda()
-		
+					
 					requesters.OpenUrl( path )
 				End
-		
-		
+			
+			
 			Case FileType.File
-		
+				
 				menu.AddAction( "Open on Desktop" ).Triggered=Lambda()
-		
+					
 					requesters.OpenUrl( path )
 				End
-		
+				
 				menu.AddSeparator()
-		
+				
 				menu.AddAction( "Rename" ).Triggered=Lambda()
-		
+					
 					Local oldName:=StripDir( path )
 					Local name:=RequestString( "Enter new name:","Ranaming '"+oldName+"'",oldName )
 					If Not name Or name=oldName Return
-		
+					
 					Local newPath:=ExtractDir( path )+name
 					If CopyFile( path,newPath )
-		
+						
 						DeleteFile( path )
-		
+						
 						browser.Refresh( node.Parent )
 						Return
 					Endif
-		
+					
 					Alert( "Failed to rename file: '"+path+"'" )
 				End
-		
+				
 				menu.AddSeparator()
-		
+				
 				menu.AddAction( "Delete" ).Triggered=Lambda()
-		
+					
 					DeleteItem( browser,path,node )
 				End
-		
+			
 			Default
-		
+				
 				Return
 			End
-		
+			
+			' cut / copy / paste
+			menu.AddSeparator()
+			
+			menu.AddAction( "Cut" ).Triggered=Lambda()
+			
+				OnCut( path )
+			End
+			
+			menu.AddAction( "Copy" ).Triggered=Lambda()
+			
+				OnCopy( path )
+			End
+			
+			pasteAction=menu.AddAction( "Paste" )
+			pasteAction.Triggered=Lambda()
+				
+				New Fiber( Lambda()
+					
+					Local ok:=OnPaste( path )
+					If ok
+						Local n:=browser.IsProjectNode( node ) ? node Else node.Parent
+						browser.Refresh( n )
+					Endif
+				End )
+				
+			End
+			pasteAction.Enabled=(_cutPath Or _copyPath) And isFolder
+			
 			menu.Open()
 		End
 		
