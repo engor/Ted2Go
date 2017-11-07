@@ -1298,6 +1298,7 @@ Class CodeDocument Extends Ted2Document
 		Local text:=stringio.LoadString( Path )
 		
 		_doc.Text=text
+		Dirty=False
 		
 		_parser=ParsersManager.Get( FileExtension )
 		_parsingEnabled=Not ParsersManager.IsFake( _parser )
@@ -1387,15 +1388,18 @@ Class CodeDocument Extends Ted2Document
 		_parsing=True
 		
 		New Fiber( Lambda()
-		
-			Local tmp:=MainWindow.AllocTmpPath( "_mx2cc_parse_",".monkey2" )
-			Local file:=StripDir( Path )
 			
-			SaveString( _doc.Text,tmp )
+			Local dirty:=Dirty
 			
-			ParsingFile( tmp )
+			Local filePath:=Path
+			If dirty
+				filePath=MainWindow.AllocTmpPath( "_mx2cc_parse_",".monkey2" )
+				SaveString( _doc.Text,filePath )
+			Endif
+			
+			ParsingFile( filePath )
 		
-			DeleteFile( tmp )
+			If dirty Then DeleteFile( filePath )
 			
 			_parsing=False
 			
