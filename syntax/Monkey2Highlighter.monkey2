@@ -121,7 +121,7 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 				If preproc And istart=sol
 				
 					Select id.ToLower()
-					Case "rem"				
+					Case "rem"
 						cnest+=1
 					Case "end"
 						cnest=Max( cnest-1,-1 )

@@ -39,55 +39,64 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 	
 	Method Attach( item:Object,eventLocation:Vec2i )
 		
-		Local node:=Cast<Node>( item )
-		Local node2:=FindNodeAtPoint( eventLocation )
-		If Not node2 Return
-		
-		Local destNode:=Cast<Node>( node2 )
-		
-		Local srcIsFolder:=GetFileType( node.Path )=FileType.Directory
-		Local destIsFolder:=GetFileType( destNode.Path )=FileType.Directory
-		
-		If Not destIsFolder
-			node2=node2.Parent ' grab destination folder
-			destNode=Cast<Node>( node2 )
-			destIsFolder=True
-		Endif
-		
-		If srcIsFolder
-			If node2=node Or node.Parent=node2 Return
-			' deny to move into child folder
-			Local n:=node2.Parent
-			While n
-				If n=node Return
-				n=n.Parent
-			Wend
-		Else
-			If node.Parent=node2 Return
-		Endif
-		
-		Local ok:=False
-		Local src:=node.Path
-		Local dest:=destNode.Path
-		
-		If Not dest.EndsWith( "/" ) Then dest+="/"
-		Local name:=StripDir( src )
-		dest+=name
-		
-		Local move:=(Keyboard.Modifiers & Modifier.Control)=0
-		
-		If srcIsFolder
-			ok=CopyDir( src,dest )
-			If ok And move Then DeleteDir( src,True )
-		Else
-			ok=CopyFile( src,dest )
-			If ok And move Then DeleteFile( src )
-		Endif
-		If ok
-			If move Then node.Remove()
+		New Fiber( Lambda()
 			
-			OnDraggedInto( destNode,name )
-		Endif
+			Local node:=Cast<Node>( item )
+			Local node2:=FindNodeAtPoint( eventLocation )
+			If Not node2 Return
+			
+			Local destNode:=Cast<Node>( node2 )
+			
+			Local srcIsFolder:=GetFileType( node.Path )=FileType.Directory
+			Local destIsFolder:=GetFileType( destNode.Path )=FileType.Directory
+			
+			If Not destIsFolder
+				node2=node2.Parent ' grab destination folder
+				destNode=Cast<Node>( node2 )
+				destIsFolder=True
+			Endif
+			
+			If srcIsFolder
+				If node2=node Or node.Parent=node2 Return
+				' deny to move into child folder
+				Local n:=node2.Parent
+				While n
+					If n=node Return
+					n=n.Parent
+				Wend
+			Else
+				If node.Parent=node2 Return
+			Endif
+			
+			Local src:=node.Path
+			Local dest:=destNode.Path
+			
+			If Not dest.EndsWith( "/" ) Then dest+="/"
+			Local name:=StripDir( src )
+			dest+=name
+			
+			If Not CheckOverwritingConfirm( dest,name,srcIsFolder ) Return
+			
+			Local ok:=False
+			Local move:=(Keyboard.Modifiers & Modifier.Control)=0
+			
+			If srcIsFolder
+				ok=CopyDir( src,dest )
+				If ok And move Then DeleteDir( src,True )
+			Else
+				ok=CopyFile( src,dest )
+				If ok And move Then DeleteFile( src )
+			Endif
+			If ok
+				If move Then node.Remove()
+				
+				OnDraggedInto( destNode,name )
+			Else
+				Alert( "Can't move into "+ExtractDir( dest ) )
+			Endif
+			
+		End )
+		
 	End
 	
 	Method Detach:View( item:Object )
@@ -133,8 +142,11 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		Local name:=StripDir( path )
 		dest+=name
 		
-		Local ok:=False
 		Local isFolder:=GetFileType( path )=FileType.Directory
+		
+		If Not CheckOverwritingConfirm( dest,name,isFolder ) Return True ' don't copied but return true
+		
+		Local ok:=False
 		If isFolder
 			ok=CopyDir( path,dest )
 		Else
@@ -142,6 +154,8 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		Endif
 		If ok
 			OnDraggedInto( node,name )
+		Else
+			Alert( "Can't copy into "+ExtractDir( dest ) )
 		Endif
 		
 		Return True
@@ -320,6 +334,23 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 	Field _draggingText:String
 	
 	Global _listener:DraggableProjTreeListener
+	
+	Method CheckOverwritingConfirm:Bool( destPath:String,name:String,isFolder:Bool )
+		
+		' confirm overwriting
+		Local confirm:=""
+		If isFolder And DirectoryExists( destPath )
+			confirm="Destination folder already contains '"+name+"' subfolder.~nDo you want to merge files replacing with moved ones?"
+		Elseif FileExists( destPath )
+			confirm="Destination folder already contains '"+name+"'.~nDo you want to replace existing file with moved one?"
+		Endif
+		
+		If confirm
+			Return RequestOkay( confirm,"" )
+		Endif
+		
+		Return True
+	End
 	
 	Method OnDraggedInto( node:Node,name:String )
 		

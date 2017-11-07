@@ -1150,10 +1150,14 @@ Class MainWindowInstance Extends Window
 	
 	Method OnFileDropped( path:String )
 		
-		Local ok:=_projectView.OnFileDropped( path )
-		If Not ok And FileExists( path ) 'file
-			_docsManager.OpenDocument( path,True )
-		Endif
+		New Fiber( Lambda()
+			
+			Local ok:=_projectView.OnFileDropped( path )
+			If Not ok And FileExists( path ) 'file
+				_docsManager.OpenDocument( path,True )
+			Endif
+			
+		End )
 	End
 	
 	Method OnAppClose()

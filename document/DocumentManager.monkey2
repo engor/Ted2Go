@@ -110,10 +110,17 @@ Class DocumentManager
 		If Not doc.Load() Return Null
 
 		InitDoc( doc )
-	
-		_openDocs.Add( doc )
+		
 		Local addAtBegin:=(openByHand And Prefs.MainPlaceDocsAtBegin)
+		
+		If addAtBegin
+			_openDocs.Insert( 0,doc )
+		Else
+			_openDocs.Add( doc )
+		Endif
+		
 		Local tab:=_tabView.AddTab( TabText( doc ),doc.View,False,addAtBegin )
+		
 		tab.DoubleClicked+=Lambda()
 			DocumentDoubleClicked( doc )
 		End

@@ -123,6 +123,8 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	Method OnThemeChanged() Override
 		
 		_doc.HideAutocomplete()
+		
+		Super.OnThemeChanged()
 	End
 	
 	Method OnRenderContent( canvas:Canvas ) Override
