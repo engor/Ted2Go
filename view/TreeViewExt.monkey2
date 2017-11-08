@@ -189,7 +189,8 @@ Class TreeViewExt Extends TreeView
 				
 				If event.Button=MouseButton.Left
 					
-					Local node:=FindNodeAtPoint( event.Location )
+					Local p:=TransformWindowPointToView( Mouse.Location )
+					Local node:=FindNodeAtPoint( p )
 					If node And Not _expandStateChanged Then NodeClicked2( node )
 				Endif
 		End
