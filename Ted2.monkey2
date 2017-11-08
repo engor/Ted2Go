@@ -109,6 +109,7 @@
 #Import "view/DockingViewExt"
 #Import "view/DraggableViewListener"
 
+#Import "Tree"
 #Import "Tuple"
 #Import "Plugin"
 #Import "ThemeImages"

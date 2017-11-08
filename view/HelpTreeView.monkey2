@@ -35,9 +35,9 @@ Class HelpTreeView Extends TreeViewExt
 	Field PageClicked:Void( page:String )
 	
 	Method New( htmlView:HtmlView )
-	
-		htmlView.AnchorClicked=Lambda( url:String )
 		
+		htmlView.AnchorClicked=Lambda( url:String )
+			
 			'dodgy work around for mx2 docs!
 			'
 			If url.StartsWith( "javascript:void('" ) And url.EndsWith( "')" )
@@ -50,7 +50,7 @@ Class HelpTreeView Extends TreeViewExt
 		End
 		
 		PageClicked+=Lambda( page:String )
-		
+			
 			Local url:=PageUrl( page )
 			If Not url Return
 			
@@ -58,15 +58,16 @@ Class HelpTreeView Extends TreeViewExt
 		End
 		
 		Init()
+		
 	End
 	
 	Property FindField:TextFieldExt()
-	
+		
 		Return _textField
 	End
 	
 	Method QuickHelp( text:String )
-	
+		
 		If text<>_textField.Text
 			_textField.Text=text
 		Else
@@ -76,153 +77,219 @@ Class HelpTreeView Extends TreeViewExt
 	End
 	
 	Method PageUrl:String( page:String )
-
-		'old doc system		
+		
+		'old doc system
 		'Return RealPath( "modules/"+page.Replace( ":","/docs/__PAGES__/" ).Replace( ".","-" )+".html" )
 		
 		'new doc system
 		Return RealPath( "docs/"+page )
 	End
 	
-	Method Update()
+	Function CreateNodes( obj:JsonObject,parent:Tree.Node,indexer:StringMap<Tree.Node> )
+		
+		Local text:=obj["text"].ToString()
+		Local page:=""
+		
+		If obj.Contains( "data" )
+			Local data:=obj["data"].ToObject()
+			page=data["page"].ToString()
+		Endif
+		
+		Local node:=New Tree.Node( text,parent,page )
+		indexer[page.ToLower()]=node
+		
+		If obj.Contains( "children" )
+			For Local child:=Eachin obj["children"].ToArray()
+				CreateNodes( Cast<JsonObject>( child ),node,indexer )
+			Next
+		Endif
+		
+	End
 	
-		RootNode.RemoveAllChildren()
-
+	Function FindChild:Node( node:TreeView.Node,text:String )
+		
+		For Local n:=Eachin node.Children
+			If n.Text=text Return Cast<Node>( n )
+		Next
+		Return Null
+	End
+	
+	Method InsertNode:Node( node:Tree.Node )
+		
+		Local parent:=RootNode
+		Local items:=node.ParentsHierarchy
+		items.Add( node )
+		
+		Local last:Node
+		Local len:=items.Length
+		For Local i:=1 Until len ' start from 1 to skip root node
+			Local item:=items[i]
+			Local text:=item.Text
+			If i+1<len And items[i+1].Text=text Continue ' skip nested mogo>mojo>... etc
+			last=FindChild( parent,text )
+			If Not last
+				last=New Node( text,parent,item.GetUserData<String>() )
+			Endif
+			parent=last
+		Next
+		Return last
+	End
+	
+	Method Update( applyFilter:Bool=False )
+		
+		_index.Clear()
+		_index2.Clear()
+		_tree.Clear()
+		
 		For Local modname:=Eachin EnumModules()
-
-			'old doc system		
+			
+			'old doc system
 			'Local index:="modules/"+modname+"/docs/__PAGES__/index.js"
-
+			
 			'new doc system
 			Local index:="docs/modules/"+modname+"/module/index.js"
-		
+			
 			Local obj:=JsonObject.Load( index )
 			If Not obj Continue
 			
-			New Node( obj,RootNode,Self )
+			CreateNodes( obj,_tree.RootNode,_index )
 		Next
 		
-		NodeClicked+=Lambda( tnode:TreeView.Node )
+		FillTree()
 		
-			Local node:=Cast<Node>( tnode )
-			If Not node Or Not node.Page Return
-			
-			PageClicked( node.Page )
-		End
-		
+		If applyFilter Then Update( _textField.Text )
 	End
-
+	
+	Method RequestFocus()
+		
+		_textField.MakeKeyView()
+	End
+	
+	
 	Private
 	
 	Class Node Extends TreeView.Node
 	
-		Method New( page:String,parent:TreeView.Node,tree:HelpTreeView )
-			Super.New( page,parent )
+		Method New( text:String,parent:TreeView.Node,page:String )
+			
+			Super.New( text,parent )
 			
 			_page=page
-		End
-	
-		Method New( obj:JsonObject,parent:TreeView.Node,tree:HelpTreeView )
-			Super.New( "",parent )
-		
-			Text=obj["text"].ToString()
-			
-			If obj.Contains( "data" )
-
-				Local data:=obj["data"].ToObject()
-
-				Local page:=data["page"].ToString()
-				
-				tree._index[page.ToLower()]=Self
-				
-				_page=page
-			Endif
-			
-			If obj.Contains( "children" )
-				For Local child:=Eachin obj["children"].ToArray()
-					New Node( Cast<JsonObject>( child ),Self,tree )
-				Next
-			Endif
-
 		End
 		
 		Property Page:String()
 			Return _page
 		End
 		
-		Property Url:String()
-			Return _url
-		End
-		
 		Private
 		
 		Field _page:String
 		
-		Field _url:String
+	End
+	
+	Method FillTree()
+	
+		RootNode.RemoveAllChildren()
+		
+		FillNode( RootNode,_tree.RootNode.Children )
+		
+	End
+	
+	Method FillNode( node:TreeView.Node,items:Stack<Tree.Node> )
+		
+		If Not items Return
+		
+		For Local item:=Eachin items
+			
+			Local page:=item.GetUserData<String>()
+			
+			' hack for the-same-nested 
+			If item.NumChildren=1
+				Local child:=item.Children[0]
+				If child.Text=item.Text.Replace( "-","." )
+					item=child
+				Endif
+			Endif
+			
+			Local n:=New Node( item.Text,node,page )
+			_index2[page.ToLower()]=n
+			
+			If item.NumChildren
+				FillNode( n,item.Children )
+			Endif
+		Next
+		
 	End
 	
 	Method Update( text:String )
-
+		
+		'RootNode.RemoveAllChildren()
 		RootNode.CollapseAll()
-			
+		
 		text=text.ToLower()
-			
+		
+		If _tree.RootNode.NumChildren=0
+			New Node( "Click here to rebuild docs!",RootNode,"$$rebuild$$" )
+			Return
+		Endif
+		
 		_matches.Clear()
+		
+		For Local it:=Eachin _index2
 			
-		Local selected:=New Map<Node,Bool>
+			'Local node:=it.Value
+			Local n:=it.Value
 			
-		For Local it:=Eachin _index
+			'Local n:=InsertNode( node )
 			
-			If Not it.Key.Contains( text ) Continue
+			'If Not text Continue
+			
+			If Not text Or Not it.Key.Contains( text )
+				n.Selected=False
+				Continue
+			Endif
+			
+			n.Selected=n.Text.ToLower().Contains( text )
+			
+			If n.Selected
 				
-			Local node:=it.Value
+				_matches.Push( n )
 				
-			_matches.Push( node )
-				
-			node.Selected=True
-				
-			selected[node]=True
-				
-			While node
-				node.Expanded=True
-				node=Cast<Node>( node.Parent )
-			Wend
-
+				While n
+					n.Expanded=True
+					n=Cast<Node>( n.Parent )
+				Wend
+			Endif
+			
 		Next
-						
-		For Local node:=Eachin _selected.Keys
-			
-			If Not selected.Contains( node ) node.Selected=False
-
-		Next
-			
-		_selected=selected
-			
+		
 		RootNode.Expanded=True
-			
+		
+		MainWindow.UpdateWindow( False )
+		
 		_matchid=0
-			
+		
 		If _matches.Length
 			
 			PageClicked( _matches[0].Page )
-			
+			Selected=_matches[0]
 		Endif
-	
+		
 	End
 	
 	Method NextHelp()
-	
-		If Not _matches Return
-	
-		_matchid+=1
-		If _matchid>=_matches.Length _matchid=0
 		
-		If _matchid<_matches.Length PageClicked( _matches[_matchid].Page )
+		If _matches.Empty Return
+		
+		_matchid=(_matchid+1) Mod _matches.Length
+		
+		PageClicked( _matches[_matchid].Page )
+		Selected=_matches[_matchid]
 	End
 	
 	Method Init()
-
-		_textField=New TextFieldExt
+		
+		_textField=New TextFieldExt( "#" )
 		_textField.Style=GetStyle( "HelpTextField" )
 		
 		_textField.Entered=Lambda()
@@ -245,22 +312,28 @@ Class HelpTreeView Extends TreeViewExt
 		RootNodeVisible=False
 		RootNode.Expanded=True
 		
-		_textField.Activated+=_textField.MakeKeyView
+		NodeClicked+=Lambda( tnode:TreeView.Node )
 		
-		Activated+=MainWindow.ShowHelpView
+			Local node:=Cast<Node>( tnode )
+			Local page:=node?.Page
+			If Not page Return
+			
+			If page="$$rebuild$$"
+				MainWindow.RebuildDocs()
+				Return
+			Endif
+			
+			PageClicked( page )
+		End
 		
 		Update()
-				
 	End
 	
 	Field _textField:TextFieldExt
-	
 	Field _matchid:Int
-		
 	Field _matches:=New Stack<Node>
-	
-	Field _selected:=New Map<Node,Bool>
-	
-	Field _index:=New Map<String,Node>
+	Field _index:=New Map<String,Tree.Node>
+	Field _index2:=New Map<String,Node>
+	Field _tree:=New Tree
 	
 End

@@ -356,7 +356,7 @@ Class ModuleManager Extends Dialog
 		Endif
 		
 		
-		App.EndModal()		
+		App.EndModal()
 		
 		_progress.Close()
 		

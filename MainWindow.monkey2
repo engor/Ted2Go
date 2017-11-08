@@ -425,6 +425,8 @@ Class MainWindowInstance Extends Window
 		
 		ArrangeElements()
 		
+		_helpTree.QuickHelp( "" )
+		
 		ContentView=_contentView
 
 		OnCreatePlugins() 'init plugins before loadstate, to register doctypes before open last opened files
@@ -877,7 +879,7 @@ Class MainWindowInstance Extends Window
 		tab.CurrentHolder.Visible=True
 	End
 	
-	Method ShowFindInDocs()
+	Method ShowFindInDocs( setFocus:Bool=True )
 		
 		Local doc:=Cast<CodeDocumentView>( _docsManager.CurrentTextView )
 		If Not doc Return
@@ -888,6 +890,13 @@ Class MainWindowInstance Extends Window
 		_helpTree.Visible=False
 		_helpSwitcher.Clicked()
 		_tabsWrap.tabs["Docs"].Activate()
+		
+		If setFocus Then _helpTree.RequestFocus()
+	End
+	
+	Method RebuildDocs()
+		
+		_buildActions.rebuildHelp.Trigger()
 	End
 	
 	Method ShowQuickHelp()
@@ -919,22 +928,26 @@ Class MainWindowInstance Extends Window
 			ident+=item.Ident
 			
 			If ident=_helpIdent
+				
 				If item.IsModuleMember
-					Local url:=_helpTree.PageUrl( ident )
-					If GetFileType( url )<>FileType.File Then url=_helpTree.PageUrl( ident2 )
 					
-					If GetFileType( url )<>FileType.File
-						Local ext:=ExtractExt( url )
-						Repeat
-							Local i:=url.FindLast( "-" )
-							If i=-1
-								url=""
-								Exit
-							Endif
-							url=url.Slice( 0,i )+ext
-						Forever
-					Endif
-					If url ShowHelp( url )
+					ShowFindInDocs( False )
+					
+'					Local url:=_helpTree.PageUrl( ident )
+'					If GetFileType( url )<>FileType.File Then url=_helpTree.PageUrl( ident2 )
+'					
+'					If GetFileType( url )<>FileType.File
+'						Local ext:=ExtractExt( url )
+'						Repeat
+'							Local i:=url.FindLast( "-" )
+'							If i=-1
+'								url=""
+'								Exit
+'							Endif
+'							url=url.Slice( 0,i )+ext
+'						Forever
+'					Endif
+'					If url ShowHelp( url )
 				Else
 					GotoCodePosition( item.FilePath,item.ScopeStartPos )
 				Endif
@@ -984,7 +997,8 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Method UpdateHelpTree()
-		_helpTree.Update()
+		
+		_helpTree.Update( True )
 	End
 	
 	Method ShowBananasShowcase()
