@@ -1345,23 +1345,22 @@ Class MainWindowInstance Extends Window
 		
 		_contentView.ContentView=_docsTabView
 		
-		
 	End
 	
 	Method LoadTabsState( jobj:JsonObject )
 		
 		Global places:=New StringMap<StringStack>
 		' defaults
-		Local s:=""
-		places["left"]=New StringStack
-		s="Project,Source,Debug,Help"
+		Local s:="Source"
+		places["left"]=New StringStack( s.Split( "," ) )
+		s="Project,Debug"
 		places["right"]=New StringStack( s.Split( "," ) )
 		s="Build,Output,Docs,Find,Chat"
 		places["bottom"]=New StringStack( s.Split( "," ) )
 		
 		Global actives:=New StringMap<String>
 		' defaults
-		actives["left"]="Project"
+		actives["left"]="Source"
 		actives["right"]="Project"
 		actives["bottom"]="Docs"
 		
@@ -1818,7 +1817,7 @@ Class DraggableTabs
 	
 	Method New()
 		
-		sizes["left"]="300"
+		sizes["left"]="250"
 		sizes["right"]="300"
 		sizes["bottom"]="250"
 		

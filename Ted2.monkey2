@@ -180,7 +180,7 @@ Function Main()
 	If jobj.Contains( "windowRect" ) 
 		rect=ToRecti( jobj["windowRect"] )
 	Else
-		Local w:=Min( 1380,App.DesktopSize.x-40 )
+		Local w:=Min( 1480,App.DesktopSize.x-40 )
 		Local h:=Min( 970,App.DesktopSize.y-64 )
 		rect=New Recti( 0,0,w,h )
 		flags|=WindowFlags.Center

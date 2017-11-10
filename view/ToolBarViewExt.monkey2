@@ -21,7 +21,7 @@ Class ToolBarExt Extends ToolBar
 	End
 	
 	Method AddIconicButton:MultiIconToolButton( icons:Image[],trigger:Void(),hint:String=Null )
-	
+		
 		Local act:=New Action( Null )
 		act.Triggered=trigger
 		Local b:=New MultiIconToolButton( act,icons,hint )

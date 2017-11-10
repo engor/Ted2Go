@@ -21,8 +21,11 @@ Class BananasDocument Extends Ted2Document
 		_table.Gravity=New Vec2f( 0.5,0 )
 		scrollView.ContentView=_table
 		
-		_filterPanel=New ToolBar
-		scrollView.AddView( _filterPanel,"bottom" )
+		_filterPanel=New ToolBarExt
+		Local sbox:=New ScrollViewTabs( _filterPanel )
+		sbox.ScrollBarsVisible=False
+		
+		scrollView.AddView( sbox,"bottom" )
 		
 		Local lab:=New Label( "Bananas Showcase" )
 		lab.Style=App.Theme.GetStyle( "BananasTitle" )
@@ -31,6 +34,9 @@ Class BananasDocument Extends Ted2Document
 		scrollView.AddView( lab,"top" )
 		
 		_list=New ListView
+		Local st:=_list.Style.Copy()
+		st.Padding=New Recti( -6,-6,6,6 )
+		_list.Style=st
 		_list.ItemDoubleClicked+=Lambda( item:ListView.Item )
 			
 			OpenItem( FindItem( item.Text ) )
@@ -64,8 +70,8 @@ Class BananasDocument Extends Ted2Document
 	Private
 	
 	Const EMPTY_TAG:="#"
-	Const MAX_WIDTH:=300
-	Const MAX_HEIGHT:=200
+	Const MAX_WIDTH:=256
+	Const MAX_HEIGHT:=196
 	Field _list:ListView
 	Field _table:TableView
 	Field _view:View
@@ -75,7 +81,7 @@ Class BananasDocument Extends Ted2Document
 	Field _tags:=New StringStack
 	Field _filterTags:=New StringStack
 	Field _filterViews:=New Stack<ToolButtonExt>
-	Field _filterPanel:ToolBar
+	Field _filterPanel:ToolBarExt
 	
 	Struct Item
 		
@@ -353,13 +359,13 @@ Class BananasDocument Extends Ted2Document
 		If item.author Then dock.AddView( New Label( item.author ),"top" )
 		
 		' version and modified
-		Local vers:=item.version
-		If vers Then vers="v"+vers
-		If item.modified
-			If vers Then vers+=" at "
-			vers+=item.modified
-		Endif
-		If vers Then dock.AddView( New Label( vers ),"top" )
+'		Local vers:=item.version
+'		If vers Then vers="v"+vers
+'		If item.modified
+'			If vers Then vers+=" at "
+'			vers+=item.modified
+'		Endif
+'		If vers Then dock.AddView( New Label( vers ),"top" )
 		
 		'tags
 		If item.tags Then dock.AddView( New Label( item.tags ),"top" )

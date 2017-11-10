@@ -20,7 +20,8 @@ Class ScrollViewTabs Extends ScrollView
 		
 			Scroll-=delta
 		
-			If scroll<>Scroll event.Eat()
+			'If scroll<>Scroll event.Eat()
+			event.Eat()
 			Return
 		End
 		
