@@ -370,6 +370,11 @@
 			}
 		},
 		
+		"TabButtonLocked":{
+			"extends":"TabButton",
+			"borderColor":"#F26522"
+		},
+		
 		"TabClose":{
 			"margin":[32,0,0,0 ],
 			"icons":"hollow_assets/tabclose_icons.png",
