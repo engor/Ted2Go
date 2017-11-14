@@ -543,6 +543,7 @@ Class TabButtonExt Extends TabButton Implements IDraggableItem<TabViewExt>
 		
 		Super.New( text,icon,view,closable )
 		_parentDock=parentDock
+		_closable=closable
 	End
 	
 	Property Detachable:Bool()
@@ -585,12 +586,26 @@ Class TabButtonExt Extends TabButton Implements IDraggableItem<TabViewExt>
 		Style=GetStyle( _locked ? "TabButtonLocked" Else "TabButton" )
 	End
 	
+	Method OnMouseEvent( event:MouseEvent ) Override
+		
+		If _closable And 
+			event.Type=EventType.MouseUp And 
+			event.Button=MouseButton.Middle
+			
+			CloseClicked()
+			event.Eat()
+			Return
+		Endif
+		
+		Super.OnMouseEvent( event )
+	End
+	
 	
 	Private
 	
 	Field _possibleParentDocks:TabViewExt[]
 	Field _locked:Bool
-	
+	Field _closable:Bool
 End
 
 
