@@ -23,6 +23,8 @@
 		"brighter": "#665C54",
 		"brightest": "#7C6F64",
 
+		"separator": "#2A2828",
+
 		"text-default": "#CECECE",
 		"text-highlight": "#FFFFFF",
 		"text-disabled": "#6F6F6F",
@@ -334,7 +336,7 @@
 		
 		"MenuSeparator":{
 			"padding":[ 0,0,0,1 ],
-			"backgroundColor":"dark",
+			"backgroundColor":"separator",
 			"border":[ 8,8,7,7 ]
 		},
 
