@@ -303,3 +303,13 @@ Function FindViewInHierarchy<T>:T( view:View ) Where T Extends View
 	Wend
 	Return Null
 End
+
+Function StripEnding:String( text:String,ends:String )
+	
+	Return text.EndsWith( ends ) ? text.Slice( 0,text.Length-ends.Length ) Else text
+End
+
+Function StripStarting:String( text:String,starts:String )
+	
+	Return text.StartsWith( starts ) ? text.Slice( starts.Length ) Else text
+End

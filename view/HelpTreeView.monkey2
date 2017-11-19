@@ -224,11 +224,13 @@ Class HelpTreeView Extends TreeViewExt
 	
 	Method Update( text:String )
 		
-		'RootNode.RemoveAllChildren()
 		RootNode.CollapseAll()
+		
+		text=StripEnding( text,"." )
 		
 		text=text.ToLower()
 		
+		Local parts:=text.Split( "." )
 		Local text2:=text.Replace( ".","-" )
 		
 		If _tree.RootNode.NumChildren=0
@@ -252,15 +254,16 @@ Class HelpTreeView Extends TreeViewExt
 				Continue
 			Endif
 			
-			n.Selected=n.Text.ToLower().Contains( text )
+			n.Selected=GetSelectionState( n,parts )
 			
 			If n.Selected
 				
 				_matches.Push( n )
 				
-				While n
-					n.Expanded=True
-					n=Cast<Node>( n.Parent )
+				Local n2:=n.Parent
+				While n2
+					n2.Expanded=True
+					n2=n2.Parent
 				Wend
 			Endif
 			
@@ -278,6 +281,26 @@ Class HelpTreeView Extends TreeViewExt
 			Selected=_matches[0]
 		Endif
 		
+	End
+	
+	Method GetSelectionState:Bool( node:TreeView.Node,parts:String[] )
+		
+		Local last:=parts.Length-1
+		Local i:=last
+		Repeat
+			Local part:=parts[i]
+			Local txt:=node.Text.ToLower()
+			If txt.Contains( part )
+				i-=1
+				If i<0 Exit 'true
+			Else
+				If i=last Return False
+			Endif
+			node=node.Parent
+			If Not node Return False
+		Forever
+		
+		Return True
 	End
 	
 	Method NextHelp()
