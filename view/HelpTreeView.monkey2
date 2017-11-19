@@ -193,6 +193,7 @@ Class HelpTreeView Extends TreeViewExt
 		
 		FillNode( RootNode,_tree.RootNode.Children )
 		
+		'Sort()
 	End
 	
 	Method FillNode( node:TreeView.Node,items:Stack<Tree.Node> )
@@ -228,6 +229,8 @@ Class HelpTreeView Extends TreeViewExt
 		
 		text=text.ToLower()
 		
+		Local text2:=text.Replace( ".","-" )
+		
 		If _tree.RootNode.NumChildren=0
 			New Node( "Click here to rebuild docs!",RootNode,"$$rebuild$$" )
 			Return
@@ -244,7 +247,7 @@ Class HelpTreeView Extends TreeViewExt
 			
 			'If Not text Continue
 			
-			If Not text Or Not it.Key.Contains( text )
+			If Not text2 Or Not it.Key.Contains( text2 )
 				n.Selected=False
 				Continue
 			Endif
@@ -289,7 +292,7 @@ Class HelpTreeView Extends TreeViewExt
 	
 	Method Init()
 		
-		_textField=New TextFieldExt( "#" )
+		_textField=New TextFieldExt( "" )
 		_textField.Style=GetStyle( "HelpTextField" )
 		
 		_textField.Entered=Lambda()

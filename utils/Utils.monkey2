@@ -263,6 +263,11 @@ Class Stack<T> Extension
 		Self.Remove( item )
 	End
 	
+	Operator+=( items:T[] )
+	
+		Self.AddAll( items )
+	End
+	
 End
 
 

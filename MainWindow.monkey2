@@ -425,10 +425,10 @@ Class MainWindowInstance Extends Window
 		
 		ArrangeElements()
 		
-		_helpTree.QuickHelp( "" )
+		'_helpTree.QuickHelp( "" )
 		
 		ContentView=_contentView
-
+		
 		OnCreatePlugins() 'init plugins before loadstate, to register doctypes before open last opened files
 		
 		LoadState( jobj )

@@ -66,9 +66,10 @@ Class TreeViewExt Extends TreeView
 		
 	Setter( value:TreeView.Node )
 		
-		If _sel=value Return
-		_sel=value
-		SelectedChanged( _sel )
+		If _sel<>value
+			_sel=value
+			SelectedChanged( _sel )
+		Endif
 		
 		EnsureVisible( _sel )
 		
@@ -146,6 +147,12 @@ Class TreeViewExt Extends TreeView
 	
 		If n Then Selected=n
 	End
+	
+	Method Sort()
+	
+		SortNode( RootNode )
+	End
+	
 	
 	Protected
 	
@@ -232,21 +239,42 @@ Class TreeViewExt Extends TreeView
 	End
 	
 	Method EnsureVisible( node:TreeView.Node )
-		
+	
 		If Not node Return
-		
+	
 		Local n:=node.Parent
 		While n
 			n.Expanded=True
 			n=n.Parent
 		Wend
-		
+	
 		' scroll Y only 
 		Local sx:=Scroll.x
 		Local scroll:=Scroll
 		Super.EnsureVisible( node.Rect )
 		scroll.Y=Scroll.y
 		Scroll=scroll
+	End
+	
+	Method SortNode( node:TreeView.Node )
+		
+		If node.Children.Length=0 Return
+		
+		Local children:=New Stack<TreeView.Node>
+		children+=node.Children
+		
+		children.Sort( Lambda:Int( lhs:TreeView.Node,rhs:TreeView.Node )
+			
+			Return lhs.Text<=>rhs.Text
+		End )
+		
+		node.RemoveAllChildren()
+		
+		For Local n:=Eachin children
+			node.AddChild( n )
+			
+			SortNode( n )
+		Next
 	End
 	
 End
