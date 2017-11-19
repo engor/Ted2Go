@@ -384,6 +384,8 @@ Class MacosProduct Extends DesktopProduct
 		plist+="<!DOCTYPE plist PUBLIC ~q-//Apple Computer//DTD PLIST 1.0//EN~q ~qhttp://www.apple.com/DTDs/PropertyList-1.0.dtd~q>~n"
 		plist+="<plist version=~q1.0~q>~n"
 		plist+="<dict>~n"
+		plist+="~t<key>CFBundleName</key>~n"
+		plist+="~t<string>"+AppName+"</string>~n"
 		plist+="~t<key>CFBundleExecutable</key>~n"
 		plist+="~t<string>"+AppName+"</string>~n"
 		plist+="~t<key>CFBundleIconFile</key>~n"
