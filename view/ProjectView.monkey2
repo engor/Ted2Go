@@ -518,6 +518,12 @@ Class ProjectView Extends ScrollView
 					If Not name Or name=oldName Return
 					
 					Local newPath:=ExtractDir( path )+name
+					
+					If FileExists( newPath )
+						Alert( "File already exists! Path: '"+newPath+"'" )
+						Return
+					Endif
+					
 					If CopyFile( path,newPath )
 						
 						DeleteFile( path )

@@ -91,6 +91,16 @@ Class DocumentManager
 		Return _openDocs.ToArray()
 	End
 	
+	Method IsDocumentOpened:Bool( path:String )
+		
+		For Local i:=Eachin _openDocs
+			
+			If i.Path=path Return True
+		Next
+		
+		Return False
+	End
+	
 	Method OpenDocument:Ted2Document( path:String,makeCurrent:Bool=False,openByHand:Bool=True )
 	
 		path=RealPath( path )

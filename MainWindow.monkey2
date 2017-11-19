@@ -1002,14 +1002,17 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Method ShowBananasShowcase()
+		
 		OpenDocument( Prefs.MonkeyRootPath+"bananas/ted2go-showcase/all.bananas" )
 	End
 	
 	Method ReadError( path:String )
+		
 		Alert( "I/O Error reading file '"+path+"'" )
 	End
 	
 	Method WriteError( path:String )
+		
 		Alert( "I/O Error writing file '"+path+"'" )
 	End
 
