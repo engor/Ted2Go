@@ -11,7 +11,9 @@
 		"statusbar-active": "#CA5100",
 		"menu-shortcut":"text-background",
 		"codemap-background": "transparent",
-		"codemap-selection": "#48000000"		
+		"codemap-selection": "#48000000",
+		"params-hint-common": "textview-color1",
+		"params-hint-selected": "textview-color2"
 	},
 
 	"fonts":{
@@ -21,8 +23,7 @@
 	},
 	
 	"styles":{
-				
-
+		
 		"GutterView":{
 			"extends":"TextView",
 			"textColor":"text-disabled",
@@ -45,6 +46,10 @@
 			"border":[ 1 ],
 			"borderColor":"clear",
 			"backgroundColor":"panel"
+		},
+
+		"ParamsHint":{
+			"extends":"Hint"
 		},
 
 		"ToolBarExt":{

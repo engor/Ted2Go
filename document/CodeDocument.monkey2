@@ -799,10 +799,13 @@ Class CodeDocument Extends Ted2Document
 		End
 		
 		_doc.TextChanged+=Lambda()
+		
 			Dirty=True
 			OnTextChanged()
 			_codeView.TextChanged()
 		End
+		
+		_codeView.CursorMoved+=OnCursorChanged
 		
 		' bar + editor
 		_content=New DockingView
@@ -1108,6 +1111,8 @@ Class CodeDocument Extends Ted2Document
 		
 		If ident = "" Then ident=_codeView.IdentBeforeCursor()
 		
+		Print "ident: "+ident
+		
 		'show
 		Local lineNum:=TextDocument.FindLine( _codeView.Cursor )
 		Local lineStr:=TextDocument.GetLine( lineNum )
@@ -1147,6 +1152,7 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Function HideAutocomplete()
+		
 		If AutoComplete AutoComplete.Hide()
 	End
 	
@@ -1462,6 +1468,148 @@ Class CodeDocument Extends Ted2Document
 		
 	End
 	
+	Method OnCursorChanged()
+		
+		Global _storedPos:=-1,_storedIdent:=""
+		Global opts:=New ParserRequestOptions
+		Global results:=New Stack<CodeItem>
+		
+		' try to show hint for method parameters
+		
+		'If _codeView.CanCopy Print "can copy, exit" ; Return ' has selection
+		
+		Local line:=_codeView.LineTextAtCursor
+		Local pos:=_codeView.PosInLineAtCursor
+		Local bracketPos:=-1,startPos:=0
+		Local lower:=line.Trim().ToLower()
+		Local isDecl:=lower.StartsWith( "function " ) Or lower.StartsWith( "method " ) Or 
+						lower.StartsWith( "operator " ) Or lower.StartsWith( "property " )
+		Local i:=isDecl ? -1 Else pos-1
+		While i>=0
+			Local c:=line[i]
+			If c=Chars.OPENED_ROUND_BRACKET
+				bracketPos=i
+				startPos=0 'reset
+			Elseif bracketPos<>-1 And (c=Chars.EQUALS Or c=Chars.COMMA Or c=Chars.SEMICOLON)
+				startPos=i
+				'Exit
+			Endif
+			i-=1
+		Wend
+		If bracketPos<0
+			Print "not found"
+			ParamsHint?.Hide()
+			_storedPos=-1
+			Return
+		Endif
+		
+		i=bracketPos+1
+		Local brackets:=0,quotes:=0
+		Local paramIndex:=0
+		While i<pos
+			Local c:=line[i]
+			Select c
+				Case Chars.OPENED_ROUND_BRACKET
+					If quotes Mod 2 = 0
+						brackets+=1
+					Endif
+				Case Chars.CLOSED_ROUND_BRACKET
+					If quotes Mod 2 = 0
+						brackets-=1
+					Endif
+				Case Chars.DOUBLE_QUOTE
+					quotes+=1
+				Case Chars.COMMA
+					If quotes Mod 2 = 0 And brackets=0
+						paramIndex+=1
+					Endif
+			End
+			i+=1
+		Wend
+		If brackets<0
+			Print "outside of params"
+			ParamsHint?.Hide()
+			_storedPos=-1
+			Return
+		Endif
+		
+		i=bracketPos
+		Local s:="",isNew:=False
+		While i>=0
+			If line[i]<=32
+				s=""
+			Else
+				s=String.FromChar( line[i] ).ToLower()+s
+				If s="new"
+					isNew=True
+					Exit
+				Endif
+				
+			Endif
+			i-=1
+		Wend
+		
+		Local ident:=GetIndentBeforePos_Mx2( line,bracketPos,True )
+		Print "ident: "+ident+", paramIndex: "+paramIndex+", isNew: "+isNew
+		
+		If ident<>_storedIdent Or bracketPos<>_storedPos
+			
+			_storedIdent=ident
+			_storedPos=bracketPos
+			
+			opts.ident=ident
+			opts.filePath=Path
+			opts.docLineNum=_codeView.LineNumAtCursor
+			opts.docLineStr=line
+			opts.docPosInLine=pos
+			opts.results=results
+			'opts.usingsFilter=usings
+			
+			results.Clear()
+			
+			If isNew
+				
+				Local item:=_parser.GetItem( ident )
+				Print "new case: "+item?.Text
+				If item Then _parser.GetConstructors( item,results )
+				
+			Else
+				
+				_parser.GetItemsForAutocomplete( opts )
+				
+				Local parts:=ident.Split( "." )
+				Local last:=parts[parts.Length-1]
+				
+				Local it:=results.All()
+				While Not it.AtEnd
+					If it.Current.Ident<>last
+						it.Erase()
+					Else
+						Print "result: "+it.Current.Text
+						it.Bump()
+					Endif
+				Wend
+			Endif
+			
+			If results.Empty
+				Print "have no results"
+				ParamsHint?.Hide()
+				_storedPos=-1
+				Return
+			Endif
+			
+			If Not ParamsHint Then ParamsHint=New ParamsHintView
+			
+			Local location:=_codeView.CursorRect.min-_codeView.Scroll
+			ParamsHint.Show( results,location,_codeView )
+			
+		Else
+			Print "the same"
+		Endif
+		
+		ParamsHint?.SetIndex( paramIndex )
+	End
+	
 	Method OnFindSelection()
 		MainWindow.OnFind()
 	End
@@ -1753,4 +1901,122 @@ End
 Function ScaledVal:Int( val:Int )
 	
 	Return val*App.Theme.Scale.x
+End
+
+
+Global ParamsHint:ParamsHintView
+
+Class ParamsHintView Extends TextView
+
+	Method New()
+		
+		Style=GetStyle( "ParamsHint" )
+		ReadOnly=True
+		Visible=False
+		Layout="float"
+		Gravity=New Vec2f( .5,1 )
+		
+		MainWindow.AddChildView( Self )
+		
+		OnThemeChanged()
+	End
+	
+	Method Show( items:Stack<CodeItem>,location:Vec2i,sender:View )
+		
+		Hide()
+		
+		_items=items
+		
+		Local s:=""
+		For Local i:=Eachin _items
+			If s Then s+="~n"
+			Local params:=i.Params
+			If Not params Then s+="<no params>" ; Continue
+			For Local j:=0 Until params.Length
+				If j>0 Then s+=", "
+				s+=params[j].ToString()
+			Next
+		Next
+		Text=s ' use it for TextView.OnMeasure
+		
+		Visible=True
+		
+		Local window:=sender.Window
+		
+		location=sender.TransformPointToView( location,window )
+		Local dy:=New Vec2i( 0,-10 )
+		
+		' fit into window area
+		Local size:=MeasureLayoutSize()
+		Local dx:=location.x+size.x-window.Bounds.Right
+		If dx>0
+			location=location-New Vec2i( dx,0 )
+		Endif
+		If location.y+size.y+dy.y>window.Bounds.Bottom
+			location=location-New Vec2i( 0,size.y )
+			dy=-dy
+		Endif
+		Offset=location+dy
+		
+	End
+	
+	Method Hide()
+		
+		Visible=False
+	End
+	
+	Method SetIndex( index:Int )
+		
+		_paramIndex=index
+	End
+	
+	Private
+	
+	Field _items:Stack<CodeItem>
+	Field _paramIndex:Int
+	Field _color1:Color,_color2:Color
+	
+	Method OnRenderContent( canvas:Canvas ) Override
+		
+		Local stored:=canvas.Color
+		
+		Local x:Float,y:Float,s:=""
+		Local font:=RenderStyle.Font
+		For Local item:=Eachin _items
+			
+			Local params:=item.Params
+			If Not params
+				s="<no params>"
+				canvas.Color=(_paramIndex=0) ? _color2 Else _color1
+				canvas.DrawText( s,x,y )
+			Else
+				For Local i:=0 Until params.Length
+					
+					If i>0
+						canvas.Color=_color1
+						canvas.DrawText( ", ",x,y )
+						x+=font.TextWidth( ", " )
+					Endif
+					
+					s=params[i].ToString()
+					canvas.Color=(i=_paramIndex) ? _color2 Else _color1
+					canvas.DrawText( s,x,y )
+					x+=font.TextWidth( s )
+				Next
+				
+			Endif
+			
+			y+=font.Height
+			x=0
+		Next
+		
+		canvas.Color=stored
+	End
+	
+	Method OnThemeChanged() Override
+		
+		_color1=App.Theme.GetColor( "params-hint-common" )
+		_color2=App.Theme.GetColor( "params-hint-selected" )
+	End
+	
 End

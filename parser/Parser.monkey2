@@ -3,7 +3,8 @@ Namespace ted2go
 
 
 Interface ICodeParser
-
+	
+	Method GetConstructors( item:CodeItem,target:Stack<CodeItem> )
 	Method RefineRawType( item:CodeItem )
 	Method ParseFile:String( filePath:String,pathOnDisk:String,isModule:Bool )
 	'Method ParseJson( json:String,filePath:String )
@@ -97,6 +98,8 @@ Class FakeParser Implements ICodeParser
 		Return _extraItemsMap
 	End
 	
+	Method GetConstructors( item:CodeItem,target:Stack<CodeItem> )
+	End
 	Method ParseFile:String( filePath:String,pathOnDisk:String,isModule:Bool )
 		'do nothing
 		Return Null
