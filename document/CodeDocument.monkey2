@@ -1480,42 +1480,49 @@ Class CodeDocument Extends Ted2Document
 		
 		Local line:=_codeView.LineTextAtCursor
 		Local pos:=_codeView.PosInLineAtCursor
-		Local bracketPos:=-1,startPos:=0
 		Local lower:=line.Trim().ToLower()
 		Local isDecl:=lower.StartsWith( "function " ) Or lower.StartsWith( "method " ) Or 
 						lower.StartsWith( "operator " ) Or lower.StartsWith( "property " )
-		Local i:=isDecl ? -1 Else pos-1
-		While i>=0
-			Local c:=line[i]
-			If c=Chars.OPENED_ROUND_BRACKET
-				bracketPos=i
-				startPos=0 'reset
-			Elseif bracketPos<>-1 And (c=Chars.EQUALS Or c=Chars.COMMA Or c=Chars.SEMICOLON)
-				startPos=i
-				'Exit
-			Endif
-			i-=1
-		Wend
-		If bracketPos<0
+		
+		Local i:=line.Find( "(" )
+		If isDecl Or i<0 Or i>pos
 			Print "not found"
 			ParamsHint?.Hide()
 			_storedPos=-1
 			Return
 		Endif
 		
-		i=bracketPos+1
 		Local brackets:=0,quotes:=0
 		Local paramIndex:=0
-		While i<pos
+		Local ident:String
+		'Local ranges:Stack<Vec2i>
+		Local parts:=New Stack<ParamsPart>
+		Local isNew:Bool
+		
+		For i=0 Until pos
 			Local c:=line[i]
 			Select c
 				Case Chars.OPENED_ROUND_BRACKET
 					If quotes Mod 2 = 0
+						' skip spaces
+						Local j:=i-1
+						While j>=0 And line[j]<=32
+							j-=1
+							Print "skip space"
+						Wend
+						Local part:=New ParamsPart
+						parts.Add( part )
+						ident=GetIndentBeforePos_Mx2( line,j,True )
+						Print "ident: "+ident'+", paramIndex: "+paramIndex+", isNew: "+isNew
+						part.ident=ident
+						part.ranges=New Stack<Vec2i>
+						part.ranges.Add( New Vec2i( i,0 ) )
 						brackets+=1
 					Endif
 				Case Chars.CLOSED_ROUND_BRACKET
 					If quotes Mod 2 = 0
 						brackets-=1
+						Local r:=parts[brackets].ranges
 					Endif
 				Case Chars.DOUBLE_QUOTE
 					quotes+=1
@@ -1524,38 +1531,79 @@ Class CodeDocument Extends Ted2Document
 						paramIndex+=1
 					Endif
 			End
-			i+=1
-		Wend
-		If brackets<0
-			Print "outside of params"
-			ParamsHint?.Hide()
-			_storedPos=-1
-			Return
-		Endif
+		Next
 		
-		i=bracketPos
-		Local s:="",isNew:=False
-		While i>=0
-			If line[i]<=32
-				s=""
-			Else
-				s=String.FromChar( line[i] ).ToLower()+s
-				If s="new"
-					isNew=True
-					Exit
-				Endif
-				
-			Endif
-			i-=1
-		Wend
 		
-		Local ident:=GetIndentBeforePos_Mx2( line,bracketPos,True )
-		Print "ident: "+ident+", paramIndex: "+paramIndex+", isNew: "+isNew
+'		Local bracketPos:=-1,startPos:=0
+'		'Local i:=isDecl ? -1 Else pos-1
+'		
+'		While i>=0
+'			Local c:=line[i]
+'			If c=Chars.CLOSED_ROUND_BRACKET
+'		
+'			Elseif c=Chars.OPENED_ROUND_BRACKET
+'				bracketPos=i
+'				startPos=0 'reset
+'			Elseif bracketPos<>-1 And (c=Chars.EQUALS Or c=Chars.COMMA Or c=Chars.SEMICOLON)
+'				startPos=i
+'				'Exit
+'			Endif
+'			i-=1
+'		Wend
+'		
+'		i=bracketPos+1
+'		Local brackets:=0,quotes:=0
+'		Local paramIndex:=0
+'		While i<pos
+'			Local c:=line[i]
+'			Select c
+'				Case Chars.OPENED_ROUND_BRACKET
+'					If quotes Mod 2 = 0
+'						brackets+=1
+'					Endif
+'				Case Chars.CLOSED_ROUND_BRACKET
+'					If quotes Mod 2 = 0
+'						brackets-=1
+'					Endif
+'				Case Chars.DOUBLE_QUOTE
+'					quotes+=1
+'				Case Chars.COMMA
+'					If quotes Mod 2 = 0 And brackets=0
+'						paramIndex+=1
+'					Endif
+'			End
+'			i+=1
+'		Wend
+'		If brackets<0
+'			Print "outside of params"
+'			ParamsHint?.Hide()
+'			_storedPos=-1
+'			Return
+'		Endif
+'		
+'		i=bracketPos
+'		Local s:="",isNew:=False
+'		While i>=0
+'			If line[i]<=32
+'				s=""
+'			Else
+'				s=String.FromChar( line[i] ).ToLower()+s
+'				If s="new"
+'					isNew=True
+'					Exit
+'				Endif
+'				
+'			Endif
+'			i-=1
+'		Wend
+'		
+'		Local ident:=GetIndentBeforePos_Mx2( line,bracketPos,True )
+'		Print "ident: "+ident+", paramIndex: "+paramIndex+", isNew: "+isNew
 		
-		If ident<>_storedIdent Or bracketPos<>_storedPos
+		If ident<>_storedIdent 'Or bracketPos<>_storedPos
 			
 			_storedIdent=ident
-			_storedPos=bracketPos
+			'_storedPos=bracketPos
 			
 			opts.ident=ident
 			opts.filePath=Path
@@ -1600,6 +1648,7 @@ Class CodeDocument Extends Ted2Document
 			
 			If Not ParamsHint Then ParamsHint=New ParamsHintView
 			
+			Print "loc: "+_codeView.CursorRect.min
 			Local location:=_codeView.CursorRect.min-_codeView.Scroll
 			ParamsHint.Show( results,location,_codeView )
 			
@@ -1609,6 +1658,15 @@ Class CodeDocument Extends Ted2Document
 		
 		ParamsHint?.SetIndex( paramIndex )
 	End
+	
+	Class ParamsPart
+		
+		Field ident:String
+		Field ranges:=New Stack<Vec2i>
+		Field index:Int
+		
+	End
+	
 	
 	Method OnFindSelection()
 		MainWindow.OnFind()
@@ -1914,7 +1972,7 @@ Class ParamsHintView Extends TextView
 		ReadOnly=True
 		Visible=False
 		Layout="float"
-		Gravity=New Vec2f( .5,1 )
+		Gravity=New Vec2f( 0,1 )
 		
 		MainWindow.AddChildView( Self )
 		
@@ -1944,19 +2002,19 @@ Class ParamsHintView Extends TextView
 		Local window:=sender.Window
 		
 		location=sender.TransformPointToView( location,window )
-		Local dy:=New Vec2i( 0,-10 )
+		'Local dy:=New Vec2i( 0,-10 )
 		
 		' fit into window area
-		Local size:=MeasureLayoutSize()
-		Local dx:=location.x+size.x-window.Bounds.Right
-		If dx>0
-			location=location-New Vec2i( dx,0 )
-		Endif
-		If location.y+size.y+dy.y>window.Bounds.Bottom
-			location=location-New Vec2i( 0,size.y )
-			dy=-dy
-		Endif
-		Offset=location+dy
+'		Local size:=MeasureLayoutSize()
+'		Local dx:=location.x+size.x-window.Bounds.Right
+'		If dx>0
+'			location=location-New Vec2i( dx,0 )
+'		Endif
+'		If location.y+size.y+dy.y>window.Bounds.Bottom
+'			location=location-New Vec2i( 0,size.y )
+'			'dy=-dy
+'		Endif
+		Offset=location'+dy
 		
 	End
 	
