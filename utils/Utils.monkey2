@@ -314,7 +314,9 @@ Function StripStarting:String( text:String,starts:String )
 	Return text.StartsWith( starts ) ? text.Slice( starts.Length ) Else text
 End
 
-Function GetIndentBeforePos_Mx2:String( line:String,pos:Int,withDots:Bool )
+#Rem monkeydocs Return ident and position in line where ident starts
+#End
+Function GetIndentBeforePos_Mx2:Tuple2<String,Int>( line:String,pos:Int,withDots:Bool )
 	
 	Local n:=pos-1
 	
@@ -339,10 +341,12 @@ Function GetIndentBeforePos_Mx2:String( line:String,pos:Int,withDots:Bool )
 	n+=1
 	
 	Local s:=""
+	Local starts:=-1
 	If n < pos
+		starts=n
 		s=line.Slice( n,pos ).Replace( "?.","." ).Replace( "->","." )
 	Endif
-	Return s
+	Return New Tuple2<String,Int>( s,starts )
 End
 
 Function IsPosInsideOfQuotes_Mx2:Bool( text:String,pos:Int )

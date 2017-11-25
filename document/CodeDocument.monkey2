@@ -122,7 +122,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	
 	Method OnThemeChanged() Override
 		
-		_doc.HideAutocomplete()
+		_doc.HideAllPopups()
 		
 		Super.OnThemeChanged()
 	End
@@ -1152,8 +1152,14 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Function HideAutocomplete()
-		
-		If AutoComplete AutoComplete.Hide()
+	
+		AutoComplete?.Hide()
+	End
+	
+	Function HideAllPopups()
+	
+		AutoComplete?.Hide()
+		ParamsHint?.Hide()
 	End
 	
 	Method GoBack()
@@ -1470,11 +1476,13 @@ Class CodeDocument Extends Ted2Document
 	
 	Method OnCursorChanged()
 		
+		' try to show hint for method parameters
+		
+		If Not Prefs.EditorShowParamsHint Return
+		
 		Global _storedPos:=-1,_storedIdent:=""
 		Global opts:=New ParserRequestOptions
 		Global results:=New Stack<CodeItem>
-		
-		' try to show hint for method parameters
 		
 		'If _codeView.CanCopy Print "can copy, exit" ; Return ' has selection
 		
@@ -1485,8 +1493,7 @@ Class CodeDocument Extends Ted2Document
 						lower.StartsWith( "operator " ) Or lower.StartsWith( "property " )
 		If Not skip
 			Local i1:=line.Find( "(" )
-			Local i2:=line.FindLast( ")" )
-			skip=(i1<0 Or i1>=pos Or i2<pos)
+			skip=(i1<0 Or i1>=pos)
 		Endif
 		If skip
 			ParamsHint?.Hide()
@@ -1497,45 +1504,70 @@ Class CodeDocument Extends Ted2Document
 		Local brackets:=0,quotes:=0
 		Local part:ParamsPart
 		Local parts:=New Stack<ParamsPart>
-		Local isNew:Bool
 		
 		For Local i:=0 Until pos
 			Local c:=line[i]
 			Select c
 				Case Chars.OPENED_ROUND_BRACKET
-					If quotes Mod 2 = 0
-						' skip spaces
-						Local j:=i-1
-						While j>=0 And line[j]<=32
-							j-=1
-						Wend
-						j+=1
+					
+					If quotes Mod 2 <> 0 Continue
+					
+					brackets+=1
+					' skip spaces
+					Local j:=i-1
+					While j>=0 And line[j]<=32
+						j-=1
+					Wend
+					j+=1
+					Local pair:=GetIndentBeforePos_Mx2( line,j,True )
+					Local ident:=pair.Item1
+					'Print "ident: "+ident'+", paramIndex: "+paramIndex+", isNew: "+isNew
+					If ident
 						part=New ParamsPart
 						parts.Add( part )
-						Local ident:=GetIndentBeforePos_Mx2( line,j,True )
-						'Print "ident: "+ident'+", paramIndex: "+paramIndex+", isNew: "+isNew
 						part.ident=ident
 						part.ranges=New Stack<Vec2i>
 						part.ranges.Add( New Vec2i( i,0 ) )
-						brackets+=1
+						
+						' check for 'New' keyword
+						j=pair.Item2-1 'where ident starts
+						While j>=0 And line[j]<=32
+							j-=1
+						Wend
+						'j+=1
+						Local s:=""
+						While j>=0 And IsAlpha( line[j] )
+							s=String.FromChar( line[j] )+s
+							j-=1
+						Wend
+						part.isNew=(s.ToLower()="new")
 					Endif
+					
 				Case Chars.CLOSED_ROUND_BRACKET
-					If quotes Mod 2 = 0
-						brackets-=1
+					
+					If quotes Mod 2 <> 0 Continue
+					
+					brackets-=1
+					If brackets>0 And brackets<parts.Length
 						part=parts[brackets-1]
 						Local r:=part.current
 						r.y=i
 						part.current=r
 					Endif
+					
 				Case Chars.DOUBLE_QUOTE
+					
 					quotes+=1
+					
 				Case Chars.SINGLE_QUOTE 'comment char
+					
 					If quotes Mod 2 = 0
 						Exit
 					Endif
+					
 				Case Chars.COMMA
-					If quotes Mod 2 = 0' And brackets=0
-						'paramIndex+=1
+					
+					If quotes Mod 2 = 0 And part<>Null
 						Local r:=part.current
 						r.y=i
 						part.current=r
@@ -1543,89 +1575,34 @@ Class CodeDocument Extends Ted2Document
 						part.ranges.Add( r )
 						part.index+=1
 					Endif
+					
 			End
 		Next
 		
-'		Print "parts: "+parts.Length
-'		For Local part:=Eachin parts
-'			Print " params: "+part.ranges.Length
-'			For Local r:=Eachin part.ranges
-'				Print "  range: "+r
-'			Next
-'		Next
+		If brackets<=0 Or 	' outside of brackets
+			part=Null 		' found brackets w/o idents - in expressions
+			
+			ParamsHint?.Hide()
+			_storedPos=-1
+			Return
+		Endif
 		
-		'If Not part Print "part is null" ; Return
-		
-'		Local bracketPos:=-1,startPos:=0
-'		'Local i:=isDecl ? -1 Else pos-1
-'		
-'		While i>=0
-'			Local c:=line[i]
-'			If c=Chars.CLOSED_ROUND_BRACKET
-'		
-'			Elseif c=Chars.OPENED_ROUND_BRACKET
-'				bracketPos=i
-'				startPos=0 'reset
-'			Elseif bracketPos<>-1 And (c=Chars.EQUALS Or c=Chars.COMMA Or c=Chars.SEMICOLON)
-'				startPos=i
-'				'Exit
-'			Endif
-'			i-=1
-'		Wend
-'		
-'		i=bracketPos+1
-'		Local brackets:=0,quotes:=0
-'		Local paramIndex:=0
-'		While i<pos
-'			Local c:=line[i]
-'			Select c
-'				Case Chars.OPENED_ROUND_BRACKET
-'					If quotes Mod 2 = 0
-'						brackets+=1
-'					Endif
-'				Case Chars.CLOSED_ROUND_BRACKET
-'					If quotes Mod 2 = 0
-'						brackets-=1
-'					Endif
-'				Case Chars.DOUBLE_QUOTE
-'					quotes+=1
-'				Case Chars.COMMA
-'					If quotes Mod 2 = 0 And brackets=0
-'						paramIndex+=1
-'					Endif
-'			End
-'			i+=1
-'		Wend
-'		If brackets<0
-'			Print "outside of params"
-'			ParamsHint?.Hide()
-'			_storedPos=-1
-'			Return
-'		Endif
-'		
-'		i=bracketPos
-'		Local s:="",isNew:=False
-'		While i>=0
-'			If line[i]<=32
-'				s=""
-'			Else
-'				s=String.FromChar( line[i] ).ToLower()+s
-'				If s="new"
-'					isNew=True
-'					Exit
-'				Endif
-'				
-'			Endif
-'			i-=1
-'		Wend
-'		
-'		Local ident:=GetIndentBeforePos_Mx2( line,bracketPos,True )
-'		Print "ident: "+ident+", paramIndex: "+paramIndex+", isNew: "+isNew
+		Local i:=brackets-1
+		While part And _codeView.Keywords.Contains( part.ident )
+			i-=1
+			If i>=0
+				part=parts[i]
+			Else
+				Return 'exit
+			Endif
+		Wend
 		
 		'If ident<>_storedIdent 'Or bracketPos<>_storedPos
 			
 			Local ident:=part.ident
 			Local paramIndex:=part.index
+			Local isNew:=part.isNew
+			
 			_storedIdent=ident
 			'_storedPos=bracketPos
 			
@@ -1635,14 +1612,12 @@ Class CodeDocument Extends Ted2Document
 			opts.docLineStr=line
 			opts.docPosInLine=pos
 			opts.results=results
-			'opts.usingsFilter=usings
 			
 			results.Clear()
 			
 			If isNew
 				
 				Local item:=_parser.GetItem( ident )
-				'Print "new case: "+item?.Text
 				If item Then _parser.GetConstructors( item,results )
 				
 			Else
@@ -1657,14 +1632,12 @@ Class CodeDocument Extends Ted2Document
 					If it.Current.Ident<>last
 						it.Erase()
 					Else
-						'Print "result: "+it.Current.Text
 						it.Bump()
 					Endif
 				Wend
 			Endif
 			
 			If results.Empty
-				'Print "have no results"
 				ParamsHint?.Hide()
 				_storedPos=-1
 				Return
@@ -1672,8 +1645,11 @@ Class CodeDocument Extends Ted2Document
 			
 			If Not ParamsHint Then ParamsHint=New ParamsHintView
 			
-			'Print "loc: "+_codeView.CursorRect.min
-			Local location:=_codeView.CursorRect.min-_codeView.Scroll
+			Local startPos:=_codeView.StartOfLineAtCursor+part.ranges[0].x
+			Local r:=_codeView.CharRect( startPos )
+			Local location:=r.min-_codeView.Scroll
+			location.x+=80*App.Theme.Scale.x
+			
 			ParamsHint.Show( results,location,_codeView )
 			
 		'Else
@@ -1688,6 +1664,7 @@ Class CodeDocument Extends Ted2Document
 		Field ident:String
 		Field ranges:=New Stack<Vec2i>
 		Field index:Int
+		Field isNew:Bool
 		
 		Property current:Vec2i()
 			Return ranges[index]

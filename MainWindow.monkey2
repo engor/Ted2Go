@@ -45,7 +45,7 @@ Class MainWindowInstance Extends Window
 		_docsManager.CurrentDocumentChanged+=Lambda()
 			
 			UpdateKeyView()
-			CodeDocument.HideAutocomplete()
+			CodeDocument.HideAllPopups()
 			
 			Local doc:=Cast<CodeTextView>( _docsManager.CurrentTextView )
 			Local mode:=doc ? doc.OverwriteMode Else False

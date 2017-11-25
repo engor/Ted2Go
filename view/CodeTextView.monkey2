@@ -93,7 +93,8 @@ Class CodeTextView Extends TextView
 	
 	Method IdentBeforeCursor:String( withDots:Bool=True )
 		
-		Return GetIndentBeforePos_Mx2( LineTextAtCursor,PosInLineAtCursor,withDots )
+		Local pair:=GetIndentBeforePos_Mx2( LineTextAtCursor,PosInLineAtCursor,withDots )
+		Return pair.Item1
 	End
 	
 	Property WordAtCursor:String()
@@ -217,6 +218,10 @@ Class CodeTextView Extends TextView
 	
 	Property PosInLineAtAnchor:Int()
 		Return Anchor-Document.StartOfLine( LineNumAtAnchor )
+	End
+	
+	Property StartOfLineAtCursor:Int()
+		Return Document.StartOfLine( LineNumAtCursor )
 	End
 	
 	Property CursorPos:Vec2i()
@@ -384,9 +389,6 @@ Class CodeTextView Extends TextView
 	Property Line:Int()
 		Return _line
 	End
-	
-	
-	Protected
 	
 	Method OnCut( wholeLine:Bool=False )
 	
