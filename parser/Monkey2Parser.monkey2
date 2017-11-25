@@ -254,6 +254,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				' alias
 				If kind = "alias"
 					_aliases.Add( ident,item )
+					item.isAlias=True
 				End
 				
 			Endif
@@ -363,12 +364,42 @@ Class Monkey2Parser Extends CodeParserPlugin
 		For Local i:=Eachin Items
 			If i.Ident=ident Return i
 		Next
+		For Local i:=Eachin _aliases.Values
+			If i.Ident=ident Return i
+		Next
 		Return Null
 	End
 	
 	Method GetItemsForAutocomplete( options:ParserRequestOptions )
 		
 		GetItemsInternal( options )
+	End
+	
+	Method GetConstructors( item:CodeItem,target:Stack<CodeItem> )
+		
+		If item.isAlias
+			Local type:=item.Type?.ident
+			item=Self[type]
+			If Not item Return
+		Endif
+		
+		If Not item.IsLikeClass Print "not a class" ; Return
+		
+		If item.Children
+			For Local i:=Eachin item.Children
+		
+				If i.Ident.ToLower()="new"
+					target+=i
+				Endif
+			Next
+		Endif
+		
+'		If _superTypes
+'			For Local i:=Eachin _superTypes
+'		
+'			Next
+'		Endif
+		
 	End
 	
 	
@@ -1213,25 +1244,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Method IsPosInsideOfQuotes:Bool( text:String,pos:Int )
 	
-		Local i:=0
-		Local n:=text.Length
-		if pos = 0 Return False
-		Local quoteCounter:=0
-		While i < n
-			Local c:=text[i]
-			If i = pos
-				If quoteCounter Mod 2 = 0 'not inside of string
-					Return False
-				Else 'inside
-					Return True
-				Endif 
-			Endif
-			If c = Chars.DOUBLE_QUOTE
-				quoteCounter+=1
-			Endif
-			i+=1
-		Wend
-		Return (quoteCounter Mod 2 <> 0)
+		Return IsPosInsideOfQuotes_Mx2( text,pos )
 	End
 	
 	Method RemovePrevious( path:String )
@@ -1258,6 +1271,7 @@ Struct Chars
 	Const SINGLE_QUOTE:="'"[0] '39
 	Const DOUBLE_QUOTE:="~q"[0] '34
 	Const COMMA:=","[0] '44
+	Const SEMICOLON:=";"[0]
 	Const DOT:="."[0] '46
 	Const EQUALS:="="[0] '61
 	Const LESS_BRACKET:="<"[0] '60
