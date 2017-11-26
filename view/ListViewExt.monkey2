@@ -216,9 +216,10 @@ Class ListViewExt Extends ScrollableView
 			Local d:=(firstVisLine-_selIndex)*_lineH
 			Scroll-=New Vec2i( 0,d )
 		Elseif _selIndex >= lastVisLine
-			Local d:=(lastVisLine-_selIndex)*_lineH
+			Local d:=(lastVisLine-_selIndex)*_lineH - _dh
 			Scroll-=New Vec2i( 0,d )
 		Endif
+		
 	End
 
 	Method OnRender( canvas:Canvas ) Override
@@ -258,6 +259,14 @@ Class ListViewExt Extends ScrollableView
 		_width=w
 		
 		Local h:=_items.Length*_lineH
+		
+		_dh=0
+		Local maxH:=Min( _visibleCount*_lineH,MaxSize.y )
+		If h>maxH 'has scroll
+			_dh=20*App.Theme.Scale.y '+20 for scrollbar
+			h+=_dh
+		Endif
+		
 		_height=h
 		
 		Return New Vec2i( w,h )
@@ -276,7 +285,7 @@ Class ListViewExt Extends ScrollableView
 		Endif
 		If sx Then h+=_lineH
 		
-		Return New Vec2i( w,h ) '+20 for scrollbar
+		Return New Vec2i( w,h )
 	End
 	
 	Method OnContentMouseEvent( event:MouseEvent ) Override
@@ -326,5 +335,6 @@ Class ListViewExt Extends ScrollableView
 	Field _selColor:Color,_hoverColor:Color
 	Field _width:Int,_height:Int
 	Field _moveCyclic:Bool
+	Field _dh:Float
 	
 End
