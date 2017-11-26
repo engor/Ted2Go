@@ -1985,11 +1985,12 @@ Class ParamsHintView Extends TextView
 		OnThemeChanged()
 	End
 	
-	Method Show( items:Stack<CodeItem>,location:Vec2i,sender:View )
+	Method Show( items:Stack<CodeItem>,location:Vec2i,sender:CodeTextView )
 		
 		Hide()
 		
 		_items=items
+		_sender=sender
 		
 		Local s:=""
 		For Local i:=Eachin _items
@@ -2039,6 +2040,7 @@ Class ParamsHintView Extends TextView
 	Field _items:Stack<CodeItem>
 	Field _paramIndex:Int
 	Field _color1:Color,_color2:Color
+	Field _sender:CodeTextView
 	
 	Method OnRenderContent( canvas:Canvas ) Override
 		
@@ -2086,9 +2088,23 @@ Class ParamsHintView Extends TextView
 	Method OnContentMouseEvent( event:MouseEvent ) Override
 		
 		If event.Type=EventType.MouseDown
+			
+'			Print App.MouseLocation
+'			Local me:=New MouseEvent( event.Type,_sender,App.MouseLocation,event.Button,event.Wheel,event.Modifiers,event.Clicks )
+'			CodeTextView_Bridge.OnContentMouseEvent( _sender,me )
+			
 			Hide()
 		Endif
 		
 	End
 	
 End
+
+'Class CodeTextView_Bridge Extends CodeTextView Final
+'	
+'	Function OnContentMouseEvent( view:CodeTextView,event:MouseEvent )
+'		
+'		view.OnContentMouseEvent( event )
+'	End
+'	
+'End
