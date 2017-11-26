@@ -1328,7 +1328,7 @@ Class CodeDocument Extends Ted2Document
 	
 	Method OnSave:Bool() Override
 	
-		ResetErrors()
+		'ResetErrors()
 		
 		Local text:=_doc.Text
 		
