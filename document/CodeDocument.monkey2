@@ -2083,4 +2083,12 @@ Class ParamsHintView Extends TextView
 		_color2=App.Theme.GetColor( "params-hint-selected" )
 	End
 	
+	Method OnContentMouseEvent( event:MouseEvent ) Override
+		
+		If event.Type=EventType.MouseDown
+			Hide()
+		Endif
+		
+	End
+	
 End
