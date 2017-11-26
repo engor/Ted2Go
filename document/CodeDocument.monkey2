@@ -217,9 +217,9 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						
 					Endif
 				
-				Case Key.F11
-				
-					ShowJsonDialog()
+				'Case Key.F11
+				'
+				'	ShowJsonDialog()
 					
 					
 				#If __TARGET__="windows"

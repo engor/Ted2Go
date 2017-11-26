@@ -370,7 +370,13 @@ Class MainWindowInstance Extends Window
 		_windowMenu.AddAction( _docsManager.nextDocument )
 		_windowMenu.AddAction( _docsManager.prevDocument )
 		_windowMenu.AddSeparator()
-		
+		Local fullscreen:=New Action( "Fullscreen mode" )
+		fullscreen.HotKey=Key.F11
+		fullscreen.Triggered=Lambda()
+			Fullscreen=Not Fullscreen
+		End
+		_windowMenu.AddAction( fullscreen )
+		_windowMenu.AddSeparator()
 		_themesMenu=CreateThemesMenu( "Themes" )
 		
 		AddZoomActions( _windowMenu )
