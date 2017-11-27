@@ -177,7 +177,7 @@ Class Ted2DocumentType Extends Plugin
 		
 		For Local type:=Eachin types
 		
-			For Local ext2:=Eachin type.Extensions	'Array.Contains() would be nice!
+			For Local ext2:=Eachin type.Extensions
 			
 				If ext=ext2 Return type
 				If ext2 = ".*" Then defaultType = type
@@ -204,25 +204,23 @@ Class Ted2DocumentType Extends Plugin
 	
 	Property Extensions:String[]()
 	
-		Return _exts
+		Return _exts.ToArray()
 	
 	Setter( exts:String[] )
 	
-		_exts=exts
+		_exts.Clear()
+		_exts.AddAll( exts )
 	End
 	
 	Method AddExtensions( exts:String[] )
-		If _exts = Null
-			_exts=exts
-			Return
-		Endif
-		' check  for duplicates here?
-		Local arr:=New String[_exts.Length+exts.Length]
-		_exts.CopyTo( arr,0,0,_exts.Length )
-		exts.CopyTo( arr,0,_exts.Length,exts.Length )
-		_exts=arr
-	End
 		
+		For Local ext:=Eachin exts
+			If Not _exts.Contains( ext )
+				_exts.Add( ext )
+			Endif
+		Next
+	End
+	
 	Method OnCreateDocument:Ted2Document( path:String ) Virtual
 	
 		Return Null	'should return hex editor!
@@ -230,7 +228,7 @@ Class Ted2DocumentType Extends Plugin
 
 	Private
 	
-	Field _exts:String[]
+	Field _exts:=New StringStack
 	
 	
 End

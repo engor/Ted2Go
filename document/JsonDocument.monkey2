@@ -7,9 +7,9 @@ Class JsonDocument Extends Ted2Document
 	Method New( path:String )
 		Super.New( path )
 		
-		_doc=New TextDocument
+		_view=New JsonDocumentView( Self )
 		
-		_view=New TextView( _doc )
+		_doc=_view.Document
 		
 		_browser=New JsonTreeView
 
@@ -59,7 +59,7 @@ Class JsonDocument Extends Ted2Document
 	
 	Field _doc:TextDocument
 	
-	Field _view:TextView
+	Field _view:JsonDocumentView
 	
 	Field _browser:JsonTreeView
 End
@@ -82,5 +82,17 @@ Class JsonDocumentType Extends Ted2DocumentType
 	Private
 	
 	Global _instance:=New JsonDocumentType
+	
+End
+
+Class JsonDocumentView Extends Ted2CodeTextView
+	
+	Method New( doc:Ted2Document )
+		
+		'very important to set FileType for init
+		'formatter, highlighter and keywords
+		FileType=doc.FileExtension
+		FilePath=doc.Path
+	End
 	
 End

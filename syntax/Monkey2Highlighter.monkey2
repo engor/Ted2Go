@@ -15,7 +15,7 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 	
 	Method New()
 		Super.New()
-		_types=New String[](".monkey2")
+		_types=New String[]( ".monkey2",".json" )
 		_hl=New Highlighter
 		_hl.Painter=HL
 	End

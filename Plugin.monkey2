@@ -53,7 +53,7 @@ Class PluginDependsOnFileType Extends Plugin Implements IDependsOnFileType
 	End
 	
 	Method New()
-		_types = New String[]("*")
+		_types=New String[]( "*" )
 	End
 	
 	Method GetFileTypes:String[]() Virtual
