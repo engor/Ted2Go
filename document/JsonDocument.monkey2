@@ -85,6 +85,10 @@ Class JsonDocument Extends Ted2Document
 		
 		Local nodes:=New Stack<TreeView.Node>
 		While node And node.Text.Contains( ":" )
+			If node.Text.Contains( ":[" )
+				' skip array indexing nodes
+				nodes.Erase( 0 )
+			Endif
 			nodes.Insert( 0,node )
 			node=node.Parent
 		Wend
