@@ -374,6 +374,36 @@ Class MainWindowInstance Extends Window
 		fullscreen.HotKey=Key.F11
 		fullscreen.Triggered=Lambda()
 			Fullscreen=Not Fullscreen
+			'little mod
+			If Fullscreen
+					Local dock:TabViewExt
+			
+					dock=_tabsWrap.docks["left"]
+					If dock.NumTabs>0 Then dock.Visible=False
+			
+					dock=_tabsWrap.docks["right"]
+					If dock.NumTabs>0 Then dock.Visible=False
+			
+					dock=_tabsWrap.docks["bottom"]
+					If dock.NumTabs>0 Then dock.Visible=False
+			
+					_toolBar.Visible=False
+			
+				Else
+			
+					Local dock:TabViewExt
+			
+					dock=_tabsWrap.docks["left"]
+					If dock.NumTabs>0 Then dock.Visible=True
+			
+					dock=_tabsWrap.docks["right"]
+					If dock.NumTabs>0 Then dock.Visible=True
+			
+					dock=_tabsWrap.docks["bottom"]
+					If dock.NumTabs>0 Then dock.Visible=True
+			
+					_toolBar.Visible=True
+				End
 		End
 		_windowMenu.AddAction( fullscreen )
 		_windowMenu.AddSeparator()
