@@ -263,6 +263,11 @@ Class Stack<T> Extension
 		Self.Remove( item )
 	End
 	
+	Operator+=( items:T[] )
+	
+		Self.AddAll( items )
+	End
+	
 End
 
 
@@ -281,4 +286,88 @@ Struct Recti Extension
 		Self.Origin=Self.Origin+New Vec2i( dx,dy )
 		Self.Size=size
 	End
+End
+
+
+Function TypeName<T>:String( obj:T ) Where T Extends Object
+	
+	Return obj ? String.FromCString( obj.typeName() ) Else Null
+End
+
+Function FindViewInHierarchy<T>:T( view:View ) Where T Extends View
+	
+	While view
+		Local r:=Cast<T>( view )
+		If r Return r
+		view=view.Parent
+	Wend
+	Return Null
+End
+
+Function StripEnding:String( text:String,ends:String )
+	
+	Return text.EndsWith( ends ) ? text.Slice( 0,text.Length-ends.Length ) Else text
+End
+
+Function StripStarting:String( text:String,starts:String )
+	
+	Return text.StartsWith( starts ) ? text.Slice( starts.Length ) Else text
+End
+
+#Rem monkeydocs Return ident and position in line where ident starts
+#End
+Function GetIndentBeforePos_Mx2:Tuple2<String,Int>( line:String,pos:Int,withDots:Bool )
+	
+	Local n:=pos-1
+	
+	While n >= 0
+	
+		Local more:=(line[n]=Chars.MORE_BRACKET)
+	
+		If line[n] = Chars.DOT Or more ' . | ?. | ->
+			If Not withDots Exit
+			If more
+				If n>0 And line[n-1]<>"-"[0] Exit
+				n-=1 ' skip '-'
+			Else
+				If n>0 And line[n-1]="?"[0] Then n-=1 ' skip '?'
+			Endif
+		ElseIf Not (IsIdent( line[n] ) Or line[n] = Chars.GRID) ' #
+			Exit
+		Endif
+	
+		n-=1
+	Wend
+	n+=1
+	
+	Local s:=""
+	Local starts:=-1
+	If n < pos
+		starts=n
+		s=line.Slice( n,pos ).Replace( "?.","." ).Replace( "->","." )
+	Endif
+	Return New Tuple2<String,Int>( s,starts )
+End
+
+Function IsPosInsideOfQuotes_Mx2:Bool( text:String,pos:Int )
+
+	Local i:=0
+	Local n:=text.Length
+	If pos=0 Return False
+	Local quoteCounter:=0
+	While i < n
+		Local c:=text[i]
+		If i = pos
+			If quoteCounter Mod 2 = 0 'not inside of string
+				Return False
+			Else 'inside
+				Return True
+			Endif 
+		Endif
+		If c = Chars.DOUBLE_QUOTE
+			quoteCounter+=1
+		Endif
+		i+=1
+	Wend
+	Return (quoteCounter Mod 2 <> 0)
 End

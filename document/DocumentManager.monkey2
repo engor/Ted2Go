@@ -91,6 +91,16 @@ Class DocumentManager
 		Return _openDocs.ToArray()
 	End
 	
+	Method IsDocumentOpened:Bool( path:String )
+		
+		For Local i:=Eachin _openDocs
+			
+			If i.Path=path Return True
+		Next
+		
+		Return False
+	End
+	
 	Method OpenDocument:Ted2Document( path:String,makeCurrent:Bool=False,openByHand:Bool=True )
 	
 		path=RealPath( path )
@@ -110,10 +120,17 @@ Class DocumentManager
 		If Not doc.Load() Return Null
 
 		InitDoc( doc )
-	
-		_openDocs.Add( doc )
+		
 		Local addAtBegin:=(openByHand And Prefs.MainPlaceDocsAtBegin)
+		
+		If addAtBegin
+			_openDocs.Insert( 0,doc )
+		Else
+			_openDocs.Add( doc )
+		Endif
+		
 		Local tab:=_tabView.AddTab( TabText( doc ),doc.View,False,addAtBegin )
+		
 		tab.DoubleClicked+=Lambda()
 			DocumentDoubleClicked( doc )
 		End
@@ -246,6 +263,7 @@ Class DocumentManager
 	End
 
 	Method Update()
+		
 		nextDocument.Enabled=_openDocs.Length>1
 		prevDocument.Enabled=_openDocs.Length>1
 	End

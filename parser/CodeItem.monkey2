@@ -35,6 +35,7 @@ End
 Class CodeItem
 	
 	Field nspace:NSpace
+	Field isAlias:=False
 	
 	Method New( ident:String )
 		_ident=ident

@@ -1,12 +1,8 @@
-Namespace myapp
+Namespace myapp3d
 
 #Import "<std>"
 #Import "<mojo>"
 #Import "<mojo3d>"
-
-#Import "assets/"
-
-#Import "util"
 
 Using std..
 Using mojo..
@@ -42,6 +38,7 @@ Class MyWindow Extends Window
 		_camera.Near=.1
 		_camera.Far=100
 		_camera.Move( 0,10,-10 )
+		_camera.AddComponent<FlyBehaviour>()
 		
 		'create light
 		'
@@ -61,11 +58,13 @@ Class MyWindow Extends Window
 	
 		RequestRender()
 		
+		If Keyboard.KeyHit( Key.Escape ) App.Terminate()
+		
 		If Keyboard.KeyHit( Key.Space ) _donut.Visible=Not _donut.Visible
 		
 		_donut.Rotate( .2,.4,.6 )
 		
-		util.Fly( _camera,Self )
+		_scene.Update()
 		
 		_scene.Render( canvas,_camera )
 		

@@ -38,6 +38,7 @@ Class PrefsInstance
 	Field EditorAutoIndent:=True
 	Field EditorAutoPairs:=True
 	Field EditorSurroundSelection:=True
+	Field EditorShowParamsHint:=True
 	'
 	Field SourceSortByType:=True
 	Field SourceShowInherited:=False
@@ -106,6 +107,7 @@ Class PrefsInstance
 			EditorAutoIndent=Json_GetBool( j2,"autoIndent",EditorAutoIndent )
 			EditorAutoPairs=Json_GetBool( j2,"autoPairs",EditorAutoPairs )
 			EditorSurroundSelection=Json_GetBool( j2,"surroundSelection",EditorSurroundSelection )
+			EditorShowParamsHint=Json_GetBool( j2,"showParamsHint",EditorShowParamsHint )
 			
 		Endif
 		
@@ -165,6 +167,7 @@ Class PrefsInstance
 		j["autoIndent"]=New JsonBool( EditorAutoIndent )
 		j["autoPairs"]=New JsonBool( EditorAutoPairs )
 		j["surroundSelection"]=New JsonBool( EditorSurroundSelection )
+		j["showParamsHint"]=New JsonBool( EditorShowParamsHint )
 		
 		j=New JsonObject
 		json["source"]=j

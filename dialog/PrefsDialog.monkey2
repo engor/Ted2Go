@@ -79,6 +79,7 @@ Class PrefsDialog Extends DialogExt
 	Field _editorAutoIndent:CheckButton
 	Field _editorAutoPairs:CheckButton
 	Field _editorSurround:CheckButton
+	Field _editorShowParamsHint:CheckButton
 	
 	Field _mainToolBarVisible:CheckButton
 	Field _mainProjectIcons:CheckButton
@@ -123,6 +124,7 @@ Class PrefsDialog Extends DialogExt
 		Prefs.EditorAutoIndent=_editorAutoIndent.Checked
 		Prefs.EditorAutoPairs=_editorAutoPairs.Checked
 		Prefs.EditorSurroundSelection=_editorSurround.Checked
+		Prefs.EditorShowParamsHint=_editorShowParamsHint.Checked
 		
 		Prefs.MainToolBarVisible=_mainToolBarVisible.Checked
 		Prefs.MainProjectIcons=_mainProjectIcons.Checked
@@ -229,6 +231,9 @@ Class PrefsDialog Extends DialogExt
 		_editorSurround=New CheckButton( "Surround selected text with ~q~q, (), []" )
 		_editorSurround.Checked=Prefs.EditorSurroundSelection
 		
+		_editorShowParamsHint=New CheckButton( "Show parameters hint" )
+		_editorShowParamsHint.Checked=Prefs.EditorShowParamsHint
+		
 		Local path:=Prefs.EditorFontPath
 		If Not path Then path=_defaultFont
 		_editorFontPath=New TextFieldExt( "" )
@@ -281,6 +286,7 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( _editorAutoIndent,"top" )
 		docker.AddView( _editorAutoPairs,"top" )
 		docker.AddView( _editorSurround,"top" )
+		docker.AddView( _editorShowParamsHint,"top" )
 		docker.AddView( New Label( " " ),"top" )
 		
 		Return docker

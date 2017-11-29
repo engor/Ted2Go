@@ -15,7 +15,7 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 	
 	Method New()
 		Super.New()
-		_types=New String[](".monkey2")
+		_types=New String[]( ".monkey2",".json" )
 		_hl=New Highlighter
 		_hl.Painter=HL
 	End
@@ -121,7 +121,7 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 				If preproc And istart=sol
 				
 					Select id.ToLower()
-					Case "rem"				
+					Case "rem"
 						cnest+=1
 					Case "end"
 						cnest=Max( cnest-1,-1 )

@@ -12,6 +12,7 @@ Class CodeTextView Extends TextView
 	Field TextChanged:Void()
 	
 	Method New()
+		
 		Super.New()
 		
 		CursorBlinkRate=2.5
@@ -92,36 +93,8 @@ Class CodeTextView Extends TextView
 	
 	Method IdentBeforeCursor:String( withDots:Bool=True )
 		
-		Local text:=Text
-		Local cur:=Cursor
-		Local n:=Cursor-1
-		Local start:=Document.StartOfLine( Document.FindLine( Cursor ) )
-		
-		While n >= start
-			
-			Local more:=(text[n]=Chars.MORE_BRACKET)
-			
-			If text[n] = Chars.DOT Or more ' . | ?. | ->
-				If Not withDots Exit
-				If more
-					If n>0 And text[n-1]<>"-"[0] Exit
-					n-=1 ' skip '-'
-				Else
-					If n>0 And text[n-1]="?"[0] Then n-=1 ' skip '?'
-				Endif
-			ElseIf Not (IsIdent( text[n] ) Or text[n] = Chars.GRID) ' #
-				Exit
-			Endif
-			
-			n-=1
-		Wend
-		n+=1
-		
-		Local s:=""
-		If n < cur
-			s=text.Slice( n,cur ).Replace( "?.","." ).Replace( "->","." )
-		Endif
-		Return s
+		Local pair:=GetIndentBeforePos_Mx2( LineTextAtCursor,PosInLineAtCursor,withDots )
+		Return pair.Item1
 	End
 	
 	Property WordAtCursor:String()
@@ -245,6 +218,10 @@ Class CodeTextView Extends TextView
 	
 	Property PosInLineAtAnchor:Int()
 		Return Anchor-Document.StartOfLine( LineNumAtAnchor )
+	End
+	
+	Property StartOfLineAtCursor:Int()
+		Return Document.StartOfLine( LineNumAtCursor )
 	End
 	
 	Property CursorPos:Vec2i()
@@ -413,9 +390,6 @@ Class CodeTextView Extends TextView
 		Return _line
 	End
 	
-	
-	Protected
-	
 	Method OnCut( wholeLine:Bool=False )
 	
 		If wholeLine
@@ -573,11 +547,12 @@ Class CodeTextView Extends TextView
 	Method OnThemeChanged() Override
 		
 		Super.OnThemeChanged()
+		
 		UpdateThemeColors()
 	End
 	
 	Method UpdateThemeColors() Virtual
-	
+		
 		_whitespacesColor=App.Theme.GetColor( "textview-whitespaces" )
 		_extraSelColor=App.Theme.GetColor( "textview-extra-selection" )
 	End

@@ -45,13 +45,18 @@ Class MainWindowInstance Extends Window
 		_docsManager.CurrentDocumentChanged+=Lambda()
 			
 			UpdateKeyView()
-			CodeDocument.HideAutocomplete()
+			CodeDocument.HideAllPopups()
 			
 			Local doc:=Cast<CodeTextView>( _docsManager.CurrentTextView )
 			Local mode:=doc ? doc.OverwriteMode Else False
 			OverwriteTextMode=mode
 			
 			_findReplaceView.CodeView=Cast<CodeTextView>( _docsManager.CurrentTextView )
+			
+			If _fullscreenState=FullscreenState.Editor
+				SwapFullscreenEditor( False,1 )
+			Endif
+			
 		End
 		
 		_docsManager.DocumentDoubleClicked+=Lambda( doc:Ted2Document )
@@ -366,15 +371,19 @@ Class MainWindowInstance Extends Window
 		
 		'Window menu
 		'
+		Local windowActions:=New WindowActions( _docsManager )
 		_windowMenu=New MenuExt( "Window" )
-		_windowMenu.AddAction( _docsManager.nextDocument )
-		_windowMenu.AddAction( _docsManager.prevDocument )
+		_windowMenu.AddAction( windowActions.nextTab )
+		_windowMenu.AddAction( windowActions.prevTab )
 		_windowMenu.AddSeparator()
-		
+		_windowMenu.AddAction( windowActions.fullscreenWindow )
+		_windowMenu.AddAction( windowActions.fullscreenEditor )
+		_windowMenu.AddSeparator()
+		_windowMenu.AddAction( windowActions.zoomIn )
+		_windowMenu.AddAction( windowActions.zoomOut )
+		_windowMenu.AddAction( windowActions.zoomDefault )
+		_windowMenu.AddSeparator()
 		_themesMenu=CreateThemesMenu( "Themes" )
-		
-		AddZoomActions( _windowMenu )
-		_windowMenu.AddSeparator()
 		_windowMenu.AddSubMenu( _themesMenu )
 		
 		
@@ -425,8 +434,10 @@ Class MainWindowInstance Extends Window
 		
 		ArrangeElements()
 		
+		'_helpTree.QuickHelp( "" )
+		
 		ContentView=_contentView
-
+		
 		OnCreatePlugins() 'init plugins before loadstate, to register doctypes before open last opened files
 		
 		LoadState( jobj )
@@ -592,6 +603,7 @@ Class MainWindowInstance Extends Window
 	Method Terminate()
 		
 		_isTerminating=True
+		
 		SaveState()
 		_enableSaving=False
 		OnForceStop() ' kill build process if started
@@ -663,6 +675,78 @@ Class MainWindowInstance Extends Window
 		_mx2cc=RealPath( _mx2cc )
 		
 		_modsDir=RealPath( "modules/" )
+	End
+	
+	Method SwapFullscreenWindow()
+		
+		If _fullscreenState=2
+			SwapFullscreenEditor()
+			Return
+		Endif
+		
+		_storedSize=Frame
+		
+		Fullscreen=Not Fullscreen
+		
+		_fullscreenState=Fullscreen ? FullscreenState.Window Else FullscreenState.None
+	End
+	
+	' customState: -1 - make windowed, 1 - make fullscreen
+	'
+	Method SwapFullscreenEditor( justStarted:Bool=False,customState:Int=0 )
+		
+		If Not justStarted And _docsManager.CurrentDocument=Null
+			Alert( "There is no editor to be fullscreened!","Fullscreen" )
+			Return
+		Endif
+		
+		_storedSize=Frame
+		
+		Local state:=Not Fullscreen
+		If customState<>0 Then state=customState>0 ? True Else False
+		
+		If _fullscreenState<>FullscreenState.Window Then Fullscreen=state
+		
+		_fullscreenState=Fullscreen ? FullscreenState.Editor Else FullscreenState.None
+		
+		Global _storedContentView:View=Null,_storedTabIndex:Int
+		Global _editorContainer:DockingView=Null
+		Global _label:Label
+		If _editorContainer=Null
+			_editorContainer=New DockingView
+			_label=New Label
+			_label.Gravity=New Vec2f( .5,0 )
+			_label.Layout="float"
+			_editorContainer.AddView( _label,"top" )
+		Endif
+		
+		If _storedContentView<>Null
+			Local view:=_editorContainer.ContentView
+			view.Layout="fill"
+			_editorContainer.ContentView=Null
+			ContentView=_storedContentView
+			_docsTabView.SetTabView( _storedTabIndex,view )
+			_docsTabView.EnsureVisibleCurrentTab()
+			_storedContentView=Null
+		Endif
+		
+		If Fullscreen
+			_storedContentView=ContentView
+			_storedTabIndex=_docsTabView.CurrentIndex
+			_docsTabView.SetTabView( _storedTabIndex,Null )
+			Local view:=_docsManager.CurrentView
+			view.Layout="fill-y"
+			view.Gravity=New Vec2f( .5,0 )
+			Local sz:=New Vec2i( Min( Width,Int(App.DesktopSize.x*.7) ),100000 )
+			view.MaxSize=sz
+			view.MinSize=sz
+			_editorContainer.ContentView=view
+			_label.Text=_docsManager.CurrentDocument.Path
+			ContentView=_editorContainer
+			
+			_docsManager.CurrentTextView?.MakeKeyView()
+			
+		Endif
 	End
 	
 	Method StoreConsoleVisibility()
@@ -853,31 +937,31 @@ Class MainWindowInstance Extends Window
 		
 		Local tab:=_tabsWrap.tabs["Build"]
 		tab.Activate()
-		If vis tab.ParentDock.Visible=True
+		If vis tab.CurrentHolder.Visible=True
 	End
 	
 	Method ShowOutputConsole( vis:Bool=True )
 		
 		Local tab:=_tabsWrap.tabs["Output"]
 		tab.Activate()
-		If vis tab.ParentDock.Visible=True
+		If vis tab.CurrentHolder.Visible=True
 	End
 	
 	Method ShowHelpView()
 		
 		Local tab:=_tabsWrap.tabs["Docs"]
 		tab.Activate()
-		tab.ParentDock.Visible=True
+		tab.CurrentHolder.Visible=True
 	End
 	
 	Method ShowFindResults()
 		
 		Local tab:=_tabsWrap.tabs["Find"]
 		tab.Activate()
-		tab.ParentDock.Visible=True
+		tab.CurrentHolder.Visible=True
 	End
 	
-	Method ShowFindInDocs()
+	Method ShowFindInDocs( setFocus:Bool=True )
 		
 		Local doc:=Cast<CodeDocumentView>( _docsManager.CurrentTextView )
 		If Not doc Return
@@ -888,6 +972,13 @@ Class MainWindowInstance Extends Window
 		_helpTree.Visible=False
 		_helpSwitcher.Clicked()
 		_tabsWrap.tabs["Docs"].Activate()
+		
+		If setFocus Then _helpTree.RequestFocus()
+	End
+	
+	Method RebuildDocs()
+		
+		_buildActions.rebuildHelp.Trigger()
 	End
 	
 	Method ShowQuickHelp()
@@ -919,22 +1010,26 @@ Class MainWindowInstance Extends Window
 			ident+=item.Ident
 			
 			If ident=_helpIdent
+				
 				If item.IsModuleMember
-					Local url:=_helpTree.PageUrl( ident )
-					If GetFileType( url )<>FileType.File Then url=_helpTree.PageUrl( ident2 )
 					
-					If GetFileType( url )<>FileType.File
-						Local ext:=ExtractExt( url )
-						Repeat
-							Local i:=url.FindLast( "-" )
-							If i=-1
-								url=""
-								Exit
-							Endif
-							url=url.Slice( 0,i )+ext
-						Forever
-					Endif
-					If url ShowHelp( url )
+					ShowFindInDocs( False )
+					
+'					Local url:=_helpTree.PageUrl( ident )
+'					If GetFileType( url )<>FileType.File Then url=_helpTree.PageUrl( ident2 )
+'					
+'					If GetFileType( url )<>FileType.File
+'						Local ext:=ExtractExt( url )
+'						Repeat
+'							Local i:=url.FindLast( "-" )
+'							If i=-1
+'								url=""
+'								Exit
+'							Endif
+'							url=url.Slice( 0,i )+ext
+'						Forever
+'					Endif
+'					If url ShowHelp( url )
 				Else
 					GotoCodePosition( item.FilePath,item.ScopeStartPos )
 				Endif
@@ -984,18 +1079,22 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Method UpdateHelpTree()
-		_helpTree.Update()
+		
+		_helpTree.Update( True )
 	End
 	
 	Method ShowBananasShowcase()
+		
 		OpenDocument( Prefs.MonkeyRootPath+"bananas/ted2go-showcase/all.bananas" )
 	End
 	
 	Method ReadError( path:String )
+		
 		Alert( "I/O Error reading file '"+path+"'" )
 	End
 	
 	Method WriteError( path:String )
+		
 		Alert( "I/O Error writing file '"+path+"'" )
 	End
 
@@ -1053,12 +1152,16 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Method SaveState()
-	
+		
 		If Not _enableSaving Return
-
+		
 		Local jobj:=New JsonObject
 		
-		jobj["windowRect"]=ToJson( Frame )
+		Local state:=_fullscreenState
+		If state=FullscreenState.None Then _storedSize=Frame
+		
+		jobj["windowRect"]=ToJson( _storedSize )
+		jobj["windowState"]=New JsonNumber( Int(state) )
 		
 		SaveTabsState( jobj )
 		
@@ -1150,11 +1253,14 @@ Class MainWindowInstance Extends Window
 	
 	Method OnFileDropped( path:String )
 		
-		If FileExists( path )
-			_docsManager.OpenDocument( path,True )
-		Else
-			_projectView.OpenProject( path )
-		Endif
+		New Fiber( Lambda()
+			
+			Local ok:=_projectView.OnFileDropped( path )
+			If Not ok And FileExists( path ) 'file
+				_docsManager.OpenDocument( path,True )
+			Endif
+			
+		End )
 	End
 	
 	Method OnAppClose()
@@ -1248,7 +1354,7 @@ Class MainWindowInstance Extends Window
 				mentionStr+=message.fromUser+" in "
 				mentionStr+=container.name
 				
-				Local dock:=_tabsWrap.tabs["Chat"].ParentDock '_tabsWrap.docks["bottom"]
+				Local dock:=_tabsWrap.tabs["Chat"].CurrentHolder '_tabsWrap.docks["bottom"]
 				ShowHint( mentionStr, New Vec2i( 0, -GetStyle( "Hint" ).Font.Height*4 ), dock, 20000 )
 				
 			Endif
@@ -1328,23 +1434,22 @@ Class MainWindowInstance Extends Window
 		
 		_contentView.ContentView=_docsTabView
 		
-		
 	End
 	
 	Method LoadTabsState( jobj:JsonObject )
 		
 		Global places:=New StringMap<StringStack>
 		' defaults
-		Local s:=""
-		places["left"]=New StringStack
-		s="Project,Source,Debug,Help"
+		Local s:="Source"
+		places["left"]=New StringStack( s.Split( "," ) )
+		s="Project,Debug"
 		places["right"]=New StringStack( s.Split( "," ) )
 		s="Build,Output,Docs,Find,Chat"
 		places["bottom"]=New StringStack( s.Split( "," ) )
 		
 		Global actives:=New StringMap<String>
 		' defaults
-		actives["left"]="Project"
+		actives["left"]="Source"
 		actives["right"]="Project"
 		actives["bottom"]="Docs"
 		
@@ -1417,7 +1522,7 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Method LoadState( jobj:JsonObject )
-	
+		
 		LoadTabsState( jobj )
 		
 		If jobj.Contains( "docsTab" )
@@ -1448,8 +1553,8 @@ Class MainWindowInstance Extends Window
 		If jobj.Contains( "theme" ) ThemeName=jobj.GetString( "theme" )
 		
 		If jobj.Contains( "themeScale" )
-			_themeScale=jobj.GetNumber( "themeScale" )
-			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
+			Local sc:=jobj.GetNumber( "themeScale" )
+			App.Theme.Scale=New Vec2f( sc )
 		Endif
 		
 		If jobj.Contains( "mx2ccDir" )
@@ -1469,8 +1574,16 @@ Class MainWindowInstance Extends Window
 			UpdateRecentFilesMenu()
 			UpdateRecentProjectsMenu()
 			UpdateCloseProjectMenu()
-
+			
 			DeleteTmps()
+			
+			' enter fullscreen mode
+			Local state:=Json_GetInt( jobj.Data,"windowState",0 )
+			If state=1
+				SwapFullscreenWindow()
+			Elseif state=2
+				SwapFullscreenEditor( True )
+			Endif
 			
 		End
 	End
@@ -1486,6 +1599,11 @@ Class MainWindowInstance Extends Window
 			Select event.Key
 			Case Key.Escape
 				
+				If _fullscreenState=FullscreenState.Editor
+					SwapFullscreenEditor()
+					Return
+				Endif
+					
 				' hide find / replace panel
 				If HideFindPanel()
 					Return
@@ -1588,7 +1706,6 @@ Class MainWindowInstance Extends Window
 	Field _themesMenu:MenuExt
 	
 	Field _theme:="default"
-	Field _themeScale:=1.0
 	
 	Field _contentView:DockingView
 	
@@ -1607,6 +1724,9 @@ Class MainWindowInstance Extends Window
 	Field _resized:Bool
 	Field _findReplaceView:FindReplaceView
 	Field _tabsWrap:=New DraggableTabs
+	
+	Field _fullscreenState:=FullscreenState.None
+	Field _storedSize:Recti
 	
 	Method ToJson:JsonValue( rect:Recti )
 		Return New JsonArray( New JsonValue[]( New JsonNumber( rect.min.x ),New JsonNumber( rect.min.y ),New JsonNumber( rect.max.x ),New JsonNumber( rect.max.y ) ) )
@@ -1692,53 +1812,26 @@ Class MainWindowInstance Extends Window
 		Next
 	End
 	
-	Method AddZoomActions( menu:MenuExt )
-		
-		menu.AddAction( "Zoom in" ).Triggered=Lambda()
-			If _themeScale>=4 Return
-			
-			_themeScale+=.125
-
-			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
-		End
-		
-		menu.AddAction( "Zoom out" ).Triggered=Lambda()
-			If _themeScale<=.5 Return
-			
-			_themeScale-=.125
-
-			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
-		End
-		
-		menu.AddAction( "Reset zoom" ).Triggered=Lambda()
-		
-			_themeScale=1
-			
-			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
-		End
-	End
-
 	Method ThemeScaleMouseFilter( event:MouseEvent )
-	
+		
 		If event.Eaten Return
-			
+		
 		If event.Type=EventType.MouseWheel And event.Modifiers & Modifier.Menu
 			
+			Local sc:=App.Theme.Scale.x
 			If event.Wheel.y>0
-				If _themeScale<4 _themeScale+=0.125
+				If sc<4 sc+=0.125
 			Else
-				If _themeScale>.5 _themeScale-=0.125
+				If sc>.5 sc-=0.125
 			Endif
-				
-			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
-
+			
+			App.Theme.Scale=New Vec2f( sc )
+			
 			event.Eat()
-				
+			
 		Else If event.Type=EventType.MouseDown And event.Button=MouseButton.Middle And event.Modifiers & Modifier.Menu
 			
-			_themeScale=1
-
-			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
+			App.Theme.Scale=New Vec2f( 1 )
 			
 			event.Eat()
 		Endif
@@ -1760,15 +1853,16 @@ Class MainWindowInstance Extends Window
 				If value=ThemeName Return
 				
 				ThemeName=value
+				Local sc:=App.Theme.Scale.x
 				
-				App.Theme.Load( _theme,New Vec2f( _themeScale ) )
+				App.Theme.Load( _theme,New Vec2f( sc ) )
 				SaveState()
 			End
 		Next
 		
 		Return menu
 	End
-		
+	
 	Method OnAppIdle()
 		
 		_docsManager.Update()
@@ -1791,6 +1885,12 @@ End
 
 Private
 
+Enum FullscreenState
+	None=0
+	Window=1
+	Editor=2
+End
+
 Class DraggableTabs
 	
 	Const Edges:=New String[]( "left","right","bottom" )
@@ -1801,7 +1901,7 @@ Class DraggableTabs
 	
 	Method New()
 		
-		sizes["left"]="300"
+		sizes["left"]="250"
 		sizes["right"]="300"
 		sizes["bottom"]="250"
 		

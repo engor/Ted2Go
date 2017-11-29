@@ -214,6 +214,11 @@
 			}
 		},
 
+		"TabButtonLocked":{
+			"extends":"TabButton",
+			"skin":"smooth_assets/tabbutton_locked_skin.png"
+		},
+
 		"TabClose":{
 			"margin":[4,0,0,0],
 			"icons":"smooth_assets/tabclose_icons.png",

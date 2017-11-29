@@ -3,3 +3,4 @@
 *.buildv*
 *.products/
 *.app
+*.DS_*
