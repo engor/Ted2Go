@@ -26,6 +26,7 @@
 #Import "action/HelpActions"
 #Import "action/FindActions"
 #Import "action/ViewActions"
+#Import "action/WindowActions"
 
 #Import "dialog/FindDialog"
 #Import "dialog/PrefsDialog"

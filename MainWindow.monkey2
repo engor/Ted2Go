@@ -366,21 +366,19 @@ Class MainWindowInstance Extends Window
 		
 		'Window menu
 		'
+		Local windowActions:=New WindowActions( _docsManager )
 		_windowMenu=New MenuExt( "Window" )
-		_windowMenu.AddAction( _docsManager.nextDocument )
-		_windowMenu.AddAction( _docsManager.prevDocument )
+		_windowMenu.AddAction( windowActions.nextTab )
+		_windowMenu.AddAction( windowActions.prevTab )
 		_windowMenu.AddSeparator()
-		Local fullscreen:=New Action( "Fullscreen mode" )
-		fullscreen.HotKey=Key.F11
-		fullscreen.Triggered=Lambda()
-			Fullscreen=Not Fullscreen
-		End
-		_windowMenu.AddAction( fullscreen )
+		_windowMenu.AddAction( windowActions.fullscreenWindow )
+		_windowMenu.AddAction( windowActions.fullscreenEditor )
+		_windowMenu.AddSeparator()
+		_windowMenu.AddAction( windowActions.zoomIn )
+		_windowMenu.AddAction( windowActions.zoomOut )
+		_windowMenu.AddAction( windowActions.zoomDefault )
 		_windowMenu.AddSeparator()
 		_themesMenu=CreateThemesMenu( "Themes" )
-		
-		AddZoomActions( _windowMenu )
-		_windowMenu.AddSeparator()
 		_windowMenu.AddSubMenu( _themesMenu )
 		
 		
@@ -600,6 +598,7 @@ Class MainWindowInstance Extends Window
 	Method Terminate()
 		
 		_isTerminating=True
+		
 		SaveState()
 		_enableSaving=False
 		OnForceStop() ' kill build process if started
@@ -671,6 +670,52 @@ Class MainWindowInstance Extends Window
 		_mx2cc=RealPath( _mx2cc )
 		
 		_modsDir=RealPath( "modules/" )
+	End
+	
+	Method SwapFullscreenWindow()
+		
+		If _fullscreenState=2
+			SwapFullscreenEditor()
+			Return
+		Endif
+		
+		_storedSize=Frame
+		
+		Fullscreen=Not Fullscreen
+		
+		_fullscreenState=Fullscreen ? FullscreenState.Window Else FullscreenState.None
+	End
+	
+	Method SwapFullscreenEditor( justStarted:Bool=False )
+		
+		If Not justStarted And _docsManager.CurrentDocument=Null
+			Alert( "There is no editor to be fullscreened!","Fullscreen" )
+			Return
+		Endif
+		
+		_storedSize=Frame
+		
+		If _fullscreenState<>FullscreenState.Window Then Fullscreen=Not Fullscreen
+		
+		_fullscreenState=Fullscreen ? FullscreenState.Editor Else FullscreenState.None
+		
+		Global _storedContentView:View=Null,_storedTabIndex:Int
+		
+		If Fullscreen
+			_storedContentView=ContentView
+			_storedTabIndex=_docsTabView.CurrentIndex
+			_docsTabView.SetTabView( _storedTabIndex,Null )
+			Local view:=_docsManager.CurrentView
+			view.Layout="fill-y"
+			view.Gravity=New Vec2f( .5,0 )
+			view.MaxSize=New Vec2i( Min( Width,Int(App.DesktopSize.x*.7) ),100000 )
+			ContentView=view
+		Else
+			Local view:=ContentView
+			view.Layout="fill"
+			ContentView=_storedContentView
+			_docsTabView.SetTabView( _storedTabIndex,view )
+		Endif
 	End
 	
 	Method StoreConsoleVisibility()
@@ -1076,12 +1121,16 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Method SaveState()
-	
+		
 		If Not _enableSaving Return
-
+		
 		Local jobj:=New JsonObject
 		
-		jobj["windowRect"]=ToJson( Frame )
+		Local state:=_fullscreenState
+		If state=FullscreenState.None Then _storedSize=Frame
+		
+		jobj["windowRect"]=ToJson( _storedSize )
+		jobj["windowState"]=New JsonNumber( Int(state) )
 		
 		SaveTabsState( jobj )
 		
@@ -1442,7 +1491,7 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Method LoadState( jobj:JsonObject )
-	
+		
 		LoadTabsState( jobj )
 		
 		If jobj.Contains( "docsTab" )
@@ -1473,8 +1522,8 @@ Class MainWindowInstance Extends Window
 		If jobj.Contains( "theme" ) ThemeName=jobj.GetString( "theme" )
 		
 		If jobj.Contains( "themeScale" )
-			_themeScale=jobj.GetNumber( "themeScale" )
-			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
+			Local sc:=jobj.GetNumber( "themeScale" )
+			App.Theme.Scale=New Vec2f( sc )
 		Endif
 		
 		If jobj.Contains( "mx2ccDir" )
@@ -1494,8 +1543,16 @@ Class MainWindowInstance Extends Window
 			UpdateRecentFilesMenu()
 			UpdateRecentProjectsMenu()
 			UpdateCloseProjectMenu()
-
+			
 			DeleteTmps()
+			
+			' enter fullscreen mode
+			Local state:=Json_GetInt( jobj.Data,"windowState",0 )
+			If state=1
+				SwapFullscreenWindow()
+			Elseif state=2
+				SwapFullscreenEditor( True )
+			Endif
 			
 		End
 	End
@@ -1511,6 +1568,11 @@ Class MainWindowInstance Extends Window
 			Select event.Key
 			Case Key.Escape
 				
+				If _fullscreenState=FullscreenState.Editor
+					SwapFullscreenEditor()
+					Return
+				Endif
+					
 				' hide find / replace panel
 				If HideFindPanel()
 					Return
@@ -1613,7 +1675,6 @@ Class MainWindowInstance Extends Window
 	Field _themesMenu:MenuExt
 	
 	Field _theme:="default"
-	Field _themeScale:=1.0
 	
 	Field _contentView:DockingView
 	
@@ -1632,6 +1693,9 @@ Class MainWindowInstance Extends Window
 	Field _resized:Bool
 	Field _findReplaceView:FindReplaceView
 	Field _tabsWrap:=New DraggableTabs
+	
+	Field _fullscreenState:=FullscreenState.None
+	Field _storedSize:Recti
 	
 	Method ToJson:JsonValue( rect:Recti )
 		Return New JsonArray( New JsonValue[]( New JsonNumber( rect.min.x ),New JsonNumber( rect.min.y ),New JsonNumber( rect.max.x ),New JsonNumber( rect.max.y ) ) )
@@ -1717,53 +1781,26 @@ Class MainWindowInstance Extends Window
 		Next
 	End
 	
-	Method AddZoomActions( menu:MenuExt )
-		
-		menu.AddAction( "Zoom in" ).Triggered=Lambda()
-			If _themeScale>=4 Return
-			
-			_themeScale+=.125
-
-			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
-		End
-		
-		menu.AddAction( "Zoom out" ).Triggered=Lambda()
-			If _themeScale<=.5 Return
-			
-			_themeScale-=.125
-
-			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
-		End
-		
-		menu.AddAction( "Reset zoom" ).Triggered=Lambda()
-		
-			_themeScale=1
-			
-			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
-		End
-	End
-
 	Method ThemeScaleMouseFilter( event:MouseEvent )
-	
+		
 		If event.Eaten Return
-			
+		
 		If event.Type=EventType.MouseWheel And event.Modifiers & Modifier.Menu
 			
+			Local sc:=App.Theme.Scale.x
 			If event.Wheel.y>0
-				If _themeScale<4 _themeScale+=0.125
+				If sc<4 sc+=0.125
 			Else
-				If _themeScale>.5 _themeScale-=0.125
+				If sc>.5 sc-=0.125
 			Endif
-				
-			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
-
+			
+			App.Theme.Scale=New Vec2f( sc )
+			
 			event.Eat()
-				
+			
 		Else If event.Type=EventType.MouseDown And event.Button=MouseButton.Middle And event.Modifiers & Modifier.Menu
 			
-			_themeScale=1
-
-			App.Theme.Scale=New Vec2f( _themeScale,_themeScale )
+			App.Theme.Scale=New Vec2f( 1 )
 			
 			event.Eat()
 		Endif
@@ -1785,15 +1822,16 @@ Class MainWindowInstance Extends Window
 				If value=ThemeName Return
 				
 				ThemeName=value
+				Local sc:=App.Theme.Scale.x
 				
-				App.Theme.Load( _theme,New Vec2f( _themeScale ) )
+				App.Theme.Load( _theme,New Vec2f( sc ) )
 				SaveState()
 			End
 		Next
 		
 		Return menu
 	End
-		
+	
 	Method OnAppIdle()
 		
 		_docsManager.Update()
@@ -1815,6 +1853,12 @@ End
 
 
 Private
+
+Enum FullscreenState
+	None=0
+	Window=1
+	Editor=2
+End
 
 Class DraggableTabs
 	
