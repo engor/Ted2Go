@@ -263,6 +263,7 @@ Class DocumentManager
 	End
 
 	Method Update()
+		
 		nextDocument.Enabled=_openDocs.Length>1
 		prevDocument.Enabled=_openDocs.Length>1
 	End

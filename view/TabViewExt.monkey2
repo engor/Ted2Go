@@ -398,8 +398,9 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 	End
 	
 	Method SetTabText( view:View,text:String )
-	
-		SetTabText( TabIndex( view ),text )
+		
+		Local index:=TabIndex( view )
+		If index>=0 Then SetTabText( index,text )
 	End
 	
 	#rem monkeydoc Sets a tab's icon.

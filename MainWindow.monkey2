@@ -726,6 +726,7 @@ Class MainWindowInstance Extends Window
 			_editorContainer.ContentView=Null
 			ContentView=_storedContentView
 			_docsTabView.SetTabView( _storedTabIndex,view )
+			_docsTabView.EnsureVisibleCurrentTab()
 			_storedContentView=Null
 		Endif
 		
