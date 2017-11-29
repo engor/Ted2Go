@@ -52,6 +52,11 @@ Class MainWindowInstance Extends Window
 			OverwriteTextMode=mode
 			
 			_findReplaceView.CodeView=Cast<CodeTextView>( _docsManager.CurrentTextView )
+			
+			If _fullscreenState=FullscreenState.Editor
+				SwapFullscreenEditor( False,1 )
+			Endif
+			
 		End
 		
 		_docsManager.DocumentDoubleClicked+=Lambda( doc:Ted2Document )
@@ -686,7 +691,9 @@ Class MainWindowInstance Extends Window
 		_fullscreenState=Fullscreen ? FullscreenState.Window Else FullscreenState.None
 	End
 	
-	Method SwapFullscreenEditor( justStarted:Bool=False )
+	' customState: -1 - make windowed, 1 - make fullscreen
+	'
+	Method SwapFullscreenEditor( justStarted:Bool=False,customState:Int=0 )
 		
 		If Not justStarted And _docsManager.CurrentDocument=Null
 			Alert( "There is no editor to be fullscreened!","Fullscreen" )
@@ -695,11 +702,32 @@ Class MainWindowInstance Extends Window
 		
 		_storedSize=Frame
 		
-		If _fullscreenState<>FullscreenState.Window Then Fullscreen=Not Fullscreen
+		Local state:=Not Fullscreen
+		If customState<>0 Then state=customState>0 ? True Else False
+		
+		If _fullscreenState<>FullscreenState.Window Then Fullscreen=state
 		
 		_fullscreenState=Fullscreen ? FullscreenState.Editor Else FullscreenState.None
 		
 		Global _storedContentView:View=Null,_storedTabIndex:Int
+		Global _editorContainer:DockingView=Null
+		Global _label:Label
+		If _editorContainer=Null
+			_editorContainer=New DockingView
+			_label=New Label
+			_label.Gravity=New Vec2f( .5,0 )
+			_label.Layout="float"
+			_editorContainer.AddView( _label,"top" )
+		Endif
+		
+		If _storedContentView<>Null
+			Local view:=_editorContainer.ContentView
+			view.Layout="fill"
+			_editorContainer.ContentView=Null
+			ContentView=_storedContentView
+			_docsTabView.SetTabView( _storedTabIndex,view )
+			_storedContentView=Null
+		Endif
 		
 		If Fullscreen
 			_storedContentView=ContentView
@@ -708,13 +736,15 @@ Class MainWindowInstance Extends Window
 			Local view:=_docsManager.CurrentView
 			view.Layout="fill-y"
 			view.Gravity=New Vec2f( .5,0 )
-			view.MaxSize=New Vec2i( Min( Width,Int(App.DesktopSize.x*.7) ),100000 )
-			ContentView=view
-		Else
-			Local view:=ContentView
-			view.Layout="fill"
-			ContentView=_storedContentView
-			_docsTabView.SetTabView( _storedTabIndex,view )
+			Local sz:=New Vec2i( Min( Width,Int(App.DesktopSize.x*.7) ),100000 )
+			view.MaxSize=sz
+			view.MinSize=sz
+			_editorContainer.ContentView=view
+			_label.Text=_docsManager.CurrentDocument.Path
+			ContentView=_editorContainer
+			
+			_docsManager.CurrentTextView?.MakeKeyView()
+			
 		Endif
 	End
 	
