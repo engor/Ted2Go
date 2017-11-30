@@ -42,8 +42,10 @@ Class WindowActions
 		End
 		
 		zoomIn=New Action( "Zoom in" )
+		zoomIn.HotKey=Key.KeypadPlus
+		zoomIn.HotKeyModifiers=Modifier.Control
 		zoomIn.Triggered=Lambda()
-			
+		
 			Local sc:=App.Theme.Scale.x
 			If sc>=4 Return
 			sc+=.125
@@ -51,8 +53,10 @@ Class WindowActions
 		End
 		
 		zoomOut=New Action( "Zoom out" )
+		zoomOut.HotKey=Key.KeypadMinus
+		zoomOut.HotKeyModifiers=Modifier.Control
 		zoomOut.Triggered=Lambda()
-			
+		
 			Local sc:=App.Theme.Scale.x
 			If sc<=.5 Return
 			sc-=.125
@@ -60,6 +64,8 @@ Class WindowActions
 		End
 		
 		zoomDefault=New Action( "Reset zoom" )
+		zoomDefault.HotKey=Key.Keypad0
+		zoomDefault.HotKeyModifiers=Modifier.Control
 		zoomDefault.Triggered=Lambda()
 		
 			App.Theme.Scale=New Vec2f( 1 )
