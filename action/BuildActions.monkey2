@@ -149,6 +149,9 @@ Class BuildActions Implements IModuleBuilder
 		_iosTarget=New CheckButton( "iOS",,group )
 		_iosTarget.Layout="fill-x"
 		
+		_verboseMode=New CheckButton( "Verbose")
+		_verboseMode.Layout="fill-x"
+		
 		targetMenu=New MenuExt( "Build target" )
 		targetMenu.AddView( _debugConfig )
 		targetMenu.AddView( _releaseConfig )
@@ -159,6 +162,8 @@ Class BuildActions Implements IModuleBuilder
 		targetMenu.AddView( _iosTarget )
 		targetMenu.AddSeparator()
 		targetMenu.AddAction( buildSettings )
+		targetMenu.AddSeparator()
+		targetMenu.AddView( _verboseMode )
 		
 		'check valid targets...WIP...
 		
@@ -349,6 +354,7 @@ Class BuildActions Implements IModuleBuilder
 	Field _emscriptenTarget:CheckButton
 	Field _androidTarget:CheckButton
 	Field _iosTarget:CheckButton
+	Field _verboseMode:CheckButton
 	
 	Field _validTargets:StringStack
 	Field _timing:Long
@@ -490,6 +496,7 @@ Class BuildActions Implements IModuleBuilder
 			
 			Local cmd:=MainWindow.Mx2ccPath+" makemods -target="+target
 			If clean cmd+=" -clean"
+			If _verboseMode.Checked cmd+=" -verbose"
 			cmd+=" -config="+cfg
 			If modules Then cmd+=" "+modules
 			
@@ -523,6 +530,7 @@ Class BuildActions Implements IModuleBuilder
 		If run Then action="build"
 
 		Local cmd:=MainWindow.Mx2ccPath+" makeapp -"+action+" "+opts
+		If _verboseMode.Checked cmd+=" -verbose"
 		cmd+=" -config="+config
 		cmd+=" -target="+target
 		cmd+=" ~q"+buildDoc.Path+"~q"
