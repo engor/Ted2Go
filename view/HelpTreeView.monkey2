@@ -193,7 +193,7 @@ Class HelpTreeView Extends TreeViewExt
 		
 		FillNode( RootNode,_tree.RootNode.Children )
 		
-		'Sort()
+		Sort()
 	End
 	
 	Method FillNode( node:TreeView.Node,items:Stack<Tree.Node> )
