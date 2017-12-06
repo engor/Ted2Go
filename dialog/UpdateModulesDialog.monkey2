@@ -171,11 +171,17 @@ Class UpdateModulesDialog Extends DialogExt
 	This sorts modules into dependancy order.
 	
 	#end
-	Function EnumModules( out:StringStack,cur:String,deps:StringMap<StringStack> )
+	Function EnumModules( out:StringStack,cur:String,src:String,deps:StringMap<StringStack> )
+		
 		If out.Contains( cur ) Return
+
+		If Not deps.Contains( cur )
+'			Print "Can't find module dependancy '"+cur+"' - check module.json file for '"+src+"'"
+			Return
+		End
 		
 		For Local dep:=Eachin deps[cur]
-			EnumModules( out,dep,deps )
+			EnumModules( out,dep,cur,deps )
 		Next
 		
 		out.Push( cur )
@@ -222,7 +228,7 @@ Class UpdateModulesDialog Extends DialogExt
 				
 		Local out:=New StringStack
 		For Local cur:=Eachin mods.Keys
-			EnumModules( out,cur,mods )
+			EnumModules( out,cur,"",mods )
 		Next
 		
 		Return out.ToArray()
