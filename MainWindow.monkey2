@@ -1073,6 +1073,9 @@ Class MainWindowInstance Extends Window
 			_editorMenu.AddAction( _editActions.cut )
 			_editorMenu.AddAction( _editActions.copy )
 			_editorMenu.AddAction( _editActions.paste )
+			_editorMenu.AddSeparator()
+			_editorMenu.AddAction( _viewActions.comment )
+			_editorMenu.AddAction( _viewActions.uncomment )
 		Endif
 		
 		_editorMenu.Open()
