@@ -965,11 +965,16 @@ Class MainWindowInstance Extends Window
 		If vis tab.CurrentHolder.Visible=True
 	End
 	
-	Method ShowHelpView()
+	Method ShowDocsView( expandTree:Bool=False )
 		
 		Local tab:=_tabsWrap.tabs["Docs"]
 		tab.Activate()
 		tab.CurrentHolder.Visible=True
+		
+		If expandTree
+			_helpTree.Visible=False
+			_helpSwitcher.Clicked()
+		Endif
 	End
 	
 	Method ShowFindResults()
@@ -979,30 +984,31 @@ Class MainWindowInstance Extends Window
 		tab.CurrentHolder.Visible=True
 	End
 	
-	Method ShowFindInDocs( setFocus:Bool=True )
-		
-		Local doc:=Cast<CodeDocumentView>( _docsManager.CurrentTextView )
-		If Not doc Return
-		
-		Local ident:=doc.WordAtCursor
-		Print "ident: "+ident
-		_helpTree.QuickHelp( ident )
-		_helpTree.Visible=False
-		_helpSwitcher.Clicked()
-		_tabsWrap.tabs["Docs"].Activate()
-		
-		If setFocus Then _helpTree.RequestFocus()
-	End
-	
 	Method RebuildDocs()
 		
 		_buildActions.rebuildHelp.Trigger()
 	End
 	
-	Method ShowQuickHelp()
+	Method ShowHelp( url:String="",searchMode:Bool=False )
+		
+		' direct jump
+		If url
+			_helpView.Navigate( url )
+			_helpView.Scroll=New Vec2i( 0,0 )
+			ShowDocsView()
+			Return
+		Endif
 		
 		Local doc:=Cast<CodeDocumentView>( _docsManager.CurrentTextView )
 		If Not doc Return
+		
+		' don't check with parser, just find in docs tree
+		If searchMode
+			Local ident:=doc.WordAtCursor
+			_helpTree.QuickHelp( ident )
+			ShowDocsView( True )
+			Return
+		Endif
 		
 		Local ident:=doc.FullIdentAtCursor
 		
@@ -1010,55 +1016,54 @@ Class MainWindowInstance Extends Window
 		
 		Local parser:=ParsersManager.Get( doc.FileType )
 		Local item:=parser.ItemAtScope( ident,doc.FilePath,doc.LineNumAtCursor )
+		
 		If item
-			Local s:=item.Namespac
-			If s
-				Local i:=s.Find( "." )
-				If i<>-1 Then s=s.Slice( 0,i )
-			Endif
-			Local ident2:="",parentIdent:=""
-			ident=s+":"+item.Namespac+"."
-			If item.Parent
-				If item.Parent.IsLikeClass
-					parentIdent=item.Parent.Ident
-					ident2=s+":"+parentIdent+"."+item.Ident
-				Endif
-				ident+=item.Parent.Ident+"."
-			Endif
-			ident+=item.Ident
 			
-			If ident=_helpIdent
+			ident=item.Ident
+			
+			Local pathTemplate:=Prefs.MonkeyRootPath+"docs/modules/{mod-name}/module/{path-to-ident}.html"
+			Local modName:=item.ModuleName
+			
+			Local pathToIdent:=(item.Namespac+"."+item.Scope).Replace( ".","-" )
+			Local path:=pathTemplate.Replace( "{mod-name}",modName ).Replace( "{path-to-ident}",pathToIdent )
+			
+			Global __prevPath:=""
+			
+			If path=__prevPath
 				
-				If item.IsModuleMember
+				If modName ' show docs for modules members
 					
-					ShowFindInDocs( False )
+					_helpTree.QuickHelp( ident )
 					
-'					Local url:=_helpTree.PageUrl( ident )
-'					If GetFileType( url )<>FileType.File Then url=_helpTree.PageUrl( ident2 )
-'					
-'					If GetFileType( url )<>FileType.File
-'						Local ext:=ExtractExt( url )
-'						Repeat
-'							Local i:=url.FindLast( "-" )
-'							If i=-1
-'								url=""
-'								Exit
-'							Endif
-'							url=url.Slice( 0,i )+ext
-'						Forever
-'					Endif
-'					If url ShowHelp( url )
-				Else
+					_helpView.Navigate( path )
+					_helpView.Scroll=New Vec2i( 0,0 )
+					
+					_helpTree.Selected=_helpTree.FindByText( ident )
+					
+					ShowDocsView( True )
+					
+				Else ' or jump to non modules members
+					
 					GotoCodePosition( item.FilePath,item.ScopeStartPos )
+					
 				Endif
 			Else
+				
+				Local parentIdent:=""
+				If item.Parent
+					If item.Parent.IsLikeClass
+						parentIdent=item.Parent.Ident
+					Endif
+				Endif
+				
 				Local nmspace:=item.Namespac
 				If parentIdent Then nmspace+="."+parentIdent
 				Local ext:=item.IsExtension ? "(ext) " Else ""
 				ShowStatusBarText( ext+"("+item.KindStr+") "+item.Text+"    |  "+nmspace+"  |  "+StripDir( item.FilePath )+"  |  line "+(item.ScopeStartPos.x+1) )
+			
 			Endif
 			
-			_helpIdent=ident
+			__prevPath=path
 			
 		ElseIf KeywordsManager.Get( doc.FileType ).Contains( ident )
 			
@@ -1066,17 +1071,10 @@ Class MainWindowInstance Extends Window
 		
 		Else
 			
-			ShowFindInDocs()
+			ShowHelp( "",True ) ' try to search ident
 			
 		Endif
 		
-	End
-	
-	Method ShowHelp( url:String )
-		
-		ShowHelpView()
-		_helpView.Navigate( url )
-		_helpView.Scroll=New Vec2i( 0,0 )
 	End
 	
 	Method ShowEditorMenu( tv:TextView )
@@ -1244,13 +1242,11 @@ Class MainWindowInstance Extends Window
 
 	Private
 	
-	Field _inited:=False
-	Field _helpIdent:String
-	
 	Method OnRender( canvas:Canvas ) Override
 		
-		If Not _inited
-			_inited=True
+		Global __inited:=False
+		If Not __inited
+			__inited=True
 			OnInit()
 		Endif
 		

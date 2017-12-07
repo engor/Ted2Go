@@ -1437,7 +1437,7 @@ Class CodeDocument Extends Ted2Document
 		
 		ResetErrors()
 		
-		Local errors:=_parser.ParseFile( Path,pathOnDisk,False )
+		Local errors:=_parser.ParseFile( Path,pathOnDisk,"" )
 		
 		If MainWindow.IsTerminating Return
 		

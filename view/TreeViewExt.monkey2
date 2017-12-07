@@ -96,6 +96,15 @@ Class TreeViewExt Extends TreeView
 		_expander.LoadState( jobj,jkey )
 	End
 	
+	Method FindByText:TreeView.Node( text:String,recursive:Bool=False )
+	
+		Return FindSubNode( RootNode,
+						recursive,
+						Lambda:Bool( n:TreeView.Node )
+							Return n.Text=text
+						End )
+	End
+	
 	Method FindSubNode:TreeView.Node( text:String,whereNode:TreeView.Node,recursive:Bool=False )
 		
 		Return FindSubNode( whereNode,

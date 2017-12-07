@@ -90,11 +90,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return True
 	End
 	
-	Method ParseFile:String( filePath:String,pathOnDisk:String,isModule:Bool )
-		
-		If Not isModule
-			isModule=filePath.StartsWith( _modsPath )
-		Endif
+	Method ParseFile:String( filePath:String,pathOnDisk:String,moduleName:String )
 		
 		' is file modified?
 		Local time:=GetFileTime( pathOnDisk )
@@ -111,7 +107,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Endif
 		
 		' start parsing process
-		Local str:=StartParsing( pathOnDisk,isModule )
+		Local str:=StartParsing( pathOnDisk )
 		
 		If Not str Return "#" 'special kind of error
 		
@@ -138,7 +134,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		Local nspace:= jobj.Contains( "namespace" ) ? jobj["namespace"].ToString() Else ""
 		
-		
 		If jobj.Contains( "members" )
 			Local items:=New Stack<CodeItem>
 			Local members:=jobj["members"].ToArray()
@@ -147,7 +142,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Items.AddAll( items )
 			
 			For Local i:=Eachin items
-				i.IsModuleMember=isModule
+				i.ModuleName=moduleName
 				NSpace.AddItem( nspace,i )
 			Next
 			'Print "file parsed: "+filePath+", items.count: "+items.Count()
@@ -169,7 +164,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Endif
 				file=folder+file
 				'Print "parse import: "+file+"  mod: "+Int(isModule)
-				ParseFile( file,file,isModule )
+				ParseFile( file,file,moduleName )
 			Next
 		Endif
 		
@@ -264,6 +259,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Local supIdent:=sup["ident"]
 				If supIdent Then item.AddSuperTypeStr( supIdent.ToString() )
 			Endif
+			
 			If jobj.Contains( "ifaceTypes" )
 				Local ifaces:=jobj["ifaceTypes"].ToArray()
 				For Local ifaceType:=Eachin ifaces
@@ -272,7 +268,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 					If iIdent Then item.AddSuperTypeStr( iIdent.ToString() )
 				Next
 			Endif
-			
 			
 			If parent
 				item.SetParent( parent )
@@ -352,7 +347,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 		opts.filePath=filePath
 		opts.docLineNum=docLine
 		opts.usingsFilter=_lastUsingsFilter
+		opts.intelliIdent=False
+		
 		GetItemsInternal( opts,1 )
+		
 		Return (Not opts.results.Empty) ? opts.results[0] Else Null
 	End
 	
@@ -426,6 +424,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local docLineStr:=options.docLineStr
 		Local target:=options.results
 		Local usingsFilter:=options.usingsFilter
+		Local intelliIdent:=options.intelliIdent
 		
 		_lastUsingsFilter=usingsFilter
 		
@@ -473,7 +472,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 					
 					For Local i:=Eachin items
 						'Print "item at scope: "+i.Text
-						If Not CheckIdent( i.Ident,firstIdent,onlyOne )
+						If Not CheckIdent( i.Ident,firstIdent,onlyOne,intelliIdent )
 							'Print "cont1: "+i.Ident
 							Continue
 						Endif
@@ -544,7 +543,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 					Endif
 					
 					'Print "global 1: "+i.Scope
-					If Not CheckIdent( i.Ident,firstIdent,onlyOne )
+					If Not CheckIdent( i.Ident,firstIdent,onlyOne,intelliIdent )
 						'Print "skip 2 "+i.Ident
 						Continue
 					Endif
@@ -709,7 +708,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 						' skip constructors
 						If Not (isSelf Or isSuper) And i.Kind=CodeItemKind.Method_ And i.Ident="New" Continue
 						
-						If Not CheckIdent( i.Ident,identPart,last )
+						If Not CheckIdent( i.Ident,identPart,last,intelliIdent )
 							'Print "continue 1: "+i.Ident
 							Continue
 						Endif
@@ -798,7 +797,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Endif
 	End
 	
-	Method StartParsing:String( pathOnDisk:String,isModule:Bool )
+	Method StartParsing:String( pathOnDisk:String )
 		
 		If Not _enabled Return ""
 		
@@ -824,12 +823,12 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Next
 		
 		For Local d:=Eachin dirs
-			If GetFileType( _modsPath+d ) = FileType.Directory
+			If GetFileType( _modsPath+d )=FileType.Directory
 				Local file:=_modsPath + d + "/" + d + ".monkey2"
 				'Print "module: "+file
-				If GetFileType( file ) = FileType.File
+				If GetFileType( file )=FileType.File
 					OnParseModule( file )
-					ParseFile( file,file,True )
+					ParseFile( file,file,d )
 				Endif
 			Endif
 		Next
@@ -1174,12 +1173,12 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
-	Method CheckIdent:Bool( ident1:String,ident2:String,startsOnly:Bool,smartStarts:Bool=True )
+	Method CheckIdent:Bool( ident1:String,ident2:String,startsOnly:Bool,intelliIdent:Bool=True )
 	
-		If ident2 = "" Return True
+		If ident2="" Return True
 		
 		If startsOnly
-			Return smartStarts ? CheckStartsWith( ident1,ident2 ) Else ident1.StartsWith( ident2 )
+			Return intelliIdent ? CheckStartsWith( ident1,ident2 ) Else ident1.StartsWith( ident2 )
 		Else
 			Return ident1 = ident2
 		Endif

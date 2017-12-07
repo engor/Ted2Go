@@ -97,7 +97,7 @@ Class HelpActions
 	
 	Method OnQuickHelp()
 	
-		MainWindow.ShowQuickHelp()
+		MainWindow.ShowHelp()
 	End
 	
 End
