@@ -40,23 +40,24 @@ End
 
 Function Json_GetBool:Bool( json:Map<String,JsonValue>,key:String,def:Bool )
 	
-	Return json[key] ? json[key].ToBool() Else def
+	Return json.Contains( key ) ? json[key].ToBool() Else def
 End
 
 Function Json_GetString:String( json:Map<String,JsonValue>,key:String,def:String )
 	
-	Return json[key] ? json[key].ToString() Else def
+	Return json.Contains( key ) ? json[key].ToString() Else def
 End
 
 Function Json_GetInt:Int( json:Map<String,JsonValue>,key:String,def:Int )
 	
-	Return json[key] ? Int(json[key].ToNumber()) Else def
+	Return json.Contains( key ) ? Int(json[key].ToNumber()) Else def
 End
+
 
 
 Class JsonArray Extension
 	
-	Function Create:JsonArray( values:String[] )
+	Function FromStrings:JsonArray( values:String[] )
 		
 		Local jvals:=New JsonValue[values.Length]
 		For Local i:=0 Until values.Length

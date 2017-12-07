@@ -1514,7 +1514,7 @@ Class MainWindowInstance Extends Window
 		
 		For Local edge:=Eachin edges
 			Local dock:=_tabsWrap.docks[edge]
-			jj[edge+"Tabs"]=JsonArray.Create( dock.TabsNames )
+			jj[edge+"Tabs"]=JsonArray.FromStrings( dock.TabsNames )
 			jj[edge+"Active"]=New JsonString( dock.ActiveName )
 			jj[edge+"Visible"]=New JsonBool( dock.Visible )
 			jj[edge+"Size"]=New JsonString( _tabsWrap.GetDockSize( dock ) )
