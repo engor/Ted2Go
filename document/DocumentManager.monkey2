@@ -87,8 +87,34 @@ Class DocumentManager
 	End
 	
 	Property OpenDocuments:Ted2Document[]()
-	
+		
 		Return _openDocs.ToArray()
+	End
+	
+	Property CurrentDocumentLabel:String()
+		
+		Return DocumentLabel( CurrentDocument )
+	End
+	
+	Method DocumentLabel:String( doc:Ted2Document )
+		
+		If Not doc Return ""
+		
+		Local label:=StripDir( doc.Path )
+	
+		If ExtractExt( doc.Path ).ToLower()=".monkey2"  label=StripExt( label )
+	
+		label=doc.State+label
+	
+		If doc.Dirty label+="*"
+	
+		Return label
+	End
+	
+	Method UpdateCurrentTabLabel()
+		
+		Local doc:=CurrentDocument
+		If doc _tabView.SetTabText( doc.View,DocumentLabel( doc ) )
 	End
 	
 	Method IsDocumentOpened:Bool( path:String )
@@ -129,7 +155,7 @@ Class DocumentManager
 			_openDocs.Add( doc )
 		Endif
 		
-		Local tab:=_tabView.AddTab( TabText( doc ),doc.View,False,addAtBegin )
+		Local tab:=_tabView.AddTab( DocumentLabel( doc ),doc.View,False,addAtBegin )
 		
 		tab.DoubleClicked+=Lambda()
 			DocumentDoubleClicked( doc )
@@ -170,7 +196,7 @@ Class DocumentManager
 			InitDoc( newDoc )
 			
 			_openDocs[i]=newDoc
-			_tabView.SetTabText( i,TabText( newDoc ) )
+			_tabView.SetTabText( i,DocumentLabel( newDoc ) )
 			_tabView.SetTabView( i,newDoc.View )
 			
 			doc.Close()
@@ -319,22 +345,9 @@ Class DocumentManager
 		Endif
 	End
 	
-	Method TabText:String( doc:Ted2Document )
-	
-		Local label:=StripDir( doc.Path )
-		
-		If ExtractExt( doc.Path ).ToLower()=".monkey2"  label=StripExt( label )
-		
-		label=doc.State+label
-		
-		If doc.Dirty label+="*"
-		
-		Return label
-	End
-	
 	Method UpdateTabLabel( doc:Ted2Document )
 	
-		If doc _tabView.SetTabText( doc.View,TabText( doc ) )
+		If doc _tabView.SetTabText( doc.View,DocumentLabel( doc ) )
 	End
 	
 	Method UpdateWindowTitle( doc:Ted2Document )

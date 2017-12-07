@@ -709,40 +709,58 @@ Class MainWindowInstance Extends Window
 		
 		_fullscreenState=Fullscreen ? FullscreenState.Editor Else FullscreenState.None
 		
-		Global _storedContentView:View=Null,_storedTabIndex:Int
-		Global _editorContainer:DockingView=Null
-		Global _label:Label
-		If _editorContainer=Null
-			_editorContainer=New DockingView
-			_label=New Label
-			_label.Gravity=New Vec2f( .5,0 )
-			_label.Layout="float"
-			_editorContainer.AddView( _label,"top" )
+		Global __storedContentView:View=Null,__storedTabIndex:Int
+		Global __editorContainer:DockingView=Null,__statusContainer:DockingView
+		Global __label:Label
+		Global __dirtyChanged:=Lambda()
+			__label.Text=_docsManager.CurrentDocumentLabel
+		End
+		
+		If __editorContainer=Null
+			__editorContainer=New DockingView
+			
+			__label=New Label
+			__label.Gravity=New Vec2f( .5,0 )
+			__label.Layout="float"
+			__editorContainer.AddView( __label,"top" )
+			
+			__statusContainer=New DockingView
+			__editorContainer.AddView( __statusContainer,"bottom" )
 		Endif
 		
-		If _storedContentView<>Null
-			Local view:=_editorContainer.ContentView
+		' restore
+		If __storedContentView<>Null
+			Local view:=__editorContainer.ContentView
 			view.Layout="fill"
-			_editorContainer.ContentView=Null
-			ContentView=_storedContentView
-			_docsTabView.SetTabView( _storedTabIndex,view )
+			__editorContainer.ContentView=Null
+			__statusContainer.ContentView=Null
+			_statusBarContainer.ContentView=_statusBar
+			ContentView=__storedContentView
+			_docsTabView.SetTabView( __storedTabIndex,view )
 			_docsTabView.EnsureVisibleCurrentTab()
-			_storedContentView=Null
+			_docsManager.UpdateCurrentTabLabel()
+			_docsManager.CurrentDocument?.DirtyChanged-=__dirtyChanged
+			__storedContentView=Null
 		Endif
 		
 		If Fullscreen
-			_storedContentView=ContentView
-			_storedTabIndex=_docsTabView.CurrentIndex
-			_docsTabView.SetTabView( _storedTabIndex,Null )
+			__storedContentView=ContentView
+			__storedTabIndex=_docsTabView.CurrentIndex
+			_docsTabView.SetTabView( __storedTabIndex,Null )
 			Local view:=_docsManager.CurrentView
 			view.Layout="fill-y"
 			view.Gravity=New Vec2f( .5,0 )
 			Local sz:=New Vec2i( Min( Width,Int(App.DesktopSize.x*.7) ),100000 )
 			view.MaxSize=sz
 			view.MinSize=sz
-			_editorContainer.ContentView=view
-			_label.Text=_docsManager.CurrentDocument.Path
-			ContentView=_editorContainer
+			__editorContainer.ContentView=view
+			__label.Text=_docsManager.CurrentDocumentLabel
+			_docsManager.CurrentDocument?.DirtyChanged+=__dirtyChanged
+			' status bar
+			_statusBarContainer.ContentView=Null
+			__statusContainer.ContentView=_statusBar
+			'
+			ContentView=__editorContainer
 			
 			_docsManager.CurrentTextView?.MakeKeyView()
 			
@@ -1417,7 +1435,7 @@ Class MainWindowInstance Extends Window
 		InitTabs()
 		
 		_contentView.RemoveView( _toolBar )
-		_contentView.RemoveView( _statusBar )
+		_contentView.RemoveView( _statusBarContainer )
 		_contentView.RemoveView( _findReplaceView )
 		
 		_tabsWrap.DetachFromParent()
@@ -1427,7 +1445,11 @@ Class MainWindowInstance Extends Window
 			_contentView.AddView( _toolBar,"top" )
 		Endif
 		
-		_contentView.AddView( _statusBar,"bottom" )
+		If Not _statusBarContainer
+			_statusBarContainer=New DockingView
+			_statusBarContainer.ContentView=_statusBar
+		Endif
+		_contentView.AddView( _statusBarContainer,"bottom" )
 		
 		_tabsWrap.AttachToParent( _contentView )
 		
@@ -1719,6 +1741,7 @@ Class MainWindowInstance Extends Window
 	Field _recentProjectsMenu:MenuExt
 	Field _closeProjectMenu:MenuExt
 	Field _statusBar:StatusBarView
+	Field _statusBarContainer:DockingView
 	Field _ovdMode:=False
 	Field _storedConsoleVisible:Bool
 	Field _consoleVisibleCounter:=0
