@@ -135,10 +135,7 @@ Class JsonDocumentView Extends Ted2CodeTextView
 	
 	Method New( doc:Ted2Document )
 		
-		'very important to set FileType for init
-		'formatter, highlighter and keywords
-		FileType=doc.FileExtension
-		FilePath=doc.Path
+		Super.New( doc )
 	End
 	
 End

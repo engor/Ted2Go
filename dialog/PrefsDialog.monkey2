@@ -420,7 +420,7 @@ Class PrefsDialog Extends DialogExt
 		Local docker1:=New DockingView
 		docker1.AddView( treeDock,"left","170",True)
 		
-		_codeView=New Ted2CodeTextView
+		_codeView=New Ted2CodeTextView( Ted2Document.Empty )
 		_codeView.ShowWhiteSpaces=True
 		_codeView.Document.TextChanged+=Lambda()
 			

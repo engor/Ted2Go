@@ -191,7 +191,9 @@ Class DocumentManager
 			Endif
 			
 			Local newDoc:=newType.CreateDocument( newPath )
-			If Not newDoc.Load() Return Null
+			If Not newDoc.Load()
+				Return Null
+			Endif
 			
 			InitDoc( newDoc )
 			
@@ -206,7 +208,7 @@ Class DocumentManager
 			DocumentAdded( newDoc )
 			
 			If doc=_currentDoc CurrentDocument=newDoc
-
+			
 			Return newDoc
 		Next
 		

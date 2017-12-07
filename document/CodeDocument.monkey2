@@ -32,15 +32,12 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	
 	
 	Method New( doc:CodeDocument )
-	
+		
+		Super.New( doc )
+		
 		_doc=doc
 		
 		ContentView.Style.Border=New Recti( -4,-4,4,4 )
-		
-		'very important to set FileType for init
-		'formatter, highlighter and keywords
-		FileType=doc.FileExtension
-		FilePath=doc.Path
 		
 		'AutoComplete
 		If Not AutoComplete Then AutoComplete=New AutocompleteDialog
@@ -765,7 +762,14 @@ Class CodeDocument Extends Ted2Document
 	Method New( path:String )
 		
 		Super.New( path )
-	
+		
+		' if file type was changed
+		Renamed+=Lambda( newPath:String,oldPath:String )
+			
+			InitParser()
+			ResetErrors()
+		End
+		
 		_view=New DockingView
 		
 		' Editor
@@ -1312,8 +1316,7 @@ Class CodeDocument Extends Ted2Document
 		_doc.Text=text
 		Dirty=False
 		
-		_parser=ParsersManager.Get( FileExtension )
-		_parsingEnabled=Not ParsersManager.IsFake( _parser )
+		InitParser()
 		
 		ParsingDoc() 'start parsing right after loading, not by timer
 		
@@ -1370,13 +1373,20 @@ Class CodeDocument Extends Ted2Document
 		OnUpdateCurrentScope()
 	End
 	
-	Field _timeTextChanged:=0
+	Method InitParser()
+		
+		_parser=ParsersManager.Get( FileExtension )
+		_parsingEnabled=Not ParsersManager.IsFake( _parser )
+	End
+	
 	Field _timeDocParsed:=0
 	Method ParsingOnTextChanged()
 		
 		If Not _parsingEnabled Return
 		
-		_timeTextChanged=Millisecs()
+		Global __timeTextChanged:=0
+		
+		__timeTextChanged=Millisecs()
 		
 		If Not _timer Then _timer=New Timer( 1,Lambda()
 		
@@ -1384,8 +1394,8 @@ Class CodeDocument Extends Ted2Document
 			
 			Local msec:=Millisecs()
 			If msec<_timeDocParsed+1000 Return
-			If _timeTextChanged=0 Or msec<_timeTextChanged+1000 Return
-			_timeTextChanged=0
+			If __timeTextChanged=0 Or msec<__timeTextChanged+1000 Return
+			__timeTextChanged=0
 			
 			ParsingDoc()
 		
