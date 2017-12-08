@@ -125,6 +125,11 @@ Class CodeItem
 		
 	End
 	
+	Property NumChildren:Int()
+		
+		Return _children?.Length
+	End
+	
 	Property Children:Stack<CodeItem>()
 		Return _children
 	Setter( value:Stack<CodeItem> )

@@ -314,7 +314,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Next
 		
 		If result
-			' try to check is we inside of method/ property / etc
+			' try to check - are we inside of method/ property / etc
 			Repeat
 				Local i:=GetInnerScope( result,docLine )
 				If i = Null Exit
@@ -337,6 +337,50 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		Return result
 		
+	End
+	
+	Method GetNearestScope:CodeItem( docPath:String,docLine:Int,above:Bool )
+	
+		Local items:=ItemsMap[docPath]
+	
+		If Not items Return Null
+	
+		' all classes / structs
+		Local fakeItem:=New CodeItem( "fake" )
+		fakeItem.Children=items
+'		For Local i:=Eachin items
+'			If docLine > i.ScopeStartPos.x And docLine < i.ScopeEndPos.x
+'				result=i
+'				Exit
+'			Endif
+'		Next
+		Local dir:=above ? -1 Else 1
+		Local result:=GetInnerScope( fakeItem,docLine )
+		
+		If result
+			' try to check - are we inside of method/ property / etc
+			Repeat
+				Local i:=GetInnerScope( result,docLine,dir )
+				If i = Null Exit
+				result=i
+			Forever
+	
+		Else
+			' try to find in extension members
+			For Local list:=Eachin ExtraItemsMap.Values
+				For Local i:=Eachin list
+					If i.FilePath<>docPath Continue
+					If docLine > i.ScopeStartPos.x And docLine < i.ScopeEndPos.x
+						result=i
+						Exit
+					Endif
+				Next
+				If result Exit
+			Next
+		End
+	
+		Return result
+	
 	End
 	
 	Method ItemAtScope:CodeItem( ident:String,filePath:String,docLine:Int )
@@ -1021,15 +1065,44 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return type
 	End
 	
-	Method GetInnerScope:CodeItem( parent:CodeItem,docLine:Int )
+	Method GetInnerScope:CodeItem( parent:CodeItem,docLine:Int,dir:Int=0 )
 		
 		Local items:=parent.Children
-		If items = Null Return Null
-		For Local i:=Eachin items
-			If docLine > i.ScopeStartPos.x And docLine < i.ScopeEndPos.x Return i
-		Next
-		Return Null
+		If items=Null Return Null
 		
+		Local result:CodeItem=Null
+		Local storedPos:=dir>0 ? 999999999 Else -1
+		For Local i:=Eachin items
+			
+			If i.Kind=CodeItemKind.Param_ Continue
+			
+			Local i1:=i.ScopeStartPos.x
+			Local i2:=i.ScopeEndPos.x
+			
+			'inside
+			If docLine>i1 And docLine<=i2
+				result=i
+				Exit
+			Endif
+			
+			If dir=-1 ' above
+				
+				If docLine>i2 And i2>storedPos
+					result=i
+					storedPos=i2
+				Endif
+				
+			Elseif dir=1 ' below
+				
+				If docLine<i1 And i1<storedPos
+					result=i
+					storedPos=i1
+				Endif
+				
+			End
+			
+		Next
+		Return result
 	End
 	
 	Function CheckUsingsFilter:Bool( nspace:String,usingsFilter:StringStack )

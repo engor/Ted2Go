@@ -826,9 +826,9 @@ Class CodeDocument Extends Ted2Document
 		End
 		
 		' update 
-		Monkey2Parser.OnDoneParseModules+=Lambda( deltaMs:Int )
-			UpdateCodeTree()
-		End
+'		Monkey2Parser.OnDoneParseModules+=Lambda( deltaMs:Int )
+'			UpdateCodeTree()
+'		End
 		
 		ArrangeElements()
 	End
@@ -1017,6 +1017,7 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Property HasErrors:Bool()
+		
 		Return Not _errors.Empty
 	End
 	
@@ -1361,7 +1362,7 @@ Class CodeDocument Extends Ted2Document
 	
 	Method OnUpdateCurrentScope()
 		
-		Local scope:=_parser.GetScope( Path,_codeView.LineNumAtCursor+1 )
+		Local scope:=_parser.GetNearestScope( Path,_codeView.LineNumAtCursor+1,True )
 		If scope
 			_treeView.SelectByScope( scope )
 		Endif
@@ -1739,11 +1740,11 @@ Class CodeDocumentType Extends Ted2DocumentType
 	End
 	
 	Method OnCreateDocument:Ted2Document( path:String ) Override
-
+		
 		Return New CodeDocument( path )
 	End
 	
-		
+	
 	Private
 	
 	Global _instance:=New CodeDocumentType

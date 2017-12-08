@@ -11,6 +11,7 @@ Interface ICodeParser
 	Method IsPosInsideOfQuotes:Bool( text:String,pos:Int )
 	Method CanShowAutocomplete:Bool( line:String,posInLine:Int )
 	Method GetScope:CodeItem( docPath:String,docLine:Int )
+	Method GetNearestScope:CodeItem( docPath:String,docLine:Int,above:Bool )
 	Method ItemAtScope:CodeItem( ident:String,filePath:String,docLine:Int )
 	
 	Method GetItemsForAutocomplete( options:ParserRequestOptions )
@@ -112,6 +113,9 @@ Class FakeParser Implements ICodeParser
 		Return True
 	End
 	Method GetScope:CodeItem( docPath:String,docLine:Int )
+		Return Null
+	End
+	Method GetNearestScope:CodeItem( docPath:String,docLine:Int,above:Bool )
 		Return Null
 	End
 	Method ItemAtScope:CodeItem( ident:String,filePath:String,docLine:Int )

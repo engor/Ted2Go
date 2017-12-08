@@ -215,6 +215,10 @@ Class TreeViewExt Extends TreeView
 		
 	End
 	
+'	Method PrintExpanded()
+'		
+'		_expander.PrintExpanded()
+'	End
 	
 	Private
 	
@@ -291,12 +295,27 @@ End
 
 Class TreeViewExpander
 	
+	Function ExpandParents( node:TreeView.Node )
+		
+		Local p:=node.Parent
+		While p<>Null
+			p.Expanded=True
+			p=p.Parent
+		Wend
+	End
+	
 	Method Store( node:TreeView.Node,recurse:Bool=False )
 	
 		Local key:=GetNodePath( node )
 	
 		If node.Expanded
 			_expands[key]=True
+			' grab all parents states
+			Local p:=node.Parent
+			While p<>Null
+				_expands[GetNodePath( p )]=p.Expanded
+				p=p.Parent
+			Wend
 		Else
 			_expands.Remove( key )
 		Endif
@@ -344,7 +363,14 @@ Class TreeViewExpander
 		Next
 	End
 	
-	Private
+	Method PrintExpanded()
+		
+		For Local key:=Eachin _expands.Keys
+			If _expands[key] Print "expanded: "+key
+		Next
+	End
+	
+	Protected
 	
 	Field _expands:=New StringMap<Bool>
 	
