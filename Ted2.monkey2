@@ -130,7 +130,7 @@ Using tinyxml2..
 
 Const MONKEY2_DOMAIN:="http://monkeycoder.co.nz"
 
-Global AppTitle:="Ted2Go v2.8a"
+Global AppTitle:="Ted2Go v2.8"
 
 
 Function Main()
