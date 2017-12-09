@@ -35,6 +35,7 @@ End
 Class CodeItem
 	
 	Field nspace:NSpace
+	Field isAlias:=False
 	
 	Method New( ident:String )
 		_ident=ident
@@ -124,6 +125,11 @@ Class CodeItem
 		
 	End
 	
+	Property NumChildren:Int()
+		
+		Return _children?.Length
+	End
+	
 	Property Children:Stack<CodeItem>()
 		Return _children
 	Setter( value:Stack<CodeItem> )
@@ -145,19 +151,13 @@ Class CodeItem
 		_namespace=value
 	End
 	
-	Property IsModuleMember:Bool()
+	Property ModuleName:String()
 		
-		If _isModuleMember=-1
-			Local p:=_parent
-			While p<>Null
-				_isModuleMember=p._isModuleMember
-				If _isModuleMember<>-1 Exit
-				p=p._parent
-			Wend
-		Endif
-		Return _isModuleMember=1 ? True Else False
-	Setter( value:Bool )
-		_isModuleMember=value ? 1 Else 0
+		Local s:=_modName
+		If Not s Then s=_parent?.ModuleName
+		Return s
+	Setter( value:String )
+		_modName=value
 	End
 	
 	Property FilePath:String()
@@ -200,13 +200,13 @@ Class CodeItem
 		item.Parent=Self
 	End
 	
-	Property SuperTypes:List<CodeType>()
+	Property SuperTypes:Stack<CodeType>()
 		Return _superTypes
-	Setter( value:List<CodeType> )
+	Setter( value:Stack<CodeType> )
 		_superTypes=value
 	End
 	
-	Property SuperTypesStr:List<String>()
+	Property SuperTypesStr:Stack<String>()
 		Return _superTypesStr
 	End
 	
@@ -232,14 +232,20 @@ Class CodeItem
 		_isExtension=value
 	End
 	
+	Property IsIfaceMember:Bool()
+		Return _isIfaceMember
+	Setter( value:Bool )
+		_isIfaceMember=value
+	End
+	
 	Method AddSuperType( type:CodeType )
-		If Not _superTypes Then _superTypes=New List<CodeType>
-		_superTypes.AddLast( type )
+		If Not _superTypes Then _superTypes=New Stack<CodeType>
+		_superTypes.Add( type )
 	End
 	
 	Method AddSuperTypeStr( type:String )
-		If Not _superTypesStr Then _superTypesStr=New List<String>
-		_superTypesStr.AddLast( type )
+		If Not _superTypesStr Then _superTypesStr=New Stack<String>
+		_superTypesStr.Add( type )
 	End
 	
 	Method FindParent:CodeItem( parentIdent:String )
@@ -309,12 +315,12 @@ Class CodeItem
 	Field _namespace:String
 	Field _filePath:String
 	Field _scopeStartPos:Vec2i=New Vec2i,_scopeEndPos:Vec2i=New Vec2i
-	Field _superTypes:List<CodeType>,_superTypesStr:List<String>
+	Field _superTypes:Stack<CodeType>,_superTypesStr:Stack<String>
 	Field _params:CodeParam[]
 	Field _paramsStr:String
-	Field _isModuleMember:=-1
 	Field _isExtension:Bool
-	
+	Field _isIfaceMember:Bool
+	Field _modName:String
 	
 	Private
 	

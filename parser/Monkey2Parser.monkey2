@@ -90,11 +90,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return True
 	End
 	
-	Method ParseFile:String( filePath:String,pathOnDisk:String,isModule:Bool )
-		
-		If Not isModule
-			isModule=filePath.StartsWith( _modsPath )
-		Endif
+	Method ParseFile:String( filePath:String,pathOnDisk:String,moduleName:String )
 		
 		' is file modified?
 		Local time:=GetFileTime( pathOnDisk )
@@ -111,7 +107,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Endif
 		
 		' start parsing process
-		Local str:=StartParsing( pathOnDisk,isModule )
+		Local str:=StartParsing( pathOnDisk )
 		
 		If Not str Return "#" 'special kind of error
 		
@@ -138,7 +134,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		Local nspace:= jobj.Contains( "namespace" ) ? jobj["namespace"].ToString() Else ""
 		
-		
 		If jobj.Contains( "members" )
 			Local items:=New Stack<CodeItem>
 			Local members:=jobj["members"].ToArray()
@@ -147,7 +142,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Items.AddAll( items )
 			
 			For Local i:=Eachin items
-				i.IsModuleMember=isModule
+				i.ModuleName=moduleName
 				NSpace.AddItem( nspace,i )
 			Next
 			'Print "file parsed: "+filePath+", items.count: "+items.Count()
@@ -169,7 +164,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Endif
 				file=folder+file
 				'Print "parse import: "+file+"  mod: "+Int(isModule)
-				ParseFile( file,file,isModule )
+				ParseFile( file,file,moduleName )
 			Next
 		Endif
 		
@@ -221,7 +216,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			arr=endPos.Split( ":" )
 			item.ScopeEndPos=New Vec2i( Int(arr[0])-1,Int(arr[1]) )
 			item.Namespac=namespac
-			
+			item.IsIfaceMember=(flags & Flags.DECL_IFACEMEMBER <> 0)
 			'Print "parser. add item: "+item.Scope+" "+kind
 			
 			If kind="class" Or kind="struct" Or kind="interface" Or kind="enum"
@@ -254,6 +249,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				' alias
 				If kind = "alias"
 					_aliases.Add( ident,item )
+					item.isAlias=True
 				End
 				
 			Endif
@@ -263,6 +259,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Local supIdent:=sup["ident"]
 				If supIdent Then item.AddSuperTypeStr( supIdent.ToString() )
 			Endif
+			
 			If jobj.Contains( "ifaceTypes" )
 				Local ifaces:=jobj["ifaceTypes"].ToArray()
 				For Local ifaceType:=Eachin ifaces
@@ -271,7 +268,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 					If iIdent Then item.AddSuperTypeStr( iIdent.ToString() )
 				Next
 			Endif
-			
 			
 			If parent
 				item.SetParent( parent )
@@ -318,7 +314,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Next
 		
 		If result
-			' try to check is we inside of method/ property / etc
+			' try to check - are we inside of method/ property / etc
 			Repeat
 				Local i:=GetInnerScope( result,docLine )
 				If i = Null Exit
@@ -343,6 +339,50 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
+	Method GetNearestScope:CodeItem( docPath:String,docLine:Int,above:Bool )
+	
+		Local items:=ItemsMap[docPath]
+	
+		If Not items Return Null
+	
+		' all classes / structs
+		Local fakeItem:=New CodeItem( "fake" )
+		fakeItem.Children=items
+'		For Local i:=Eachin items
+'			If docLine > i.ScopeStartPos.x And docLine < i.ScopeEndPos.x
+'				result=i
+'				Exit
+'			Endif
+'		Next
+		Local dir:=above ? -1 Else 1
+		Local result:=GetInnerScope( fakeItem,docLine )
+		
+		If result
+			' try to check - are we inside of method/ property / etc
+			Repeat
+				Local i:=GetInnerScope( result,docLine,dir )
+				If i = Null Exit
+				result=i
+			Forever
+	
+		Else
+			' try to find in extension members
+			For Local list:=Eachin ExtraItemsMap.Values
+				For Local i:=Eachin list
+					If i.FilePath<>docPath Continue
+					If docLine > i.ScopeStartPos.x And docLine < i.ScopeEndPos.x
+						result=i
+						Exit
+					Endif
+				Next
+				If result Exit
+			Next
+		End
+	
+		Return result
+	
+	End
+	
 	Method ItemAtScope:CodeItem( ident:String,filePath:String,docLine:Int )
 		
 		Local opts:=New ParserRequestOptions
@@ -351,7 +391,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 		opts.filePath=filePath
 		opts.docLineNum=docLine
 		opts.usingsFilter=_lastUsingsFilter
+		opts.intelliIdent=False
+		
 		GetItemsInternal( opts,1 )
+		
 		Return (Not opts.results.Empty) ? opts.results[0] Else Null
 	End
 	
@@ -363,12 +406,42 @@ Class Monkey2Parser Extends CodeParserPlugin
 		For Local i:=Eachin Items
 			If i.Ident=ident Return i
 		Next
+		For Local i:=Eachin _aliases.Values
+			If i.Ident=ident Return i
+		Next
 		Return Null
 	End
 	
 	Method GetItemsForAutocomplete( options:ParserRequestOptions )
 		
 		GetItemsInternal( options )
+	End
+	
+	Method GetConstructors( item:CodeItem,target:Stack<CodeItem> )
+		
+		If item.isAlias
+			Local type:=item.Type?.ident
+			item=Self[type]
+			If Not item Return
+		Endif
+		
+		If Not item.IsLikeClass Print "not a class" ; Return
+		
+		If item.Children
+			For Local i:=Eachin item.Children
+		
+				If i.Ident.ToLower()="new"
+					target+=i
+				Endif
+			Next
+		Endif
+		
+'		If _superTypes
+'			For Local i:=Eachin _superTypes
+'		
+'			Next
+'		Endif
+		
 	End
 	
 	
@@ -395,6 +468,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local docLineStr:=options.docLineStr
 		Local target:=options.results
 		Local usingsFilter:=options.usingsFilter
+		Local intelliIdent:=options.intelliIdent
 		
 		_lastUsingsFilter=usingsFilter
 		
@@ -442,7 +516,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 					
 					For Local i:=Eachin items
 						'Print "item at scope: "+i.Text
-						If Not CheckIdent( i.Ident,firstIdent,onlyOne )
+						If Not CheckIdent( i.Ident,firstIdent,onlyOne,intelliIdent )
 							'Print "cont1: "+i.Ident
 							Continue
 						Endif
@@ -513,7 +587,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 					Endif
 					
 					'Print "global 1: "+i.Scope
-					If Not CheckIdent( i.Ident,firstIdent,onlyOne )
+					If Not CheckIdent( i.Ident,firstIdent,onlyOne,intelliIdent )
 						'Print "skip 2 "+i.Ident
 						Continue
 					Endif
@@ -678,7 +752,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 						' skip constructors
 						If Not (isSelf Or isSuper) And i.Kind=CodeItemKind.Method_ And i.Ident="New" Continue
 						
-						If Not CheckIdent( i.Ident,identPart,last )
+						If Not CheckIdent( i.Ident,identPart,last,intelliIdent )
 							'Print "continue 1: "+i.Ident
 							Continue
 						Endif
@@ -767,7 +841,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Endif
 	End
 	
-	Method StartParsing:String( pathOnDisk:String,isModule:Bool )
+	Method StartParsing:String( pathOnDisk:String )
 		
 		If Not _enabled Return ""
 		
@@ -793,12 +867,12 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Next
 		
 		For Local d:=Eachin dirs
-			If GetFileType( _modsPath+d ) = FileType.Directory
+			If GetFileType( _modsPath+d )=FileType.Directory
 				Local file:=_modsPath + d + "/" + d + ".monkey2"
 				'Print "module: "+file
-				If GetFileType( file ) = FileType.File
+				If GetFileType( file )=FileType.File
 					OnParseModule( file )
-					ParseFile( file,file,True )
+					ParseFile( file,file,d )
 				Endif
 			Endif
 		Next
@@ -991,15 +1065,44 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return type
 	End
 	
-	Method GetInnerScope:CodeItem( parent:CodeItem,docLine:Int )
+	Method GetInnerScope:CodeItem( parent:CodeItem,docLine:Int,dir:Int=0 )
 		
 		Local items:=parent.Children
-		If items = Null Return Null
-		For Local i:=Eachin items
-			If docLine > i.ScopeStartPos.x And docLine < i.ScopeEndPos.x Return i
-		Next
-		Return Null
+		If items=Null Return Null
 		
+		Local result:CodeItem=Null
+		Local storedPos:=dir>0 ? 999999999 Else -1
+		For Local i:=Eachin items
+			
+			If i.Kind=CodeItemKind.Param_ Continue
+			
+			Local i1:=i.ScopeStartPos.x
+			Local i2:=i.ScopeEndPos.x
+			
+			'inside
+			If docLine>i1 And docLine<=i2
+				result=i
+				Exit
+			Endif
+			
+			If dir=-1 ' above
+				
+				If docLine>i2 And i2>storedPos
+					result=i
+					storedPos=i2
+				Endif
+				
+			Elseif dir=1 ' below
+				
+				If docLine<i1 And i1<storedPos
+					result=i
+					storedPos=i1
+				Endif
+				
+			End
+			
+		Next
+		Return result
 	End
 	
 	Function CheckUsingsFilter:Bool( nspace:String,usingsFilter:StringStack )
@@ -1143,12 +1246,12 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
-	Method CheckIdent:Bool( ident1:String,ident2:String,startsOnly:Bool,smartStarts:Bool=True )
+	Method CheckIdent:Bool( ident1:String,ident2:String,startsOnly:Bool,intelliIdent:Bool=True )
 	
-		If ident2 = "" Return True
+		If ident2="" Return True
 		
 		If startsOnly
-			Return smartStarts ? CheckStartsWith( ident1,ident2 ) Else ident1.StartsWith( ident2 )
+			Return intelliIdent ? CheckStartsWith( ident1,ident2 ) Else ident1.StartsWith( ident2 )
 		Else
 			Return ident1 = ident2
 		Endif
@@ -1213,25 +1316,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Method IsPosInsideOfQuotes:Bool( text:String,pos:Int )
 	
-		Local i:=0
-		Local n:=text.Length
-		if pos = 0 Return False
-		Local quoteCounter:=0
-		While i < n
-			Local c:=text[i]
-			If i = pos
-				If quoteCounter Mod 2 = 0 'not inside of string
-					Return False
-				Else 'inside
-					Return True
-				Endif 
-			Endif
-			If c = Chars.DOUBLE_QUOTE
-				quoteCounter+=1
-			Endif
-			i+=1
-		Wend
-		Return (quoteCounter Mod 2 <> 0)
+		Return IsPosInsideOfQuotes_Mx2( text,pos )
 	End
 	
 	Method RemovePrevious( path:String )
@@ -1258,6 +1343,7 @@ Struct Chars
 	Const SINGLE_QUOTE:="'"[0] '39
 	Const DOUBLE_QUOTE:="~q"[0] '34
 	Const COMMA:=","[0] '44
+	Const SEMICOLON:=";"[0]
 	Const DOT:="."[0] '46
 	Const EQUALS:="="[0] '61
 	Const LESS_BRACKET:="<"[0] '60

@@ -87,8 +87,44 @@ Class DocumentManager
 	End
 	
 	Property OpenDocuments:Ted2Document[]()
-	
+		
 		Return _openDocs.ToArray()
+	End
+	
+	Property CurrentDocumentLabel:String()
+		
+		Return DocumentLabel( CurrentDocument )
+	End
+	
+	Method DocumentLabel:String( doc:Ted2Document )
+		
+		If Not doc Return ""
+		
+		Local label:=StripDir( doc.Path )
+	
+		If ExtractExt( doc.Path ).ToLower()=".monkey2"  label=StripExt( label )
+	
+		label=doc.State+label
+	
+		If doc.Dirty label+="*"
+	
+		Return label
+	End
+	
+	Method UpdateCurrentTabLabel()
+		
+		Local doc:=CurrentDocument
+		If doc _tabView.SetTabText( doc.View,DocumentLabel( doc ) )
+	End
+	
+	Method IsDocumentOpened:Bool( path:String )
+		
+		For Local i:=Eachin _openDocs
+			
+			If i.Path=path Return True
+		Next
+		
+		Return False
 	End
 	
 	Method OpenDocument:Ted2Document( path:String,makeCurrent:Bool=False,openByHand:Bool=True )
@@ -110,10 +146,17 @@ Class DocumentManager
 		If Not doc.Load() Return Null
 
 		InitDoc( doc )
-	
-		_openDocs.Add( doc )
+		
 		Local addAtBegin:=(openByHand And Prefs.MainPlaceDocsAtBegin)
-		Local tab:=_tabView.AddTab( TabText( doc ),doc.View,False,addAtBegin )
+		
+		If addAtBegin
+			_openDocs.Insert( 0,doc )
+		Else
+			_openDocs.Add( doc )
+		Endif
+		
+		Local tab:=_tabView.AddTab( DocumentLabel( doc ),doc.View,False,addAtBegin )
+		
 		tab.DoubleClicked+=Lambda()
 			DocumentDoubleClicked( doc )
 		End
@@ -148,12 +191,14 @@ Class DocumentManager
 			Endif
 			
 			Local newDoc:=newType.CreateDocument( newPath )
-			If Not newDoc.Load() Return Null
+			If Not newDoc.Load()
+				Return Null
+			Endif
 			
 			InitDoc( newDoc )
 			
 			_openDocs[i]=newDoc
-			_tabView.SetTabText( i,TabText( newDoc ) )
+			_tabView.SetTabText( i,DocumentLabel( newDoc ) )
 			_tabView.SetTabView( i,newDoc.View )
 			
 			doc.Close()
@@ -163,7 +208,7 @@ Class DocumentManager
 			DocumentAdded( newDoc )
 			
 			If doc=_currentDoc CurrentDocument=newDoc
-
+			
 			Return newDoc
 		Next
 		
@@ -246,6 +291,7 @@ Class DocumentManager
 	End
 
 	Method Update()
+		
 		nextDocument.Enabled=_openDocs.Length>1
 		prevDocument.Enabled=_openDocs.Length>1
 	End
@@ -301,22 +347,9 @@ Class DocumentManager
 		Endif
 	End
 	
-	Method TabText:String( doc:Ted2Document )
-	
-		Local label:=StripDir( doc.Path )
-		
-		If ExtractExt( doc.Path ).ToLower()=".monkey2"  label=StripExt( label )
-		
-		label=doc.State+label
-		
-		If doc.Dirty label+="*"
-		
-		Return label
-	End
-	
 	Method UpdateTabLabel( doc:Ted2Document )
 	
-		If doc _tabView.SetTabText( doc.View,TabText( doc ) )
+		If doc _tabView.SetTabText( doc.View,DocumentLabel( doc ) )
 	End
 	
 	Method UpdateWindowTitle( doc:Ted2Document )

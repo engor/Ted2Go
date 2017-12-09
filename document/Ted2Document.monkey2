@@ -3,18 +3,22 @@ Namespace ted2go
 
 
 Class Ted2Document
-
+	
+	Const Empty:=New Ted2Document("")
+	
 	Field DirtyChanged:Void()
 	
 	Field StateChanged:Void()
 
 	Field Closed:Void()
+	
+	Field Renamed:Void( newPath:String,oldPath:String )
 
 	Method New( path:String )
 	
 		_path=path
 		_fileExt=ExtractExt( _path )
-				
+		
 		_modTime=GetFileTime( _path )
 	End
 	
@@ -23,7 +27,7 @@ Class Ted2Document
 		Return _path
 	End
 	
-	Property FileExtension:String()'file extension
+	Property FileExtension:String()
 		
 		Return _fileExt
 	End
@@ -106,11 +110,17 @@ Class Ted2Document
 		Return True
 	End
 
-	'DON'T USE YET!	
 	Method Rename( path:String )
+		
+		If path=_path Return
+		
+		Local old:=_path
 		_path=path
+		_fileExt=ExtractExt( _path )
 		
 		Dirty=True
+		
+		Renamed( path,old )
 	End
 	
 	Method Close()
@@ -173,11 +183,11 @@ Class Ted2DocumentType Extends Plugin
 		ext=ext.ToLower()
 
 		Local types:=Plugin.PluginsOfType<Ted2DocumentType>()
-		Local defaultType:Ted2DocumentType = Null
+		Local defaultType:Ted2DocumentType=Null
 		
 		For Local type:=Eachin types
 		
-			For Local ext2:=Eachin type.Extensions	'Array.Contains() would be nice!
+			For Local ext2:=Eachin type.Extensions
 			
 				If ext=ext2 Return type
 				If ext2 = ".*" Then defaultType = type
@@ -185,9 +195,7 @@ Class Ted2DocumentType Extends Plugin
 			
 		Next
 		
-		If defaultType <> Null Return defaultType 'use it if there is no registered extension
-		
-		Return Null
+		Return defaultType 'use it if there is no registered extension
 	End
 	
 	Method CreateDocument:Ted2Document( path:String )
@@ -204,25 +212,23 @@ Class Ted2DocumentType Extends Plugin
 	
 	Property Extensions:String[]()
 	
-		Return _exts
+		Return _exts.ToArray()
 	
 	Setter( exts:String[] )
 	
-		_exts=exts
+		_exts.Clear()
+		_exts.AddAll( exts )
 	End
 	
 	Method AddExtensions( exts:String[] )
-		If _exts = Null
-			_exts=exts
-			Return
-		Endif
-		' check  for duplicates here?
-		Local arr:=New String[_exts.Length+exts.Length]
-		_exts.CopyTo( arr,0,0,_exts.Length )
-		exts.CopyTo( arr,0,_exts.Length,exts.Length )
-		_exts=arr
-	End
 		
+		For Local ext:=Eachin exts
+			If Not _exts.Contains( ext )
+				_exts.Add( ext )
+			Endif
+		Next
+	End
+	
 	Method OnCreateDocument:Ted2Document( path:String ) Virtual
 	
 		Return Null	'should return hex editor!
@@ -230,7 +236,7 @@ Class Ted2DocumentType Extends Plugin
 
 	Private
 	
-	Field _exts:String[]
+	Field _exts:=New StringStack
 	
 	
 End

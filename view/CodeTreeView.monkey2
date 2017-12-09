@@ -44,19 +44,20 @@ Class CodeTreeView Extends TreeViewExt
 		If expandIfOnlyOneItem And RootNode.NumChildren=1
 			RootNode.Children[0].Expanded=True
 		Endif
+		
 	End
 	
 	Method SelectByScope( scope:CodeItem )
-	
+		
 		Local node:=FindNode( RootNode,scope )
 		If Not node Return
 		
-		If scope.IsLikeClass
-			node.Expanded=True
-			NodeExpanded( node )
-			Return
-		Endif
+		node.Expanded=True
+		TreeViewExpander.ExpandParents( node )
 		
+		MeasureLayoutSize()
+		
+		Selected=Null
 		Selected=node
 	End
 	
@@ -173,13 +174,14 @@ End
 Class CodeTreeNode Extends TreeView.Node
 
 	Method New( item:CodeItem,node:TreeView.Node )
+		
 		Super.New( item.Text,node )
 		_code=item
 		Icon=CodeItemIcons.GetIcon( item )
-		
 	End
 	
 	Property CodeItem:CodeItem()
+		
 		Return _code
 	End
 	

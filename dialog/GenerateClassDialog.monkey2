@@ -16,7 +16,7 @@ Class GenerateClassDialog Extends DialogExt
 		
 		Local dock:=New DockingView
 		
-		_codeView=New Ted2CodeTextView
+		_codeView=New Ted2CodeTextView( Ted2Document.Empty )
 		_codeView.FileType=".monkey2"
 		_codeView.MinSize=New Vec2i( 200,200 )
 		dock.AddView( _codeView,"bottom" )

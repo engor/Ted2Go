@@ -149,6 +149,9 @@ Class BuildActions Implements IModuleBuilder
 		_iosTarget=New CheckButton( "iOS",,group )
 		_iosTarget.Layout="fill-x"
 		
+		_verboseMode=New CheckButton( "Verbose")
+		_verboseMode.Layout="fill-x"
+		
 		targetMenu=New MenuExt( "Build target" )
 		targetMenu.AddView( _debugConfig )
 		targetMenu.AddView( _releaseConfig )
@@ -159,6 +162,8 @@ Class BuildActions Implements IModuleBuilder
 		targetMenu.AddView( _iosTarget )
 		targetMenu.AddSeparator()
 		targetMenu.AddAction( buildSettings )
+		targetMenu.AddSeparator()
+		targetMenu.AddView( _verboseMode )
 		
 		'check valid targets...WIP...
 		
@@ -204,6 +209,11 @@ Class BuildActions Implements IModuleBuilder
 		Return _locked
 	End
 	
+	Property Verbosed:Bool()
+	
+		Return _verboseMode.Checked
+	End
+	
 	Method LockBuildFile()
 		
 		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
@@ -217,6 +227,8 @@ Class BuildActions Implements IModuleBuilder
 		jobj["buildConfig"]=New JsonString( _buildConfig )
 		
 		jobj["buildTarget"]=New JsonString( _buildTarget )
+		
+		jobj["buildVerbose"]=New JsonBool( _verboseMode.Checked )
 	End
 		
 	Method LoadState( jobj:JsonObject )
@@ -239,12 +251,12 @@ Class BuildActions Implements IModuleBuilder
 		Endif
 		
 		If jobj.Contains( "buildTarget" )
-					
-			local target:=jobj["buildTarget"].ToString()
-
-			If _validTargets.Contains( target )
 			
-				 _buildTarget=target
+			local target:=jobj["buildTarget"].ToString()
+			
+			If _validTargets.Contains( target )
+				
+				_buildTarget=target
 				
 				Select _buildTarget
 				Case "desktop"
@@ -259,6 +271,10 @@ Class BuildActions Implements IModuleBuilder
 			
 			Endif
 			
+		Endif
+		
+		If jobj.Contains( "buildVerbose" )
+			_verboseMode.Checked=jobj.GetBool( "buildVerbose" )
 		Endif
 		
 	End
@@ -349,6 +365,7 @@ Class BuildActions Implements IModuleBuilder
 	Field _emscriptenTarget:CheckButton
 	Field _androidTarget:CheckButton
 	Field _iosTarget:CheckButton
+	Field _verboseMode:CheckButton
 	
 	Field _validTargets:StringStack
 	Field _timing:Long
@@ -490,6 +507,7 @@ Class BuildActions Implements IModuleBuilder
 			
 			Local cmd:=MainWindow.Mx2ccPath+" makemods -target="+target
 			If clean cmd+=" -clean"
+			If Verbosed cmd+=" -verbose"
 			cmd+=" -config="+cfg
 			If modules Then cmd+=" "+modules
 			
@@ -523,6 +541,7 @@ Class BuildActions Implements IModuleBuilder
 		If run Then action="build"
 
 		Local cmd:=MainWindow.Mx2ccPath+" makeapp -"+action+" "+opts
+		If Verbosed cmd+=" -verbose"
 		cmd+=" -config="+config
 		cmd+=" -target="+target
 		cmd+=" ~q"+buildDoc.Path+"~q"

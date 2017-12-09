@@ -54,7 +54,7 @@
 
 		"TabClose":{
 			"margin":[8,8,8,8 ],
-			"icons":"prime_assets/tabclose_icons.png",
+			"icons":"prime_assets/prime_tabclose_icons.png",
 			"iconColor":"text-disabled",
 			"states":{
 				"hover":{

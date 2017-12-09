@@ -1,5 +1,5 @@
-Namespace ted2go
 
+Namespace ted2go
 
 Class UpdateModulesDialog Extends DialogExt
 	
@@ -171,11 +171,17 @@ Class UpdateModulesDialog Extends DialogExt
 	This sorts modules into dependancy order.
 	
 	#end
-	Function EnumModules( out:StringStack,cur:String,deps:StringMap<StringStack> )
-		If out.Contains( cur ) Return
+	Function EnumModules( out:StringStack,cur:String,src:String,deps:StringMap<StringStack> )
 		
+		If Not deps.Contains( cur )
+'			Print "Can't find module dependancy '"+cur+"' - check module.json file for '"+src+"'"
+			Return
+		End
+		
+		If out.Contains( cur ) Return
+
 		For Local dep:=Eachin deps[cur]
-			EnumModules( out,dep,deps )
+			EnumModules( out,dep,cur,deps )
 		Next
 		
 		out.Push( cur )
@@ -183,43 +189,46 @@ Class UpdateModulesDialog Extends DialogExt
 	
 	Function EnumModules:String[]()
 	
+		LoadEnv()
+		
 		Local mods:=New StringMap<StringStack>
 		
-		Local modsPath:=MainWindow.ModsPath
+		For Local moddir:=Eachin ModuleDirs
 	
-		For Local f:=Eachin LoadDir( modsPath )
-		
-			Local dir:=modsPath+f+"/"
-			If GetFileType( dir )<>FileType.Directory Continue
+			For Local f:=Eachin LoadDir( moddir )
 			
-			Local str:=LoadString( dir+"module.json" )
-			If Not str Continue
-			
-			Local obj:=JsonObject.Parse( str )
-			If Not obj 
-				Print "Error parsing json:"+dir+"module.json"
-				Continue
-			Endif
-			
-			Local name:=obj["module"].ToString()
-			If name<>f Continue
-			
-			Local deps:=New StringStack
-			If name<>"monkey" deps.Push( "monkey" )
-			
-			Local jdeps:=obj["depends"]
-			If jdeps
-				For Local dep:=Eachin jdeps.ToArray()
-					deps.Push( dep.ToString() )
-				Next
-			Endif
-			
-			mods[name]=deps
+				Local dir:=moddir+f+"/"
+				If GetFileType( dir )<>FileType.Directory Continue
+				
+				Local str:=LoadString( dir+"module.json" )
+				If Not str Continue
+				
+				Local obj:=JsonObject.Parse( str )
+				If Not obj 
+					Print "Error parsing json:"+dir+"module.json"
+					Continue
+				Endif
+				
+				Local name:=obj["module"].ToString()
+				If name<>f Continue
+				
+				Local deps:=New StringStack
+				If name<>"monkey" deps.Push( "monkey" )
+				
+				Local jdeps:=obj["depends"]
+				If jdeps
+					For Local dep:=Eachin jdeps.ToArray()
+						deps.Push( dep.ToString() )
+					Next
+				Endif
+				
+				mods[name]=deps
+			Next
 		Next
-		
+				
 		Local out:=New StringStack
 		For Local cur:=Eachin mods.Keys
-			EnumModules( out,cur,mods )
+			EnumModules( out,cur,"",mods )
 		Next
 		
 		Return out.ToArray()
@@ -230,22 +239,4 @@ Class UpdateModulesDialog Extends DialogExt
 		out.AddAll( EnumModules() )
 	End
 
-#rem	
-	Function GetModulesNames( out:StringStack )
-	
-		Local modsPath:=MainWindow.ModsPath
-	
-		Local dd:=LoadDir( modsPath )
-	
-		For Local d:=Eachin dd
-			If GetFileType( modsPath+d ) = FileType.Directory
-				Local file:=modsPath + d + "/module.json"
-				If GetFileType( file ) = FileType.File
-					out.Add( d )
-				Endif
-			Endif
-		Next
-	End
-#end
-	
 End

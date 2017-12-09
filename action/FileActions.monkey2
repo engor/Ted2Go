@@ -144,7 +144,7 @@ Class FileActions
 		Local name:=StripDir( doc.Path )
 		Local path:=MainWindow.RequestFile( "Save As",name,True )
 		If Not path Return Null
-				
+		
 		If Not ExtractExt( path ) path+=ExtractExt( doc.Path )
 		
 		Return _docs.RenameDocument( doc,path )

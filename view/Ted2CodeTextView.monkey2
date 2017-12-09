@@ -3,15 +3,31 @@ Namespace ted2go
 
 
 Class Ted2CodeTextView Extends CodeTextView
-
+	
+	Method New( doc:Ted2Document )
+		
+		_document=doc
+		
+		AdjustFileType()
+		
+		_document.Renamed+=Lambda( newPath:String,oldPath:String )
+			
+			AdjustFileType()
+		End
+	End
+	
 	Property FileType:String() 'where else we can store this type?
-		return _type
+		
+		Return _type
+		
 	Setter( value:String )
+		
+		If value=_type Return
 		_type=value
-		Keywords = KeywordsManager.Get(_type)
-		Highlighter = HighlightersManager.Get(_type)
-		Formatter = FormattersManager.Get(_type)
-		Document.TextHighlighter = Highlighter.Painter
+		Keywords=KeywordsManager.Get(_type)
+		Highlighter=HighlightersManager.Get(_type)
+		Formatter=FormattersManager.Get(_type)
+		Document.TextHighlighter=Highlighter.Painter
 	End
 	
 	Property FilePath:String()
@@ -31,6 +47,14 @@ Class Ted2CodeTextView Extends CodeTextView
 	
 	Protected
 	
+	Field _document:Ted2Document
+	
+	Method AdjustFileType()
+		
+		FileType=_document.FileExtension
+		FilePath=_document.Path
+	End
+	
 	Method OnKeyEvent( event:KeyEvent ) Override
 	
 		TextViewKeyEventFilter.FilterKeyEvent( event,Self,FileType )
@@ -40,7 +64,7 @@ Class Ted2CodeTextView Extends CodeTextView
 		Endif
 		
 	End
-
+	
 	Private
 	
 	Field _type:String

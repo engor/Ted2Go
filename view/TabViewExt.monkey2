@@ -20,7 +20,8 @@ Class ScrollViewTabs Extends ScrollView
 		
 			Scroll-=delta
 		
-			If scroll<>Scroll event.Eat()
+			'If scroll<>Scroll event.Eat()
+			event.Eat()
 			Return
 		End
 		
@@ -34,7 +35,7 @@ End
 ' full copy of mojox.TabView
 ' can't extend it, all I need is private there
 '
-Class TabViewExt Extends DockingView
+Class TabViewExt Extends DockingView Implements IDraggableHolder
 
 	#rem monkeydoc Invoked when the current tab changes.
 	#end
@@ -107,8 +108,58 @@ Class TabViewExt Extends DockingView
 	Function CreateDraggableTab:TabButtonExt( text:String,view:View,possibleParents:TabViewExt[],icon:Image=Null,closable:Bool=False )
 		
 		Local tab:=New TabButtonExt( text,icon,view,closable,Null )
-		tab.PossibleParentDocks=possibleParents
+		tab.PossibleHolders=possibleParents
 		Return tab
+	End
+	
+	Method Attach( item:Object,eventLocation:Vec2i )
+		
+		Local tab:=Cast<TabButtonExt>( item )
+		AddTab( tab )
+		MakeCurrent( tab,True )
+		
+		_vis=True
+		_curIndex=CurrentIndex-1 '-1 for [+] tab
+	End
+	
+	Method Detach:View( item:Object )
+		
+		Local tab:=Cast<TabButtonExt>( item )
+		RemoveTab( tab )
+		tab.Selected=True
+		Return tab
+	End
+	
+	Method OnDragStarted()
+		
+		_dragDropMode=True
+		_curIndex=CurrentIndex
+		_vis=Visible
+		Visible=True
+		If Not _placeHolderTab
+			Local v:=New Label ("[Drop tab here]")
+			v.Style=GetStyle( "TabsDropArea","Label" )
+			v.Layout="fill"
+			v.Gravity=New Vec2f( .5,.5 )
+			_placeHolderTab=AddTab( "[+]",v,True )
+			_placeHolderContent=v
+		Else
+			AddTab( _placeHolderTab,True )
+		Endif
+	End
+	
+	Method OnDragEnded()
+		
+		If Not _dragDropMode Return
+		
+		_dragDropMode=False
+		
+		RemoveTab( _placeHolderTab )
+		_placeHolderTab=Null
+'		
+		Visible=(_vis And NumTabs>0)
+		
+		If _curIndex>=0 Then CurrentIndex=_curIndex
 	End
 	
 	#rem monkeydoc Tab view flags.
@@ -347,8 +398,9 @@ Class TabViewExt Extends DockingView
 	End
 	
 	Method SetTabText( view:View,text:String )
-	
-		SetTabText( TabIndex( view ),text )
+		
+		Local index:=TabIndex( view )
+		If index>=0 Then SetTabText( index,text )
 	End
 	
 	#rem monkeydoc Sets a tab's icon.
@@ -376,38 +428,6 @@ Class TabViewExt Extends DockingView
 				Return
 			Endif
 		Next
-	End
-	
-	Method ShowDragPlaceHolder()
-		
-		_dragDropMode=True
-		_curIndex=CurrentIndex
-		_vis=Visible
-		Visible=True
-		If Not _placeHolderTab
-			Local v:=New Label ("[Drop tab here]")
-			v.Style=GetStyle( "TabsDropArea","Label" )
-			v.Layout="fill"
-			v.Gravity=New Vec2f( .5,.5 )
-			_placeHolderTab=AddTab( "[+]",v,True )
-			_placeHolderContent=v
-		Else
-			AddTab( _placeHolderTab,True )
-		Endif
-	End
-	
-	Method HideDragPlaceHolder()
-		
-		If Not _dragDropMode Return
-		
-		_dragDropMode=False
-		
-		RemoveTab( _placeHolderTab )
-		_placeHolderTab=Null
-'		
-		Visible=(_vis And NumTabs>0)
-		
-		If _curIndex>=0 Then CurrentIndex=_curIndex
 	End
 	
 	
@@ -516,7 +536,7 @@ Class TabViewExt Extends DockingView
 End
 
 
-Class TabButtonExt Extends TabButton
+Class TabButtonExt Extends TabButton Implements IDraggableItem<TabViewExt>
 	
 	Field ActiveChanged:Void()
 	
@@ -524,17 +544,18 @@ Class TabButtonExt Extends TabButton
 		
 		Super.New( text,icon,view,closable )
 		_parentDock=parentDock
+		_closable=closable
 	End
 	
 	Property Detachable:Bool()
-		Return PossibleParentDocks<>Null
+		Return PossibleHolders<>Null
 	End
 	
-	Property ParentDock:TabViewExt()
+	Property CurrentHolder:TabViewExt()
 		Return _parentDock
 	End
 	
-	Property PossibleParentDocks:TabViewExt[]()
+	Property PossibleHolders:TabViewExt[]()
 		Return _possibleParentDocks
 	Setter( value:TabViewExt[] )
 		_possibleParentDocks=value
@@ -542,22 +563,7 @@ Class TabButtonExt Extends TabButton
 	
 	Method Activate()
 		
-		Local dock:=ParentDock
-		If dock Then dock.MakeCurrent( Text )
-	End
-	
-	Method TryDropTo( tabDock:TabViewExt )
-		
-		If Not CanDropTo( tabDock )
-			tabDock=_parentDock
-		Endif
-		
-		_parentDock.Visible=(_parentDock.NumTabs>0)
-		_parentDock=tabDock
-		tabDock.AddTab( Self )
-		tabDock.Visible=True
-		
-		Activate()
+		CurrentHolder?.MakeCurrent( Text )
 	End
 	
 	Property IsActive:Bool()
@@ -581,25 +587,26 @@ Class TabButtonExt Extends TabButton
 		Style=GetStyle( _locked ? "TabButtonLocked" Else "TabButton" )
 	End
 	
+	Method OnMouseEvent( event:MouseEvent ) Override
+		
+		If _closable And 
+			event.Type=EventType.MouseUp And 
+			event.Button=MouseButton.Middle
+			
+			CloseClicked()
+			event.Eat()
+			Return
+		Endif
+		
+		Super.OnMouseEvent( event )
+	End
+	
 	
 	Private
 	
 	Field _possibleParentDocks:TabViewExt[]
 	Field _locked:Bool
-	
-	Method CanDropTo:Bool( tabDock:TabViewExt )
-	
-		If Not tabDock Print "if 1" ; Return False
-		If Not _possibleParentDocks Print "if 1" ; Return False
-	
-		For Local d:=Eachin _possibleParentDocks
-	
-			If d=tabDock Return True
-		Next
-		Print "false"
-		Return False
-	End
-	
+	Field _closable:Bool
 End
 
 
@@ -623,119 +630,16 @@ Class TabButtonExt_Bridge Extends TabButtonExt Abstract
 End
 
 
-Class DraggableTabsListener
+Class DraggableTabsListener Extends DraggableViewListener<TabButtonExt,TabViewExt>
 	
-	Method New()
+	Method GetItem:TabButtonExt( eventView:View,eventLocation:Vec2i ) Override
 		
-		App.MouseEventFilter+=OnMouseEvent
+		Return Cast<TabButtonExt>( eventView )
 	End
 	
-	Private
-	
-	Global _label:Label
-	Global _tab:TabButtonExt
-	Global _pressedPos:Vec2i
-	Global _detached:Bool
-	
-	Function OnMouseEvent( event:MouseEvent )
-	
-		Select event.Type
-			
-			Case EventType.MouseDown
-				
-				_tab=Cast<TabButtonExt>( event.View )
-				If Not _tab Return
-				
-				If Not _tab.Detachable
-					_tab=Null
-					Return
-				Endif
-				
-				_pressedPos=Mouse.Location
-				
-			
-			Case EventType.MouseMove
-			
-				If Not _tab Return
-				
-				If _detached
-					Local r:=_tab.Frame
-					Local sz:=r.Size
-					r.TopLeft=Mouse.Location+New Vec2i( 0,-10 )
-					r.BottomRight=r.TopLeft+sz
-					_tab.Frame=r
-					App.RequestRender()
-					Return
-				Endif
-				
-				Local dy:Float=Abs(Mouse.Y-_pressedPos.y)
-				If dy>10.0*App.Theme.Scale.y
-					Detach()
-				Endif
-				
-				
-			Case EventType.MouseUp
-				
-				If Not _detached 
-					_tab=Null
-					Return
-				Endif
-				
-				MainWindow.RemoveChildView( _tab )
-				
-				Local dock:TabViewExt=Null
-				Local v:=App.ActiveViewAtMouseLocation()
-				While v
-					Local d:=Cast<TabViewExt>( v )
-					If d
-						dock=d
-						Exit
-					Endif
-					v=v.Parent
-				Wend
-				
-				If _tab.PossibleParentDocks
-					For Local d:=Eachin _tab.PossibleParentDocks
-						d.HideDragPlaceHolder()
-					Next
-				Endif
-				
-				_tab.TryDropTo( dock )
-				
-				_tab=Null
-				_detached=False
-			
-		End
-	
+	Method GetHolder:TabViewExt( view:View ) Override
+		
+		Return FindViewInHierarchy<TabViewExt>( view )
 	End
-	
-	Function Detach()
-		
-		_detached=True
-		
-'		If Not _label
-'			_label=New Label
-'			_label.Layout="float"
-'			_label.MaxSize=New Vec2i( 40,100 )
-'			MainWindow.AddChildView( _label )
-'		Endif
-'		_label.Text=_tab.Text
-'		_label.Visible=True
-		'Local size:=_label.MeasureLayoutSize()
-		'_label.Frame=New Recti( Mouse.Location,Mouse.Location+size)
-		
-		_tab.ParentDock.RemoveTab( _tab )
-		MainWindow.AddChildView( _tab )
-		_tab.Selected=True
-		
-		If Not _tab.PossibleParentDocks Return
-		
-		For Local d:=Eachin _tab.PossibleParentDocks
-			d.ShowDragPlaceHolder()
-		Next
-		
-	End
-	
 	
 End
-	

@@ -23,6 +23,8 @@
 		"brighter": "#665C54",
 		"brightest": "#7C6F64",
 
+		"separator": "#2A2828",
+
 		"text-default": "#CECECE",
 		"text-highlight": "#FFFFFF",
 		"text-disabled": "#6F6F6F",
@@ -130,7 +132,7 @@
 		},
 
 		"ProgressBar":{
-			"icons":"hollow_assets/progressbar_icons.png"
+			"icons":"hollow_assets/hollow_progressbar_icons.png"
 		},
 
 		"StatusBar":{
@@ -232,7 +234,7 @@
 		},
 		
 		"CheckBox":{
-			"icons":"hollow_assets/checkbox_icons.png",
+			"icons":"hollow_assets/hollow_checkbox_icons.png",
 			"iconColor":"textview-color7",
 			"margin":[0,0,0,0]
 		},
@@ -302,7 +304,7 @@
 		"Menu":{
 			"extends":"DockingView",
 			"padding":[ 0 ],
-			"skin":"hollow_assets/dialog_skin.png",
+			"skin":"hollow_assets/hollow_dialog_skin.png",
 			"skinColor":"dark"
 		},
 		
@@ -334,7 +336,7 @@
 		
 		"MenuSeparator":{
 			"padding":[ 0,0,0,1 ],
-			"backgroundColor":"dark",
+			"backgroundColor":"separator",
 			"border":[ 8,8,7,7 ]
 		},
 
@@ -370,9 +372,14 @@
 			}
 		},
 		
+		"TabButtonLocked":{
+			"extends":"TabButton",
+			"borderColor":"#F26522"
+		},
+		
 		"TabClose":{
 			"margin":[32,0,0,0 ],
-			"icons":"hollow_assets/tabclose_icons.png",
+			"icons":"hollow_assets/hollow_tabclose_icons.png",
 			"iconColor":"text-disabled",
 			"states":{
 				"hover":{
@@ -399,7 +406,7 @@
 		
 		"TreeView":{
 			"backgroundColor":"darker",
-			"icons":"hollow_assets/treeview_icons.png",
+			"icons":"hollow_assets/hollow_treeview_icons.png",
 			"iconColor":"text-background"
 		},
 		
@@ -454,7 +461,7 @@
 		},
 		
 		"Dialog":{
-			"skin":"hollow_assets/dialog_skin.png",
+			"skin":"hollow_assets/hollow_dialog_skin.png",
 			"skinColor":"bright"
 		},
 		

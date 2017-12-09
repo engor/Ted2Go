@@ -142,7 +142,7 @@
 
 		"ProgressBar":{
 			"iconColor":"accent",
-			"icons":"prime_assets/progressbar_icons.png"
+			"icons":"prime_assets/prime_progressbar_icons.png"
 		},
 
 		"StatusBar":{
@@ -222,7 +222,7 @@
 		},
 		
 		"CheckBox":{
-			"icons":"prime_assets/checkbox_icons.png",
+			"icons":"prime_assets/prime_checkbox_icons.png",
 			"iconColor":"accent",
 			"margin":[0,0,0,0]
 		},
@@ -292,7 +292,7 @@
 		"Menu":{
 			"extends":"DockingView",
 			"padding":[ 0 ],
-			"skin":"prime_assets/dialog_skin.png",
+			"skin":"prime_assets/prime_dialog_skin.png",
 			"skinColor":"darkest"
 		},
 		
@@ -358,10 +358,15 @@
 				}
 			}
 		},
+
+		"TabButtonLocked":{
+			"extends":"TabButton",
+			"borderColor":"textview-color4"
+		},
 		
 		"TabClose":{
 			"margin":[32,0,0,0 ],
-			"icons":"prime_assets/tabclose_icons.png",
+			"icons":"prime_assets/prime_tabclose_icons.png",
 			"iconColor":"text-disabled",
 			"states":{
 				"hover":{
@@ -388,7 +393,7 @@
 		
 		"TreeView":{
 			"backgroundColor":"dark",
-			"icons":"prime_assets/treeview_icons.png",
+			"icons":"prime_assets/prime_treeview_icons.png",
 			"iconColor":"#8fff"
 		},
 		
@@ -444,7 +449,7 @@
 		},
 		
 		"Dialog":{
-			"skin":"prime_assets/dialog_skin.png",
+			"skin":"prime_assets/prime_dialog_skin.png",
 			"skinColor":"bright"
 		},
 		

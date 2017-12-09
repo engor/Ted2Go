@@ -158,7 +158,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 		' using lowerCase for keywords
 		Local lastIdent:=(dotPos > 0) ? ident.Slice( dotPos+1 ) Else ident
 		Local lastIdentLower:=lastIdent.ToLower()
-				
+		
 		_view.word=lastIdentLower
 		
 		Local starts:=(_fullIdent And ident.StartsWith( _fullIdent ))
@@ -175,37 +175,37 @@ Class AutocompleteDialog Extends NoTitleDialog
 		'if typed ident starts with previous
 		'need to simple filter items
 		
-		If IsOpened And starts And Not ident.EndsWith(".")
-			
-			Local items:=_view.Items
-			For Local i:=Eachin items
-				
-				If parser.CheckStartsWith( i.Text,lastIdentLower )
-					result.Add( i )
-				Endif
-				
-			Next
-			
-			' some "copy/paste" code
-			_fullIdent=ident
-			_lastIdentPart=lastIdentLower
-			If IsOpened Then Hide() 'hide to re-layout on open
-			
-			'nothing to show
-			If result.Empty
-				Return
-			Endif
-			
-			CodeItemsSorter.SortByIdent( result,lastIdent )
-			
-			_view.Reset()'reset selIndex
-			_view.SetItems( result )
-			
-			Super.Show()
-			
-			_disableUsingsFilter=filter
-			Return
-		End
+'		If IsOpened And starts And Not ident.EndsWith(".")
+'			
+'			Local items:=_view.Items
+'			For Local i:=Eachin items
+'				
+'				If parser.CheckStartsWith( i.Text,lastIdentLower )
+'					result.Add( i )
+'				Endif
+'				
+'			Next
+'			
+'			' some "copy/paste" code
+'			_fullIdent=ident
+'			_lastIdentPart=lastIdentLower
+'			If IsOpened Then Hide() 'hide to re-layout on open
+'			
+'			'nothing to show
+'			If result.Empty
+'				Return
+'			Endif
+'			
+'			CodeItemsSorter.SortByIdent( result,lastIdent )
+'			
+'			_view.Reset()'reset selIndex
+'			_view.SetItems( result )
+'			
+'			Super.Show()
+'			
+'			_disableUsingsFilter=filter
+'			Return
+'		End
 		
 		
 		_fullIdent=ident
@@ -514,7 +514,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 		Next
 		'preprocessor
 		'need to load it like keywords
-		Local s:="#If ,#Rem,#End,#Endif,#Else,#Else If ,#Import ,monkeydoc,__TARGET__,__MOBILE_TARGET__,__DESKTOP_TARGET__,__HOSTOS__"
+		Local s:="#If ,#Rem,#End,#Endif,#Else,#Else If ,#Import ,monkeydoc,__TARGET__,__MOBILE_TARGET__,__DESKTOP_TARGET__,__HOSTOS__,#Reflect "
 		Local arr:=s.Split( "," )
 		For Local i:=Eachin arr
 			list.Add( New ListViewItem( i ) )

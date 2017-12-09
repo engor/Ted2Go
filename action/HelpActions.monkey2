@@ -14,7 +14,7 @@ Class HelpActions
 	Field mx2homepage:Action
 	Field bananas:Action
 	
-
+	
 	Method New()
 	
 		quickHelp=New Action( "Quick help" )
@@ -38,37 +38,17 @@ Class HelpActions
 		
 			GotoUploadModulesPage()
 		End
-
+		
 		about=New Action( "About monkey2" )
 		about.Triggered=Lambda()
 		
-			Local htmlView:=New HtmlView
-			htmlView.Go( MainWindow.AboutPagePath )
-	
-			Local dialog:=New Dialog( "About monkey2" )
-			dialog.ContentView=htmlView
-
-			dialog.MinSize=New Vec2i( 640,600 )
-
-			dialog.AddAction( "Okay!" ).Triggered=dialog.Close
-			
-			dialog.Open()
+			OnAboutDialog( "About monkey2",MainWindow.AboutPagePath )
 		End
-
+		
 		aboutTed2go=New Action( "About ted2go" )
 		aboutTed2go.Triggered=Lambda()
-		
-			Local htmlView:=New HtmlView
-			htmlView.Go( "asset::ted2/aboutTed2Go.html" )
-	
-			Local dialog:=New Dialog( "About ted2go" )
-			dialog.ContentView=htmlView
-
-			dialog.MinSize=New Vec2i( 640,600 )
-
-			dialog.AddAction( "Okay!" ).Triggered=dialog.Close
 			
-			dialog.Open()
+			OnAboutDialog( "About ted2go","asset::ted2/aboutTed2Go.html" )
 		End
 		
 		makeBetter=New Action( "Make this app better! (paypal)" )
@@ -89,7 +69,6 @@ Class HelpActions
 			MainWindow.ShowBananasShowcase()
 		End
 	End
-
 	
 	Private
 	
@@ -97,7 +76,24 @@ Class HelpActions
 	
 	Method OnQuickHelp()
 	
-		MainWindow.ShowQuickHelp()
+		MainWindow.ShowHelp()
+	End
+	
+	Method OnAboutDialog( title:String,url:String,okButton:String="Okay!" )
+	
+		Local htmlView:=New HtmlView
+		htmlView.Go( url )
+	
+		Local dialog:=New DialogExt( title,htmlView )
+	
+		dialog.MinSize=New Vec2i( 640,600 )
+	
+		dialog.AddAction( okButton ).Triggered=dialog.Hide
+	
+		dialog.FadeEnabled=True ' faded
+	
+		dialog.Show()
+	
 	End
 	
 End
