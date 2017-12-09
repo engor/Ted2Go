@@ -232,6 +232,12 @@ Class CodeItem
 		_isExtension=value
 	End
 	
+	Property IsIfaceMember:Bool()
+		Return _isIfaceMember
+	Setter( value:Bool )
+		_isIfaceMember=value
+	End
+	
 	Method AddSuperType( type:CodeType )
 		If Not _superTypes Then _superTypes=New Stack<CodeType>
 		_superTypes.Add( type )
@@ -313,6 +319,7 @@ Class CodeItem
 	Field _params:CodeParam[]
 	Field _paramsStr:String
 	Field _isExtension:Bool
+	Field _isIfaceMember:Bool
 	Field _modName:String
 	
 	Private

@@ -43,6 +43,17 @@ Interface ITest
 	
 End
 
+Class c123 Implements ITest
+	
+	Method abs()
+	End
+End
+
+Class c456 Extends c123
+	
+'	Method abs()' Override
+'	End
+End
 
 '0000000000000000000000000000000
 '0000000000000000000000000000000

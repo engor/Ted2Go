@@ -216,7 +216,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			arr=endPos.Split( ":" )
 			item.ScopeEndPos=New Vec2i( Int(arr[0])-1,Int(arr[1]) )
 			item.Namespac=namespac
-			
+			item.IsIfaceMember=(flags & Flags.DECL_IFACEMEMBER <> 0)
 			'Print "parser. add item: "+item.Scope+" "+kind
 			
 			If kind="class" Or kind="struct" Or kind="interface" Or kind="enum"

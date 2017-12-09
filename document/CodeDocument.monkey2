@@ -908,13 +908,15 @@ Class CodeDocument Extends Ted2Document
 		
 		If FileExtension <> ".monkey2" Return ident
 		
-		If ident <> text And item And item.IsLikeFunc 'not a keyword
+		If ident<>text And item And item.IsLikeFunc 'not a keyword
 			
 			Local i:=textLine.Find( "Method " ) 'to simplify overriding - insert full text
 			If i <> -1 And i < cursorPosInLine
 				Local i2:=textLine.Find( "(" ) 'is inside of params?
 				If i2 = -1 Or i2 > cursorPosInLine
-					Return text.StartsWith( "New(" ) ? text Else text+" Override"
+					Local ovr:=Not text.StartsWith( "New(" )
+					If ovr And item.Parent And item.Parent.Kind=CodeItemKind.Interface_ Then ovr=False
+					Return ovr ? text+" Override" Else text
 				Endif
 			Endif
 			
