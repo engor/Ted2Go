@@ -331,7 +331,18 @@ Class CodeTextView Extends TextView
 						Local cur:=CharAtPoint( event.Location )
 						SelectText( cur,cur )
 					Else
-						Local r:=CursorRect | CharRect( Anchor )
+						Local i1:=Min( Cursor,Anchor )
+						Local i2:=Max( Cursor,Anchor )
+						Local l1:=Document.FindLine( i1 )
+						Local l2:=Document.FindLine( i2 )
+						Local r:Recti=Null
+						For Local line:=l1 To l2
+							If r=Null
+								r=LineRect( line )
+							Else
+								r|=LineRect( line )
+							Endif
+						Next
 						If Not r.Contains( event.Location )
 							Local cur:=CharAtPoint( event.Location )
 							SelectText( cur,cur )
