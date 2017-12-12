@@ -9,6 +9,22 @@ Function IsLowercacedFirstChar:Bool(s:String)
 	Return s1 = s1.ToLower()
 End
 
+Function GetCaseSensitivePath:String( path:String )
+
+#If __HOSTOS__="windows"
+	Local dir:=ExtractDir( path )
+	Local items:=LoadDir( dir )
+	If items
+		Local lower:=StripDir( path ).ToLower()
+		For Local i:=Eachin items
+			If i.ToLower()=lower Return dir+i
+		Next
+	Endif
+	Return path
+#Else
+	Return path
+#Endif
+End
 
 Class Utils
 	

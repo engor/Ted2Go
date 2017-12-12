@@ -334,7 +334,7 @@ Class BuildActions Implements IModuleBuilder
 	
 	Method GotoError( err:BuildError )
 	
-		Local doc:=Cast<CodeDocument>( _docs.OpenDocument( err.path,True ) )
+		Local doc:=Cast<CodeDocument>( _docs.OpenDocument( GetCaseSensitivePath( err.path ),True ) )
 		If Not doc Return
 	
 		Local tv := doc.CodeView
@@ -451,7 +451,7 @@ Class BuildActions Implements IModuleBuilder
 						Local msg:=stdout.Slice( i+12 )
 						
 						Local err:=New BuildError( path,line,msg )
-						Local doc:=Cast<CodeDocument>( _docs.OpenDocument( path,False ) )
+						Local doc:=Cast<CodeDocument>( _docs.OpenDocument( GetCaseSensitivePath( path ),False ) )
 						
 						If doc
 							doc.AddError( err )
