@@ -1894,9 +1894,11 @@ Class MainWindowInstance Extends Window
 		_buildActions.Update()
 		
 		_forceStop.Enabled=_buildConsole.Running Or _outputConsole.Running
-	
-		_saveItem.SetIcon( _fileActions.save.Enabled ? 1 Else 0 )
-		_saveAllItem.SetIcon( _fileActions.saveAll.Enabled ? 1 Else 0 )
+		
+		If _saveItem ' when toolbar is visible
+			_saveItem.SetIcon( _fileActions.save.Enabled ? 1 Else 0 )
+			_saveAllItem.SetIcon( _fileActions.saveAll.Enabled ? 1 Else 0 )
+		Endif
 		
 		App.Idle+=OnAppIdle
 		
