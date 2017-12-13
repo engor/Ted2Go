@@ -210,6 +210,10 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						If ctrl
 							DeleteLineAtCursor()
 						Endif
+						#Else
+						If ctrl
+							DeleteWordAtCursor()
+						Endif
 						#Endif
 						
 					Endif
@@ -752,6 +756,23 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		ReplaceText( "" )
 		pos=Min( pos,Document.EndOfLine( line ) )
 		SelectText( pos,pos )
+	End
+	
+	Method DeleteWordAtCursor()
+		
+		Local line:=Document.FindLine( Cursor )
+		Local found:Word=Null
+		For Local word:=Eachin WordIterator.ForLine( Self,line )
+			If Cursor>word.index And Cursor<=word.index+word.length
+				found=word
+				Exit
+			Endif
+		Next
+		If found
+			Local pos:=Cursor
+			SelectText( found.index,Cursor )
+			ReplaceText( "" )
+		Endif
 	End
 	
 End
