@@ -642,6 +642,8 @@ Class BuildActions Implements IModuleBuilder
 		
 		_locked=doc
 		SetLockedState( _locked,True )
+		_docs.CurrentDocumentChanged()
+		
 	End
 	
 	Method SetLockedState( doc:CodeDocument,locked:Bool )
