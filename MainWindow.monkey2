@@ -246,6 +246,7 @@ Class MainWindowInstance Extends Window
 		_tabMenu.AddAction( _fileActions.close )
 		_tabMenu.AddAction( _fileActions.closeOthers )
 		_tabMenu.AddAction( _fileActions.closeToRight )
+		_tabMenu.AddAction( _fileActions.closeAll )
 		_tabMenu.AddSeparator()
 		_tabMenu.AddAction( _fileActions.save )
 		_tabMenu.AddAction( _fileActions.saveAs )
@@ -404,6 +405,7 @@ Class MainWindowInstance Extends Window
 		_helpMenu.AddAction( _helpActions.aboutTed2go )
 		_helpMenu.AddSeparator()
 		_helpMenu.AddAction( _helpActions.makeBetter )
+		_helpMenu.AddAction( _helpActions.joinCommunity )
 		
 		'Menu bar
 		'

@@ -1404,13 +1404,12 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Field _timeDocParsed:=0
+	Field _timeTextChanged:=0
 	Method ParsingOnTextChanged()
 		
 		If Not _parsingEnabled Return
 		
-		Global __timeTextChanged:=0
-		
-		__timeTextChanged=Millisecs()
+		_timeTextChanged=Millisecs()
 		
 		If Not _timer Then _timer=New Timer( 1,Lambda()
 		
@@ -1418,8 +1417,8 @@ Class CodeDocument Extends Ted2Document
 			
 			Local msec:=Millisecs()
 			If msec<_timeDocParsed+1000 Return
-			If __timeTextChanged=0 Or msec<__timeTextChanged+1000 Return
-			__timeTextChanged=0
+			If _timeTextChanged=0 Or msec<_timeTextChanged+1000 Return
+			_timeTextChanged=0
 			
 			ParsingDoc()
 		
