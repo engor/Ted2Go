@@ -114,7 +114,77 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		_doc.ArrangeElements()
 	End
 	
-
+	Method DeleteLineAtCursor()
+	
+		Local line:=Document.FindLine( Cursor )
+		Local pos:=Cursor
+		SelectText( Document.StartOfLine( line ),Document.EndOfLine( line )+1 )
+		ReplaceText( "" )
+		pos=Min( pos,Document.EndOfLine( line ) )
+		SelectText( pos,pos )
+	End
+	
+	Method DeleteWordBackward()
+	
+		If CanCopy ' try to delete selected area
+			ReplaceText( "" )
+			Return
+		Endif
+	
+		Local line:=Document.FindLine( Cursor )
+		Local found:Word=Null
+		For Local word:=Eachin WordIterator.ForLine( Self,line )
+			If Cursor>word.index And Cursor<=word.index+word.length
+				found=word
+				Exit
+			Endif
+		Next
+		If found
+			SelectText( found.index,Cursor )
+			ReplaceText( "" )
+		Endif
+	End
+	
+	Method DeleteWordForward()
+	
+		If CanCopy ' try to delete selected area
+			ReplaceText( "" )
+			Return
+		Endif
+	
+		Local line:=Document.FindLine( Cursor )
+		Local found:Word=Null
+		For Local word:=Eachin WordIterator.ForLine( Self,line )
+			If Cursor>=word.index And Cursor<word.index+word.length
+				found=word
+				Exit
+			Endif
+		Next
+		If found
+			SelectText( Cursor,found.index+found.length )
+			ReplaceText( "" )
+		Endif
+	End
+	
+	Method DeleteToEnd()
+	
+		Local i1:=Min( Anchor,Cursor )
+		Local i2:=Max( Anchor,Cursor )
+	
+		SelectText( i1,Document.EndOfLine( Document.FindLine( i2 ) ) )
+		ReplaceText( "" )
+	End
+	
+	Method DeleteToBegin()
+	
+		Local i1:=Min( Anchor,Cursor )
+		Local i2:=Max( Anchor,Cursor )
+	
+		SelectText( Document.StartOfLine( Document.FindLine( i1 ) ),i2 )
+		ReplaceText( "" )
+	End
+	
+	
 	Protected
 	
 	Method OnThemeChanged() Override
@@ -176,6 +246,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		Local alt:=(event.Modifiers & Modifier.Alt)
 		Local ctrl:=(event.Modifiers & Modifier.Control)
 		Local shift:=(event.Modifiers & Modifier.Shift)
+		Local menu:=(event.Modifiers & Modifier.Menu)
 		
 		'ctrl+space - show autocomplete list
 		Select event.Type
@@ -184,7 +255,19 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			Local key:=FixNumpadKeys( event )
 			
 			Select key
-			
+				
+'				#If __TARGET__="macos"
+'				Case Key.K
+'					If ctrl 
+'						If shift
+'							DeleteLineAtCursor()
+'						Else
+'							DeleteToEnd()
+'						Endif
+'						Return
+'					Endif
+'				#Endif
+				
 				Case Key.Space
 					If ctrl
 						Return
@@ -206,15 +289,21 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						
 					Else
 						
-						#If __TARGET__="macos"
-						If ctrl
-							DeleteLineAtCursor()
-						Endif
-						#Else
-						If ctrl
-							DeleteWordAtCursor()
-						Endif
-						#Endif
+'						#If __TARGET__="macos"
+'						If menu
+'							DeleteToBegin()
+'						Elseif ctrl
+'							DeleteWordBeforeCursor()
+'						Endif
+'						#Else
+'						If ctrl
+'							If shift
+'								DeleteToBegin()
+'							Else
+'								DeleteWordBeforeCursor()
+'							Endif
+'						Endif
+'						#Endif
 						
 					Endif
 				
@@ -264,7 +353,13 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				Case Key.KeyDelete
 			
 					If shift 'shift+del - cut selected
-						If CanCopy Then OnCut()
+						If ctrl
+'							DeleteToEnd()
+						Elseif CanCopy
+							OnCut()
+						Endif
+'					Else If ctrl 'ctrl w/o shift
+'						DeleteWordAfterCursor()
 					Else
 						If Anchor = Cursor
 							Local len:=Text.Length
@@ -746,33 +841,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		Endif
 		
 		Return False
-	End
-	
-	Method DeleteLineAtCursor()
-		
-		Local line:=Document.FindLine( Cursor )
-		Local pos:=Cursor
-		SelectText( Document.StartOfLine( line ),Document.EndOfLine( line )+1 )
-		ReplaceText( "" )
-		pos=Min( pos,Document.EndOfLine( line ) )
-		SelectText( pos,pos )
-	End
-	
-	Method DeleteWordAtCursor()
-		
-		Local line:=Document.FindLine( Cursor )
-		Local found:Word=Null
-		For Local word:=Eachin WordIterator.ForLine( Self,line )
-			If Cursor>word.index And Cursor<=word.index+word.length
-				found=word
-				Exit
-			Endif
-		Next
-		If found
-			Local pos:=Cursor
-			SelectText( found.index,Cursor )
-			ReplaceText( "" )
-		Endif
 	End
 	
 End

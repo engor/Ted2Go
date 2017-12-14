@@ -11,7 +11,12 @@ Class EditActions
 	Field paste:Action
 	Field selectAll:Action
 	Field wordWrap:Action
-	
+	' Edit -- Text
+	Field textDeleteWordForward:Action
+	Field textDeleteWordBackward:Action
+	Field textDeleteLine:Action
+	Field textDeleteToEnd:Action
+	Field textDeleteToBegin:Action
 	
 	Method New( docs:DocumentManager )
 	
@@ -57,6 +62,45 @@ Class EditActions
 		wordWrap.HotKey=Key.Z
 		wordWrap.HotKeyModifiers=Modifier.Alt
 		
+		textDeleteLine=New Action( "Delete line" )
+		textDeleteLine.Triggered=OnDeleteLine
+		#If __TARGET__="macos"
+		textDeleteLine.HotKey=Key.K
+		textDeleteLine.HotKeyModifiers=Modifier.Control|Modifier.Shift
+		#Else
+		textDeleteLine.HotKey=Key.E
+		textDeleteLine.HotKeyModifiers=Modifier.Control
+		#Endif
+		
+		textDeleteWordForward=New Action( "Delete word forward" )
+		textDeleteWordForward.Triggered=OnDeleteWordForward
+		textDeleteWordForward.HotKey=Key.KeyDelete
+		textDeleteWordForward.HotKeyModifiers=Modifier.Control
+		
+		textDeleteWordBackward=New Action( "Delete word backward" )
+		textDeleteWordBackward.Triggered=OnDeleteWordBackward
+		textDeleteWordBackward.HotKey=Key.Backspace
+		textDeleteWordBackward.HotKeyModifiers=Modifier.Control
+		
+		textDeleteToBegin=New Action( "Delete to beginning" )
+		textDeleteToBegin.Triggered=OnDeleteToBegin
+		textDeleteToBegin.HotKey=Key.Backspace
+		#If __TARGET__="macos"
+		textDeleteToBegin.HotKeyModifiers=Modifier.Menu
+		#Else
+		textDeleteToBegin.HotKeyModifiers=Modifier.Menu|Modifier.Shift
+		#Endif
+		
+		textDeleteToEnd=New Action( "Delete to end" )
+		textDeleteToEnd.Triggered=OnDeleteToEnd
+		#If __TARGET__="macos"
+		textDeleteToEnd.HotKey=Key.K
+		textDeleteToEnd.HotKeyModifiers=Modifier.Control
+		#Else
+		textDeleteToEnd.HotKey=Key.KeyDelete
+		textDeleteToEnd.HotKeyModifiers=Modifier.Control|Modifier.Shift
+		#Endif
+		
 	End
 	
 	Method Update()
@@ -74,6 +118,36 @@ Class EditActions
 	Private
 	
 	Field _docs:DocumentManager
+	
+	Property CurrentCodeDocument:CodeDocumentView()
+		
+		Return Cast<CodeDocumentView>( App.KeyView )
+	End
+	
+	Method OnDeleteLine()
+		
+		CurrentCodeDocument?.DeleteLineAtCursor()
+	End
+	
+	Method OnDeleteWordForward()
+		
+		CurrentCodeDocument?.DeleteWordForward()
+	End
+	
+	Method OnDeleteWordBackward()
+		
+		CurrentCodeDocument?.DeleteWordBackward()
+	End
+	
+	Method OnDeleteToBegin()
+		
+		CurrentCodeDocument?.DeleteToBegin()
+	End
+	
+	Method OnDeleteToEnd()
+		
+		CurrentCodeDocument?.DeleteToEnd()
+	End
 	
 	Method OnUndo()
 
