@@ -642,7 +642,7 @@ Class BuildActions Implements IModuleBuilder
 		
 		_locked=doc
 		SetLockedState( _locked,True )
-		_docs.CurrentDocumentChanged()
+		
 		
 	End
 	
@@ -651,6 +651,7 @@ Class BuildActions Implements IModuleBuilder
 		doc.State=locked ? "+" Else ""
 		Local tab:=_docs.FindTab( doc.View )
 		If tab Then tab.SetLockedState( locked )
+		_docs.CurrentDocumentChanged()
 	End
 	
 	Method OnBuildFileSettings()
