@@ -21,6 +21,8 @@ Class MainWindowInstance Extends Window
 	Field SizeChanged:Void()
 	Field Rendered:Void( canvas:Canvas )
 	
+	Global _storeX:Int, _storeY:Int, _storeW:Int, _storeH:Int, _maximed:Bool, _Fullscreen_:Bool
+	
 	Method New( title:String,rect:Recti,flags:WindowFlags,jobj:JsonObject )
 		Super.New( title,rect,flags )
 		
@@ -679,6 +681,29 @@ Class MainWindowInstance Extends Window
 		_modsDir=RealPath( "modules/" )
 	End
 	
+	Method SetFullscreenBorderless()
+	
+		Local _bounds:SDL_Rect
+		SDL_GetDisplayBounds(SDL_GetWindowDisplayIndex(Window.SDLWindow),Varptr _bounds)
+	
+		If(_fullscreenState)
+			If _fullscreenState<>FullscreenState.Editor Or Maximized
+				SDL_GetWindowSize(Window.SDLWindow,Varptr _storeW, Varptr _storeH)
+				SDL_GetWindowPosition(Window.SDLWindow, Varptr _storeX, Varptr _storeY)
+			End
+			If(Maximized)Then Restore()
+			SDL_SetWindowSize(Window.SDLWindow,_bounds.w, _bounds.h)
+			SDL_SetWindowPosition(Window.SDLWindow,_bounds.x,_bounds.y)
+			_Fullscreen_=True
+		Else
+			SDL_SetWindowSize(Window.SDLWindow,_storeW, _storeH)
+			SDL_SetWindowPosition(Window.SDLWindow,_storeX,_storeY)	
+			If(_storeY<_bounds.y+23)Then Maximize()
+			_Fullscreen_=False
+		End
+			SendWindowEvent(New WindowEvent(EventType.WindowResized, Self))
+	End  
+	
 	Method SwapFullscreenWindow()
 		
 		If _fullscreenState=2
@@ -688,9 +713,14 @@ Class MainWindowInstance Extends Window
 		
 		_storedSize=Frame
 		
-		Fullscreen=Not Fullscreen
+'		Fullscreen=Not Fullscreen
+'		
+'		_fullscreenState=Fullscreen ? FullscreenState.Window Else FullscreenState.None
 		
-		_fullscreenState=Fullscreen ? FullscreenState.Window Else FullscreenState.None
+		_Fullscreen_=Not _Fullscreen_
+		_fullscreenState=_Fullscreen_ ? FullscreenState.Window Else FullscreenState.None
+		SetFullscreenBorderless()
+		
 	End
 	
 	' customState: -1 - make windowed, 1 - make fullscreen
@@ -704,12 +734,21 @@ Class MainWindowInstance Extends Window
 		
 		_storedSize=Frame
 		
-		Local state:=Not Fullscreen
-		If customState<>0 Then state=customState>0 ? True Else False
+'		Local state:=Not Fullscreen
+'		If customState<>0 Then state=customState>0 ? True Else False
+'		
+'		If _fullscreenState<>FullscreenState.Window Then Fullscreen=state
+'		
+'		_fullscreenState=Fullscreen ? FullscreenState.Editor Else FullscreenState.None
+
+		Local state:=Not _Fullscreen_
+
+		If customState<>0 Then state=customState>0 ? True Else False		
+		If _fullscreenState<>FullscreenState.Window Then _Fullscreen_=state	
 		
-		If _fullscreenState<>FullscreenState.Window Then Fullscreen=state
+		_fullscreenState=_Fullscreen_ ? FullscreenState.Editor Else FullscreenState.None
 		
-		_fullscreenState=Fullscreen ? FullscreenState.Editor Else FullscreenState.None
+		SetFullscreenBorderless()
 		
 		Global __storedContentView:View=Null,__storedTabIndex:Int
 		Global __editorContainer:DockingView=Null,__statusContainer:DockingView
@@ -745,14 +784,15 @@ Class MainWindowInstance Extends Window
 			__storedContentView=Null
 		Endif
 		
-		If Fullscreen
+		'If Fullscreen
+		If _Fullscreen_
 			__storedContentView=ContentView
 			__storedTabIndex=_docsTabView.CurrentIndex
 			_docsTabView.SetTabView( __storedTabIndex,Null )
 			Local view:=_docsManager.CurrentView
 			view.Layout="fill-y"
 			view.Gravity=New Vec2f( .5,0 )
-			Local sz:=New Vec2i( Min( Width,Int(App.DesktopSize.x*.7) ),100000 )
+			Local sz:=New Vec2i( Min( App.DesktopSize.x,Int(App.DesktopSize.x*.7) ),100000 )
 			view.MaxSize=sz
 			view.MinSize=sz
 			__editorContainer.ContentView=view

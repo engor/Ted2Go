@@ -19,6 +19,7 @@
 #Import "<mojo>"
 #Import "<mojox>"
 #Import "<tinyxml2>"
+#Import "<sdl2>"
 
 #Import "action/FileActions"
 #Import "action/EditActions"
@@ -126,7 +127,7 @@ Using std..
 Using mojo..
 Using mojox..
 Using tinyxml2..
-
+Using sdl2..
 
 Const MONKEY2_DOMAIN:="http://monkeycoder.co.nz"
 
