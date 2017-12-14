@@ -21,8 +21,6 @@ Class MainWindowInstance Extends Window
 	Field SizeChanged:Void()
 	Field Rendered:Void( canvas:Canvas )
 	
-	Global _storeX:Int, _storeY:Int, _storeW:Int, _storeH:Int, _maximed:Bool, _Fullscreen_:Bool
-	
 	Method New( title:String,rect:Recti,flags:WindowFlags,jobj:JsonObject )
 		Super.New( title,rect,flags )
 		
@@ -681,45 +679,19 @@ Class MainWindowInstance Extends Window
 		_modsDir=RealPath( "modules/" )
 	End
 	
-	Method SetFullscreenBorderless()
-	
-		Local _bounds:SDL_Rect
-		SDL_GetDisplayBounds(SDL_GetWindowDisplayIndex(Window.SDLWindow),Varptr _bounds)
-	
-		If(_fullscreenState)
-			If _fullscreenState<>FullscreenState.Editor Or Maximized
-				SDL_GetWindowSize(Window.SDLWindow,Varptr _storeW, Varptr _storeH)
-				SDL_GetWindowPosition(Window.SDLWindow, Varptr _storeX, Varptr _storeY)
-			End
-			If(Maximized)Then Restore()
-			SDL_SetWindowSize(Window.SDLWindow,_bounds.w, _bounds.h)
-			SDL_SetWindowPosition(Window.SDLWindow,_bounds.x,_bounds.y)
-			_Fullscreen_=True
-		Else
-			SDL_SetWindowSize(Window.SDLWindow,_storeW, _storeH)
-			SDL_SetWindowPosition(Window.SDLWindow,_storeX,_storeY)	
-			If(_storeY<_bounds.y+23)Then Maximize()
-			_Fullscreen_=False
-		End
-			SendWindowEvent(New WindowEvent(EventType.WindowResized, Self))
-	End  
-	
 	Method SwapFullscreenWindow()
 		
-		If _fullscreenState=2
+		If _fullscreenState=FullscreenState.Editor
 			SwapFullscreenEditor()
 			Return
 		Endif
 		
-		_storedSize=Frame
+		If Not _fullscreen Then _storedSize=Frame
 		
-'		Fullscreen=Not Fullscreen
-'		
-'		_fullscreenState=Fullscreen ? FullscreenState.Window Else FullscreenState.None
+		_fullscreen=Not _fullscreen
+		_fullscreenState=_fullscreen ? FullscreenState.Window Else FullscreenState.None
 		
-		_Fullscreen_=Not _Fullscreen_
-		_fullscreenState=_Fullscreen_ ? FullscreenState.Window Else FullscreenState.None
-		SetFullscreenBorderless()
+		UpdateFullscreenMode()
 		
 	End
 	
@@ -732,77 +704,59 @@ Class MainWindowInstance Extends Window
 			Return
 		Endif
 		
-		_storedSize=Frame
-		
-'		Local state:=Not Fullscreen
-'		If customState<>0 Then state=customState>0 ? True Else False
-'		
-'		If _fullscreenState<>FullscreenState.Window Then Fullscreen=state
-'		
-'		_fullscreenState=Fullscreen ? FullscreenState.Editor Else FullscreenState.None
-
-		Local state:=Not _Fullscreen_
-
-		If customState<>0 Then state=customState>0 ? True Else False		
-		If _fullscreenState<>FullscreenState.Window Then _Fullscreen_=state	
-		
-		_fullscreenState=_Fullscreen_ ? FullscreenState.Editor Else FullscreenState.None
-		
-		SetFullscreenBorderless()
-		
-		Global __storedContentView:View=Null,__storedTabIndex:Int
-		Global __editorContainer:DockingView=Null,__statusContainer:DockingView
-		Global __label:Label
-		Global __dirtyChanged:=Lambda()
-			__label.Text=_docsManager.CurrentDocumentLabel
-		End
-		
-		If __editorContainer=Null
-			__editorContainer=New DockingView
-			
-			__label=New Label
-			__label.Gravity=New Vec2f( .5,0 )
-			__label.Layout="float"
-			__editorContainer.AddView( __label,"top" )
-			
-			__statusContainer=New DockingView
-			__editorContainer.AddView( __statusContainer,"bottom" )
-		Endif
+		If Not _fullscreen Then _storedSize=Frame
 		
 		' restore
-		If __storedContentView<>Null
-			Local view:=__editorContainer.ContentView
+		If _fullscreenHelper.storedContentView<>Null
+			Local view:=_fullscreenHelper.editorContainer.ContentView
 			view.Layout="fill"
-			__editorContainer.ContentView=Null
-			__statusContainer.ContentView=Null
+			_fullscreenHelper.editorContainer.ContentView=Null
+			_fullscreenHelper.statusContainer.ContentView=Null
 			_statusBarContainer.ContentView=_statusBar
-			ContentView=__storedContentView
-			_docsTabView.SetTabView( __storedTabIndex,view )
+			ContentView=_fullscreenHelper.storedContentView
+			_docsTabView.SetTabView( _fullscreenHelper.storedTabIndex,view )
 			_docsTabView.EnsureVisibleCurrentTab()
 			_docsManager.UpdateCurrentTabLabel()
-			_docsManager.CurrentDocument?.DirtyChanged-=__dirtyChanged
-			__storedContentView=Null
+			_docsManager.CurrentDocument?.DirtyChanged-=_fullscreenHelper.UpdateTitle
+			_fullscreenHelper.storedContentView=Null
 		Endif
 		
-		'If Fullscreen
-		If _Fullscreen_
-			__storedContentView=ContentView
-			__storedTabIndex=_docsTabView.CurrentIndex
-			_docsTabView.SetTabView( __storedTabIndex,Null )
+		' stay in fullscreen
+		If _fullscreenPrevState=FullscreenState.Window 
+			_fullscreenState=FullscreenState.Window 
+			_fullscreenPrevState=FullscreenState.None 
+			Return
+		Endif
+		
+		_fullscreenPrevState=_fullscreenState
+		
+		Local state:=Not _fullscreen
+		
+		If customState<>0 Then state=(customState > 0)
+		If _fullscreenState<>FullscreenState.Window Then _fullscreen=state
+		
+		_fullscreenState=_fullscreen ? FullscreenState.Editor Else FullscreenState.None
+		
+		UpdateFullscreenMode()
+		
+		If _fullscreen
+			_fullscreenHelper.storedContentView=ContentView
+			_fullscreenHelper.storedTabIndex=_docsTabView.CurrentIndex
+			_docsTabView.SetTabView( _fullscreenHelper.storedTabIndex,Null )
 			Local view:=_docsManager.CurrentView
 			view.Layout="fill-y"
 			view.Gravity=New Vec2f( .5,0 )
-			Local sz:=New Vec2i( Min( App.DesktopSize.x,Int(App.DesktopSize.x*.7) ),100000 )
+			Local sz:=New Vec2i( Int(App.DesktopSize.x*.7),100000 )
 			view.MaxSize=sz
 			view.MinSize=sz
-			__editorContainer.ContentView=view
-			__label.Text=_docsManager.CurrentDocumentLabel
-			_docsManager.CurrentDocument?.DirtyChanged+=__dirtyChanged
+			_fullscreenHelper.editorContainer.ContentView=view
+			_fullscreenHelper.titleLabel.Text=_docsManager.CurrentDocumentLabel
+			_docsManager.CurrentDocument?.DirtyChanged+=_fullscreenHelper.UpdateTitle
 			' status bar
 			_statusBarContainer.ContentView=Null
-			__statusContainer.ContentView=_statusBar
+			_fullscreenHelper.statusContainer.ContentView=_statusBar
 			'
-			ContentView=__editorContainer
+			ContentView=_fullscreenHelper.editorContainer
 			
 			_docsManager.CurrentTextView?.MakeKeyView()
 			
@@ -1170,6 +1124,27 @@ Class MainWindowInstance Extends Window
 		Else
 			doc.View.MakeKeyView()
 		Endif
+	End
+	
+	Method UpdateFullscreenMode()
+		
+		If _fullscreen
+			
+			Local bounds:SDL_Rect
+			SDL_GetDisplayBounds( SDL_GetWindowDisplayIndex(Window.SDLWindow),Varptr bounds )
+			
+			SDL_SetWindowSize( Window.SDLWindow,bounds.w,bounds.h )
+			SDL_SetWindowPosition( Window.SDLWindow,bounds.x,bounds.y )
+			
+			' Frame=... doesn't work here
+		Else
+			
+			SDL_SetWindowSize( Window.SDLWindow,_storedSize.Width,_storedSize.Height )
+			SDL_SetWindowPosition( Window.SDLWindow,_storedSize.Left,_storedSize.Top )
+			
+		End
+		
+		SendWindowEvent( New WindowEvent( EventType.WindowResized,Self ) )
 	End
 	
 	Method GotoCodePosition( docPath:String,pos:Vec2i,lenToSelect:Int=0 )
@@ -1789,7 +1764,9 @@ Class MainWindowInstance Extends Window
 	Field _findReplaceView:FindReplaceView
 	Field _tabsWrap:=New DraggableTabs
 	
-	Field _fullscreenState:=FullscreenState.None
+	Field _fullscreen:Bool
+	Field _fullscreenState:=FullscreenState.None,_fullscreenPrevState:=FullscreenState.None
+	Field _fullscreenHelper:= New FullscreenHelper
 	Field _storedSize:Recti
 	
 	Method ToJson:JsonValue( rect:Recti )
@@ -1956,6 +1933,38 @@ Enum FullscreenState
 	Window=1
 	Editor=2
 End
+
+
+Class FullscreenHelper
+	
+	Field state:FullscreenState
+	Field frame:Recti
+	Field storedContentView:View
+	Field storedTabIndex:Int
+	Field editorContainer:DockingView
+	Field statusContainer:DockingView
+	Field titleLabel:Label
+	
+	Method New()
+		
+		editorContainer=New DockingView
+		
+		titleLabel=New Label
+		titleLabel.Gravity=New Vec2f( .5,0 )
+		titleLabel.Layout="float"
+		editorContainer.AddView( titleLabel,"top" )
+		
+		statusContainer=New DockingView
+		editorContainer.AddView( statusContainer,"bottom" )
+	End
+	
+	Method UpdateTitle()
+		
+		titleLabel.Text=MainWindow.DocsManager.CurrentDocumentLabel
+	End
+	
+End
+
 
 Class DraggableTabs
 	
