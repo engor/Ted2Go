@@ -17,6 +17,9 @@ Class EditActions
 	Field textDeleteLine:Action
 	Field textDeleteToEnd:Action
 	Field textDeleteToBegin:Action
+	Field textLowercase:Action
+	Field textUppercase:Action
+	Field textSwapCase:Action
 	
 	Method New( docs:DocumentManager )
 	
@@ -101,6 +104,19 @@ Class EditActions
 		textDeleteToEnd.HotKeyModifiers=Modifier.Control|Modifier.Shift
 		#Endif
 		
+		textLowercase=New Action( "lowercace" )
+		textLowercase.Triggered=OnLowercase
+		textLowercase.HotKey=Key.L
+		textLowercase.HotKeyModifiers=Modifier.Control|Modifier.Shift
+		
+		textUppercase=New Action( "UPPERCASE" )
+		textUppercase.Triggered=OnUppercase
+		textUppercase.HotKey=Key.U
+		textUppercase.HotKeyModifiers=Modifier.Control|Modifier.Shift
+		
+		textSwapCase=New Action( "Swap case" )
+		textSwapCase.Triggered=OnSwapCase
+		
 	End
 	
 	Method Update()
@@ -119,9 +135,9 @@ Class EditActions
 	
 	Field _docs:DocumentManager
 	
-	Property CurrentCodeDocument:CodeDocumentView()
+	Property CurrentCodeDocument:CodeTextView()
 		
-		Return Cast<CodeDocumentView>( App.KeyView )
+		Return Cast<CodeTextView>( App.KeyView )
 	End
 	
 	Method OnDeleteLine()
@@ -145,8 +161,23 @@ Class EditActions
 	End
 	
 	Method OnDeleteToEnd()
-		
+	
 		CurrentCodeDocument?.DeleteToEnd()
+	End
+	
+	Method OnLowercase()
+	
+		CurrentCodeDocument?.LowercaseSelection()
+	End
+	
+	Method OnUppercase()
+	
+		CurrentCodeDocument?.UppercaseSelection()
+	End
+	
+	Method OnSwapCase()
+		
+		CurrentCodeDocument?.SwapCaseSelection()
 	End
 	
 	Method OnUndo()

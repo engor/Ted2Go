@@ -60,6 +60,116 @@ Class CodeTextView Extends TextView
 		UpdateThemeColors()
 	End
 	
+	Method DeleteLineAtCursor()
+	
+		Local line:=Document.FindLine( Cursor )
+		Local pos:=Cursor
+		SelectText( Document.StartOfLine( line ),Document.EndOfLine( line )+1 )
+		ReplaceText( "" )
+		pos=Min( pos,Document.EndOfLine( line ) )
+		SelectText( pos,pos )
+	End
+	
+	Method DeleteWordBackward()
+	
+		If CanCopy ' try to delete selected area
+			ReplaceText( "" )
+			Return
+		Endif
+	
+		Local line:=Document.FindLine( Cursor )
+		Local found:Word=Null
+		For Local word:=Eachin WordIterator.ForLine( Self,line )
+			If Cursor>word.index And Cursor<=word.index+word.length
+				found=word
+				Exit
+			Endif
+		Next
+		If found
+			SelectText( found.index,Cursor )
+			ReplaceText( "" )
+		Endif
+	End
+	
+	Method DeleteWordForward()
+	
+		If CanCopy ' try to delete selected area
+			ReplaceText( "" )
+			Return
+		Endif
+	
+		Local line:=Document.FindLine( Cursor )
+		Local found:Word=Null
+		For Local word:=Eachin WordIterator.ForLine( Self,line )
+			If Cursor>=word.index And Cursor<word.index+word.length
+				found=word
+				Exit
+			Endif
+		Next
+		If found
+			SelectText( Cursor,found.index+found.length )
+			ReplaceText( "" )
+		Endif
+	End
+	
+	Method DeleteToEnd()
+	
+		Local i1:=Min( Anchor,Cursor )
+		Local i2:=Max( Anchor,Cursor )
+	
+		SelectText( i1,Document.EndOfLine( Document.FindLine( i2 ) ) )
+		ReplaceText( "" )
+	End
+	
+	Method DeleteToBegin()
+	
+		Local i1:=Min( Anchor,Cursor )
+		Local i2:=Max( Anchor,Cursor )
+	
+		SelectText( Document.StartOfLine( Document.FindLine( i1 ) ),i2 )
+		ReplaceText( "" )
+	End
+	
+	Method LowercaseSelection()
+	
+		Local txt:=SelectedText
+		If txt
+			Local a:=Anchor,c:=Cursor
+			ReplaceText( txt.ToLower() )
+			SelectText( a,c )
+		Endif
+	End
+	
+	Method UppercaseSelection()
+	
+		Local txt:=SelectedText
+		If txt
+			Local a:=Anchor,c:=Cursor
+			ReplaceText( txt.ToUpper() )
+			SelectText( a,c )
+		Endif
+	End
+	
+	Method SwapCaseSelection()
+	
+		Local txt:=SelectedText
+		If txt
+			Local a:=Anchor,c:=Cursor
+			ReplaceText( SwapCase( txt ) )
+			SelectText( a,c )
+		Endif
+	End
+	
+	Property SelectedText:String()
+		
+		If Not CanCopy Return ""
+		
+		Local i1:=Min( Anchor,Cursor )
+		Local i2:=Max( Anchor,Cursor )
+		
+		Return Text.Slice( i1,i2 )
+	End
+	
 	Property IsCursorAtTheEndOfLine:Bool()
 		
 		Local line:=Document.FindLine( Cursor )

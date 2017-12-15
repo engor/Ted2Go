@@ -15,12 +15,12 @@ Class ViewActions
 		
 		_docs=docs
 		
-		goBack=New Action( "Go back" )
+		goBack=New Action( "Jump back" )
 		goBack.Triggered=OnGoBack
 		goBack.HotKey=Key.Left
 		goBack.HotKeyModifiers=Modifier.Alt|Modifier.Menu
 		
-		goForward=New Action( "Go forward" )
+		goForward=New Action( "Jump forward" )
 		goForward.Triggered=OnGoForward
 		goForward.HotKey=Key.Right
 		goForward.HotKeyModifiers=Modifier.Alt|Modifier.Menu
@@ -48,7 +48,7 @@ Class ViewActions
 		gotoLine.HotKey=Key.G
 		gotoLine.HotKeyModifiers=Modifier.Menu
 		
-		gotoDeclaration=New Action( "Goto declaration" )
+		gotoDeclaration=New Action( "Goto definition" )
 		gotoDeclaration.Triggered=OnGotoDeclaration
 		gotoDeclaration.HotKey=Key.F12
 	End

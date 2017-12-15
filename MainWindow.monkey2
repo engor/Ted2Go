@@ -318,7 +318,29 @@ Class MainWindowInstance Extends Window
 		_editMenu.AddSeparator()
 		_editMenu.AddAction( _editActions.selectAll )
 		_editMenu.AddSeparator()
+		' Edit -- Text
+		Local subText:=New MenuExt( "Text" )
+		subText.AddAction( _editActions.textDeleteWordForward )
+		subText.AddAction( _editActions.textDeleteWordBackward )
+		subText.AddAction( _editActions.textDeleteLine )
+		subText.AddAction( _editActions.textDeleteToEnd )
+		subText.AddAction( _editActions.textDeleteToBegin )
+		_editMenu.AddSubMenu( subText )
+		' Edit -- Comment
+		Local subComment:=New MenuExt( "Comment" )
+		subComment.AddAction( _viewActions.comment )
+		subComment.AddAction( _viewActions.uncomment )
+		_editMenu.AddSubMenu( subComment )
+		' Edit -- Convert case
+		Local subCase:=New MenuExt( "Convert case" )
+		subCase.AddAction( _editActions.textUppercase )
+		subCase.AddAction( _editActions.textLowercase )
+		subCase.AddAction( _editActions.textSwapCase )
+		_editMenu.AddSubMenu( subCase )
+		'
+		_editMenu.AddSeparator()
 		_editMenu.AddAction( _editActions.wordWrap )
+		
 		
 		'Find menu
 		'
@@ -330,17 +352,14 @@ Class MainWindowInstance Extends Window
 		_findMenu.AddSeparator()
 		_findMenu.AddAction( _findActions.findInFiles )
 		
-		'View menu
+		'Goto menu
 		'
-		_viewMenu=New MenuExt( "View" )
-		_viewMenu.AddAction( _viewActions.gotoLine )
-		_viewMenu.AddAction( _viewActions.gotoDeclaration )
-		_viewMenu.AddSeparator()
-		_viewMenu.AddAction( _viewActions.comment )
-		_viewMenu.AddAction( _viewActions.uncomment )
-		_viewMenu.AddSeparator()
-		_viewMenu.AddAction( _viewActions.goBack )
-		_viewMenu.AddAction( _viewActions.goForward )
+		_gotoMenu=New MenuExt( "Goto" )
+		_gotoMenu.AddAction( _viewActions.gotoLine )
+		_gotoMenu.AddAction( _viewActions.gotoDeclaration )
+		_gotoMenu.AddSeparator()
+		_gotoMenu.AddAction( _viewActions.goBack )
+		_gotoMenu.AddAction( _viewActions.goForward )
 		
 		'Build menu
 		'
@@ -413,7 +432,7 @@ Class MainWindowInstance Extends Window
 		_menuBar.AddMenu( _fileMenu )
 		_menuBar.AddMenu( _editMenu )
 		_menuBar.AddMenu( _findMenu )
-		_menuBar.AddMenu( _viewMenu )
+		_menuBar.AddMenu( _gotoMenu )
 		_menuBar.AddMenu( _buildMenu )
 		_menuBar.AddMenu( _windowMenu )
 		_menuBar.AddMenu( _helpMenu )
@@ -1735,7 +1754,7 @@ Class MainWindowInstance Extends Window
 	Field _fileMenu:MenuExt
 	Field _editMenu:MenuExt
 	Field _findMenu:MenuExt
-	Field _viewMenu:MenuExt
+	Field _gotoMenu:MenuExt
 	Field _buildMenu:MenuExt
 	Field _windowMenu:MenuExt
 	Field _helpMenu:MenuExt
