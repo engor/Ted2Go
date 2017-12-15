@@ -1618,15 +1618,16 @@ Class CodeDocument Extends Ted2Document
 			Return
 		Endif
 		
-		Local i:=brackets-1
-		While part And _codeView.Keywords.Contains( part.ident )
-			i-=1
-			If i>=0
-				part=parts[i]
-			Else
-				Return 'exit
-			Endif
-		Wend
+'		Local i:=brackets-1
+'		While part And _codeView.Keywords.Contains( part.ident )
+'			i-=1
+'			If i>=0
+'				Print "part: "+part.ident+", "+i
+'				part=parts[i]
+'			Else
+'				Return 'exit
+'			Endif
+'		Wend
 		
 		'If ident<>_storedIdent 'Or bracketPos<>_storedPos
 			
