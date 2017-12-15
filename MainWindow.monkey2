@@ -705,7 +705,10 @@ Class MainWindowInstance Extends Window
 			Return
 		Endif
 		
-		If Not _fullscreen Then _storedSize=Frame
+		If Not _fullscreen
+			_storedSize=Frame
+			_storedMaximized=Maximized
+		Endif
 		
 		_fullscreen=Not _fullscreen
 		_fullscreenState=_fullscreen ? FullscreenState.Window Else FullscreenState.None
@@ -723,7 +726,10 @@ Class MainWindowInstance Extends Window
 			Return
 		Endif
 		
-		If Not _fullscreen Then _storedSize=Frame
+		If Not _fullscreen
+			_storedSize=Frame
+			_storedMaximized=Maximized
+		Endif
 		
 		' restore
 		If _fullscreenHelper.storedContentView<>Null
@@ -1152,6 +1158,8 @@ Class MainWindowInstance Extends Window
 			Local bounds:SDL_Rect
 			SDL_GetDisplayBounds( SDL_GetWindowDisplayIndex(Window.SDLWindow),Varptr bounds )
 			
+			If _storedMaximized Then Restore()
+			
 			SDL_SetWindowSize( Window.SDLWindow,bounds.w,bounds.h )
 			SDL_SetWindowPosition( Window.SDLWindow,bounds.x,bounds.y )
 			
@@ -1160,6 +1168,8 @@ Class MainWindowInstance Extends Window
 			
 			SDL_SetWindowSize( Window.SDLWindow,_storedSize.Width,_storedSize.Height )
 			SDL_SetWindowPosition( Window.SDLWindow,_storedSize.Left,_storedSize.Top )
+			
+			If _storedMaximized Then Maximize()
 			
 		End
 		
@@ -1786,7 +1796,7 @@ Class MainWindowInstance Extends Window
 	Field _fullscreen:Bool
 	Field _fullscreenState:=FullscreenState.None,_fullscreenPrevState:=FullscreenState.None
 	Field _fullscreenHelper:= New FullscreenHelper
-	Field _storedSize:Recti
+	Field _storedSize:Recti,_storedMaximized:Bool
 	
 	Method ToJson:JsonValue( rect:Recti )
 		Return New JsonArray( New JsonValue[]( New JsonNumber( rect.min.x ),New JsonNumber( rect.min.y ),New JsonNumber( rect.max.x ),New JsonNumber( rect.max.y ) ) )
