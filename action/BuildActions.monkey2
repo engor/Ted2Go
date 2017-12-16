@@ -26,7 +26,11 @@ End
 
 Interface IModuleBuilder
 	
-	Method BuildModules:Bool( clean:Bool,modules:String="",configs:String="debug release" )
+	' cleanState: 
+	' -1: don't clean
+	' 0: use previous
+	' 1: clean
+	Method BuildModules:Bool( modules:String="",configs:String="",cleanState:Int=0 )
 	
 End
 
@@ -295,27 +299,45 @@ Class BuildActions Implements IModuleBuilder
 		rebuildHelp.Enabled=idle
 		moduleManager.Enabled=idle
 	End
-
-	Method BuildModules:Bool( clean:Bool,modules:String="",configs:String="debug release" )
 	
+	Method BuildModules:Bool( modules:String="",configs:String="",cleanState:Int=0 )
+		
+		If Not modules Then modules=_storedModules
+		
+		If Not configs
+			configs=_storedConfigs
+			If Not configs Then configs="debug release"
+		Endif
+		
+		Local clean:Bool
+		If cleanState=0
+			clean=_storedClean
+		Else
+			clean=(cleanState=1)
+		Endif
+		
 		Local dialog:=New UpdateModulesDialog( _validTargets,modules,configs,clean )
 		dialog.Title="Update / Rebuild modules"
 		
 		Local ok:=dialog.ShowModal()
 		If Not ok Return False
 		
-		Local result:=True
+		Local result:Bool
 		
 		Local targets:=dialog.SelectedTargets
 		modules=dialog.SelectedModules
-		
-		clean=dialog.NeedClean
 		configs=dialog.SelectedConfigs
+		clean=dialog.NeedClean
+		
+		' store
+		_storedModules=modules
+		_storedConfigs=configs
+		_storedClean=clean
 		
 		Local time:=Millisecs()
 		
 		For Local target:=Eachin targets
-			result=BuildModules( clean,target,modules,configs )
+			result=BuildModules( target,modules,configs,clean )
 			If result=False Exit
 		Next
 		
@@ -370,6 +392,9 @@ Class BuildActions Implements IModuleBuilder
 	Field _validTargets:StringStack
 	Field _timing:Long
 	
+	Field _storedModules:String
+	Field _storedConfigs:String
+	Field _storedClean:Bool
 	
 	Method BuildDoc:CodeDocument()
 		
@@ -494,7 +519,7 @@ Class BuildActions Implements IModuleBuilder
 		Return _console.ExitCode=0
 	End
 
-	Method BuildModules:Bool( clean:Bool,target:String,modules:String,configs:String="debug release" )
+	Method BuildModules:Bool( target:String,modules:String,configs:String,clean:Bool )
 		
 		PreBuildModules()
 		
@@ -666,7 +691,7 @@ Class BuildActions Implements IModuleBuilder
 		
 		If _console.Running Return
 	
-		BuildModules( False )
+		BuildModules()
 	End
 	
 	Method OnModuleManager()

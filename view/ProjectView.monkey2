@@ -459,7 +459,7 @@ Class ProjectView Extends ScrollView
 					
 					menu.AddAction( "Update / Rebuild "+name ).Triggered=Lambda()
 						
-						_builder.BuildModules( True,name )
+						_builder.BuildModules( name )
 					End
 					
 				Endif
@@ -474,7 +474,7 @@ Class ProjectView Extends ScrollView
 					
 					menu.AddAction( "Update / Rebuild modules" ).Triggered=Lambda()
 						
-						_builder.BuildModules( False )
+						_builder.BuildModules()
 					End
 					
 				Endif
