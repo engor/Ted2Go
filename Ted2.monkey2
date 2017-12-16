@@ -7,7 +7,11 @@
 '
 'windres resource.rc resource.o
 
+#If __ARCH__="x86"
 #Import "logo/resource.o"
+#Elseif __ARCH__="x64"
+#Import "logo/resource_x64.o"
+#Endif
 
 #Endif
 
