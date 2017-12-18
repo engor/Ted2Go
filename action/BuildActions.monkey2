@@ -316,7 +316,9 @@ Class BuildActions Implements IModuleBuilder
 			clean=(cleanState=1)
 		Endif
 		
-		Local dialog:=New UpdateModulesDialog( _validTargets,modules,configs,clean )
+		Local selTargets:=(_storedTargets ?Else "desktop")
+		
+		Local dialog:=New UpdateModulesDialog( _validTargets,selTargets,modules,configs,clean )
 		dialog.Title="Update / Rebuild modules"
 		
 		Local ok:=dialog.ShowModal()
@@ -330,6 +332,7 @@ Class BuildActions Implements IModuleBuilder
 		clean=dialog.NeedClean
 		
 		' store
+		_storedTargets=targets.Join( " " )
 		_storedModules=modules
 		_storedConfigs=configs
 		_storedClean=clean
@@ -394,6 +397,7 @@ Class BuildActions Implements IModuleBuilder
 	
 	Field _storedModules:String
 	Field _storedConfigs:String
+	Field _storedTargets:String
 	Field _storedClean:Bool
 	
 	Method BuildDoc:CodeDocument()

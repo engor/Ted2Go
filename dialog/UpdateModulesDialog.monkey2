@@ -3,7 +3,7 @@ Namespace ted2go
 
 Class UpdateModulesDialog Extends DialogExt
 	
-	Method New( targets:StringStack,selectedModules:String,configs:String,clean:Bool )
+	Method New( targets:StringStack,selectedTargets:String,selectedModules:String,configs:String,clean:Bool )
 		
 		_modsNames.Clear()
 		GetModulesNames( _modsNames )
@@ -53,13 +53,15 @@ Class UpdateModulesDialog Extends DialogExt
 		dock.AddView( table,"top" )
 		dock.AddView( New Label( " " ),"top" )
 		
+		Local selTargets:=New StringStack( selectedTargets.Split( " " ) )
+		
 		dock.AddView( New Label( "Targets:" ),"top" )
 		Local targetDock:=New DockingView
 		For Local t:=Eachin targets
 			Local chb:=New CheckButton( t )
 			targetDock.AddView( chb,"left" )
 			_targetsViews.Add( chb )
-			chb.Checked=(t="desktop")
+			chb.Checked=selTargets.Contains( t )
 		Next
 		dock.AddView( targetDock,"top" )
 		dock.AddView( New Label( " " ),"top" )
