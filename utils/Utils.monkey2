@@ -2,13 +2,40 @@
 Namespace ted2go
 
 
-Function IsLowercacedFirstChar:Bool(s:String)
+Function SwapCase:String( s:String )
+	
+	Local result:="",ss:String,lower:String
+	For Local i:=0 Until s.Length
+		ss=s.Slice( i,i+1 )
+		lower=ss.ToLower()
+		result+=(ss=lower) ? ss.ToUpper() Else lower
+	Next
+	Return result
+End
+
+Function IsLowercacedFirstChar:Bool( s:String )
 	
 	If Not s Return False
 	Local s1:=s.Slice( 0,1 )
 	Return s1 = s1.ToLower()
 End
 
+Function GetCaseSensitivePath:String( path:String )
+
+#If __HOSTOS__="windows"
+	Local dir:=ExtractDir( path )
+	Local items:=LoadDir( dir )
+	If items
+		Local lower:=StripDir( path ).ToLower()
+		For Local i:=Eachin items
+			If i.ToLower()=lower Return dir+i
+		Next
+	Endif
+	Return path
+#Else
+	Return path
+#Endif
+End
 
 Class Utils
 	

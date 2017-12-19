@@ -114,7 +114,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		_doc.ArrangeElements()
 	End
 	
-
+	
 	Protected
 	
 	Method OnThemeChanged() Override
@@ -176,6 +176,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		Local alt:=(event.Modifiers & Modifier.Alt)
 		Local ctrl:=(event.Modifiers & Modifier.Control)
 		Local shift:=(event.Modifiers & Modifier.Shift)
+		Local menu:=(event.Modifiers & Modifier.Menu)
 		
 		'ctrl+space - show autocomplete list
 		Select event.Type
@@ -184,7 +185,19 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			Local key:=FixNumpadKeys( event )
 			
 			Select key
-			
+				
+'				#If __TARGET__="macos"
+'				Case Key.K
+'					If ctrl 
+'						If shift
+'							DeleteLineAtCursor()
+'						Else
+'							DeleteToEnd()
+'						Endif
+'						Return
+'					Endif
+'				#Endif
+				
 				Case Key.Space
 					If ctrl
 						Return
@@ -206,11 +219,21 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						
 					Else
 						
-						#If __TARGET__="macos"
-						If ctrl
-							DeleteLineAtCursor()
-						Endif
-						#Endif
+'						#If __TARGET__="macos"
+'						If menu
+'							DeleteToBegin()
+'						Elseif ctrl
+'							DeleteWordBeforeCursor()
+'						Endif
+'						#Else
+'						If ctrl
+'							If shift
+'								DeleteToBegin()
+'							Else
+'								DeleteWordBeforeCursor()
+'							Endif
+'						Endif
+'						#Endif
 						
 					Endif
 				
@@ -260,7 +283,13 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				Case Key.KeyDelete
 			
 					If shift 'shift+del - cut selected
-						If CanCopy Then OnCut()
+						If ctrl
+'							DeleteToEnd()
+						Elseif CanCopy
+							OnCut()
+						Endif
+'					Else If ctrl 'ctrl w/o shift
+'						DeleteWordAfterCursor()
 					Else
 						If Anchor = Cursor
 							Local len:=Text.Length
@@ -742,16 +771,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		Endif
 		
 		Return False
-	End
-	
-	Method DeleteLineAtCursor()
-		
-		Local line:=Document.FindLine( Cursor )
-		Local pos:=Cursor
-		SelectText( Document.StartOfLine( line ),Document.EndOfLine( line )+1 )
-		ReplaceText( "" )
-		pos=Min( pos,Document.EndOfLine( line ) )
-		SelectText( pos,pos )
 	End
 	
 End
@@ -1383,13 +1402,12 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Field _timeDocParsed:=0
+	Field _timeTextChanged:=0
 	Method ParsingOnTextChanged()
 		
 		If Not _parsingEnabled Return
 		
-		Global __timeTextChanged:=0
-		
-		__timeTextChanged=Millisecs()
+		_timeTextChanged=Millisecs()
 		
 		If Not _timer Then _timer=New Timer( 1,Lambda()
 		
@@ -1397,8 +1415,8 @@ Class CodeDocument Extends Ted2Document
 			
 			Local msec:=Millisecs()
 			If msec<_timeDocParsed+1000 Return
-			If __timeTextChanged=0 Or msec<__timeTextChanged+1000 Return
-			__timeTextChanged=0
+			If _timeTextChanged=0 Or msec<_timeTextChanged+1000 Return
+			_timeTextChanged=0
 			
 			ParsingDoc()
 		
@@ -1600,15 +1618,16 @@ Class CodeDocument Extends Ted2Document
 			Return
 		Endif
 		
-		Local i:=brackets-1
-		While part And _codeView.Keywords.Contains( part.ident )
-			i-=1
-			If i>=0
-				part=parts[i]
-			Else
-				Return 'exit
-			Endif
-		Wend
+'		Local i:=brackets-1
+'		While part And _codeView.Keywords.Contains( part.ident )
+'			i-=1
+'			If i>=0
+'				Print "part: "+part.ident+", "+i
+'				part=parts[i]
+'			Else
+'				Return 'exit
+'			Endif
+'		Wend
 		
 		'If ident<>_storedIdent 'Or bracketPos<>_storedPos
 			

@@ -478,7 +478,7 @@ Class AndroidProduct Extends BuildProduct
 	Method New( srcPath:String )
 		Super.New( srcPath,"android" )
 		
-		AddExts( New String[]( ".xml",".java",".gradle" ) )
+		AddExts( New String[]( ".xml",".java",".gradle",".name" ) )
 		
 		AddVar( "Package Name","com.monkey2.monkey2game" )
 		AddVar( "Activity Name","Monkey2Game" )

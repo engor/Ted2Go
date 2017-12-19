@@ -11,7 +11,15 @@ Class EditActions
 	Field paste:Action
 	Field selectAll:Action
 	Field wordWrap:Action
-	
+	' Edit -- Text
+	Field textDeleteWordForward:Action
+	Field textDeleteWordBackward:Action
+	Field textDeleteLine:Action
+	Field textDeleteToEnd:Action
+	Field textDeleteToBegin:Action
+	Field textLowercase:Action
+	Field textUppercase:Action
+	Field textSwapCase:Action
 	
 	Method New( docs:DocumentManager )
 	
@@ -57,6 +65,58 @@ Class EditActions
 		wordWrap.HotKey=Key.Z
 		wordWrap.HotKeyModifiers=Modifier.Alt
 		
+		textDeleteLine=New Action( "Delete line" )
+		textDeleteLine.Triggered=OnDeleteLine
+		#If __TARGET__="macos"
+		textDeleteLine.HotKey=Key.K
+		textDeleteLine.HotKeyModifiers=Modifier.Control|Modifier.Shift
+		#Else
+		textDeleteLine.HotKey=Key.E
+		textDeleteLine.HotKeyModifiers=Modifier.Control
+		#Endif
+		
+		textDeleteWordForward=New Action( "Delete word forward" )
+		textDeleteWordForward.Triggered=OnDeleteWordForward
+		textDeleteWordForward.HotKey=Key.KeyDelete
+		textDeleteWordForward.HotKeyModifiers=Modifier.Control
+		
+		textDeleteWordBackward=New Action( "Delete word backward" )
+		textDeleteWordBackward.Triggered=OnDeleteWordBackward
+		textDeleteWordBackward.HotKey=Key.Backspace
+		textDeleteWordBackward.HotKeyModifiers=Modifier.Control
+		
+		textDeleteToBegin=New Action( "Delete to beginning" )
+		textDeleteToBegin.Triggered=OnDeleteToBegin
+		textDeleteToBegin.HotKey=Key.Backspace
+		#If __TARGET__="macos"
+		textDeleteToBegin.HotKeyModifiers=Modifier.Menu
+		#Else
+		textDeleteToBegin.HotKeyModifiers=Modifier.Menu|Modifier.Shift
+		#Endif
+		
+		textDeleteToEnd=New Action( "Delete to end" )
+		textDeleteToEnd.Triggered=OnDeleteToEnd
+		#If __TARGET__="macos"
+		textDeleteToEnd.HotKey=Key.K
+		textDeleteToEnd.HotKeyModifiers=Modifier.Control
+		#Else
+		textDeleteToEnd.HotKey=Key.KeyDelete
+		textDeleteToEnd.HotKeyModifiers=Modifier.Control|Modifier.Shift
+		#Endif
+		
+		textLowercase=New Action( "lowercace" )
+		textLowercase.Triggered=OnLowercase
+		textLowercase.HotKey=Key.L
+		textLowercase.HotKeyModifiers=Modifier.Control|Modifier.Shift
+		
+		textUppercase=New Action( "UPPERCASE" )
+		textUppercase.Triggered=OnUppercase
+		textUppercase.HotKey=Key.U
+		textUppercase.HotKeyModifiers=Modifier.Control|Modifier.Shift
+		
+		textSwapCase=New Action( "Swap case" )
+		textSwapCase.Triggered=OnSwapCase
+		
 	End
 	
 	Method Update()
@@ -74,6 +134,51 @@ Class EditActions
 	Private
 	
 	Field _docs:DocumentManager
+	
+	Property CurrentCodeDocument:CodeTextView()
+		
+		Return Cast<CodeTextView>( App.KeyView )
+	End
+	
+	Method OnDeleteLine()
+		
+		CurrentCodeDocument?.DeleteLineAtCursor()
+	End
+	
+	Method OnDeleteWordForward()
+		
+		CurrentCodeDocument?.DeleteWordForward()
+	End
+	
+	Method OnDeleteWordBackward()
+		
+		CurrentCodeDocument?.DeleteWordBackward()
+	End
+	
+	Method OnDeleteToBegin()
+		
+		CurrentCodeDocument?.DeleteToBegin()
+	End
+	
+	Method OnDeleteToEnd()
+	
+		CurrentCodeDocument?.DeleteToEnd()
+	End
+	
+	Method OnLowercase()
+	
+		CurrentCodeDocument?.LowercaseSelection()
+	End
+	
+	Method OnUppercase()
+	
+		CurrentCodeDocument?.UppercaseSelection()
+	End
+	
+	Method OnSwapCase()
+		
+		CurrentCodeDocument?.SwapCaseSelection()
+	End
 	
 	Method OnUndo()
 

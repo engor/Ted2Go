@@ -7,7 +7,11 @@
 '
 'windres resource.rc resource.o
 
+#If __ARCH__="x86"
 #Import "logo/resource.o"
+#Elseif __ARCH__="x64"
+#Import "logo/resource_x64.o"
+#Endif
 
 #Endif
 
@@ -19,6 +23,7 @@
 #Import "<mojo>"
 #Import "<mojox>"
 #Import "<tinyxml2>"
+#Import "<sdl2>"
 
 #Import "action/FileActions"
 #Import "action/EditActions"
@@ -126,7 +131,7 @@ Using std..
 Using mojo..
 Using mojox..
 Using tinyxml2..
-
+Using sdl2..
 
 Const MONKEY2_DOMAIN:="http://monkeycoder.co.nz"
 

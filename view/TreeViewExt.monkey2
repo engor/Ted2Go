@@ -313,7 +313,7 @@ Class TreeViewExpander
 			' grab all parents states
 			Local p:=node.Parent
 			While p<>Null
-				_expands[GetNodePath( p )]=p.Expanded
+				If p.Expanded Then _expands[GetNodePath( p )]=True
 				p=p.Parent
 			Wend
 		Else
@@ -331,7 +331,7 @@ Class TreeViewExpander
 	
 		Local key:=GetNodePath( node )
 		
-		node.Expanded = _expands.Contains( key ) ? True Else False
+		node.Expanded=_expands.Contains( key )
 		
 		If Not recurse Return
 		

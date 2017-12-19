@@ -514,7 +514,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 		Next
 		'preprocessor
 		'need to load it like keywords
-		Local s:="#If ,#Rem,#End,#Endif,#Else,#Else If ,#Import ,monkeydoc,__TARGET__,__MOBILE_TARGET__,__DESKTOP_TARGET__,__HOSTOS__,#Reflect "
+		Local s:="#If ,#Rem,#End,#Endif,#Else,#Else If ,#Import ,monkeydoc,__TARGET__,__MOBILE_TARGET__,__DESKTOP_TARGET__,__HOSTOS__,__ARCH__,#Reflect "
 		Local arr:=s.Split( "," )
 		For Local i:=Eachin arr
 			list.Add( New ListViewItem( i ) )

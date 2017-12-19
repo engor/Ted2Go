@@ -26,7 +26,11 @@ End
 
 Interface IModuleBuilder
 	
-	Method BuildModules:Bool( clean:Bool,modules:String="",configs:String="debug release" )
+	' cleanState: 
+	' -1: don't clean
+	' 0: use previous
+	' 1: clean
+	Method BuildModules:Bool( modules:String="",configs:String="",cleanState:Int=0 )
 	
 End
 
@@ -295,27 +299,48 @@ Class BuildActions Implements IModuleBuilder
 		rebuildHelp.Enabled=idle
 		moduleManager.Enabled=idle
 	End
-
-	Method BuildModules:Bool( clean:Bool,modules:String="",configs:String="debug release" )
 	
-		Local dialog:=New UpdateModulesDialog( _validTargets,modules,configs,clean )
+	Method BuildModules:Bool( modules:String="",configs:String="",cleanState:Int=0 )
+		
+		If Not modules Then modules=_storedModules
+		
+		If Not configs
+			configs=_storedConfigs
+			If Not configs Then configs="debug release"
+		Endif
+		
+		Local clean:Bool
+		If cleanState=0
+			clean=_storedClean
+		Else
+			clean=(cleanState=1)
+		Endif
+		
+		Local selTargets:=(_storedTargets ?Else "desktop")
+		
+		Local dialog:=New UpdateModulesDialog( _validTargets,selTargets,modules,configs,clean )
 		dialog.Title="Update / Rebuild modules"
 		
 		Local ok:=dialog.ShowModal()
 		If Not ok Return False
 		
-		Local result:=True
+		Local result:Bool
 		
 		Local targets:=dialog.SelectedTargets
 		modules=dialog.SelectedModules
-		
-		clean=dialog.NeedClean
 		configs=dialog.SelectedConfigs
+		clean=dialog.NeedClean
+		
+		' store
+		_storedTargets=targets.Join( " " )
+		_storedModules=modules
+		_storedConfigs=configs
+		_storedClean=clean
 		
 		Local time:=Millisecs()
 		
 		For Local target:=Eachin targets
-			result=BuildModules( clean,target,modules,configs )
+			result=BuildModules( target,modules,configs,clean )
 			If result=False Exit
 		Next
 		
@@ -334,7 +359,7 @@ Class BuildActions Implements IModuleBuilder
 	
 	Method GotoError( err:BuildError )
 	
-		Local doc:=Cast<CodeDocument>( _docs.OpenDocument( err.path,True ) )
+		Local doc:=Cast<CodeDocument>( _docs.OpenDocument( GetCaseSensitivePath( err.path ),True ) )
 		If Not doc Return
 	
 		Local tv := doc.CodeView
@@ -370,6 +395,10 @@ Class BuildActions Implements IModuleBuilder
 	Field _validTargets:StringStack
 	Field _timing:Long
 	
+	Field _storedModules:String
+	Field _storedConfigs:String
+	Field _storedTargets:String
+	Field _storedClean:Bool
 	
 	Method BuildDoc:CodeDocument()
 		
@@ -451,7 +480,7 @@ Class BuildActions Implements IModuleBuilder
 						Local msg:=stdout.Slice( i+12 )
 						
 						Local err:=New BuildError( path,line,msg )
-						Local doc:=Cast<CodeDocument>( _docs.OpenDocument( path,False ) )
+						Local doc:=Cast<CodeDocument>( _docs.OpenDocument( GetCaseSensitivePath( path ),False ) )
 						
 						If doc
 							doc.AddError( err )
@@ -494,7 +523,7 @@ Class BuildActions Implements IModuleBuilder
 		Return _console.ExitCode=0
 	End
 
-	Method BuildModules:Bool( clean:Bool,target:String,modules:String,configs:String="debug release" )
+	Method BuildModules:Bool( target:String,modules:String,configs:String,clean:Bool )
 		
 		PreBuildModules()
 		
@@ -642,6 +671,8 @@ Class BuildActions Implements IModuleBuilder
 		
 		_locked=doc
 		SetLockedState( _locked,True )
+		
+		
 	End
 	
 	Method SetLockedState( doc:CodeDocument,locked:Bool )
@@ -649,6 +680,7 @@ Class BuildActions Implements IModuleBuilder
 		doc.State=locked ? "+" Else ""
 		Local tab:=_docs.FindTab( doc.View )
 		If tab Then tab.SetLockedState( locked )
+		_docs.CurrentDocumentChanged()
 	End
 	
 	Method OnBuildFileSettings()
@@ -663,7 +695,7 @@ Class BuildActions Implements IModuleBuilder
 		
 		If _console.Running Return
 	
-		BuildModules( False )
+		BuildModules()
 	End
 	
 	Method OnModuleManager()
