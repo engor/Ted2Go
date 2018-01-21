@@ -368,6 +368,7 @@ Class BuildActions Implements IModuleBuilder
 		MainWindow.UpdateWindow( False )
 	
 		tv.GotoPosition( New Vec2i( err.line,0 ) )
+		tv.MakeKeyView()
 	End
 	
 	
@@ -462,39 +463,35 @@ Class BuildActions Implements IModuleBuilder
 		
 		Repeat
 		
-			Local stdout:=_console.ReadStdout()
+			Local result:=_console.ReadStdoutWithErrors()
+			Local stdout:=result.stdout
 			If Not stdout Exit
 			
 			If stdout.StartsWith( "Application built:" )
 
 '				_appFile=stdout.Slice( stdout.Find( ":" )+1 ).Trim()
 			Else
-			
-				Local i:=stdout.Find( "] : Error : " )
-				If i<>-1
+				
+				Local err:=result.error
+				If err
 					hasErrors=True
-					Local j:=stdout.Find( " [" )
-					If j<>-1
-						Local path:=stdout.Slice( 0,j )
-						Local line:=Int( stdout.Slice( j+2,i ) )-1
-						Local msg:=stdout.Slice( i+12 )
-						
-						Local err:=New BuildError( path,line,msg )
-						Local doc:=Cast<CodeDocument>( _docs.OpenDocument( GetCaseSensitivePath( path ),False ) )
-						
-						If doc
-							doc.AddError( err )
-							'If _errors.Empty
-							'	MainWindow.ShowBuildConsole( True )
-							'	GotoError( err )
-							'Endif
-							_errors.Add( err )
-						Endif
-						
+					
+					Local buildErr:=New BuildError( err.path,err.line,err.message )
+					Local doc:=Cast<CodeDocument>( _docs.OpenDocument( GetCaseSensitivePath( buildErr.path ),False ) )
+					
+					If doc
+						doc.AddError( buildErr )
+						'If _errors.Empty
+						'	MainWindow.ShowBuildConsole( True )
+						'	GotoError( err )
+						'Endif
+						_errors.Add( buildErr )
 					Endif
+					
 				Endif
+				
 				If Not hasErrors
-					i=stdout.Find( "Build error: " )
+					Local i:=stdout.Find( "Build error: " )
 					hasErrors=(i<>-1)
 				Endif
 				
