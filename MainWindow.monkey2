@@ -1658,6 +1658,10 @@ Class MainWindowInstance Extends Window
 			Select event.Key
 			Case Key.Escape
 				
+				If CodeDocument.HideParamsHint()
+					Return
+				Endif
+				
 				If _fullscreenState=FullscreenState.Editor
 					SwapFullscreenEditor()
 					Return
