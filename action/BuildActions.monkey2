@@ -507,7 +507,18 @@ Class BuildActions Implements IModuleBuilder
 		
 		MainWindow.HideStatusBarProgress()
 		
-		Local status:=hasErrors ? "{0} failed. See the build console for details." Else (_console.ExitCode=0 ? "{0} finished." Else "{0} cancelled.")
+		Local status:=""
+		If hasErrors
+			status="{0} failed. See the build console for details."
+		Else
+			If _console.ExitCode=0
+				status="{0} finished."
+			Else
+				status="{0} cancelled."
+				' notify about cancellation
+				_console.Write( "~n"+status.Replace( "{0}",title )+"~n" )
+			Endif
+		Endif
 		status=status.Replace( "{0}",title )
 		
 		If showElapsedTime
