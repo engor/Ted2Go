@@ -191,7 +191,7 @@ Class SceneDocumentType Extends Ted2DocumentType
 	Method New()
 		AddPlugin( Self )
 		
-		Extensions=New String[]( ".gltf",".b3d",".3ds",".obj",".dae",".fbx",".blend",".x" )
+		Extensions=New String[]( ".gltf",".glb",".b3d",".3ds",".obj",".dae",".fbx",".blend",".x" )
 	End
 	
 	Method OnCreateDocument:Ted2Document( path:String ) Override
