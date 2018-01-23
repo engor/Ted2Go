@@ -44,7 +44,7 @@ Class SceneDocumentView Extends View
 			_anim=0
 		Endif
 		
-		_doc.Scene.Render( canvas,_doc.Camera )
+		_doc.Camera.Render( canvas )
 	End
 	
 	Method OnMouseEvent( event:MouseEvent ) Override
@@ -105,7 +105,7 @@ Class SceneDocument Extends Ted2Document
 		
 		Scene.SetCurrent( _scene )
 		
-		_camera=New Camera
+		_camera=New Camera( _view )
 		_camera.Near=.01
 		_camera.Far=10
 		_camera.MoveZ( -2.5 )
