@@ -193,15 +193,18 @@ Function Main()
 
 	New MainWindowInstance( AppTitle,rect,flags,jobj )
 	
-	' open docs from args
-	Local args:=AppArgs()
-	For Local i:=1 Until args.Length
-		Local arg:=args[i]
-		arg=arg.Replace( "\","/" )
-		If GetFileType( arg ) = FileType.File
-			MainWindow.OpenDocument( arg )
-		Endif
-	Next
+	App.Idle+=Lambda()
+		
+		' open docs from args
+		Local args:=AppArgs()
+		For Local i:=1 Until args.Length
+			Local arg:=args[i]
+			arg=arg.Replace( "\","/" )
+			If GetFileType( arg ) = FileType.File
+				MainWindow.OpenDocument( arg,True )
+			Endif
+		Next
+	End
 	
 	App.Run()
 	
