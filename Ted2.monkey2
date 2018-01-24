@@ -32,6 +32,7 @@
 #Import "action/FindActions"
 #Import "action/ViewActions"
 #Import "action/WindowActions"
+#Import "action/GotoActions"
 
 #Import "dialog/FindDialog"
 #Import "dialog/PrefsDialog"

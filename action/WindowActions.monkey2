@@ -17,7 +17,6 @@ Class WindowActions
 		
 		nextTab=docs.nextDocument
 		prevTab=docs.prevDocument
-		
 		fullscreenWindow=New Action( "Fullscreen window" )
 #If __TARGET__="macos"
 		fullscreenWindow.HotKey=Key.F
