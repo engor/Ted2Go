@@ -16,41 +16,42 @@ Class MyWindow Extends Window
 	
 	Field _light:Light
 	
-	Field _donut:Model
+	Field _ground:Model
 	
-	Field _bloom:BloomEffect
+	Field _donut:Model
 	
 	Method New( title:String="Simple mojo3d app",width:Int=640,height:Int=480,flags:WindowFlags=WindowFlags.Resizable )
 
 		Super.New( title,width,height,flags )
 		
-		_scene=Scene.GetCurrent()
-		
-		_scene.ClearColor=Color.Black
-		
-		_bloom=New BloomEffect
-		
-		_scene.AddPostEffect( _bloom )
+		'create (current) scene
+		'
+		_scene=New Scene
+		_scene.ShadowAlpha=.75
 		
 		'create camera
 		'
-		_camera=New Camera
-		_camera.Near=.1
-		_camera.Far=100
-		_camera.Move( 0,10,-10 )
+		_camera=New Camera( Self )
 		_camera.AddComponent<FlyBehaviour>()
+		_camera.Move( 0,10,-5 )
 		
 		'create light
 		'
 		_light=New Light
-
+		_light.CastsShadow=True
 		_light.RotateX( 90 )
 		
-		Local material:=New PbrMaterial( Color.Black )
-		material.EmissiveFactor=New Color( 0,2,0 )
+		'create ground
+		'
+		Local groundBox:=New Boxf( -50,-1,-50,50,0,50 )
+		Local groundMaterial:=New PbrMaterial( Color.Green )
+		_ground=Model.CreateBox( groundBox,1,1,1,groundMaterial )
+		_ground.CastsShadow=False
 		
-		_donut=Model.CreateTorus( 2,.5,48,24,material )
-		
+		'create dount
+		'		
+		Local donutMaterial:=New PbrMaterial( Color.Brown )
+		_donut=Model.CreateTorus( 2,.5,48,24,donutMaterial )
 		_donut.Move( 0,10,0 )
 	End
 	
@@ -58,17 +59,13 @@ Class MyWindow Extends Window
 	
 		RequestRender()
 		
-		If Keyboard.KeyHit( Key.Escape ) App.Terminate()
-		
-		If Keyboard.KeyHit( Key.Space ) _donut.Visible=Not _donut.Visible
-		
 		_donut.Rotate( .2,.4,.6 )
-		
+
 		_scene.Update()
 		
-		_scene.Render( canvas,_camera )
+		_camera.Render( canvas )
 		
-		canvas.DrawText( "Width="+Width+", Height="+Height+", FPS="+App.FPS,0,0 )
+		canvas.DrawText( "FPS="+App.FPS,0,0 )
 	End
 	
 End

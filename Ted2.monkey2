@@ -32,6 +32,7 @@
 #Import "action/FindActions"
 #Import "action/ViewActions"
 #Import "action/WindowActions"
+#Import "action/GotoActions"
 
 #Import "dialog/FindDialog"
 #Import "dialog/PrefsDialog"
@@ -135,7 +136,7 @@ Using sdl2..
 
 Const MONKEY2_DOMAIN:="http://monkeycoder.co.nz"
 
-Global AppTitle:="Ted2Go v2.8"
+Global AppTitle:="Ted2Go v2.9a"
 
 
 Function Main()
@@ -193,15 +194,18 @@ Function Main()
 
 	New MainWindowInstance( AppTitle,rect,flags,jobj )
 	
-	' open docs from args
-	Local args:=AppArgs()
-	For Local i:=1 Until args.Length
-		Local arg:=args[i]
-		arg=arg.Replace( "\","/" )
-		If GetFileType( arg ) = FileType.File
-			MainWindow.OpenDocument( arg )
-		Endif
-	Next
+	App.Idle+=Lambda()
+		
+		' open docs from args
+		Local args:=AppArgs()
+		For Local i:=1 Until args.Length
+			Local arg:=args[i]
+			arg=arg.Replace( "\","/" )
+			If GetFileType( arg ) = FileType.File
+				MainWindow.OpenDocument( arg,True )
+			Endif
+		Next
+	End
 	
 	App.Run()
 	
@@ -219,7 +223,7 @@ Function SetupMonkeyRootPath:String( rootPath:String,searchMode:Bool )
 		' search for choosen-by-requester folder
 		While Not found
 	
-			Local ok:=Confirm( "Initializing","Monkey2 root directory isn't set.~nTo continue, you should to specify it." )
+			Local ok:=Confirm( "Initializing","Monkey2 root directory isn't set.~nTo continue, you should specify it." )
 			If Not ok
 				Return ""
 			End
