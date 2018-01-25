@@ -243,6 +243,7 @@ Class MainWindowInstance Extends Window
 		_findActions=New FindActions( _docsManager,_projectView,_findConsole )
 		_helpActions=New HelpActions
 		_viewActions=New ViewActions( _docsManager )
+		_tabActions=New TabActions( _tabsWrap.AllDocks )
 		
 		_tabMenu=New Menu
 		_tabMenu.AddAction( _fileActions.close )
@@ -363,6 +364,10 @@ Class MainWindowInstance Extends Window
 		_gotoMenu.AddAction( _viewActions.goBack )
 		_gotoMenu.AddAction( _viewActions.goForward )
 		
+		'View menu
+		'
+		_viewMenu=New MenuExt( "View" )
+		TabActions.CreateMenu( _viewMenu )
 		'Build menu
 		'
 		_forceStop=New Action( "Force Stop" )
@@ -435,6 +440,7 @@ Class MainWindowInstance Extends Window
 		_menuBar.AddMenu( _editMenu )
 		_menuBar.AddMenu( _findMenu )
 		_menuBar.AddMenu( _gotoMenu )
+		_menuBar.AddMenu( _viewMenu )
 		_menuBar.AddMenu( _buildMenu )
 		_menuBar.AddMenu( _windowMenu )
 		_menuBar.AddMenu( _helpMenu )
@@ -1517,6 +1523,7 @@ Class MainWindowInstance Extends Window
 		' put views
 		For Local edge:=Eachin edges
 			Local val:=Json_FindValue( jobj.Data,"tabsDocks/"+edge+"Tabs" )
+			Local vistabs:=Json_FindValue( jobj.Data,"tabsDocks/"+edge+"TabsVisible" )
 			If val And val<>JsonValue.NullValue
 				For Local v:=Eachin val.ToArray().All()
 					Local key:=v.ToString()
@@ -1526,7 +1533,16 @@ Class MainWindowInstance Extends Window
 					Next
 					'
 					Local tab:=_tabsWrap.tabs[key]
-					If tab Then _tabsWrap.docks[edge].AddTab( tab )
+					If tab Then 
+						_tabsWrap.docks[edge].AddTab( tab )
+						'set view visible
+						If vistabs And vistabs<>JsonValue.NullValue
+							For Local vt:=Eachin vistabs.ToArray().All()
+								If key=vt.ToString() Then tab.Visible=True; Exit
+								tab.Visible=False
+							Next
+						End
+					End
 				Next
 			Endif
 		Next
@@ -1574,6 +1590,7 @@ Class MainWindowInstance Extends Window
 		For Local edge:=Eachin edges
 			Local dock:=_tabsWrap.docks[edge]
 			jj[edge+"Tabs"]=JsonArray.FromStrings( dock.TabsNames )
+			jj[edge+"TabsVisible"]=JsonArray.FromStrings( dock.TabsVisible )
 			jj[edge+"Active"]=New JsonString( dock.ActiveName )
 			jj[edge+"Visible"]=New JsonBool( dock.Visible )
 			jj[edge+"Size"]=New JsonString( _tabsWrap.GetDockSize( dock ) )
@@ -1677,15 +1694,15 @@ Class MainWindowInstance Extends Window
 				If event.Modifiers & Modifier.Shift
 					
 					dock=_tabsWrap.docks["left"]
-					If dock.NumTabs>0 Then dock.Visible=Not dock.Visible
+					If dock.NumTabs>0 And dock.VisibleTabs Then dock.Visible=Not dock.Visible
 					
 					dock=_tabsWrap.docks["right"]
-					If dock.NumTabs>0 Then dock.Visible=Not dock.Visible
+					If dock.NumTabs>0 And dock.VisibleTabs Then dock.Visible=Not dock.Visible
 					
 				Else ' bottom dock
 					
 					dock=_tabsWrap.docks["bottom"]
-					If dock.NumTabs>0 Then dock.Visible=Not dock.Visible
+					If dock.NumTabs>0 And dock.VisibleTabs Then dock.Visible=Not dock.Visible
 					
 					_consoleVisibleCounter+=1
 				Endif
@@ -1728,6 +1745,7 @@ Class MainWindowInstance Extends Window
 	Field _buildActions:BuildActions
 	Field _helpActions:HelpActions
 	Field _viewActions:ViewActions
+	Field _tabActions:TabActions
 	
 	Field _ircView:IRCView
 	Field _buildConsole:ConsoleExt
@@ -1760,6 +1778,7 @@ Class MainWindowInstance Extends Window
 	Field _editMenu:MenuExt
 	Field _findMenu:MenuExt
 	Field _gotoMenu:MenuExt
+	Field _viewMenu:MenuExt
 	Field _buildMenu:MenuExt
 	Field _windowMenu:MenuExt
 	Field _helpMenu:MenuExt
