@@ -176,6 +176,30 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 		Return _tabs.Length
 	End
 	
+	#rem monkeydoc Number of visible tabs
+	#end
+	Property VisibleTabs:Int()
+		
+		Local num:Int
+		For Local t:=Eachin _tabs
+			If t.Visible num+=1
+		Next
+		Return num
+	End
+	
+	#rem monkeydoc Give string array of Visible tab names
+	#end
+	Property TabsVisible:String[]()
+		
+		Local arr:=New String[NumTabs]
+		For Local i:=0 Until _tabs.Length
+			If _tabs[i].Visible
+				arr[i]=_tabs[i].Text
+			End
+		Next
+		Return arr
+	End
+	
 	#rem monkeydoc The current index.
 	#end
 	Property CurrentIndex:Int()
