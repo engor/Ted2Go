@@ -115,6 +115,7 @@
 #Import "view/ViewExtensions"
 #Import "view/DockingViewExt"
 #Import "view/DraggableViewListener"
+#Import "view/Undock"
 
 #Import "Tree"
 #Import "Tuple"
