@@ -24,9 +24,11 @@ Class TabActions
 								If firstCurrent.Visible Then firstCurrent.CurrentHolder.MakeCurrent( firstCurrent.Text ); Exit
 							Next	
 						Else
-							_tabb.Visible=True
-							_tabb.View.Visible=True
-							_tabb.CurrentHolder.MakeCurrent( _tabb.Text )
+							If( _tabb.View )
+								_tabb.Visible=True
+								_tabb.View.Visible=True
+								_tabb.CurrentHolder.MakeCurrent( _tabb.Text )
+							End
 						End
 						_tabb.CurrentHolder.Visible=_tabb.CurrentHolder.VisibleTabs
 					End
@@ -62,11 +64,15 @@ Class TabActions
 		For Local i:=Eachin tabs
 			Local _docks:=i.Tabs
 			For Local _tabb:=Eachin _docks	
-					_tabb.Visible=True
-					_tabb.View.Visible=True
-					_tabb.CurrentHolder.MakeCurrent( _tabb.Text )
-					_tabb.CurrentHolder.Visible=_tabb.CurrentHolder.VisibleTabs
+					If _tabb.View
+						_tabb.Visible=True
+						_tabb.View.Visible=True
+						_tabb.CurrentHolder.MakeCurrent( _tabb.Text )
+						_tabb.CurrentHolder.Visible=_tabb.CurrentHolder.VisibleTabs
+					End
 			Next
 		Next
+		'Undock Reset
+		UndockWindow.RestoreUndock()
 	End
 End

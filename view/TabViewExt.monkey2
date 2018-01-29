@@ -294,7 +294,7 @@ Class TabViewExt Extends DockingView Implements IDraggableHolder
 		tab.RightClicked=Lambda()
 		
 			MakeCurrent( tab,True )
-			
+			If tab.Undockable Then UndockWindow.NewUndock( tab )
 			RightClicked()
 		End
 		
@@ -594,6 +594,13 @@ Class TabButtonExt Extends TabButton Implements IDraggableItem<TabViewExt>
 		Return _parentDock.ActiveName=Text
 	End
 	
+	'undockable?
+	Property Undockable:Bool()
+		Return _undockable
+	Setter( value:Bool )
+		_undockable=value
+	End
+	
 	Method SetLockedState( locked:Bool )
 		
 		_locked=locked
@@ -631,6 +638,7 @@ Class TabButtonExt Extends TabButton Implements IDraggableItem<TabViewExt>
 	Field _possibleParentDocks:TabViewExt[]
 	Field _locked:Bool
 	Field _closable:Bool
+	Field _undockable:Bool
 End
 
 

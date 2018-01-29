@@ -1229,6 +1229,9 @@ Class MainWindowInstance Extends Window
 		jobj["windowRect"]=ToJson( _storedSize )
 		jobj["windowState"]=New JsonNumber( Int(state) )
 		
+		SaveUndockTabsState( jobj )
+		If _isTerminating UndockWindow.RestoreUndock()
+			
 		SaveTabsState( jobj )
 		
 		Local jdocs:=New JsonObject
@@ -1597,9 +1600,37 @@ Class MainWindowInstance Extends Window
 		Next
 	End
 	
+	Method LoadUndockTabsState( jobj:JsonObject ) 
+				
+		Local edges:=DraggableTabs.Edges	
+		For Local edge:=Eachin edges
+			Local dock:=_tabsWrap.docks[edge]
+			For Local i:=Eachin dock.TabsNames
+				Local val:=Json_FindValue( jobj.Data,"undockTabs/"+i )
+				If val
+					Local _undockWindow:=UndockWindow.NewUndock( _tabsWrap.tabs[i] )
+					_undockWindow.SetUndockFrame( ToRecti( val ) )
+				End
+			Next
+		Next
+	End
+		
+	Method SaveUndockTabsState( jobj:JsonObject )
+		
+		If( UndockWindow._undockWindows.Length )	
+			Local jj:=New JsonObject
+			jobj["undockTabs"]=jj
+			For Local i:=Eachin UndockWindow._undockWindows
+				If i._visible jj[i.Title]=ToJson( i.Frame )
+			Next
+		End
+	End
+	
 	Method LoadState( jobj:JsonObject )
 		
 		LoadTabsState( jobj )
+		
+		LoadUndockTabsState( jobj )
 		
 		If jobj.Contains( "docsTab" )
 			Local jdocs:=jobj.GetObject( "docsTab" )
@@ -2052,6 +2083,7 @@ Class DraggableTabs
 	Method AddTab( name:String,view:View )
 		
 		tabs[name]=TabViewExt.CreateDraggableTab( name,view,_docksArray )
+		tabs[name].Undockable=True
 	End
 	
 	Method GetDockSize:String( dock:TabViewExt )
