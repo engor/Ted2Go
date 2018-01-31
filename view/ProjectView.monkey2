@@ -264,7 +264,7 @@ Class ProjectView Extends ScrollView
 		OpenProject( dir )
 	End
 	
-	Method OnOpenDocument( path:String,runExec:Bool=True )
+	Method OnOpenDocument( path:String,makeFocused:Bool,runExec:Bool=True )
 		
 		If GetFileType( path )<>FileType.File Return
 			
@@ -286,6 +286,8 @@ Class ProjectView Extends ScrollView
 			If exe Return 'never open .exe
 			
 			_docs.OpenDocument( path,True )
+			
+			If Not makeFocused Then Self.MakeKeyView()
 			
 		End )
 	End
@@ -344,12 +346,12 @@ Class ProjectView Extends ScrollView
 		
 		browser.FileClicked+=Lambda( node:ProjectBrowserView.Node )
 			
-			If browser.SingleClickExpanding Then OnOpenDocument( node.Path )
+			If browser.SingleClickExpanding Then OnOpenDocument( node.Path,False )
 		End
 		
 		browser.FileDoubleClicked+=Lambda( node:ProjectBrowserView.Node )
 			
-			If Not browser.SingleClickExpanding Then OnOpenDocument( node.Path )
+			If Not browser.SingleClickExpanding Then OnOpenDocument( node.Path,True )
 		End
 		
 		browser.FileRightClicked+=Lambda( node:ProjectBrowserView.Node )

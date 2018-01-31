@@ -94,6 +94,13 @@ Class MainWindowInstance Extends Window
 		'Build tab
 		
 		_buildConsole=New ConsoleExt
+		' jump to errors etc.
+		_buildConsole.RequestJumpToFile+=Lambda( path:String,line:Int )
+			
+			' emulate build error
+			Local err:=New BuildError( path,line,"" )
+			_buildActions.GotoError( err )
+		End
 		
 		'Output tab
 		
@@ -211,14 +218,9 @@ Class MainWindowInstance Extends Window
 		
 		_buildActions=New BuildActions( _docsManager,_buildConsole,_debugView )
 		_buildActions.ErrorsOccured+=Lambda( errors:BuildError[] )
+			
 			ShowBuildConsole( True )
 			_buildActions.GotoError( errors[0] )
-			
-			_buildErrorsList.Clear()
-			For Local err:=Eachin errors
-				_buildErrorsList.AddItem( New BuildErrorListViewItem( err ) )
-			Next
-			_buildErrorsList.Visible=True
 		End
 		
 		' ProjectView
@@ -241,6 +243,7 @@ Class MainWindowInstance Extends Window
 		_findActions=New FindActions( _docsManager,_projectView,_findConsole )
 		_helpActions=New HelpActions
 		_viewActions=New ViewActions( _docsManager )
+		_tabActions=New TabActions( _tabsWrap.AllDocks )
 		
 		_tabMenu=New Menu
 		_tabMenu.AddAction( _fileActions.close )
@@ -361,6 +364,10 @@ Class MainWindowInstance Extends Window
 		_gotoMenu.AddAction( _viewActions.goBack )
 		_gotoMenu.AddAction( _viewActions.goForward )
 		
+		'View menu
+		'
+		_viewMenu=New MenuExt( "View" )
+		TabActions.CreateMenu( _viewMenu )
 		'Build menu
 		'
 		_forceStop=New Action( "Force Stop" )
@@ -433,19 +440,13 @@ Class MainWindowInstance Extends Window
 		_menuBar.AddMenu( _editMenu )
 		_menuBar.AddMenu( _findMenu )
 		_menuBar.AddMenu( _gotoMenu )
+		_menuBar.AddMenu( _viewMenu )
 		_menuBar.AddMenu( _buildMenu )
 		_menuBar.AddMenu( _windowMenu )
 		_menuBar.AddMenu( _helpMenu )
 		
-		_buildErrorsList=New ListViewExt
-		_buildErrorsList.Visible=False
-		_buildErrorsList.OnItemChoosen+=Lambda()
-			Local item:=Cast<BuildErrorListViewItem>( _buildErrorsList.CurrentItem )
-			_buildActions.GotoError( item.error )
-		End
-		
+
 		_buildConsoleView=New DockingView
-		_buildConsoleView.AddView( _buildErrorsList,"right","400",True )
 		_buildConsoleView.ContentView=_buildConsole
 		
 		_statusBar=New StatusBarView
@@ -1228,6 +1229,9 @@ Class MainWindowInstance Extends Window
 		jobj["windowRect"]=ToJson( _storedSize )
 		jobj["windowState"]=New JsonNumber( Int(state) )
 		
+		SaveUndockTabsState( jobj )
+		If _isTerminating UndockWindow.RestoreUndock()
+			
 		SaveTabsState( jobj )
 		
 		Local jdocs:=New JsonObject
@@ -1334,17 +1338,14 @@ Class MainWindowInstance Extends Window
 	Method OnPreBuild()
 		
 		OnForceStop()
-		_buildErrorsList.Visible=False
 	End
 	
 	Method OnPreSemant()
 	
-		_buildErrorsList.Visible=False
 	End
 	
 	Method OnPreBuildModules()
 	
-		_buildErrorsList.Visible=False
 	End
 	
 	Method OnProjectClosed( dir:String )
@@ -1525,6 +1526,7 @@ Class MainWindowInstance Extends Window
 		' put views
 		For Local edge:=Eachin edges
 			Local val:=Json_FindValue( jobj.Data,"tabsDocks/"+edge+"Tabs" )
+			Local vistabs:=Json_FindValue( jobj.Data,"tabsDocks/"+edge+"TabsVisible" )
 			If val And val<>JsonValue.NullValue
 				For Local v:=Eachin val.ToArray().All()
 					Local key:=v.ToString()
@@ -1534,7 +1536,16 @@ Class MainWindowInstance Extends Window
 					Next
 					'
 					Local tab:=_tabsWrap.tabs[key]
-					If tab Then _tabsWrap.docks[edge].AddTab( tab )
+					If tab Then 
+						_tabsWrap.docks[edge].AddTab( tab )
+						'set view visible
+						If vistabs And vistabs<>JsonValue.NullValue
+							For Local vt:=Eachin vistabs.ToArray().All()
+								If key=vt.ToString() Then tab.Visible=True; Exit
+								tab.Visible=False
+							Next
+						End
+					End
 				Next
 			Endif
 		Next
@@ -1582,15 +1593,44 @@ Class MainWindowInstance Extends Window
 		For Local edge:=Eachin edges
 			Local dock:=_tabsWrap.docks[edge]
 			jj[edge+"Tabs"]=JsonArray.FromStrings( dock.TabsNames )
+			jj[edge+"TabsVisible"]=JsonArray.FromStrings( dock.TabsVisible )
 			jj[edge+"Active"]=New JsonString( dock.ActiveName )
 			jj[edge+"Visible"]=New JsonBool( dock.Visible )
 			jj[edge+"Size"]=New JsonString( _tabsWrap.GetDockSize( dock ) )
 		Next
 	End
 	
+	Method LoadUndockTabsState( jobj:JsonObject ) 
+				
+		Local edges:=DraggableTabs.Edges	
+		For Local edge:=Eachin edges
+			Local dock:=_tabsWrap.docks[edge]
+			For Local i:=Eachin dock.TabsNames
+				Local val:=Json_FindValue( jobj.Data,"undockTabs/"+i )
+				If val
+					Local _undockWindow:=UndockWindow.NewUndock( _tabsWrap.tabs[i] )
+					_undockWindow.SetUndockFrame( ToRecti( val ) )
+				End
+			Next
+		Next
+	End
+		
+	Method SaveUndockTabsState( jobj:JsonObject )
+		
+		If( UndockWindow._undockWindows.Length )	
+			Local jj:=New JsonObject
+			jobj["undockTabs"]=jj
+			For Local i:=Eachin UndockWindow._undockWindows
+				If i._visible jj[i.Title]=ToJson( i.Frame )
+			Next
+		End
+	End
+	
 	Method LoadState( jobj:JsonObject )
 		
 		LoadTabsState( jobj )
+		
+		LoadUndockTabsState( jobj )
 		
 		If jobj.Contains( "docsTab" )
 			Local jdocs:=jobj.GetObject( "docsTab" )
@@ -1666,6 +1706,10 @@ Class MainWindowInstance Extends Window
 			Select event.Key
 			Case Key.Escape
 				
+				If CodeDocument.HideParamsHint()
+					Return
+				Endif
+				
 				If _fullscreenState=FullscreenState.Editor
 					SwapFullscreenEditor()
 					Return
@@ -1681,15 +1725,15 @@ Class MainWindowInstance Extends Window
 				If event.Modifiers & Modifier.Shift
 					
 					dock=_tabsWrap.docks["left"]
-					If dock.NumTabs>0 Then dock.Visible=Not dock.Visible
+					If dock.NumTabs>0 And dock.VisibleTabs Then dock.Visible=Not dock.Visible
 					
 					dock=_tabsWrap.docks["right"]
-					If dock.NumTabs>0 Then dock.Visible=Not dock.Visible
+					If dock.NumTabs>0 And dock.VisibleTabs Then dock.Visible=Not dock.Visible
 					
 				Else ' bottom dock
 					
 					dock=_tabsWrap.docks["bottom"]
-					If dock.NumTabs>0 Then dock.Visible=Not dock.Visible
+					If dock.NumTabs>0 And dock.VisibleTabs Then dock.Visible=Not dock.Visible
 					
 					_consoleVisibleCounter+=1
 				Endif
@@ -1732,10 +1776,10 @@ Class MainWindowInstance Extends Window
 	Field _buildActions:BuildActions
 	Field _helpActions:HelpActions
 	Field _viewActions:ViewActions
+	Field _tabActions:TabActions
 	
 	Field _ircView:IRCView
 	Field _buildConsole:ConsoleExt
-	Field _buildErrorsList:ListViewExt
 	Field _buildConsoleView:DockingView
 	Field _outputConsole:ConsoleExt
 	Field _outputConsoleView:DockingView
@@ -1765,6 +1809,7 @@ Class MainWindowInstance Extends Window
 	Field _editMenu:MenuExt
 	Field _findMenu:MenuExt
 	Field _gotoMenu:MenuExt
+	Field _viewMenu:MenuExt
 	Field _buildMenu:MenuExt
 	Field _windowMenu:MenuExt
 	Field _helpMenu:MenuExt
@@ -2038,6 +2083,7 @@ Class DraggableTabs
 	Method AddTab( name:String,view:View )
 		
 		tabs[name]=TabViewExt.CreateDraggableTab( name,view,_docksArray )
+		tabs[name].Undockable=True
 	End
 	
 	Method GetDockSize:String( dock:TabViewExt )

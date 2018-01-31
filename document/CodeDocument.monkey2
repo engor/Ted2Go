@@ -1188,6 +1188,18 @@ Class CodeDocument Extends Ted2Document
 		ParamsHint?.Hide()
 	End
 	
+	#Rem monkeydocs Return true if ParamsHint was actually closed.
+	#End
+	Function HideParamsHint:Bool()
+		
+		If ParamsHint And ParamsHint.Visible
+			ParamsHint.Hide()
+			Return True
+		Endif
+		
+		Return False
+	End
+	
 	Method GoBack()
 		
 		Navigator.TryBack()
