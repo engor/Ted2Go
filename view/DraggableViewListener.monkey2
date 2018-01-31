@@ -118,8 +118,6 @@ Class DraggableViewListener<TItem,THolder>
 				_item=Null
 				_detached=False
 				
-				event.Eat()
-				
 		End
 	
 	End
