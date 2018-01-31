@@ -199,16 +199,22 @@ Class TreeViewExt Extends TreeView
 			Case EventType.MouseClick
 				
 				_expandStateChanged=False
+			
+			Case EventType.MouseDoubleClick
 				
+				_doubleClicked=True
 				
 			Case EventType.MouseUp
 				
-				If event.Button=MouseButton.Left
+				If Not _doubleClicked And event.Button=MouseButton.Left
 					
 					Local p:=TransformWindowPointToView( Mouse.Location )
 					Local node:=FindNodeAtPoint( p )
 					If node And Not _expandStateChanged Then NodeClicked2( node )
 				Endif
+				
+				_doubleClicked=False
+				
 		End
 		
 		Super.OnContentMouseEvent( event )
@@ -226,6 +232,7 @@ Class TreeViewExt Extends TreeView
 	Field _selColor:Color
 	Field _singleClickExpanding:Bool
 	Field _expandStateChanged:Bool
+	Field _doubleClicked:Bool
 	
 	Field NodeClicked2:Void( node:Node )
 	

@@ -94,6 +94,13 @@ Class MainWindowInstance Extends Window
 		'Build tab
 		
 		_buildConsole=New ConsoleExt
+		' jump to errors etc.
+		_buildConsole.RequestJumpToFile+=Lambda( path:String,line:Int )
+			
+			' emulate build error
+			Local err:=New BuildError( path,line,"" )
+			_buildActions.GotoError( err )
+		End
 		
 		'Output tab
 		
@@ -211,14 +218,9 @@ Class MainWindowInstance Extends Window
 		
 		_buildActions=New BuildActions( _docsManager,_buildConsole,_debugView )
 		_buildActions.ErrorsOccured+=Lambda( errors:BuildError[] )
+			
 			ShowBuildConsole( True )
 			_buildActions.GotoError( errors[0] )
-			
-			_buildErrorsList.Clear()
-			For Local err:=Eachin errors
-				_buildErrorsList.AddItem( New BuildErrorListViewItem( err ) )
-			Next
-			_buildErrorsList.Visible=True
 		End
 		
 		' ProjectView
@@ -437,15 +439,8 @@ Class MainWindowInstance Extends Window
 		_menuBar.AddMenu( _windowMenu )
 		_menuBar.AddMenu( _helpMenu )
 		
-		_buildErrorsList=New ListViewExt
-		_buildErrorsList.Visible=False
-		_buildErrorsList.OnItemChoosen+=Lambda()
-			Local item:=Cast<BuildErrorListViewItem>( _buildErrorsList.CurrentItem )
-			_buildActions.GotoError( item.error )
-		End
-		
+
 		_buildConsoleView=New DockingView
-		_buildConsoleView.AddView( _buildErrorsList,"right","400",True )
 		_buildConsoleView.ContentView=_buildConsole
 		
 		_statusBar=New StatusBarView
@@ -1334,17 +1329,14 @@ Class MainWindowInstance Extends Window
 	Method OnPreBuild()
 		
 		OnForceStop()
-		_buildErrorsList.Visible=False
 	End
 	
 	Method OnPreSemant()
 	
-		_buildErrorsList.Visible=False
 	End
 	
 	Method OnPreBuildModules()
 	
-		_buildErrorsList.Visible=False
 	End
 	
 	Method OnProjectClosed( dir:String )
@@ -1666,6 +1658,10 @@ Class MainWindowInstance Extends Window
 			Select event.Key
 			Case Key.Escape
 				
+				If CodeDocument.HideParamsHint()
+					Return
+				Endif
+				
 				If _fullscreenState=FullscreenState.Editor
 					SwapFullscreenEditor()
 					Return
@@ -1735,7 +1731,6 @@ Class MainWindowInstance Extends Window
 	
 	Field _ircView:IRCView
 	Field _buildConsole:ConsoleExt
-	Field _buildErrorsList:ListViewExt
 	Field _buildConsoleView:DockingView
 	Field _outputConsole:ConsoleExt
 	Field _outputConsoleView:DockingView
