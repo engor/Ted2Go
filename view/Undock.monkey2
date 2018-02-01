@@ -52,6 +52,8 @@ Class UndockWindow Extends Window
 			SDL_SetWindowPosition( Self.Window.SDLWindow, _frame.X, _frame.Y )
 			SDL_SetWindowSize( Self.Window.SDLWindow, _frame.Width, _frame.Height )
 			Self.Restore()
+			Local event:=New WindowEvent( EventType.WindowMoved, Self )
+			SendWindowEvent( event )
 		End
 		
 		Method OnWindowEvent( event:WindowEvent ) Override
