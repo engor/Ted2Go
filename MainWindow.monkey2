@@ -71,6 +71,7 @@ Class MainWindowInstance Extends Window
 
 		_docsManager.DocumentAdded+=Lambda( doc:Ted2Document )
 			AddRecentFile( doc.Path )
+			AnalyzeIndentation( doc )
 			SaveState()
 		End
 
@@ -475,9 +476,15 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Field PrefsChanged:Void()
+	
 	Method OnPrefsChanged()
 		
 		ArrangeElements()
+		
+		For Local doc:=Eachin _docsManager.OpenDocuments
+			doc.TextView?.TabStop=Prefs.EditorTabSize
+		Next
+		
 		PrefsChanged()
 		
 		SetupChatTab()
@@ -1860,6 +1867,35 @@ Class MainWindowInstance Extends Window
 		If _recentFiles.Length>20 Then _recentFiles.Resize( 20 )
 		
 		UpdateRecentFilesMenu()
+	End
+	
+	Method AnalyzeIndentation( doc:Ted2Document )
+		
+		Local codeDoc:=Cast<CodeDocument>( doc )
+		If Not codeDoc Return
+		Local text:=codeDoc.TextView?.Text
+		If Not text Return
+		
+		Local useSpaces:=Prefs.EditorUseSpacesAsTabs
+		Local hint:=""
+		Local type:=IndentationHelper.AnalyzeIndentation( text )
+		Print Int(type)
+		Select type
+			Case IndentationHelper.Type.Spaces
+				If Not useSpaces Then hint="There is a spaced indentation found."
+				
+			Case IndentationHelper.Type.Tabs
+				If useSpaces Then hint="There is a tabbed indentation found."
+				
+			Case IndentationHelper.Type.Mixed
+				hint="There is a mixed indentation found."
+				
+		End
+		
+		If hint
+			codeDoc.ShowFixIndentationView( hint )
+		Endif
+		
 	End
 	
 	Method AddRecentProject( path:String )

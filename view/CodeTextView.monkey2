@@ -21,6 +21,8 @@ Class CodeTextView Extends TextView
 		CursorMoved += OnCursorMoved
 		Document.TextChanged += TextChanged
 		
+		TabStop=Prefs.EditorTabSize
+		
 		
 '		Document.LinesModified += Lambda( first:Int,removed:Int,inserted:Int )
 '			
@@ -394,6 +396,7 @@ Class CodeTextView Extends TextView
 		Return _extraSelStart>=0
 	End
 	
+	
 	Protected
 	
 	Method CheckFormat( event:KeyEvent )
@@ -534,6 +537,46 @@ Class CodeTextView Extends TextView
 		SmartCopySelected()
 	
 		SelectText( Cursor,Anchor )
+	End
+	
+	Method GetPosInLineAtCursorCheckingTabSize:Int()
+	
+		Return GetPosInLineCheckingTabSize( LineTextAtCursor,PosInLineAtCursor )
+	End
+	
+	Method GetPosInLineCheckingTabSize:Int( line:String,posInLine:Int )
+		
+		Local tabSize:=Prefs.EditorTabSize
+		Local pos:=0
+		For Local i:=0 Until posInLine
+			If line[i]=Chars.TAB
+				Local offset:=(i Mod tabSize)
+				pos+=tabSize-offset
+			Else
+				pos+=1
+			Endif
+		Next
+		
+		Return pos
+	End
+	
+	Method InsertTabulation()
+		
+		Local useSpaces:=Prefs.EditorUseSpacesAsTabs
+		Local tabSize:=Prefs.EditorTabSize
+		
+		If useSpaces ' use spaces
+			
+			Local pos:=GetPosInLineAtCursorCheckingTabSize()
+			Local chars:=(pos Mod tabSize)
+			ReplaceText( " ".Dup( tabSize-chars ) )
+			
+		Else ' use tabs
+			
+			ReplaceText( "~t" )
+			
+		Endif
+		
 	End
 	
 	Method SmartCopySelected()
@@ -699,6 +742,11 @@ Class CodeTextView Extends TextView
 		Super.OnRenderContent( canvas,clip )
 	End
 	
+	Property TabStr:String()
+		
+		Return Prefs.EditorUseSpacesAsTabs ? TextUtils.GetSpacesForTabEquivalent() Else "~t"
+	End
+	
 	Method OnRenderLine( canvas:Canvas,line:Int ) Override
 		
 		Super.OnRenderLine( canvas,line )
@@ -707,42 +755,31 @@ Class CodeTextView Extends TextView
 		If Not _showWhiteSpaces Return
 	
 		Local text:=Document.Text
-		Local colors:=Document.Colors
-		Local r:Recti
 		Local start:=Document.StartOfLine( line )
+		Local right:=0
+		
+		canvas.Color=_whitespacesColor
 		
 		For Local word:=Eachin WordIterator.ForLine( Self,line )
 			
-			If text[word.Index]=9 ' tab
+			Local wordStr:=text.Slice( word.Index,word.Index+word.Length )
+			
+			If text[word.Index]=Chars.TAB Or text[word.Index]=Chars.SPACE ' indent chars
 				
-				Local ind:=word.Index-1
-				Local cnt:=0
-				' ckeck tab width
-				While ind>=start
-					If text[ind]=9 Exit
-					cnt+=1
-					ind-=1
-				Wend
-				
-				cnt = cnt Mod TabStop
-				
-				canvas.Color=_whitespacesColor
-				
-				Local len:=word.Length
-				
-				r=word.Rect
-				Local x0:=r.Left,y0:=r.Top+1,y1:=y0+r.Height
-				
-				Local xx:=x0 + (cnt=0 ? _tabw Else Float(TabStop-cnt)/Float(TabStop)*_tabw)
-				
-				Local after:=word.Index+len
-				If after < text.Length And text[after] > 32 Then len-=1
-				
-				For Local i:=0 Until len
-					canvas.DrawLine( xx,y0,xx,y1 )
-					xx+=_tabw
+				Local i1:=word.Index-start,i2:=i1+word.Length
+				Local r:=word.Rect
+				Local x0:=right,y0:=r.Top+1,y1:=y0+r.Height
+				For Local i:=i1+1 To i2
+					If i Mod TabStop = 0
+						Local dx:=Float(i-i1)*_charw
+						canvas.DrawLine( x0+dx,y0,x0+dx,y1 )
+					Endif
 				Next
+				
 			Endif
+			
+			right=word.Rect.Right
+			
 		Next
 	
 	End
@@ -752,7 +789,8 @@ Class CodeTextView Extends TextView
 		Super.OnValidateStyle()
 		
 		Local style:=RenderStyle
-		_tabw=style.Font.TextWidth( "X" )*TabStop
+		_charw=style.Font.TextWidth( "X" )
+		_tabw=_charw*TabStop
 	End
 	
 	
@@ -761,7 +799,7 @@ Class CodeTextView Extends TextView
 	Field _line:Int
 	Field _whitespacesColor:Color
 	Field _showWhiteSpaces:Bool
-	Field _tabw:Int
+	Field _tabw:Int,_charw:Int
 	Field _overwriteMode:Bool
 	Field _extraSelStart:Int=-1,_extraSelEnd:Int
 	Field _extraSelColor:Color=Color.DarkGrey
@@ -827,4 +865,101 @@ Function FixNumpadKeys:Key( event:KeyEvent )
 		End
 	Endif
 	Return key
+End
+
+
+Class IndentationHelper Final
+	
+	Enum Type
+		Spaces,
+		Tabs,
+		Mixed
+	End
+		
+	Function AnalyzeIndentation:Type( text:String )
+		
+		Local len:=text.Length
+		Local start:=-1,k:=0,spacesCount:=0,tabsCount:=0
+		
+		Local tabAsSpacesStr:=TextUtils.GetSpacesForTabEquivalent()
+		
+		Local lines:=New StringStack( text.Split( "~n" ) )
+		
+		For Local line:=Eachin lines
+			
+			For Local k:=0 Until line.Length
+				
+				Local char:=line[k]
+				If char>Chars.SPACE Or k=line.Length-1' end of indentation
+					
+					If k>0
+						Local indentStr:=line.Slice( 0,k )
+						
+						Print "indent.len: "+indentStr.Length
+						Local spaces:=(indentStr.Find( tabAsSpacesStr )<>-1)
+						Local tabs:=(indentStr.Find( "~t" )<>-1)
+						
+						If spaces And tabs Return Type.Mixed
+						
+						spacesCount+=Int(spaces)
+						tabsCount+=Int(tabs)
+					Endif
+					
+					Exit
+					
+				Endif
+			Next
+		Next
+		
+		Return spacesCount>tabsCount ? Type.Spaces Else Type.Tabs
+	End
+	
+	Function FixIndentation:String( text:String )
+		
+		Local len:=text.Length
+		Local useSpaces:=Prefs.EditorUseSpacesAsTabs
+		Local tabAsSpacesStr:=TextUtils.GetSpacesForTabEquivalent()
+		
+		Local lines:=New StringStack( text.Split( "~n" ) )
+		
+		' TODO fix multiline strings like
+'Global multi:="Hello,
+'               multiline
+'               world!"
+		
+		For Local lineIndex:=0 Until lines.Length
+			
+			Local line:=lines[lineIndex]
+			
+			For Local k:=0 Until line.Length
+				
+				Local char:=line[k]
+				If char>Chars.SPACE Or k=line.Length-1' end of indentation
+					
+					If k>0
+						Local indentStr:=line.Slice( 0,k )
+						If useSpaces
+							indentStr=indentStr.Replace( "~t",tabAsSpacesStr )
+						Else
+							indentStr=indentStr.Replace( tabAsSpacesStr,"~t" )
+						Endif
+						
+						lines[lineIndex]=indentStr+line.Slice( k )
+					Endif
+					
+					Exit
+					
+				Endif
+			Next
+		Next
+		
+		Return lines.Join( "~n" )
+	End
+	
+	
+	Private
+	
+	Method New()
+	End
+	
 End

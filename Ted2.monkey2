@@ -81,6 +81,7 @@
 
 #Import "utils/JsonUtils"
 #Import "utils/Utils"
+#Import "utils/TextUtils"
 
 #Import "view/IRCView"
 #Import "view/CodeMapView"

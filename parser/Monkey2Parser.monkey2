@@ -1338,30 +1338,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 End
 
 
-Struct Chars
-	
-	Const SINGLE_QUOTE:="'"[0] '39
-	Const DOUBLE_QUOTE:="~q"[0] '34
-	Const COMMA:=","[0] '44
-	Const SEMICOLON:=";"[0]
-	Const DOT:="."[0] '46
-	Const EQUALS:="="[0] '61
-	Const LESS_BRACKET:="<"[0] '60
-	Const MORE_BRACKET:=">"[0] '62
-	Const OPENED_SQUARE_BRACKET:="["[0] '91
-	Const CLOSED_SQUARE_BRACKET:="]"[0] '93
-	Const OPENED_ROUND_BRACKET:="("[0] '40
-	Const CLOSED_ROUND_BRACKET:=")"[0] '41
-	Const DIGIT_0:="0"[0] '48
-	Const DIGIT_9:="9"[0] '57
-	Const AT:="@"[0] '64
-	Const GRID:="#"[0] '35
-	Const TAB:="~t"[0] '9
-	Const SPACE:=" "[0] '32
-	
-End
-
-
 Class NSpace
 	
 	Field parent:NSpace

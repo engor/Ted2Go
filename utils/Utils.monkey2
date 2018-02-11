@@ -37,7 +37,7 @@ Function GetCaseSensitivePath:String( path:String )
 #Endif
 End
 
-Class Utils
+Class Utils Final
 	
 	Function ArrayContains<T>:Bool( arr:T[],value:T )
 		If Not arr Return False
@@ -63,13 +63,23 @@ Class Utils
 	End
 	
 	Function GetIndent:Int( line:String )
+		
 		Local len:=line.Length,n:=0
-		While n < len And line[n] <= 32
+		While n < len And line[n] <= Chars.SPACE
 			n+=1
 		Wend
 		Return n
 	End
+	
+	Function GetIndentAsSpaces:Int( line:String )
 		
+		Local len:=line.Length,n:=0
+		While n < len And line[n] <= Chars.SPACE
+			n+=(line[n]=Chars.TAB) ? Prefs.EditorTabSize Else 1
+		Wend
+		Return n
+	End
+	
 	Function GetIndentStr:String( line:String )
 		Local n:=GetIndent( line )
 		Return  (n > 0) ? line.Slice( 0,n ) Else ""
@@ -171,6 +181,9 @@ Class Utils
 	
 	
 	Private
+	
+	Global _storedTabSize:=0,_spacesForTab:String
+	
 	
 	Method New()
 	End

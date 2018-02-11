@@ -10,10 +10,10 @@ Class PrefsInstance
 	Field AcKeywordsOnly:=False
 	Field AcShowAfter:=2
 	Field AcUseTab:=True
-	Field AcUseEnter:=False
+	Field AcUseEnter:=True
 	Field AcUseSpace:=False
 	Field AcUseDot:=False
-	Field AcNewLineByEnter:=True
+	Field AcNewLineByEnter:=False
 	Field AcStrongFirstChar:=True
 	Field AcUseLiveTemplates:=True
 	'
@@ -39,6 +39,8 @@ Class PrefsInstance
 	Field EditorAutoPairs:=True
 	Field EditorSurroundSelection:=True
 	Field EditorShowParamsHint:=True
+	Field EditorUseSpacesAsTabs:=False
+	Field EditorTabSize:=4
 	'
 	Field SourceSortByType:=True
 	Field SourceShowInherited:=False
@@ -108,6 +110,8 @@ Class PrefsInstance
 			EditorAutoPairs=Json_GetBool( j2,"autoPairs",EditorAutoPairs )
 			EditorSurroundSelection=Json_GetBool( j2,"surroundSelection",EditorSurroundSelection )
 			EditorShowParamsHint=Json_GetBool( j2,"showParamsHint",EditorShowParamsHint )
+			EditorUseSpacesAsTabs=Json_GetBool( j2,"useSpacesAsTabs",EditorUseSpacesAsTabs )
+			EditorTabSize=Json_GetInt( j2,"tabSize",EditorTabSize )
 			
 		Endif
 		
@@ -168,6 +172,8 @@ Class PrefsInstance
 		j["autoPairs"]=New JsonBool( EditorAutoPairs )
 		j["surroundSelection"]=New JsonBool( EditorSurroundSelection )
 		j["showParamsHint"]=New JsonBool( EditorShowParamsHint )
+		j["useSpacesAsTabs"]=New JsonBool( EditorUseSpacesAsTabs )
+		j["tabSize"]=New JsonNumber( EditorTabSize )
 		
 		j=New JsonObject
 		json["source"]=j
