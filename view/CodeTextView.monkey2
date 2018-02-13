@@ -550,7 +550,7 @@ Class CodeTextView Extends TextView
 		Local pos:=0
 		For Local i:=0 Until posInLine
 			If line[i]=Chars.TAB
-				Local offset:=(i Mod tabSize)
+				Local offset:=(pos Mod tabSize)
 				pos+=tabSize-offset
 			Else
 				pos+=1
@@ -752,24 +752,35 @@ Class CodeTextView Extends TextView
 		Super.OnRenderLine( canvas,line )
 	
 		' draw whitespaces
+		'
 		If Not _showWhiteSpaces Return
 	
 		Local text:=Document.Text
 		Local start:=Document.StartOfLine( line )
+		Local ending:=Document.EndOfLine( line )
 		Local right:=0
+		Local lineStr:=Document.GetLine( line )
 		
 		canvas.Color=_whitespacesColor
 		
 		For Local word:=Eachin WordIterator.ForLine( Self,line )
 			
-			Local wordStr:=text.Slice( word.Index,word.Index+word.Length )
+			Local atEnd:=(word.Index+word.Length=ending)
 			
-			If text[word.Index]=Chars.TAB Or text[word.Index]=Chars.SPACE ' indent chars
+			If text[word.Index]=Chars.TAB Or (text[word.Index]=Chars.SPACE And (word.Length>=TabStop Or atEnd)) ' indent chars
 				
-				Local i1:=word.Index-start,i2:=i1+word.Length
+				Local wordStr:=text.Slice( word.Index,word.Index+word.Length )
+				wordStr=wordStr.Replace( "~t",TextUtils.GetSpacesForTabEquivalent() )
+				
+				Local i1:=word.Index-start
+				Local i2:=i1+word.Length
+				i1=GetPosInLineCheckingTabSize( lineStr,i1 )
+				i2=GetPosInLineCheckingTabSize( lineStr,i2 )
+				If atEnd Then i2+=1
+				
 				Local r:=word.Rect
 				Local x0:=right,y0:=r.Top+1,y1:=y0+r.Height
-				For Local i:=i1+1 To i2
+				For Local i:=i1+1 Until i2
 					If i Mod TabStop = 0
 						Local dx:=Float(i-i1)*_charw
 						canvas.DrawLine( x0+dx,y0,x0+dx,y1 )
@@ -919,6 +930,8 @@ Class IndentationHelper Final
 		Local len:=text.Length
 		Local useSpaces:=Prefs.EditorUseSpacesAsTabs
 		Local tabAsSpacesStr:=TextUtils.GetSpacesForTabEquivalent()
+		Local rem:=False
+		Local quotes:=0
 		
 		Local lines:=New StringStack( text.Split( "~n" ) )
 		
@@ -936,7 +949,8 @@ Class IndentationHelper Final
 				Local char:=line[k]
 				If char>Chars.SPACE Or k=line.Length-1' end of indentation
 					
-					If k>0
+					' check indentation
+					If k>0 And quotes Mod 2 = 0
 						Local indentStr:=line.Slice( 0,k )
 						If useSpaces
 							indentStr=indentStr.Replace( "~t",tabAsSpacesStr )
@@ -946,6 +960,20 @@ Class IndentationHelper Final
 						
 						lines[lineIndex]=indentStr+line.Slice( k )
 					Endif
+					
+					Local q1:Int,q2:Int
+					' check comments and quotes
+					While k<line.Length
+						q1=line.Find( "'",k )
+						q2=line.Find( "~q",k )
+						If q2<>-1
+							If q1<>-1 And q1<q2 Exit ' comment char is nearest
+							quotes+=1
+							k=q2+1
+						Endif
+					Wend
+					
+					Print "quotes: "+quotes
 					
 					Exit
 					

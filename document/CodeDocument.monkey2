@@ -223,40 +223,30 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						' remove all indent spaces by single press of Backspace
 						If Cursor=Anchor And Prefs.EditorUseSpacesAsTabs
 							
-							Local pos:=GetPosInLineAtCursorCheckingTabSize()
-							
-							Local canRemoveCount:=(pos Mod Prefs.EditorTabSize)
-							If canRemoveCount=0 Then canRemoveCount=Prefs.EditorTabSize
 							Local posInLine:=PosInLineAtCursor
 							Local line:=LineTextAtCursor
-							Local i:=posInLine-1,counter:=canRemoveCount
 							
-							While counter>0
-								If line[i]<>Chars.SPACE Exit
-								counter-=1
-								i-=1
-							Wend
-							If counter>1 Then counter+=1 ' don't remove space nearest to another char (is it correct?)
-							canRemoveCount-=counter
-							SelectText( Cursor,Cursor-canRemoveCount )
+							' check for spaces only, tab will be removed by super class
+							If posInLine>0 And line[posInLine-1]=Chars.SPACE
+							
+								Local pos:=GetPosInLineAtCursorCheckingTabSize()
+								Local canRemoveCount:=(pos Mod Prefs.EditorTabSize)
+								If canRemoveCount=0 Then canRemoveCount=Prefs.EditorTabSize
+								Local i:=posInLine-1,counter:=canRemoveCount
+								
+								While counter>0
+									If line[i]<>Chars.SPACE Exit
+									counter-=1
+									i-=1
+								Wend
+								If counter>1 Then counter+=1 ' don't remove space nearest to another char (is it correct?)
+								canRemoveCount-=counter
+								SelectText( Cursor,Cursor-canRemoveCount )
+								
+							Endif
 							
 						Endif
 						
-'						#If __TARGET__="macos"
-'						If menu
-'							DeleteToBegin()
-'						Elseif ctrl
-'							DeleteWordBeforeCursor()
-'						Endif
-'						#Else
-'						If ctrl
-'							If shift
-'								DeleteToBegin()
-'							Else
-'								DeleteWordBeforeCursor()
-'							Endif
-'						Endif
-'						#Endif
 						
 					Endif
 				
