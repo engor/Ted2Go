@@ -28,11 +28,6 @@ Class PrefsDialog Extends DialogExt
 		docker=GetCompletionDock()
 		tabView.AddTab( "AutoComplete",docker )
 		
-		' Chat
-		'
-		docker=GetChatDock()
-		tabView.AddTab( "IRC chat",docker )
-		
 		' Live Templates
 		'
 		docker=GetLiveTemplatesDock()
@@ -136,12 +131,6 @@ Class PrefsDialog Extends DialogExt
 		Prefs.MainProjectIcons=_mainProjectIcons.Checked
 		Prefs.MainProjectSingleClickExpanding=_mainProjectSingleClickExpanding.Checked
 		Prefs.MainPlaceDocsAtBegin=_mainPlaceDocsAtBegin.Checked
-		
-		Prefs.IrcNickname=_chatNick.Text
-		Prefs.IrcServer=_chatServer.Text
-		Prefs.IrcPort=Int(_chatPort.Text)
-		Prefs.IrcRooms=_chatRooms.Text
-		Prefs.IrcConnect=_chatAutoConnect.Checked
 		
 		App.ThemeChanged()
 		
@@ -353,33 +342,6 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( _acKeywordsOnly,"top" )
 		docker.AddView( _acUseLiveTemplates,"top" )
 		docker.AddView( New Label( " " ),"top" )
-		
-		Return docker
-	End
-	
-	Method GetChatDock:DockingView()
-		
-		Local chatTable:=New TableView( 2,6 )
-		_chatNick=New TextFieldExt( Prefs.IrcNickname )
-		_chatServer=New TextFieldExt( Prefs.IrcServer )
-		_chatPort=New TextFieldExt( ""+Prefs.IrcPort )
-		_chatRooms=New TextFieldExt( Prefs.IrcRooms )
-		_chatAutoConnect=New CheckButton( "Auto connect at start" )
-		_chatAutoConnect.Checked=Prefs.IrcConnect
-		chatTable[0,0]=New Label( "Nickname" )
-		chatTable[1,0]=_chatNick
-		chatTable[0,1]=New Label( "Server" )
-		chatTable[1,1]=_chatServer
-		chatTable[0,2]=New Label( "Port" )
-		chatTable[1,2]=_chatPort
-		chatTable[0,3]=New Label( "Rooms" )
-		chatTable[1,3]=_chatRooms
-		chatTable[0,4]=_chatAutoConnect
-		chatTable[0,5]=New Label( "" ) 'bottom padding hack
-		
-		Local docker:=New DockingView
-		docker.AddView( New Label( " " ),"top" )
-		docker.AddView( chatTable,"top" )
 		
 		Return docker
 	End
