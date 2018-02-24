@@ -343,6 +343,8 @@ Class FileActions
 		
 		_prefsDialog=New PrefsDialog
 		
+		' not good place for subscribing, but it's simplier than proper one...
+		'
 		_prefsDialog.Apply+=Lambda()
 		
 			For Local d:=Eachin _docs.OpenDocuments
@@ -351,6 +353,16 @@ Class FileActions
 			Next
 			
 			MainWindow.OnPrefsChanged()
+		End
+		
+		' analyze opened docs to show prompt "fix indentation?"
+		'
+		_prefsDialog.TabulationChanged+=Lambda()
+			
+			For Local d:=Eachin _docs.OpenDocuments
+				Local codeDoc:=Cast<CodeDocument>( d )
+				If codeDoc Then codeDoc.AnalyzeIndentation()
+			Next
 		End
 		
 		_prefsDialog.ShowModal()

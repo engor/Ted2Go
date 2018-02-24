@@ -892,6 +892,7 @@ Class CodeDocument Extends Ted2Document
 			' store cursor position
 			Local line:=_codeView.LineNumAtCursor
 			Local posInLine:=_codeView.PosInLineAtCursor
+			Local scroll:=_codeView.Scroll
 			' get fixed text
 			Local text:=IndentationHelper.FixIndentation( _codeView.Document )
 			' replacing allow us to use undo
@@ -900,6 +901,7 @@ Class CodeDocument Extends Ted2Document
 			' restore cursor
 			Local cursor:=_codeView.Document.StartOfLine( line )+posInLine
 			_codeView.SelectText( cursor,cursor )
+			_codeView.Scroll=scroll
 			' 
 			_fixIndentView.Visible=False
 		End
@@ -971,7 +973,6 @@ Class CodeDocument Extends Ted2Document
 		_browserView.AddView( bar,"top" )
 		
 		
-		
 		_treeView=New CodeTreeView
 		_browserView.ContentView=_treeView
 		
@@ -988,6 +989,37 @@ Class CodeDocument Extends Ted2Document
 		End
 		
 		Return _browserView
+	End
+	
+	Method AnalyzeIndentation()
+		
+		Local text:=_codeView.Text
+		If Not text Return
+		
+		Local useSpaces:=Prefs.EditorUseSpacesAsTabs
+		Local hint:=""
+		Local type:=IndentationHelper.AnalyzeIndentation( text )
+		
+		Select type
+			Case IndentationHelper.Type.Spaces
+				If Not useSpaces Then hint="There is a spaced indentation found."
+				
+			Case IndentationHelper.Type.Tabs
+				If useSpaces Then hint="There is a tabbed indentation found."
+				
+			Case IndentationHelper.Type.Mixed
+				hint="There is a mixed indentation found."
+				
+		End
+		
+		If hint
+			Local quest:=Prefs.EditorUseSpacesAsTabs ? "Replace with spaces?" Else "Replace with tabs?"
+			_fixIndentHint.Text=hint+" "+quest
+			_fixIndentView.Visible=True
+		Else
+			_fixIndentView.Visible=False
+		Endif
+		
 	End
 	
 	' not multipurpose method, need to move into plugin
@@ -1199,13 +1231,6 @@ Class CodeDocument Extends Ted2Document
 		Local can:=AutoComplete.CanShow( text,posInLine,FileExtension )
 		Return can
 		
-	End
-	
-	Method ShowFixIndentationView( hint:String )
-		
-		Local quest:=Prefs.EditorUseSpacesAsTabs ? "Replace with spaces?" Else "Replace with tabs?"
-		_fixIndentHint.Text=hint+" "+quest
-		_fixIndentView.Visible=True
 	End
 	
 	Method ShowAutocomplete( ident:String="",byCtrlSpace:Bool=False )

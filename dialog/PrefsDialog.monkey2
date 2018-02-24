@@ -5,6 +5,7 @@ Namespace ted2go
 Class PrefsDialog Extends DialogExt
 
 	Field Apply:Void()
+	Field TabulationChanged:Void()
 	
 	Method New()
 		
@@ -122,6 +123,7 @@ Class PrefsDialog Extends DialogExt
 		Prefs.EditorAutoPairs=_editorAutoPairs.Checked
 		Prefs.EditorSurroundSelection=_editorSurround.Checked
 		Prefs.EditorShowParamsHint=_editorShowParamsHint.Checked
+		Local useSpaces:=Prefs.EditorUseSpacesAsTabs ' store
 		Prefs.EditorUseSpacesAsTabs=_editorUseSpacesAsTabs.Checked
 		size=_editorTabSize.Text.Trim()
 		If Not size Then size="4" 'default
@@ -136,6 +138,8 @@ Class PrefsDialog Extends DialogExt
 		
 		Hide()
 		Apply()
+		
+		If Prefs.EditorUseSpacesAsTabs<>useSpaces Then TabulationChanged()
 		
 		Prefs.SaveLocalState()
 		

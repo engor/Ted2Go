@@ -66,13 +66,16 @@ Class MainWindowInstance Extends Window
 			
 			OnFileDropped( path )
 		End
-
+		
 		_docsManager.DocumentAdded+=Lambda( doc:Ted2Document )
 			AddRecentFile( doc.Path )
-			AnalyzeIndentation( doc )
+			
+			Local codeDoc:=Cast<CodeDocument>( doc )
+			If codeDoc Then codeDoc.AnalyzeIndentation()
+			
 			SaveState()
 		End
-
+		
 		_docsManager.DocumentRemoved+=Lambda( doc:Ted2Document )
 			If IsTmpPath( doc.Path ) DeleteFile( doc.Path )
 			SaveState()
@@ -1755,35 +1758,6 @@ Class MainWindowInstance Extends Window
 		If _recentFiles.Length>20 Then _recentFiles.Resize( 20 )
 		
 		UpdateRecentFilesMenu()
-	End
-	
-	Method AnalyzeIndentation( doc:Ted2Document )
-		
-		Local codeDoc:=Cast<CodeDocument>( doc )
-		If Not codeDoc Return
-		Local text:=codeDoc.TextView?.Text
-		If Not text Return
-		
-		Local useSpaces:=Prefs.EditorUseSpacesAsTabs
-		Local hint:=""
-		Local type:=IndentationHelper.AnalyzeIndentation( text )
-		
-		Select type
-			Case IndentationHelper.Type.Spaces
-				If Not useSpaces Then hint="There is a spaced indentation found."
-				
-			Case IndentationHelper.Type.Tabs
-				If useSpaces Then hint="There is a tabbed indentation found."
-				
-			Case IndentationHelper.Type.Mixed
-				hint="There is a mixed indentation found."
-				
-		End
-		
-		If hint
-			codeDoc.ShowFixIndentationView( hint )
-		Endif
-		
 	End
 	
 	Method AddRecentProject( path:String )

@@ -868,7 +868,8 @@ Class IndentationHelper Final
 	Enum Type
 		Spaces,
 		Tabs,
-		Mixed
+		Mixed,
+		None
 	End
 		
 	Function AnalyzeIndentation:Type( text:String )
@@ -912,7 +913,13 @@ Class IndentationHelper Final
 			Next
 		Next
 		
-		Return spacesCount>tabsCount ? Type.Spaces Else Type.Tabs
+		If spacesCount>0
+			Return Type.Spaces
+		Elseif tabsCount>0
+			Return Type.Tabs
+		Endif
+		
+		Return Type.None
 	End
 	
 	Function FixIndentation:String( document:TextDocument )
@@ -932,6 +939,13 @@ Class IndentationHelper Final
 			
 			Local lineLen:=line.Length
 			If lineLen=0 Continue
+			
+			' trim endings of lines
+			Local s:=line.TrimEnd()
+			If s ' don't trim whitespaced lines
+				line=s
+				lines[lineIndex]=line
+			Endif
 			
 			Local start:=document.StartOfLine( lineIndex )
 			Local lineStr:="" ' our new content of line 
@@ -954,7 +968,7 @@ Class IndentationHelper Final
 					
 					If atEnd
 						If indentStart=-1 Then indentStart=k ' if there is the only tab in line
-						k+=1
+						If Not isText Then k+=1
 					Endif
 					
 					' indentation found
@@ -967,11 +981,12 @@ Class IndentationHelper Final
 							lineStr+=line.Slice( textStart,indentStart )
 							textStart=k
 						Endif
-						
 						' processing indent depending on "tabs or spaces" option
 						Local indentStr:=line.Slice( indentStart,k )
+						
 						' tabs --> spaces
 						If useSpaces
+							
 							' the first tab can be 1 to 4 spaces
 							If indentStr[0]=Chars.TAB
 								Local pos:=TextUtils.GetPosInLineCheckingTabSize( line,indentStart,Prefs.EditorTabSize )
@@ -989,7 +1004,9 @@ Class IndentationHelper Final
 								' so convert all tabs into spaces equivalent
 								indentStr=indentStr.Replace( "~t",tabAsSpacesStr )
 							Endif
+							
 						Else ' spaces --> tabs
+							
 							indentStr=indentStr.Replace( "~t",tabAsSpacesStr ) ' avoid mixing of tabs and spaces
 							Local size:=indentStr.Length
 							Local cnt:=size/tabSize
@@ -1003,16 +1020,20 @@ Class IndentationHelper Final
 							If cnt>0 ' our tabs 'replacement'
 								indentStr+="~t".Dup( cnt )
 							Endif
+							
 						Endif
 						
 						lineStr+=indentStr
 						
-					Elseif atEnd
+					Endif
+					
+					If atEnd And (isText Or skip)
 						
 						If replaced=0 ' if do nothing with line
 							lineStr=line
 						Elseif textStart<>-1 ' if there is a last part of line
-							lineStr+=line.Slice( textStart,k )
+							lineStr+=line.Slice( textStart,k+1 )
+							textStart=0
 						Endif
 						
 					Endif
