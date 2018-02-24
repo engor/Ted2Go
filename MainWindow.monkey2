@@ -436,7 +436,7 @@ Class MainWindowInstance Extends Window
 		_buildConsoleView=New DockingView
 		_buildConsoleView.ContentView=_buildConsole
 		
-		_statusBar=New StatusBarView
+		_statusBar=New StatusBarView( "Stop process ("+_forceStop.HotKeyText+")" )
 		
 		_contentView=New DockingView
 		_contentView.AddView( _menuBar,"top" )
