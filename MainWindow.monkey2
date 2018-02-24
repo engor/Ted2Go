@@ -1879,7 +1879,7 @@ Class MainWindowInstance Extends Window
 		Local useSpaces:=Prefs.EditorUseSpacesAsTabs
 		Local hint:=""
 		Local type:=IndentationHelper.AnalyzeIndentation( text )
-		Print Int(type)
+		
 		Select type
 			Case IndentationHelper.Type.Spaces
 				If Not useSpaces Then hint="There is a spaced indentation found."

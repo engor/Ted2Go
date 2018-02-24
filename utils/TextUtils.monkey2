@@ -14,6 +14,22 @@ Class TextUtils Final
 		Return _spacesForTab
 	End
 	
+	Function GetPosInLineCheckingTabSize:Int( line:String,posInLine:Int,tabSize:Int )
+	
+		Local pos:=0
+		For Local i:=0 Until posInLine
+			If line[i]=Chars.TAB
+				Local offset:=(pos Mod tabSize)
+				pos+=tabSize-offset
+			Else
+				pos+=1
+			Endif
+		Next
+	
+		Return pos
+	End
+	
+	
 	Private
 	
 	Global _storedTabSize:=0,_spacesForTab:String

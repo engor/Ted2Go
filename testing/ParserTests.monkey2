@@ -64,8 +64,8 @@ End
 Global boo:=True
 
 Global multi:="Hello,
-               multiline
-               world!"
+				multiline
+				world!"
 
 Global vector:Vec2f
 Global globList:List<String>

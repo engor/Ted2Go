@@ -223,25 +223,32 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						' remove all indent spaces by single press of Backspace
 						If Cursor=Anchor And Prefs.EditorUseSpacesAsTabs
 							
-							Local posInLine:=PosInLineAtCursor
-							Local line:=LineTextAtCursor
+							Local color:=Document.Colors[Cursor]
 							
-							' check for spaces only, tab will be removed by super class
-							If posInLine>0 And line[posInLine-1]=Chars.SPACE
-							
-								Local pos:=GetPosInLineAtCursorCheckingTabSize()
-								Local canRemoveCount:=(pos Mod Prefs.EditorTabSize)
-								If canRemoveCount=0 Then canRemoveCount=Prefs.EditorTabSize
-								Local i:=posInLine-1,counter:=canRemoveCount
+							' skip comments and strings areas
+							If color<>Highlighter.COLOR_COMMENT And color<>Highlighter.COLOR_STRING
 								
-								While counter>0
-									If line[i]<>Chars.SPACE Exit
-									counter-=1
-									i-=1
-								Wend
-								If counter>1 Then counter+=1 ' don't remove space nearest to another char (is it correct?)
-								canRemoveCount-=counter
-								SelectText( Cursor,Cursor-canRemoveCount )
+								Local posInLine:=PosInLineAtCursor
+								Local line:=LineTextAtCursor
+								
+								' check for spaces only, tab will be removed by super class
+								If posInLine>0 And line[posInLine-1]=Chars.SPACE
+								
+									Local pos:=GetPosInLineAtCursorCheckingTabSize()
+									Local canRemoveCount:=(pos Mod Prefs.EditorTabSize)
+									If canRemoveCount=0 Then canRemoveCount=Prefs.EditorTabSize
+									Local i:=posInLine-1,counter:=canRemoveCount
+									
+									While counter>0
+										If line[i]<>Chars.SPACE Exit
+										counter-=1
+										i-=1
+									Wend
+									If counter>1 Then counter+=1 ' don't remove space nearest to another char (is it correct?)
+									canRemoveCount-=counter
+									SelectText( Cursor,Cursor-canRemoveCount )
+									
+								Endif
 								
 							Endif
 							
@@ -886,7 +893,7 @@ Class CodeDocument Extends Ted2Document
 			Local line:=_codeView.LineNumAtCursor
 			Local posInLine:=_codeView.PosInLineAtCursor
 			' get fixed text
-			Local text:=IndentationHelper.FixIndentation( _codeView.Text )
+			Local text:=IndentationHelper.FixIndentation( _codeView.Document )
 			' replacing allow us to use undo
 			_codeView.SelectAll()
 			_codeView.ReplaceText( text )
