@@ -199,6 +199,53 @@ Class CodeDocumentView Extends Ted2CodeTextView
 '					Endif
 '				#Endif
 				
+				Case Key.D
+					
+					Local ok:=ctrl
+					#If __TARGET__="macos"
+					ok=ok And shift
+					#Endif
+					
+					If ok ' duplicate line or selection
+						
+						Local cur:=Cursor,anc:=Anchor
+						If cur=anc ' duplicate whole line
+							
+							Local pos:=PosInLineAtCursor
+							Local line:=Document.FindLine( cur )
+							Local s:=LineTextAtCursor
+							Local ends:=Document.EndOfLine( line )
+							ReplaceText( ends,ends,"~n"+s )
+							pos=pos+StartOfLineAtCursor
+							SelectText( pos,pos )
+							
+						Else ' duplicate selection
+							
+							Local min:=Min( Cursor,Anchor )
+							Local max:=Max( Cursor,Anchor )
+							Local selLen:=max-min
+							Local s:=SelectedText
+							Local atEnd:=(max=Document.EndOfLine( Document.FindLine( max ) ))
+							If atEnd
+								Local minLine:=Document.FindLine( min )
+								Local s0:=Document.GetLine( minLine )
+								Local pos:=min-Document.StartOfLine( minLine )
+								Local indent:=Min( GetIndent( s0 ),pos )
+								Local indentStr:=(indent>0) ? s0.Slice( 0,indent ) Else ""
+								s="~n"+indentStr+s
+								selLen+=indentStr.Length
+							Endif
+							SelectText( max,max )
+							ReplaceText( s )
+							Local pos:=max+Int(atEnd)
+							SelectText( pos,pos+selLen )
+							
+						Endif
+						
+						Return
+						
+					Endif
+					
 				Case Key.Space
 					If ctrl
 						Return
