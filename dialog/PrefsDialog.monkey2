@@ -45,7 +45,14 @@ Class PrefsDialog Extends DialogExt
 		
 		_acShowAfter.Activated+=_acShowAfter.MakeKeyView
 		
-		Deactivated+=MainWindow.UpdateKeyView
+		Deactivated+=Lambda()
+			MainWindow.UpdateKeyView()
+			_lastTab=tabView.CurrentIndex
+		End
+		
+		OnShow+=Lambda()
+			tabView.CurrentIndex=_lastTab
+		End
 		
 		MinSize=New Vec2i( 550,500 )
 		MaxSize=New Vec2i( 550,600 )
@@ -94,6 +101,9 @@ Class PrefsDialog Extends DialogExt
 	
 	Field _codeView:Ted2CodeTextView
 	Field _treeView:TreeViewExt
+	
+	Global _lastTab:Int
+	
 	
 	Method OnApply()
 	
