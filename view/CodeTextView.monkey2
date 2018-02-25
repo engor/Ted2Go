@@ -205,8 +205,8 @@ Class CodeTextView Extends TextView
 	
 	Method IdentBeforeCursor:String( withDots:Bool=True )
 		
-		Local pair:=GetIndentBeforePos_Mx2( LineTextAtCursor,PosInLineAtCursor,withDots )
-		Return pair.Item1
+		Local info:=GetIndentBeforePos_Mx2( LineTextAtCursor,PosInLineAtCursor,withDots )
+		Return info.ident
 	End
 	
 	Property WordAtCursor:String()

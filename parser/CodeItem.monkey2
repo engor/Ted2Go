@@ -427,6 +427,7 @@ Struct CodeType
 	Field expr:String
 	Field args:CodeType[]
 	Field isPointer:Bool
+	Field isArray:Bool
 	
 	Property ident:String()
 		Return _ident
@@ -458,6 +459,7 @@ Struct CodeType
 		Endif
 		
 		If isPointer Then _str+=" Ptr"
+		If isArray Then _str+="[]"
 		
 		Return _str
 	End

@@ -354,35 +354,11 @@ Class Monkey2DocumentView Extends Ted2TextView
 			Local ident:=IdentNearestCursor()
 				
 			If ident MainWindow.ShowQuickHelp( ident )
-				
-		Case Key.F2
 			
-			New Fiber( Lambda()
-				
-				Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+_doc.Path+"~q"
-					
-				Local str:=LoadString( "process::"+cmd )
-				Local i:=str.Find( "{" )
-				If i=-1 Return
-				str=str.Slice( i )
-					
-				Local jobj:=JsonObject.Parse( str )
-				If Not jobj Return
-					
-				Local jsonTree:=New JsonTreeView( jobj )
-					
-				Local dialog:=New Dialog( "ParseInfo",jsonTree )
-				dialog.AddAction( "Close" ).Triggered=dialog.Close
-				dialog.MinSize=New Vec2i( 512,600 )
-					
-				dialog.Open()
-				
-			End )
-				
 		Case Key.Tab,Key.Enter
 			
 			If _typing Capitalize( False )
-				
+			
 		Case Key.Left
 			
 			If _typing
@@ -392,7 +368,7 @@ Class Monkey2DocumentView Extends Ted2TextView
 					Capitalize( True )
 				Endif
 			Endif
-				
+			
 		Case Key.Right
 			
 			If _typing
@@ -402,7 +378,7 @@ Class Monkey2DocumentView Extends Ted2TextView
 					Capitalize( True )
 				Endif
 			Endif
-				
+			
 		Case Key.Up,Key.Down
 			
 			Capitalize( True )	'in cased we missed anything...

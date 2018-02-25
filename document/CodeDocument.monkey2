@@ -1282,7 +1282,7 @@ Class CodeDocument Extends Ted2Document
 	
 	Method ShowAutocomplete( ident:String="",byCtrlSpace:Bool=False )
 		
-		If ident = "" Then ident=_codeView.IdentBeforeCursor()
+		If Not ident Then ident=_codeView.IdentBeforeCursor()
 		
 		Print "ident: "+ident
 		
@@ -1712,8 +1712,8 @@ Class CodeDocument Extends Ted2Document
 						j-=1
 					Wend
 					j+=1
-					Local pair:=GetIndentBeforePos_Mx2( line,j,True )
-					Local ident:=pair.Item1
+					Local info:=GetIndentBeforePos_Mx2( line,j,True )
+					Local ident:=info.ident
 					'Print "ident: "+ident'+", paramIndex: "+paramIndex+", isNew: "+isNew
 					If ident
 						part=New ParamsPart
@@ -1723,7 +1723,7 @@ Class CodeDocument Extends Ted2Document
 						part.ranges.Add( New Vec2i( i,0 ) )
 						
 						' check for 'New' keyword
-						j=pair.Item2-1 'where ident starts
+						j=info.pos-1 'where ident starts
 						While j>=0 And line[j]<=32
 							j-=1
 						Wend

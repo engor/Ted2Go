@@ -855,6 +855,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Method ParseModules()
 		
+		'Return
+		
 		Local dd:=LoadDir( _modsPath )
 		
 		' pop up some modules to parse them first
@@ -911,6 +913,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 					Local t:=ParseMember( jobj )
 					t.kind=kind2
 					Return t
+				Default
+					If init.Contains( "type" )
+						Return ParseType( init["type"].ToObject() )
+					Endif
 				End
 			Endif
 			' not found
@@ -924,6 +930,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Local t:=New CodeType
 				t.kind=kind
 				t.ident=type["ident"].ToString()
+				t.isArray=type.Contains( "is-array" )
 				Return t
 				
 			Case "functype"
@@ -1043,12 +1050,25 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return result
 	End
 	
-	Method GetJobjType:Map<String,JsonValue>( jobj:Map<String,JsonValue> )
+	Method ProcessArrayType( child:StringMap<JsonValue>,parent:StringMap<JsonValue> )
+		
+		If parent.Contains( "kind" ) And parent["kind"].ToString()="arraytype"
+			child["is-array"]=New JsonBool( True )
+		Endif
+	End
+	
+	Method GetJobjType:StringMap<JsonValue>( jobj:Map<String,JsonValue> )
 		
 		Local type:Map<String,JsonValue> = Null
 		
 		If jobj.Contains( "type" )
 			type=jobj["type"].ToObject()
+			ProcessArrayType( type,type )
+			While type.Contains( "type" )
+				Local t:=type
+				type=type["type"].ToObject()
+				ProcessArrayType( type,t )
+			Wend
 		Elseif jobj.Contains( "getFunc" )
 			type=jobj["getFunc"].ToObject()["type"].ToObject()
 			' properties have retType
@@ -1057,9 +1077,13 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Endif
 		Elseif jobj.Contains( "init" )
 			Local init:=jobj["init"].ToObject()
-			if init.Contains( "type" )
-				type=init["type"].ToObject()
-			Endif
+			Local t:=init
+			While t.Contains( "type" )
+				Local par:=type
+				t=t["type"].ToObject()
+				type=t
+				If par Then ProcessArrayType( type,par )
+			Wend
 		Endif
 		
 		Return type
