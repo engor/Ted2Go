@@ -879,7 +879,7 @@ Class CodeDocument Extends Ted2Document
 		
 		' Editor
 		_codeView=New CodeDocumentView( Self )
-		_codeView.LineChanged += OnLineChanged
+		_codeView.LineNumChanged += OnLineChanged
 		
 		_doc=_codeView.Document
 		

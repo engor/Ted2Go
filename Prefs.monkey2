@@ -35,6 +35,7 @@ Class PrefsInstance
 	Field EditorShowParamsHint:=True
 	Field EditorUseSpacesAsTabs:=False
 	Field EditorTabSize:=4
+	Field EditorRemoveLinesTrailing:=True
 	'
 	Field SourceSortByType:=True
 	Field SourceShowInherited:=False
@@ -95,6 +96,7 @@ Class PrefsInstance
 			EditorShowParamsHint=Json_GetBool( j2,"showParamsHint",EditorShowParamsHint )
 			EditorUseSpacesAsTabs=Json_GetBool( j2,"useSpacesAsTabs",EditorUseSpacesAsTabs )
 			EditorTabSize=Json_GetInt( j2,"tabSize",EditorTabSize )
+			EditorRemoveLinesTrailing=Json_GetBool( j2,"removeLinesTrailing",EditorRemoveLinesTrailing )
 			
 		Endif
 		
@@ -149,6 +151,7 @@ Class PrefsInstance
 		j["showParamsHint"]=New JsonBool( EditorShowParamsHint )
 		j["useSpacesAsTabs"]=New JsonBool( EditorUseSpacesAsTabs )
 		j["tabSize"]=New JsonNumber( EditorTabSize )
+		j["removeLinesTrailing"]=New JsonBool( EditorRemoveLinesTrailing )
 		
 		j=New JsonObject
 		json["source"]=j

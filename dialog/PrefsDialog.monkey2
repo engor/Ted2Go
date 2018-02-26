@@ -85,6 +85,7 @@ Class PrefsDialog Extends DialogExt
 	Field _editorShowParamsHint:CheckButton
 	Field _editorUseSpacesAsTabs:CheckButton
 	Field _editorTabSize:TextFieldExt
+	Field _editorRemoveLinesTrailing:CheckButton
 	
 	Field _mainToolBarVisible:CheckButton
 	Field _mainProjectIcons:CheckButton
@@ -138,6 +139,7 @@ Class PrefsDialog Extends DialogExt
 		size=_editorTabSize.Text.Trim()
 		If Not size Then size="4" 'default
 		Prefs.EditorTabSize=Clamp( Int(size),1,16 )
+		Prefs.EditorRemoveLinesTrailing=_editorRemoveLinesTrailing.Checked
 		
 		Prefs.MainToolBarVisible=_mainToolBarVisible.Checked
 		Prefs.MainProjectIcons=_mainProjectIcons.Checked
@@ -247,6 +249,9 @@ Class PrefsDialog Extends DialogExt
 		_editorUseSpacesAsTabs.Checked=Prefs.EditorUseSpacesAsTabs
 		_editorTabSize=New TextFieldExt( ""+Prefs.EditorTabSize )
 		
+		_editorRemoveLinesTrailing=New CheckButton( "Remove lines trailings (whitespaces)" )
+		_editorRemoveLinesTrailing.Checked=Prefs.EditorRemoveLinesTrailing
+		
 		Local path:=Prefs.EditorFontPath
 		If Not path Then path=_defaultFont
 		_editorFontPath=New TextFieldExt( "" )
@@ -306,8 +311,10 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( _editorAutoPairs,"top" )
 		docker.AddView( _editorSurround,"top" )
 		docker.AddView( _editorShowParamsHint,"top" )
+		docker.AddView( _editorRemoveLinesTrailing,"top" )
 		docker.AddView( tabs,"top" )
 		docker.AddView( New Label( " " ),"top" )
+		
 		
 		Return docker
 	End

@@ -8,7 +8,7 @@ Class CodeTextView Extends TextView
 	Field Keywords:IKeywords
 	Field Highlighter:Highlighter
 	
-	Field LineChanged:Void( prevLine:Int,newLine:Int )
+	Field LineNumChanged:Void( prevLine:Int,newLine:Int )
 	Field TextChanged:Void()
 	
 	Method New()
@@ -22,6 +22,36 @@ Class CodeTextView Extends TextView
 		Document.TextChanged += TextChanged
 		
 		TabStop=Prefs.EditorTabSize
+		
+		LineNumChanged+=Lambda( prevLine:Int,newLine:Int )
+		
+			' remove lines trailing
+			'
+			If Not Prefs.EditorRemoveLinesTrailing Return
+			
+			Local start:=Document.StartOfLine( prevLine )
+			Local ends:=Document.EndOfLine( prevLine )
+			Local i:=ends-1
+			
+			Local color:=Document.Colors[i]
+			If color=Highlighter.COLOR_STRING Or color=Highlighter.COLOR_COMMENT Return
+			
+			While i>=start And Text[i]<=Chars.SPACE
+				i-=1
+			Wend
+			i+=1
+			
+			If i=ends Return ' have no trailing
+			If i=start Return ' skip whole-whitespaced line
+			
+			Local cur:=Min( Cursor,Anchor),anc:=Max( Cursor,Anchor )
+			
+			ReplaceText( i,ends,"" )
+			Local delta:=ends-i
+			
+			SelectText( cur,anc-delta )
+			
+		End
 		
 		
 '		Document.LinesModified += Lambda( first:Int,removed:Int,inserted:Int )
@@ -807,7 +837,7 @@ Class CodeTextView Extends TextView
 		If line <> _line
 			If _typing Then FormatLine( _line )
 			
-			LineChanged( _line,line )
+			LineNumChanged( _line,line )
 			_line=line
 		Endif
 		
