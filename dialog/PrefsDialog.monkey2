@@ -249,7 +249,7 @@ Class PrefsDialog Extends DialogExt
 		_editorUseSpacesAsTabs.Checked=Prefs.EditorUseSpacesAsTabs
 		_editorTabSize=New TextFieldExt( ""+Prefs.EditorTabSize )
 		
-		_editorRemoveLinesTrailing=New CheckButton( "Remove lines trailings (whitespaces)" )
+		_editorRemoveLinesTrailing=New CheckButton( "Remove whitespaced trailings on saving" )
 		_editorRemoveLinesTrailing.Checked=Prefs.EditorRemoveLinesTrailing
 		
 		Local path:=Prefs.EditorFontPath

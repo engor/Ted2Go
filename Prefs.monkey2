@@ -35,7 +35,7 @@ Class PrefsInstance
 	Field EditorShowParamsHint:=True
 	Field EditorUseSpacesAsTabs:=False
 	Field EditorTabSize:=4
-	Field EditorRemoveLinesTrailing:=True
+	Field EditorRemoveLinesTrailing:=False
 	'
 	Field SourceSortByType:=True
 	Field SourceShowInherited:=False

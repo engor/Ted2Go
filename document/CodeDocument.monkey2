@@ -1517,7 +1517,15 @@ Class CodeDocument Extends Ted2Document
 	
 		'ResetErrors()
 		
-		Local text:=_doc.Text
+		Local text:=""
+		
+		If Prefs.EditorRemoveLinesTrailing
+			Local linesChanged:=0
+			text=RemoveWhitespacedTrailings( _doc,Varptr linesChanged )
+			If linesChanged>0 Then _codeView.SetTextSilent( text ) ' set text saving cursor/anchor/scroll
+		Else
+			text=_doc.Text
+		Endif
 		
 		Local ok:=stringio.SaveString( text,Path )
 	

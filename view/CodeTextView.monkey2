@@ -23,35 +23,9 @@ Class CodeTextView Extends TextView
 		
 		TabStop=Prefs.EditorTabSize
 		
-		LineNumChanged+=Lambda( prevLine:Int,newLine:Int )
-		
-			' remove lines trailing
-			'
-			If Not Prefs.EditorRemoveLinesTrailing Return
-			
-			Local start:=Document.StartOfLine( prevLine )
-			Local ends:=Document.EndOfLine( prevLine )
-			Local i:=ends-1
-			
-			Local color:=Document.Colors[i]
-			If color=Highlighter.COLOR_STRING Or color=Highlighter.COLOR_COMMENT Return
-			
-			While i>=start And Text[i]<=Chars.SPACE
-				i-=1
-			Wend
-			i+=1
-			
-			If i=ends Return ' have no trailing
-			If i=start Return ' skip whole-whitespaced line
-			
-			Local cur:=Min( Cursor,Anchor),anc:=Max( Cursor,Anchor )
-			
-			ReplaceText( i,ends,"" )
-			Local delta:=ends-i
-			
-			SelectText( cur,anc-delta )
-			
-		End
+'		LineNumChanged+=Lambda( prevLine:Int,newLine:Int )
+'		
+'		End
 		
 		
 '		Document.LinesModified += Lambda( first:Int,removed:Int,inserted:Int )
@@ -424,6 +398,21 @@ Class CodeTextView Extends TextView
 	
 	Property HasExtraSelection:Bool()
 		Return _extraSelStart>=0
+	End
+	
+	Method SetTextSilent( text:String )
+		
+		Local curLine:=LineNumAtCursor
+		Local ancLine:=LineNumAtAnchor
+		Local curPos:=PosInLineAtCursor
+		Local ancPos:=PosInLineAtAnchor
+		Local scroll:=Scroll
+		
+		Text=text
+		
+		SelectText( Document.StartOfLine( ancLine )+ancPos,Document.StartOfLine( curLine )+curPos )
+		Scroll=scroll
+		
 	End
 	
 	
@@ -890,6 +879,49 @@ Function FixNumpadKeys:Key( event:KeyEvent )
 		End
 	Endif
 	Return key
+End
+
+
+Function RemoveWhitespacedTrailings:String( doc:TextDocument,linesChanged:Int Ptr )
+	
+	Local text:=doc.Text
+	Local numLines:=doc.NumLines
+	Local result:=""
+	Local index:=0,changes:=0
+	
+	For Local line:=0 Until numLines
+		
+		Local start:=doc.StartOfLine( line )
+		Local ends:=doc.EndOfLine( line )
+		Local i:=ends-1
+		
+		Local color:=doc.Colors[i]
+		If color=Highlighter.COLOR_STRING Or color=Highlighter.COLOR_COMMENT Continue
+		
+		While i>=start And text[i]<=Chars.SPACE
+			i-=1
+		Wend
+		i+=1
+		
+		If i=ends Continue ' have no trailing
+		If i=start Continue ' skip whole-whitespaced line
+		
+		If i>index 
+			result+=text.Slice( index,i )
+			changes+=1
+		Endif
+		index=ends ' skip trailing part of text
+		
+	Next
+	
+	If changes=0
+		result=text
+	Elseif index<text.Length-1
+		result+=text.Slice( index,text.Length )
+	Endif
+	
+	linesChanged[0]=changes
+	Return result
 End
 
 
