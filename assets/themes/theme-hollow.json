@@ -8,9 +8,9 @@
 		"normal":"Roboto-Medium.ttf,16",
 		"fixedWidth":"RobotoMono-Medium.ttf,19",
 		"small":"Roboto-Medium.ttf,14",
-		"editor":"MesloLGSDZ-Bold.ttf,19"
+		"editor":"SourceCodePro-Medium.ttf,19"
 	},
-
+	
 	"colors":{
 
 		"border": "#121111",
@@ -36,12 +36,12 @@
 		"textview-whitespaces":"bright",
 
 		"textview-color0":"#FF00FF", 	//When is this used?
-		"textview-color1": "#EBDAB4",	//identifiers
-		"textview-color2": "#FB4934",	//keywords
-		"textview-color3": "#B8BB26",	//strings
-		"textview-color4": "#B087D2",	//numbers
+		"textview-color1": "#FFFBF2",	//identifiers
+		"textview-color2": "#FA3E28",	//keywords
+		"textview-color3": "#C4C722",	//strings
+		"textview-color4": "#B77FE5",	//numbers
 		"textview-color5": "#6F665E",	//comment
-		"textview-color6": "#FABD2F",	//preproc
+		"textview-color6": "#FDBD28",	//preproc
 		"textview-color7": "#8EC07C",
 		
 		"windowClearColor":"darkest",

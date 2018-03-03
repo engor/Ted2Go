@@ -7,9 +7,9 @@
 		"normal":"Roboto-Medium.ttf,16",
 		"fixedWidth":"RobotoMono-Medium.ttf,18",
 		"small":"Roboto-Medium.ttf,13",
-		"editor":"MesloLGSDZ-Bold.ttf,18"
+		"editor":"SourceCodePro-Medium.ttf,19"
 	},
-
+	
 	"colors":{
 
 		// "accent": "",

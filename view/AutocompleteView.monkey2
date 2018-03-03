@@ -28,11 +28,22 @@ Class AutocompleteListView Extends ListViewExt
 	Field word:String 'word to select
 	
 	Method New( lineHeight:Int,maxLines:Int )
+		
 		Super.New( lineHeight,maxLines )
+		
+		OnThemeChanged()
 	End
 	
 	
 	Protected
+	
+	Method OnThemeChanged() Override
+		
+		Super.OnThemeChanged()
+		_selColor=App.Theme.GetColor( "completion-list-selected" )
+		_markedBgColor=App.Theme.GetColor( "completion-list-marked-bg" )
+		_markedTextColor=App.Theme.GetColor( "completion-list-marked-text" )
+	End
 	
 	Method DrawItem( item:ListViewItem,canvas:Canvas,x:Float,y:Float,handleX:Float=0,handleY:Float=0 ) Override
 		
@@ -62,19 +73,21 @@ Class AutocompleteListView Extends ListViewExt
 				index+=1
 				ch = index>=len ? -1 Else word[index]
 				clr=canvas.Color
-				canvas.Color=_selColor
+				canvas.Color=_markedBgColor
 				canvas.DrawRect( x,y-LineHeight*handleY,w,LineHeight )
+				canvas.Color=_markedTextColor
+				canvas.DrawText( s,x,y,handleX,handleY )
 				canvas.Color=clr
+			Else
+				canvas.DrawText( s,x,y,handleX,handleY )
 			Endif
-			canvas.DrawText( s,x,y,handleX,handleY )
 			x+=w
 		Next
 	End
 	
-	
 	Private
 	
-	Field _selColor:=New Color( .8,.8,.8,.1 )
+	Field _markedBgColor:Color,_markedTextColor:Color
 	
 End
 
@@ -514,7 +527,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 		Next
 		'preprocessor
 		'need to load it like keywords
-		Local s:="#If ,#Rem,#End,#Endif,#Else,#Else If ,#Import ,monkeydoc,__TARGET__,__MOBILE_TARGET__,__DESKTOP_TARGET__,__HOSTOS__,__ARCH__,#Reflect "
+		Local s:="#If ,#Rem,#End,#Endif,#Else,#Else If ,#Import ,#Reflect ,monkeydoc,__TARGET__,__MOBILE_TARGET__,__DESKTOP_TARGET__,__WEB_TARGET__,__HOSTOS__,__ARCH__,__DEBUG__,__RELEASE__,__CONFIG__,__MAKEDOCS__"
 		Local arr:=s.Split( "," )
 		For Local i:=Eachin arr
 			list.Add( New ListViewItem( i ) )

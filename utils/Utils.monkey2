@@ -37,7 +37,7 @@ Function GetCaseSensitivePath:String( path:String )
 #Endif
 End
 
-Class Utils
+Class Utils Final
 	
 	Function ArrayContains<T>:Bool( arr:T[],value:T )
 		If Not arr Return False
@@ -63,13 +63,23 @@ Class Utils
 	End
 	
 	Function GetIndent:Int( line:String )
+		
 		Local len:=line.Length,n:=0
-		While n < len And line[n] <= 32
+		While n < len And line[n] <= Chars.SPACE
 			n+=1
 		Wend
 		Return n
 	End
+	
+	Function GetIndentAsSpaces:Int( line:String )
 		
+		Local len:=line.Length,n:=0
+		While n < len And line[n] <= Chars.SPACE
+			n+=(line[n]=Chars.TAB) ? Prefs.EditorTabSize Else 1
+		Wend
+		Return n
+	End
+	
 	Function GetIndentStr:String( line:String )
 		Local n:=GetIndent( line )
 		Return  (n > 0) ? line.Slice( 0,n ) Else ""
@@ -171,6 +181,9 @@ Class Utils
 	
 	
 	Private
+	
+	Global _storedTabSize:=0,_spacesForTab:String
+	
 	
 	Method New()
 	End
@@ -341,14 +354,40 @@ Function StripStarting:String( text:String,starts:String )
 	Return text.StartsWith( starts ) ? text.Slice( starts.Length ) Else text
 End
 
+' 
+Struct IdentInfo
+	
+	Field pos:Int
+	Field ident:String
+	Field isArray:Bool
+	
+End
+
 #Rem monkeydocs Return ident and position in line where ident starts
 #End
-Function GetIndentBeforePos_Mx2:Tuple2<String,Int>( line:String,pos:Int,withDots:Bool )
+Function GetIndentBeforePos_Mx2:IdentInfo( line:String,pos:Int,withDots:Bool )
 	
 	Local n:=pos-1
 	
 	While n >= 0
 	
+		' array syntax: a[i]
+		If line[n]=Chars.CLOSED_SQUARE_BRACKET
+			Local cnt:=1
+			n-=1
+			While n >= 0
+				If line[n]=Chars.CLOSED_SQUARE_BRACKET
+					cnt+=1
+				Elseif line[n]=Chars.OPENED_SQUARE_BRACKET
+					cnt-=1
+					If cnt=0 Exit
+				Endif
+				n-=1
+			Wend
+			n-=1
+			If n<0 Exit
+		Endif
+		
 		Local more:=(line[n]=Chars.MORE_BRACKET)
 	
 		If line[n] = Chars.DOT Or more ' . | ?. | ->
@@ -369,11 +408,35 @@ Function GetIndentBeforePos_Mx2:Tuple2<String,Int>( line:String,pos:Int,withDots
 	
 	Local s:=""
 	Local starts:=-1
+	Local arr:=False
 	If n < pos
 		starts=n
 		s=line.Slice( n,pos ).Replace( "?.","." ).Replace( "->","." )
+		Local i:=s.FindLast( "." )
+		arr=(i>0 And s[i-1]=Chars.CLOSED_SQUARE_BRACKET) ' [i].
+		If s.Find( "[" )<>-1
+			n=0
+			Local s2:="",cnt:=0
+			While n<s.Length
+				If s[n]=Chars.OPENED_SQUARE_BRACKET
+					cnt+=1
+				Elseif s[n]=Chars.CLOSED_SQUARE_BRACKET
+					cnt-=1
+				Elseif cnt=0
+					s2+=String.FromChar( s[n] )
+				Endif
+				n+=1
+			Wend
+			s=s2
+		Endif
 	Endif
-	Return New Tuple2<String,Int>( s,starts )
+	
+	Local info:=New IdentInfo
+	info.ident=s
+	info.pos=starts
+	info.isArray=arr
+	
+	Return info
 End
 
 Function IsPosInsideOfQuotes_Mx2:Bool( text:String,pos:Int )

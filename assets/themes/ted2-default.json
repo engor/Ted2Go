@@ -13,7 +13,10 @@
 		"codemap-background": "transparent",
 		"codemap-selection": "#48000000",
 		"params-hint-common": "textview-color1",
-		"params-hint-selected": "textview-color4"
+		"params-hint-selected": "textview-color4",
+		"completion-list-selected": "content",
+		"completion-list-marked-bg": "#0fff",
+		"completion-list-marked-text": "textview-color4"
 	},
 
 	"fonts":{

@@ -5,6 +5,7 @@ Namespace ted2go
 Class PrefsDialog Extends DialogExt
 
 	Field Apply:Void()
+	Field TabulationChanged:Void()
 	
 	Method New()
 		
@@ -28,11 +29,6 @@ Class PrefsDialog Extends DialogExt
 		docker=GetCompletionDock()
 		tabView.AddTab( "AutoComplete",docker )
 		
-		' Chat
-		'
-		docker=GetChatDock()
-		tabView.AddTab( "IRC chat",docker )
-		
 		' Live Templates
 		'
 		docker=GetLiveTemplatesDock()
@@ -49,7 +45,14 @@ Class PrefsDialog Extends DialogExt
 		
 		_acShowAfter.Activated+=_acShowAfter.MakeKeyView
 		
-		Deactivated+=MainWindow.UpdateKeyView
+		Deactivated+=Lambda()
+			MainWindow.UpdateKeyView()
+			_lastTab=tabView.CurrentIndex
+		End
+		
+		OnShow+=Lambda()
+			tabView.CurrentIndex=_lastTab
+		End
 		
 		MinSize=New Vec2i( 550,500 )
 		MaxSize=New Vec2i( 550,600 )
@@ -80,6 +83,9 @@ Class PrefsDialog Extends DialogExt
 	Field _editorAutoPairs:CheckButton
 	Field _editorSurround:CheckButton
 	Field _editorShowParamsHint:CheckButton
+	Field _editorUseSpacesAsTabs:CheckButton
+	Field _editorTabSize:TextFieldExt
+	Field _editorRemoveLinesTrailing:CheckButton
 	
 	Field _mainToolBarVisible:CheckButton
 	Field _mainProjectIcons:CheckButton
@@ -96,6 +102,9 @@ Class PrefsDialog Extends DialogExt
 	
 	Field _codeView:Ted2CodeTextView
 	Field _treeView:TreeViewExt
+	
+	Global _lastTab:Int
+	
 	
 	Method OnApply()
 	
@@ -125,22 +134,24 @@ Class PrefsDialog Extends DialogExt
 		Prefs.EditorAutoPairs=_editorAutoPairs.Checked
 		Prefs.EditorSurroundSelection=_editorSurround.Checked
 		Prefs.EditorShowParamsHint=_editorShowParamsHint.Checked
+		Local useSpaces:=Prefs.EditorUseSpacesAsTabs ' store
+		Prefs.EditorUseSpacesAsTabs=_editorUseSpacesAsTabs.Checked
+		size=_editorTabSize.Text.Trim()
+		If Not size Then size="4" 'default
+		Prefs.EditorTabSize=Clamp( Int(size),1,16 )
+		Prefs.EditorRemoveLinesTrailing=_editorRemoveLinesTrailing.Checked
 		
 		Prefs.MainToolBarVisible=_mainToolBarVisible.Checked
 		Prefs.MainProjectIcons=_mainProjectIcons.Checked
 		Prefs.MainProjectSingleClickExpanding=_mainProjectSingleClickExpanding.Checked
 		Prefs.MainPlaceDocsAtBegin=_mainPlaceDocsAtBegin.Checked
 		
-		Prefs.IrcNickname=_chatNick.Text
-		Prefs.IrcServer=_chatServer.Text
-		Prefs.IrcPort=Int(_chatPort.Text)
-		Prefs.IrcRooms=_chatRooms.Text
-		Prefs.IrcConnect=_chatAutoConnect.Checked
-		
 		App.ThemeChanged()
 		
 		Hide()
 		Apply()
+		
+		If Prefs.EditorUseSpacesAsTabs<>useSpaces Then TabulationChanged()
 		
 		Prefs.SaveLocalState()
 		
@@ -188,7 +199,7 @@ Class PrefsDialog Extends DialogExt
 		
 		Local docker:=New DockingView
 		Local monkeyPathDock:=New DockingView
-		monkeyPathDock.AddView( New Label( "Monkey2 root folder" ),"left" )
+		monkeyPathDock.AddView( New Label( "Monkey2 root folder:" ),"left" )
 		monkeyPathDock.AddView( _monkeyRootPath,"left" )
 		monkeyPathDock.AddView( btnChooseMonkeyPath,"left" )
 		
@@ -234,6 +245,13 @@ Class PrefsDialog Extends DialogExt
 		_editorShowParamsHint=New CheckButton( "Show parameters hint" )
 		_editorShowParamsHint.Checked=Prefs.EditorShowParamsHint
 		
+		_editorUseSpacesAsTabs=New CheckButton( "Use spaces" )
+		_editorUseSpacesAsTabs.Checked=Prefs.EditorUseSpacesAsTabs
+		_editorTabSize=New TextFieldExt( ""+Prefs.EditorTabSize )
+		
+		_editorRemoveLinesTrailing=New CheckButton( "Remove whitespaced trailings on saving" )
+		_editorRemoveLinesTrailing.Checked=Prefs.EditorRemoveLinesTrailing
+		
 		Local path:=Prefs.EditorFontPath
 		If Not path Then path=_defaultFont
 		_editorFontPath=New TextFieldExt( "" )
@@ -269,11 +287,17 @@ Class PrefsDialog Extends DialogExt
 		Local btnResetFont:=New PushButton( resetFont )
 		
 		Local font:=New DockingView
-		font.AddView( New Label( "Font" ),"left" )
+		font.AddView( New Label( "Font:" ),"left" )
 		font.AddView( _editorFontPath,"left" )
 		font.AddView( _editorFontSize,"left","45" )
 		font.AddView( btnChooseFont,"left" )
 		font.AddView( btnResetFont,"left" )
+		
+		Local tabs:=New DockingView
+		tabs.AddView( New Label( "Tab size:" ),"left" )
+		_editorTabSize.MaxSize=New Vec2i( 100,100 )
+		tabs.AddView( _editorTabSize,"left" )
+		tabs.AddView( _editorUseSpacesAsTabs,"left" )
 		
 		Local docker:=New DockingView
 		docker.AddView( New Label( " " ),"top" )
@@ -287,7 +311,10 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( _editorAutoPairs,"top" )
 		docker.AddView( _editorSurround,"top" )
 		docker.AddView( _editorShowParamsHint,"top" )
+		docker.AddView( _editorRemoveLinesTrailing,"top" )
+		docker.AddView( tabs,"top" )
 		docker.AddView( New Label( " " ),"top" )
+		
 		
 		Return docker
 	End
@@ -336,33 +363,6 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( _acKeywordsOnly,"top" )
 		docker.AddView( _acUseLiveTemplates,"top" )
 		docker.AddView( New Label( " " ),"top" )
-		
-		Return docker
-	End
-	
-	Method GetChatDock:DockingView()
-		
-		Local chatTable:=New TableView( 2,6 )
-		_chatNick=New TextFieldExt( Prefs.IrcNickname )
-		_chatServer=New TextFieldExt( Prefs.IrcServer )
-		_chatPort=New TextFieldExt( ""+Prefs.IrcPort )
-		_chatRooms=New TextFieldExt( Prefs.IrcRooms )
-		_chatAutoConnect=New CheckButton( "Auto connect at start" )
-		_chatAutoConnect.Checked=Prefs.IrcConnect
-		chatTable[0,0]=New Label( "Nickname" )
-		chatTable[1,0]=_chatNick
-		chatTable[0,1]=New Label( "Server" )
-		chatTable[1,1]=_chatServer
-		chatTable[0,2]=New Label( "Port" )
-		chatTable[1,2]=_chatPort
-		chatTable[0,3]=New Label( "Rooms" )
-		chatTable[1,3]=_chatRooms
-		chatTable[0,4]=_chatAutoConnect
-		chatTable[0,5]=New Label( "" ) 'bottom padding hack
-		
-		Local docker:=New DockingView
-		docker.AddView( New Label( " " ),"top" )
-		docker.AddView( chatTable,"top" )
 		
 		Return docker
 	End

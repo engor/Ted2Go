@@ -387,8 +387,6 @@ Class ProjectView Extends ScrollView
 					d.ShowModal()
 				End
 				
-				menu.AddSeparator()
-				
 				menu.AddAction( "New file" ).Triggered=Lambda()
 					
 					Local file:=RequestString( "New file name:" )
@@ -419,6 +417,34 @@ Class ProjectView Extends ScrollView
 					Endif
 					
 					browser.Refresh( node )
+				End
+				
+				menu.AddSeparator()
+				
+				menu.AddAction( "Rename folder" ).Triggered=Lambda()
+				
+					Local oldName:=StripDir( path )
+					Local name:=RequestString( "Enter new name:","Ranaming '"+oldName+"'",oldName )
+					If Not name Or name=oldName Return
+					
+					Local i:=path.Slice( 0,path.Length-1 ).FindLast( "/" )
+					If i<>-1
+						
+						Local newPath:=path.Slice( 0,i+1 )+name
+						
+						If DirectoryExists( newPath )
+							Alert( "Folder already exists! Path: '"+newPath+"'" )
+							Return
+						Endif
+						
+						Local ok:=(libc.rename( path,newPath )=0)
+						If ok
+							browser.Refresh( node.Parent )
+							Return
+						Endif
+					
+						Alert( "Failed to rename folder: '"+path+"'" )
+					Endif
 				End
 				
 				menu.AddAction( "Delete" ).Triggered=Lambda()
@@ -508,12 +534,12 @@ Class ProjectView Extends ScrollView
 				
 				menu.AddAction( "Open on Desktop" ).Triggered=Lambda()
 					
-					requesters.OpenUrl( path )
+					requesters.OpenUrl( ExtractDir( path ) )
 				End
 				
 				menu.AddSeparator()
 				
-				menu.AddAction( "Rename" ).Triggered=Lambda()
+				menu.AddAction( "Rename file" ).Triggered=Lambda()
 					
 					Local oldName:=StripDir( path )
 					Local name:=RequestString( "Enter new name:","Ranaming '"+oldName+"'",oldName )
@@ -526,10 +552,8 @@ Class ProjectView Extends ScrollView
 						Return
 					Endif
 					
-					If CopyFile( path,newPath )
-						
-						DeleteFile( path )
-						
+					Local ok:=(libc.rename( path,newPath )=0)
+					If ok
 						browser.Refresh( node.Parent )
 						Return
 					Endif

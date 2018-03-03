@@ -32,6 +32,7 @@
 #Import "action/FindActions"
 #Import "action/ViewActions"
 #Import "action/WindowActions"
+#Import "action/TabActions"
 
 #Import "dialog/FindDialog"
 #Import "dialog/PrefsDialog"
@@ -80,6 +81,7 @@
 
 #Import "utils/JsonUtils"
 #Import "utils/Utils"
+#Import "utils/TextUtils"
 
 #Import "view/IRCView"
 #Import "view/CodeMapView"
@@ -114,6 +116,7 @@
 #Import "view/ViewExtensions"
 #Import "view/DockingViewExt"
 #Import "view/DraggableViewListener"
+#Import "view/Undock"
 
 #Import "Tree"
 #Import "Tuple"
@@ -135,7 +138,7 @@ Using sdl2..
 
 Const MONKEY2_DOMAIN:="http://monkeycoder.co.nz"
 
-Global AppTitle:="Ted2Go v2.8.1"
+Global AppTitle:="Ted2Go v2.9.1"
 
 
 Function Main()

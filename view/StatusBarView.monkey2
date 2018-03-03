@@ -6,7 +6,7 @@ Class StatusBarView Extends DockingView
 	
 	Field Cancelled:Void()
 	
-	Method New()
+	Method New( stopProcessHint:String="Stop process" )
 		
 		Style=GetStyle( "StatusBar" )
 		
@@ -37,7 +37,7 @@ Class StatusBarView Extends DockingView
 		act.Triggered=OnCancel
 		
 		_progressCancel=New ToolButtonExt( act,"" )
-		_progressCancel.Hint="Stop process"
+		_progressCancel.Hint=stopProcessHint
 		_progressCancel.Style=GetStyle( "StatusBarButton" )
 		AddView( _progressCancel,"right" )
 		

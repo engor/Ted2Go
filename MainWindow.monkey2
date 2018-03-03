@@ -11,8 +11,6 @@ Namespace ted2go
 
 #Import "assets/fonts/@/fonts"
 
-#Import "assets/themes/irc/@/themes/irc"
-
 
 Global MainWindow:MainWindowInstance
 
@@ -68,28 +66,20 @@ Class MainWindowInstance Extends Window
 			
 			OnFileDropped( path )
 		End
-
+		
 		_docsManager.DocumentAdded+=Lambda( doc:Ted2Document )
 			AddRecentFile( doc.Path )
+			
+			Local codeDoc:=Cast<CodeDocument>( doc )
+			If codeDoc Then codeDoc.AnalyzeIndentation()
+			
 			SaveState()
 		End
-
+		
 		_docsManager.DocumentRemoved+=Lambda( doc:Ted2Document )
 			If IsTmpPath( doc.Path ) DeleteFile( doc.Path )
 			SaveState()
 		End
-		
-		'IRC tab
-		
-		_ircView=New IRCView
-		_ircView.introScreen.Text="Hang out with other Monkey 2 users"
-		_ircView.introScreen.OnNickChange+=Lambda( nick:String )
-			Prefs.IrcNickname=nick
-		End
-		
-		SetupChatTab()
-		
-		If Prefs.IrcConnect Then _ircView.introScreen.Connect()
 		
 		'Build tab
 		
@@ -243,6 +233,7 @@ Class MainWindowInstance Extends Window
 		_findActions=New FindActions( _docsManager,_projectView,_findConsole )
 		_helpActions=New HelpActions
 		_viewActions=New ViewActions( _docsManager )
+		_tabActions=New TabActions( _tabsWrap.AllDocks )
 		
 		_tabMenu=New Menu
 		_tabMenu.AddAction( _fileActions.close )
@@ -363,6 +354,10 @@ Class MainWindowInstance Extends Window
 		_gotoMenu.AddAction( _viewActions.goBack )
 		_gotoMenu.AddAction( _viewActions.goForward )
 		
+		'View menu
+		'
+		_viewMenu=New MenuExt( "View" )
+		TabActions.CreateMenu( _viewMenu )
 		'Build menu
 		'
 		_forceStop=New Action( "Force Stop" )
@@ -435,6 +430,7 @@ Class MainWindowInstance Extends Window
 		_menuBar.AddMenu( _editMenu )
 		_menuBar.AddMenu( _findMenu )
 		_menuBar.AddMenu( _gotoMenu )
+		_menuBar.AddMenu( _viewMenu )
 		_menuBar.AddMenu( _buildMenu )
 		_menuBar.AddMenu( _windowMenu )
 		_menuBar.AddMenu( _helpMenu )
@@ -443,7 +439,7 @@ Class MainWindowInstance Extends Window
 		_buildConsoleView=New DockingView
 		_buildConsoleView.ContentView=_buildConsole
 		
-		_statusBar=New StatusBarView
+		_statusBar=New StatusBarView( "Stop process ("+_forceStop.HotKeyText+")" )
 		
 		_contentView=New DockingView
 		_contentView.AddView( _menuBar,"top" )
@@ -469,12 +465,16 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Field PrefsChanged:Void()
+	
 	Method OnPrefsChanged()
 		
 		ArrangeElements()
-		PrefsChanged()
 		
-		SetupChatTab()
+		For Local doc:=Eachin _docsManager.OpenDocuments
+			doc.TextView?.TabStop=Prefs.EditorTabSize
+		Next
+		
+		PrefsChanged()
 		
 		_projectView.SingleClickExpanding=Prefs.MainProjectSingleClickExpanding
 	End
@@ -623,7 +623,6 @@ Class MainWindowInstance Extends Window
 		SaveState()
 		_enableSaving=False
 		OnForceStop() ' kill build process if started
-		If _ircView Then _ircView.Quit("Closing Ted2Go")
 		
 		' waiting for started processes if any
 		ParsersManager.DisableAll()
@@ -1223,6 +1222,9 @@ Class MainWindowInstance Extends Window
 		jobj["windowRect"]=ToJson( _storedSize )
 		jobj["windowState"]=New JsonNumber( Int(state) )
 		
+		SaveUndockTabsState( jobj )
+		If _isTerminating UndockWindow.RestoreUndock()
+			
 		SaveTabsState( jobj )
 		
 		Local jdocs:=New JsonObject
@@ -1298,9 +1300,8 @@ Class MainWindowInstance Extends Window
 			SizeChanged()
 		Endif
 		
-		UpdateIrcIcon()
-		
 		Rendered( canvas )
+		
 	End
 	
 	Method OnInit()
@@ -1361,93 +1362,6 @@ Class MainWindowInstance Extends Window
 		_resized=True
 	End
 	
-	Method SetupChatTab()
-		
-		If Not _ircView Return
-		
-		_ircView.ircHandler.OnMessage+=Self.OnChatMessage
-		
-		Local intro:=_ircView.introScreen
-		
-		If intro.IsConnected Return
-		
-		Local nick:=Prefs.IrcNickname
-		Local server:=Prefs.IrcServer
-		Local port:=Prefs.IrcPort
-		Local rooms:=Prefs.IrcRooms
-		intro.AddOnlyServer( nick,server,server,port,rooms )
-		
-	End
-	
-	Method OnChatTabActiveChanged()
-		
-		Local tab:=_tabsWrap.tabs["Chat"]
-		
-		If Not tab.IsActive Return
-		
-		tab.Icon=Null
-		
-		_ircNotifyIcon=0
-		
-		HideHint()
-		
-	End
-	
-	Method OnChatMessage( message:IRCMessage, container:IRCMessageContainer, server:IRCServer )
-		
-		If message.type<>"PRIVMSG" Or _tabsWrap.tabs["Chat"].IsActive Return
-		
-		'Show notice icon
-		If message.text.Contains(server.nickname) Then
-			
-			If _ircNotifyIcon<=1 Then
-				
-				_ircNotifyIcon=2
-				
-				Local mentionStr:String
-				mentionStr=server.nickname+" was mentioned by "
-				mentionStr+=message.fromUser+" in "
-				mentionStr+=container.name
-				
-				Local dock:=_tabsWrap.tabs["Chat"].CurrentHolder '_tabsWrap.docks["bottom"]
-				ShowHint( mentionStr, New Vec2i( 0, -GetStyle( "Hint" ).Font.Height*4 ), dock, 20000 )
-				
-			Endif
-			
-		Else
-			
-			If _ircNotifyIcon<=0 Then _ircNotifyIcon=1
-			
-		Endif
-		
-	End
-	
-	Method UpdateIrcIcon()
-		
-		If _ircNotifyIcon<=0 Then Return
-		
-		Local time:Int=Int(Millisecs()*0.0025)
-		
-		If time=_ircIconBlink Then Return
-		_ircIconBlink=time
-		
-		Local tab:=_tabsWrap.tabs["Chat"]
-		
-		If time Mod 2 Then
-			Select _ircNotifyIcon
-				
-				Case 1
-					tab.Icon=App.Theme.OpenImage( "irc/notice.png" )
-					
-				Case 2
-					tab.Icon=App.Theme.OpenImage( "irc/important.png" )
-			End
-		Else
-			tab.Icon=App.Theme.OpenImage( "irc/blink.png" )
-		Endif
-		
-	End
-	
 	Method InitTabs()
 		
 		If Not _tabsWrap.tabs.Empty Return
@@ -1459,9 +1373,7 @@ Class MainWindowInstance Extends Window
 		_tabsWrap.AddTab( "Output",_outputConsoleView )
 		_tabsWrap.AddTab( "Docs",_docsConsole )
 		_tabsWrap.AddTab( "Find",_findConsole )
-		_tabsWrap.AddTab( "Chat",_ircView )
 		
-		_tabsWrap.tabs["Chat"].ActiveChanged+=OnChatTabActiveChanged
 	End
 	
 	Method ArrangeElements()
@@ -1503,7 +1415,7 @@ Class MainWindowInstance Extends Window
 		places["left"]=New StringStack( s.Split( "," ) )
 		s="Project,Debug"
 		places["right"]=New StringStack( s.Split( "," ) )
-		s="Build,Output,Docs,Find,Chat"
+		s="Build,Output,Docs,Find"
 		places["bottom"]=New StringStack( s.Split( "," ) )
 		
 		Global actives:=New StringMap<String>
@@ -1517,6 +1429,7 @@ Class MainWindowInstance Extends Window
 		' put views
 		For Local edge:=Eachin edges
 			Local val:=Json_FindValue( jobj.Data,"tabsDocks/"+edge+"Tabs" )
+			Local vistabs:=Json_FindValue( jobj.Data,"tabsDocks/"+edge+"TabsVisible" )
 			If val And val<>JsonValue.NullValue
 				For Local v:=Eachin val.ToArray().All()
 					Local key:=v.ToString()
@@ -1526,7 +1439,16 @@ Class MainWindowInstance Extends Window
 					Next
 					'
 					Local tab:=_tabsWrap.tabs[key]
-					If tab Then _tabsWrap.docks[edge].AddTab( tab )
+					If tab Then 
+						_tabsWrap.docks[edge].AddTab( tab )
+						'set view visible
+						If vistabs And vistabs<>JsonValue.NullValue
+							For Local vt:=Eachin vistabs.ToArray().All()
+								If key=vt.ToString() Then tab.Visible=True; Exit
+								tab.Visible=False
+							Next
+						End
+					End
 				Next
 			Endif
 		Next
@@ -1574,15 +1496,44 @@ Class MainWindowInstance Extends Window
 		For Local edge:=Eachin edges
 			Local dock:=_tabsWrap.docks[edge]
 			jj[edge+"Tabs"]=JsonArray.FromStrings( dock.TabsNames )
+			jj[edge+"TabsVisible"]=JsonArray.FromStrings( dock.TabsVisible )
 			jj[edge+"Active"]=New JsonString( dock.ActiveName )
 			jj[edge+"Visible"]=New JsonBool( dock.Visible )
 			jj[edge+"Size"]=New JsonString( _tabsWrap.GetDockSize( dock ) )
 		Next
 	End
 	
+	Method LoadUndockTabsState( jobj:JsonObject ) 
+				
+		Local edges:=DraggableTabs.Edges	
+		For Local edge:=Eachin edges
+			Local dock:=_tabsWrap.docks[edge]
+			For Local i:=Eachin dock.TabsNames
+				Local val:=Json_FindValue( jobj.Data,"undockTabs/"+i )
+				If val
+					Local _undockWindow:=UndockWindow.NewUndock( _tabsWrap.tabs[i] )
+					_undockWindow.SetUndockFrame( ToRecti( val ) )
+				End
+			Next
+		Next
+	End
+		
+	Method SaveUndockTabsState( jobj:JsonObject )
+		
+		If( UndockWindow._undockWindows.Length )	
+			Local jj:=New JsonObject
+			jobj["undockTabs"]=jj
+			For Local i:=Eachin UndockWindow._undockWindows
+				If i._visible jj[i.Title]=ToJson( i.Frame )
+			Next
+		End
+	End
+	
 	Method LoadState( jobj:JsonObject )
 		
 		LoadTabsState( jobj )
+		
+		LoadUndockTabsState( jobj )
 		
 		If jobj.Contains( "docsTab" )
 			Local jdocs:=jobj.GetObject( "docsTab" )
@@ -1677,15 +1628,15 @@ Class MainWindowInstance Extends Window
 				If event.Modifiers & Modifier.Shift
 					
 					dock=_tabsWrap.docks["left"]
-					If dock.NumTabs>0 Then dock.Visible=Not dock.Visible
+					If dock.NumTabs>0 And dock.VisibleTabs Then dock.Visible=Not dock.Visible
 					
 					dock=_tabsWrap.docks["right"]
-					If dock.NumTabs>0 Then dock.Visible=Not dock.Visible
+					If dock.NumTabs>0 And dock.VisibleTabs Then dock.Visible=Not dock.Visible
 					
 				Else ' bottom dock
 					
 					dock=_tabsWrap.docks["bottom"]
-					If dock.NumTabs>0 Then dock.Visible=Not dock.Visible
+					If dock.NumTabs>0 And dock.VisibleTabs Then dock.Visible=Not dock.Visible
 					
 					_consoleVisibleCounter+=1
 				Endif
@@ -1728,8 +1679,8 @@ Class MainWindowInstance Extends Window
 	Field _buildActions:BuildActions
 	Field _helpActions:HelpActions
 	Field _viewActions:ViewActions
+	Field _tabActions:TabActions
 	
-	Field _ircView:IRCView
 	Field _buildConsole:ConsoleExt
 	Field _buildConsoleView:DockingView
 	Field _outputConsole:ConsoleExt
@@ -1744,13 +1695,9 @@ Class MainWindowInstance Extends Window
 	Field _helpTree:HelpTreeView
 	Field _helpSwitcher:ToolButtonExt
 	
-	'Field _ircTabView:TabView
 	Field _docsTabView:TabViewExt
 	Field _consolesTabView2:TabView
 	Field _browsersTabView2:TabView
-	
-	Field _ircNotifyIcon:Int
-	Field _ircIconBlink:Int
 	
 	Field _forceStop:Action
 
@@ -1760,6 +1707,7 @@ Class MainWindowInstance Extends Window
 	Field _editMenu:MenuExt
 	Field _findMenu:MenuExt
 	Field _gotoMenu:MenuExt
+	Field _viewMenu:MenuExt
 	Field _buildMenu:MenuExt
 	Field _windowMenu:MenuExt
 	Field _helpMenu:MenuExt
@@ -2033,6 +1981,7 @@ Class DraggableTabs
 	Method AddTab( name:String,view:View )
 		
 		tabs[name]=TabViewExt.CreateDraggableTab( name,view,_docksArray )
+		tabs[name].Undockable=True
 	End
 	
 	Method GetDockSize:String( dock:TabViewExt )
