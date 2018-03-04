@@ -18,6 +18,7 @@ Discuss on [forum page](http://monkeycoder.co.nz/forums/topic/ted2go-fork/).
 Support me if you like this project:
 * [PayPal](https://paypal.me/engor)
 * Payed downloading [from itch.io](https://nerobot.itch.io/ted2go)
+* Become a patron [on Patreon.com](https://www.patreon.com/nerobot)
 
 ## Notes for contributors
 Please, take a look at code style. It based on original Ted2.
