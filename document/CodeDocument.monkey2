@@ -174,10 +174,10 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		_doc.HideHint_()
 		
-		Local alt:=(event.Modifiers & Modifier.Alt)
-		Local ctrl:=(event.Modifiers & Modifier.Control)
-		Local shift:=(event.Modifiers & Modifier.Shift)
-		Local menu:=(event.Modifiers & Modifier.Menu)
+		Local alt:=(event.Modifiers & Modifier.Alt)<>0
+		Local ctrl:=(event.Modifiers & Modifier.Control)<>0
+		Local shift:=(event.Modifiers & Modifier.Shift)<>0
+		Local menu:=(event.Modifiers & Modifier.Menu)<>0
 		
 		'ctrl+space - show autocomplete list
 		Select event.Type
