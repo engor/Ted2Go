@@ -30,9 +30,10 @@
 #Import "action/BuildActions"
 #Import "action/HelpActions"
 #Import "action/FindActions"
-#Import "action/ViewActions"
+#Import "action/GotoActions"
 #Import "action/WindowActions"
 #Import "action/TabActions"
+#Import "action/FoldingActions"
 
 #Import "dialog/FindDialog"
 #Import "dialog/PrefsDialog"
@@ -138,7 +139,7 @@ Using sdl2..
 
 Const MONKEY2_DOMAIN:="http://monkeycoder.co.nz"
 
-Global AppTitle:="Ted2Go v2.9"
+Global AppTitle:="Ted2Go v2.9.1a"
 
 
 Function Main()

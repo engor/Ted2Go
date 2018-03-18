@@ -60,9 +60,51 @@ End
 
 
 Function StripGenericType:String( ident:String )
+	
 	Local i:=ident.Find("<")
 	If i > 0 Return ident.Slice( 0,i )
 	Return ident
+End
+
+
+Function AddItems( items:Stack<CodeItem>,target:Stack<CodeItem>,checkUnique:Bool )
+
+	If Not items Return
+
+	If checkUnique' need to add unique
+		For Local i:=Eachin items
+
+			Local s:=i.Text
+			Local exists:=False
+			For Local ii:=Eachin target
+				If ii.Text = s
+					exists=True
+					Exit
+				Endif
+			End
+			If Not exists
+				target.Add( i )
+			Endif
+		Next
+	Else
+		target.AddAll( items )
+	Endif
+End
+
+
+Function ExtractExtensionItems( extMap:StringMap<Stack<CodeItem>>,item:CodeItem,target:Stack<CodeItem> )
+
+	If extMap.Empty Return
+
+	Local type:=item.Type.ident
+	Local list:=extMap[type]
+	If Not list
+		type=item.Ident
+		list=extMap[type]
+	Endif
+	If list
+		AddItems( list,target,True )
+	Endif
 End
 
 

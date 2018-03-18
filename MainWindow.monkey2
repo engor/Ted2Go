@@ -232,7 +232,7 @@ Class MainWindowInstance Extends Window
 		_editActions=New EditActions( _docsManager )
 		_findActions=New FindActions( _docsManager,_projectView,_findConsole )
 		_helpActions=New HelpActions
-		_viewActions=New ViewActions( _docsManager )
+		_gotoActions=New GotoActions( _docsManager )
 		_tabActions=New TabActions( _tabsWrap.AllDocks )
 		
 		_tabMenu=New Menu
@@ -321,8 +321,8 @@ Class MainWindowInstance Extends Window
 		_editMenu.AddSubMenu( subText )
 		' Edit -- Comment
 		Local subComment:=New MenuExt( "Comment" )
-		subComment.AddAction( _viewActions.comment )
-		subComment.AddAction( _viewActions.uncomment )
+		subComment.AddAction( _editActions.comment )
+		subComment.AddAction( _editActions.uncomment )
 		_editMenu.AddSubMenu( subComment )
 		' Edit -- Convert case
 		Local subCase:=New MenuExt( "Convert case" )
@@ -348,16 +348,31 @@ Class MainWindowInstance Extends Window
 		'Goto menu
 		'
 		_gotoMenu=New MenuExt( "Goto" )
-		_gotoMenu.AddAction( _viewActions.gotoLine )
-		_gotoMenu.AddAction( _viewActions.gotoDeclaration )
+		_gotoMenu.AddAction( _gotoActions.gotoLine )
+		_gotoMenu.AddAction( _gotoActions.gotoDeclaration )
 		_gotoMenu.AddSeparator()
-		_gotoMenu.AddAction( _viewActions.goBack )
-		_gotoMenu.AddAction( _viewActions.goForward )
+		_gotoMenu.AddAction( _gotoActions.goBack )
+		_gotoMenu.AddAction( _gotoActions.goForward )
 		
 		'View menu
 		'
 		_viewMenu=New MenuExt( "View" )
-		TabActions.CreateMenu( _viewMenu )
+		Local m:=New MenuExt( "Docks" )
+		TabActions.CreateMenu( m )
+		_viewMenu.AddSubMenu( m )
+		_viewMenu.AddSeparator()
+		m=New MenuExt( "Folding" )
+		Local foldActions:=New FoldingActions
+		m.AddAction( foldActions.foldCurrent )
+		m.AddAction( foldActions.unfoldCurrent )
+		m.AddSeparator()
+		m.AddAction( foldActions.foldScope )
+		m.AddAction( foldActions.unfoldScope )
+		m.AddSeparator()
+		m.AddAction( foldActions.foldAll )
+		m.AddAction( foldActions.unfoldAll )
+		_viewMenu.AddSubMenu( m )
+		
 		'Build menu
 		'
 		_forceStop=New Action( "Force Stop" )
@@ -891,15 +906,15 @@ Class MainWindowInstance Extends Window
 		Local cutTitle:=GetActionTextWithShortcut( _editActions.cut )
 		Local copyTitle:=GetActionTextWithShortcut( _editActions.copy )
 		Local pasteTitle:=GetActionTextWithShortcut( _editActions.paste )
-		Local goBackTitle:=GetActionTextWithShortcut( _viewActions.goBack )
-		Local goForwTitle:=GetActionTextWithShortcut( _viewActions.goForward )
+		Local goBackTitle:=GetActionTextWithShortcut( _gotoActions.goBack )
+		Local goForwTitle:=GetActionTextWithShortcut( _gotoActions.goForward )
 		
 		_toolBar=New ToolBarExt
 		_toolBar.Style=GetStyle( "MainToolBar" )
 		_toolBar.MaxSize=New Vec2i( 10000,40 )
 		
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/back.png" ),_viewActions.goBack.Triggered,goBackTitle )
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/forward.png" ),_viewActions.goForward.Triggered,goForwTitle )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/back.png" ),_gotoActions.goBack.Triggered,goBackTitle )
+		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/forward.png" ),_gotoActions.goForward.Triggered,goForwTitle )
 		_toolBar.AddSeparator()
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/new_file.png" ),_fileActions.new_.Triggered,newTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_file.png" ),_fileActions.open.Triggered,openTitle )
@@ -1099,14 +1114,14 @@ Class MainWindowInstance Extends Window
 		
 		If Not _editorMenu
 			_editorMenu=New MenuExt
-			_editorMenu.AddAction( _viewActions.gotoDeclaration )
+			_editorMenu.AddAction( _gotoActions.gotoDeclaration )
 			_editorMenu.AddSeparator()
 			_editorMenu.AddAction( _editActions.cut )
 			_editorMenu.AddAction( _editActions.copy )
 			_editorMenu.AddAction( _editActions.paste )
 			_editorMenu.AddSeparator()
-			_editorMenu.AddAction( _viewActions.comment )
-			_editorMenu.AddAction( _viewActions.uncomment )
+			_editorMenu.AddAction( _editActions.comment )
+			_editorMenu.AddAction( _editActions.uncomment )
 		Endif
 		
 		_editorMenu.Open()
@@ -1274,12 +1289,12 @@ Class MainWindowInstance Extends Window
 	
 	Method GetActionComment:Action()
 	
-		Return _viewActions.comment
+		Return _editActions.comment
 	End
 	
 	Method GetActionUncomment:Action()
 	
-		Return _viewActions.uncomment
+		Return _editActions.uncomment
 	End
 	
 
@@ -1678,7 +1693,7 @@ Class MainWindowInstance Extends Window
 	Field _findActions:FindActions
 	Field _buildActions:BuildActions
 	Field _helpActions:HelpActions
-	Field _viewActions:ViewActions
+	Field _gotoActions:GotoActions
 	Field _tabActions:TabActions
 	
 	Field _buildConsole:ConsoleExt

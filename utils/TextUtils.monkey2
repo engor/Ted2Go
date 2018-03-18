@@ -14,6 +14,11 @@ Class TextUtils Final
 		Return _spacesForTab
 	End
 	
+	Function GetIndentStr:String()
+		
+		Return Prefs.EditorUseSpacesAsTabs ? GetSpacesForTabEquivalent() Else "~t"
+	End
+	
 	Function GetPosInLineCheckingTabSize:Int( line:String,posInLine:Int,tabSize:Int )
 	
 		Local pos:=0

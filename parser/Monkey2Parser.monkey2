@@ -794,7 +794,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	End
 	
 	Method AddExtensionItem( parent:CodeItem,item:CodeItem )
-	
+		
 		Local key:=parent.Ident
 		Local list:=ExtraItemsMap[key]
 		If Not list
@@ -813,7 +813,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Method RemoveExtensions( filePath:String )
 		
-		For Local list:=Eachin ExtraItemsMap.Values.All()
+		For Local list:=Eachin ExtraItemsMap.Values
 			Local it:=list.All()
 			While Not it.AtEnd
 				Local i:=it.Current
@@ -827,18 +827,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 	End
 	
 	Method ExtractExtensionItems( item:CodeItem,target:Stack<CodeItem> )
-	
-		If ExtraItemsMap.Empty Return
 		
-		Local type:=item.Type.ident
-		Local list:=ExtraItemsMap[type]
-		If Not list
-			type=item.Ident
-			list=ExtraItemsMap[type]
-		Endif
-		If list
-			AddItems( list,target,True )
-		Endif
+		' use global function not a method
+		ted2go.ExtractExtensionItems( _extensions,item,target )
 	End
 	
 	Method StartParsing:String( pathOnDisk:String )
@@ -1144,30 +1135,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Endif
 		Next
 		Return False
-	End
-	
-	Method AddItems( items:Stack<CodeItem>,target:Stack<CodeItem>,checkUnique:Bool )
-		
-		If Not items Return
-		
-		If checkUnique' need to add unique
-			For Local i:=Eachin items
-		
-				Local s:=i.Text
-				Local exists:=False
-				For Local ii:=Eachin target
-					If ii.Text = s
-						exists=True
-						Exit
-					Endif
-				End
-				If Not exists
-					target.Add( i )
-				Endif
-			Next
-		Else
-			target.AddAll( items )
-		Endif
 	End
 	
 	Method GetAllItems( item:CodeItem,target:Stack<CodeItem>,isSuper:Bool=False )
