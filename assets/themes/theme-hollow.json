@@ -311,7 +311,6 @@
 		"MenuButton":{
 			"extends":"Label",
 			"padding":[8,3],
-			"textColor":"text-default",
 			"states":{
 				"hover":{
 					"textColor":"text-highlight",
