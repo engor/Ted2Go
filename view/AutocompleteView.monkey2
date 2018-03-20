@@ -527,11 +527,13 @@ Class AutocompleteDialog Extends NoTitleDialog
 		Next
 		'preprocessor
 		'need to load it like keywords
-		Local s:="#If ,#Rem,#End,#Endif,#Else,#Else If ,#Import ,#Reflect ,monkeydoc,__TARGET__,__MOBILE_TARGET__,__DESKTOP_TARGET__,__WEB_TARGET__,__HOSTOS__,__ARCH__,__DEBUG__,__RELEASE__,__CONFIG__,__MAKEDOCS__"
-		Local arr:=s.Split( "," )
-		For Local i:=Eachin arr
-			list.Add( New ListViewItem( i ) )
-		Next
+		Local s:=GetPreprocessorDirectives( fileType )
+		If s
+			Local arr:=s.Split( "," )
+			For Local i:=Eachin arr
+				list.Add( New ListViewItem( i ) )
+			Next
+		Endif
 		_keywords[fileType]=list
 	End
 	
@@ -554,6 +556,18 @@ Class AutocompleteDialog Extends NoTitleDialog
 	
 	Method UpdateParsers( fileType:String )
 		_parsers[fileType]=ParsersManager.Get( fileType )
+	End
+	
+	Function GetPreprocessorDirectives:String( fileType: String )
+		
+		Select fileType
+			Case ".monkey2"
+				Return "#If ,#Rem,#End,#Endif,#Else,#Else If ,#Import ,#Reflect ,monkeydoc,__TARGET__,__MOBILE_TARGET__,__DESKTOP_TARGET__,__WEB_TARGET__,__HOSTOS__,__ARCH__,__DEBUG__,__RELEASE__,__CONFIG__,__MAKEDOCS__"
+			Case ".cpp",".h",".hpp",".c"
+				Return "#if ,#end,#endif,#else,#elif ,#define ,#undef ,#ifdef ,#ifndef "
+		End
+		
+		Return ""
 	End
 	
 End
