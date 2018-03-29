@@ -41,20 +41,12 @@ Class TreeViewExt Extends TreeView
 		
 		Super.NodeExpanded+=Lambda( node:Node )
 			
-			_expandStateChanged=True
-			
-			_expander.Store( node )
-			OnSelect( node )
-			NodeExpanded( node )
+			OnExpanded( node,True )
 		End
 		
 		Super.NodeCollapsed+=Lambda( node:Node )
 			
-			_expandStateChanged=True
-			
-			_expander.Store( node )
-			OnSelect( node )
-			NodeCollapsed( node )
+			OnCollapsed( node,True )
 		End
 		
 		_selColor=App.Theme.GetColor( "panel" )
@@ -235,6 +227,24 @@ Class TreeViewExt Extends TreeView
 	Field _doubleClicked:Bool
 	
 	Field NodeClicked2:Void( node:Node )
+	
+	Method OnCollapsed( node:Node,sel:Bool )
+	
+		_expandStateChanged=True
+	
+		_expander.Store( node )
+		If sel Then OnSelect( node )
+		NodeCollapsed( node )
+	End
+	
+	Method OnExpanded( node:Node,sel:Bool )
+	
+		_expandStateChanged=True
+	
+		_expander.Store( node )
+		If sel Then OnSelect( node )
+		NodeExpanded( node )
+	End
 	
 	Method TrySwitchExpandingState:Bool( node:TreeView.Node )
 		

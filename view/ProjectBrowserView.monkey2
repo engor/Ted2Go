@@ -120,11 +120,47 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 	Method OnDragStarted()
 		
 		_draggingState=True
+		_parentScrollView=Self.FindView<ScrollView>()
+		
+		' timer for dragging stuff: scroll & expand
+		'
+		If _draggingAutoscrollTimer Then _draggingAutoscrollTimer.Cancel()
+		_draggingAutoscrollTimer=New Timer( 15,Lambda()
+			
+			If _draggingAutoscrollValue
+				
+				' autoscroll
+				'
+				Local sc:=_parentScrollView.Scroll
+				sc.y+=_draggingAutoscrollValue
+				_parentScrollView.Scroll=sc
+			
+			Else
+				
+				' autoexpand
+				'
+				Local point:=MainWindow.TransformPointToView( App.MouseLocation,Self )
+				Local node:=FindNodeAtPoint( point )
+				If node And Not node.Expanded And node.Children
+					If node<>_draggingNodeToExpand
+						_draggingNodeToExpand=node
+						_draggingExpandCounter=0
+					Endif
+					_draggingExpandCounter+=1
+					If _draggingExpandCounter>=15
+						node.Expanded=True
+						OnNodeExpanded( node )
+					Endif
+				Endif
+			Endif
+			
+		End )
 	End
 	
 	Method OnDragEnded()
 		
 		_draggingState=False
+		If _draggingAutoscrollTimer Then _draggingAutoscrollTimer.Cancel()
 	End
 	
 	Method OnFileDropped:Bool( path:String )
@@ -332,6 +368,11 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 	Field _draggableView:Button
 	Field _draggingState:Bool
 	Field _draggingText:String
+	Field _draggingAutoscrollValue:=0
+	Field _draggingAutoscrollTimer:Timer
+	Field _parentScrollView:ScrollView
+	Field _draggingNodeToExpand:TreeView.Node
+	Field _draggingExpandCounter:=0
 	
 	Global _listener:DraggableProjTreeListener
 	
@@ -369,6 +410,24 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		
 		If _draggingState
 			_draggableView.Text=(Keyboard.Modifiers & Modifier.Control = 0) ? _draggingText Else _draggingText+" (copy)"
+			
+			' autoscrolling area in dragging state
+			'
+			Local prnt:=_parentScrollView
+			If Not prnt Return
+			
+			Local y:=MainWindow.TransformPointToView( App.MouseLocation,prnt ).y
+			Local h:=prnt.Frame.Height
+			Local dy:=35*App.Theme.Scale.x
+			Local val:=20*App.Theme.Scale.x
+			
+			If y<dy
+				_draggingAutoscrollValue=-val
+			Elseif y>h-dy
+				_draggingAutoscrollValue=val
+			Else
+				_draggingAutoscrollValue=0
+			Endif
 		Endif
 	End
 	
@@ -671,6 +730,25 @@ Class DraggableProjTreeListener Extends DraggableViewListener<ProjectBrowserView
 	Method GetHolder:ProjectBrowserView( view:View ) Override
 	
 		Return Cast<ProjectBrowserView>( view )
+	End
+	
+End
+
+
+Class View Extension
+	
+	#Rem monkeydoc Return this view or nearest parent view with a given type of T.
+	#End
+	Method FindView<T>:T( checkSelf:Bool=False ) Where T Extends View
+		
+		Local view:=checkSelf ? Self Else Self.Parent
+		While view
+			Local res:=Cast<T>( view )
+			If res Return res
+			view=view.Parent
+		Wend
+		
+		Return null
 	End
 	
 End

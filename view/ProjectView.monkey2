@@ -20,8 +20,6 @@ Class ProjectView Extends ScrollView
 		
 		ContentView=_docker
 		
-		_docker.ContentView=New TreeViewExt
-		
 		openProject=New Action( "Open project" )
 		openProject.HotKey=Key.O
 		openProject.HotKeyModifiers=Modifier.Menu|Modifier.Shift
