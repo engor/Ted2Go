@@ -2,7 +2,7 @@
 Namespace ted2go
 
 
-Class ProjectView Extends ScrollView
+Class ProjectView Extends DockingView
 
 	Field openProject:Action
 	
@@ -133,19 +133,6 @@ Class ProjectView Extends ScrollView
 	
 	
 	Protected
-	
-	Method OnMouseEvent( event:MouseEvent ) Override
-	
-		Select event.Type
-		Case EventType.MouseWheel ' little faster
-			
-			Scroll-=New Vec2i( 0,ContentView.RenderStyle.Font.Height*event.Wheel.Y*3 )
-			Return
-	
-		End
-	
-		Super.OnMouseEvent( event )
-	End
 	
 	
 	Private
@@ -335,7 +322,7 @@ Class ProjectView Extends ScrollView
 		Local browser:=New ProjectBrowserView()
 		browser.SingleClickExpanding=Prefs.MainProjectSingleClickExpanding
 		_projBrowser=browser
-		_docker.AddView( browser,"top" )
+		_docker.ContentView=browser
 		
 		browser.RequestedDelete+=Lambda( node:ProjectBrowserView.Node )
 		

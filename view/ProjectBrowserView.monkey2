@@ -41,8 +41,9 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		
 		New Fiber( Lambda()
 			
+			Local point:=eventLocation-Scroll
 			Local node:=Cast<Node>( item )
-			Local node2:=FindNodeAtPoint( eventLocation )
+			Local node2:=FindNodeAtPoint( point )
 			If Not node2 Return
 			
 			Local destNode:=Cast<Node>( node2 )
@@ -120,7 +121,6 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 	Method OnDragStarted()
 		
 		_draggingState=True
-		_parentScrollView=Self.FindView<ScrollView>()
 		
 		' timer for dragging stuff: scroll & expand
 		'
@@ -131,9 +131,9 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 				
 				' autoscroll
 				'
-				Local sc:=_parentScrollView.Scroll
+				Local sc:=Scroll
 				sc.y+=_draggingAutoscrollValue
-				_parentScrollView.Scroll=sc
+				Scroll=sc
 			
 			Else
 				
@@ -370,7 +370,6 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 	Field _draggingText:String
 	Field _draggingAutoscrollValue:=0
 	Field _draggingAutoscrollTimer:Timer
-	Field _parentScrollView:ScrollView
 	Field _draggingNodeToExpand:TreeView.Node
 	Field _draggingExpandCounter:=0
 	
@@ -402,6 +401,8 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		Local par:=IsProjectNode( node ) ? node Else node.Parent
 		OnNodeExpanded( par ) 'update parent folder
 		
+		MainWindow.UpdateWindow( False )
+		
 		SelectByPathEnds( path )
 		
 	End
@@ -413,11 +414,8 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 			
 			' autoscrolling area in dragging state
 			'
-			Local prnt:=_parentScrollView
-			If Not prnt Return
-			
-			Local y:=MainWindow.TransformPointToView( App.MouseLocation,prnt ).y
-			Local h:=prnt.Frame.Height
+			Local y:=MainWindow.TransformPointToView( App.MouseLocation,Self ).y
+			Local h:=Frame.Height
 			Local dy:=35*App.Theme.Scale.x
 			Local val:=20*App.Theme.Scale.x
 			
@@ -724,7 +722,12 @@ Class DraggableProjTreeListener Extends DraggableViewListener<ProjectBrowserView
 		
 		Local projTree:=FindViewInHierarchy<ProjectBrowserView>( eventView )
 		
-		Return Cast<ProjectBrowserView.Node>( projTree?.FindNodeAtPoint( eventLocation ) )
+		If projTree
+			Local point:=eventLocation-projTree.Scroll
+			Return Cast<ProjectBrowserView.Node>( projTree?.FindNodeAtPoint( point ) )
+		Endif
+		
+		Return Null
 	End
 	
 	Method GetHolder:ProjectBrowserView( view:View ) Override

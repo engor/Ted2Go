@@ -92,28 +92,30 @@ Class TreeViewExt Extends TreeView
 	
 		Return FindSubNode( RootNode,
 						recursive,
-						Lambda:Bool( n:TreeView.Node )
-							Return n.Text=text
-						End )
+						Lambda:Bool( n:TreeView.Node,param:String )
+							Return n.Text=param
+						End,
+						text )
 	End
 	
 	Method FindSubNode:TreeView.Node( text:String,whereNode:TreeView.Node,recursive:Bool=False )
 		
 		Return FindSubNode( whereNode,
 						recursive,
-						Lambda:Bool( n:TreeView.Node )
-							Return n.Text=text
-						End )
+						Lambda:Bool( n:TreeView.Node,param:String )
+							Return n.Text=param
+						End,
+						text )
 	End
 	
-	Method FindSubNode:TreeView.Node( whereNode:TreeView.Node,recursive:Bool,findCondition:Bool(n:TreeView.Node) )
+	Method FindSubNode:TreeView.Node( whereNode:TreeView.Node,recursive:Bool,findCondition:Bool(TreeView.Node,String),findParam:String )
 	
-		If findCondition( whereNode ) Return whereNode
+		If findCondition( whereNode,findParam ) Return whereNode
 	
 		For Local i:=Eachin whereNode.Children
-			If findCondition( i ) Return i
+			If findCondition( i,findParam ) Return i
 			If recursive And i.Children
-				Local n:=FindSubNode( i,recursive,findCondition )
+				Local n:=FindSubNode( i,recursive,findCondition,findParam )
 				If n Return n
 			Endif
 		Next
@@ -131,9 +133,10 @@ Class TreeViewExt Extends TreeView
 		
 		Local n:=FindSubNode( RootNode,
 						True,
-						Lambda:Bool( n:TreeView.Node )
-							Return GetNodePath( n )=path
-						End )
+						Lambda:Bool( n:TreeView.Node,param:String )
+							Return GetNodePath( n )=param
+						End,
+						path )
 		
 		If n Then Selected=n
 	End
@@ -142,9 +145,10 @@ Class TreeViewExt Extends TreeView
 	
 		Local n:=FindSubNode( RootNode,
 						True,
-						Lambda:Bool( n:TreeView.Node )
-							Return GetNodePath( n ).EndsWith( pathEnding )
-						End )
+						Lambda:Bool( n:TreeView.Node,param:String )
+							Return GetNodePath( n ).EndsWith( param )
+						End,
+						pathEnding )
 	
 		If n Then Selected=n
 	End
@@ -278,8 +282,7 @@ Class TreeViewExt Extends TreeView
 			n=n.Parent
 		Wend
 	
-		' scroll Y only 
-		Local sx:=Scroll.x
+		' scroll Y only
 		Local scroll:=Scroll
 		Super.EnsureVisible( node.Rect )
 		scroll.Y=Scroll.y
