@@ -831,6 +831,10 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		
 		_lineColor=App.Theme.GetColor( "textview-cursor-line" )
 		
+	End
+	
+	Method OnValidateStyle() Override
+		
 		Local newFont:Font
 		Local fontPath:=Prefs.GetCustomFontPath()
 		If fontPath
@@ -840,6 +844,9 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		If Not newFont Then newFont=App.Theme.GetStyle( Style.Name ).Font
 		
 		RenderStyle.Font=newFont
+		
+		Super.OnValidateStyle()
+		
 	End
 	
 	Method InsertLiveTemplate:Bool( ident:String,templ:String=Null )
