@@ -58,6 +58,11 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					
 					text=_doc.PrepareForInsert( ident,text,Not bySpace,LineTextAtCursor,PosInLineAtCursor,item )
 					Local i1:=Cursor-AutoComplete.LastIdentPart.Length
+					
+					If text.StartsWith( "#" ) And i1>0 And Text[i1-1]=Chars.GRID
+						i1-=1
+					Endif
+					
 					Local i2:=Cursor
 					If result.byTab
 						Local i:=Cursor
