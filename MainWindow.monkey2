@@ -1267,6 +1267,11 @@ Class MainWindowInstance Extends Window
 		UpdateWindow( True )
 	End
 	
+	Method OpenProject( path:String )
+		
+		_projectView.OpenProject( path )
+	End
+	
 	Method GetActionFind:Action()
 	
 		Return _findActions.find

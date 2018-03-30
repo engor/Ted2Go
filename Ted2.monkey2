@@ -205,6 +205,8 @@ Function Main()
 			arg=arg.Replace( "\","/" )
 			If GetFileType( arg ) = FileType.File
 				MainWindow.OpenDocument( arg,True )
+			Elseif GetFileType( arg ) = FileType.Directory
+				MainWindow.OpenProject( arg )
 			Endif
 		Next
 	End
