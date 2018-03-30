@@ -28,6 +28,11 @@ Class ProjectView Extends DockingView
 		InitProjBrowser()
 	End
 	
+	Property SelectedItem:ProjectBrowserView.Node()
+	
+		Return Cast<ProjectBrowserView.Node>( _projBrowser.Selected )
+	End
+	
 	Property OpenProjects:String[]()
 	
 		Return _projects.ToArray()
