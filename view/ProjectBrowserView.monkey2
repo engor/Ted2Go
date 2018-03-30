@@ -394,7 +394,7 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 	
 	Method OnDraggedInto( node:Node,name:String )
 		
-		Local path:=node.Text+"\"+name
+		Local path:=GetNodePath( node )+"\"+name
 		
 		node.Expanded=True
 		_expander.Store( node )
@@ -403,7 +403,7 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		
 		MainWindow.UpdateWindow( False )
 		
-		SelectByPathEnds( path )
+		SelectByPath( path )
 		
 	End
 	

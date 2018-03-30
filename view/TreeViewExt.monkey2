@@ -92,30 +92,28 @@ Class TreeViewExt Extends TreeView
 	
 		Return FindSubNode( RootNode,
 						recursive,
-						Lambda:Bool( n:TreeView.Node,param:String )
-							Return n.Text=param
-						End,
-						text )
+						Lambda:Bool( n:TreeView.Node )
+							Return n.Text=text
+						End )
 	End
 	
 	Method FindSubNode:TreeView.Node( text:String,whereNode:TreeView.Node,recursive:Bool=False )
 		
 		Return FindSubNode( whereNode,
 						recursive,
-						Lambda:Bool( n:TreeView.Node,param:String )
-							Return n.Text=param
-						End,
-						text )
+						Lambda:Bool( n:TreeView.Node )
+							Return n.Text=text
+						End )
 	End
 	
-	Method FindSubNode:TreeView.Node( whereNode:TreeView.Node,recursive:Bool,findCondition:Bool(TreeView.Node,String),findParam:String )
+	Method FindSubNode:TreeView.Node( whereNode:TreeView.Node,recursive:Bool,findCondition:Bool(TreeView.Node) )
 	
-		If findCondition( whereNode,findParam ) Return whereNode
+		If findCondition( whereNode ) Return whereNode
 	
 		For Local i:=Eachin whereNode.Children
-			If findCondition( i,findParam ) Return i
+			If findCondition( i ) Return i
 			If recursive And i.Children
-				Local n:=FindSubNode( i,recursive,findCondition,findParam )
+				Local n:=FindSubNode( i,recursive,findCondition )
 				If n Return n
 			Endif
 		Next
@@ -133,22 +131,20 @@ Class TreeViewExt Extends TreeView
 		
 		Local n:=FindSubNode( RootNode,
 						True,
-						Lambda:Bool( n:TreeView.Node,param:String )
-							Return GetNodePath( n )=param
-						End,
-						path )
+						Lambda:Bool( n:TreeView.Node )
+							Return GetNodePath( n )=path
+						End )
 		
 		If n Then Selected=n
 	End
 	
 	Method SelectByPathEnds( pathEnding:String )
-	
+		
 		Local n:=FindSubNode( RootNode,
 						True,
-						Lambda:Bool( n:TreeView.Node,param:String )
-							Return GetNodePath( n ).EndsWith( param )
-						End,
-						pathEnding )
+						Lambda:Bool( n:TreeView.Node )
+							Return GetNodePath( n ).EndsWith( pathEnding )
+						End )
 	
 		If n Then Selected=n
 	End
