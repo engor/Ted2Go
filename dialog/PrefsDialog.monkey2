@@ -501,7 +501,6 @@ Class PrefsDialog Extends DialogExt
 			Return
 		Endif
 		
-		DebugStop()
 		LiveTemplates[TemplateSelLang].Remove( TemplateSelName )
 		_treeView.RemoveNode( _treeView.Selected )
 		_codeView.Text=""
