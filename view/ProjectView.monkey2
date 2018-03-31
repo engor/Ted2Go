@@ -591,6 +591,18 @@ Class ProjectView Extends DockingView
 			End
 			pasteAction.Enabled=(_cutPath Or _copyPath) And isFolder
 			
+			' collapse all
+			'
+			If isFolder
+				
+				menu.AddSeparator()
+				
+				menu.AddAction( "Collapse all" ).Triggered=Lambda()
+				
+					_projBrowser.CollapseAll( node )
+				End
+			Endif
+				
 			menu.Open()
 		End
 		

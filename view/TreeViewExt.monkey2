@@ -213,21 +213,6 @@ Class TreeViewExt Extends TreeView
 		
 	End
 	
-'	Method PrintExpanded()
-'		
-'		_expander.PrintExpanded()
-'	End
-	
-	Private
-	
-	Field _sel:TreeView.Node
-	Field _selColor:Color
-	Field _singleClickExpanding:Bool
-	Field _expandStateChanged:Bool
-	Field _doubleClicked:Bool
-	
-	Field NodeClicked2:Void( node:Node )
-	
 	Method OnCollapsed( node:Node,sel:Bool )
 	
 		_expandStateChanged=True
@@ -245,6 +230,21 @@ Class TreeViewExt Extends TreeView
 		If sel Then OnSelect( node )
 		NodeExpanded( node )
 	End
+	
+'	Method PrintExpanded()
+'		
+'		_expander.PrintExpanded()
+'	End
+	
+	Private
+	
+	Field _sel:TreeView.Node
+	Field _selColor:Color
+	Field _singleClickExpanding:Bool
+	Field _expandStateChanged:Bool
+	Field _doubleClicked:Bool
+	
+	Field NodeClicked2:Void( node:Node )
 	
 	Method TrySwitchExpandingState:Bool( node:TreeView.Node )
 		

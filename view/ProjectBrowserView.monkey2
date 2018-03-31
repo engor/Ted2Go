@@ -261,6 +261,18 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		If node Then Refresh( node )
 	End
 	
+	Method CollapseAll( node:TreeView.Node )
+		
+		For Local child:=Eachin node.Children
+			CollapseAll( child )
+		Next
+		
+		If node.Expanded
+			node.Expanded=False
+			OnCollapsed( node,False )
+		Endif
+	End
+	
 	
 	Protected
 	
