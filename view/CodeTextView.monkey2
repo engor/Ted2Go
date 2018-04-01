@@ -29,6 +29,7 @@ Class CodeTextView Extends TextView
 		Document.TextChanged += TextChanged
 		
 		TabStop=Prefs.EditorTabSize
+		LineSpacing=Prefs.EditorLineSpacing
 		
 		Document.LinesModified+=Lambda( first:Int,removed:Int,inserted:Int )
 			

@@ -116,7 +116,12 @@ Class CodeDocumentView Extends Ted2CodeTextView
 		Endif
 		If _codeMap Then _codeMap.Visible=visible
 		
+		'line spacing
+		LineSpacing=Prefs.EditorLineSpacing
+		
 		_doc.ArrangeElements()
+		
+		InvalidateStyle()
 	End
 	
 	

@@ -481,6 +481,20 @@ Class TextView Extends ScrollableView
 		Return _charh
 	End
 	
+	#rem monkeydoc Line spacing koefficien. Default is 1.0.
+	#end
+	Property LineSpacing:Float()
+	
+		Return _lineSpacing
+		
+	Setter( value:Float )
+		
+		If value=_lineSpacing Return
+		
+		_lineSpacing=value
+		InvalidateStyle()
+	End
+	
 	#rem monkeydoc True if undo available.
 	#end
 	Property CanUndo:Bool()
@@ -554,7 +568,7 @@ Class TextView Extends ScrollableView
 		Local w:=_charw
 		If i0<eol And text[i0]>32 w=_font.TextWidth( text.Slice( i0,i0+1 ) )
 		
-		Return New Recti( x0,y0,x0+w,y0+_charh )
+		Return New Recti( x0,y0,x0+w,y0+_charh/_lineSpacing )
 	End
 	
 	#rem monkeydoc Returns the index of the character nearest to a given point.
@@ -948,7 +962,7 @@ Class TextView Extends ScrollableView
 		_font=style.Font
 		
 		_charw=_font.TextWidth( "X" )
-		_charh=_font.Height
+		_charh=_font.Height*_lineSpacing
 		
 		_tabw=_charw*_tabStop
 		
@@ -1554,6 +1568,7 @@ Class TextView Extends ScrollableView
 	Field _charw:Int
 	Field _charh:Int
 	Field _tabw:Int
+	Field _lineSpacing:=1.0
 	
 	Field _wordWrap:Bool=False
 	Field _wrapw:Int=$7fffffff
