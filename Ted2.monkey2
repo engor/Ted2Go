@@ -84,7 +84,6 @@
 #Import "utils/Utils"
 #Import "utils/TextUtils"
 
-#Import "view/IRCView"
 #Import "view/CodeMapView"
 #Import "view/CodeTextView"
 #Import "view/ConsoleViewExt"
@@ -170,7 +169,7 @@ Function Main()
 	
 	'initial theme
 	'
-	If Not jobj.Contains( "theme" ) jobj["theme"]=New JsonString( "theme-warm" )
+	If Not jobj.Contains( "theme" ) jobj["theme"]=New JsonString( "theme-hollow" )
 
 	If Not jobj.Contains( "themeScale" ) jobj["themeScale"]=New JsonNumber( 1 )
 	
