@@ -254,7 +254,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						Endif
 						
 					Else
-						
+					
 						' remove all indent spaces by single press of Backspace
 						If Cursor=Anchor And Prefs.EditorUseSpacesAsTabs
 							
@@ -289,6 +289,18 @@ Class CodeDocumentView Extends Ted2CodeTextView
 							
 						Endif
 						
+						Local line:=CursorLine
+						If Cursor=Anchor And Cursor=Document.StartOfLine( line )
+							
+							Local f:=_folding[line]
+							If f And f.folded
+								_folding.Remove( line )
+								_folding[line-1]=f
+								f.startLine-=1
+								f.endLine-=1
+								f.folded+=10 ' hack
+							Endif
+						Endif
 						
 					Endif
 				
@@ -369,12 +381,22 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Local text:=Document.GetLine( line )
 					Local indent:=GetIndent( text )
 					Local posInLine:=PosInLineAtCursor
+					
 					'fix 'bug' when we delete ~n at the end of line.
 					'in this case GetLine return 2 lines, and if they empty
 					'then we get double indent
 					'need to fix inside mojox
 					
 					Local beforeIndent:=(posInLine<=indent)
+					
+					If beforeIndent
+						Local f:=_folding[line]
+						If f And f.folded
+							_folding.Remove( line )
+							_folding[line+1]=f
+							SetLineVisible( line+1,True )
+						Endif
+					Endif
 					
 					If indent > posInLine Then indent=posInLine
 					
@@ -405,9 +427,9 @@ Class CodeDocumentView Extends Ted2CodeTextView
 							Endif
 						Endif
 					Endif
-			
+					
 					ReplaceText( "~n"+s )
-			
+					
 					Return
 			
 				#If __TARGET__="macos"
@@ -1281,7 +1303,7 @@ Class CodeDocument Extends Ted2Document
 		
 		If Not ident Then ident=_codeView.IdentBeforeCursor()
 		
-		Print "ident: "+ident
+		'Print "ident: "+ident
 		
 		'show
 		Local lineNum:=TextDocument.FindLine( _codeView.Cursor )

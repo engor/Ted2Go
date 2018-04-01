@@ -78,11 +78,6 @@ Class CodeGutterView Extends View
 					canvas.DrawLine( xx+10*k,rect.Top+rect.Height*.5-4*k,xx+10*k,rect.Top+rect.Height*.5-4*k+8*k ) ' vert line to make cross
 				Endif
 				canvas.DrawRectWire( xx+5*k,rect.Top+rect.Height*.5-5*k,10*k,10*k ) ' bounding rect
-'				Local h:=(rect.Height-10)/2.0
-'				If h>0
-'					canvas.Alpha=0.5
-'					canvas.DrawLine( xx+10,rect.Bottom-h,xx+10,rect.Bottom ) ' vert part
-'				Endif]
 				If Not folding.folded
 					If curFolding Then _folded.Add( curFolding )
 					curFolding=folding
@@ -109,9 +104,10 @@ Class CodeGutterView Extends View
 				canvas.Alpha=1
 			Endif
 			
-			' show each 10th
+			' show dots between each 10th
 			'
-			Local ok:= Prefs.EditorShowEvery10LineNumber And ((i+1) Mod 10 <> 0)
+			Local ok:=Prefs.EditorShowEvery10LineNumber And ((i+1) Mod 10 <> 0)
+			ok=ok And Not (folding And folding.folded)
 			If ok And i<>cursorLine And i<>anchorLine
 				canvas.Alpha=0.5
 				canvas.DrawRect( xx-4*k,rect.Top+rect.Height*.5-1*k,2*k,2*k )
@@ -120,7 +116,7 @@ Class CodeGutterView Extends View
 			Endif
 			
 			' show error bubble
-			
+			'
 			If _doc.HasErrors And _doc.HasErrorAt( i )
 				If _errorIcon <> Null
 					canvas.Color=Color.White

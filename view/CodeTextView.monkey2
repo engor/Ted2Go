@@ -35,11 +35,27 @@ Class CodeTextView Extends TextView
 			Local delta:=inserted-removed
 			If delta=0 Return
 			
-			Local prevLine:=Document.FindLine( _storedCursor )
+			'Local prevLine:=Document.FindLine( _storedCursor )
 			
-			'Print "modif line: "+first+", "+delta+", "+prevLine
+			'Print "modif line: "+first+", "+removed+", "+inserted
 			
-			' maybe not optimal way to do that but who'll make it better? :)
+			' line with folding was removed
+			'
+			If removed<>0
+				Local i1:=Min( first,first+removed )
+				Local i2:=Max( first,first+removed )
+				For Local i:=i1 Until i2
+					Local f:=_folding[i]
+					If Not f Continue
+					If f.folded<10
+						_folding.Remove( i )
+					Else
+						f.folded-=10
+						UpdateLineWidth( i ) ' dirty
+					Endif
+				Next
+			Endif
+			
 			
 			Local flag:=False
 			Local indent:=Utils.GetIndent( LineTextAtCursor )
@@ -68,22 +84,14 @@ Class CodeTextView Extends TextView
 				Endif
 				
 				If shiftBlock ' shift down whole block
-					Print "shift"
 					If f.folded
-						UnfoldBlock( line,False )
-						f.folded=2
 						flag=True
 					Endif
 					f.startLine+=delta
 					f.endLine+=delta
 					_foldingTmpMap[line]=f
-					If f.folded=2
-						f.folded=False
-						FoldBlock( f.startLine,False )
-					Endif
 					
 				Elseif expandBlock
-					Print "expand"
 					f.endLine+=delta
 				Endif
 				
@@ -93,10 +101,6 @@ Class CodeTextView Extends TextView
 				Local f:=_foldingTmpMap[line]
 				_folding.Remove( line )
 				_folding[f.startLine]=f
-'				If f.folded=2
-'					f.folded=False
-'					FoldBlock( f.startLine,False )
-'				Endif
 			Next
 			_foldingTmpMap.Clear()
 			
@@ -544,8 +548,6 @@ Class CodeTextView Extends TextView
 			If line=curLine Then moveCursor=True
 		Next
 		
-		_foldedCount+=1
-		
 		If moveCursor
 			Local pos:=Document.StartOfLine( startLine )
 			SelectText( pos,pos )
@@ -580,8 +582,6 @@ Class CodeTextView Extends TextView
 			Endif
 		Next
 		
-		_foldedCount-=1
-	
 		If updateLines
 			OnValidateStyle()
 			RequestRender()
@@ -653,6 +653,8 @@ Class CodeTextView Extends TextView
 	
 	
 	Protected
+	
+	Field _folding:=New IntMap<Folding>
 	
 	Method CheckFormat( event:KeyEvent )
 		
@@ -957,6 +959,7 @@ Class CodeTextView Extends TextView
 		
 		_whitespacesColor=App.Theme.GetColor( "textview-whitespaces" )
 		_extraSelColor=App.Theme.GetColor( "textview-extra-selection" )
+		_commentsColor=App.Theme.GetColor( "textview-color"+Highlighter.COLOR_COMMENT )
 	End
 	
 	Method OnRenderContent( canvas:Canvas,clip:Recti ) Override
@@ -988,7 +991,21 @@ Class CodeTextView Extends TextView
 	Method OnRenderLine( canvas:Canvas,line:Int ) Override
 		
 		Super.OnRenderLine( canvas,line )
-	
+		
+		' show folded lines number
+		'
+		Local folding:=_folding[line]
+		If folding And folding.folded
+			Local r:=LineRect( line )
+			Local tx:=r.Right+20
+			Local ty:=r.Center.y
+			Local a:=canvas.Alpha
+			canvas.Alpha=0.75
+			canvas.Color=_commentsColor
+			canvas.DrawText( "..."+(folding.endLine-folding.startLine)+" line(s)",tx,ty,0,.5 )
+			canvas.Alpha=a
+		Endif
+		
 		' draw whitespaces
 		'
 		If Not _showWhiteSpaces Return
@@ -1030,7 +1047,7 @@ Class CodeTextView Extends TextView
 			right=word.Rect.Right
 			
 		Next
-	
+		
 	End
 	
 	Method OnValidateStyle() Override
@@ -1046,7 +1063,7 @@ Class CodeTextView Extends TextView
 	Private
 	
 	Field _line:Int
-	Field _whitespacesColor:Color
+	Field _whitespacesColor:Color,_commentsColor:Color
 	Field _showWhiteSpaces:Bool
 	Field _tabw:Int,_charw:Int
 	Field _overwriteMode:Bool
@@ -1054,8 +1071,6 @@ Class CodeTextView Extends TextView
 	Field _extraSelColor:Color=Color.DarkGrey
 	Field _storedCursor:Int
 	Field _typing:Bool
-	Field _folding:=New IntMap<Folding>
-	Field _foldedCount:=0
 	Field _foldingTmpMap:=New IntMap<Folding>
 	
 	Method OnCursorMoved()
@@ -1064,6 +1079,7 @@ Class CodeTextView Extends TextView
 		
 		' if cursor is inside of invisible line - unfold area with cursor
 		If Not IsLineVisible( line )
+			'Print "show line: "+line
 			Local c:=Cursor,a:=Anchor
 			UnfoldAtLine( line )
 			SelectText( a,c )
@@ -1141,6 +1157,7 @@ Function RemoveWhitespacedTrailings:String( doc:TextDocument,linesChanged:Int Pt
 		Local start:=doc.StartOfLine( line )
 		Local ends:=doc.EndOfLine( line )
 		Local i:=ends-1
+		If i<0 Continue
 		
 		Local color:=doc.Colors[i]
 		If color=Highlighter.COLOR_STRING Or color=Highlighter.COLOR_COMMENT Continue
