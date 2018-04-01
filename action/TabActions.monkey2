@@ -12,42 +12,42 @@ Class TabActions
 	
 	Function SwitchView( tabName:String )
 		
-			For Local i:=Eachin tabs
-				Local _docks:=i.Tabs
-				For Local _tabb:=Eachin _docks	
-					If _tabb.Text=tabName Then
-						If _tabb.Visible
-							_tabb.Visible=False
-							_tabb.View.Visible=False
-							'make first tab as current
-							For Local firstCurrent:=Eachin _docks
-								If firstCurrent.Visible Then firstCurrent.CurrentHolder.MakeCurrent( firstCurrent.Text ); Exit
-							Next	
-						Else
-							If( _tabb.View )
-								_tabb.Visible=True
-								_tabb.View.Visible=True
-								_tabb.CurrentHolder.MakeCurrent( _tabb.Text )
-							End
+		For Local i:=Eachin tabs
+			Local _docks:=i.Tabs
+			For Local _tabb:=Eachin _docks
+				If _tabb.Text=tabName Then
+					If _tabb.Visible
+						_tabb.Visible=False
+						_tabb.View.Visible=False
+						'make first tab as current
+						For Local firstCurrent:=Eachin _docks
+							If firstCurrent.Visible Then firstCurrent.CurrentHolder.MakeCurrent( firstCurrent.Text ); Exit
+						Next
+					Else
+						If( _tabb.View )
+							_tabb.Visible=True
+							_tabb.View.Visible=True
+							_tabb.CurrentHolder.MakeCurrent( _tabb.Text )
 						End
-						_tabb.CurrentHolder.Visible=_tabb.CurrentHolder.VisibleTabs
 					End
-					
-				Next
+					_tabb.CurrentHolder.Visible=_tabb.CurrentHolder.VisibleTabs
+				End
+				
 			Next
+		Next
 	End
 	
 	Function CreateMenu( view:MenuExt )
 		
 		Local keynr:Int
-		Local tabNames:=New String[]( "Project","Debug","Source","Build","Output","Docs","Find","Chat" )	
+		Local tabNames:=New String[]( "Project","Debug","Source","Build","Output","Docs","Find","Chat" )
 		For Local a:=Eachin tabNames
 			Local key:=Cast<Key>( 49+keynr )
 			Local i:=view.AddAction( a )
 			i.HotKey=key
 			i.HotKeyModifiers=Modifier.Alt
 			i.Triggered=Lambda()
-				SwitchView( a )	
+				SwitchView( a )
 			End
 			keynr+=1
 		Next
@@ -55,7 +55,7 @@ Class TabActions
 		'reset all tabs
 		Local _reset:=view.AddAction( "Reset" )
 		_reset.Triggered=Lambda()
-			Reset()	
+			Reset()
 		End
 	End
 	
@@ -63,7 +63,7 @@ Class TabActions
 		
 		For Local i:=Eachin tabs
 			Local _docks:=i.Tabs
-			For Local _tabb:=Eachin _docks	
+			For Local _tabb:=Eachin _docks
 					If _tabb.View
 						_tabb.Visible=True
 						_tabb.View.Visible=True
@@ -75,4 +75,5 @@ Class TabActions
 		'Undock Reset
 		UndockWindow.RestoreUndock()
 	End
+	
 End

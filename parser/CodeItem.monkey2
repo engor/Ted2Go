@@ -226,6 +226,16 @@ Class CodeItem
 		Return False
 	End
 	
+	Property IsOperator:Bool()
+	
+		Return _kind=CodeItemKind.Operator_
+	End
+	
+	Property IsProperty:Bool()
+	
+		Return _kind=CodeItemKind.Property_
+	End
+	
 	Property IsExtension:Bool()
 		Return _isExtension
 	Setter( value:Bool )

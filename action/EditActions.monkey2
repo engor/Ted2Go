@@ -20,6 +20,9 @@ Class EditActions
 	Field textLowercase:Action
 	Field textUppercase:Action
 	Field textSwapCase:Action
+	'
+	Field comment:Action
+	Field uncomment:Action
 	
 	Method New( docs:DocumentManager )
 	
@@ -116,6 +119,24 @@ Class EditActions
 		
 		textSwapCase=New Action( "Swap case" )
 		textSwapCase.Triggered=OnSwapCase
+		
+		comment=New Action( "Comment block" )
+		comment.Triggered=OnComment
+		#If __TARGET__="macos"
+		comment.HotKey=Key.Backslash
+		#Else
+		comment.HotKey=Key.Apostrophe
+		#Endif
+		comment.HotKeyModifiers=Modifier.Menu
+		
+		uncomment=New Action( "Uncomment block" )
+		uncomment.Triggered=OnUncomment
+		#If __TARGET__="macos"
+		uncomment.HotKey=Key.Backslash
+		#Else
+		uncomment.HotKey=Key.Apostrophe
+		#Endif
+		uncomment.HotKeyModifiers=Modifier.Menu|Modifier.Shift
 		
 	End
 	
@@ -238,6 +259,22 @@ Class EditActions
 			tv.SelectText( cur,anc )
 			tv.Scroll=sc
 		Endif
+	End
+	
+	Method OnComment()
+	
+		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
+		If Not doc Return
+	
+		doc.Comment()
+	End
+	
+	Method OnUncomment()
+	
+		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
+		If Not doc Return
+	
+		doc.Uncomment()
 	End
 	
 End

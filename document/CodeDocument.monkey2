@@ -192,18 +192,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 			Select key
 				
-'				#If __TARGET__="macos"
-'				Case Key.K
-'					If ctrl 
-'						If shift
-'							DeleteLineAtCursor()
-'						Else
-'							DeleteToEnd()
-'						Endif
-'						Return
-'					Endif
-'				#Endif
-				
 				Case Key.D
 					
 					Local ok:=ctrl
@@ -271,7 +259,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						Endif
 						
 					Else
-						
+					
 						' remove all indent spaces by single press of Backspace
 						If Cursor=Anchor And Prefs.EditorUseSpacesAsTabs
 							
@@ -306,13 +294,21 @@ Class CodeDocumentView Extends Ted2CodeTextView
 							
 						Endif
 						
+						Local line:=CursorLine
+						If Cursor=Anchor And Cursor=Document.StartOfLine( line )
+							
+							Local f:=_folding[line]
+							If f And f.folded
+								_folding.Remove( line )
+								_folding[line-1]=f
+								f.startLine-=1
+								f.endLine-=1
+								f.folded+=10 ' hack
+							Endif
+						Endif
 						
 					Endif
 				
-				'Case Key.F11
-				'
-				'	ShowJsonDialog()
-					
 					
 				#If __TARGET__="windows"
 				Case Key.E 'delete whole line
@@ -332,7 +328,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 			
 				Case Key.C
-			
+					
 					If ctrl 'nothing selected - copy whole line
 						OnCopy( Not CanCopy )
 						Return
@@ -340,7 +336,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 			
 				Case Key.Insert 'ctrl+insert - copy, shift+insert - paste
-			
+					
 					If shift
 						SmartPaste()
 					Elseif ctrl
@@ -390,12 +386,22 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Local text:=Document.GetLine( line )
 					Local indent:=GetIndent( text )
 					Local posInLine:=PosInLineAtCursor
+					
 					'fix 'bug' when we delete ~n at the end of line.
 					'in this case GetLine return 2 lines, and if they empty
 					'then we get double indent
 					'need to fix inside mojox
 					
 					Local beforeIndent:=(posInLine<=indent)
+					
+					If beforeIndent
+						Local f:=_folding[line]
+						If f And f.folded
+							_folding.Remove( line )
+							_folding[line+1]=f
+							SetLineVisible( line+1,True )
+						Endif
+					Endif
 					
 					If indent > posInLine Then indent=posInLine
 					
@@ -426,9 +432,9 @@ Class CodeDocumentView Extends Ted2CodeTextView
 							Endif
 						Endif
 					Endif
-			
+					
 					ReplaceText( "~n"+s )
-			
+					
 					Return
 			
 				#If __TARGET__="macos"
@@ -448,7 +454,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 				Case Key.Up '
 			
-					If event.Modifiers & Modifier.Menu
+					If menu
 						If shift 'selection
 							SelectText( 0,Anchor )
 						Else
@@ -459,7 +465,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 				Case Key.Down '
 			
-					If event.Modifiers & Modifier.Menu
+					If menu
 						If shift 'selection
 							SelectText( Anchor,Text.Length )
 						Else
@@ -1147,8 +1153,21 @@ Class CodeDocument Extends Ted2Document
 				Endif
 			Endif
 			
-			result+="~n"+Utils.RepeatStr( "~t",indent+1 )+"~n"
-			result+=Utils.RepeatStr( "~t",indent )+"End"
+			Local indentStr:=TextUtils.GetIndentStr()
+			result+="~n"+Utils.RepeatStr( indentStr,indent+1 )+"~n"
+			result+=Utils.RepeatStr( indentStr,indent )+"End"
+		
+			Return result
+		Endif
+		
+		If ident="monkeydoc"
+			
+			Local indent:=Utils.GetIndent( textLine )
+			Local indentStr:=TextUtils.GetIndentStr()
+			indentStr=Utils.RepeatStr( indentStr,indent )
+			Local result:="#Rem monkeydoc ~n"
+			result+=indentStr+"#End"
+			
 			Return result
 		Endif
 		
@@ -1296,7 +1315,7 @@ Class CodeDocument Extends Ted2Document
 		
 		If Not ident Then ident=_codeView.IdentBeforeCursor()
 		
-		Print "ident: "+ident
+		'Print "ident: "+ident
 		
 		'show
 		Local lineNum:=TextDocument.FindLine( _codeView.Cursor )
@@ -1577,6 +1596,46 @@ Class CodeDocument Extends Ted2Document
 		OnUpdateCurrentScope()
 	End
 	
+	Field _tmpFileItems:=New Stack<CodeItem>
+	Method UpdateFolding()
+		
+		' extract all items in file
+		Local list:=_parser.ItemsMap[Path]
+		If list Then _tmpFileItems.AddAll( list )
+		
+		' extensions are here too
+		For list=Eachin _parser.ExtraItemsMap.Values
+			For Local i:=Eachin list
+				If i.FilePath=Path
+					If Not _tmpFileItems.Contains( i.Parent ) Then _tmpFileItems.Add( i.Parent )
+				Endif
+			Next
+		Next
+		
+		If _tmpFileItems.Empty
+			_codeView.ResetFolding()
+			Return
+		Endif
+		
+		UpdateFolding( _tmpFileItems,Null )
+		
+		_tmpFileItems.Clear()
+		
+	End
+	
+	Method UpdateFolding( items:Stack<CodeItem>,parent:CodeTextView.Folding )
+	
+		For Local i:=Eachin items
+			Local cls:=i.IsLikeClass
+			If cls Or i.IsLikeFunc Or i.IsOperator Or i.IsProperty
+				Local starts:=i.ScopeStartPos.x
+				Local ends:=i.ScopeEndPos.x
+				_codeView.MarkAsFoldable( starts,ends,parent )
+				If cls And i.Children Then UpdateFolding( i.Children,_codeView.GetFolding( starts ) )
+			Endif
+		Next
+	End
+	
 	Method InitParser()
 		
 		_parser=ParsersManager.Get( FileExtension )
@@ -1672,7 +1731,7 @@ Class CodeDocument Extends Ted2Document
 		Endif
 		
 		UpdateCodeTree()
-		
+		UpdateFolding()
 	End
 	
 	Method OnTextChanged()
