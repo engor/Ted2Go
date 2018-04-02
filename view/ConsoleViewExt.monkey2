@@ -114,7 +114,7 @@ Class ConsoleExt Extends TextView
 				Return
 			Endif
 			
-			stdout=_stdout+(stdout.Replace( "~r~n","~n" ).Replace( "~r","~n" ))
+			stdout=_stdout+stdout.Replace( "~r~n","~n" )
 			
 			Local i0:=0
 			Repeat
@@ -376,11 +376,23 @@ Class ConsoleExt Extends TextView
 			Local sc:=Scroll
 			Local maxScroll:=LineRect(Document.NumLines-1).Bottom-VisibleRect.Height
 			Local atBottom:=Scroll.y>=maxScroll And cur=anc
-			AppendText( text )
-			SelectText( Text.Length,Text.Length )
+			
+			If text.StartsWith( "~r" )
+				Local line:=Document.NumLines-1,dl:=0
+				If Document.GetLine( line )=""
+					dl=-1
+				Endif
+				SelectText( Document.StartOfLine( line+dl ),Document.EndOfLine( line ) )
+				ReplaceText( text.Replace( "~r","" ) )
+			Else
+				AppendText( text )
+			Endif
+			
 			If Not atBottom
 				SelectText( anc,cur )
 				Scroll=sc 'restore
+			Else
+				SelectText( Text.Length,Text.Length )
 			Endif
 			
 		Endif
