@@ -314,18 +314,8 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						
 					Endif
 				
-					
-				#If __TARGET__="windows"
-				Case Key.E 'delete whole line
-					If ctrl
-						DeleteLineAtCursor()
-						Return
-					Endif
-				#Endif
-			
-			
 				Case Key.X
-			
+					
 					If ctrl 'nothing selected - cut whole line
 						OnCut( Not CanCopy )
 						Return

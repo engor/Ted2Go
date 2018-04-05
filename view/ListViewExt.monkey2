@@ -43,6 +43,7 @@ End
 Class ListViewExt Extends ScrollableView
 
 	Field OnItemChoosen:Void()
+	Field OnItemChoosenDblClick:Void()
 	
 	Method New()
 		Self.New( 20,50 )
@@ -70,6 +71,14 @@ Class ListViewExt Extends ScrollableView
 		_visibleCount=Min( _maxLines,_items.Length )
 	End
 	
+	Method RemoveItem( item:ListViewItem )
+	
+		_items.Remove( item )
+	
+		_visibleCount=Min( _maxLines,_items.Length )
+		_selIndex=Clamp( _selIndex,0,_items.Length-1 )
+	End
+	
 	Method SetItems<T>( items:Stack<T> ) Where T Extends ListViewItem
 		
 		_items.Clear()
@@ -80,6 +89,11 @@ Class ListViewExt Extends ScrollableView
 	
 		_items.Clear()
 		AddItems( items )
+	End
+	
+	Method Sort<T>( func:Int(l:T,r:T) ) Where T Extends ListViewItem
+	
+		_items.Sort( func )
 	End
 	
 	Method Reset()
@@ -108,6 +122,11 @@ Class ListViewExt Extends ScrollableView
 		
 		Assert( _selIndex >= 0 And _selIndex < _items.Length,"Index out of bounds!" )
 		Return _items[_selIndex]
+	End
+	
+	Property CurrentIndex:Int()
+	
+		Return _selIndex
 	End
 	
 	Property MoveCyclic:Bool()
@@ -140,6 +159,15 @@ Class ListViewExt Extends ScrollableView
 		RequestRender()
 	End
 	
+	Method SelectByIndex( index:Int )
+		
+		Assert( _selIndex >= 0 And _selIndex < _items.Length,"Index out of bounds!" )
+		
+		_selIndex=index
+		EnsureVisible()
+		RequestRender()
+	End
+	
 	Method PageUp()
 	
 		_selIndex-=_visibleCount
@@ -159,7 +187,13 @@ Class ListViewExt Extends ScrollableView
 	End
 	
 	Property Items:Stack<ListViewItem>.Iterator()
+	
 		Return _items.All()
+	End
+	
+	Property Empty:Bool()
+		
+		Return _items.Empty
 	End
 	
 	Method DrawItem( item:ListViewItem,canvas:Canvas,x:Float,y:Float,handleX:Float=0,handleY:Float=0 ) Virtual
@@ -298,7 +332,7 @@ Class ListViewExt Extends ScrollableView
 			
 		Case EventType.MouseMove
 			
-			'If VisibleRect.Contains(MouseLocation) Then RequestRender()
+			'If VisibleRect.Contains( MouseLocation ) Then RequestRender()
 		
 		Case EventType.MouseDoubleClick
 		
@@ -308,6 +342,7 @@ Class ListViewExt Extends ScrollableView
 			
 			_selIndex=index
 			OnItemChoosen()
+			OnItemChoosenDblClick()
 			
 		Case EventType.MouseClick
 		
@@ -317,6 +352,7 @@ Class ListViewExt Extends ScrollableView
 			
 			_selIndex=index
 			OnItemChoosen()
+			RequestRender()
 			
 		Default
 			Return

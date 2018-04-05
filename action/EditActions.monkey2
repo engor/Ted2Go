@@ -70,13 +70,8 @@ Class EditActions
 		
 		textDeleteLine=New Action( "Delete line" )
 		textDeleteLine.Triggered=OnDeleteLine
-		#If __TARGET__="macos"
 		textDeleteLine.HotKey=Key.K
 		textDeleteLine.HotKeyModifiers=Modifier.Control|Modifier.Shift
-		#Else
-		textDeleteLine.HotKey=Key.E
-		textDeleteLine.HotKeyModifiers=Modifier.Control
-		#Endif
 		
 		textDeleteWordForward=New Action( "Delete word forward" )
 		textDeleteWordForward.Triggered=OnDeleteWordForward
