@@ -23,7 +23,7 @@ Interface IDraggableHolder
 	
 End
 
-#Rem Call order: Detach -> OnDragStarted -> Attach -> OnDragEnded
+#Rem Calls order: Detach -> OnDragStarted -> Attach -> OnDragEnded
 
 #End
 Class DraggableViewListener<TItem,THolder>
@@ -76,12 +76,7 @@ Class DraggableViewListener<TItem,THolder>
 				If Not _item Return
 				
 				If _detached
-					Local r:=_view.Frame
-					Local sz:=r.Size
-					r.TopLeft=Mouse.Location+New Vec2i( 0,-10 )
-					r.BottomRight=r.TopLeft+sz
-					_view.Frame=r
-					App.RequestRender()
+					UpdateDetached()
 					Return
 				Endif
 				
@@ -89,6 +84,7 @@ Class DraggableViewListener<TItem,THolder>
 				
 				If dy>=_threshold*App.Theme.Scale.y
 					Detach()
+					UpdateDetached()
 				Endif
 				
 			
@@ -118,6 +114,7 @@ Class DraggableViewListener<TItem,THolder>
 				_item=Null
 				_detached=False
 				
+				event.Eat()
 		End
 	
 	End
@@ -140,6 +137,16 @@ Class DraggableViewListener<TItem,THolder>
 			i.OnDragStarted()
 		Next
 		
+	End
+	
+	Method UpdateDetached()
+		
+		Local r:=_view.Frame
+		Local sz:=r.Size
+		r.TopLeft=Mouse.Location+New Vec2i( 0,-10 )
+		r.BottomRight=r.TopLeft+sz
+		_view.Frame=r
+		App.RequestRender()
 	End
 	
 	Function CanAttach:Bool( item:TItem,holder:THolder )

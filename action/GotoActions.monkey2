@@ -2,12 +2,10 @@
 Namespace ted2go
 
 
-Class ViewActions
+Class GotoActions
 	
 	Field goBack:Action
 	Field goForward:Action
-	Field comment:Action
-	Field uncomment:Action
 	Field gotoLine:Action
 	Field gotoDeclaration:Action
 	
@@ -24,24 +22,6 @@ Class ViewActions
 		goForward.Triggered=OnGoForward
 		goForward.HotKey=Key.Right
 		goForward.HotKeyModifiers=Modifier.Alt|Modifier.Menu
-		
-		comment=New Action( "Comment block" )
-		comment.Triggered=OnComment
-#If __TARGET__="macos"
-		comment.HotKey=Key.Backslash
-#Else
-		comment.HotKey=Key.Apostrophe
-#Endif
-		comment.HotKeyModifiers=Modifier.Menu
-		
-		uncomment=New Action( "Uncomment block" )
-		uncomment.Triggered=OnUncomment
-#If __TARGET__="macos"
-		uncomment.HotKey=Key.Backslash
-#Else
-		uncomment.HotKey=Key.Apostrophe
-#Endif
-		uncomment.HotKeyModifiers=Modifier.Menu|Modifier.Shift
 		
 		gotoLine=New Action( "Goto line" )
 		gotoLine.Triggered=OnGotoLine
@@ -72,22 +52,6 @@ Class ViewActions
 		If Not doc Return
 	
 		doc.GoForward()
-	End
-	
-	Method OnComment()
-	
-		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
-		If Not doc Return
-	
-		doc.Comment()
-	End
-	
-	Method OnUncomment()
-	
-		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
-		If Not doc Return
-	
-		doc.Uncomment()
 	End
 	
 	Method OnGotoLine()

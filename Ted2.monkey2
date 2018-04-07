@@ -30,9 +30,10 @@
 #Import "action/BuildActions"
 #Import "action/HelpActions"
 #Import "action/FindActions"
-#Import "action/ViewActions"
+#Import "action/GotoActions"
 #Import "action/WindowActions"
 #Import "action/TabActions"
+#Import "action/FoldingActions"
 
 #Import "dialog/FindDialog"
 #Import "dialog/PrefsDialog"
@@ -42,6 +43,7 @@
 #Import "dialog/FindInFilesDialog"
 #Import "dialog/UpdateModulesDialog"
 #Import "dialog/GenerateClassDialog"
+#Import "dialog/RecentFilesDialog"
 
 #Import "document/DocumentManager"
 #Import "document/Ted2Document"
@@ -83,7 +85,6 @@
 #Import "utils/Utils"
 #Import "utils/TextUtils"
 
-#Import "view/IRCView"
 #Import "view/CodeMapView"
 #Import "view/CodeTextView"
 #Import "view/ConsoleViewExt"
@@ -117,6 +118,8 @@
 #Import "view/DockingViewExt"
 #Import "view/DraggableViewListener"
 #Import "view/Undock"
+#Import "view/TextViewExt"
+
 
 #Import "Tree"
 #Import "Tuple"
@@ -138,7 +141,7 @@ Using sdl2..
 
 Const MONKEY2_DOMAIN:="http://monkeycoder.co.nz"
 
-Global AppTitle:="Ted2Go v2.9"
+Global AppTitle:="Ted2Go v2.10"
 
 
 Function Main()
@@ -167,7 +170,7 @@ Function Main()
 	
 	'initial theme
 	'
-	If Not jobj.Contains( "theme" ) jobj["theme"]=New JsonString( "theme-warm" )
+	If Not jobj.Contains( "theme" ) jobj["theme"]=New JsonString( "theme-hollow" )
 
 	If Not jobj.Contains( "themeScale" ) jobj["themeScale"]=New JsonNumber( 1 )
 	
@@ -205,6 +208,8 @@ Function Main()
 			arg=arg.Replace( "\","/" )
 			If GetFileType( arg ) = FileType.File
 				MainWindow.OpenDocument( arg,True )
+			Elseif GetFileType( arg ) = FileType.Directory
+				MainWindow.OpenProject( arg )
 			Endif
 		Next
 	End

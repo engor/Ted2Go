@@ -41,20 +41,12 @@ Class TreeViewExt Extends TreeView
 		
 		Super.NodeExpanded+=Lambda( node:Node )
 			
-			_expandStateChanged=True
-			
-			_expander.Store( node )
-			OnSelect( node )
-			NodeExpanded( node )
+			OnExpanded( node,True )
 		End
 		
 		Super.NodeCollapsed+=Lambda( node:Node )
 			
-			_expandStateChanged=True
-			
-			_expander.Store( node )
-			OnSelect( node )
-			NodeCollapsed( node )
+			OnCollapsed( node,True )
 		End
 		
 		_selColor=App.Theme.GetColor( "panel" )
@@ -114,7 +106,7 @@ Class TreeViewExt Extends TreeView
 						End )
 	End
 	
-	Method FindSubNode:TreeView.Node( whereNode:TreeView.Node,recursive:Bool,findCondition:Bool(n:TreeView.Node) )
+	Method FindSubNode:TreeView.Node( whereNode:TreeView.Node,recursive:Bool,findCondition:Bool(TreeView.Node) )
 	
 		If findCondition( whereNode ) Return whereNode
 	
@@ -147,7 +139,7 @@ Class TreeViewExt Extends TreeView
 	End
 	
 	Method SelectByPathEnds( pathEnding:String )
-	
+		
 		Local n:=FindSubNode( RootNode,
 						True,
 						Lambda:Bool( n:TreeView.Node )
@@ -221,6 +213,24 @@ Class TreeViewExt Extends TreeView
 		
 	End
 	
+	Method OnCollapsed( node:Node,sel:Bool )
+	
+		_expandStateChanged=True
+	
+		_expander.Store( node )
+		If sel Then OnSelect( node )
+		NodeCollapsed( node )
+	End
+	
+	Method OnExpanded( node:Node,sel:Bool )
+	
+		_expandStateChanged=True
+	
+		_expander.Store( node )
+		If sel Then OnSelect( node )
+		NodeExpanded( node )
+	End
+	
 '	Method PrintExpanded()
 '		
 '		_expander.PrintExpanded()
@@ -268,8 +278,7 @@ Class TreeViewExt Extends TreeView
 			n=n.Parent
 		Wend
 	
-		' scroll Y only 
-		Local sx:=Scroll.x
+		' scroll Y only
 		Local scroll:=Scroll
 		Super.EnsureVisible( node.Rect )
 		scroll.Y=Scroll.y

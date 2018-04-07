@@ -11,6 +11,13 @@ Class CodeTextView Extends TextView
 	Field LineNumChanged:Void( prevLine:Int,newLine:Int )
 	Field TextChanged:Void()
 	
+	Class Folding
+		Field folded:Int
+		Field startLine:Int
+		Field endLine:Int
+		Field parent:Folding
+	End
+	
 	Method New()
 		
 		Super.New()
@@ -22,46 +29,89 @@ Class CodeTextView Extends TextView
 		Document.TextChanged += TextChanged
 		
 		TabStop=Prefs.EditorTabSize
+		LineSpacing=Prefs.EditorLineSpacing
 		
-'		LineNumChanged+=Lambda( prevLine:Int,newLine:Int )
-'		
-'		End
+		Document.LinesModified+=Lambda( first:Int,removed:Int,inserted:Int )
+			
+			Local delta:=inserted-removed
+			If delta=0 Return
+			
+			'Local prevLine:=Document.FindLine( _storedCursor )
+			
+			'Print "modif line: "+first+", "+removed+", "+inserted
+			
+			' line with folding was removed
+			'
+			If removed<>0
+				Local i1:=Min( first,first+removed )
+				Local i2:=Max( first,first+removed )
+				For Local i:=i1 Until i2
+					Local f:=_folding[i]
+					If Not f Continue
+					If f.folded<10
+						_folding.Remove( i )
+					Else
+						f.folded-=10
+						UpdateLineWidth( i ) ' dirty
+					Endif
+				Next
+			Endif
+			
+			
+			Local flag:=False
+			Local indent:=Utils.GetIndent( LineTextAtCursor )
+			Local less:=(PosInLineAtCursor<=indent)
+			
+			For Local line:=Eachin _folding.Keys
+				
+				Local f:=_folding[line]
+				
+				' move foldings which are under changed line
+				Local shiftBlock:=False
+				Local expandBlock:=False
+				
+				If line>=first
+				
+					If line>first Or less ' shift down whole block
+						shiftBlock=True
+					Else
+						expandBlock=True
+					Endif
+					
+				Elseif first>f.startLine And first<=f.endLine ' changed line is inside of folding
+					
+					expandBlock=(first<f.endLine Or less) ' expand block ending
+					
+				Endif
+				
+				If shiftBlock ' shift down whole block
+					If f.folded
+						flag=True
+					Endif
+					f.startLine+=delta
+					f.endLine+=delta
+					_foldingTmpMap[line]=f
+					
+				Elseif expandBlock
+					f.endLine+=delta
+				Endif
+				
+			Next
+			
+			For Local line:=Eachin _foldingTmpMap.Keys
+				Local f:=_foldingTmpMap[line]
+				_folding.Remove( line )
+				_folding[f.startLine]=f
+			Next
+			_foldingTmpMap.Clear()
+			
+			If flag
+				OnValidateStyle()
+				RequestRender()
+			Endif
+			
+		End
 		
-		
-'		Document.LinesModified += Lambda( first:Int,removed:Int,inserted:Int )
-'			
-'			If _extraSelStart=-1 Return
-'			If first>=_extraSelEnd Print "ret" ; Return
-'			
-'			Print "LinesModified: "+first+", "+removed+", "+inserted
-'			
-'			If inserted>0
-'				
-'				If first<_extraSelStart
-'					Print "if 1-1"
-'					_extraSelStart+=inserted
-'				Endif
-'				_extraSelEnd+=inserted
-'				
-'			Else
-'				
-'				If first<=_extraSelStart And first+removed>=_extraSelEnd
-'					ResetExtraSelection()
-'					Print "reset"
-'					Return
-'				Endif
-'				
-'				If first<_extraSelStart
-'					Print "if 2-1"
-'					_extraSelStart-=removed
-'					_extraSelEnd-=removed
-'				Else
-'					Print "if 2-2"
-'					_extraSelEnd-=Min( removed,_extraSelEnd-first )
-'				Endif
-'				
-'			Endif
-'		End
 		
 		UpdateThemeColors()
 	End
@@ -319,6 +369,9 @@ Class CodeTextView Extends TextView
 	Property LineTextAtCursor:String()
 		Return Document.GetLine( Document.FindLine( Cursor ) )
 	End
+	Property LineTextAtAnchor:String()
+		Return Document.GetLine( Document.FindLine( Anchor ) )
+	End
 	
 	Property LineNumAtCursor:Int()
 		Return Document.FindLine( Cursor )
@@ -415,11 +468,196 @@ Class CodeTextView Extends TextView
 		
 	End
 	
+	Method ResetFolding()
+		
+		_folding.Clear()
+	End
+	
+	Method MarkAsFoldable( line:Int,endLine:Int,parent:Folding )
+		
+		' try to fix folding bounds - we get incorrect endLine from mx2cc
+		While endLine>line
+			' searching for End keyword with the same indentation as [line]
+			Local ok:=Document.GetLine( endLine ).Trim().ToLower().StartsWith( "end" )
+			If ok
+				ok = ok And Utils.GetIndent( Document.GetLine( line ) )=Utils.GetIndent( Document.GetLine( endLine ) )
+			Endif
+			If ok
+				' parser based on colors, OMG :)
+				Local color:=Document.Colors[Document.StartOfLine( endLine )]
+				ok = ok And Not (color=Highlighter.COLOR_COMMENT Or color=Highlighter.COLOR_STRING)
+			Endif
+			If ok
+				Exit
+			Endif
+			endLine-=1
+		Wend
+		
+		Local folding:Folding
+		If Not _folding.Contains( line )
+			
+			If endLine>line
+				folding=New Folding
+				folding.startLine=line
+				_folding[line]=folding
+			Endif
+			
+		Else
+			folding=_folding[line]
+		Endif
+		
+		If folding
+			folding.endLine=endLine
+			folding.parent=parent
+		Endif
+	End
+	
+	Method SwitchFolding( line:Int,gotoLine:Bool=False )
+		
+		If Not _folding.Contains( line ) Return
+		
+		If gotoLine
+			GotoLine( line )
+		Endif
+		
+		If _folding[line].folded
+			UnfoldBlock( line )
+		Else
+			FoldBlock( line )
+		Endif
+	End
+	
+	Method FoldBlock( startLine:Int,updateLines:Bool=True,findBlock:Bool=False )
+		
+		If findBlock
+			Local f:=FindNearestFolding( startLine )
+			If Not f Return
+			startLine=f.startLine
+		Endif
+		
+		If Not _folding.Contains( startLine ) Return
+		Local f:=_folding[startLine]
+		If f.folded Return
+		
+		f.folded=True
+		Local endLine:=f.endLine
+		Local curLine:=LineNumAtCursor
+		Local moveCursor:=False
+		
+		For Local line:=startLine+1 To endLine
+			SetLineVisible( line,False )
+			If line=curLine Then moveCursor=True
+		Next
+		
+		If moveCursor
+			Local pos:=Document.StartOfLine( startLine )
+			SelectText( pos,pos )
+		Endif
+		
+		If updateLines
+			OnValidateStyle()
+			RequestRender()
+		Endif
+	End
+	
+	Method UnfoldBlock( startLine:Int,updateLines:Bool=True,findBlock:Bool=False,unfoldChildren:Bool=False )
+		
+		If findBlock
+			Local f:=FindNearestFolding( startLine )
+			If Not f Return
+			startLine=f.startLine
+		Endif
+		
+		If Not _folding.Contains( startLine ) Return
+		If Not _folding[startLine].folded Return
+		
+		_folding[startLine].folded=False
+		Local endLine:=_folding[startLine].endLine
+		
+		For Local line:=startLine+1 To endLine
+			
+			SetLineVisible( line,True )
+			Local folding:=_folding[line]
+			If folding And folding.folded
+				line=folding.endLine
+			Endif
+		Next
+		
+		If updateLines
+			OnValidateStyle()
+			RequestRender()
+		Endif
+	End
+	
+	Method FindNearestFolding:Folding( line:Int )
+		
+		Local maxLine:=-1
+		Local found:Folding
+		For Local i:=Eachin _folding.Keys
+			If maxLine<>-1 And i>maxLine Exit
+			Local f:=_folding[i]
+			If line>=f.startLine And line<=f.endLine
+				found=f
+				maxLine=f.endLine
+			Endif
+			
+		Next
+	
+		Return found
+	End
+	
+	Method UnfoldAtLine( line:Int )
+		
+		' find folding block at line
+		Local found:=FindNearestFolding( line )
+		
+		If Not found Return
+		
+		' unfold nearest block
+		UnfoldBlock( found.startLine,False )
+		Local par:=found.parent
+		While par
+			' and all its parents
+			UnfoldBlock( par.startLine,False )
+			par=par.parent
+		Wend
+		
+		OnValidateStyle()
+		RequestRender()
+		
+	End
+	
+	Method GetFolding:Folding( line:Int )
+	
+		Return _folding.Contains( line ) ? _folding[line] Else Null
+	End
+	
+	Method FoldAll()
+	
+		For Local line:=Eachin _folding.Keys
+			FoldBlock( line,False )
+		Next
+		
+		OnValidateStyle()
+		RequestRender()
+	End
+	
+	Method UnfoldAll()
+	
+		For Local line:=Eachin _folding.Keys
+			UnfoldBlock( line,False )
+		Next
+		
+		OnValidateStyle()
+		RequestRender()
+	End
+	
 	
 	Protected
 	
+	Field _folding:=New IntMap<Folding>
+	
 	Method CheckFormat( event:KeyEvent )
-		
 		
 		Select event.Type
 		
@@ -722,6 +960,7 @@ Class CodeTextView Extends TextView
 		
 		_whitespacesColor=App.Theme.GetColor( "textview-whitespaces" )
 		_extraSelColor=App.Theme.GetColor( "textview-extra-selection" )
+		_commentsColor=App.Theme.GetColor( "textview-color"+Highlighter.COLOR_COMMENT )
 	End
 	
 	Method OnRenderContent( canvas:Canvas,clip:Recti ) Override
@@ -753,7 +992,21 @@ Class CodeTextView Extends TextView
 	Method OnRenderLine( canvas:Canvas,line:Int ) Override
 		
 		Super.OnRenderLine( canvas,line )
-	
+		
+		' show folded lines number
+		'
+		Local folding:=_folding[line]
+		If folding And folding.folded
+			Local r:=LineRect( line )
+			Local tx:=r.Right+20
+			Local ty:=r.Top+RenderStyle.Font.Height*.5
+			Local a:=canvas.Alpha
+			canvas.Alpha=0.75
+			canvas.Color=_commentsColor
+			canvas.DrawText( "..."+(folding.endLine-folding.startLine)+" line(s)",tx,ty,0,.5 )
+			canvas.Alpha=a
+		Endif
+		
 		' draw whitespaces
 		'
 		If Not _showWhiteSpaces Return
@@ -795,7 +1048,7 @@ Class CodeTextView Extends TextView
 			right=word.Rect.Right
 			
 		Next
-	
+		
 	End
 	
 	Method OnValidateStyle() Override
@@ -811,7 +1064,7 @@ Class CodeTextView Extends TextView
 	Private
 	
 	Field _line:Int
-	Field _whitespacesColor:Color
+	Field _whitespacesColor:Color,_commentsColor:Color
 	Field _showWhiteSpaces:Bool
 	Field _tabw:Int,_charw:Int
 	Field _overwriteMode:Bool
@@ -819,10 +1072,21 @@ Class CodeTextView Extends TextView
 	Field _extraSelColor:Color=Color.DarkGrey
 	Field _storedCursor:Int
 	Field _typing:Bool
+	Field _foldingTmpMap:=New IntMap<Folding>
 	
 	Method OnCursorMoved()
 		
 		Local line:=Document.FindLine( Cursor )
+		
+		' if cursor is inside of invisible line - unfold area with cursor
+		If Not IsLineVisible( line )
+			'Print "show line: "+line
+			Local c:=Cursor,a:=Anchor
+			UnfoldAtLine( line )
+			SelectText( a,c )
+		Endif
+		
+		' emit line changed signal
 		If line <> _line
 			If _typing Then FormatLine( _line )
 			
@@ -894,6 +1158,7 @@ Function RemoveWhitespacedTrailings:String( doc:TextDocument,linesChanged:Int Pt
 		Local start:=doc.StartOfLine( line )
 		Local ends:=doc.EndOfLine( line )
 		Local i:=ends-1
+		If i<0 Continue
 		
 		Local color:=doc.Colors[i]
 		If color=Highlighter.COLOR_STRING Or color=Highlighter.COLOR_COMMENT Continue

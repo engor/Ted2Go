@@ -86,6 +86,7 @@ Class PrefsDialog Extends DialogExt
 	Field _editorUseSpacesAsTabs:CheckButton
 	Field _editorTabSize:TextFieldExt
 	Field _editorRemoveLinesTrailing:CheckButton
+	Field _editorLineSpacing:TextFieldExt
 	
 	Field _mainToolBarVisible:CheckButton
 	Field _mainProjectIcons:CheckButton
@@ -140,6 +141,7 @@ Class PrefsDialog Extends DialogExt
 		If Not size Then size="4" 'default
 		Prefs.EditorTabSize=Clamp( Int(size),1,16 )
 		Prefs.EditorRemoveLinesTrailing=_editorRemoveLinesTrailing.Checked
+		Prefs.EditorLineSpacing=Clamp( Float(_editorLineSpacing.Text.Trim()),0.5,2.5 )
 		
 		Prefs.MainToolBarVisible=_mainToolBarVisible.Checked
 		Prefs.MainProjectIcons=_mainProjectIcons.Checked
@@ -252,6 +254,8 @@ Class PrefsDialog Extends DialogExt
 		_editorRemoveLinesTrailing=New CheckButton( "Remove whitespaced trailings on saving" )
 		_editorRemoveLinesTrailing.Checked=Prefs.EditorRemoveLinesTrailing
 		
+		_editorLineSpacing=New TextFieldExt( ""+Prefs.EditorLineSpacing )
+		
 		Local path:=Prefs.EditorFontPath
 		If Not path Then path=_defaultFont
 		_editorFontPath=New TextFieldExt( "" )
@@ -299,6 +303,12 @@ Class PrefsDialog Extends DialogExt
 		tabs.AddView( _editorTabSize,"left" )
 		tabs.AddView( _editorUseSpacesAsTabs,"left" )
 		
+		Local lineSpacing:=New DockingView
+		lineSpacing.AddView( New Label( "Line spacing interval:" ),"left" )
+		_editorLineSpacing.MaxSize=New Vec2i( 100,100 )
+		lineSpacing.AddView( _editorLineSpacing,"left" )
+		lineSpacing.AddView( New Label( "  0.5...2.5" ),"left" )
+		
 		Local docker:=New DockingView
 		docker.AddView( New Label( " " ),"top" )
 		docker.AddView( _editorToolBarVisible,"top" )
@@ -313,6 +323,7 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( _editorShowParamsHint,"top" )
 		docker.AddView( _editorRemoveLinesTrailing,"top" )
 		docker.AddView( tabs,"top" )
+		docker.AddView( lineSpacing,"top" )
 		docker.AddView( New Label( " " ),"top" )
 		
 		
@@ -501,7 +512,6 @@ Class PrefsDialog Extends DialogExt
 			Return
 		Endif
 		
-		DebugStop()
 		LiveTemplates[TemplateSelLang].Remove( TemplateSelName )
 		_treeView.RemoveNode( _treeView.Selected )
 		_codeView.Text=""

@@ -24,7 +24,7 @@ Class CodeTreeView Extends TreeViewExt
 		If list Then _stack.AddAll( list )
 		
 		' extensions are here too
-		For Local lst:=Eachin parser.ExtraItemsMap.Values.All()
+		For Local lst:=Eachin parser.ExtraItemsMap.Values
 			For Local i:=Eachin lst
 				If i.FilePath=path
 					If Not _stack.Contains( i.Parent ) Then _stack.Add( i.Parent )

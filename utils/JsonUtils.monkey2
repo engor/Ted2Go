@@ -53,6 +53,11 @@ Function Json_GetInt:Int( json:Map<String,JsonValue>,key:String,def:Int )
 	Return json.Contains( key ) ? Int(json[key].ToNumber()) Else def
 End
 
+Function Json_GetFloat:Float( json:Map<String,JsonValue>,key:String,def:Float )
+	
+	Return json.Contains( key ) ? Float(json[key].ToNumber()) Else def
+End
+
 
 
 Class JsonArray Extension

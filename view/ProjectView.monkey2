@@ -2,7 +2,7 @@
 Namespace ted2go
 
 
-Class ProjectView Extends ScrollView
+Class ProjectView Extends DockingView
 
 	Field openProject:Action
 	
@@ -20,14 +20,17 @@ Class ProjectView Extends ScrollView
 		
 		ContentView=_docker
 		
-		_docker.ContentView=New TreeViewExt
-		
 		openProject=New Action( "Open project" )
 		openProject.HotKey=Key.O
 		openProject.HotKeyModifiers=Modifier.Menu|Modifier.Shift
 		openProject.Triggered=OnOpenProject
 		
 		InitProjBrowser()
+	End
+	
+	Property SelectedItem:ProjectBrowserView.Node()
+	
+		Return Cast<ProjectBrowserView.Node>( _projBrowser.Selected )
 	End
 	
 	Property OpenProjects:String[]()
@@ -135,19 +138,6 @@ Class ProjectView Extends ScrollView
 	
 	
 	Protected
-	
-	Method OnMouseEvent( event:MouseEvent ) Override
-	
-		Select event.Type
-		Case EventType.MouseWheel ' little faster
-			
-			Scroll-=New Vec2i( 0,ContentView.RenderStyle.Font.Height*event.Wheel.Y*3 )
-			Return
-	
-		End
-	
-		Super.OnMouseEvent( event )
-	End
 	
 	
 	Private
@@ -337,7 +327,7 @@ Class ProjectView Extends ScrollView
 		Local browser:=New ProjectBrowserView()
 		browser.SingleClickExpanding=Prefs.MainProjectSingleClickExpanding
 		_projBrowser=browser
-		_docker.AddView( browser,"top" )
+		_docker.ContentView=browser
 		
 		browser.RequestedDelete+=Lambda( node:ProjectBrowserView.Node )
 		
@@ -601,6 +591,18 @@ Class ProjectView Extends ScrollView
 			End
 			pasteAction.Enabled=(_cutPath Or _copyPath) And isFolder
 			
+			' collapse all
+			'
+			If isFolder
+				
+				menu.AddSeparator()
+				
+				menu.AddAction( "Collapse all" ).Triggered=Lambda()
+				
+					_projBrowser.CollapseAll( node )
+				End
+			Endif
+				
 			menu.Open()
 		End
 		
