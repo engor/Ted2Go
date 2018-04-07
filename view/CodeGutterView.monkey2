@@ -66,21 +66,29 @@ Class CodeGutterView Extends View
 			
 			Local rect:=_textView.LineRect( i )
 			Local xx:=_width-8*k
-			
+			Local hcenter:=rect.Top+RenderStyle.Font.Height*.5
 			' folding marks
 			'
 			Local folding:=_textView.GetFolding( i )
 			If folding
+				Local dx:=-2*k
 				canvas.Color=textColor
 				canvas.Alpha=1
-				canvas.DrawLine( xx+7*k,rect.Top+rect.Height*.5,xx+7*k+7*k,rect.Top+rect.Height*.5 ) ' horiz line
+				canvas.DrawLine( xx+7*k+dx,hcenter,xx+7*k+7*k+dx,hcenter ) ' horiz line
 				If folding.folded
-					canvas.DrawLine( xx+10*k,rect.Top+rect.Height*.5-4*k,xx+10*k,rect.Top+rect.Height*.5-4*k+8*k ) ' vert line to make cross
+					canvas.DrawLine( xx+10*k+dx,hcenter-4*k,xx+10*k+dx,hcenter-4*k+8*k ) ' vert line to make cross
 				Endif
-				canvas.DrawRectWire( xx+5*k,rect.Top+rect.Height*.5-5*k,10*k,10*k ) ' bounding rect
+				canvas.DrawRectWire( xx+5*k+dx,hcenter-5*k,10*k,10*k ) ' bounding rect
 				If Not folding.folded
 					If curFolding Then _folded.Add( curFolding )
 					curFolding=folding
+					Local dy:=rect.Height-RenderStyle.Font.Height
+					If dy>0
+						dx=8*k
+						canvas.Alpha=0.5
+						canvas.DrawLine( xx+dx,rect.Bottom-dy,xx+dx,rect.Bottom )
+						canvas.Alpha=1
+					Endif
 				Endif
 			Elseif curFolding
 				canvas.Color=textColor
@@ -93,13 +101,13 @@ Class CodeGutterView Extends View
 						curFolding=_folded[0]
 						_folded.Erase( 0 )
 					Endif
-					canvas.DrawLine( xx+dx,rect.Top,xx+dx,rect.Top+rect.Height*.5 )
-					canvas.DrawLine( xx+dx,rect.Top+rect.Height*.5,xx+dx+6*k,rect.Top+rect.Height*.5 )
+					canvas.DrawLine( xx+dx,rect.Top,xx+dx,hcenter )
+					canvas.DrawLine( xx+dx,hcenter,xx+dx+6*k,hcenter )
 					If curFolding
-						canvas.DrawLine( xx+8*k,rect.Top+rect.Height*.5,xx+8*k,rect.Bottom )
+						canvas.DrawLine( xx+8*k,hcenter,xx+8*k,rect.Bottom )
 					Endif
 				Else
-					canvas.DrawLine( xx+dx,rect.Top,xx+dx,rect.Top+rect.Height )
+					canvas.DrawLine( xx+dx,rect.Top,xx+dx,rect.Bottom )
 				Endif
 				canvas.Alpha=1
 			Endif
@@ -110,7 +118,7 @@ Class CodeGutterView Extends View
 			ok=ok And Not (folding And folding.folded)
 			If ok And i<>cursorLine And i<>anchorLine
 				canvas.Alpha=0.5
-				canvas.DrawRect( xx-4*k,rect.Top+rect.Height*.5-1*k,2*k,2*k )
+				canvas.DrawRect( xx-4*k,hcenter-1*k,2*k,2*k )
 				canvas.Alpha=1
 				Continue
 			Endif
@@ -125,7 +133,7 @@ Class CodeGutterView Extends View
 				Endif
 			Else
 				canvas.Color=(i=cursorLine Or i=anchorLine) ? textColor*1.125 Else textColor 'make selected line number little brighter
-				canvas.DrawText( i+1,xx,rect.Top+rect.Height*.5,1,.5 )
+				canvas.DrawText( i+1,xx,hcenter,1,.5 )
 			Endif
 			
 		Next

@@ -999,7 +999,7 @@ Class CodeTextView Extends TextView
 		If folding And folding.folded
 			Local r:=LineRect( line )
 			Local tx:=r.Right+20
-			Local ty:=r.Center.y
+			Local ty:=r.Top+RenderStyle.Font.Height*.5
 			Local a:=canvas.Alpha
 			canvas.Alpha=0.75
 			canvas.Color=_commentsColor
