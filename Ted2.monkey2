@@ -43,6 +43,7 @@
 #Import "dialog/FindInFilesDialog"
 #Import "dialog/UpdateModulesDialog"
 #Import "dialog/GenerateClassDialog"
+#Import "dialog/RecentFilesDialog"
 
 #Import "document/DocumentManager"
 #Import "document/Ted2Document"

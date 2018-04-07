@@ -571,7 +571,7 @@ Struct CodeItemsSorter Final
 		
 		If _sorterByIdent = Null
 			_sorterByIdent=Lambda:Int( lhs:ListViewItem,rhs:ListViewItem )
-
+				
 				Local lp:=GetIdentPower( lhs.Text,_etalonIdent )
 				Local rp:=GetIdentPower( rhs.Text,_etalonIdent )
 				
@@ -585,7 +585,7 @@ Struct CodeItemsSorter Final
 		list.Sort( _sorterByIdent )
 	End
 	
-	Function GetIdentPower:Int( ident:String,etalon:String )
+	Function GetIdentPower:Int( ident:String,etalon:String,useStrongPrefs:Bool=True )
 		
 		Local len:=etalon.Length
 		Local power:=0
@@ -607,8 +607,10 @@ Struct CodeItemsSorter Final
 			Endif
 		Next
 		
+		If index<len Then power=0 ' not all letters found
+		
 		' strong first char
-		If Prefs.AcStrongFirstChar
+		If useStrongPrefs And Prefs.AcStrongFirstChar
 			Local lower1:=IsLowercacedFirstChar( ident )
 			Local lower2:=IsLowercacedFirstChar( etalon )
 			If lower1 <> lower2 ' if first chars cases aren't equals

@@ -81,6 +81,8 @@ Class MainWindowInstance Extends Window
 			SaveState()
 		End
 		
+		_recentViewedFiles=New RecentFiles( _docsManager )
+		
 		'Build tab
 		
 		_buildConsole=New ConsoleExt
@@ -372,6 +374,19 @@ Class MainWindowInstance Extends Window
 		m.AddAction( foldActions.foldAll )
 		m.AddAction( foldActions.unfoldAll )
 		_viewMenu.AddSubMenu( m )
+		_viewMenu.AddSeparator()
+		Local showRecent:=New Action( "Recently viewed files...")
+		showRecent.Triggered=Lambda()
+			Local path:=_recentViewedFiles.ShowDialog()
+			If path Then OpenDocument( path )
+		End
+		showRecent.HotKey=Key.E
+		#If __TARGET__="macos"
+		showRecent.HotKeyModifiers=Modifier.Menu
+		#Else
+		showRecent.HotKeyModifiers=Modifier.Control
+		#Endif
+		_viewMenu.AddAction( showRecent )
 		
 		'Build menu
 		'
@@ -1760,6 +1775,8 @@ Class MainWindowInstance Extends Window
 	Field _fullscreenState:=FullscreenState.None,_fullscreenPrevState:=FullscreenState.None
 	Field _fullscreenHelper:= New FullscreenHelper
 	Field _storedSize:Recti,_storedMaximized:Bool
+	
+	Field _recentViewedFiles:RecentFiles
 	
 	Method ToJson:JsonValue( rect:Recti )
 		Return New JsonArray( New JsonValue[]( New JsonNumber( rect.min.x ),New JsonNumber( rect.min.y ),New JsonNumber( rect.max.x ),New JsonNumber( rect.max.y ) ) )
