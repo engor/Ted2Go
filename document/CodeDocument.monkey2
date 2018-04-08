@@ -302,8 +302,13 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						Local line:=CursorLine
 						If Cursor=Anchor And Cursor=Document.StartOfLine( line )
 							
+							_delKey=Key.Backspace
+							
 							Local f:=_folding[line]
-							If f And f.folded
+							If f
+								If f.folded
+									SetLineVisible( line,False )
+								Endif
 								_folding.Remove( line )
 								_folding[line-1]=f
 								f.startLine-=1
@@ -344,7 +349,9 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 			
 				Case Key.KeyDelete
-			
+					
+					_delKey=Key.KeyDelete
+					
 					If shift 'shift+del - cut selected
 						If ctrl
 '							DeleteToEnd()
@@ -389,12 +396,13 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					
 					Local beforeIndent:=(posInLine<=indent)
 					
-					If beforeIndent
-						Local f:=_folding[line]
-						If f And f.folded
-							_folding.Remove( line )
-							_folding[line+1]=f
-							SetLineVisible( line+1,True )
+					Local f:=_folding[line]
+					If f And beforeIndent
+						f.folded+=20
+					Elseif Not f And Not beforeIndent
+						f=FindNearestFolding( line )
+						If f And line=f.endLine
+							f.folded+=30
 						Endif
 					Endif
 					
