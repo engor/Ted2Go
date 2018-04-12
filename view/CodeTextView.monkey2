@@ -38,14 +38,13 @@ Class CodeTextView Extends TextView
 			
 			'Local prevLine:=Document.FindLine( _storedCursor )
 			
-			'Print "modif line: "+first+", "+removed+", "+inserted+", "+CursorLine+" "+prevLine
+			'Print "modif line: "+first+", "+removed+", "+inserted
 			
-			' if line with folding was removed
+			' line with folding was removed
 			'
 			If removed<>0
-				Local dd:=(_delKey=Key.Backspace) ? -removed Else removed
-				Local i1:=Min( first,first+dd )
-				Local i2:=Max( first,first+dd )
+				Local i1:=Min( first,first+removed )
+				Local i2:=Max( first,first+removed )
 				For Local i:=i1 Until i2
 					Local f:=_folding[i]
 					If Not f Continue
@@ -53,11 +52,11 @@ Class CodeTextView Extends TextView
 						_folding.Remove( i )
 					Else
 						f.folded-=10
-						f.endLine+=1
-						UpdateLineWidth( i )
+						UpdateLineWidth( i ) ' dirty
 					Endif
 				Next
 			Endif
+			
 			
 			Local flag:=False
 			Local indent:=Utils.GetIndent( LineTextAtCursor )
@@ -83,14 +82,6 @@ Class CodeTextView Extends TextView
 					
 					expandBlock=(first<f.endLine Or less) ' expand block ending
 					
-					If f.folded>=30
-						expandBlock=False
-						f.folded-=30
-					Endif
-				Endif
-				
-				If f.folded>=20
-					shiftBlock=True
 				Endif
 				
 				If shiftBlock ' shift down whole block
@@ -101,15 +92,8 @@ Class CodeTextView Extends TextView
 					f.endLine+=delta
 					_foldingTmpMap[line]=f
 					
-					If f.folded>=20
-						SetLineVisible( f.startLine,True )
-						f.folded-=20
-					Endif
-					
 				Elseif expandBlock
-					
 					f.endLine+=delta
-					
 				Endif
 				
 			Next
@@ -1090,7 +1074,6 @@ Class CodeTextView Extends TextView
 	Field _storedCursor:Int
 	Field _typing:Bool
 	Field _foldingTmpMap:=New IntMap<Folding>
-	
 	
 	Method OnCursorMoved()
 		

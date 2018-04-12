@@ -126,7 +126,7 @@ Class SceneDocument Extends Ted2Document
 	
 	Method OnLoad:Bool() Override
 		
-		If ExtractExt( Path )=".mojo3d"		
+		If ExtractExt( Path )=".mojo3d"
 			
 			Print "Loading scene from "+Path
 			
@@ -135,7 +135,7 @@ Class SceneDocument Extends Ted2Document
 			_camera=Cast<Camera>( _scene.FindEntity( "Camera" ) )
 			
 			If _camera _camera.View=_view
-				
+			
 			Return True
 		Endif
 		
