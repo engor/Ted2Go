@@ -656,6 +656,7 @@ Class CodeTextView Extends TextView
 	Protected
 	
 	Field _folding:=New IntMap<Folding>
+	Field _delKey:Key
 	
 	Method CheckFormat( event:KeyEvent )
 		
