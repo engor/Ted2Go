@@ -13,35 +13,41 @@ Class FoldingActions
 	
 	Method New()
 		
+		#If __TARGET__="macos"
+		Local modif:=Modifier.Gui
+		#Else
+		Local modif:=Modifier.Control
+		#Endif
+		
 		foldCurrent=New Action( "Fold current" )
 		foldCurrent.Triggered=OnFoldCurrent
-		foldCurrent.HotKey=Key.Minus
-		foldCurrent.HotKeyModifiers=Modifier.Alt
+		foldCurrent.HotKey=Key.LeftBracket
+		foldCurrent.HotKeyModifiers=modif
 		
 		foldScope=New Action( "Fold current & parents" )
 		foldScope.Triggered=OnFoldScope
-		foldScope.HotKey=Key.Minus
-		foldScope.HotKeyModifiers=Modifier.Alt|Modifier.Shift
+		foldScope.HotKey=Key.LeftBracket
+		foldScope.HotKeyModifiers=modif|Modifier.Alt
 		
 		foldAll=New Action( "Fold all" )
 		foldAll.Triggered=OnFoldAll
-		foldAll.HotKey=Key.Minus
-		foldAll.HotKeyModifiers=Modifier.Alt|Modifier.Shift|Modifier.Control
+		foldAll.HotKey=Key.LeftBracket
+		foldAll.HotKeyModifiers=modif|Modifier.Shift
 		
 		unfoldCurrent=New Action( "Unfold current" )
 		unfoldCurrent.Triggered=OnUnfoldCurrent
-		unfoldCurrent.HotKey=Key.Equals
-		unfoldCurrent.HotKeyModifiers=Modifier.Alt
+		unfoldCurrent.HotKey=Key.RightBracket
+		unfoldCurrent.HotKeyModifiers=modif
 		
 		unfoldScope=New Action( "Unfold current & children" )
 		unfoldScope.Triggered=OnUnfoldScope
-		unfoldScope.HotKey=Key.Equals
-		unfoldScope.HotKeyModifiers=Modifier.Alt|Modifier.Shift
+		unfoldScope.HotKey=Key.RightBracket
+		unfoldScope.HotKeyModifiers=modif|Modifier.Alt
 		
 		unfoldAll=New Action( "Unfold all" )
 		unfoldAll.Triggered=OnUnfoldAll
-		unfoldAll.HotKey=Key.Equals
-		unfoldAll.HotKeyModifiers=Modifier.Alt|Modifier.Shift|Modifier.Control
+		unfoldAll.HotKey=Key.RightBracket
+		unfoldAll.HotKeyModifiers=modif|Modifier.Shift
 		
 	End
 	
