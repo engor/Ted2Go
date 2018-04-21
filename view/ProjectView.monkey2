@@ -305,7 +305,7 @@ Class ProjectView Extends DockingView
 	
 	Method CreateFileInternal:Bool( path:String,content:String=Null )
 		
-		If ExtractExt(path)="" Then path+=".monkey2"
+		'If ExtractExt(path)="" Then path+=".monkey2"
 		
 		If GetFileType( path )<>FileType.None
 			Alert( "A file or directory already exists at '"+path+"'" )
@@ -350,8 +350,22 @@ Class ProjectView Extends DockingView
 			Local path:=node.Path
 			Local pasteAction:Action
 			Local isFolder:=False
+			Local fileType:=GetFileType( path )
 			
-			Select GetFileType( path )
+			menu.AddAction( "Open on Desktop" ).Triggered=Lambda()
+			
+				Local p:=(fileType=FileType.File) ? ExtractDir( path ) Else path
+				requesters.OpenUrl( p )
+			End
+			menu.AddAction( "Copy path" ).Triggered=Lambda()
+			
+				App.ClipboardText=path
+			End
+			
+			menu.AddSeparator()
+			
+			
+			Select fileType
 			Case FileType.Directory
 				
 				isFolder=True
@@ -379,7 +393,7 @@ Class ProjectView Extends DockingView
 				
 				menu.AddAction( "New file" ).Triggered=Lambda()
 					
-					Local file:=RequestString( "New file name:" )
+					Local file:=RequestString( "New file name:","New file",".monkey2" )
 					If Not file Return
 					
 					Local tpath:=path+"/"+file
@@ -512,22 +526,8 @@ Class ProjectView Extends DockingView
 					Endif
 				Endif
 				
-				menu.AddSeparator()
-				
-				menu.AddAction( "Open on Desktop" ).Triggered=Lambda()
-					
-					requesters.OpenUrl( path )
-				End
-			
 			
 			Case FileType.File
-				
-				menu.AddAction( "Open on Desktop" ).Triggered=Lambda()
-					
-					requesters.OpenUrl( ExtractDir( path ) )
-				End
-				
-				menu.AddSeparator()
 				
 				menu.AddAction( "Rename file" ).Triggered=Lambda()
 					

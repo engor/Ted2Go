@@ -248,6 +248,22 @@ Class MainWindowInstance Extends Window
 		_tabMenu.AddSeparator()
 		_tabMenu.AddAction( _buildActions.lockBuildFile )
 		
+		_tabMenu.AddSeparator()
+		_tabMenu.AddAction( "Open on Desktop" ).Triggered=Lambda()
+			
+			Local path:=_docsManager.CurrentDocument?.Path
+			If path
+				requesters.OpenUrl( ExtractDir( path ) )
+			Endif
+		End
+		_tabMenu.AddAction( "Copy path" ).Triggered=Lambda()
+		
+			Local path:=_docsManager.CurrentDocument?.Path
+			If path
+				App.ClipboardText=path
+			Endif
+		End
+		
 		_docsTabView.RightClicked+=Lambda()
 			_tabMenu.Open()
 		End
