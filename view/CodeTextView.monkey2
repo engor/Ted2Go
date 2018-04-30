@@ -43,8 +43,9 @@ Class CodeTextView Extends TextView
 			' line with folding was removed
 			'
 			If removed<>0
-				Local i1:=Min( first,first+removed )
-				Local i2:=Max( first,first+removed )
+				Local dd:=(_delKey=Key.Backspace) ? -removed Else removed
+				Local i1:=Min( first,first+dd )
+				Local i2:=Max( first,first+dd )
 				For Local i:=i1 Until i2
 					Local f:=_folding[i]
 					If Not f Continue
@@ -52,7 +53,8 @@ Class CodeTextView Extends TextView
 						_folding.Remove( i )
 					Else
 						f.folded-=10
-						UpdateLineWidth( i ) ' dirty
+						f.endLine+=1
+						UpdateLineWidth( i )
 					Endif
 				Next
 			Endif
@@ -82,9 +84,18 @@ Class CodeTextView Extends TextView
 					
 					expandBlock=(first<f.endLine Or less) ' expand block ending
 					
+					If f.folded>=30
+						expandBlock=False
+						f.folded-=30
+					Endif
+					
+					If f.folded>=20
+						shiftBlock=True
+					Endif
 				Endif
 				
 				If shiftBlock ' shift down whole block
+					
 					If f.folded
 						flag=True
 					Endif
@@ -92,8 +103,15 @@ Class CodeTextView Extends TextView
 					f.endLine+=delta
 					_foldingTmpMap[line]=f
 					
+					If f.folded>=20
+						SetLineVisible( f.startLine,True )
+						f.folded-=20
+					Endif
+					
 				Elseif expandBlock
+					
 					f.endLine+=delta
+					
 				Endif
 				
 			Next
