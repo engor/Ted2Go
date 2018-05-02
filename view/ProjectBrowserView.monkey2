@@ -28,8 +28,12 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		NodeCollapsed+=OnNodeCollapsed
 		
 		App.Activated+=Lambda()
-		
+			
+			Local sc:=Scroll
+			
 			UpdateAllNodes()
+			
+			Scroll=sc
 		End
 		
 		UpdateFileTypeIcons()
