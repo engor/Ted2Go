@@ -305,7 +305,7 @@ Class ProjectView Extends DockingView
 	
 	Method CreateFileInternal:Bool( path:String,content:String=Null )
 		
-		'If ExtractExt(path)="" Then path+=".monkey2"
+		If ExtractExt(path)="" Then path+=".monkey2"
 		
 		If GetFileType( path )<>FileType.None
 			Alert( "A file or directory already exists at '"+path+"'" )
