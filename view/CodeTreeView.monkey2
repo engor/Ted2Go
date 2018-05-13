@@ -123,7 +123,7 @@ Class CodeTreeView Extends TreeViewExt
 		
 		Local added:=New StringStack
 		For Local i:=Eachin list
-			If i.Kind = CodeItemKind.Param_ Continue
+			If i.KindStr="block" Continue
 			Local txt:=i.Text
 			If added.Contains( txt ) Continue
 			added.Add( txt )

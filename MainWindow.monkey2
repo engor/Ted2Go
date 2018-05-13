@@ -1076,7 +1076,7 @@ Class MainWindowInstance Extends Window
 		If Not ident Return
 		
 		Local parser:=ParsersManager.Get( doc.FileType )
-		Local item:=parser.ItemAtScope( ident,doc.FilePath,doc.LineNumAtCursor )
+		Local item:=parser.ItemAtScope( ident,doc.FilePath,GetCursorPos( doc ) )
 		
 		If item
 			

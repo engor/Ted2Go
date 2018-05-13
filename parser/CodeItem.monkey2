@@ -491,6 +491,7 @@ Struct CodeParam
 	End
 	Field type:CodeType
 	Field params:CodeParam[] 'for func as param
+	Field srcpos:Vec2i
 	
 	Method ToString:String()
 		

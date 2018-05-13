@@ -10,9 +10,9 @@ Interface ICodeParser
 	'Method ParseJson( json:String,filePath:String )
 	Method IsPosInsideOfQuotes:Bool( text:String,pos:Int )
 	Method CanShowAutocomplete:Bool( line:String,posInLine:Int )
-	Method GetScope:CodeItem( docPath:String,docLine:Int )
-	Method GetNearestScope:CodeItem( docPath:String,docLine:Int,above:Bool )
-	Method ItemAtScope:CodeItem( ident:String,filePath:String,docLine:Int )
+	Method GetScope:CodeItem( docPath:String,cursor:Vec2i )
+	Method GetNearestScope:CodeItem( docPath:String,cursor:Vec2i )
+	Method ItemAtScope:CodeItem( ident:String,filePath:String,cursor:Vec2i )
 	
 	Method GetItemsForAutocomplete( options:ParserRequestOptions )
 	Method CheckStartsWith:Bool( ident1:String,ident2:String )
@@ -112,11 +112,10 @@ Class ParserRequestOptions Final
 	
 	Field ident:String
 	Field filePath:String
-	Field docLineNum:Int
+	Field cursor:Vec2i
 	Field results:Stack<CodeItem>
 	Field usingsFilter:Stack<String>
 	Field docLineStr:String
-	Field docPosInLine:Int
 	Field intelliIdent:=True
 	
 End
@@ -154,13 +153,13 @@ Class FakeParser Implements ICodeParser
 	Method CanShowAutocomplete:Bool( line:String,posInLine:Int )
 		Return True
 	End
-	Method GetScope:CodeItem( docPath:String,docLine:Int )
+	Method GetScope:CodeItem( docPath:String,cursor:Vec2i )
 		Return Null
 	End
-	Method GetNearestScope:CodeItem( docPath:String,docLine:Int,above:Bool )
+	Method GetNearestScope:CodeItem( docPath:String,cursor:Vec2i )
 		Return Null
 	End
-	Method ItemAtScope:CodeItem( ident:String,filePath:String,docLine:Int )
+	Method ItemAtScope:CodeItem( ident:String,filePath:String,cursor:Vec2i )
 		Return Null
 	End
 	Method RefineRawType( item:CodeItem )

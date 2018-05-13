@@ -268,9 +268,8 @@ Class AutocompleteDialog Extends NoTitleDialog
 			Global opts:=New ParserRequestOptions
 			opts.ident=ident
 			opts.filePath=filePath
-			opts.docLineNum=docLineNum
+			opts.cursor=New Vec2i( docLineNum,docPosInLine )
 			opts.docLineStr=docLineStr
-			opts.docPosInLine=docPosInLine
 			opts.results=_listForExtract
 			opts.usingsFilter=usings
 			

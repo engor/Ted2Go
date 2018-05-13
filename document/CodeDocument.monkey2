@@ -426,7 +426,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 							If text.ToLower().EndsWith( "abstract" )
 								' nothing
 							Else
-								Local scope:=_doc.Parser.GetScope( FilePath,LineNumAtCursor )
+								Local scope:=_doc.Parser.GetScope( FilePath,CursorPos )
 								If scope And scope.Kind=CodeItemKind.Interface_
 									' nothing
 								Else
@@ -762,7 +762,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	
 		New Fiber( Lambda()
 		
-			Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+_doc.Path+"~q"
+			Local cmd:=Monkey2Parser.GetParseCommand( _doc.Path )
 			
 			Local str:=LoadString( "process::"+cmd )
 			Local i:=str.Find( "{" )
@@ -1140,7 +1140,7 @@ Class CodeDocument Extends Ted2Document
 						Local s:=textLine.Slice( 0,i1 ).Trim()
 						s=Utils.GetIndentBeforePos( s,s.Length )
 						
-						Local item:=_parser.ItemAtScope( s,Path,_codeView.LineNumAtCursor )
+						Local item:=_parser.ItemAtScope( s,Path,CursorPos )
 						If item
 							' strip ident
 							s=item.Text.Slice( item.Ident.Length )
@@ -1267,8 +1267,7 @@ Class CodeDocument Extends Ted2Document
 		If Not _parsingEnabled Return
 		
 		Local ident:=_codeView.FullIdentAtCursor
-		Local line:=TextDocument.FindLine( _codeView.Cursor )
-		Local item:=_parser.ItemAtScope( ident,Path,line )
+		Local item:=_parser.ItemAtScope( ident,Path,CursorPos )
 		
 		If item
 			Local pos:=item.ScopeStartPos
@@ -1585,9 +1584,16 @@ Class CodeDocument Extends Ted2Document
 		OnUpdateCurrentScope()
 	End
 	
+	Property CursorPos:Vec2i()
+		
+		Return GetCursorPos( _codeView )
+	End
+	
 	Method OnUpdateCurrentScope()
 		
-		Local scope:=_parser.GetNearestScope( Path,_codeView.LineNumAtCursor+1,True )
+		'DebugStop()
+		Local scope:=_parser.GetNearestScope( Path,CursorPos )
+		Print ""+CursorPos+", "+scope?.KindStr+", "+scope?.Text
 		If scope
 			_treeView.SelectByScope( scope )
 		Endif
@@ -1884,9 +1890,8 @@ Class CodeDocument Extends Ted2Document
 			
 			opts.ident=ident
 			opts.filePath=Path
-			opts.docLineNum=_codeView.LineNumAtCursor
+			opts.cursor=CursorPos
 			opts.docLineStr=line
-			opts.docPosInLine=pos
 			opts.results=results
 			
 			results.Clear()

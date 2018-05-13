@@ -45,7 +45,7 @@ Class Monkey2TreeView Extends JsonTreeView
 	
 	Method UpdateTree( path:String )
 	
-		Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+path+"~q"
+		Local cmd:=Monkey2Parser.GetParseCommand( path )
 					
 		Local str:=LoadString( "process::"+cmd )
 		

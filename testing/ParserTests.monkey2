@@ -8,17 +8,52 @@ Private
 Class TestTheSame
 	
 	Property TestTheSame:TestTheSame()
+		
+		Local abc:="Hello"
+		If abc.Length>5
+			Print "it's longer than 5"
+		Endif
+		
 		Return Null
+		
+	Setter( value:TestTheSame )
+		
+		Local a8:=8
+		
 	End
 	
 	Method Test( pType:String Ptr )
+		
 		pType->Capitalize()
 		aPtr->Normalize()
+		
+		Local v:=GetVector()
+		Local c:=New Color
+		Local abc:="Hello"
+		If abc.Length>5
+			Print "it's longer than 5"
+			Local def:=3000
+			
+		Endif
+		
 	End
 	
 	Field aPtr:Vec2i Ptr
 	
 End
+
+Function LocalTest()
+	
+	Local img:=Image.Load( "" )
+	Local vvv:=GetVector()
+	
+End
+
+Function GetVector:Vec2i()
+
+	Return New Vec2i
+End
+
 
 Struct Vec2i Extension
 	

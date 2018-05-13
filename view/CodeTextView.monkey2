@@ -1407,3 +1407,9 @@ Class IndentationHelper Final
 	End
 	
 End
+
+Function GetCursorPos:Vec2i( tv:TextView )
+	
+	Local cursor:=tv.Cursor,line:=tv.Document.FindLine( cursor )
+	Return New Vec2i( line+1,cursor-tv.Document.StartOfLine( line ) )
+End

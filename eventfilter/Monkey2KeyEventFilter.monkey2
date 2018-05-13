@@ -39,7 +39,7 @@ Class Monkey2KeyEventFilter Extends TextViewKeyEventFilter
 					
 					New Fiber( Lambda()
 						
-						Local cmd:="~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+doc.Path+"~q"
+						Local cmd:=Monkey2Parser.GetParseCommand( doc.Path )
 						
 						Local str:=LoadString( "process::"+cmd )
 						Local i:=str.Find( "{" )
