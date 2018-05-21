@@ -47,7 +47,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			ParseModules()
 			
 			time=Millisecs()-time
-			'Print "parse modules: "+time+" ms"
+			Print "parse modules: "+(time/1000)+" sec"
 			
 			OnDoneParseModules( time )
 		End )
@@ -90,48 +90,51 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return True
 	End
 	
-	Method ParseFile:String( filePath:String,pathOnDisk:String,moduleName:String )
+	Method ParseFile:String( params:ParseFileParams )
 		
-		' is file modified?
-		Local time:=GetFileTime( pathOnDisk )
-		If time=0 Return Null ' file not found
-		
-		Local last:=_filesTime[filePath]
-		
-		If last = 0 Or time > last
-			_filesTime[filePath]=time
-			'Print "parse file: "+filePath.Replace( "C:/proj/monkey2/monkey2fork/","" )+"  "+pathOnDisk.Replace( "C:/proj/monkey/monkey2fork/","" )+"  mod:"+Int(isModule)
-		Else
-			'Print "parse file, not modified: "+filePath.Replace( "C:/proj/monkey2/monkey2fork/","" )+"  "+pathOnDisk.Replace( "C:/proj/monkey/monkey2fork/","" )+"  mod:"+Int(isModule)
-			Return Null
-		Endif
+		Local filePath:=params.filePath
+		'Local pathOnDisk:=params.pathOnDisk
+		Local moduleName:=params.moduleName
+		Local geninfo:=params.geninfo
 		
 		' start parsing process
-		Local str:=StartParsing( pathOnDisk )
+		'
+		If geninfo And _enabled
+			'Print "geninfo: "+filePath
+			Local proc:=New ProcessReader( filePath )
+			Local str:=proc.Run( GetParseCommand( filePath,moduleName<>"" ) )
+			
+			If Not str Return "#" 'special kind of error
+			
+			Local hasErrors:=(str.Find( "] : Error : " ) > 0)
+			
+			If hasErrors Return str
+		Endif
 		
-		If Not str Return "#" 'special kind of error
+		Local geninfoPath:=GetGeninfoPath( filePath )
+		If Not geninfo
+			' is file modified?
+			Local time:=GetFileTime( geninfoPath )
+			If time=0 Return Null ' file not found
 		
-'		If Not isModule
-'			Print "-----"
-'			Print str
-'			Print "-----"
-'		Endif
+			Local last:=_filesTime[filePath]
 		
-		Local hasErrors:=(str.Find( "] : Error : " ) > 0)
+			If last = 0 Or time > last
+				_filesTime[filePath]=time
+				'Print "parse file: "+filePath
+			Else
+				'Print "parse file, not modified: "+filePath
+				Return Null
+			Endif
+		Endif
 		
-		Local i:=str.Find( "{" )
+		Local jobj:=JsonObject.Parse( LoadString( geninfoPath ) )
 		
-		' return errors
-		If hasErrors Return (i > 0) ? str.Slice( 0,i ) Else str
-		If i=-1 Return "#" ' not a valid json
+		If Not jobj Return "#"
 		
-		'----------
 		
 		RemovePrevious( filePath )
 
-		Local json:=str.Slice( i )
-		Local jobj:=JsonObject.Parse( json )
-		
 		Local nspace:= jobj.Contains( "namespace" ) ? jobj["namespace"].ToString() Else ""
 		
 		If jobj.Contains( "members" )
@@ -163,8 +166,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 					Endif
 				Endif
 				file=folder+file
-				'Print "parse import: "+file+"  mod: "+Int(isModule)
-				ParseFile( file,file,moduleName )
+				'Print "parse import: "+file
+				ParseFile( file,moduleName,False )
 			Next
 		Endif
 		
@@ -183,7 +186,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		Return Null
 	End
-		
+	
 	Method ParseJsonMembers( members:Stack<JsonValue>,parent:CodeItem,filePath:String,resultContainer:Stack<CodeItem>,namespac:String )
 		
 		For Local val:=Eachin members
@@ -335,40 +338,13 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Method GetScope:CodeItem( docPath:String,cursor:Vec2i )
 		
-		Local items:=ItemsMap[docPath]
+		Local result:=GetNearestScope( docPath,cursor )
 		
-		If Not items Return Null
-		
-		' all classes / structs
-		Local result:CodeItem=Null
-		For Local i:=Eachin items
-			If CheckLineLocation( i,cursor )
-				result=i
-				Exit
-			Endif
-		Next
-		
-		If result
-			' try to check - are we inside of method/ property / etc
-			Repeat
-				Local i:=GetInnerScope( result,cursor )
-				If i = Null Exit
-				result=i
-			Forever
-			
-		Else
-			' try to find in extension members
-			For Local list:=Eachin ExtraItemsMap.Values.All()
-				For Local i:=Eachin list
-					If i.FilePath<>docPath Continue
-					If CheckLineLocation( i,cursor )
-						result=i
-						Exit
-					Endif
-				Next
-				If result Exit
-			Next
-		End
+		' we are looking for scope here, so skip locals
+		'
+		If result And IsLocalMember( result )
+			result=result.Parent
+		Endif
 		
 		Return result
 		
@@ -377,33 +353,17 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Method GetNearestScope:CodeItem( docPath:String,cursor:Vec2i )
 	
 		Local items:=ItemsMap[docPath]
-	
-		If Not items Return Null
-	
-		' all classes / structs
-		Local fakeItem:=New CodeItem( "fake" )
-		fakeItem.Children=items
-
-		Local result:=GetInnerScope( fakeItem,cursor )
 		
-		If result
-			' try to check - are we inside of method/ property / etc
-			Repeat
-				Local i:=GetInnerScope( result,cursor )
-				If i = Null Exit
-				result=i
-			Forever
-	
-		Else
+		If Not items Return Null
+		
+		' all classes / structs
+		Local result:=GetInnerScope( items,cursor )
+		
+		If Not result
 			' try to find in extension members
-			For Local list:=Eachin ExtraItemsMap.Values
-				For Local i:=Eachin list
-					If i.FilePath<>docPath Continue
-					If CheckLineLocation( i,cursor )
-						result=i
-						Exit
-					Endif
-				Next
+			For Local list:=Eachin ExtraItemsMap.Values.All()
+				If list.Empty Or list[0].FilePath<>docPath Continue
+				Local result:=GetInnerScope( list,cursor )
 				If result Exit
 			Next
 		End
@@ -473,10 +433,32 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
-	Function GetParseCommand:String( filePathToParse:String )
-	
-		Return "~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+filePathToParse+"~q"
+	Function GetParseCommand:String( filePathToParse:String,isModule:Bool=False )
+		
+		Local path:String
+		If isModule
+			path=filePathToParse
+		Else
+			path=MainWindow.LockedDocument?.Path ?Else filePathToParse
+		Endif
+		
+		Return "~q"+MainWindow.Mx2ccPath+"~q geninfo ~q"+path+"~q"
 	End
+	
+	Function GetGeninfoPath:String( filePath:String )
+		
+		Return ExtractDir( filePath )+".mx2/"+StripDir( StripExt( filePath ) )+".geninfo"
+	End
+	
+	Function GetTempFilePathForParsing:String( srcPath:String )
+		
+		Local dir:=ExtractDir( srcPath )+".mx2/"
+		CreateDir( dir )
+		Local name:=StripDir( srcPath )
+		
+		Return dir+name
+	End
+	
 	
 	Private
 	
@@ -614,26 +596,28 @@ Class Monkey2Parser Extends CodeParserPlugin
 				
 				For Local i:=Eachin Items
 					
+					'Local similar:=i.Ident.ToLower().StartsWith( ident )
+					
 					If Not CheckUsingsFilter( i.Namespac,usingsFilter )
-						'Print "skip 1 "+i.Ident
+						'If similar Print "exclude: "+i.Namespac+" "+i.Text
 						Continue
 					Endif
 					
 					'Print "global 1: "+i.Scope
 					If Not CheckIdent( i.Ident,firstIdent,onlyOne,intelliIdent )
-						'Print "skip 2 "+i.Ident
+						'If similar Print "skip 2 "+i.Ident
 						Continue
 					Endif
 					
 					If Not CheckAccessInGlobal( i,filePath )
-						'Print "skip 3 "+i.Ident
+						'If similar Print "skip 3 "+i.Ident
 						Continue
 					Endif
 					
-					If Not CheckLineLocation( i,cursor )
-						'Print "skip 4 "+i.Ident
-						Continue
-					Endif
+'					If Not CheckLineLocation( i,cursor )
+'						If similar Print "skip 4 "+i.Ident
+'						Continue
+'					Endif
 					
 					'Print "global 2"
 					If Not onlyOne
@@ -668,7 +652,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		If item = Null
 			
 			Local s:=ident
-			If s.EndsWith( "." ) Then s=s.Slice( 0,s.Length-1 )
+			If s.EndsWith( "." ) Then s=s.Slice( 0,-1 )
 			Local tuple:=NSpace.Find( s,False,usingsFilter )
 			Local ns := tuple ? (tuple.Item1 ? tuple.Item1 Else tuple.Item2) Else Null
 			If ns
@@ -824,12 +808,15 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		Local al:=_aliases[typeName]
 		Return al ? al.Type.ident Else typeName
+		
 	End
 	
 	Method AddExtensionItem( parent:CodeItem,item:CodeItem )
 		
 		Local key:=parent.Ident
+		
 		Local list:=ExtraItemsMap[key]
+		
 		If Not list
 			list=New Stack<CodeItem>
 			ExtraItemsMap[key]=list
@@ -840,6 +827,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Exit
 			Endif
 		Next
+		
 		item.IsExtension=True
 		list.Add( item )
 	End
@@ -865,16 +853,14 @@ Class Monkey2Parser Extends CodeParserPlugin
 		ted2go.ExtractExtensionItems( _extensions,item,target )
 	End
 	
-	Method StartParsing:String( pathOnDisk:String )
+	Method ParseFile( path:String,moduleName:String,geninfo:Bool=True )
 		
-		If Not _enabled Return ""
+		Local params:=New ParseFileParams
+		params.filePath=path
+		params.moduleName=moduleName
+		params.geninfo=geninfo
 		
-		Local proc:=New ProcessReader( pathOnDisk )
-		
-		Local cmd:=GetParseCommand( pathOnDisk )
-		Local str:=proc.Run( cmd )
-		
-		Return str
+		ParseFile( params )
 	End
 	
 	Method ParseModules()
@@ -885,6 +871,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		' pop up some modules to parse them first
 		Local dirs:=New Stack<String>
+		
 		dirs.AddAll( dd )
 		Local mods:=New String[]( "std","mojo","monkey" )
 		For Local m:=Eachin mods
@@ -898,16 +885,78 @@ Class Monkey2Parser Extends CodeParserPlugin
 				'Print "module: "+file
 				If GetFileType( file )=FileType.File
 					OnParseModule( file )
-					ParseFile( file,file,d )
+					ParseFile( file,d )
 				Endif
 			Endif
 		Next
 		
 	End
 	
+	Method StripNamespace:String( type:String )
+		
+		Local pair:=NSpace.Find( type,False )
+		
+		Local nspace:=pair?.Item2?.FullName
+		If nspace
+			type=type.Replace( nspace+".","" )
+		Endif
+		
+		Return type
+	End
+	
+	Method ParseSemtype:CodeType( semtype:String,kind:String )
+		
+		'DebugStop()
+		
+		semtype=StripNamespace( semtype )
+		
+		Local type:=New CodeType
+		
+		If semtype.EndsWith( "[]" )
+			type.isArray=True
+			semtype=semtype.Slice( 0,-2 )
+		Endif
+		
+		' generics
+		'
+		Local i:=semtype.Find( "<" )
+		Local args:CodeType[]
+		If i<>-1
+			Local generic:=semtype.Slice( i+1,-1 )
+			semtype=semtype.Slice( 0,i )
+			
+			Local parts:=generic.Split( "," )
+			For Local part:=Eachin parts
+				Local stripped:=StripNamespace( part )
+				If stripped<>part
+					generic=generic.Replace( part,stripped )
+				Endif
+			Next
+			
+			Local t:=New CodeType
+			t.ident=generic
+			args=New CodeType[]( t )
+		Endif
+		
+		type.ident=semtype
+		type.expr=semtype
+		type.kind=kind
+		type.args=args
+		
+		Return type
+	End
+	
 	Method ParseType:CodeType( jobj:Map<String,JsonValue>,type:Map<String,JsonValue> = Null )
 		
-		If type=Null Then type=GetJobjType( jobj )
+		If type=Null
+			
+			Local semtype:=Json_GetString( jobj,"semtype","" )
+			If semtype
+				Return ParseSemtype( semtype,Json_GetString( jobj,"kind","" ) )
+			Endif
+			
+			type=GetJobjType( jobj )
+		Endif
 		
 		If Not type
 		
@@ -1114,21 +1163,25 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return type
 	End
 	
-	Method GetInnerScope:CodeItem( parent:CodeItem,cursor:Vec2i )
+	Method GetInnerScope:CodeItem( items:Stack<CodeItem>,cursor:Vec2i )
 		
-		Local items:=parent.Children
 		If items=Null Return Null
 		
 		Local result:CodeItem=Null
 		For Local i:=Eachin items
-			
-			' inside
 			If CheckLineLocation( i,cursor,True )
 				result=i
-				If Not IsLocalMember( i ) Exit
+				If Not IsLocalMember( i )
+					items=result.Children
+					If items ' check all nested
+						i=GetInnerScope( items,cursor )
+						If i<>Null Then result=i
+					Endif
+					Exit
+				Endif
 			Endif
-			
 		Next
+		
 		Return result
 	End
 	
@@ -1286,6 +1339,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		Local srcpos:=item.ScopeStartPos
 		Local endpos:=item.ScopeEndPos
+		
 		If useSpecialLocalRule And IsLocalMember( item )
 			cursor.x-=1 ' hacking
 			Local retval:=cursor.x=srcpos.x And cursor.y>=srcpos.y
@@ -1296,9 +1350,10 @@ Class Monkey2Parser Extends CodeParserPlugin
 			If cursor.x>srcpos.x And cursor.x<endpos.x
 				Return True
 			Elseif cursor.x=srcpos.x Or cursor.x=endpos.x
-				 Return cursor.y>=srcpos.y And cursor.y<=endpos.y
+				Return cursor.y>=srcpos.y And cursor.y<=endpos.y
 			Endif
 		Endif
+	
 		Return False
 	End
 	
@@ -1493,13 +1548,14 @@ Class NSpace
 		Next
 		
 		Local ns:NSpace
-		For Local n:=Eachin list
-			If n And Monkey2Parser.CheckUsingsFilter( n.FullName,usingsFilter )
-				ns=n
-				Exit
-			Endif
-		Next
-		
+		If usingsFilter
+			For Local n:=Eachin list
+				If n And Monkey2Parser.CheckUsingsFilter( n.FullName,usingsFilter )
+					ns=n
+					Exit
+				Endif
+			Next
+		Endif
 		Return New Tuple2<NSpace,NSpace>( ns,lastNs )
 		
 	End

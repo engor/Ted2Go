@@ -239,13 +239,12 @@ Class AutocompleteDialog Extends NoTitleDialog
 				usings=New Stack<String>
 				
 				Local locked:=MainWindow.LockedDocument
-				local current:=Cast<CodeDocument>(MainWindow.DocsManager.CurrentDocument)
+				Local current:=Cast<CodeDocument>( MainWindow.DocsManager.CurrentDocument )
 				
 				If Not locked Then locked=current
 				If locked
 					Local info:=parser.UsingsMap[locked.Path]
 					If info.nspace Or info.usings
-						usings=New StringStack
 						If info.nspace Then usings.Add( info.nspace+".." )
 						If info.usings Then usings.AddAll( info.usings )
 					Endif
@@ -255,13 +254,15 @@ Class AutocompleteDialog Extends NoTitleDialog
 					Local info:=parser.UsingsMap[current.Path]
 					If info.nspace
 						Local s:=info.nspace+".."
-						If s And Not usings.Contains( s ) Then usings.Add( s )
+						If Not usings.Contains( s ) Then usings.Add( s )
 					Endif
 					If info.usings Then usings.AddAll( info.usings )
 				Endif
 				
 				If Not usings.Contains( "monkey.." ) Then usings.Add( "monkey.." )
 			Endif
+			
+			'Print "usings: "+usings.Join( " " )
 			
 			_listForExtract.Clear()
 			

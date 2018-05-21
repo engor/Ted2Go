@@ -83,6 +83,9 @@ Class MainWindowInstance Extends Window
 		
 		_recentViewedFiles=New RecentFiles( _docsManager )
 		
+		_codeParsing=New CodeParsing( _docsManager )
+		
+		
 		'Build tab
 		
 		_buildConsole=New ConsoleExt
@@ -1646,6 +1649,7 @@ Class MainWindowInstance Extends Window
 				SwapFullscreenEditor( True )
 			Endif
 			
+			_codeParsing.Parse()
 		End
 	End
 	
@@ -1793,6 +1797,7 @@ Class MainWindowInstance Extends Window
 	Field _storedSize:Recti,_storedMaximized:Bool
 	
 	Field _recentViewedFiles:RecentFiles
+	Field _codeParsing:CodeParsing
 	
 	Method ToJson:JsonValue( rect:Recti )
 		Return New JsonArray( New JsonValue[]( New JsonNumber( rect.min.x ),New JsonNumber( rect.min.y ),New JsonNumber( rect.max.x ),New JsonNumber( rect.max.y ) ) )

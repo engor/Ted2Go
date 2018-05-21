@@ -1,6 +1,7 @@
 
 Namespace test2go
 
+Using std..
 
 Private
 
@@ -13,6 +14,8 @@ Class TestTheSame
 		If abc.Length>5
 			Print "it's longer than 5"
 		Endif
+		abc.Capitalize()
+		Local f7:=""
 		
 		Return Null
 		
@@ -39,6 +42,7 @@ Class TestTheSame
 	End
 	
 	Field aPtr:Vec2i Ptr
+	Global ccc:List<Vec3f>
 	
 End
 

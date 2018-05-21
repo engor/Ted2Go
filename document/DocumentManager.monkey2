@@ -87,8 +87,18 @@ Class DocumentManager
 	End
 	
 	Property OpenDocuments:Ted2Document[]()
-		
+	
 		Return _openDocs.ToArray()
+	End
+	
+	Property OpenCodeDocuments:CodeDocument[]()
+		
+		Local stack:=New Stack<CodeDocument>
+		For Local i:=Eachin _openDocs
+			Local doc:=Cast<CodeDocument>( i )
+			If doc Then stack.Add( doc )
+		Next
+		Return stack.ToArray()
 	End
 	
 	Property CurrentDocumentLabel:String()

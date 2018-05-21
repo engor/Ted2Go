@@ -6,7 +6,7 @@ Interface ICodeParser
 	
 	Method GetConstructors( item:CodeItem,target:Stack<CodeItem> )
 	Method RefineRawType( item:CodeItem )
-	Method ParseFile:String( filePath:String,pathOnDisk:String,moduleName:String )
+	Method ParseFile:String( params:ParseFileParams )
 	'Method ParseJson( json:String,filePath:String )
 	Method IsPosInsideOfQuotes:Bool( text:String,pos:Int )
 	Method CanShowAutocomplete:Bool( line:String,posInLine:Int )
@@ -120,6 +120,15 @@ Class ParserRequestOptions Final
 	
 End
 
+Class ParseFileParams
+	
+	Field filePath:String
+	'Field paths:String[]
+	Field moduleName:String
+	Field geninfo:Bool=True
+	
+End
+
 
 Private
 
@@ -143,7 +152,7 @@ Class FakeParser Implements ICodeParser
 	
 	Method GetConstructors( item:CodeItem,target:Stack<CodeItem> )
 	End
-	Method ParseFile:String( filePath:String,pathOnDisk:String,moduleName:String )
+	Method ParseFile:String( params:ParseFileParams )
 		'do nothing
 		Return Null
 	End
