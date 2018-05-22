@@ -17,7 +17,7 @@ Class CodeParsing
 				codeDoc.Renamed+=Lambda( newPath:String,oldPath:String )
 					
 					' maybe now we have no parser for this file
-					' so re-started
+					' so re-starting
 					StopWatching( codeDoc )
 					StartWatching( codeDoc )
 				End
@@ -28,23 +28,31 @@ Class CodeParsing
 			Local codeDoc:=Cast<CodeDocument>( doc )
 			If codeDoc Then StopWatching( codeDoc )
 		End
+		_docsManager.LockedDocumentChanged+=Lambda()
+			
+			Local doc:=_docsManager.LockedDocument
+			If doc
+				FindWatcher( doc )?.WakeUp()
+			Endif
+		End
 		
 		DocWatcher.docsForUpdate=Lambda:CodeDocument[]()
 			
-			'Return New CodeDocument[]( Cast<CodeDocument>( _docsManager.CurrentDocument ) )
 			Return _docsManager.OpenCodeDocuments
 		End
+		
+		DocWatcher.Init()
 	End
 	
-	Method Parse()
-		
-		Local doc:=MainWindow.LockedDocument
-		If Not doc Then doc=Cast<CodeDocument>( _docsManager.CurrentDocument )
-		If doc
-			Local parser:=ParsersManager.Get( doc.CodeView.FileType )
-			DocWatcher.TryToParse( doc,parser )
-		Endif
-	End
+'	Method Parse()
+'		
+'		Local doc:=MainWindow.LockedDocument
+'		If Not doc Then doc=Cast<CodeDocument>( _docsManager.CurrentDocument )
+'		If doc
+'			Local parser:=ParsersManager.Get( doc.CodeView.FileType )
+'			DocWatcher.TryToParse( doc,parser )
+'		Endif
+'	End
 	
 	
 	Private
@@ -52,13 +60,23 @@ Class CodeParsing
 	Field _docsManager:DocumentManager
 	Field _watchers:=New Stack<DocWatcher>
 	
-	Method StartWatching( doc:CodeDocument )
-	
+	Method FindWatcher:DocWatcher( doc:CodeDocument )
+		
 		For Local i:=Eachin _watchers
-			If i.doc=doc Return
+			If i.doc=doc Return i
 		Next
+		
+		Return Null
+	End
 	
-		_watchers.Add( New DocWatcher( doc ) )
+	Method StartWatching( doc:CodeDocument )
+		
+		If FindWatcher( doc ) Return ' already added
+		
+		Local watcher:=New DocWatcher( doc )
+		_watchers.Add( watcher )
+		
+		watcher.WakeUp()
 	End
 	
 	Method StopWatching( doc:CodeDocument )
@@ -107,6 +125,27 @@ Class DocWatcher
 		_view.Document.TextChanged-=OnTextChanged
 	End
 	
+	Method WakeUp()
+	
+		OnTextChanged()
+	End
+	
+	Function Init()
+	
+		_timeTextChanged=Millisecs()
+	End
+	
+	Private
+	
+	Field _view:CodeDocumentView
+	Field _parser:ICodeParser
+	Global _dirtyCounter:=0,_dirtyCounterLastParse:=0
+	Global _timeDocParsed:=0
+	Global _timeTextChanged:=0
+	Global _timer:Timer
+	Global _parsing:Bool
+	Global _changed:=New Stack<CodeDocument>
+	
 	Method OnTextChanged()
 		
 		' skip whitespaces ?
@@ -138,6 +177,7 @@ Class DocWatcher
 			
 			_parsing=True
 			
+			Local docForParsing:CodeDocument
 			Local dirty:=New String[_changed.Length]
 			Local texts:=New String[_changed.Length]
 			For Local i:=0 Until _changed.Length
@@ -146,11 +186,12 @@ Class DocWatcher
 					dirty[i]=d.Path
 					texts[i]=d.CodeView.Text
 				Endif
+				docForParsing=d ' grab latest added doc
 			Next
 			_changed.Clear()
 			
 			Local params:=New ParseFileParams
-			params.filePath=doc.Path
+			params.filePath=docForParsing.Path
 			
 			For Local i:=0 Until dirty.Length
 				If dirty[i]
@@ -185,8 +226,7 @@ Class DocWatcher
 				
 			Endif
 			
-			
-			OnDocumentParsed( doc,parser,errors )
+			OnDocumentParsed( docForParsing,parser,errors )
 			
 			For Local i:=0 Until dirty.Length
 				If dirty[i] Then DeleteFile( dirty[i] )
@@ -205,18 +245,6 @@ Class DocWatcher
 		Local items:=GetCodeItems( doc.Path,parser )
 		doc.OnDocumentParsed( items,Null )
 	End
-	
-	
-	Private
-	
-	Field _view:CodeDocumentView
-	Field _parser:ICodeParser
-	Global _dirtyCounter:=0,_dirtyCounterLastParse:=0
-	Global _timeDocParsed:=0
-	Global _timeTextChanged:=0
-	Global _timer:Timer
-	Global _parsing:Bool
-	Global _changed:=New Stack<CodeDocument>
 	
 	Function OnDocumentParsed( doc:CodeDocument,parser:ICodeParser,errors:Stack<BuildError> )
 		

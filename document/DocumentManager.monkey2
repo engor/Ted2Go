@@ -8,6 +8,7 @@ Class DocumentManager
 	Field prevDocument:Action
 
 	Field CurrentDocumentChanged:Void()
+	Field LockedDocumentChanged:Void()
 	
 	Field DocumentAdded:Void( doc:Ted2Document )
 	Field DocumentRemoved:Void( doc:Ted2Document )
@@ -34,15 +35,31 @@ Class DocumentManager
 		nextDocument.Triggered=OnNextDocument
 		nextDocument.HotKey=Key.Tab
 		nextDocument.HotKeyModifiers=Modifier.Control
-
+		
 		prevDocument=New Action( "Previous tab" )
 		prevDocument.Triggered=OnPrevDocument
 		prevDocument.HotKey=Key.Tab
 		prevDocument.HotKeyModifiers=Modifier.Control|Modifier.Shift
 		
+		DocumentRemoved+=Lambda( doc:Ted2Document )
+			
+			If doc=_locked Then OnLockedChanged( Null )
+		End
+		
 		App.Activated+=Lambda()
 			New Fiber( OnAppActivated )
 		End
+	End
+	
+	Method LockBuildFile()
+	
+		Local doc:=Cast<CodeDocument>( CurrentDocument )
+		OnLockBuildFile( doc )
+	End
+	
+	Property LockedDocument:CodeDocument()
+	
+		Return _locked
 	End
 	
 	Property TabView:TabViewExt()
@@ -50,6 +67,11 @@ Class DocumentManager
 		Return _tabView
 	End
 
+	Property CurrentCodeDocument:CodeDocument()
+		
+		Return Cast<CodeDocument>( _currentDoc )
+	End
+	
 	Property CurrentDocument:Ted2Document()
 	
 		Return _currentDoc
@@ -265,6 +287,8 @@ Class DocumentManager
 		jobj["openDocuments"]=docs
 		
 		If _currentDoc jobj["currentDocument"]=New JsonString( _currentDoc.Path )
+		
+		If _locked jobj["lockedDocument"]=New JsonString( _locked.Path )
 	End
 		
 	Method LoadState( jobj:JsonObject )
@@ -298,6 +322,11 @@ Class DocumentManager
 			CurrentDocument=_openDocs[0]
 		Endif
 		
+		If jobj.Contains( "lockedDocument" )
+			Local path:=jobj["lockedDocument"].ToString()
+			OnLockBuildFile( Cast<CodeDocument>( FindDocument( path ) ) )
+		Endif
+		
 	End
 
 	Method Update()
@@ -310,10 +339,9 @@ Class DocumentManager
 	
 	Field _tabView:TabViewExt
 	Field _browser:DockingView
-	
 	Field _currentDoc:Ted2Document
-	
 	Field _openDocs:=New Stack<Ted2Document>
+	Field _locked:CodeDocument
 	
 	Method InitDoc( doc:Ted2Document )
 	
@@ -448,7 +476,7 @@ Class DocumentManager
 			Case FileType.None
 			
 				doc.Dirty=True
-
+				
 				'CurrentDocument=doc
 				
 				Alert( "File '"+doc.Path+"' has been deleted!" )
@@ -457,6 +485,35 @@ Class DocumentManager
 		
 		Next
 		
+	End
+	
+	Method OnLockBuildFile( doc:CodeDocument )
+		
+		If Not doc Return
+		
+		If _locked Then SetLockedState( _locked,False )
+		
+		If doc=_locked
+			OnLockedChanged( Null )
+			Return
+		Endif
+		
+		SetLockedState( doc,True )
+		OnLockedChanged( doc )
+	End
+	
+	Method SetLockedState( doc:CodeDocument,locked:Bool )
+	
+		doc.State=locked ? "+" Else ""
+		Local tab:=FindTab( doc.View )
+		If tab Then tab.SetLockedState( locked )
+		CurrentDocumentChanged()
+	End
+	
+	Method OnLockedChanged( locked:CodeDocument )
+		
+		_locked=locked
+		LockedDocumentChanged()
 	End
 	
 End

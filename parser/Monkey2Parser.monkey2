@@ -100,15 +100,18 @@ Class Monkey2Parser Extends CodeParserPlugin
 		' start parsing process
 		'
 		If geninfo And _enabled
-			'Print "geninfo: "+filePath
+			Local parsedPath:String
+			Local cmd:=GetParseCommand( filePath,Varptr parsedPath )
 			Local proc:=New ProcessReader( filePath )
-			Local str:=proc.Run( GetParseCommand( filePath,moduleName<>"" ) )
+			Local str:=proc.Run( cmd )
 			
 			If Not str Return "#" 'special kind of error
 			
 			Local hasErrors:=(str.Find( "] : Error : " ) > 0)
 			
 			If hasErrors Return str
+			
+			filePath=parsedPath
 		Endif
 		
 		Local geninfoPath:=GetGeninfoPath( filePath )
@@ -127,8 +130,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Return Null
 			Endif
 		Endif
-		
-		Local jobj:=JsonObject.Parse( LoadString( geninfoPath ) )
+		'Print "info path: "+geninfoPath
+		Local jobj:=JsonObject.Parse( LoadString( geninfoPath ),True )
 		
 		If Not jobj Return "#"
 		
@@ -433,14 +436,24 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
-	Function GetParseCommand:String( filePathToParse:String,isModule:Bool=False )
+	Function GetParseCommand:String( filePathToParse:String,realParsedPath:String Ptr=Null )
 		
 		Local path:String
-		If isModule
-			path=filePathToParse
+		Local modsDir:=Prefs.MonkeyRootPath+"modules/"
+		If filePathToParse.StartsWith( modsDir ) And filePathToParse.Find( "/tests/")=-1
+			Local i1:=modsDir.Length
+			Local i2:=filePathToParse.Find( "/",i1+1 )
+			If i2<>-1
+				Local modName:=filePathToParse.Slice( i1,i2 )
+				path=modsDir+modName+"/"+modName+".monkey2"
+			Else
+				path=filePathToParse
+			Endif
 		Else
 			path=MainWindow.LockedDocument?.Path ?Else filePathToParse
 		Endif
+		
+		realParsedPath[0]=path
 		
 		Return "~q"+MainWindow.Mx2ccPath+"~q geninfo ~q"+path+"~q"
 	End
@@ -497,7 +510,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local rootScope:=GetScope( filePath,cursor )
 		Local scope:=rootScope
 		
-		Print "scope: "+scope?.Text
+		'Print "scope: "+scope?.Text
 		
 		'-----------------------------
 		' what the first ident is?

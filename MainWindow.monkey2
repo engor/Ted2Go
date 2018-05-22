@@ -59,7 +59,7 @@ Class MainWindowInstance Extends Window
 		
 		_docsManager.DocumentDoubleClicked+=Lambda( doc:Ted2Document )
 		
-			_buildActions.LockBuildFile()
+			_docsManager.LockBuildFile()
 		End
 		
 		App.FileDropped+=Lambda( path:String )
@@ -640,7 +640,7 @@ Class MainWindowInstance Extends Window
 	
 	Property LockedDocument:CodeDocument()
 	
-		Return _buildActions.LockedDocument
+		Return _docsManager.LockedDocument
 	End
 	
 	Property IsTerminating:Bool()
@@ -1310,9 +1310,9 @@ Class MainWindowInstance Extends Window
 	End
 
 	Method OpenDocument( path:String,lockIt:Bool=False )
-	
+		
 		_docsManager.OpenDocument( path,True )
-		If lockIt Then _buildActions.LockBuildFile()
+		If lockIt Then _docsManager.LockBuildFile()
 		UpdateWindow( True )
 	End
 	
@@ -1649,7 +1649,6 @@ Class MainWindowInstance Extends Window
 				SwapFullscreenEditor( True )
 			Endif
 			
-			_codeParsing.Parse()
 		End
 	End
 	
