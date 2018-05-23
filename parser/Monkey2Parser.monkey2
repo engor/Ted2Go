@@ -47,7 +47,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			ParseModules()
 			
 			time=Millisecs()-time
-			Print "parse modules: "+(time/1000)+" sec"
+			Print "completed parse modules: "+(time/1000)+" sec"
 			
 			OnDoneParseModules( time )
 		End )
@@ -439,6 +439,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Function GetParseCommand:String( filePathToParse:String,realParsedPath:String Ptr=Null )
 		
 		Local path:String
+		' is it a module file?
 		Local modsDir:=Prefs.MonkeyRootPath+"modules/"
 		If filePathToParse.StartsWith( modsDir ) And filePathToParse.Find( "/tests/")=-1
 			Local i1:=modsDir.Length
@@ -450,7 +451,14 @@ Class Monkey2Parser Extends CodeParserPlugin
 				path=filePathToParse
 			Endif
 		Else
-			path=MainWindow.LockedDocument?.Path ?Else filePathToParse
+			Local locked:=MainWindow.LockedDocument?.Path
+			If locked
+				' is it a standalone file?
+				Local proj:=ProjectView.FindProjectByFile( filePathToParse )
+				path = locked.StartsWith( proj ) ? locked Else filePathToParse
+			Else
+				path=filePathToParse
+			Endif
 		Endif
 		
 		realParsedPath[0]=path

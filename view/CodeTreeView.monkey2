@@ -36,6 +36,7 @@ Class CodeTreeView Extends TreeViewExt
 	Method SelectByScope( scope:CodeItem )
 		
 		Local node:=FindNode( RootNode,scope )
+		If Not node And scope.Parent Then node=FindNode( RootNode,scope.Parent )
 		If Not node Return
 		
 		node.Expanded=True
