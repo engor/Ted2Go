@@ -63,7 +63,7 @@ Class DocumentManager
 	End
 	
 	Property TabView:TabViewExt()
-
+	
 		Return _tabView
 	End
 
@@ -176,7 +176,7 @@ Class DocumentManager
 		
 		doc=docType.CreateDocument( path )
 		If Not doc.Load() Return Null
-
+		
 		InitDoc( doc )
 		
 		Local addAtBegin:=(openByHand And Prefs.MainPlaceDocsAtBegin)
@@ -290,7 +290,7 @@ Class DocumentManager
 		
 		If _locked jobj["lockedDocument"]=New JsonString( _locked.Path )
 	End
-		
+	
 	Method LoadState( jobj:JsonObject )
 		
 		If Not jobj.Contains( "openDocuments" ) Return
@@ -328,12 +328,19 @@ Class DocumentManager
 		Endif
 		
 	End
-
+	
 	Method Update()
 		
 		nextDocument.Enabled=_openDocs.Length>1
 		prevDocument.Enabled=_openDocs.Length>1
 	End
+	
+	Method SetAsMainFile( path:String,set:Bool )
+		
+		Local doc:=Cast<CodeDocument>( FindDocument( path ) )
+		If doc Then SetMainFileState( doc,set )
+	End
+	
 	
 	Private
 	
@@ -361,7 +368,7 @@ Class DocumentManager
 		
 			Local index:=_tabView.TabIndex( doc.View )
 			If index=-1 Return	'in case doc already removed via Rename.
-
+		
 			_tabView.RemoveTab( index )
 			_openDocs.Remove( doc )
 			
@@ -507,6 +514,12 @@ Class DocumentManager
 		doc.State=locked ? "+" Else ""
 		Local tab:=FindTab( doc.View )
 		If tab Then tab.SetLockedState( locked )
+		CurrentDocumentChanged()
+	End
+	
+	Method SetMainFileState( doc:CodeDocument,state:Bool )
+	
+		doc.State=state ? ">" Else ""
 		CurrentDocumentChanged()
 	End
 	

@@ -5,7 +5,7 @@ Namespace ted2go
 Class Plugin
 
 	Property Name:String() Virtual
-	
+		
 		Return "<untitled plugin>"
 	End
 	

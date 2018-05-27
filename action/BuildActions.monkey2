@@ -266,7 +266,7 @@ Class BuildActions Implements IModuleBuilder
 		Wend
 	
 		Local idle:=Not _console.Running
-		Local canbuild:=idle And BuildDoc()<>Null And _buildTarget
+		Local canbuild:=idle And FilePathToBuild And _buildTarget
 		
 		build.Enabled=canbuild
 		buildAndRun.Enabled=canbuild
@@ -375,9 +375,9 @@ Class BuildActions Implements IModuleBuilder
 	Field _storedTargets:String
 	Field _storedClean:Bool
 	
-	Method BuildDoc:CodeDocument()
+	Property FilePathToBuild:String()
 		
-		Return _docs.LockedDocument ?Else _docs.CurrentCodeDocument
+		Return MainWindow.GetActiveMainFilePath()
 	End
 	
 	Method SaveAll:Bool( buildFile:String )
@@ -536,10 +536,10 @@ Class BuildActions Implements IModuleBuilder
 	
 	Method BuildApp:Bool( config:String,target:String,sourceAction:String )
 	
-		Local buildDoc:=BuildDoc()
-		If Not buildDoc Return False
+		Local buildDocPath:=FilePathToBuild
+		If Not buildDocPath Return False
 		
-		Local product:=BuildProduct.GetBuildProduct( buildDoc.Path,target,False )
+		Local product:=BuildProduct.GetBuildProduct( buildDocPath,target,False )
 		If Not product Return False
 		
 		Local opts:=product.GetMx2ccOpts()
@@ -553,12 +553,12 @@ Class BuildActions Implements IModuleBuilder
 		If Verbosed cmd+=" -verbose"
 		cmd+=" -config="+config
 		cmd+=" -target="+target
-		cmd+=" ~q"+buildDoc.Path+"~q"
+		cmd+=" ~q"+buildDocPath+"~q"
 		
 		Local title := sourceAction="build" ? "Building" Else (sourceAction="run" ? "Running" Else "Checking")
-		Local msg:=title+" ~ "+target+" ~ "+config+" ~ "+StripDir( buildDoc.Path )
+		Local msg:=title+" ~ "+target+" ~ "+config+" ~ "+StripDir( buildDocPath )
 		
-		If Not BuildMx2( cmd,msg,sourceAction,buildDoc.Path,True ) Return False
+		If Not BuildMx2( cmd,msg,sourceAction,buildDocPath,True ) Return False
 		
 		_console.Write("~nDone.")
 		
@@ -640,10 +640,10 @@ Class BuildActions Implements IModuleBuilder
 	
 	Method OnBuildFileSettings()
 
-		Local buildDoc:=BuildDoc()
-		If Not buildDoc Return
+		Local path:=FilePathToBuild
+		If Not path Return
 		
-		local product:=BuildProduct.GetBuildProduct( buildDoc.Path,_buildTarget,True )
+		Local product:=BuildProduct.GetBuildProduct( path,_buildTarget,True )
 	End
 	
 	Method OnUpdateModules()

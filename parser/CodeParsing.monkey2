@@ -4,7 +4,7 @@ Namespace ted2go
 
 Class CodeParsing
 	
-	Method New( docs:DocumentManager )
+	Method New( docs:DocumentManager,projView:ProjectView )
 		
 		_docsManager=docs
 		
@@ -21,7 +21,13 @@ Class CodeParsing
 					StopWatching( codeDoc )
 					StartWatching( codeDoc )
 				End
+				Return
 			Endif
+			
+'			If ProjectView.IsProjectFile( doc.Path )
+'				
+'			Endif
+			
 		End
 		_docsManager.DocumentRemoved+=Lambda( doc:Ted2Document )
 		
@@ -30,9 +36,12 @@ Class CodeParsing
 		End
 		_docsManager.LockedDocumentChanged+=Lambda()
 			
-			Local doc:=_docsManager.LockedDocument
-			If doc
-				FindWatcher( doc )?.WakeUp()
+			' have we locked or active path?
+			Local mainFile:=MainWindow.GetActiveMainFilePath( False )
+			If mainFile
+				FindWatcher( mainFile )?.WakeUp()
+			Else
+				DocWatcher.WakeUpGlobal()
 			Endif
 		End
 		
@@ -42,6 +51,16 @@ Class CodeParsing
 		End
 		
 		DocWatcher.Init()
+		
+		projView.MainFileChanged+=Lambda( path:String,prevPath:String )
+			
+			DocWatcher.WakeUpGlobal()
+		End
+		
+		projView.ActiveProjectChanged+=Lambda( proj:Monkey2Project )
+			
+			DocWatcher.WakeUpGlobal()
+		End
 	End
 	
 '	Method Parse()
@@ -66,6 +85,15 @@ Class CodeParsing
 			If i.doc=doc Return i
 		Next
 		
+		Return Null
+	End
+	
+	Method FindWatcher:DocWatcher( path:String )
+	
+		For Local i:=Eachin _watchers
+			If i.doc.Path=path Return i
+		Next
+	
 		Return Null
 	End
 	
@@ -130,6 +158,11 @@ Class DocWatcher
 		OnTextChanged()
 	End
 	
+	Function WakeUpGlobal()
+	
+		_timeTextChanged=Millisecs()
+	End
+	
 	Function Init()
 	
 		_timeTextChanged=Millisecs()
@@ -191,7 +224,7 @@ Class DocWatcher
 			_changed.Clear()
 			
 			Local params:=New ParseFileParams
-			params.filePath=docForParsing.Path
+			params.filePath=MainWindow.GetActiveMainFilePath()
 			
 			For Local i:=0 Until dirty.Length
 				If dirty[i]
@@ -248,14 +281,16 @@ Class DocWatcher
 	
 	Function OnDocumentParsed( doc:CodeDocument,parser:ICodeParser,errors:Stack<BuildError> )
 		
-		Local items:=GetCodeItems( doc.Path,parser )
-		doc.OnDocumentParsed( items,GetErrors( doc.Path,errors ) )
+		If doc
+			Local items:=GetCodeItems( doc.Path,parser )
+			doc.OnDocumentParsed( items,GetErrors( doc.Path,errors ) )
+		Endif
 		
 		Local docs:=docsForUpdate()
 		If docs
 			For Local d:=Eachin docs
 				If d=doc Continue
-				items=GetCodeItems( d.Path,parser )
+				Local items:=GetCodeItems( d.Path,parser )
 				d.OnDocumentParsed( items,GetErrors( d.Path,errors ) )
 			Next
 		Endif

@@ -206,25 +206,49 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		Return New Node( parent,Self )
 	End
 	
-	Method AddProject( dir:String )
-		
-		Local node:=NewNode( _rootNode )
-		Local s:=StripDir( dir )+" ("+dir+")"
-		node.Text=s
-		node._path=dir
-		UpdateProjIcon( node )
-		_expander.Restore( node )
-		
-		UpdateNode( node )
-		ApplyFilter( node )
+	Method SetActiveProject( project:Monkey2Project )
+	
+		For Local n:=Eachin RootNode.Children
+			Local node:=Cast<Node>( n )
+			Local s:=PrepareProjectName( node._project )
+			If node._project=project Then s="+"+s
+			node.Text=s
+		Next
 	End
 	
-	Method RemoveProject( dir:String )
+	Method SetMainFile( path:String,set:Bool )
+		
+		If Not Prefs.MainProjectIcons Return
+		
+		Local node:=_rootNode.FindNodeByPath( path )
+		If node
+			node.Icon=set ? ThemeImages.Get( "project/monkey2main.png" ) Else GetFileTypeIcon( node._path )
+		Endif
+	End
 	
-		Local s:=StripDir( dir )+" ("+dir+")"
+	Method AddProject( project:Monkey2Project )
+	
+		Local node:=NewNode( _rootNode )
+		Local s:=PrepareProjectName( project )
+		node.Text=s
+		node._path=project.Folder
+		node._project=project
+		UpdateProjIcon( node )
+		_expander.Restore( node )
+	
+		UpdateNode( node )
+		ApplyFilter( node )
+		
+		Local mainFile:=project.MainFilePath
+		If mainFile Then SetMainFile( mainFile,True )
+	End
+	
+	Method RemoveProject( project:Monkey2Project )
+	
 		Local toRemove:TreeView.Node=Null
 		For Local n:=Eachin RootNode.Children
-			If n.Text=s
+			Local node:=Cast<Node>( n )
+			If node._project=project
 				toRemove=n
 				Exit
 			Endif
@@ -316,12 +340,30 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 			_view=view
 		End
 		
+		Method FindNodeByPath:Node( path:String )
+			
+			If Children
+				For Local i:=Eachin Children
+					Local n:=Cast<Node>( i )
+					If n._path=path Return n
+					If n.Children
+						n=n.FindNodeByPath( path )
+						If n Return n
+					Endif
+				Next
+			Endif
+			
+			Return Null
+		End
+		
+		
 		Private
-	
+		
 		Field _path:String
 		Field _holders:ProjectBrowserView[]
 		Field _curHolder:ProjectBrowserView
 		Field _view:View
+		Field _project:Monkey2Project
 		
 	End
 	
@@ -406,6 +448,12 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		Endif
 		
 		Return True
+	End
+	
+	Method PrepareProjectName:String( project:Monkey2Project )
+		
+		Local dir:=project.Folder
+		Return StripDir( dir )+" ("+dir+")"
 	End
 	
 	Method OnDraggedInto( node:Node,name:String )
@@ -494,12 +542,12 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 	
 	Method UpdateFilterItems( projNode:Node )
 		
-		Local path:=projNode.Path+"/project.json"
-		If GetFileType( path ) <> FileType.File Return
+		Local proj:=projNode._project
+		If proj.IsFolderBased Return
 		
 		Local projName:=projNode.Text
 		
-		Local t:=GetFileTime( path )
+		Local t:=proj.Modified
 		If t=_filtersFileTimes[projName] Return
 		
 		_filtersFileTimes[projName]=t
@@ -507,13 +555,10 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		Local list:=GetOrCreate( _filters,projName )
 		list.Clear()
 		
-		Local json:=JsonObject.Load( path )
-		If json.Contains( "exclude" )
-			For Local i:=Eachin json["exclude"].ToArray()
-				Local f:=New TextFilter( i.ToString() )
-				list+=f
-			Next
-		Endif
+		For Local i:=Eachin proj.Excluded
+			Local f:=New TextFilter( i )
+			list+=f
+		Next
 	End
 	
 	Method UpdateProjIcon( node:TreeView.Node )

@@ -146,7 +146,7 @@ Global AppTitle:="Ted2Go v2.11"
 
 
 Function Main()
-
+	
 	Prefs.LoadLocalState()
 	
 	Local root:=Prefs.MonkeyRootPath
@@ -166,13 +166,13 @@ Function Main()
 	'
 	Local jobj:=JsonObject.Load( "bin/ted2.state.json" )
 	If Not jobj jobj=New JsonObject
-
+	
 	Prefs.LoadState( jobj )
 	
 	'initial theme
 	'
 	If Not jobj.Contains( "theme" ) jobj["theme"]=New JsonString( "theme-hollow" )
-
+	
 	If Not jobj.Contains( "themeScale" ) jobj["themeScale"]=New JsonNumber( 1 )
 	
 	SetConfig( "MOJO_INITIAL_THEME",jobj.GetString( "theme" ) )
@@ -186,7 +186,7 @@ Function Main()
 	'initial window state
 	'
 	Local flags:=WindowFlags.Resizable|WindowFlags.HighDPI
-
+	
 	Local rect:Recti
 	
 	If jobj.Contains( "windowRect" ) 
@@ -197,7 +197,7 @@ Function Main()
 		rect=New Recti( 0,0,w,h )
 		flags|=WindowFlags.Center
 	Endif
-
+	
 	New MainWindowInstance( AppTitle,rect,flags,jobj )
 	
 	App.Idle+=Lambda()
@@ -208,7 +208,11 @@ Function Main()
 			Local arg:=args[i]
 			arg=arg.Replace( "\","/" )
 			If GetFileType( arg ) = FileType.File
-				MainWindow.OpenDocument( arg,True )
+				If ProjectView.IsProjectFile( arg )
+					MainWindow.OpenProject( arg )
+				Else
+					MainWindow.OpenDocument( arg,True )
+				Endif
 			Elseif GetFileType( arg ) = FileType.Directory
 				MainWindow.OpenProject( arg )
 			Endif
@@ -222,7 +226,7 @@ End
 Function SetupMonkeyRootPath:String( rootPath:String,searchMode:Bool )
 	
 #If __DESKTOP_TARGET__
-
+	
 	If searchMode
 		' search for desired folder
 		Local found:=FindBinFolder( rootPath )
@@ -230,7 +234,7 @@ Function SetupMonkeyRootPath:String( rootPath:String,searchMode:Bool )
 		If Not found And rootPath<>AppDir() Then found=FindBinFolder( AppDir() )
 		' search for choosen-by-requester folder
 		While Not found
-	
+			
 			Local ok:=Confirm( "Initializing","Monkey2 root directory isn't set.~nTo continue, you should specify it." )
 			If Not ok
 				Return ""
@@ -256,30 +260,30 @@ Function SetupMonkeyRootPath:String( rootPath:String,searchMode:Bool )
 End
 
 Function GetActionTextWithShortcut:String( action:Action )
-
+	
 	Return action.Text+" ("+action.HotKeyText+")"
 End
 
 Function Exec( exePath:String,args:String="" )
-
+	
 #If __HOSTOS__="windows"
-
+	
 	libc.system( exePath+" "+args )
 	
 #Else If __HOSTOS__="macos"
-
+	
 	libc.system( "open ~q"+exePath+"~q --args "+args )
-
+	
 #Else If __HOSTOS__="linux"
-
+	
 	libc.system( exePath+" "+args+" >/dev/null 2>/dev/null &" )
-
+	
 #Else If __HOSTOS__="raspbian"
-
+	
 	libc.system( exePath+" "+args+" >/dev/null 2>/dev/null &" )
-
+	
 #Endif
-
+	
 End
 
 
@@ -292,13 +296,13 @@ Function FindBinFolder:String( startingFolder:String )
 	ChangeDir( startingFolder )
 	
 	While GetFileType( "bin" )<>FileType.Directory Or GetFileType( "modules" )<>FileType.Directory
-	
+		
 		If IsRootDir( CurrentDir() )
 			
 			ok=False
 			Exit
 		Endif
-	
+		
 		ChangeDir( ExtractDir( CurrentDir() ) )
 	Wend
 	Local result:=ok ? CurrentDir() Else ""

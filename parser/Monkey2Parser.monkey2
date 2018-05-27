@@ -44,7 +44,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			Local time:=Millisecs()
 			
-			ParseModules()
+			'ParseModules()
 			
 			time=Millisecs()-time
 			Print "completed parse modules: "+(time/1000)+" sec"
@@ -451,16 +451,19 @@ Class Monkey2Parser Extends CodeParserPlugin
 				path=filePathToParse
 			Endif
 		Else
-			Local locked:=MainWindow.LockedDocument?.Path
-			If locked
+			Local mainFile:=MainWindow.GetActiveMainFilePath()
+			If mainFile
+				If GetFileType( mainFile )<>FileType.File
+					Alert( "File doesn't exists!~n"+mainFile,"Invalid main file" )
+				Endif
 				' is it a standalone file?
-				Local proj:=ProjectView.FindProjectByFile( filePathToParse )
-				path = locked.StartsWith( proj ) ? locked Else filePathToParse
+				Local proj:=ProjectView.FindProject( filePathToParse )?.Folder
+				path = mainFile.StartsWith( proj ) ? mainFile Else filePathToParse
 			Else
 				path=filePathToParse
 			Endif
 		Endif
-		
+		Print "path: "+path
 		realParsedPath[0]=path
 		
 		Return "~q"+MainWindow.Mx2ccPath+"~q geninfo ~q"+path+"~q"

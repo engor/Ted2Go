@@ -57,7 +57,7 @@ Class FindInFilesDialog Extends DialogExt
 			
 			If CustomFolder Return
 			
-			Local projs:=projView.OpenProjects
+			Local projs:=projView.OpenProjectsFolders
 			If Not projs Return
 			
 			_projList.RemoveAllItems()

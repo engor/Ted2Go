@@ -56,7 +56,7 @@ Class FindActions
 			Local path:=docs.CurrentDocument?.Path
 			If Not path Then path=projView.SelectedItem?.Path
 			
-			Local proj:=projView.FindProjectByFile( path )
+			Local proj:=ProjectView.FindProject( path )?.Folder
 			OnFindInFiles( "",proj )
 			
 		End
