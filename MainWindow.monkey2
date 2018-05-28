@@ -660,7 +660,14 @@ Class MainWindowInstance Extends Window
 	Method GetActiveMainFilePath:String( checkCurrentDoc:Bool=True )
 	
 		Local path:=_docsManager.LockedDocument?.Path
-		If Not path Then path=_projectView.ActiveProject?.MainFilePath
+		If Not path
+			Local proj:=_projectView.ActiveProject
+			path=proj?.MainFilePath
+			If proj And Not path
+				Alert( "Main file of "+proj.Name+" project is not specified.~n~nRight click on file in Project tree~nand choose 'Set as main file'.","Build error" )
+				Return ""
+			Endif
+		Endif
 		If Not path And checkCurrentDoc Then path=_docsManager.CurrentDocument?.Path
 		
 '		Print "locked: "+_docsManager.LockedDocument?.Path

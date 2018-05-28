@@ -1,4 +1,4 @@
 {
-	"mainFile": "Ted2.monkey2",
-	"excluded": [".git*", "bin", "*.buildv*", "*.products", "logo", ".mx2"]
+	"excluded":[".git*","bin","*.buildv*","*.products","logo",".mx2"],
+	"mainFile":"Ted2.monkey2"
 }

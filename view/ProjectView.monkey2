@@ -140,8 +140,20 @@ Class ProjectView Extends DockingView
 		Local proj:=FindProject( path )
 		If proj
 			If proj.IsFolderBased
-				Alert( "Can't set folder-based project as active!","Projects" )
-				Return
+				Local yes:=RequestOkay( "Can't set folder-based project as active.~n~nDo you want create project file for the project?","Projects","Yes","No" )
+				If Not yes Return
+				Local name:=RequestString( "Project name:","Projects",StripDir( proj.Folder ) ).Trim()
+				If Not name
+					Alert( "No name was entered, so do nothing.","Projects" )
+					Return
+				Endif
+				If ExtractExt( name )<>".mx2proj"
+					name+=".mx2proj"
+				Endif
+				Local path:=proj.Folder+"/"+name
+				Monkey2Project.SaveEmptyProject( path )
+				OpenProject( path )
+				SetActiveProject( path )
 			Endif
 			OnActiveProjectChanged( proj )
 		Endif
@@ -159,26 +171,20 @@ Class ProjectView Extends DockingView
 	
 	Method OpenProject:Bool( path:String )
 		
-		Local dir:=path
-		If GetFileType( path )=FileType.File
-			dir=ExtractDir( path )
-'		Else
-'			Local mx2path:=dir+"/"+StripDir( dir )+".mx2proj"
-'			If GetFileType( mx2path )=FileType.File
-'				path=mx2path
-'			Endif
+		Local proj:=FindProject( path )
+		
+		If proj ' silently close it
+			_projects-=proj
+			_projBrowser.RemoveProject( proj )
 		Endif
-		dir=StripSlashes( dir )
 		
-		If FindProject( dir ) Return False
+		proj=New Monkey2Project( path )
 		
-		Local project:=New Monkey2Project( path )
+		_projects+=proj
 		
-		_projects+=project
+		_projBrowser.AddProject( proj )
 		
-		_projBrowser.AddProject( project )
-		
-		ProjectOpened( project.Path )
+		ProjectOpened( proj.Path )
 		
 		Return True
 	End
@@ -757,6 +763,15 @@ End
 
 Class Monkey2Project
 	
+	Function SaveEmptyProject( path:String )
+		
+		Local jobj:=New JsonObject
+		jobj["mainFile"]=New JsonString
+		jobj["excluded"]=New JsonArray
+		
+		SaveString( jobj.ToJson(),path )
+	End
+	
 	Method New( path:String )
 		
 		_path=path
@@ -770,8 +785,7 @@ Class Monkey2Project
 			_isFolderBased=True
 		Endif
 		
-		path=StripSlashes( path )
-		_data.SetString( "folder",path )
+		_folder=StripSlashes( path )
 	End
 	
 	Property MainFile:String()
@@ -779,13 +793,19 @@ Class Monkey2Project
 	End
 	
 	Property MainFilePath:String()
-		Return Folder+"/"+MainFile
+		Local main:=MainFile
+		Return main ? Folder+"/"+main Else ""
 	Setter( value:String )
 		_data.SetString( "mainFile",value.Replace(Folder+"/","" ) )
+		OnChanged()
 	End
 	
 	Property Folder:String()
-		Return _data.GetString( "folder" )
+		Return _folder
+	End
+	
+	Property Name:String()
+		Return StripDir( _folder )
 	End
 	
 	Property IsFolderBased:Bool()
@@ -834,10 +854,15 @@ Class Monkey2Project
 	
 	Private
 	
-	Field _path:String
+	Field _path:String,_folder:String
 	Field _data:JsonObject
 	Field _isFolderBased:Bool
 	Field _modified:Int
 	Field _excluded:String[],_excludedTime:Int
+	
+	Method OnChanged()
+		
+		Save()
+	End
 	
 End
