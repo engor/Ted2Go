@@ -122,6 +122,11 @@ Class ProjectView Extends DockingView
 		Return ExtractExt( filePath )=".mx2proj"
 	End
 	
+	Function ActiveProjectName:String()
+	
+		Return _activeProject?.Name
+	End
+	
 	Method OnFileDropped:Bool( path:String )
 		
 		Local ok:=_projBrowser.OnFileDropped( path )
@@ -262,7 +267,7 @@ Class ProjectView Extends DockingView
 	Global _projects:=New Stack<Monkey2Project>
 	Field _builder:IModuleBuilder
 	Field _projBrowser:ProjectBrowserView
-	Field _activeProject:Monkey2Project
+	Global _activeProject:Monkey2Project
 	Field _cutPath:String,_copyPath:String
 	
 	Method OnCut( path:String )

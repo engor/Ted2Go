@@ -658,13 +658,12 @@ Class MainWindowInstance Extends Window
 	End
 	
 	Method GetActiveMainFilePath:String( checkCurrentDoc:Bool=True )
-	
+		
 		Local path:=_docsManager.LockedDocument?.Path
 		If Not path
 			Local proj:=_projectView.ActiveProject
 			path=proj?.MainFilePath
 			If proj And Not path
-				Alert( "Main file of "+proj.Name+" project is not specified.~n~nRight click on file in Project tree~nand choose 'Set as main file'.","Build error" )
 				Return ""
 			Endif
 		Endif

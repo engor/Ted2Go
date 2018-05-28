@@ -537,7 +537,13 @@ Class BuildActions Implements IModuleBuilder
 	Method BuildApp:Bool( config:String,target:String,sourceAction:String )
 	
 		Local buildDocPath:=FilePathToBuild
-		If Not buildDocPath Return False
+		If Not buildDocPath
+			Local projName:=ProjectView.ActiveProjectName()
+			If projName
+				Alert( "Main file of "+projName+" project is not specified.~n~nRight click on file in Project tree~nand choose 'Set as main file'.","Build error" )
+			Endif
+			Return False
+		Endif
 		
 		Local product:=BuildProduct.GetBuildProduct( buildDocPath,target,False )
 		If Not product Return False

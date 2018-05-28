@@ -44,7 +44,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			Local time:=Millisecs()
 			
-			'ParseModules()
+			ParseModules()
 			
 			time=Millisecs()-time
 			Print "completed parse modules: "+(time/1000)+" sec"
