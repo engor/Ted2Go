@@ -51,14 +51,16 @@ Class ProjectView Extends DockingView
 		App.Activated+=Lambda()
 			
 			For Local proj:=Eachin _projects
-				proj.Reload()
+				Local changed:=proj.Reload()
+				If changed
+					_projBrowser?.RefreshProject( proj )
+				Endif
 			Next
 		End
 		
 		ActiveProjectChanged+=Lambda( proj:Monkey2Project )
 		
 			_projBrowser?.SetActiveProject( proj )
-			_projBrowser?.SetMainFile( proj.MainFilePath,True )
 		End
 		
 		MainFileChanged+=Lambda( path:String,prevPath:String )
@@ -106,8 +108,6 @@ Class ProjectView Extends DockingView
 	
 		If Not filePath Return Null
 		
-		filePath=StripSlashes( filePath )
-	
 		For Local proj:=Eachin _projects
 			If filePath.StartsWith( proj.Folder )
 				Return proj
@@ -140,34 +140,28 @@ Class ProjectView Extends DockingView
 		Return ok
 	End
 	
-	Method SetActiveProject( path:String )
+	Method SetActiveProject( path:String,prompt:Bool=True )
 		
 		Local proj:=FindProject( path )
 		If proj
 			If proj.IsFolderBased
-				Local yes:=RequestOkay( "Can't set folder-based project as active.~n~nDo you want create project file for the project?","Projects","Yes","No" )
-				If Not yes Return
-				Local name:=RequestString( "Project name:","Projects",StripDir( proj.Folder ) ).Trim()
-				If Not name
-					Alert( "No name was entered, so do nothing.","Projects" )
-					Return
-				Endif
-				If ExtractExt( name )<>".mx2proj"
-					name+=".mx2proj"
-				Endif
-				Local path:=proj.Folder+"/"+name
-				Monkey2Project.SaveEmptyProject( path )
-				OpenProject( path )
-				SetActiveProject( path )
+				If Not prompt Return
+				proj=ShowCreateProjectFilePrompt( "Can't set folder-based project as active.",proj )
+				If Not proj Return
 			Endif
 			OnActiveProjectChanged( proj )
 		Endif
 	End
 	
-	Method SetMainFile( path:String )
+	Method SetMainFile( path:String,prompt:Bool=True )
 	
 		Local proj:=FindProject( path )
 		If proj
+			If proj.IsFolderBased
+				If Not prompt Return
+				proj=ShowCreateProjectFilePrompt( "Can't set main file of folder-based project.",proj )
+				If Not proj Return
+			Endif
 			Local prev:=proj.MainFilePath
 			proj.MainFilePath=path
 			MainFileChanged( path,prev )
@@ -177,17 +171,21 @@ Class ProjectView Extends DockingView
 	Method OpenProject:Bool( path:String )
 		
 		Local proj:=FindProject( path )
+		Local isProjExists:=(proj<>Null)
 		
-		If proj ' silently close it
-			_projects-=proj
-			_projBrowser.RemoveProject( proj )
-		Endif
+		Local projIndex:=_projects.FindIndex( proj )
+		Local wasActive:=(proj=_activeProject)
 		
 		proj=New Monkey2Project( path )
 		
-		_projects+=proj
-		
-		_projBrowser.AddProject( proj )
+		If isProjExists
+			_projects.Set( projIndex,proj )
+			_projBrowser.RefreshProject( proj )
+			If wasActive Then OnActiveProjectChanged( proj )
+		Else
+			_projects+=proj
+			_projBrowser.AddProject( proj )
+		Endif
 		
 		ProjectOpened( proj.Path )
 		
@@ -202,6 +200,8 @@ Class ProjectView Extends DockingView
 		_projBrowser.RemoveProject( proj )
 		
 		_projects-=proj
+		
+		If proj=_activeProject Then OnActiveProjectChanged( Null )
 		
 		ProjectClosed( dir )
 	End
@@ -252,7 +252,7 @@ Class ProjectView Extends DockingView
 		If selPath Then _projBrowser.SelectByPath( selPath )
 		
 		Local activePath:=Json_GetString( jobj.Data,"active","" )
-		If activePath Then SetActiveProject( activePath )
+		If activePath Then SetActiveProject( activePath,False )
 	End
 	
 	
@@ -269,6 +269,40 @@ Class ProjectView Extends DockingView
 	Field _projBrowser:ProjectBrowserView
 	Global _activeProject:Monkey2Project
 	Field _cutPath:String,_copyPath:String
+	
+	Method ShowCreateProjectFilePrompt:Monkey2Project( prompt:String,proj:Monkey2Project )
+		
+		Local yes:=RequestOkay( prompt+"~n~nDo you want create project file for the project?","Projects","Yes","No" )
+		If Not yes Return Null
+		
+		Local path:String
+		Repeat 
+			Local name:=RequestString( "Project filename:","Projects",StripDir( proj.Folder ) ).Trim()
+			If Not name
+				Alert( "Name wasn't entered, so do nothing.","Projects" )
+				Return Null
+			Endif
+			If ExtractExt( name )<>".mx2proj"
+				name+=".mx2proj"
+			Endif
+			path=proj.Folder+"/"+name
+			
+			If FileExists( path )
+				Local yes:=RequestOkay( "Such project file already exists.~nDo you want use it for the project?","Projects","Use it","Create another" )
+				If Not yes Continue
+			Else
+				' don't overwrite existing files
+				Monkey2Project.SaveEmptyProject( path )
+			Endif
+			
+			Exit
+			
+		Forever
+		
+		OpenProject( path )
+		
+		Return FindProject( path )
+	End
 	
 	Method OnCut( path:String )
 		
@@ -373,9 +407,9 @@ Class ProjectView Extends DockingView
 	
 		OpenProject( dir )
 		
-		If _projects.Length=1
-			OnActiveProjectChanged( _projects[0] )
-		Endif
+'		If _projects.Length=1
+'			OnActiveProjectChanged( _projects[0] )
+'		Endif
 	End
 	
 	Method OnActiveProjectChanged( proj:Monkey2Project )
@@ -768,11 +802,14 @@ End
 
 Class Monkey2Project
 	
+	Const KEY_MAIN_FILE:="mainFile"
+	Const KEY_HIDDEN:="hidden"
+	
 	Function SaveEmptyProject( path:String )
 		
 		Local jobj:=New JsonObject
-		jobj["mainFile"]=New JsonString
-		jobj["excluded"]=New JsonArray
+		jobj[KEY_MAIN_FILE]=New JsonString
+		jobj[KEY_HIDDEN]=New JsonArray
 		
 		SaveString( jobj.ToJson(),path )
 	End
@@ -794,14 +831,14 @@ Class Monkey2Project
 	End
 	
 	Property MainFile:String()
-		Return _data.GetString( "mainFile" )
+		Return _data.GetString( KEY_MAIN_FILE )
 	End
 	
 	Property MainFilePath:String()
 		Local main:=MainFile
 		Return main ? Folder+"/"+main Else ""
 	Setter( value:String )
-		_data.SetString( "mainFile",value.Replace(Folder+"/","" ) )
+		_data.SetString( KEY_MAIN_FILE,value.Replace(Folder+"/","" ) )
 		OnChanged()
 	End
 	
@@ -830,7 +867,7 @@ Class Monkey2Project
 		If _modified=0 Return New String[0]
 		If _modified=_excludedTime Return _excluded
 		
-		Local jarr:=_data.GetArray( "excluded" )
+		Local jarr:=_data.GetArray( KEY_HIDDEN )
 		If Not jarr Or jarr.Empty Return New String[0]
 		
 		_excluded=New String[jarr.Length]
@@ -846,15 +883,18 @@ Class Monkey2Project
 		If Not _isFolderBased Then SaveString( _data.ToJson(),_path )
 	End
 	
-	Method Reload()
+	Method Reload:Bool()
 	
-		If _isFolderBased Return
+		If _isFolderBased Return False
 		
 		Local t:=GetFileTime( _path )
 		If t>_modified
 			_data=JsonObject.Load( _path )
 			_modified=t
+			Return True
 		Endif
+		
+		Return False
 	End
 	
 	Private

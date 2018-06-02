@@ -1,4 +1,4 @@
 {
-	"excluded":[".git*","bin","*.buildv*","*.products","logo",".mx2"],
+	"hidden":[".git*","bin","*.buildv*","*.products","logo",".mx2"],
 	"mainFile":"Ted2.monkey2"
 }

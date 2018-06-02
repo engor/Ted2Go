@@ -102,6 +102,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 		If geninfo And _enabled
 			Local parsedPath:String
 			Local cmd:=GetParseCommand( filePath,Varptr parsedPath )
+			
+			If Not cmd Return "#"
+			
 			Local proc:=New ProcessReader( filePath )
 			Local str:=proc.Run( cmd )
 			
@@ -466,7 +469,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Print "path: "+path
 		realParsedPath[0]=path
 		
-		Return "~q"+MainWindow.Mx2ccPath+"~q geninfo ~q"+path+"~q"
+		Return path ? "~q"+MainWindow.Mx2ccPath+"~q geninfo ~q"+path+"~q" Else ""
 	End
 	
 	Function GetGeninfoPath:String( filePath:String )

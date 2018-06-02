@@ -759,10 +759,11 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	End
 	
 	Method ShowJsonDialog()
-	
-		New Fiber( Lambda()
 		
-			Local cmd:=Monkey2Parser.GetParseCommand( _doc.Path )
+		Local cmd:=Monkey2Parser.GetParseCommand( _doc.Path )
+		If Not cmd Return
+		
+		New Fiber( Lambda()
 			
 			Local str:=LoadString( "process::"+cmd )
 			Local i:=str.Find( "{" )
@@ -781,7 +782,6 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			tv.WordWrap=True
 			tv.Text=str
 			dock.AddView( tv,"bottom",200,True )
-			
 			
 			Local dialog:=New Dialog( "ParseInfo",dock )
 			dialog.AddAction( "Close" ).Triggered=dialog.Close

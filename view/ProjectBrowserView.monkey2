@@ -241,6 +241,33 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		
 		Local mainFile:=project.MainFilePath
 		If mainFile Then SetMainFile( mainFile,True )
+		
+	End
+	
+	Method RefreshProject( project:Monkey2Project )
+		
+		Local folder:=project.Folder
+		Local projNode:Node=Null
+		For Local n:=Eachin RootNode.Children
+			Local node:=Cast<Node>( n )
+			If node._project.Folder=folder
+				projNode=node
+				Exit
+			Endif
+		Next
+		
+		If Not projNode Return
+		
+		projNode._project=project
+		UpdateProjIcon( projNode )
+		_expander.Restore( projNode )
+	
+		UpdateNode( projNode )
+		ApplyFilter( projNode )
+	
+		Local mainFile:=project.MainFilePath
+		If mainFile Then SetMainFile( mainFile,True )
+		
 	End
 	
 	Method RemoveProject( project:Monkey2Project )
