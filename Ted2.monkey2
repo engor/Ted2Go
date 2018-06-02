@@ -207,15 +207,7 @@ Function Main()
 		For Local i:=1 Until args.Length
 			Local arg:=args[i]
 			arg=arg.Replace( "\","/" )
-			If GetFileType( arg ) = FileType.File
-				If ProjectView.IsProjectFile( arg )
-					MainWindow.OpenProject( arg )
-				Else
-					MainWindow.OpenDocument( arg,True )
-				Endif
-			Elseif GetFileType( arg ) = FileType.Directory
-				MainWindow.OpenProject( arg )
-			Endif
+			MainWindow.OnFileDropped( arg )
 		Next
 	End
 	

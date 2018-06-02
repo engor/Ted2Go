@@ -551,6 +551,18 @@ Class MainWindowInstance Extends Window
 		'SDL_RaiseWindow( SDLWindow )
 	End
 	
+	Method OnFileDropped( path:String )
+	
+		New Fiber( Lambda()
+	
+			Local ok:=_projectView.OnFileDropped( path )
+			If Not ok And FileExists( path ) 'file
+				_docsManager.OpenDocument( path,True )
+			Endif
+	
+		End )
+	End
+	
 	Method HideFindPanel:Bool()
 		
 		If Not _findReplaceView.Visible Return False
@@ -1395,18 +1407,6 @@ Class MainWindowInstance Extends Window
 		
 		' need to make visible after layout
 		_docsTabView.EnsureVisibleCurrentTab()
-	End
-	
-	Method OnFileDropped( path:String )
-		
-		New Fiber( Lambda()
-			
-			Local ok:=_projectView.OnFileDropped( path )
-			If Not ok And FileExists( path ) 'file
-				_docsManager.OpenDocument( path,True )
-			Endif
-			
-		End )
 	End
 	
 	Method OnAppClose()

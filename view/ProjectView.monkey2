@@ -122,6 +122,11 @@ Class ProjectView Extends DockingView
 		Return ExtractExt( filePath )=".mx2proj"
 	End
 	
+	Function IsValidProject:Bool( path:String )
+	
+		Return IsProjectFile( path ) Or GetFileType( path )=FileType.Directory
+	End
+	
 	Function ActiveProjectName:String()
 	
 		Return _activeProject?.Name
@@ -131,8 +136,7 @@ Class ProjectView Extends DockingView
 		
 		Local ok:=_projBrowser.OnFileDropped( path )
 		If Not ok
-			Local isFolder:=GetFileType( path )=FileType.Directory
-			If isFolder
+			If IsValidProject( path )
 				ok=True
 				OpenProject( path )
 			Endif
