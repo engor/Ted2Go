@@ -454,7 +454,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 				path=filePathToParse
 			Endif
 		Else
-			Local mainFile:=MainWindow.GetActiveMainFilePath()
+			Local mainFile:=PathsProvider.GetActiveMainFilePath()
 			If mainFile
 				If GetFileType( mainFile )<>FileType.File
 					Alert( "File doesn't exists!~n"+mainFile,"Invalid main file" )

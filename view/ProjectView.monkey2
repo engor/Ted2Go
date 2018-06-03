@@ -132,6 +132,14 @@ Class ProjectView Extends DockingView
 		Return _activeProject?.Name
 	End
 	
+	Function CheckMainFilePath( proj:Monkey2Project )
+		
+		If Not proj.MainFilePath
+			Alert( "Main file of ~q"+proj.Name+"~q project is not specified.~n~nRight click on file in Project tree~nand choose 'Set as main file'.","Build error" )
+		Endif
+	
+	End
+	
 	Method OnFileDropped:Bool( path:String )
 		
 		Local ok:=_projBrowser.OnFileDropped( path )
@@ -639,6 +647,13 @@ Class ProjectView Extends DockingView
 				menu.AddSeparator()
 				
 				If browser.IsProjectNode( node ) ' root node
+					
+					menu.AddAction( "Build & Run" ).Triggered=Lambda()
+						PathsProvider.SetCustomBuildProject( node.Project )
+						Local buildActions:=Di.Resolve<BuildActions>()
+						buildActions.buildAndRun.Triggered()
+						PathsProvider.SetCustomBuildProject( Null )
+					End
 					
 					menu.AddAction( "Set as active project" ).Triggered=Lambda()
 					

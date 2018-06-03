@@ -344,6 +344,10 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 			Return _path
 		End
 		
+		Property Project:Monkey2Project()
+			Return _project
+		End
+		
 		Property Detachable:Bool()
 			Return GetNodeDeepLevel( Self )>1
 		End

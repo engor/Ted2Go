@@ -30,16 +30,16 @@ Class MainWindowInstance Extends Window
 		
 		_tabsWrap=New DraggableTabs
 		
-		_docsTabView=New TabViewExt( TabViewFlags.DraggableTabs|TabViewFlags.ClosableTabs )
+		_docsTabView=Di.Resolve<DocsTabView>()
 		
 		_recentFilesMenu=New MenuExt( "Recent files" )
 		_recentProjectsMenu=New MenuExt( "Recent projects" )
 		_closeProjectMenu=New MenuExt( "Close project" )
 		
-		_docBrowser=New DockingView
+		_docBrowser=Di.Resolve<DocBrowserView>()
 		
-		_docsManager=New DocumentManager( _docsTabView,_docBrowser )
-
+		_docsManager=Di.Resolve<DocumentManager>()
+		
 		_docsManager.CurrentDocumentChanged+=Lambda()
 			
 			UpdateKeyView()
@@ -93,7 +93,7 @@ Class MainWindowInstance Extends Window
 		
 		'Build tab
 		
-		_buildConsole=New ConsoleExt
+		_buildConsole=Di.Resolve<BuildConsole>()
 		' jump to errors etc.
 		_buildConsole.RequestJumpToFile+=Lambda( path:String,line:Int )
 			
@@ -104,7 +104,7 @@ Class MainWindowInstance Extends Window
 		
 		'Output tab
 		
-		_outputConsole=New ConsoleExt
+		_outputConsole=Di.Resolve<OutputConsole>()
 		Local bar:=New ToolBarExt
 		bar.MaxSize=New Vec2i( 300,30 )
 		
@@ -214,9 +214,9 @@ Class MainWindowInstance Extends Window
 		_helpView.Navigate( AboutPagePath )
 		
 		
-		_debugView=New DebugView( _docsManager,_outputConsole )
+		_debugView=Di.Resolve<DebugView>()
 		
-		_buildActions=New BuildActions( _docsManager,_buildConsole,_debugView )
+		_buildActions=Di.Resolve<BuildActions>()
 		_buildActions.ErrorsOccured+=Lambda( errors:BuildError[] )
 			
 			ShowBuildConsole( True )
@@ -225,7 +225,7 @@ Class MainWindowInstance Extends Window
 		
 		' ProjectView
 		'
-		_projectView=New ProjectView( _docsManager,_buildActions )
+		_projectView=Di.Resolve<ProjectView>()
 		' project opened
 		_projectView.ProjectOpened+=Lambda( path:String )
 			AddRecentProject( path )
@@ -664,28 +664,14 @@ Class MainWindowInstance Extends Window
 		Return _docsManager
 	End
 	
+	Property ProjView:ProjectView()
+	
+		Return _projectView
+	End
+	
 	Property LockedDocument:CodeDocument()
 	
 		Return _docsManager.LockedDocument
-	End
-	
-	Method GetActiveMainFilePath:String( checkCurrentDoc:Bool=True )
-		
-		Local path:=_docsManager.LockedDocument?.Path
-		If Not path
-			Local proj:=_projectView.ActiveProject
-			path=proj?.MainFilePath
-			If proj And Not path
-				Return ""
-			Endif
-		Endif
-		If Not path And checkCurrentDoc Then path=_docsManager.CurrentDocument?.Path
-		
-'		Print "locked: "+_docsManager.LockedDocument?.Path
-'		Print "active: "+_projectView.ActiveProject?.MainFilePath
-'		Print "current: "+_docsManager.CurrentDocument?.Path
-		
-		Return path
 	End
 	
 	Property IsTerminating:Bool()

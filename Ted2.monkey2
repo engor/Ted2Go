@@ -121,7 +121,7 @@
 #Import "view/Undock"
 #Import "view/TextViewExt"
 
-
+#Import "PathsProvider"
 #Import "Tree"
 #Import "Tuple"
 #Import "Plugin"
@@ -130,6 +130,9 @@
 #Import "ProcessReader"
 #Import "LiveTemplates"
 #Import "MainWindow"
+
+#Import "di/Di"
+#Import "di/DiSetup"
 
 
 Namespace ted2go
@@ -140,12 +143,15 @@ Using mojox..
 Using tinyxml2..
 Using sdl2..
 
+
 Const MONKEY2_DOMAIN:="http://monkeycoder.co.nz"
 
 Global AppTitle:="Ted2Go v2.11"
 
 
 Function Main()
+	
+	SetupDiContainer()
 	
 	Prefs.LoadLocalState()
 	

@@ -376,8 +376,13 @@ Class BuildActions Implements IModuleBuilder
 	Field _storedClean:Bool
 	
 	Property FilePathToBuild:String()
-		
-		Return MainWindow.GetActiveMainFilePath()
+	
+		Return PathsProvider.GetActiveMainFilePath()
+	End
+	
+	Property FilePathToBuildWithPrompt:String()
+	
+		Return PathsProvider.GetActiveMainFilePath( True,True )
 	End
 	
 	Method SaveAll:Bool( buildFile:String )
@@ -536,14 +541,8 @@ Class BuildActions Implements IModuleBuilder
 	
 	Method BuildApp:Bool( config:String,target:String,sourceAction:String )
 	
-		Local buildDocPath:=FilePathToBuild
-		If Not buildDocPath
-			Local projName:=ProjectView.ActiveProjectName()
-			If projName
-				Alert( "Main file of "+projName+" project is not specified.~n~nRight click on file in Project tree~nand choose 'Set as main file'.","Build error" )
-			Endif
-			Return False
-		Endif
+		Local buildDocPath:=FilePathToBuildWithPrompt
+		If Not buildDocPath Return False
 		
 		Local product:=BuildProduct.GetBuildProduct( buildDocPath,target,False )
 		If Not product Return False

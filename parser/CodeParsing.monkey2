@@ -37,7 +37,7 @@ Class CodeParsing
 		_docsManager.LockedDocumentChanged+=Lambda()
 			
 			' have we locked or active path?
-			Local mainFile:=MainWindow.GetActiveMainFilePath( False )
+			Local mainFile:=PathsProvider.GetActiveMainFilePath( False )
 			If mainFile
 				FindWatcher( mainFile )?.WakeUp()
 			Else
@@ -224,7 +224,7 @@ Class DocWatcher
 			_changed.Clear()
 			
 			Local params:=New ParseFileParams
-			params.filePath=MainWindow.GetActiveMainFilePath()
+			params.filePath=PathsProvider.GetActiveMainFilePath()
 			
 			For Local i:=0 Until dirty.Length
 				If dirty[i]
