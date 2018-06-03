@@ -92,6 +92,7 @@ Class PrefsDialog Extends DialogExt
 	Field _mainProjectIcons:CheckButton
 	Field _mainProjectSingleClickExpanding:CheckButton
 	Field _mainPlaceDocsAtBegin:CheckButton
+	Field _mainUseOpenGlEsProfile:CheckButton
 	
 	Field _monkeyRootPath:TextFieldExt
 	
@@ -147,6 +148,7 @@ Class PrefsDialog Extends DialogExt
 		Prefs.MainProjectIcons=_mainProjectIcons.Checked
 		Prefs.MainProjectSingleClickExpanding=_mainProjectSingleClickExpanding.Checked
 		Prefs.MainPlaceDocsAtBegin=_mainPlaceDocsAtBegin.Checked
+		Prefs.OpenGlProfile=_mainUseOpenGlEsProfile.Checked ? "es" Else ""
 		
 		App.ThemeChanged()
 		
@@ -173,6 +175,9 @@ Class PrefsDialog Extends DialogExt
 		
 		_mainPlaceDocsAtBegin=New CheckButton( "Place opened document to the left side" )
 		_mainPlaceDocsAtBegin.Checked=Prefs.MainPlaceDocsAtBegin
+		
+		_mainUseOpenGlEsProfile=New CheckButton( "Use opengl 'es' mode; uncheck to use full onengl (restart required)" )
+		_mainUseOpenGlEsProfile.Checked=(Prefs.OpenGlProfile="es")
 		
 		_monkeyRootPath=New TextFieldExt( Prefs.MonkeyRootPath )
 		_monkeyRootPath.Enabled=False
@@ -213,6 +218,7 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( _mainToolBarVisible,"top" )
 		docker.AddView( _mainProjectSingleClickExpanding,"top" )
 		docker.AddView( _mainPlaceDocsAtBegin,"top" )
+		docker.AddView( _mainUseOpenGlEsProfile,"top" )
 		docker.AddView( New Label( " " ),"top" )
 		
 		Return docker

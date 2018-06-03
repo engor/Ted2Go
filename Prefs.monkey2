@@ -43,7 +43,8 @@ Class PrefsInstance
 	'
 	Field MonkeyRootPath:String
 	Field IdeHomeDir:String
-	'	
+	Field OpenGlProfile:="es"
+	'
 	Field SiblyMode:Bool
 	
 	Property FindFilesFilter:String()
@@ -63,6 +64,7 @@ Class PrefsInstance
 			MainProjectIcons=Json_GetBool( j2,"projectIcons",MainProjectIcons )
       		MainProjectSingleClickExpanding=Json_GetBool( j2,"singleClickExpanding",MainProjectSingleClickExpanding )
       		MainPlaceDocsAtBegin=Json_GetBool( j2,"placeDocsAtBegin",MainPlaceDocsAtBegin )
+      		OpenGlProfile=Json_GetString( j2,"openglProfile",OpenGlProfile )
       		
 		Endif
 		
@@ -125,6 +127,7 @@ Class PrefsInstance
 		j["projectIcons"]=New JsonBool( MainProjectIcons )
 		j["singleClickExpanding"]=New JsonBool( MainProjectSingleClickExpanding )
 		j["placeDocsAtBegin"]=New JsonBool( MainPlaceDocsAtBegin )
+		j["openglProfile"]=New JsonBool( OpenGlProfile )
 		
 		j=New JsonObject
 		json["completion"]=j

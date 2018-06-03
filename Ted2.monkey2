@@ -185,6 +185,10 @@ Function Main()
 	
 	SetConfig( "MOJO_INITIAL_THEME_SCALE",jobj.GetString( "themeScale" ) )
 	
+	If Prefs.OpenGlProfile
+		SetConfig( "MOJO_OPENGL_PROFILE",Prefs.OpenGlProfile )
+	Endif
+	
 	'start the app!
 	'
 	New AppInstance
