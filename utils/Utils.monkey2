@@ -367,6 +367,13 @@ End
 #End
 Function GetIndentBeforePos_Mx2:IdentInfo( line:String,pos:Int,withDots:Bool )
 	
+	' grab whole word under cursor
+	'
+	Local len:=line.Length
+	While pos < len And IsIdent( line[pos] )
+		pos+=1
+	Wend
+	
 	Local n:=pos-1
 	
 	While n >= 0

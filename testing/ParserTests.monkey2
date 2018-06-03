@@ -17,6 +17,10 @@ Class TestTheSame
 		abc.Capitalize()
 		Local f7:=""
 		
+		For Local Y:=0 Until 20
+			Local dev:=True
+		Next
+		
 		Return Null
 		
 	Setter( value:TestTheSame )
@@ -26,6 +30,10 @@ Class TestTheSame
 	End
 	
 	Method Test( pType:String Ptr )
+		
+		For Local Y:=0 Until 20
+			Local dev:=True
+		Next
 		
 		pType->Capitalize()
 		aPtr->Normalize()

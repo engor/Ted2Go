@@ -159,7 +159,7 @@ Class MainWindowInstance Extends Window
 		
 		'Help tab
 		
-		_helpView=New HtmlViewExt
+		_helpView=Di.Resolve<HelpView>()
 		_docsConsole=New DockingView
 		bar=New ToolBarExt
 		bar.MaxSize=New Vec2i( 300,30 )
@@ -193,7 +193,7 @@ Class MainWindowInstance Extends Window
 			label.Text=url
 		End
 		
-		_helpTree=New HelpTreeView( _helpView )
+		_helpTree=Di.Resolve<HelpTreeView>()
 		_docsConsole.AddView( _helpTree,"right",200,True )
 		
 		_docsConsole.AddView( bar,"top" )
@@ -1094,23 +1094,23 @@ Class MainWindowInstance Extends Window
 			Return
 		Endif
 		
-		Local doc:=Cast<CodeDocumentView>( _docsManager.CurrentTextView )
-		If Not doc Return
+		Local view:=Cast<CodeDocumentView>( _docsManager.CurrentTextView )
+		If Not view Return
 		
 		' don't check with parser, just find in docs tree
 		If searchMode
-			Local ident:=doc.WordAtCursor
+			Local ident:=view.WordAtCursor
 			_helpTree.QuickHelp( ident )
 			ShowDocsView( True )
 			Return
 		Endif
 		
-		Local ident:=doc.FullIdentAtCursor
+		Local ident:=view.IdentBeforeCursor()
 		
 		If Not ident Return
 		
-		Local parser:=ParsersManager.Get( doc.FileType )
-		Local item:=parser.ItemAtScope( ident,doc.FilePath,GetCursorPos( doc ) )
+		Local parser:=ParsersManager.Get( view.FileType )
+		Local item:=parser.ItemAtScope( ident,view.FilePath,GetCursorPos( view ) )
 		
 		If item
 			
@@ -1160,7 +1160,7 @@ Class MainWindowInstance Extends Window
 			
 			__prevPath=path
 			
-		ElseIf KeywordsManager.Get( doc.FileType ).Contains( ident )
+		Elseif KeywordsManager.Get( view.FileType ).Contains( ident )
 			
 			ShowStatusBarText( "(keyword) "+ident )
 		
@@ -1266,7 +1266,7 @@ Class MainWindowInstance Extends Window
 	
 	Method GotoDeclaration()
 	
-		Local doc:=Cast<CodeDocument>( _docsManager.CurrentDocument )
+		Local doc:=_docsManager.CurrentCodeDocument
 		If Not doc Return
 		
 		doc.GotoDeclaration()

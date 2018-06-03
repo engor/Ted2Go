@@ -37,6 +37,16 @@ Function SetupDiContainer()
 			Di.Resolve<BuildConsole>(),
 			Di.Resolve<DebugView>() )
 	End )
+	
+	Di.Bind<HelpView>()
+	
+	Di.Bind( Lambda:HelpTreeView()
+		Local view:=New HelpTreeView(
+			Di.Resolve<HelpView>() )
+		view.Init()
+		Return view
+	End )
+	
 End
 
 
@@ -58,4 +68,7 @@ Class BuildConsole Extends ConsoleExt
 End
 
 Class OutputConsole Extends ConsoleExt
+End
+
+Class HelpView Extends HtmlViewExt
 End

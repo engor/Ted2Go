@@ -57,8 +57,6 @@ Class HelpTreeView Extends TreeViewExt
 			MainWindow.ShowHelp( url )
 		End
 		
-		Init()
-		
 	End
 	
 	Property FindField:TextFieldExt()
@@ -148,11 +146,17 @@ Class HelpTreeView Extends TreeViewExt
 			
 			'new doc system
 			Local index:="docs/modules/"+modname+"/module/index.js"
+			Try
 			
-			Local obj:=JsonObject.Load( index )
-			If Not obj Continue
-			
-			CreateNodes( obj,_tree.RootNode,_index )
+				Local obj:=JsonObject.Load( index,True )
+				If Not obj Continue
+				
+				CreateNodes( obj,_tree.RootNode,_index )
+				
+			Catch ex:Throwable
+				
+				Print "Can't parse doc file: "+index
+			End
 		Next
 		
 		FillTree()
@@ -165,8 +169,56 @@ Class HelpTreeView Extends TreeViewExt
 		_textField.MakeKeyView()
 	End
 	
+	Method Init()
+		
+		_textField=New TextFieldExt( "" )
+		_textField.Style=GetStyle( "HelpTextField" )
+		
+		_textField.Entered=Lambda()
+			
+			NextHelp()
+		End
+		
+		_textField.Document.TextChanged=Lambda()
+			
+			Local text:=_textField.Text
+			
+			Update( text )
+		End
+		
+		Local find:=New Label( "Find " )
+		find.AddView( _textField )
+		
+		AddView( find,"top" )
+		
+		RootNodeVisible=False
+		RootNode.Expanded=True
+		
+		NodeClicked+=Lambda( tnode:TreeView.Node )
+			
+			Local node:=Cast<Node>( tnode )
+			Local page:=node?.Page
+			If Not page Return
+			
+			If page="$$rebuild$$"
+				MainWindow.RebuildDocs()
+				Return
+			Endif
+			
+			PageClicked( page )
+		End
+		
+		Update()
+	End
 	
 	Private
+	
+	Field _textField:TextFieldExt
+	Field _matchid:Int
+	Field _matches:=New Stack<Node>
+	Field _index:=New Map<String,Tree.Node>
+	Field _index2:=New Map<String,Node>
+	Field _tree:=New Tree
 	
 	Class Node Extends TreeView.Node
 	
@@ -194,6 +246,10 @@ Class HelpTreeView Extends TreeViewExt
 		FillNode( RootNode,_tree.RootNode.Children )
 		
 		Sort()
+		
+		If RootNode.Children.Length=0
+			New Node( "No docs found; you can use 'Help -- Rebuild docs'.",RootNode,"" )
+		Endif
 	End
 	
 	Method FillNode( node:TreeView.Node,items:Stack<Tree.Node> )
@@ -312,54 +368,5 @@ Class HelpTreeView Extends TreeViewExt
 		PageClicked( _matches[_matchid].Page )
 		Selected=_matches[_matchid]
 	End
-	
-	Method Init()
-		
-		_textField=New TextFieldExt( "" )
-		_textField.Style=GetStyle( "HelpTextField" )
-		
-		_textField.Entered=Lambda()
-		
-			NextHelp()
-		End
-		
-		_textField.Document.TextChanged=Lambda()
-		
-			Local text:=_textField.Text
-			
-			Update( text )
-		End
-		
-		Local find:=New Label( "Find " )
-		find.AddView( _textField )
-		
-		AddView( find,"top" )
-	
-		RootNodeVisible=False
-		RootNode.Expanded=True
-		
-		NodeClicked+=Lambda( tnode:TreeView.Node )
-		
-			Local node:=Cast<Node>( tnode )
-			Local page:=node?.Page
-			If Not page Return
-			
-			If page="$$rebuild$$"
-				MainWindow.RebuildDocs()
-				Return
-			Endif
-			
-			PageClicked( page )
-		End
-		
-		Update()
-	End
-	
-	Field _textField:TextFieldExt
-	Field _matchid:Int
-	Field _matches:=New Stack<Node>
-	Field _index:=New Map<String,Tree.Node>
-	Field _index2:=New Map<String,Node>
-	Field _tree:=New Tree
 	
 End

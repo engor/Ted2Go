@@ -7,9 +7,9 @@ Class HtmlViewExt Extends HtmlView
 	Field Navigated:Void( url:String )
 	
 	Method New()
-	
+		
 		Super.New()
-				
+		
 		_navOps.OnNavigate += Lambda( nav:Nav )
 			
 			Go( nav.url )
@@ -65,6 +65,8 @@ Class HtmlViewExt Extends HtmlView
 	Field _timer:Timer
 	
 	Method StoreScroll()
+		
+		If Not _navOps.Empty Return
 		
 		Local nav:=_navOps.Current
 		If nav Then nav.scroll=Scroll
