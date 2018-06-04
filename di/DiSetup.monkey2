@@ -47,6 +47,11 @@ Function SetupDiContainer()
 		Return view
 	End )
 	
+	Di.Bind( Lambda:CodeParsing()
+		Return New CodeParsing(
+			Di.Resolve<DocumentManager>(),
+			Di.Resolve<ProjectView>() )
+	End )
 End
 
 
