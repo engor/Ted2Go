@@ -39,7 +39,7 @@ Class MainWindowInstance Extends Window
 		_docBrowser=Di.Resolve<DocBrowserView>()
 		
 		_docsManager=Di.Resolve<DocumentManager>()
-		
+
 		_docsManager.CurrentDocumentChanged+=Lambda()
 			
 			UpdateKeyView()

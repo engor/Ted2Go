@@ -1200,17 +1200,30 @@ Class CodeDocument Extends Ted2Document
 		Return _doc
 	End
 	
+	Method JumpToDebugLine( path:String,line:Int )
+		
+		Local doc:=Cast<CodeDocument>( MainWindow.DocsManager.OpenDocument( path,True ) )
+		If doc
+			MainWindow.UpdateWindow( False )
+			Local haveNoLine:=(doc.DebugLine=-1)
+			Local pos:=New Vec2i( line,0 )
+			If haveNoLine
+				JumpToPosition( path,pos ) 'store jump position
+			Else
+				doc._codeView.GotoPosition( pos,0 )
+			Endif
+			doc?.DebugLine=line
+		Endif
+	End
+	
 	Property DebugLine:Int()
 	
 		Return _debugLine
 	
 	Setter( debugLine:Int )
-		If debugLine=_debugLine Return
 		
 		_debugLine=debugLine
-		If _debugLine=-1 Return
 		
-		_codeView.GotoLine( _debugLine )
 	End
 	
 	Property Errors:Stack<BuildError>()
@@ -2053,7 +2066,7 @@ End
 Class NavOps<T>
 	
 	Field OnNavigate:Void( target:T )
-		
+	
 	Method Navigate( value:T )
 		
 		Push( value )
@@ -2085,7 +2098,7 @@ Class NavOps<T>
 			Return
 		Endif
 		Local value:=_items[_index]
-
+		
 		OnNavigate( value )
 	End
 	
@@ -2097,7 +2110,7 @@ Class NavOps<T>
 			Return
 		Endif
 		Local value:=_items[_index]
-
+		
 		OnNavigate( value )
 	End
 	
