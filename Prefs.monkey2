@@ -127,7 +127,7 @@ Class PrefsInstance
 		j["projectIcons"]=New JsonBool( MainProjectIcons )
 		j["singleClickExpanding"]=New JsonBool( MainProjectSingleClickExpanding )
 		j["placeDocsAtBegin"]=New JsonBool( MainPlaceDocsAtBegin )
-		j["openglProfile"]=New JsonBool( OpenGlProfile )
+		j["openglProfile"]=New JsonString( OpenGlProfile )
 		
 		j=New JsonObject
 		json["completion"]=j
