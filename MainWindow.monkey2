@@ -39,7 +39,7 @@ Class MainWindowInstance Extends Window
 		_docBrowser=Di.Resolve<DocBrowserView>()
 		
 		_docsManager=Di.Resolve<DocumentManager>()
-		
+
 		_docsManager.CurrentDocumentChanged+=Lambda()
 			
 			UpdateKeyView()
@@ -238,12 +238,28 @@ Class MainWindowInstance Extends Window
 			_findActions.FindInFiles( folder )
 		End
 		
-		_codeParsing=New CodeParsing( _docsManager,_projectView )
+		_codeParsing=Di.Resolve<CodeParsing>()
 		
 		_projectView.MainFileChanged+=Lambda( path:String,prevPath:String )
-		
+			
 			_docsManager.SetAsMainFile( prevPath,False )
 			_docsManager.SetAsMainFile( path,True )
+		End
+		
+		_projectView.FileRenamed+=Lambda( path:String,prevPath:String )
+			
+			Local doc:=_docsManager.FindDocument( prevPath )
+			If doc Then _docsManager.RenameDocument( doc,path )
+		End
+		
+		_projectView.FolderRenamed+=Lambda( path:String,prevPath:String )
+			
+			Local docs:=_docsManager.OpenDocuments
+			For Local doc:=Eachin docs
+				If doc.Path.StartsWith( prevPath )
+					_docsManager.RenameDocument( doc,doc.Path.Replace( prevPath,path ) )
+				Endif
+			Next
 		End
 		
 		_fileActions=New FileActions( _docsManager )

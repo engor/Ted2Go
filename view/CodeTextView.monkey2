@@ -884,7 +884,6 @@ Class CodeTextView Extends TextView
 		For Local i:=1 Until lines.Length
 			Local s:=lines[i]
 			If result Then result+="~n"
-			If Not s.Trim() Continue 'empty
 			result+=s.Slice( indent2 )
 		Next
 	
@@ -949,7 +948,7 @@ Class CodeTextView Extends TextView
 		txt=txt.Replace( "~r~n","~n" )
 		txt=txt.Replace( "~r","~n" )
 		Local lines:=txt.Split( "~n" )
-	
+		
 		' add indent at cursor
 		If indent
 			Local add:=Utils.RepeatStr( "~t",indent )
@@ -961,10 +960,10 @@ Class CodeTextView Extends TextView
 		' result text
 		Local result:=""
 		For Local i:=0 Until lines.Length
-			If result Then result+="~n"
+			If i>0 Then result+="~n"
 			result+=lines[i]
 		Next
-	
+		
 		Return result
 	End
 	

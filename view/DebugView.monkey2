@@ -126,11 +126,11 @@ Class DebugView Extends DockingView
 	End
 	
 	Method DebugApp( appFile:String,config:String )
-	
+		
 		If _console.Running Return
-
+		
 		_console.Clear()
-			
+		
 		MainWindow.ShowOutputConsole()
 	
 		Local cmd:="~q"+RealPath( appFile )+"~q"
@@ -355,7 +355,7 @@ Class DebugView Extends DockingView
 				Local bits:=line.Split( ";" )
 				Local label:=bits[0].Slice( 1 )
 				Local seq:=Int( bits[3] )
-
+				
 				func=Null
 				For Local i:=funcIndex Until root.NumChildren
 					Local tfunc:=Cast<Node>( root.GetChild( i ) )
@@ -373,16 +373,12 @@ Class DebugView Extends DockingView
 					func.srcFile=bits[1]
 					func.srcLine=Int( bits[2] )
 					func.seq=seq
-
+					
 					If Not first func.Expanded=True
 				Endif
 				
 				If Not first
-					Local doc:=Cast<CodeDocument>( _docs.OpenDocument( func.srcFile,True ) )
-					If doc
-						MainWindow.UpdateWindow( False )
-						doc.DebugLine=func.srcLine-1
-					Endif
+					_docs.CurrentCodeDocument?.JumpToDebugLine( func.srcFile,func.srcLine-1 )
 					first=func
 				Endif
 				
@@ -426,7 +422,7 @@ Class DebugView Extends DockingView
 		
 		_killme=False
 		_debugging=True
-
+		
 		UpdateActions()
 	End
 	

@@ -14,6 +14,8 @@ Class ProjectView Extends DockingView
 	
 	Field RequestedFindInFolder:Void( folder:String )
 	Field MainFileChanged:Void( path:String,prevPath:String )
+	Field FileRenamed:Void( path:String,prevPath:String )
+	Field FolderRenamed:Void( path:String,prevPath:String )
 	
 	Method New( docs:DocumentManager,builder:IModuleBuilder )
 	
@@ -629,13 +631,14 @@ Class ProjectView Extends DockingView
 							Return
 						Endif
 						
-						Local ok:=(libc.rename( path,newPath )=0)
-						If ok
+						Local code:=libc.rename( path,newPath )
+						If code=0
 							browser.Refresh( node.Parent )
+							FolderRenamed( newPath,path )
 							Return
 						Endif
 					
-						Alert( "Failed to rename folder: '"+path+"'" )
+						Alert( "Failed to rename folder: '"+path+"'. Error code: "+code )
 					Endif
 				End
 				

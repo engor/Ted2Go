@@ -334,17 +334,9 @@ Class BuildActions Implements IModuleBuilder
 	End
 	
 	Method GotoError( err:BuildError )
-	
-		Local doc:=Cast<CodeDocument>( _docs.OpenDocument( GetCaseSensitivePath( err.path ),True ) )
-		If Not doc Return
-	
-		Local tv := doc.CodeView
-		If Not tv Return
-	
-		MainWindow.UpdateWindow( False )
-	
-		tv.GotoPosition( New Vec2i( err.line,0 ) )
-		tv.MakeKeyView()
+		
+		Local targetPath:=GetCaseSensitivePath( err.path )
+		_docs.CurrentCodeDocument?.JumpToPosition( targetPath,New Vec2i( err.line,0 ) )
 	End
 	
 	
