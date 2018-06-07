@@ -218,7 +218,9 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( _mainToolBarVisible,"top" )
 		docker.AddView( _mainProjectSingleClickExpanding,"top" )
 		docker.AddView( _mainPlaceDocsAtBegin,"top" )
+		#If __TARGET__="windows"
 		docker.AddView( _mainUseOpenGlEsProfile,"top" )
+		#Endif
 		docker.AddView( New Label( " " ),"top" )
 		
 		Return docker
