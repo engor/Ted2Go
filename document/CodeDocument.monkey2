@@ -814,7 +814,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Local x:=RenderStyle.Font.TextWidth( indentStr )
 					Local w:=RenderStyle.Font.TextWidth( s )
 					If event.Location.x >= x And event.Location.x <= x+w
-						Local s:=_doc.GetStringError( line )
+						Local s:=_doc.GetErrorMessageAt( line )
 						If s <> Null
 							_doc.ShowHint_( s,event.Location )
 						Else
@@ -1254,7 +1254,8 @@ Class CodeDocument Extends Ted2Document
 		_errMap[error.line]=s
 	End
 	
-	Method GetStringError:String( line:Int )
+	Method GetErrorMessageAt:String( line:Int )
+		
 		Return _errMap[line]
 	End
 	
@@ -1610,6 +1611,14 @@ Class CodeDocument Extends Ted2Document
 	Method OnLineChanged:Void( prevLine:Int,newLine:Int )
 		
 		If AutoComplete.IsOpened Then AutoComplete.Hide()
+		
+		' show error in status bar
+		If HasErrors
+			Local error:=GetErrorMessageAt( newLine )
+			If error
+				MainWindow.ShowStatusBarText( error )
+			Endif
+		Endif
 		
 		If Not _parsingEnabled Return
 		

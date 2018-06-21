@@ -4,6 +4,11 @@ Namespace ted2go
 
 Class CodeParsing
 	
+	Function IsFileBuildable:Bool( path:String )
+		
+		Return ExtractExt( path )=".monkey2"
+	End
+	
 	Method New( docs:DocumentManager,projView:ProjectView )
 		
 		_docsManager=docs
@@ -98,6 +103,8 @@ Class CodeParsing
 	End
 	
 	Method StartWatching( doc:CodeDocument )
+		
+		If Not IsFileBuildable( doc.Path ) Return
 		
 		If FindWatcher( doc ) Return ' already added
 		
@@ -208,6 +215,10 @@ Class DocWatcher
 			
 			If Not enabled Return
 			
+			'Local mainFile:=PathsProvider.GetActiveMainFilePath( False )
+			'If Not mainFile Return
+			Local mainFile:=PathsProvider.GetActiveMainFilePath()
+			
 			_parsing=True
 			
 			Local docForParsing:CodeDocument
@@ -224,7 +235,7 @@ Class DocWatcher
 			_changed.Clear()
 			
 			Local params:=New ParseFileParams
-			params.filePath=PathsProvider.GetActiveMainFilePath()
+			params.filePath=mainFile
 			
 			For Local i:=0 Until dirty.Length
 				If dirty[i]

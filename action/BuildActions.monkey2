@@ -264,12 +264,14 @@ Class BuildActions Implements IModuleBuilder
 		While Not _errors.Empty And _errors.First.removed
 			_errors.RemoveFirst()
 		Wend
-	
+		
 		Local idle:=Not _console.Running
 		Local canbuild:=idle And FilePathToBuild And _buildTarget
 		
 		build.Enabled=canbuild
 		buildAndRun.Enabled=canbuild
+		semant.Enabled=canbuild
+		debugApp.Enabled=canbuild
 		nextError.Enabled=Not _errors.Empty
 		updateModules.Enabled=idle
 		rebuildHelp.Enabled=idle
