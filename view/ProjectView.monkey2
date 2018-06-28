@@ -746,7 +746,24 @@ Class ProjectView Extends DockingView
 					Local name:=RequestString( "Enter new name:","Ranaming '"+oldName+"'",oldName )
 					If Not name Or name=oldName Return
 					
-					Local newPath:=ExtractDir( path )+name
+					Local dir:=ExtractDir( path )
+					Local newPath:=dir+name
+					
+					' if just case is different
+					'
+					If name.ToLower()=oldName.ToLower()
+						Local tmpPath:=dir+Int(Rnd( 1000000,9999999 ))+name
+						' rename to temp
+						Local ok:=(libc.rename( path,tmpPath )=0)
+						If ok
+							' rename to desired
+							ok=(libc.rename( tmpPath,newPath )=0)
+							If ok
+								browser.Refresh( node.Parent )
+								Return
+							Endif
+						Endif
+					Endif
 					
 					If FileExists( newPath )
 						Alert( "File already exists! Path: '"+newPath+"'" )
