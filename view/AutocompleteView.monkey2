@@ -116,10 +116,18 @@ Class AutocompleteDialog Extends NoTitleDialog
 		
 		_view=New AutocompleteListView( lineHg,linesCount )
 		_view.MoveCyclic=True
+		_view.Layout="fill"
+		
+		_hintView=New Label( "Press Ctr+Space to show more..." )
+		_hintView.Style=App.Theme.GetStyleWithDownCasting( "CompletionHint","Label" )
+		
+		Local dock:=New DockingView
+		dock.AddView( _hintView,"bottom" )
+		dock.ContentView=_view
 		
 		_etalonMaxSize=New Vec2i( 500,lineHg*linesCount )
 		
-		ContentView=_view
+		ContentView=dock
 		
 		_keywords=New StringMap<Stack<ListViewItem>>
 		_templates=New StringMap<Stack<ListViewItem>>
@@ -145,6 +153,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 	Setter( value:Bool )
 		_fullIdent=""
 		_disableUsingsFilter=value
+		Print "set filer: "+value
 	End
 	
 	Property LastIdentPart:String()
@@ -181,6 +190,8 @@ Class AutocompleteDialog Extends NoTitleDialog
 		Local parser:=GetParser( fileType )
 		
 		Local filter:=_disableUsingsFilter
+		
+		_hintView.Text=(_disableUsingsFilter ? "Press Ctr+Space to show less..." Else "Press Ctr+Space to show more...")
 		
 		'-----------------------------
 		' some optimization
@@ -234,35 +245,24 @@ Class AutocompleteDialog Extends NoTitleDialog
 		
 			Local usings:Stack<String>
 			
-			If Not _disableUsingsFilter 'And onlyOne
+			If Not _disableUsingsFilter
 				
 				usings=New Stack<String>
 				
-				Local locked:=MainWindow.LockedDocument
-				Local current:=Cast<CodeDocument>( MainWindow.DocsManager.CurrentDocument )
-				
-				If Not locked Then locked=current
-				If locked
-					Local info:=parser.UsingsMap[locked.Path]
+				Local currentFile:=Cast<CodeDocument>( MainWindow.DocsManager.CurrentDocument )?.Path
+				Local mainFile:=PathsProvider.GetMainFileOfDocument( currentFile )
+				If mainFile
+					Local info:=parser.UsingsMap[mainFile]
 					If info.nspace Or info.usings
 						If info.nspace Then usings.Add( info.nspace+".." )
 						If info.usings Then usings.AddAll( info.usings )
 					Endif
 				Endif
 				
-				If current And current <> locked
-					Local info:=parser.UsingsMap[current.Path]
-					If info.nspace
-						Local s:=info.nspace+".."
-						If Not usings.Contains( s ) Then usings.Add( s )
-					Endif
-					If info.usings Then usings.AddAll( info.usings )
-				Endif
-				
 				If Not usings.Contains( "monkey.." ) Then usings.Add( "monkey.." )
 			Endif
 			
-			'Print "usings: "+usings.Join( " " )
+			Print "usings: "+usings?.Join( " " )
 			
 			_listForExtract.Clear()
 			
@@ -362,6 +362,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 	
 	Field _etalonMaxSize:Vec2f
 	Field _view:AutocompleteListView
+	Field _hintView:Label
 	Field _keywords:StringMap<Stack<ListViewItem>>
 	Field _templates:StringMap<Stack<ListViewItem>>
 	Field _lastIdentPart:String,_fullIdent:String
@@ -400,6 +401,8 @@ Class AutocompleteDialog Extends NoTitleDialog
 	Method OnKeyFilter( event:KeyEvent )
 		
 		If Not IsOpened Return
+		
+		Local ctrl:=(event.Modifiers & Modifier.Control)<>0
 		
 		Select event.Type
 			
@@ -452,7 +455,6 @@ Class AutocompleteDialog Extends NoTitleDialog
 					
 				Case Key.Space
 					If Not templ
-						Local ctrl:=event.Modifiers & Modifier.Control
 						If Prefs.AcUseSpace And Not ctrl
 							OnItemChoosen( curItem,key )
 							event.Eat()
@@ -479,7 +481,9 @@ Class AutocompleteDialog Extends NoTitleDialog
 			
 			Case EventType.KeyChar
 				
-				If Not IsIdent( event.Text[0] ) Then Hide()
+				Local char:=event.Text[0]
+				Local ctrlSpace:=(ctrl And char=Chars.SPACE)
+				If Not ctrlSpace And Not IsIdent( char ) Then Hide()
 				
 		End
 		
@@ -570,4 +574,21 @@ Class AutocompleteDialog Extends NoTitleDialog
 		Return ""
 	End
 	
+End
+
+
+Class Theme Extension
+	
+	Method GetStyleWithDownCasting:Style( name:String,name2:String=Null,name3:String=Null )
+		
+		Local style:=Self.GetStyle( name )
+		If style=Null And name2
+			style=Self.GetStyle( name2 )
+		Endif
+		If style=Null And name3
+			style=Self.GetStyle( name3 )
+		Endif
+		
+		Return style
+	End
 End

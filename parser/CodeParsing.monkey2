@@ -229,8 +229,7 @@ Class DocWatcher
 				
 				' collect all different files to be parsed
 				'
-				Local isItMainProjectFile:=False
-				Local path:=GetFilePathToParse( changedDoc.Path,Varptr isItMainProjectFile )
+				Local path:=PathsProvider.GetMainFileOfDocument( changedDoc.Path )
 				Local exists:=False
 				For Local p:=Eachin _paramsToParse
 					If path=p.filePath
@@ -311,44 +310,6 @@ Class DocWatcher
 			
 		End )
 		
-	End
-	
-	Function GetFilePathToParse:String( path:String,isItMainProjectFile:Bool Ptr=Null )
-		
-		'Print "GetFilePathToParse: "+path
-		
-		isItMainProjectFile[0]=False
-		
-		' is it a module file?
-		'
-		Local modsDir:=Prefs.MonkeyRootPath+"modules/"
-		' excluding of tests dirs
-		'
-		If path.StartsWith( modsDir ) And path.Find( "/tests/")=-1
-			Local i1:=modsDir.Length
-			Local i2:=path.Find( "/",i1+1 )
-			If i2<>-1
-				Local modName:=path.Slice( i1,i2 )
-				'Alert( modsDir+modName+"/"+modName+".monkey2" )
-				' main file of a module
-				'
-				path=modsDir+modName+"/"+modName+".monkey2"
-				isItMainProjectFile[0]=True
-			Endif
-		Else
-			' is it a project file?
-			'
-			Local proj:=ProjectView.FindProject( path )
-			If proj
-				ProjectView.CheckMainFilePath( proj,False )
-				If proj.MainFilePath
-					path=proj.MainFilePath
-					isItMainProjectFile[0]=True
-				Endif
-			Endif
-		Endif
-		
-		Return path
 	End
 	
 	Function UpdateDocItems( doc:CodeDocument,parser:ICodeParser )

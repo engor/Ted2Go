@@ -38,6 +38,39 @@ Class PathsProvider
 		Return path
 	End
 	
+	Function GetMainFileOfDocument:String( path:String )
+		
+		'Print "GetFilePathToParse: "+path
+		
+		' is it a module file?
+		'
+		Local modsDir:=Prefs.MonkeyRootPath+"modules/"
+		' excluding of tests dirs
+		'
+		If path.StartsWith( modsDir ) And path.Find( "/tests/")=-1
+			Local i1:=modsDir.Length
+			Local i2:=path.Find( "/",i1+1 )
+			If i2<>-1
+				Local modName:=path.Slice( i1,i2 )
+				' main file of a module
+				'
+				path=modsDir+modName+"/"+modName+".monkey2"
+			Endif
+		Else
+			' is it a project file?
+			'
+			Local proj:=ProjectView.FindProject( path )
+			If proj
+				ProjectView.CheckMainFilePath( proj,False )
+				If proj.MainFilePath
+					path=proj.MainFilePath
+				Endif
+			Endif
+		Endif
+		
+		Return path
+	End
+	
 	Function SetCustomBuildProject( proj:Monkey2Project )
 	
 		_customBuildProject=proj

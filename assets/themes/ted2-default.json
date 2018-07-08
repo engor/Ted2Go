@@ -136,6 +136,14 @@
 		"CompletionDialogContent":{
 			"padding":[ 1 ]
 		},
+		"CompletionHint":{
+			"extends":"Label",
+			"padding":[ 3 ],
+			"borderColor": "#20000000",
+			"border":[ 0,1,0,0 ],
+			"margin":[ 0,4,0,0 ],
+			"font":"small"
+		},
 				
 		"TextFieldBordered":{
 			"extends":"TextField",

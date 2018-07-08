@@ -44,7 +44,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			Local time:=Millisecs()
 			
-			'ParseModules()
+			ParseModules()
 			
 			time=Millisecs()-time
 			Print "completed parse modules: "+(time/1000)+" sec"
@@ -98,6 +98,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local geninfo:=params.geninfo
 		
 		Local parsingData:=""
+		Local errorMessage:=""
 		
 		' start parsing process - ask mx2cc to generate .geninfo files
 		'
@@ -116,7 +117,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			Local hasErrors:=(str.Find( "] : Error : " ) > 0)
 			
-			If hasErrors Return str
+			If hasErrors
+				errorMessage=str
+			Endif
 			
 		Endif
 		
@@ -133,9 +136,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 				If last = 0 Or time > last
 					_filesTime[filePath]=time
-					Print "parse file: "+filePath
+					'Print "parse file: "+filePath
 				Else
-					Print "parse file, not modified: "+filePath
+					'Print "parse file, not modified: "+filePath
 					Return Null
 				Endif
 			Endif
@@ -143,11 +146,13 @@ Class Monkey2Parser Extends CodeParserPlugin
 			parsingData=LoadString( geninfoPath )
 		Endif
 		
-		'Print "info path: "+geninfoPath
+		
 		Local jobj:=JsonObject.Parse( parsingData )
 		
-		If Not jobj Return "#"
-		
+		If Not jobj
+			Print "invalid json: "+filePath
+			Return "#"
+		Endif
 		
 		RemovePrevious( filePath )
 		
@@ -200,7 +205,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Endif
 		UsingsMap[filePath]=useInfo
 		
-		Return Null
+		Return errorMessage
 	End
 	
 	Method ParseJsonMembers( members:Stack<JsonValue>,parent:CodeItem,filePath:String,resultContainer:Stack<CodeItem>,namespac:String )

@@ -1271,7 +1271,7 @@ Class CodeDocument Extends Ted2Document
 			For Local err:=Eachin errors
 				AddError( err )
 			Next
-			Return
+			'Return
 		Endif
 		
 		UpdateCodeTree( codeItems )
