@@ -261,10 +261,10 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		projNode._project=project
 		UpdateProjIcon( projNode )
 		_expander.Restore( projNode )
-	
+		
 		UpdateNode( projNode )
 		ApplyFilter( projNode )
-	
+		
 		Local mainFile:=project.MainFilePath
 		If mainFile Then SetMainFile( mainFile,True )
 		
@@ -538,7 +538,7 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 	Method ApplyFilter( node:Node )
 		
 		Local projNode:=FindProjectNode( node )
-		UpdateFilterItems( projNode )
+		UpdateHiddenItems( projNode )
 		
 		Local list:=_filters[projNode.Text]
 		If list And list.Length>0 And node.Expanded
@@ -571,7 +571,7 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		Next
 	End
 	
-	Method UpdateFilterItems( projNode:Node )
+	Method UpdateHiddenItems( projNode:Node )
 		
 		Local proj:=projNode._project
 		If proj.IsFolderBased Return
@@ -586,7 +586,7 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		Local list:=GetOrCreate( _filters,projName )
 		list.Clear()
 		
-		For Local i:=Eachin proj.Excluded
+		For Local i:=Eachin proj.Hidden
 			Local f:=New TextFilter( i )
 			list+=f
 		Next
