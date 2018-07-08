@@ -338,7 +338,10 @@ Class BuildActions Implements IModuleBuilder
 	Method GotoError( err:BuildError )
 		
 		Local targetPath:=GetCaseSensitivePath( err.path )
-		_docs.CurrentCodeDocument?.JumpToPosition( targetPath,New Vec2i( err.line,0 ) )
+		Local doc:=_docs.OpenDocument( targetPath,True,True )
+		If doc
+			_docs.CurrentCodeDocument.JumpToPosition( targetPath,New Vec2i( err.line,0 ) )
+		Endif
 	End
 	
 	
