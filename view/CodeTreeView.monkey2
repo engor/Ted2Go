@@ -40,6 +40,7 @@ Class CodeTreeView Extends TreeViewExt
 		If Not node Return
 		
 		node.Expanded=True
+		_expander.Store( node )
 		TreeViewExpander.ExpandParents( node )
 		
 		MeasureLayoutSize()

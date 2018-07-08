@@ -241,9 +241,6 @@ Class DocWatcher
 				If Not exists
 					Local params:=New ParseFileParams
 					params.filePath=path
-					If path=changedDoc.Path
-						params.isDirty=changedDoc.Dirty
-					Endif
 					_paramsToParse.Add( params )
 				Endif
 				' always save all dirty files in temp before parsing
