@@ -204,55 +204,80 @@ Class DocWatcher
 		
 		If _parsing Return
 		
+		' timer that watching for changed docs
+		'
 		If Not _timer Then _timer=New Timer( 1,Lambda()
 			
-			If _parsing Return
+			If _parsing Or Not enabled Or _changed.Empty Return
 			
 			Local msec:=Millisecs()
 			If msec<_timeDocParsed+1000 Return
 			If _timeTextChanged=0 Or msec<_timeTextChanged+1000 Return
 			_timeTextChanged=0
 			
-			If Not enabled Return
-			
-			'Local mainFile:=PathsProvider.GetActiveMainFilePath( False )
-			'If Not mainFile Return
-			Local mainFile:=PathsProvider.GetActiveMainFilePath()
-			
 			_parsing=True
 			
-			Local docForParsing:CodeDocument
-			Local dirty:=New String[_changed.Length]
-			Local texts:=New String[_changed.Length]
-			For Local i:=0 Until _changed.Length
-				Local d:=_changed[i]
-				If d.Dirty
-					dirty[i]=d.Path
-					texts[i]=d.CodeView.Text
-				Endif
-				docForParsing=d ' grab latest added doc
-			Next
+			' copy docs and free list to collect new 'changes'
+			'
+			Global _docsToParse:=New Stack<CodeDocument>
+			_docsToParse.AddAll( _changed.ToArray() )
 			_changed.Clear()
 			
-			Local params:=New ParseFileParams
-			params.filePath=mainFile
+			Global _paramsToParse:=New Stack<ParseFileParams>
 			
-			For Local i:=0 Until dirty.Length
-				If dirty[i]
-					dirty[i]=Monkey2Parser.GetTempFilePathForParsing( dirty[i] )
-					SaveString( texts[i],dirty[i] )
+			For Local changedDoc:=Eachin _docsToParse
+				
+				' collect all different files to be parsed
+				'
+				Local isItMainProjectFile:=False
+				Local path:=GetFilePathToParse( changedDoc.Path,Varptr isItMainProjectFile )
+				Local exists:=False
+				For Local p:=Eachin _paramsToParse
+					If path=p.filePath
+						exists=True
+						Exit
+					Endif
+				Next
+				If Not exists
+					Local params:=New ParseFileParams
+					params.filePath=path
+					If path=changedDoc.Path
+						params.isDirty=changedDoc.Dirty
+					Endif
+					_paramsToParse.Add( params )
+				Endif
+				' always save all dirty files in temp before parsing
+				' check changescounter here to avoid unnecessarily re-savings
+				'
+				Local tmpPath:=Monkey2Parser.GetTempFilePathForParsing( changedDoc.Path )
+				If changedDoc.CheckChangesCounter() 'Or Not FileExists( tmpPath )
+					SaveString( changedDoc.TextView.Text,tmpPath )
+					changedDoc.StoreChangesCounter()
 				Endif
 			Next
 			
-			Local errorStr:=parser.ParseFile( params )
+			Global _results:=New StringStack
 			
+			' parse all docs
+			'
+			For Local params:=Eachin _paramsToParse
+				Local errorStr:=parser.ParseFile( params )
+				_results.Add( errorStr )
+			Next
+			
+			' maybe app is in shutdown state
+			'
 			If Not enabled Return
 			
-			Local errors:=New Stack<BuildError>
+			Global _errors:=New Stack<BuildError>
 			
-			If errorStr And errorStr<>"#"
+			' and collect all errors
+			'
+			For Local str:=Eachin _results
 				
-				Local arr:=errorStr.Split( "~n" )
+				If Not str Or str="#" Continue
+				
+				Local arr:=str.Split( "~n" )
 				For Local s:=Eachin arr
 					Local i:=s.Find( "] : Error : " )
 					If i<>-1
@@ -263,18 +288,25 @@ Class DocWatcher
 							Local msg:=s.Slice( i+12 )
 							path=path.Replace( ".mx2/","" )
 							Local err:=New BuildError( path,line,msg )
-							errors.Add( err )
+							_errors.Add( err )
 						Endif
 					Endif
 				Next
-				
-			Endif
-			
-			OnDocumentParsed( docForParsing,parser,errors )
-			
-			For Local i:=0 Until dirty.Length
-				If dirty[i] Then DeleteFile( dirty[i] )
 			Next
+			
+			OnParseCompleted( parser,_errors )
+			
+			' don't remove tmp files to avoid unnecessarily re-savings
+			'
+'			For Local changedDoc:=Eachin _docsToParse
+'				Local tmpPath:=Monkey2Parser.GetTempFilePathForParsing( changedDoc.Path )
+'				DeleteFile( tmpPath )
+'			Next
+			
+			_docsToParse.Clear()
+			_paramsToParse.Clear()
+			_errors.Clear()
+			_results.Clear()
 			
 			_parsing=False
 			
@@ -284,28 +316,59 @@ Class DocWatcher
 		
 	End
 	
+	Function GetFilePathToParse:String( path:String,isItMainProjectFile:Bool Ptr=Null )
+		
+		'Print "GetFilePathToParse: "+path
+		
+		isItMainProjectFile[0]=False
+		
+		' is it a module file?
+		'
+		Local modsDir:=Prefs.MonkeyRootPath+"modules/"
+		' excluding of tests dirs
+		'
+		If path.StartsWith( modsDir ) And path.Find( "/tests/")=-1
+			Local i1:=modsDir.Length
+			Local i2:=path.Find( "/",i1+1 )
+			If i2<>-1
+				Local modName:=path.Slice( i1,i2 )
+				'Alert( modsDir+modName+"/"+modName+".monkey2" )
+				' main file of a module
+				'
+				path=modsDir+modName+"/"+modName+".monkey2"
+				isItMainProjectFile[0]=True
+			Endif
+		Else
+			' is it a project file?
+			'
+			Local proj:=ProjectView.FindProject( path )
+			If proj
+				ProjectView.CheckMainFilePath( proj,False )
+				If proj.MainFilePath
+					path=proj.MainFilePath
+					isItMainProjectFile[0]=True
+				Endif
+			Endif
+		Endif
+		
+		Return path
+	End
+	
 	Function UpdateDocItems( doc:CodeDocument,parser:ICodeParser )
 	
 		Local items:=GetCodeItems( doc.Path,parser )
 		doc.OnDocumentParsed( items,Null )
 	End
 	
-	Function OnDocumentParsed( doc:CodeDocument,parser:ICodeParser,errors:Stack<BuildError> )
-		
-		If doc
-			Local items:=GetCodeItems( doc.Path,parser )
-			doc.OnDocumentParsed( items,GetErrors( doc.Path,errors ) )
-		Endif
+	Function OnParseCompleted( parser:ICodeParser,errors:Stack<BuildError> )
 		
 		Local docs:=docsForUpdate()
 		If docs
-			For Local d:=Eachin docs
-				If d=doc Continue
-				Local items:=GetCodeItems( d.Path,parser )
-				d.OnDocumentParsed( items,GetErrors( d.Path,errors ) )
+			For Local doc:=Eachin docs
+				Local items:=GetCodeItems( doc.Path,parser )
+				doc.OnDocumentParsed( items,GetErrors( doc.Path,errors ) )
 			Next
 		Endif
-		
 	End
 	
 	Function GetErrors:Stack<BuildError>( path:String,errors:Stack<BuildError>)

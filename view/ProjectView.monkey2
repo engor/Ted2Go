@@ -129,15 +129,24 @@ Class ProjectView Extends DockingView
 		Return IsProjectFile( path ) Or GetFileType( path )=FileType.Directory
 	End
 	
+	Function IsPartOfActiveProject:Bool( path:String )
+	
+		Return _activeProject And path.StartsWith( _activeProject.Folder )
+	End
+	
 	Function ActiveProjectName:String()
 	
 		Return _activeProject?.Name
 	End
 	
-	Function CheckMainFilePath( proj:Monkey2Project )
+	Function CheckMainFilePath( proj:Monkey2Project,showAlert:Bool )
 		
 		If Not proj.MainFilePath
-			Alert( "Main file of ~q"+proj.Name+"~q project is not specified.~n~nRight click on file in Project tree~nand choose 'Set as main file'.","Build error" )
+			If showAlert
+				Alert( "Main file of ~q"+proj.Name+"~q project is not specified.~n~nRight click on file in Project tree~nand choose 'Set as main file'.","Build error" )
+			Else
+				MainWindow.ShowStatusBarText( "Main file of ~q"+proj.Name+"~q project is not specified!" )
+			Endif
 		Endif
 	
 	End
@@ -862,8 +871,16 @@ Class Monkey2Project
 			_modified=GetFileTime( path )
 			path=ExtractDir( path )
 		Else
-			_data=New JsonObject
-			_isFolderBased=True
+			' try to load project file
+			Local dirName:=StripDir( path )
+			Local projPath:=StripSlashes( path )+"/"+dirName+".mx2proj"
+			If GetFileType( projPath )=FileType.File
+				_data=JsonObject.Load( projPath )
+				_modified=GetFileTime( projPath )
+			Else
+				_data=New JsonObject
+				_isFolderBased=True
+			Endif
 		Endif
 		
 		_folder=StripSlashes( path )
@@ -903,7 +920,7 @@ Class Monkey2Project
 	
 	Property Excluded:String[]()
 		
-		If _modified=0 Return New String[0]
+		If _modified=0 Or Not _data Return New String[0]
 		If _modified=_excludedTime Return _excluded
 		
 		Local jarr:=_data.GetArray( KEY_HIDDEN )

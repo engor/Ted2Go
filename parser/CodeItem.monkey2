@@ -419,7 +419,8 @@ Class CodeItem
 			_kind=CodeItemKind.Local_
 		Case "operator"
 			_kind=CodeItemKind.Operator_
-		Case "for","select","while"
+		'Case "for","select","while"
+		Case "block"
 			_kind=CodeItemKind.Inner_
 		Case "alias"
 			_kind=CodeItemKind.Alias_

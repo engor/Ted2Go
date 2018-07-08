@@ -931,6 +931,7 @@ Class CodeDocument Extends Ted2Document
 		_doc.TextChanged+=Lambda()
 		
 			Dirty=True
+			_changesCounter+=1
 			OnTextChanged()
 			_codeView.TextChanged()
 		End
@@ -1263,7 +1264,10 @@ Class CodeDocument Extends Ted2Document
 		
 		ResetErrors()
 		
+		'Print "OnDocumentParsed: "+Path
+		
 		If errors And Not errors.Empty
+			'Print "OnDocumentParsed. errors: "+errors.Length
 			For Local err:=Eachin errors
 				AddError( err )
 			Next
@@ -1431,6 +1435,16 @@ Class CodeDocument Extends Ted2Document
 		_codeView.OnKeyEvent( event )
 	End
 	
+	Method StoreChangesCounter()
+		
+		_storedChangesCounter=_changesCounter
+	End
+	
+	Method CheckChangesCounter:Bool()
+		
+		Return _changesCounter<>_storedChangesCounter
+	End
+	
 	Property CodeView:CodeDocumentView()
 		Return _codeView
 	End
@@ -1466,6 +1480,7 @@ Class CodeDocument Extends Ted2Document
 	
 	Field _toolBar:ToolBarExt
 	Field _content:DockingView
+	Field _changesCounter:Int,_storedChangesCounter:Int
 	
 	Method InitParser()
 		
@@ -1567,6 +1582,7 @@ Class CodeDocument Extends Ted2Document
 		
 		_doc.Text=text
 		Dirty=False
+		_changesCounter=0
 		
 		InitParser()
 		
