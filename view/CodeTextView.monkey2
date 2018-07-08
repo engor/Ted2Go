@@ -1282,9 +1282,6 @@ Class IndentationHelper Final
 			
 			Local line:=lines[lineIndex]
 			
-			Local lineLen:=line.Length
-			If lineLen=0 Continue
-			
 			' trim endings of lines
 			Local s:=line.TrimEnd()
 			If s ' don't trim whitespaced lines
@@ -1292,8 +1289,11 @@ Class IndentationHelper Final
 				lines[lineIndex]=line
 			Endif
 			
+			Local lineLen:=line.Length
+			If lineLen=0 Continue
+			
 			Local start:=document.StartOfLine( lineIndex )
-			Local lineStr:="" ' our new content of line 
+			Local lineStr:="" ' our new content of line
 			Local indentStart:=-1,textStart:=0
 			Local replaced:=0
 			
@@ -1317,7 +1317,7 @@ Class IndentationHelper Final
 					Endif
 					
 					' indentation found
-					If Not skip And indentStart<>-1 And k-indentStart>=minIndent
+					If Not skip And indentStart<>-1 And (indentStart=0 Or k-indentStart>=minIndent)
 						
 						replaced+=1
 						
@@ -1352,19 +1352,20 @@ Class IndentationHelper Final
 							
 						Else ' spaces --> tabs
 							
-							indentStr=indentStr.Replace( "~t",tabAsSpacesStr ) ' avoid mixing of tabs and spaces
-							Local size:=indentStr.Length
-							Local cnt:=size/tabSize
-							Local md:=size Mod tabSize
-							indentStr=""
-							If md>1 ' convert 2+ spaces into tab
-								cnt+=1
-							Elseif md>0 ' left 1 space as is at the beginning of indent
-								indentStr+=" "
+							Local spacesCount:=0
+							For Local ch:=Eachin indentStr
+								If ch=Chars.SPACE Then spacesCount+=1
+							Next
+							Local tabsCount:=indentStr.Length-spacesCount
+							Local cnt:=spacesCount/tabSize
+							Local md:=spacesCount Mod tabSize
+							If tabsCount>0
+								tabsCount+=cnt
+							Else
+								tabsCount=cnt+(md ? 1 Else 0)
 							Endif
-							If cnt>0 ' our tabs 'replacement'
-								indentStr+="~t".Dup( cnt )
-							Endif
+							
+							indentStr="~t".Dup( tabsCount )
 							
 						Endif
 						
