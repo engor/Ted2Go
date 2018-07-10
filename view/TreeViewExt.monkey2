@@ -49,7 +49,7 @@ Class TreeViewExt Extends TreeView
 			OnCollapsed( node,True )
 		End
 		
-		_selColor=App.Theme.GetColor( "panel" )
+		OnThemeChanged()
 	End
 	
 	Property Selected:TreeView.Node()
@@ -161,7 +161,7 @@ Class TreeViewExt Extends TreeView
 	
 	Method OnThemeChanged() Override
 		
-		_selColor=App.Theme.GetColor( "panel" )
+		_selColor=App.Theme.GetColor( "treeview-selected-row" )
 	End
 	
 	Method OnRenderContent( canvas:Canvas ) Override

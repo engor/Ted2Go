@@ -16,7 +16,8 @@
 		"params-hint-selected": "textview-color4",
 		"completion-list-selected": "content",
 		"completion-list-marked-bg": "#0fff",
-		"completion-list-marked-text": "textview-color4"
+		"completion-list-marked-text": "textview-color4",
+		"treeview-selected-row": "#1fff"
 	},
 
 	"fonts":{
