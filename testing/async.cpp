@@ -3,6 +3,8 @@
 
 #include <SDL.h>
 
+bbRuntimeError( "Type '"+getName()+"' is not a pointer type" );
+
 bbInt g_mojo_app_AppInstance_AddAsyncCallback( bbFunction<void()> callback );
 
 namespace{
