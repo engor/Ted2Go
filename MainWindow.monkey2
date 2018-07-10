@@ -138,6 +138,14 @@ Class MainWindowInstance Extends Window
 			"Word wrap" )
 		it.ToggleMode=True
 		
+		Local tbAct:=New Action( " \r " )
+		tbAct.Triggered+=Lambda()
+			_outputConsole.ProcessingRtChar=Not _outputConsole.ProcessingRtChar
+		End
+		Local tb:=New ToolButtonExt( tbAct,"Processing \r char at the beginning of lines" )
+		tb.ToggleMode=True
+		bar.AddView( tb )
+		
 		_outputConsoleView=New DockingView
 		_outputConsoleView.AddView( bar,"top" )
 		_outputConsoleView.ContentView=_outputConsole
