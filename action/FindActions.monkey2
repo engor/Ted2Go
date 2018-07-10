@@ -290,7 +290,10 @@ Class FindActions
 		'Local counter:=1
 		Local doc:=New TextDocument 'use it to get line number
 		For Local f:=Eachin files
-		
+			
+			' skip temp-folders
+			If f.Find( PathsProvider.MX2_TMP )<>-1 Continue
+			
 			Local text:=LoadString( f )
 		
 			If Not caseSensitive Then text=text.ToLower()

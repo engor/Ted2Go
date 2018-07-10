@@ -9,7 +9,7 @@ Class FindInFilesDialog Extends DialogExt
 		_findField=New TextFieldExt
 		
 		_findField.Entered+=Lambda()
-			actions.findNext.Trigger()
+			actions.findAllInFiles.Trigger()
 		End
 		
 		_projList=New ListView

@@ -245,7 +245,7 @@ Class DocWatcher
 				' always save all dirty files in temp before parsing
 				' check changescounter here to avoid unnecessarily re-savings
 				'
-				Local tmpPath:=Monkey2Parser.GetTempFilePathForParsing( changedDoc.Path )
+				Local tmpPath:=PathsProvider.GetTempFilePathForParsing( changedDoc.Path )
 				If changedDoc.CheckChangesCounter() 'Or Not FileExists( tmpPath )
 					SaveString( changedDoc.TextView.Text,tmpPath )
 					changedDoc.StoreChangesCounter()
@@ -282,7 +282,7 @@ Class DocWatcher
 							Local path:=s.Slice( 0,j )
 							Local line:=Int( s.Slice( j+2,i ) )-1
 							Local msg:=s.Slice( i+12 )
-							path=path.Replace( ".mx2/","" )
+							path=path.Replace( PathsProvider.MX2_TMP,"" )
 							Local err:=New BuildError( path,line,msg )
 							_errors.Add( err )
 						Endif

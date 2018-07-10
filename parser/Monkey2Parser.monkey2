@@ -123,7 +123,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 		Endif
 		
-		Local geninfoPath:=GetGeninfoPath( filePath )
+		Local geninfoPath:=PathsProvider.GetGeninfoPath( filePath )
 		
 		If Not geninfo
 			' was file modified?
@@ -485,7 +485,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Function GetSimpleParseCommand:String( filePathToParse:String )
 		
-		Return "~q"+MainWindow.Mx2ccPath+"~q makeapp -parse -geninfo ~q"+filePathToParse+"~q"
+		Return "~q"+MainWindow.Mx2ccPath+"~q makeapp -parse geninfo ~q"+filePathToParse+"~q"
 	End
 	
 	Function GetFullParseCommand:String( filePathToParse:String )
@@ -493,23 +493,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return "~q"+MainWindow.Mx2ccPath+"~q geninfo ~q"+filePathToParse+"~q"
 	End
 	
-	Function GetGeninfoPath:String( filePath:String )
-		
-		Return ExtractDir( filePath )+".mx2/"+StripDir( StripExt( filePath ) )+".geninfo"
-	End
-	
-	Function GetTempFilePathForParsing:String( srcPath:String )
-		
-		Local dir:=ExtractDir( srcPath )+".mx2/"
-		CreateDir( dir )
-		Local name:=StripDir( srcPath )
-		
-		Return dir+name
-	End
-	
 	Function GetSuitableFilePathToParse:String( filePath:String )
 		
-		Local tmpPath:=GetTempFilePathForParsing( filePath )
+		Local tmpPath:=PathsProvider.GetTempFilePathForParsing( filePath )
 		Local t1:=GetFileTime( filePath )
 		Local t2:=GetFileTime( tmpPath )
 		

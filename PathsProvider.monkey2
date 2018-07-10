@@ -4,6 +4,8 @@ Namespace ted2go
 
 Class PathsProvider
 	
+	Const MX2_TMP:=".mx2/"
+	
 	Function GetActiveMainFilePath:String( checkCurrentDoc:Bool=True,showNoMainFileAlert:Bool=False )
 		
 		If _customBuildProject
@@ -75,6 +77,21 @@ Class PathsProvider
 	
 		_customBuildProject=proj
 	End
+	
+	Function GetGeninfoPath:String( filePath:String )
+		
+		Return ExtractDir( filePath )+MX2_TMP+StripDir( StripExt( filePath ) )+".geninfo"
+	End
+	
+	Function GetTempFilePathForParsing:String( srcPath:String )
+		
+		Local dir:=ExtractDir( srcPath )+MX2_TMP
+		CreateDir( dir )
+		Local name:=StripDir( srcPath )
+		
+		Return dir+name
+	End
+	
 	
 	Private
 	
