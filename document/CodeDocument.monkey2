@@ -760,7 +760,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	
 	Method ShowJsonDialog()
 		
-		Local cmd:=Monkey2Parser.GetParseCommand( _doc.Path )
+		Local cmd:=Monkey2Parser.GetFullParseCommand( _doc.Path )
 		If Not cmd Return
 		
 		New Fiber( Lambda()

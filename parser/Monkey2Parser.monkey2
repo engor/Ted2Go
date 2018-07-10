@@ -106,7 +106,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 			'Print "source file: "+filePath
 			
-			Local cmd:=GetParseCommand( filePath )
+			Local cmd:=GetFullParseCommand( filePath )
 			
 			If Not cmd Return "#"
 			
@@ -123,27 +123,55 @@ Class Monkey2Parser Extends CodeParserPlugin
 			
 		Endif
 		
+		Local geninfoPath:=GetGeninfoPath( filePath )
+		
+		If Not geninfo
+			' was file modified?
+			Local time:=GetFileTime( geninfoPath )
+			If time=0 Return Null ' file not found
+		
+			Local last:=_filesTime[filePath]
+		
+			If last = 0 Or time > last
+				_filesTime[filePath]=time
+				'Print "parse file: "+filePath
+			Else
+				'Print "parse file, not modified: "+filePath
+				Return Null
+			Endif
+		Endif
+		
+		parsingData=LoadString( geninfoPath )
+		
 		If Not parsingData
 			
-			Local geninfoPath:=GetGeninfoPath( filePath )
+			' have no valid .geninfo data, so try to simple-parse file
+			'
+			Local path:=GetSuitableFilePathToParse( filePath )
+			Print "path: "+path
+			Local cmd:=GetSimpleParseCommand( path )
 			
-			If Not geninfo
-				' was file modified?
-				Local time:=GetFileTime( geninfoPath )
-				If time=0 Return Null ' file not found
+			If Not cmd Return "#"
 			
-				Local last:=_filesTime[filePath]
+			Local proc:=New ProcessReader( filePath )
+			Local str:=proc.Run( cmd )
 			
-				If last = 0 Or time > last
-					_filesTime[filePath]=time
-					'Print "parse file: "+filePath
-				Else
-					'Print "parse file, not modified: "+filePath
-					Return Null
-				Endif
+			If Not str Return "#" ' it's special kind of error
+			
+			Local i:=str.Find( "{" )
+			
+			If i<>-1
+				parsingData=str.Slice( i )
+				str=str.Slice( 0,i )
+				Print "json: "+parsingData
 			Endif
 			
-			parsingData=LoadString( geninfoPath )
+			Local hasErrors:=(str.Find( "] : Error : " ) > 0)
+			
+			If hasErrors
+				errorMessage=str
+			Endif
+			
 		Endif
 		
 		
@@ -153,6 +181,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			Print "invalid json: "+filePath
 			Return "#"
 		Endif
+		
 		
 		RemovePrevious( filePath )
 		
@@ -464,12 +493,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return "~q"+MainWindow.Mx2ccPath+"~q geninfo ~q"+filePathToParse+"~q"
 	End
 	
-	Function GetParseCommand:String( filePathToParse:String )
-		
-		Return GetFullParseCommand( filePathToParse )
-'		Return path ? GetFullParseCommand( path ) Else GetSimpleParseCommand( filePathToParse )
-	End
-	
 	Function GetGeninfoPath:String( filePath:String )
 		
 		Return ExtractDir( filePath )+".mx2/"+StripDir( StripExt( filePath ) )+".geninfo"
@@ -482,6 +505,15 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local name:=StripDir( srcPath )
 		
 		Return dir+name
+	End
+	
+	Function GetSuitableFilePathToParse:String( filePath:String )
+		
+		Local tmpPath:=GetTempFilePathForParsing( filePath )
+		Local t1:=GetFileTime( filePath )
+		Local t2:=GetFileTime( tmpPath )
+		
+		Return t1>t2 ? filePath Else tmpPath
 	End
 	
 	
