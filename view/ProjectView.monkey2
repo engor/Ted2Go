@@ -546,7 +546,7 @@ Class ProjectView Extends DockingView
 			Local isFolder:=False
 			Local fileType:=GetFileType( path )
 			
-			menu.AddAction( "Open on Desktop" ).Triggered=Lambda()
+			menu.AddAction( "Show in Explorer" ).Triggered=Lambda()
 				
 				Local p:=(fileType=FileType.File) ? ExtractDir( path ) Else path
 				requesters.OpenUrl( p )

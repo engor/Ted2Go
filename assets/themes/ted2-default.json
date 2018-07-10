@@ -45,6 +45,10 @@
 			"extends":"TextField",
 			"skinColor":"panel"
 		},
+		"HelpPageAddress":{
+			"extends":"Label",
+			"font":"small"
+		},
 
 		"Hint":{
 			"border":[ 1 ],

@@ -190,9 +190,18 @@ Class MainWindowInstance Extends Window
 				_helpView.Forward()
 			End,
 			"Forward" )
+		Local explorerAct:=New Action( "[*]" )
+		explorerAct.Triggered+=Lambda()
+			Local url:=_helpView.Url
+			requesters.OpenUrl( url )
+		End
+		Local explorerBtn:=New ToolButtonExt( explorerAct,"Show in Explorer" )
+		bar.AddView( explorerBtn )
+		
 		bar.AddSeparator()
 		bar.AddSeparator()
 		label=New Label
+		label.Style=App.Theme.GetStyle( "HelpPageAddress" )
 		
 		bar.ContentView=label
 		
@@ -289,7 +298,7 @@ Class MainWindowInstance Extends Window
 		_tabMenu.AddAction( _buildActions.lockBuildFile )
 		_tabMenu.AddAction( _projectView.setMainFile )
 		_tabMenu.AddSeparator()
-		_tabMenu.AddAction( "Open on Desktop" ).Triggered=Lambda()
+		_tabMenu.AddAction( "Show in Explorer" ).Triggered=Lambda()
 			
 			Local path:=_docsManager.CurrentDocument?.Path
 			If path
