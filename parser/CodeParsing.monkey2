@@ -9,6 +9,11 @@ Class CodeParsing
 		Return ExtractExt( path )=".monkey2"
 	End
 	
+	Function DeleteTempFiles()
+		
+		DocWatcher.DeleteTempFiles()
+	End
+	
 	Method New( docs:DocumentManager,projView:ProjectView )
 		
 		_docsManager=docs
@@ -175,6 +180,14 @@ Class DocWatcher
 		_timeTextChanged=Millisecs()
 	End
 	
+	Function DeleteTempFiles()
+		
+		For Local path:=Eachin _tempFiles
+			DeleteFile( path )
+			Print "delete temp: "+path
+		Next
+	End
+	
 	Private
 	
 	Field _view:CodeDocumentView
@@ -185,6 +198,7 @@ Class DocWatcher
 	Global _timer:Timer
 	Global _parsing:Bool
 	Global _changed:=New Stack<CodeDocument>
+	Global _tempFiles:=New StringStack
 	
 	Method OnTextChanged()
 		
@@ -249,6 +263,7 @@ Class DocWatcher
 				If changedDoc.CheckChangesCounter() 'Or Not FileExists( tmpPath )
 					SaveString( changedDoc.TextView.Text,tmpPath )
 					changedDoc.StoreChangesCounter()
+					CollectTempFile( tmpPath )
 				Endif
 			Next
 			
@@ -310,6 +325,13 @@ Class DocWatcher
 			
 		End )
 		
+	End
+	
+	Function CollectTempFile( path:String )
+	
+		If Not _tempFiles.Contains( path )
+			_tempFiles.Add( path )
+		Endif
 	End
 	
 	Function UpdateDocItems( doc:CodeDocument,parser:ICodeParser )

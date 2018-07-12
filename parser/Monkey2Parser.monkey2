@@ -107,6 +107,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			'Print "source file: "+filePath
 			
 			Local cmd:=GetFullParseCommand( filePath )
+			'Print "semant cmd: "+cmd
 			
 			If Not cmd Return "#"
 			
@@ -128,7 +129,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		If Not geninfo
 			' was file modified?
 			Local time:=GetFileTime( geninfoPath )
-			If time=0 Return Null ' file not found
+			'If time=0 Return Null ' file not found
 		
 			Local last:=_filesTime[filePath]
 		
@@ -148,8 +149,9 @@ Class Monkey2Parser Extends CodeParserPlugin
 			' have no valid .geninfo data, so try to simple-parse file
 			'
 			Local path:=GetSuitableFilePathToParse( filePath )
-			Print "path: "+path
+			
 			Local cmd:=GetSimpleParseCommand( path )
+			'Print "parse cmd: "+cmd
 			
 			If Not cmd Return "#"
 			
@@ -163,7 +165,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 			If i<>-1
 				parsingData=str.Slice( i )
 				str=str.Slice( 0,i )
-				Print "json: "+parsingData
 			Endif
 			
 			Local hasErrors:=(str.Find( "] : Error : " ) > 0)
@@ -178,7 +179,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local jobj:=JsonObject.Parse( parsingData )
 		
 		If Not jobj
-			Print "invalid json: "+filePath
+			'Print "invalid json: "+filePath
 			Return "#"
 		Endif
 		
@@ -485,12 +486,12 @@ Class Monkey2Parser Extends CodeParserPlugin
 	
 	Function GetSimpleParseCommand:String( filePathToParse:String )
 		
-		Return "~q"+MainWindow.Mx2ccPath+"~q makeapp -parse geninfo ~q"+filePathToParse+"~q"
+		Return "~q"+MainWindow.Mx2ccPath+"~q geninfo -parse ~q"+filePathToParse+"~q"
 	End
 	
 	Function GetFullParseCommand:String( filePathToParse:String )
 		
-		Return "~q"+MainWindow.Mx2ccPath+"~q geninfo ~q"+filePathToParse+"~q"
+		Return "~q"+MainWindow.Mx2ccPath+"~q geninfo -semant ~q"+filePathToParse+"~q"
 	End
 	
 	Function GetSuitableFilePathToParse:String( filePath:String )

@@ -745,6 +745,8 @@ Class MainWindowInstance Extends Window
 		End )
 		future.Get()
 		
+		CodeParsing.DeleteTempFiles()
+		
 		App.Terminate()
 	End
 
