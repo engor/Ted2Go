@@ -22,7 +22,8 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 	
 	Method HL:Int( text:String,colors:Byte[],sol:Int,eol:Int,state:Int )
 
-        If _keywords = Null Then _keywords=KeywordsManager.Get( GetMainFileType() )
+        If Not _keywords Then _keywords=KeywordsManager.Get( GetMainFileType() )
+        If Not _parser Then _parser=ParsersManager.Get( GetMainFileType() )
 
 		Local i0:=sol
 		
@@ -134,8 +135,11 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 				
 					color=Highlighter.COLOR_IDENT
 					
-					If _keywords.Contains( id ) Then color=Highlighter.COLOR_KEYWORD
-				
+					If _keywords.Contains( id )
+						color=Highlighter.COLOR_KEYWORD
+'					Elseif _parser.GetItem( id )
+'						color=Highlighter.COLOR_CODE_ITEM
+					Endif
 				Endif
 				
 			Else If IsDigit( chr )

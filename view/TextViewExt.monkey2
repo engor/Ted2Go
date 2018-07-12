@@ -1628,9 +1628,9 @@ Class TextView Extends ScrollableView
 		
 		SelectionColor=App.Theme.GetColor( "textview-selection" )
 		
-		Local colors:=New Color[8]
+		Local colors:=New Color[9]
 		
-		For Local i:=0 Until 8
+		For Local i:=0 Until colors.Length
 			colors[i]=App.Theme.GetColor( "textview-color"+i )
 		Next
 		
