@@ -132,7 +132,7 @@ Class BuildActions Implements IModuleBuilder
 		_releaseConfig.Clicked+=Lambda()
 			_buildConfig="release"
 		End
-		_buildConfig="debug"
+		_buildConfig="release"
 
 		group=New CheckGroup
 

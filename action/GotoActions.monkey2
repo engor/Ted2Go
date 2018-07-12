@@ -8,6 +8,8 @@ Class GotoActions
 	Field goForward:Action
 	Field gotoLine:Action
 	Field gotoDeclaration:Action
+	Field prevScope:Action
+	Field nextScope:Action
 	
 	Method New( docs:DocumentManager )
 		
@@ -31,6 +33,21 @@ Class GotoActions
 		gotoDeclaration=New Action( "Goto definition" )
 		gotoDeclaration.Triggered=OnGotoDeclaration
 		gotoDeclaration.HotKey=Key.F12
+		
+		prevScope=New Action( "Previous scope" )
+		prevScope.Triggered=OnPrevScope
+		#If __TARGET__<>"macos"
+		prevScope.HotKey=Key.Up
+		prevScope.HotKeyModifiers=Modifier.Alt
+		#Endif
+		
+		nextScope=New Action( "Next scope" )
+		nextScope.Triggered=OnNextScope
+		#If __TARGET__<>"macos"
+		nextScope.HotKey=Key.Down
+		nextScope.HotKeyModifiers=Modifier.Alt
+		#Endif
+		
 	End
 	
 	
@@ -41,17 +58,13 @@ Class GotoActions
 	Method OnGoBack()
 		
 		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
-		If Not doc Return
-		
-		doc.GoBack()
+		doc?.GoBack()
 	End
 	
 	Method OnGoForward()
 	
 		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
-		If Not doc Return
-	
-		doc.GoForward()
+		doc?.GoForward()
 	End
 	
 	Method OnGotoLine()
@@ -62,6 +75,18 @@ Class GotoActions
 	Method OnGotoDeclaration()
 	
 		MainWindow.GotoDeclaration()
+	End
+	
+	Method OnPrevScope()
+		
+		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
+		doc?.JumpToPreviousScope()
+	End
+	
+	Method OnNextScope()
+		
+		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
+		doc?.JumpToNextScope()
 	End
 	
 End

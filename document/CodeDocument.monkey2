@@ -1445,6 +1445,71 @@ Class CodeDocument Extends Ted2Document
 		Return _changesCounter<>_storedChangesCounter
 	End
 	
+	Method GrabCodeItems( parent:CodeItem,items:Stack<CodeItem> )
+		
+		If parent.IsLikeFunc Or parent.IsOperator Or parent.IsProperty Or parent.IsLikeClass
+			items.Add( parent )
+		Endif
+		
+		If Not (parent.Children Or parent.IsLikeClass) Return
+		
+		For Local child:=Eachin parent.Children
+			GrabCodeItems( child,items )
+		Next 
+	End
+	
+	Method JumpToPreviousScope()
+		
+		Local topItems:=_parser.ItemsMap[Path]
+		If Not topItems Return
+		
+		Local allItems:=New Stack<CodeItem>
+		For Local item:=Eachin topItems
+			GrabCodeItems( item,allItems )
+		Next
+		
+		Local curLine:=_codeView.LineNumAtCursor
+		Local newPos:=New Vec2i( -1 )
+		For Local item:=Eachin allItems
+			Local pos:=item.ScopeStartPos
+			If pos.x<curLine And pos.x>newPos.x
+				newPos=pos
+			Endif
+		Next
+		
+		If newPos.x<>curLine
+			Local pos:=_codeView.Document.StartOfLine( newPos.x )+newPos.y
+			_codeView.SelectText( pos,pos )
+			_codeView.MakeCentered()
+		Endif
+	End
+	
+	Method JumpToNextScope()
+		
+		Local topItems:=_parser.ItemsMap[Path]
+		If Not topItems Return
+		
+		Local allItems:=New Stack<CodeItem>
+		For Local item:=Eachin topItems
+			GrabCodeItems( item,allItems )
+		Next
+		
+		Local curLine:=_codeView.LineNumAtCursor
+		Local newPos:=New Vec2i( _codeView.Document.NumLines )
+		For Local item:=Eachin allItems
+			Local pos:=item.ScopeStartPos
+			If pos.x>curLine And pos.x<newPos.x
+				newPos=pos
+			Endif
+		Next
+		
+		If newPos.x<>curLine
+			Local pos:=_codeView.Document.StartOfLine( newPos.x )+newPos.y
+			_codeView.SelectText( pos,pos )
+			_codeView.MakeCentered()
+		Endif
+	End
+	
 	Property CodeView:CodeDocumentView()
 		Return _codeView
 	End

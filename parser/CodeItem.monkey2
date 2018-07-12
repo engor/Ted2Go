@@ -215,7 +215,7 @@ Class CodeItem
 		Case CodeItemKind.Class_,CodeItemKind.Interface_,CodeItemKind.Struct_,CodeItemKind.Enum_
 			Return True
 		End
-		Return False
+		Return _isExtension
 	End
 	
 	Property IsLikeFunc:Bool()

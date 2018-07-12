@@ -426,6 +426,9 @@ Class MainWindowInstance Extends Window
 		_gotoMenu.AddSeparator()
 		_gotoMenu.AddAction( _gotoActions.goBack )
 		_gotoMenu.AddAction( _gotoActions.goForward )
+		_gotoMenu.AddSeparator()
+		_gotoMenu.AddAction( _gotoActions.prevScope )
+		_gotoMenu.AddAction( _gotoActions.nextScope )
 		
 		'View menu
 		'
