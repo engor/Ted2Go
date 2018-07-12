@@ -378,6 +378,7 @@ Class MainWindowInstance Extends Window
 		_editMenu.AddAction( _editActions.paste )
 		_editMenu.AddSeparator()
 		_editMenu.AddAction( _editActions.selectAll )
+		_editMenu.AddAction( _editActions.selectWord )
 		_editMenu.AddSeparator()
 		' Edit -- Text
 		Local subText:=New MenuExt( "Text" )
@@ -391,6 +392,7 @@ Class MainWindowInstance Extends Window
 		Local subComment:=New MenuExt( "Comment" )
 		subComment.AddAction( _editActions.comment )
 		subComment.AddAction( _editActions.uncomment )
+		
 		_editMenu.AddSubMenu( subComment )
 		' Edit -- Convert case
 		Local subCase:=New MenuExt( "Convert case" )

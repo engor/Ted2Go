@@ -37,7 +37,7 @@ Class FileActions
 		
 		close=New Action( "Close tab" )
 		close.HotKey=Key.W
-		close.HotKeyModifiers=Modifier.Menu
+		close.HotKeyModifiers=Modifier.Alt
 		close.Triggered=OnClose
 		
 		closeOthers=New Action( "Close other tabs" )

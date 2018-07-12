@@ -804,6 +804,45 @@ Class TextView Extends ScrollableView
 		SelectText( 0,_doc.TextLength )
 	End
 	
+	Method SelectWord()
+		
+		' this method tries to intelligent expand
+		' selection under cursor
+		'
+		Local line:=Document.FindLine( _cursor )
+		Local i1:=Document.StartOfLine( line )
+		Local i2:=Document.EndOfLine( line )
+		Local cur:=_cursor
+		Local anc:=Max( _anchor-1,i1 )
+		Local chr:=(anc>i1) ? Text[anc] Else Text[cur]
+		If Text[cur]=Chars.SPACE And chr<>Chars.SPACE
+			i2=cur
+		Endif
+		If Text[anc]=Chars.SPACE And (IsIdent( Text[cur] ) Or Text[cur]=Chars.DOT)
+			i1=anc+1
+			chr=Text[cur]
+		Endif
+		Local isIdent:=IsIdent( chr )
+		If isIdent
+			While anc>=i1 And IsIdent( Text[anc] )
+				anc-=1
+			Wend
+			While cur<i2 And IsIdent( Text[cur] )
+				cur+=1
+			Wend
+		Else
+			While anc>=i1 And Not IsIdent( Text[anc] )
+				anc-=1
+			Wend
+			While cur<i2 And Not IsIdent( Text[cur] )
+				cur+=1
+			Wend
+		Endif
+		If anc<>_anchor Then anc+=1
+		
+		SelectText( anc,cur )
+	End
+	
 	#rem monkeydoc Performs a cut.
 	#end
 	Method Cut()
