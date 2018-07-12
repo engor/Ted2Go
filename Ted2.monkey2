@@ -121,11 +121,13 @@
 #Import "view/Undock"
 #Import "view/TextViewExt"
 
+#Import "theme/ThemeImages"
+#Import "theme/ThemesInfo"
+
 #Import "PathsProvider"
 #Import "Tree"
 #Import "Tuple"
 #Import "Plugin"
-#Import "ThemeImages"
 #Import "Prefs"
 #Import "ProcessReader"
 #Import "LiveTemplates"
@@ -174,6 +176,8 @@ Function Main()
 	If Not jobj jobj=New JsonObject
 	
 	Prefs.LoadState( jobj )
+	
+	ThemesInfo.Load( "theme::themes.json" )
 	
 	'initial theme
 	'

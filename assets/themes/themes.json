@@ -1,12 +1,42 @@
 {
-	"Classic dark":"theme-classic-dark",
-	"Overcast":"theme-overcast",
-	"Monkey 1":"theme-monkey1",
-	"Blitzed":"theme-blitzed",
-	"Basic Blue":"theme-Basic-Blue",
-	"Hollow":"theme-hollow",
-	"Prime - Red":"theme-prime-red",
-	"Prime - Blue":"theme-prime-blue",
-	"Smooth":"theme-smooth",
-	"Warm":"theme-warm"
+	"Classic dark": {
+		"path": "theme-classic-dark",
+		"dark": true
+	},
+	"Overcast": {
+		"path": "theme-overcast",
+		"dark": false
+	},
+	"Monkey 1": {
+		"path": "theme-monkey1",
+		"dark": false
+	},
+	"Blitzed": {
+		"path": "theme-blitzed",
+		"dark": true
+	},
+	"Basic Blue": {
+		"path": "theme-Basic-Blue",
+		"dark": true
+	},
+	"Hollow": {
+		"path": "theme-hollow",
+		"dark": true
+	},
+	"Prime - Red": {
+		"path": "theme-prime-red",
+		"dark": true
+	},
+	"Prime - Blue": {
+		"path": "theme-prime-blue",
+		"dark": true
+	},
+	"Smooth": {
+		"path": "theme-smooth",
+		"dark": true
+	},
+	"Warm": {
+		"path": "theme-warm",
+		"dark": true
+	}
 }

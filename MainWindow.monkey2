@@ -171,6 +171,18 @@ Class MainWindowInstance Extends Window
 		_docsConsole=New DockingView
 		bar=New ToolBarExt
 		bar.MaxSize=New Vec2i( 300,30 )
+		
+		_helpSwitcher=New ToolButtonExt( New Action( ">" ) )
+		bar.AddView( _helpSwitcher,"left" )
+		bar.AddView( New SpacerView( 30,0 ),"left" ) ' right offset
+		
+		_helpSwitcher.Clicked=Lambda()
+		
+			_helpTree.Visible=Not _helpTree.Visible
+			_helpSwitcher.Text=_helpTree.Visible ? "<" Else ">"
+			_helpSwitcher.Hint=_helpTree.Visible ? "Hide docs index" Else "Show docs index"
+		End
+		
 		bar.AddIconicButton(
 			ThemeImages.Get( "docbar/home.png" ),
 			Lambda()
@@ -190,7 +202,7 @@ Class MainWindowInstance Extends Window
 				_helpView.Forward()
 			End,
 			"Forward" )
-		Local explorerAct:=New Action( "[*]" )
+		Local explorerAct:=New Action( " [*] " )
 		explorerAct.Triggered+=Lambda()
 			Local url:=_helpView.Url
 			requesters.OpenUrl( url )
@@ -211,20 +223,11 @@ Class MainWindowInstance Extends Window
 		End
 		
 		_helpTree=Di.Resolve<HelpTreeView>()
-		_docsConsole.AddView( _helpTree,"right",200,True )
+		_docsConsole.AddView( _helpTree,"left",200,True )
 		
 		_docsConsole.AddView( bar,"top" )
 		_docsConsole.ContentView=_helpView
 		
-		_helpSwitcher=New ToolButtonExt( New Action( "<" ) )
-		bar.AddView( New SpacerView( 6,0 ),"right" ) ' right offset
-		bar.AddView( _helpSwitcher,"right" )
-		_helpSwitcher.Clicked=Lambda()
-		
-			_helpTree.Visible=Not _helpTree.Visible
-			_helpSwitcher.Text=_helpTree.Visible ? ">" Else "<"
-			_helpSwitcher.Hint=_helpTree.Visible ? "Hide docs index" Else "Show docs index"
-		End
 		_helpTree.Visible=False
 		_helpSwitcher.Clicked() 'show at startup
 		
@@ -712,14 +715,6 @@ Class MainWindowInstance Extends Window
 	Property IsTerminating:Bool()
 		
 		Return _isTerminating
-	End
-	
-	Property ThemeName:String()
-		
-		Return _theme
-	Setter( value:String )
-		
-		_theme=value
 	End
 	
 	Property AboutPagePath:String()
@@ -1362,7 +1357,7 @@ Class MainWindowInstance Extends Window
 		End
 		jobj["recentProjects"]=recent
 		
-		jobj["theme"]=New JsonString( ThemeName )
+		jobj["theme"]=New JsonString( ThemesInfo.ActiveThemePath )
 		
 		jobj["themeScale"]=New JsonNumber( App.Theme.Scale.y )
 		
@@ -1670,7 +1665,7 @@ Class MainWindowInstance Extends Window
 			Next
 		End
 		
-		If jobj.Contains( "theme" ) ThemeName=jobj.GetString( "theme" )
+		If jobj.Contains( "theme" ) ThemesInfo.ActiveThemePath=jobj.GetString( "theme" )
 		
 		If jobj.Contains( "themeScale" )
 			Local sc:=jobj.GetNumber( "themeScale" )
@@ -1825,8 +1820,6 @@ Class MainWindowInstance Extends Window
 	Field _editorMenu:MenuExt
 	Field _themesMenu:MenuExt
 	
-	Field _theme:="default"
-	
 	Field _contentView:DockingView
 	
 	Field _recentFiles:=New StringStack
@@ -1965,20 +1958,17 @@ Class MainWindowInstance Extends Window
 	
 		Local menu:=New MenuExt( text )
 		
-		Local themes:=JsonObject.Load( "theme::themes.json" )
-		If Not themes Return menu
-		
-		For Local it:=Eachin themes
-			Local name:=it.Key
-			Local value:=it.Value.ToString()
+		For Local i:=0 Until ThemesInfo.GetCount()
+			Local name:=ThemesInfo.GetNameAt( i )
+			Local path:=ThemesInfo.GetPathAt( i )
 			menu.AddAction( name ).Triggered=Lambda()
 				
-				If value=ThemeName Return
+				If path=ThemesInfo.ActiveThemePath Return
 				
-				ThemeName=value
+				ThemesInfo.ActiveThemePath=path
 				Local sc:=App.Theme.Scale.x
 				
-				App.Theme.Load( _theme,New Vec2f( sc ) )
+				App.Theme.Load( path,New Vec2f( sc ) )
 				SaveState()
 			End
 		Next

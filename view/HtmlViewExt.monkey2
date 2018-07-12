@@ -18,7 +18,13 @@ Class HtmlViewExt Extends HtmlView
 			_url=nav.url
 			
 			nav.state+=1
-			If nav.state=1 Return 'navigated first time, so it's new page, don't touch the scroll
+			
+			UpdateCss()
+			
+			'navigated first time, so it's new page, don't touch the scroll
+			If nav.state=1
+				Return 
+			Endif
 			
 			Scroll=nav.scroll
 			
@@ -68,6 +74,22 @@ Class HtmlViewExt Extends HtmlView
 	
 	Field _navOps:=New NavOps<Nav>
 	Field _url:String
+	
+	Method OnValidateStyle() Override
+		
+		Super.OnValidateStyle()
+		
+		UpdateCss()
+	End
+	
+	Method UpdateCss()
+		
+		If ThemesInfo.IsActiveThemeDark()
+			HtmlSource=HtmlSource.Replace( "theme.css","theme-dark.css" )
+		Else
+			HtmlSource=HtmlSource.Replace( "theme-dark.css","theme.css" )
+		Endif
+	End
 	
 	Method StoreScroll()
 		
