@@ -153,7 +153,6 @@ Class AutocompleteDialog Extends NoTitleDialog
 	Setter( value:Bool )
 		_fullIdent=""
 		_disableUsingsFilter=value
-		Print "set filer: "+value
 	End
 	
 	Property LastIdentPart:String()

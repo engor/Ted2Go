@@ -3,7 +3,7 @@ Namespace ted2go
 
 
 Class HtmlViewExt Extends HtmlView
-
+	
 	Field Navigated:Void( url:String )
 	
 	Method New()

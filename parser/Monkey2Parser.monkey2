@@ -93,7 +93,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Method ParseFile:String( params:ParseFileParams )
 		
 		Local filePath:=params.filePath
-		'Local pathOnDisk:=params.pathOnDisk
 		Local moduleName:=params.moduleName
 		Local geninfo:=params.geninfo
 		
@@ -107,7 +106,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 			'Print "source file: "+filePath
 			
 			Local cmd:=GetFullParseCommand( filePath )
-			'Print "semant cmd: "+cmd
 			
 			If Not cmd Return "#"
 			
@@ -143,38 +141,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Endif
 		
 		parsingData=LoadString( geninfoPath )
-		
-		If Not parsingData
-			
-			' have no valid .geninfo data, so try to simple-parse file
-			'
-			Local path:=GetSuitableFilePathToParse( filePath )
-			
-			Local cmd:=GetSimpleParseCommand( path )
-			'Print "parse cmd: "+cmd
-			
-			If Not cmd Return "#"
-			
-			Local proc:=New ProcessReader( filePath )
-			Local str:=proc.Run( cmd )
-			
-			If Not str Return "#" ' it's special kind of error
-			
-			Local i:=str.Find( "{" )
-			
-			If i<>-1
-				parsingData=str.Slice( i )
-				str=str.Slice( 0,i )
-			Endif
-			
-			Local hasErrors:=(str.Find( "] : Error : " ) > 0)
-			
-			If hasErrors
-				errorMessage=str
-			Endif
-			
-		Endif
-		
 		
 		Local jobj:=JsonObject.Parse( parsingData )
 		

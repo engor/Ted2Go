@@ -39,8 +39,8 @@ Class CodeTreeView Extends TreeViewExt
 		If Not node And scope.Parent Then node=FindNode( RootNode,scope.Parent )
 		If Not node Return
 		
-		node.Expanded=True
-		_expander.Store( node )
+		'node.Expanded=True
+		'_expander.Store( node )
 		TreeViewExpander.ExpandParents( node )
 		
 		MeasureLayoutSize()
