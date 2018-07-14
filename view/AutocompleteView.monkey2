@@ -262,7 +262,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 				If Not usings.Contains( "monkey.." ) Then usings.Add( "monkey.." )
 			Endif
 			
-			Print "usings: "+usings?.Join( " " )
+			'Print "usings: "+usings?.Join( " " )
 			
 			_listForExtract.Clear()
 			

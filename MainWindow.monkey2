@@ -1229,7 +1229,7 @@ Class MainWindowInstance Extends Window
 	
 	Method UpdateHelpTree()
 		
-		_helpTree.Update( True )
+		_helpTree.Update()
 	End
 	
 	Method ShowBananasShowcase()

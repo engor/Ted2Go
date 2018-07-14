@@ -184,7 +184,6 @@ Class DocWatcher
 		
 		For Local path:=Eachin _tempFiles
 			DeleteFile( path )
-			Print "delete temp: "+path
 		Next
 	End
 	

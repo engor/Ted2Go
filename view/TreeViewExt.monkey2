@@ -149,9 +149,15 @@ Class TreeViewExt Extends TreeView
 		If n Then Selected=n
 	End
 	
-	Method Sort()
-	
-		SortNode( RootNode )
+	Method Sort( func:Int( lhs:TreeView.Node,rhs:TreeView.Node )=Null )
+		
+		If func=Null
+			func=Lambda:Int( lhs:TreeView.Node,rhs:TreeView.Node )
+				Return lhs.Text<=>rhs.Text
+			End
+		Endif
+		
+		SortNode( RootNode,func )
 	End
 	
 	
@@ -285,24 +291,21 @@ Class TreeViewExt Extends TreeView
 		Scroll=scroll
 	End
 	
-	Method SortNode( node:TreeView.Node )
+	Method SortNode( node:TreeView.Node,func:Int( lhs:TreeView.Node,rhs:TreeView.Node ) )
 		
 		If node.Children.Length=0 Return
 		
 		Local children:=New Stack<TreeView.Node>
 		children+=node.Children
 		
-		children.Sort( Lambda:Int( lhs:TreeView.Node,rhs:TreeView.Node )
-			
-			Return lhs.Text<=>rhs.Text
-		End )
+		children.Sort( func )
 		
 		node.RemoveAllChildren()
 		
 		For Local n:=Eachin children
 			node.AddChild( n )
 			
-			SortNode( n )
+			SortNode( n,func )
 		Next
 	End
 	
