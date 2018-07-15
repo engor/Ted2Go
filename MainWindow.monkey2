@@ -1339,7 +1339,7 @@ Class MainWindowInstance Extends Window
 		
 		SaveUndockTabsState( jobj )
 		If _isTerminating UndockWindow.RestoreUndock()
-			
+		
 		SaveTabsState( jobj )
 		
 		Local jdocs:=New JsonObject
@@ -1547,7 +1547,7 @@ Class MainWindowInstance Extends Window
 					Next
 					'
 					Local tab:=_tabsWrap.tabs[key]
-					If tab Then 
+					If tab Then
 						_tabsWrap.docks[edge].AddTab( tab )
 						'set view visible
 						If vistabs And vistabs<>JsonValue.NullValue
@@ -1592,6 +1592,11 @@ Class MainWindowInstance Extends Window
 			dock.Visible=dock.Visible And (dock.NumTabs>0)
 		Next
 		
+		Local val:=Json_FindValue( jobj.Data,"tabsDocks/sourcesInnerListHeight" )
+		If val
+			Local size:=Max( 50,Int(val.ToNumber()) )
+			_docBrowser.PropertiesViewHeight=size
+		Endif
 	End
 	
 	Method SaveTabsState( jobj:JsonObject )
@@ -1609,11 +1614,13 @@ Class MainWindowInstance Extends Window
 			jj[edge+"Visible"]=New JsonBool( dock.Visible )
 			jj[edge+"Size"]=New JsonString( _tabsWrap.GetDockSize( dock ) )
 		Next
+		
+		jj["sourcesInnerListHeight"]=New JsonNumber( _docBrowser.PropertiesViewHeight )
 	End
 	
 	Method LoadUndockTabsState( jobj:JsonObject ) 
-				
-		Local edges:=DraggableTabs.Edges	
+		
+		Local edges:=DraggableTabs.Edges
 		For Local edge:=Eachin edges
 			Local dock:=_tabsWrap.docks[edge]
 			For Local i:=Eachin dock.TabsNames
@@ -1625,10 +1632,10 @@ Class MainWindowInstance Extends Window
 			Next
 		Next
 	End
-		
+	
 	Method SaveUndockTabsState( jobj:JsonObject )
 		
-		If( UndockWindow._undockWindows.Length )	
+		If( UndockWindow._undockWindows.Length )
 			Local jj:=New JsonObject
 			jobj["undockTabs"]=jj
 			For Local i:=Eachin UndockWindow._undockWindows
@@ -1798,7 +1805,7 @@ Class MainWindowInstance Extends Window
 	Field _findConsole:TreeViewExt
 	
 	Field _projectView:ProjectView
-	Field _docBrowser:DockingView
+	Field _docBrowser:DocBrowserView
 	Field _debugView:DebugView
 	Field _helpTree:HelpTreeView
 	Field _helpSwitcher:ToolButtonExt

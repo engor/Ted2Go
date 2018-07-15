@@ -6,6 +6,7 @@ Class CodeTreeView Extends TreeViewExt
 	
 	Field SortByType:=True
 	Field ShowInherited:=False
+	Field FillNestedItems:=True
 	
 	Method Fill( codeItems:Stack<CodeItem>,parser:ICodeParser,expandIfOnlyOneItem:Bool=True )
 		
@@ -41,18 +42,24 @@ Class CodeTreeView Extends TreeViewExt
 		
 		'node.Expanded=True
 		'_expander.Store( node )
-		TreeViewExpander.ExpandParents( node )
+		
+		Local isContainer:=(scope.IsLikeFunc Or scope.IsLikeClass)
+		
+		If Not isContainer
+			If node.Parent And node.Parent.Expanded=False
+				node=node.Parent
+			Endif
+		Endif
+		
+		If isContainer
+			TreeViewExpander.ExpandParents( node )
+		Endif
 		
 		MeasureLayoutSize()
 		
 		Selected=Null
 		Selected=node
 	End
-	
-	
-	Private
-	
-	Field _codeItems:Stack<CodeItem>
 	
 	Method FindNode:TreeView.Node( treeNode:TreeView.Node,item:CodeItem )
 	
@@ -71,14 +78,23 @@ Class CodeTreeView Extends TreeViewExt
 		Return Null
 	End
 	
-	Method AddTreeItem( item:CodeItem,node:TreeView.Node,parser:ICodeParser )
 	
+	Private
+	
+	Field _codeItems:Stack<CodeItem>
+	
+	Method AddTreeItem( item:CodeItem,node:TreeView.Node,parser:ICodeParser )
+		
+		If item.IsBlock Return
+		
 		Local n:=New CodeTreeNode( item,node )
 		
 		' restore expand state
 		_expander.Restore( n )
 		
-		If item.Children = Null And Not ShowInherited Return
+		If Not FillNestedItems Or item.IsFuncTypedField Return
+		
+		If item.Children=Null And Not ShowInherited Return
 		
 		Local list:=New Stack<CodeItem>
 		
@@ -107,7 +123,7 @@ Class CodeTreeView Extends TreeViewExt
 		
 		Local added:=New StringStack
 		For Local i:=Eachin list
-			If i.KindStr="block" Continue
+			If i.IsBlock Continue
 			Local txt:=i.Text
 			If added.Contains( txt ) Continue
 			added.Add( txt )

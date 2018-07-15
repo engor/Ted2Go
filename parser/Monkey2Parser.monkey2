@@ -244,7 +244,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 					
 				Case "block"
 					
-					item.Ident=""+item.ScopeStartPos+"..."+item.ScopeEndPos
+					item.Ident="block{"+item.ScopeStartPos+"..."+item.ScopeEndPos+"}"
 				
 				Case "property"
 					
@@ -313,7 +313,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			If kind="local"
 				' add into parent that isn't a nested block
 				' like method/func
-				Local par:=GetNonBlockParent( parent )
+				Local par:=CodeItem.GetNonBlockParent( parent )
 				item.SetParent( par )
 			Elseif parent
 				item.SetParent( parent )
@@ -1217,16 +1217,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return False
 	End
 	
-	Function GetNonBlockParent:CodeItem( parent:CodeItem )
-	
-		Local par:=parent
-		While par And par.KindStr="block"
-			par=par.Parent
-		Wend
-		
-		Return par
-	End
-	
 	Function GetScopePosition:Vec2i( strPos:String )
 		
 		Local arr:=strPos.Split( ":" )
@@ -1335,17 +1325,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 		' inside of item's parent
 		If item.Parent.Ident = scopeClass.Ident Return True
 		
-'		Local type:=item.Parent.Type.ident
-'		
-		' it's own class
-'		If type = scopeClass.Type.ident
-'			Return True
-'		Else
-'			' inherited
-'			Local has:=scopeClass.HasSuchSuperClass( type )
-'			If has Return item.Access = AccessMode.Protected_
-'		Endif
-		
 		Return False
 		
 	End
@@ -1356,10 +1335,11 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local endpos:=item.ScopeEndPos
 		
 		If localRule<>LOCAL_RULE_NONE And IsLocalMember( item )
-			'cursor.x-=1 ' hacking
 			If localRule=LOCAL_RULE_SELF_SCOPE
+				cursor.x-=1 ' hacking
 				Return cursor.x=srcpos.x And cursor.y>=srcpos.y
 			Elseif localRule=LOCAL_RULE_PARENT_SCOPE
+				
 				Return (cursor.x=srcpos.x And cursor.y>=srcpos.y) Or 
 						(cursor.x>srcpos.x And cursor.x<endpos.x)
 			Endif

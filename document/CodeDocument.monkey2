@@ -1007,7 +1007,7 @@ Class CodeDocument Extends Ted2Document
 	Method OnCreateBrowser:View() Override
 		
 		If _browserView Return _browserView
-			
+		
 		' sorting toolbar
 		_browserView=New DockingView
 		
@@ -1047,17 +1047,29 @@ Class CodeDocument Extends Ted2Document
 		
 		_treeView.SortByType=Prefs.SourceSortByType
 		_treeView.ShowInherited=Prefs.SourceShowInherited
+		_treeView.ExpandParentsForSelected=False
 		
 		' goto item from tree view
-		_treeView.NodeClicked+=Lambda( node:TreeView.Node )
+		Local clickFunc:=Lambda( node:TreeView.Node )
 		
 			Local codeNode:=Cast<CodeTreeNode>( node )
 			Local item:=codeNode.CodeItem
 			JumpToPosition( item.FilePath,item.ScopeStartPos )
-			
 		End
 		
+		_treeView.NodeClicked+=clickFunc
+		
+		_treeViewInnerList=New CodeTreeView
+		_treeViewInnerList.FillNestedItems=False
+		
+		_treeViewInnerList.NodeClicked+=clickFunc
+		
 		Return _browserView
+	End
+	
+	Method OnCreateBrowserProperties:View() Override
+		
+		Return _treeViewInnerList
 	End
 	
 	Method AnalyzeIndentation()
@@ -1528,6 +1540,7 @@ Class CodeDocument Extends Ted2Document
 	Field _view:DockingView
 	Field _codeView:CodeDocumentView
 	Field _treeView:CodeTreeView
+	Field _treeViewInnerList:CodeTreeView
 	Field _browserView:DockingView
 	Field _fixIndentView:DockingView
 	Field _fixIndentHint:Label
@@ -1700,10 +1713,6 @@ Class CodeDocument Extends Ted2Document
 				MainWindow.ShowStatusBarText( error )
 			Endif
 		Endif
-		
-		If Not _parsingEnabled Return
-		
-		OnUpdateCurrentScope()
 	End
 	
 	Property CursorPos:Vec2i()
@@ -1713,11 +1722,33 @@ Class CodeDocument Extends Ted2Document
 	
 	Method OnUpdateCurrentScope()
 		
-		'DebugStop()
 		Local scope:=_parser.GetNearestScope( Path,CursorPos )
 		'Print ""+CursorPos+", "+scope?.KindStr+", "+scope?.Text
 		If scope
 			_treeView.SelectByScope( scope )
+			
+			_treeViewInnerList.RemoveAllViews()
+			
+			Local storedScope:=scope
+			If scope.IsBlock
+				scope=CodeItem.GetNonBlockParent( scope )
+			Endif
+			If scope.IsLikeField
+				scope=CodeItem.GetNonFieldParent( scope )
+			Endif
+			If scope.NumChildren>0
+				Local st:=New Stack<CodeItem>
+				For Local child:=Eachin scope.Children
+					If Not (child.IsLikeClass Or child.IsLikeFunc Or child.IsOperator)
+						st.Add( child )
+					Endif
+				Next
+				If Not st.Empty
+					_treeViewInnerList.Fill( st,_parser )
+					MainWindow.UpdateWindow( False )
+					_treeViewInnerList.Selected=_treeViewInnerList.FindNode( _treeViewInnerList.RootNode,storedScope )
+				Endif
+			Endif
 		Endif
 	End
 	
@@ -1772,6 +1803,10 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Method OnCursorChanged()
+		
+		If _parsingEnabled
+			OnUpdateCurrentScope()
+		Endif
 		
 		' try to show hint for method parameters
 		
@@ -2053,20 +2088,18 @@ Class CodeItemIcons
 			Case "param"
 				key="*"
 			Default
-				Local type:=item.Type
-				If (kind="field" Or kind="global") And type<>Null And type.IsLikeFunc
+				If item.IsFuncTypedField
 					key="field_func"
 				Else
-					If item.Ident.ToLower() = "new" Then kind="constructor"
+					If item.Ident.ToLower()="new" Then kind="constructor"
 					key=kind+"_"+item.AccessStr
 				Endif
 		End
 		
 		Local ic:=_icons[key]
-		If ic = Null Then ic=_iconDefault
+		If ic=Null Then ic=_iconDefault
 		
 		Return ic
-		
 	End
 
 	Function GetKeywordsIcon:Image()

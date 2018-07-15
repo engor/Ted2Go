@@ -14,7 +14,7 @@ Class DocumentManager
 	Field DocumentRemoved:Void( doc:Ted2Document )
 	Field DocumentDoubleClicked:Void( doc:Ted2Document )
 
-	Method New( tabView:TabViewExt,browser:DockingView )
+	Method New( tabView:TabViewExt,browser:DocBrowserView )
 	
 		_tabView=tabView
 		_browser=browser
@@ -85,6 +85,7 @@ Class DocumentManager
 		If _currentDoc
 			_tabView.CurrentView=CurrentView
 			_browser.ContentView=_currentDoc.BrowserView
+			_browser.PropertiesView.ContentView=_currentDoc.BrowserPropertiesView
 		Else
 			_browser.ContentView=Null
 		Endif
@@ -345,7 +346,7 @@ Class DocumentManager
 	Private
 	
 	Field _tabView:TabViewExt
-	Field _browser:DockingView
+	Field _browser:DocBrowserView
 	Field _currentDoc:Ted2Document
 	Field _openDocs:=New Stack<Ted2Document>
 	Field _locked:CodeDocument

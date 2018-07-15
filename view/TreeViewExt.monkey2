@@ -11,6 +11,8 @@ Class TreeViewExt Extends TreeView
 	Field NodeCollapsed:Void( node:Node )
 	Field SelectedChanged:Void( selNode:Node )
 	
+	Field ExpandParentsForSelected:=True
+	
 	Method New()
 		
 		Super.New()
@@ -277,13 +279,15 @@ Class TreeViewExt Extends TreeView
 	Method EnsureVisible( node:TreeView.Node )
 	
 		If Not node Return
-	
-		Local n:=node.Parent
-		While n
-			n.Expanded=True
-			n=n.Parent
-		Wend
-	
+		
+		If ExpandParentsForSelected
+			Local n:=node.Parent
+			While n
+				n.Expanded=True
+				n=n.Parent
+			Wend
+		Endif
+		
 		' scroll Y only
 		Local scroll:=Scroll
 		Super.EnsureVisible( node.Rect )

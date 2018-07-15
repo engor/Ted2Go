@@ -62,6 +62,13 @@ Class Ted2Document
 		Return _browser
 	End
 	
+	Property BrowserPropertiesView:View()
+	
+		If Not _browserProperties _browserProperties=OnCreateBrowserProperties()
+		
+		Return _browserProperties
+	End
+	
 	Property TextView:TextView()
 	
 		Return OnGetTextView( View )
@@ -82,7 +89,7 @@ Class Ted2Document
 	
 	Method Load:Bool()
 	
-		If Not OnLoad() 
+		If Not OnLoad()
 			MainWindow.ReadError( _path )
 			Return False
 		Endif
@@ -152,6 +159,11 @@ Class Ted2Document
 		Return Null
 	End
 	
+	Method OnCreateBrowserProperties:View() Virtual
+	
+		Return Null
+	End
+	
 	Method OnGetTextView:TextView( view:View ) virtual
 	
 		Return Cast<TextView>( view )
@@ -169,6 +181,7 @@ Class Ted2Document
 	Field _view:View
 	Field _fileExt:String
 	Field _browser:View
+	Field _browserProperties:View
 	
 End
 
