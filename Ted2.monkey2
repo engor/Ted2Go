@@ -120,6 +120,7 @@
 #Import "view/DraggableViewListener"
 #Import "view/Undock"
 #Import "view/TextViewExt"
+#Import "view/ExamplesView"
 
 #Import "theme/ThemeImages"
 #Import "theme/ThemesInfo"

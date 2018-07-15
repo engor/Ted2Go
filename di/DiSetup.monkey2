@@ -5,6 +5,11 @@ Namespace ted2go
 '
 Function SetupDiContainer()
 	
+	Di.Bind( Lambda:ExamplesView()
+		Return New ExamplesView(
+			Di.Resolve<DocumentManager>() )
+	End )
+	
 	Di.Bind( Lambda:DocsTabView()
 		Return New DocsTabView( TabViewFlags.DraggableTabs|TabViewFlags.ClosableTabs )
 	End )

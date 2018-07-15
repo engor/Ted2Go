@@ -328,6 +328,16 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		Endif
 	End
 	
+	Function GetFileTypeIcon:Image( path:String )
+		
+		Local ext:=ExtractExt( path )
+		If Not ext Return Null
+		
+		UpdateFileTypeIcons()
+		
+		Return _fileTypeIcons[ext.ToLower()]
+	End
+	
 	
 	Protected
 	
@@ -396,14 +406,6 @@ Class ProjectBrowserView Extends TreeViewExt Implements IDraggableHolder
 		Field _view:View
 		Field _project:Monkey2Project
 		
-	End
-	
-	Method GetFileTypeIcon:Image( path:String ) Virtual
-	
-		Local ext:=ExtractExt( path )
-		If Not ext Return Null
-	
-		Return _fileTypeIcons[ext.ToLower()]
 	End
 	
 	Method OnValidateStyle() Override

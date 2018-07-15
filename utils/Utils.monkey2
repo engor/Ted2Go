@@ -172,9 +172,16 @@ Class Utils Final
 		Return Null
 	End
 	
-	Function PrintLog<T>( list:List<T>,prefix:String="" )
+	Function PrintLog<T>( items:List<T>,prefix:String="" )
 	
-		For Local i:=Eachin list
+		For Local i:=Eachin items
+			Print prefix+""+i
+		End
+	End
+	
+	Function PrintLog<T>( items:Stack<T>,prefix:String="" )
+	
+		For Local i:=Eachin items
 			Print prefix+""+i
 		End
 	End

@@ -243,6 +243,10 @@ Class MainWindowInstance Extends Window
 			_buildActions.GotoError( errors[0] )
 		End
 		
+		' ExamplesView
+		'
+		_examplesView=Di.Resolve<ExamplesView>()
+		
 		' ProjectView
 		'
 		_projectView=Di.Resolve<ProjectView>()
@@ -1481,6 +1485,7 @@ Class MainWindowInstance Extends Window
 		_tabsWrap.AddTab( "Output",_outputConsoleView )
 		_tabsWrap.AddTab( "Docs",_docsConsole )
 		_tabsWrap.AddTab( "Find",_findConsole )
+		_tabsWrap.AddTab( "Examples",_examplesView )
 		
 	End
 	
@@ -1521,7 +1526,7 @@ Class MainWindowInstance Extends Window
 		' defaults
 		Local s:="Source"
 		places["left"]=New StringStack( s.Split( "," ) )
-		s="Project,Debug"
+		s="Project,Debug,Examples"
 		places["right"]=New StringStack( s.Split( "," ) )
 		s="Build,Output,Docs,Find"
 		places["bottom"]=New StringStack( s.Split( "," ) )
@@ -1803,6 +1808,7 @@ Class MainWindowInstance Extends Window
 	Field _helpView:HtmlViewExt
 	Field _docsConsole:DockingView
 	Field _findConsole:TreeViewExt
+	Field _examplesView:DockingView
 	
 	Field _projectView:ProjectView
 	Field _docBrowser:DocBrowserView

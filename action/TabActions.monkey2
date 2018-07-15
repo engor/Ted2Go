@@ -24,7 +24,7 @@ Class TabActions
 							If firstCurrent.Visible Then firstCurrent.CurrentHolder.MakeCurrent( firstCurrent.Text ); Exit
 						Next
 					Else
-						If( _tabb.View )
+						If _tabb.View
 							_tabb.Visible=True
 							_tabb.View.Visible=True
 							_tabb.CurrentHolder.MakeCurrent( _tabb.Text )
@@ -40,7 +40,7 @@ Class TabActions
 	Function CreateMenu( view:MenuExt )
 		
 		Local keynr:Int
-		Local tabNames:=New String[]( "Project","Debug","Source","Build","Output","Docs","Find","Chat" )
+		Local tabNames:=New String[]( "Project","Debug","Source","Build","Output","Docs","Find","Examples" )
 		For Local a:=Eachin tabNames
 			Local key:=Cast<Key>( 49+keynr )
 			Local i:=view.AddAction( a )
