@@ -73,16 +73,6 @@ Class CodeParsing
 		End
 	End
 	
-'	Method Parse()
-'		
-'		Local doc:=MainWindow.LockedDocument
-'		If Not doc Then doc=Cast<CodeDocument>( _docsManager.CurrentDocument )
-'		If doc
-'			Local parser:=ParsersManager.Get( doc.CodeView.FileType )
-'			DocWatcher.TryToParse( doc,parser )
-'		Endif
-'	End
-	
 	
 	Private
 	
@@ -283,6 +273,7 @@ Class DocWatcher
 			
 			' and collect all errors
 			'
+			Local tmpFolder:=PathsProvider.MX2_TMP+"/"
 			For Local str:=Eachin _results
 				
 				If Not str Or str="#" Continue
@@ -296,7 +287,7 @@ Class DocWatcher
 							Local path:=s.Slice( 0,j )
 							Local line:=Int( s.Slice( j+2,i ) )-1
 							Local msg:=s.Slice( i+12 )
-							path=path.Replace( PathsProvider.MX2_TMP,"" )
+							path=path.Replace( tmpFolder,"" )
 							Local err:=New BuildError( path,line,msg )
 							_errors.Add( err )
 						Endif

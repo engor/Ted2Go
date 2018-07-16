@@ -56,10 +56,8 @@ Class ExamplesView Extends DockingView
 				Endif
 			Next
 			
-			Local t:=Millisecs()
 			' other
 			CollectFolders( Prefs.MonkeyRootPath+"modules/",folders )
-			Print "dt: "+(Millisecs()-t)
 			
 			For Local section:=Eachin VALID_FOLDERS
 				Local node:=New TreeViewExt.Node( section,_tree.RootNode )
@@ -170,7 +168,6 @@ Class ExamplesView Extends DockingView
 		
 		For Local file:=Eachin dirs
 			
-			Print "file: "+file
 			Local full:=path+file
 			Local data:=New FolderData
 			data.path=full

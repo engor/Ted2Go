@@ -4,7 +4,7 @@ Namespace ted2go
 
 Class PathsProvider
 	
-	Const MX2_TMP:=".mx2/"
+	Const MX2_TMP:=".mx2"
 	
 	Function GetActiveMainFilePath:String( checkCurrentDoc:Bool=True,showNoMainFileAlert:Bool=False )
 		
@@ -63,10 +63,22 @@ Class PathsProvider
 			'
 			Local proj:=ProjectView.FindProject( path )
 			If proj
-				ProjectView.CheckMainFilePath( proj,False )
+				Local showNote:=True
 				If proj.MainFilePath
 					path=proj.MainFilePath
+				Else
+					Local lockedProj:Monkey2Project
+					Local lockedPath:=docsManager().LockedDocument?.Path
+					If lockedPath And lockedPath<>path
+						lockedProj=ProjectView.FindProject( lockedPath )
+						If lockedProj And lockedProj=proj
+							' will parse locked file coz it's the same project as current file
+							path=lockedPath
+							showNote=False
+						Endif
+					Endif
 				Endif
+				If showNote Then ProjectView.CheckMainFilePath( proj,False )
 			Endif
 		Endif
 		
@@ -80,12 +92,12 @@ Class PathsProvider
 	
 	Function GetGeninfoPath:String( filePath:String )
 		
-		Return ExtractDir( filePath )+MX2_TMP+StripDir( StripExt( filePath ) )+".geninfo"
+		Return ExtractDir( filePath )+MX2_TMP+"/"+StripDir( StripExt( filePath ) )+".geninfo"
 	End
 	
 	Function GetTempFilePathForParsing:String( srcPath:String )
 		
-		Local dir:=ExtractDir( srcPath )+MX2_TMP
+		Local dir:=ExtractDir( srcPath )+MX2_TMP+"/"
 		CreateDir( dir )
 		Local name:=StripDir( srcPath )
 		
