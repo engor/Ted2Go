@@ -1736,6 +1736,9 @@ Class CodeDocument Extends Ted2Document
 			If scope.IsLikeField
 				scope=CodeItem.GetNonFieldParent( scope )
 			Endif
+			
+			If Not scope Return
+			
 			If scope.NumChildren>0
 				Local st:=New Stack<CodeItem>
 				For Local child:=Eachin scope.Children

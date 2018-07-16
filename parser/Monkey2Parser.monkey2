@@ -42,6 +42,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		New Fiber( Lambda()
 			
+			Fiber.Sleep( 1.5 )
+			
 			Local time:=Millisecs()
 			
 			ParseModules()

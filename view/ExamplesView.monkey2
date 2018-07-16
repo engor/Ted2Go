@@ -56,8 +56,10 @@ Class ExamplesView Extends DockingView
 				Endif
 			Next
 			
+			Local t:=Millisecs()
 			' other
 			CollectFolders( Prefs.MonkeyRootPath+"modules/",folders )
+			Print "dt: "+(Millisecs()-t)
 			
 			For Local section:=Eachin VALID_FOLDERS
 				Local node:=New TreeViewExt.Node( section,_tree.RootNode )
@@ -88,7 +90,6 @@ Class ExamplesView Extends DockingView
 	Private
 	
 	Const VALID_FOLDERS:=New String[]( "bananas","examples","tests" )
-	Const INVALID_FOLDERS:=New String[]( "src" )
 	
 	Field _tree:TreeViewExt
 	Field _dirIcon:Image
@@ -189,10 +190,13 @@ Class ExamplesView Extends DockingView
 			Local lowercasedName:=name.ToLower()
 			If Utils.ArrayContains( VALID_FOLDERS,lowercasedName )
 				target.Add( folder+name )
-				Return
+				Continue
 			Endif
-			If Utils.ArrayContains( INVALID_FOLDERS,lowercasedName )
-				Return
+			'If lowercasedName="src"
+			If lowercasedName="src" Or lowercasedName="include" Or lowercasedName="native" Or
+				lowercasedName="bin" Or lowercasedName="docs" Or lowercasedName=PathsProvider.MX2_TMP Or
+				lowercasedName.Contains( ".product" ) Or lowercasedName.Contains( ".buildv" )
+				Continue
 			Endif
 			Local path:=folder+name
 			If GetFileType( path )=FileType.Directory
