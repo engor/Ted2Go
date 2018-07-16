@@ -476,17 +476,18 @@ Class ProjectView Extends DockingView
 		End )
 	End
 	
-	' Return True if there is an actual folder deletion
-	Method CleanProject:Bool( dir:String )
-	
+	' Return True if there was an actual folder deletion
+	Method CleanFolder:Bool( folder:String )
+		
 		Local succ:=0,err:=0
-		Local items:=LoadDir( dir )
-		For Local i:=Eachin items
-			i=dir+"/"+i
-			If GetFileType(i)=FileType.Directory
-				If i.Contains( ".buildv" )
-					Local ok:=DeleteDir( i,True )
+		For Local i:=Eachin LoadDir( folder )
+			Local path:=folder+"/"+i
+			If GetFileType( path )=FileType.Directory
+				If i.Contains( ".buildv" ) Or i=PathsProvider.MX2_TMP
+					Local ok:=DeleteDir( path,True )
 					If ok Then succ+=1 Else err+=1
+				Else
+					CleanFolder( path )
 				Endif
 			Endif
 		Next
@@ -674,12 +675,12 @@ Class ProjectView Extends DockingView
 						CloseProject( path )
 					End
 					
-					menu.AddAction( "Clean (delete .buildv)" ).Triggered=Lambda()
+					menu.AddAction( "Clean (delete .buildv & .mx2)" ).Triggered=Lambda()
 						
-						If Not RequestOkay( "Really delete all '.buildv' folders?" ) Return
+						If Not RequestOkay( "Really delete all '.buildv' and '.mx2' folders?" ) Return
 						
-						Local changes:=CleanProject( path )
-						If changes Then browser.Refresh( node )
+						Local changed:=CleanFolder( path )
+						If changed Then browser.Refresh( node )
 					End
 				Else
 					
