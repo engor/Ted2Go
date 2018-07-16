@@ -1722,12 +1722,12 @@ Class CodeDocument Extends Ted2Document
 	
 	Method OnUpdateCurrentScope()
 		
+		_treeViewInnerList.RootNode.RemoveAllChildren()
+		
 		Local scope:=_parser.GetNearestScope( Path,CursorPos )
 		'Print ""+CursorPos+", "+scope?.KindStr+", "+scope?.Text
 		If scope
 			_treeView.SelectByScope( scope )
-			
-			_treeViewInnerList.RemoveAllViews()
 			
 			Local storedScope:=scope
 			If scope.IsBlock
