@@ -1,7 +1,7 @@
 
 Namespace ted2go
 
-#Import "../assets/docs-priority.txt"
+#Import "../assets/docsPriority.txt"
 
 
 Private
@@ -250,7 +250,7 @@ Class HelpTreeView Extends TreeViewExt
 	
 	Method InitPriorityInfo()
 		
-		Local t:=LoadString( "asset::docs-priority.txt",True )
+		Local t:=LoadString( "asset::docsPriority.txt",True )
 		If t Then t=t.Trim()
 		Local arr:=t.Split( "~n" )
 		For Local i:=0 Until arr.Length
