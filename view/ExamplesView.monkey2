@@ -10,10 +10,6 @@ Class ExamplesView Extends DockingView
 		
 		_docs=docs
 		
-		ContentView=New Label( "Collecting data..." )
-		
-		App.Idle+=LoadData
-		
 		_tree=New TreeViewExt
 		
 		' load projects when first time expanding node
@@ -39,6 +35,32 @@ Class ExamplesView Extends DockingView
 		End
 		
 	End
+	
+	Method Init()
+		
+		If _inited Return
+		
+		_inited=True
+		
+		Local label:=New Label( "Collecting data..." )
+		label.Gravity=New Vec2f( 0,0 )
+		
+		ContentView=label
+		
+		LoadData()
+		
+	End
+	
+	
+	Private
+	
+	Const VALID_FOLDERS:=New String[]( "bananas","examples","tests" )
+	
+	Field _tree:TreeViewExt
+	Field _dirIcon:Image
+	Field _fileIcon:Image
+	Field _docs:DocumentManager
+	Field _inited:Bool
 	
 	Method LoadData()
 		
@@ -84,15 +106,6 @@ Class ExamplesView Extends DockingView
 			ContentView=_tree
 		End )
 	End
-	
-	Private
-	
-	Const VALID_FOLDERS:=New String[]( "bananas","examples","tests" )
-	
-	Field _tree:TreeViewExt
-	Field _dirIcon:Image
-	Field _fileIcon:Image
-	Field _docs:DocumentManager
 	
 	Method GetNodeWithData:NodeWithData<FolderData>( node:TreeView.Node )
 		

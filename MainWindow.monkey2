@@ -1487,6 +1487,13 @@ Class MainWindowInstance Extends Window
 		_tabsWrap.AddTab( "Find",_findConsole )
 		_tabsWrap.AddTab( "Examples",_examplesView )
 		
+		' load examples when user open Examples tab
+		Local tab:=_tabsWrap.tabs["Examples"]
+		tab.ActiveChanged+=Lambda()
+			If tab.IsActive
+				_examplesView.Init()
+			Endif
+		End
 	End
 	
 	Method ArrangeElements()
@@ -1808,7 +1815,7 @@ Class MainWindowInstance Extends Window
 	Field _helpView:HtmlViewExt
 	Field _docsConsole:DockingView
 	Field _findConsole:TreeViewExt
-	Field _examplesView:DockingView
+	Field _examplesView:ExamplesView
 	
 	Field _projectView:ProjectView
 	Field _docBrowser:DocBrowserView
