@@ -30,7 +30,7 @@ Class MyWindow Extends Window
 		_scene.ClearColor = New Color( 0.2, 0.6, 1.0 )
 		_scene.AmbientLight = _scene.ClearColor * 0.25
 		_scene.FogColor = _scene.ClearColor
-		_scene.FogFar = 1.0
+		_scene.FogNear = 1.0
 		_scene.FogFar = 200.0
 		
 		'create camera
