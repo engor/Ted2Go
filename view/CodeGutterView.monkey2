@@ -114,13 +114,13 @@ Class CodeGutterView Extends View
 			
 			' show dots between each 10th
 			'
-			Local ok:=Prefs.EditorShowEvery10LineNumber And ((i+1) Mod 10 <> 0)
-			ok=ok And Not (folding And folding.folded)
-			If ok And i<>cursorLine And i<>anchorLine
+			Local drawDot:=Prefs.EditorShowEvery10LineNumber And ((i+1) Mod 10 <> 0)
+			drawDot=drawDot And Not (folding And folding.folded)
+			drawDot=drawDot And i<>cursorLine And i<>anchorLine
+			If drawDot
 				canvas.Alpha=0.5
 				canvas.DrawRect( xx-4*k,hcenter-1*k,2*k,2*k )
 				canvas.Alpha=1
-				Continue
 			Endif
 			
 			' show error bubble
@@ -131,7 +131,7 @@ Class CodeGutterView Extends View
 					canvas.DrawImage( _errorIcon,xx-_errorIcon.Width,rect.Top )
 					canvas.Color=textColor
 				Endif
-			Else
+			Elseif Not drawDot
 				canvas.Color=(i=cursorLine Or i=anchorLine) ? textColor*1.125 Else textColor 'make selected line number little brighter
 				canvas.DrawText( i+1,xx,hcenter,1,.5 )
 			Endif

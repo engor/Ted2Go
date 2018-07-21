@@ -247,6 +247,14 @@ Class ConsoleExt Extends TextView
 		_lines.Clear()
 	End
 	
+	Property ProcessingRtChar:Bool()
+		
+		Return _processingRt
+		
+	Setter( value:Bool )
+		
+		_processingRt=value
+	End
 	
 	Protected
 	
@@ -357,6 +365,7 @@ Class ConsoleExt Extends TextView
 	
 	Field _errors:=New IntMap<ErrorInfo>
 	Field _linesRead:Int
+	Field _processingRt:Bool
 	
 	Method UpdateRunning()
 	
@@ -377,7 +386,7 @@ Class ConsoleExt Extends TextView
 			Local maxScroll:=LineRect(Document.NumLines-1).Bottom-VisibleRect.Height
 			Local atBottom:=Scroll.y>=maxScroll And cur=anc
 			
-			If text.StartsWith( "~r" )
+			If _processingRt And text.StartsWith( "~r" )
 				Local line:=Document.NumLines-1,dl:=0
 				If Document.GetLine( line )=""
 					dl=-1

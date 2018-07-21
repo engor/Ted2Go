@@ -16,7 +16,8 @@
 		"params-hint-selected": "textview-color4",
 		"completion-list-selected": "content",
 		"completion-list-marked-bg": "#0fff",
-		"completion-list-marked-text": "textview-color4"
+		"completion-list-marked-text": "textview-color4",
+		"treeview-selected-row": "#1fff"
 	},
 
 	"fonts":{
@@ -43,6 +44,10 @@
 		"HelpTextField":{
 			"extends":"TextField",
 			"skinColor":"panel"
+		},
+		"HelpPageAddress":{
+			"extends":"Label",
+			"font":"small"
 		},
 
 		"Hint":{
@@ -135,6 +140,14 @@
 		},
 		"CompletionDialogContent":{
 			"padding":[ 1 ]
+		},
+		"CompletionHint":{
+			"extends":"Label",
+			"padding":[ 3 ],
+			"borderColor": "#20000000",
+			"border":[ 0,1,0,0 ],
+			"margin":[ 0,4,0,0 ],
+			"font":"small"
 		},
 				
 		"TextFieldBordered":{

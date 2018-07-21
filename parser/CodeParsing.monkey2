@@ -4,6 +4,16 @@ Namespace ted2go
 
 Class CodeParsing
 	
+	Function IsFileBuildable:Bool( path:String )
+		
+		Return ExtractExt( path )=".monkey2"
+	End
+	
+	Function DeleteTempFiles()
+		
+		DocWatcher.DeleteTempFiles()
+	End
+	
 	Method New( docs:DocumentManager,projView:ProjectView )
 		
 		_docsManager=docs
@@ -63,16 +73,6 @@ Class CodeParsing
 		End
 	End
 	
-'	Method Parse()
-'		
-'		Local doc:=MainWindow.LockedDocument
-'		If Not doc Then doc=Cast<CodeDocument>( _docsManager.CurrentDocument )
-'		If doc
-'			Local parser:=ParsersManager.Get( doc.CodeView.FileType )
-'			DocWatcher.TryToParse( doc,parser )
-'		Endif
-'	End
-	
 	
 	Private
 	
@@ -98,6 +98,8 @@ Class CodeParsing
 	End
 	
 	Method StartWatching( doc:CodeDocument )
+		
+		If Not IsFileBuildable( doc.Path ) Return
 		
 		If FindWatcher( doc ) Return ' already added
 		
@@ -168,6 +170,13 @@ Class DocWatcher
 		_timeTextChanged=Millisecs()
 	End
 	
+	Function DeleteTempFiles()
+		
+		For Local path:=Eachin _tempFiles
+			DeleteFile( path )
+		Next
+	End
+	
 	Private
 	
 	Field _view:CodeDocumentView
@@ -178,6 +187,7 @@ Class DocWatcher
 	Global _timer:Timer
 	Global _parsing:Bool
 	Global _changed:=New Stack<CodeDocument>
+	Global _tempFiles:=New StringStack
 	
 	Method OnTextChanged()
 		
@@ -197,51 +207,78 @@ Class DocWatcher
 		
 		If _parsing Return
 		
+		' timer that watching for changed docs
+		'
 		If Not _timer Then _timer=New Timer( 1,Lambda()
 			
-			If _parsing Return
+			If _parsing Or Not enabled Or _changed.Empty Return
 			
 			Local msec:=Millisecs()
 			If msec<_timeDocParsed+1000 Return
 			If _timeTextChanged=0 Or msec<_timeTextChanged+1000 Return
 			_timeTextChanged=0
 			
-			If Not enabled Return
-			
 			_parsing=True
 			
-			Local docForParsing:CodeDocument
-			Local dirty:=New String[_changed.Length]
-			Local texts:=New String[_changed.Length]
-			For Local i:=0 Until _changed.Length
-				Local d:=_changed[i]
-				If d.Dirty
-					dirty[i]=d.Path
-					texts[i]=d.CodeView.Text
-				Endif
-				docForParsing=d ' grab latest added doc
-			Next
+			' copy docs and free list to collect new 'changes'
+			'
+			Global _docsToParse:=New Stack<CodeDocument>
+			_docsToParse.AddAll( _changed.ToArray() )
 			_changed.Clear()
 			
-			Local params:=New ParseFileParams
-			params.filePath=PathsProvider.GetActiveMainFilePath()
+			Global _paramsToParse:=New Stack<ParseFileParams>
 			
-			For Local i:=0 Until dirty.Length
-				If dirty[i]
-					dirty[i]=Monkey2Parser.GetTempFilePathForParsing( dirty[i] )
-					SaveString( texts[i],dirty[i] )
+			For Local changedDoc:=Eachin _docsToParse
+				
+				' collect all different files to be parsed
+				'
+				Local path:=PathsProvider.GetMainFileOfDocument( changedDoc.Path )
+				Local exists:=False
+				For Local p:=Eachin _paramsToParse
+					If path=p.filePath
+						exists=True
+						Exit
+					Endif
+				Next
+				If Not exists
+					Local params:=New ParseFileParams
+					params.filePath=path
+					_paramsToParse.Add( params )
+				Endif
+				' always save all dirty files in temp before parsing
+				' check changescounter here to avoid unnecessarily re-savings
+				'
+				Local tmpPath:=PathsProvider.GetTempFilePathForParsing( changedDoc.Path )
+				If changedDoc.CheckChangesCounter() 'Or Not FileExists( tmpPath )
+					SaveString( changedDoc.TextView.Text,tmpPath )
+					changedDoc.StoreChangesCounter()
+					CollectTempFile( tmpPath )
 				Endif
 			Next
 			
-			Local errorStr:=parser.ParseFile( params )
+			Global _results:=New StringStack
 			
+			' parse all docs
+			'
+			For Local params:=Eachin _paramsToParse
+				Local errorStr:=parser.ParseFile( params )
+				_results.Add( errorStr )
+			Next
+			
+			' maybe app is in shutdown state
+			'
 			If Not enabled Return
 			
-			Local errors:=New Stack<BuildError>
+			Global _errors:=New Stack<BuildError>
 			
-			If errorStr And errorStr<>"#"
+			' and collect all errors
+			'
+			Local tmpFolder:=PathsProvider.MX2_TMP+"/"
+			For Local str:=Eachin _results
 				
-				Local arr:=errorStr.Split( "~n" )
+				If Not str Or str="#" Continue
+				
+				Local arr:=str.Split( "~n" )
 				For Local s:=Eachin arr
 					Local i:=s.Find( "] : Error : " )
 					If i<>-1
@@ -250,20 +287,27 @@ Class DocWatcher
 							Local path:=s.Slice( 0,j )
 							Local line:=Int( s.Slice( j+2,i ) )-1
 							Local msg:=s.Slice( i+12 )
-							path=path.Replace( ".mx2/","" )
+							path=path.Replace( tmpFolder,"" )
 							Local err:=New BuildError( path,line,msg )
-							errors.Add( err )
+							_errors.Add( err )
 						Endif
 					Endif
 				Next
-				
-			Endif
-			
-			OnDocumentParsed( docForParsing,parser,errors )
-			
-			For Local i:=0 Until dirty.Length
-				If dirty[i] Then DeleteFile( dirty[i] )
 			Next
+			
+			OnParseCompleted( parser,_errors )
+			
+			' don't remove tmp files to avoid unnecessarily re-savings
+			'
+'			For Local changedDoc:=Eachin _docsToParse
+'				Local tmpPath:=Monkey2Parser.GetTempFilePathForParsing( changedDoc.Path )
+'				DeleteFile( tmpPath )
+'			Next
+			
+			_docsToParse.Clear()
+			_paramsToParse.Clear()
+			_errors.Clear()
+			_results.Clear()
 			
 			_parsing=False
 			
@@ -273,28 +317,28 @@ Class DocWatcher
 		
 	End
 	
+	Function CollectTempFile( path:String )
+	
+		If Not _tempFiles.Contains( path )
+			_tempFiles.Add( path )
+		Endif
+	End
+	
 	Function UpdateDocItems( doc:CodeDocument,parser:ICodeParser )
 	
 		Local items:=GetCodeItems( doc.Path,parser )
 		doc.OnDocumentParsed( items,Null )
 	End
 	
-	Function OnDocumentParsed( doc:CodeDocument,parser:ICodeParser,errors:Stack<BuildError> )
-		
-		If doc
-			Local items:=GetCodeItems( doc.Path,parser )
-			doc.OnDocumentParsed( items,GetErrors( doc.Path,errors ) )
-		Endif
+	Function OnParseCompleted( parser:ICodeParser,errors:Stack<BuildError> )
 		
 		Local docs:=docsForUpdate()
 		If docs
-			For Local d:=Eachin docs
-				If d=doc Continue
-				Local items:=GetCodeItems( d.Path,parser )
-				d.OnDocumentParsed( items,GetErrors( d.Path,errors ) )
+			For Local doc:=Eachin docs
+				Local items:=GetCodeItems( doc.Path,parser )
+				doc.OnDocumentParsed( items,GetErrors( doc.Path,errors ) )
 			Next
 		Endif
-		
 	End
 	
 	Function GetErrors:Stack<BuildError>( path:String,errors:Stack<BuildError>)

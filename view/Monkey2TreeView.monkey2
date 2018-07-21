@@ -45,7 +45,7 @@ Class Monkey2TreeView Extends JsonTreeView
 	
 	Method UpdateTree( path:String )
 		
-		Local cmd:=Monkey2Parser.GetParseCommand( path )
+		Local cmd:=Monkey2Parser.GetFullParseCommand( path )
 		If Not cmd Return
 		
 		Local str:=LoadString( "process::"+cmd )

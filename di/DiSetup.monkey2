@@ -5,6 +5,11 @@ Namespace ted2go
 '
 Function SetupDiContainer()
 	
+	Di.Bind( Lambda:ExamplesView()
+		Return New ExamplesView(
+			Di.Resolve<DocumentManager>() )
+	End )
+	
 	Di.Bind( Lambda:DocsTabView()
 		Return New DocsTabView( TabViewFlags.DraggableTabs|TabViewFlags.ClosableTabs )
 	End )
@@ -67,7 +72,31 @@ Class DocsTabView Extends TabViewExt
 End
 
 Class DocBrowserView Extends DockingView
+	
+	Method New()
+		
+		Super.New()
+		
+		_propView=New DockingView
+		AddView( _propView,"bottom",200,True )
+	End
+	
+	Property PropertiesViewHeight:Int()
+		Return Int(GetViewSize( _propView ))
+	Setter( value:Int )
+		SetViewSize( _propView,value )
+	End
+	
+	Property PropertiesView:DockingView()
+		Return _propView
+	End
+	
+	Private
+	
+	Field _propView:DockingView
+	
 End
+
 
 Class BuildConsole Extends ConsoleExt
 End

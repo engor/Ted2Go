@@ -138,6 +138,14 @@ Class MainWindowInstance Extends Window
 			"Word wrap" )
 		it.ToggleMode=True
 		
+		Local tbAct:=New Action( " \r " )
+		tbAct.Triggered+=Lambda()
+			_outputConsole.ProcessingRtChar=Not _outputConsole.ProcessingRtChar
+		End
+		Local tb:=New ToolButtonExt( tbAct,"Processing \r char at the beginning of lines" )
+		tb.ToggleMode=True
+		bar.AddView( tb )
+		
 		_outputConsoleView=New DockingView
 		_outputConsoleView.AddView( bar,"top" )
 		_outputConsoleView.ContentView=_outputConsole
@@ -163,6 +171,18 @@ Class MainWindowInstance Extends Window
 		_docsConsole=New DockingView
 		bar=New ToolBarExt
 		bar.MaxSize=New Vec2i( 300,30 )
+		
+		_helpSwitcher=New ToolButtonExt( New Action( ">" ) )
+		bar.AddView( _helpSwitcher,"left" )
+		bar.AddView( New SpacerView( 30,0 ),"left" ) ' right offset
+		
+		_helpSwitcher.Clicked=Lambda()
+		
+			_helpTree.Visible=Not _helpTree.Visible
+			_helpSwitcher.Text=_helpTree.Visible ? "<" Else ">"
+			_helpSwitcher.Hint=_helpTree.Visible ? "Hide docs index" Else "Show docs index"
+		End
+		
 		bar.AddIconicButton(
 			ThemeImages.Get( "docbar/home.png" ),
 			Lambda()
@@ -182,9 +202,18 @@ Class MainWindowInstance Extends Window
 				_helpView.Forward()
 			End,
 			"Forward" )
+		Local explorerAct:=New Action( " [*] " )
+		explorerAct.Triggered+=Lambda()
+			Local url:=_helpView.Url
+			requesters.OpenUrl( url )
+		End
+		Local explorerBtn:=New ToolButtonExt( explorerAct,"Show in Explorer" )
+		bar.AddView( explorerBtn )
+		
 		bar.AddSeparator()
 		bar.AddSeparator()
 		label=New Label
+		label.Style=App.Theme.GetStyle( "HelpPageAddress" )
 		
 		bar.ContentView=label
 		
@@ -194,20 +223,11 @@ Class MainWindowInstance Extends Window
 		End
 		
 		_helpTree=Di.Resolve<HelpTreeView>()
-		_docsConsole.AddView( _helpTree,"right",200,True )
+		_docsConsole.AddView( _helpTree,"left",200,True )
 		
 		_docsConsole.AddView( bar,"top" )
 		_docsConsole.ContentView=_helpView
 		
-		_helpSwitcher=New ToolButtonExt( New Action( "<" ) )
-		bar.AddView( New SpacerView( 6,0 ),"right" ) ' right offset
-		bar.AddView( _helpSwitcher,"right" )
-		_helpSwitcher.Clicked=Lambda()
-		
-			_helpTree.Visible=Not _helpTree.Visible
-			_helpSwitcher.Text=_helpTree.Visible ? ">" Else "<"
-			_helpSwitcher.Hint=_helpTree.Visible ? "Hide docs index" Else "Show docs index"
-		End
 		_helpTree.Visible=False
 		_helpSwitcher.Clicked() 'show at startup
 		
@@ -222,6 +242,10 @@ Class MainWindowInstance Extends Window
 			ShowBuildConsole( True )
 			_buildActions.GotoError( errors[0] )
 		End
+		
+		' ExamplesView
+		'
+		_examplesView=Di.Resolve<ExamplesView>()
 		
 		' ProjectView
 		'
@@ -281,7 +305,7 @@ Class MainWindowInstance Extends Window
 		_tabMenu.AddAction( _buildActions.lockBuildFile )
 		_tabMenu.AddAction( _projectView.setMainFile )
 		_tabMenu.AddSeparator()
-		_tabMenu.AddAction( "Open on Desktop" ).Triggered=Lambda()
+		_tabMenu.AddAction( "Show in Explorer" ).Triggered=Lambda()
 			
 			Local path:=_docsManager.CurrentDocument?.Path
 			If path
@@ -361,6 +385,7 @@ Class MainWindowInstance Extends Window
 		_editMenu.AddAction( _editActions.paste )
 		_editMenu.AddSeparator()
 		_editMenu.AddAction( _editActions.selectAll )
+		_editMenu.AddAction( _editActions.selectWord )
 		_editMenu.AddSeparator()
 		' Edit -- Text
 		Local subText:=New MenuExt( "Text" )
@@ -374,6 +399,7 @@ Class MainWindowInstance Extends Window
 		Local subComment:=New MenuExt( "Comment" )
 		subComment.AddAction( _editActions.comment )
 		subComment.AddAction( _editActions.uncomment )
+		
 		_editMenu.AddSubMenu( subComment )
 		' Edit -- Convert case
 		Local subCase:=New MenuExt( "Convert case" )
@@ -404,6 +430,9 @@ Class MainWindowInstance Extends Window
 		_gotoMenu.AddSeparator()
 		_gotoMenu.AddAction( _gotoActions.goBack )
 		_gotoMenu.AddAction( _gotoActions.goForward )
+		_gotoMenu.AddSeparator()
+		_gotoMenu.AddAction( _gotoActions.prevScope )
+		_gotoMenu.AddAction( _gotoActions.nextScope )
 		
 		'View menu
 		'
@@ -695,14 +724,6 @@ Class MainWindowInstance Extends Window
 		Return _isTerminating
 	End
 	
-	Property ThemeName:String()
-		
-		Return _theme
-	Setter( value:String )
-		
-		_theme=value
-	End
-	
 	Property AboutPagePath:String()
 		
 		Local path:=Prefs.MonkeyRootPath+"ABOUT.HTML"
@@ -727,6 +748,8 @@ Class MainWindowInstance Extends Window
 			ProcessReader.WaitingForStopAll( future )
 		End )
 		future.Get()
+		
+		CodeParsing.DeleteTempFiles()
 		
 		App.Terminate()
 	End
@@ -1210,7 +1233,7 @@ Class MainWindowInstance Extends Window
 	
 	Method UpdateHelpTree()
 		
-		_helpTree.Update( True )
+		_helpTree.Update()
 	End
 	
 	Method ShowBananasShowcase()
@@ -1320,7 +1343,7 @@ Class MainWindowInstance Extends Window
 		
 		SaveUndockTabsState( jobj )
 		If _isTerminating UndockWindow.RestoreUndock()
-			
+		
 		SaveTabsState( jobj )
 		
 		Local jdocs:=New JsonObject
@@ -1341,7 +1364,7 @@ Class MainWindowInstance Extends Window
 		End
 		jobj["recentProjects"]=recent
 		
-		jobj["theme"]=New JsonString( ThemeName )
+		jobj["theme"]=New JsonString( ThemesInfo.ActiveThemePath )
 		
 		jobj["themeScale"]=New JsonNumber( App.Theme.Scale.y )
 		
@@ -1462,7 +1485,15 @@ Class MainWindowInstance Extends Window
 		_tabsWrap.AddTab( "Output",_outputConsoleView )
 		_tabsWrap.AddTab( "Docs",_docsConsole )
 		_tabsWrap.AddTab( "Find",_findConsole )
+		_tabsWrap.AddTab( "Examples",_examplesView )
 		
+		' load examples when user open Examples tab
+		Local tab:=_tabsWrap.tabs["Examples"]
+		tab.ActiveChanged+=Lambda()
+			If tab.IsActive
+				_examplesView.Init()
+			Endif
+		End
 	End
 	
 	Method ArrangeElements()
@@ -1502,7 +1533,7 @@ Class MainWindowInstance Extends Window
 		' defaults
 		Local s:="Source"
 		places["left"]=New StringStack( s.Split( "," ) )
-		s="Project,Debug"
+		s="Project,Debug,Examples"
 		places["right"]=New StringStack( s.Split( "," ) )
 		s="Build,Output,Docs,Find"
 		places["bottom"]=New StringStack( s.Split( "," ) )
@@ -1528,7 +1559,7 @@ Class MainWindowInstance Extends Window
 					Next
 					'
 					Local tab:=_tabsWrap.tabs[key]
-					If tab Then 
+					If tab Then
 						_tabsWrap.docks[edge].AddTab( tab )
 						'set view visible
 						If vistabs And vistabs<>JsonValue.NullValue
@@ -1573,6 +1604,11 @@ Class MainWindowInstance Extends Window
 			dock.Visible=dock.Visible And (dock.NumTabs>0)
 		Next
 		
+		Local val:=Json_FindValue( jobj.Data,"tabsDocks/sourcesInnerListHeight" )
+		If val
+			Local size:=Max( 50,Int(val.ToNumber()) )
+			_docBrowser.PropertiesViewHeight=size
+		Endif
 	End
 	
 	Method SaveTabsState( jobj:JsonObject )
@@ -1590,11 +1626,13 @@ Class MainWindowInstance Extends Window
 			jj[edge+"Visible"]=New JsonBool( dock.Visible )
 			jj[edge+"Size"]=New JsonString( _tabsWrap.GetDockSize( dock ) )
 		Next
+		
+		jj["sourcesInnerListHeight"]=New JsonNumber( _docBrowser.PropertiesViewHeight )
 	End
 	
 	Method LoadUndockTabsState( jobj:JsonObject ) 
-				
-		Local edges:=DraggableTabs.Edges	
+		
+		Local edges:=DraggableTabs.Edges
 		For Local edge:=Eachin edges
 			Local dock:=_tabsWrap.docks[edge]
 			For Local i:=Eachin dock.TabsNames
@@ -1606,10 +1644,10 @@ Class MainWindowInstance Extends Window
 			Next
 		Next
 	End
-		
+	
 	Method SaveUndockTabsState( jobj:JsonObject )
 		
-		If( UndockWindow._undockWindows.Length )	
+		If( UndockWindow._undockWindows.Length )
 			Local jj:=New JsonObject
 			jobj["undockTabs"]=jj
 			For Local i:=Eachin UndockWindow._undockWindows
@@ -1649,7 +1687,7 @@ Class MainWindowInstance Extends Window
 			Next
 		End
 		
-		If jobj.Contains( "theme" ) ThemeName=jobj.GetString( "theme" )
+		If jobj.Contains( "theme" ) ThemesInfo.ActiveThemePath=jobj.GetString( "theme" )
 		
 		If jobj.Contains( "themeScale" )
 			Local sc:=jobj.GetNumber( "themeScale" )
@@ -1777,9 +1815,10 @@ Class MainWindowInstance Extends Window
 	Field _helpView:HtmlViewExt
 	Field _docsConsole:DockingView
 	Field _findConsole:TreeViewExt
+	Field _examplesView:ExamplesView
 	
 	Field _projectView:ProjectView
-	Field _docBrowser:DockingView
+	Field _docBrowser:DocBrowserView
 	Field _debugView:DebugView
 	Field _helpTree:HelpTreeView
 	Field _helpSwitcher:ToolButtonExt
@@ -1803,8 +1842,6 @@ Class MainWindowInstance Extends Window
 	Field _menuBar:MenuBarExt
 	Field _editorMenu:MenuExt
 	Field _themesMenu:MenuExt
-	
-	Field _theme:="default"
 	
 	Field _contentView:DockingView
 	
@@ -1944,20 +1981,17 @@ Class MainWindowInstance Extends Window
 	
 		Local menu:=New MenuExt( text )
 		
-		Local themes:=JsonObject.Load( "theme::themes.json" )
-		If Not themes Return menu
-		
-		For Local it:=Eachin themes
-			Local name:=it.Key
-			Local value:=it.Value.ToString()
+		For Local i:=0 Until ThemesInfo.GetCount()
+			Local name:=ThemesInfo.GetNameAt( i )
+			Local path:=ThemesInfo.GetPathAt( i )
 			menu.AddAction( name ).Triggered=Lambda()
 				
-				If value=ThemeName Return
+				If path=ThemesInfo.ActiveThemePath Return
 				
-				ThemeName=value
+				ThemesInfo.ActiveThemePath=path
 				Local sc:=App.Theme.Scale.x
 				
-				App.Theme.Load( _theme,New Vec2f( sc ) )
+				App.Theme.Load( path,New Vec2f( sc ) )
 				SaveState()
 			End
 		Next

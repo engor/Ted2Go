@@ -12,6 +12,7 @@ Class Highlighter
 	Const COLOR_COMMENT:=5
 	Const COLOR_PREPROC:=6
 	Const COLOR_OTHER:=7
+	Const COLOR_CODE_ITEM:=8
 	
 	'use it like a property, as readonly
 	Field Painter:Int( text:String,colors:Byte[],sol:Int,eol:Int,state:Int )
@@ -20,11 +21,11 @@ End
 
 
 Class HighlighterPlugin Extends PluginDependsOnFileType
-
+	
 	Property Name:String() Override
 		Return "HighlighterPlugin"
 	End
-		
+	
 	Property Highlighter:Highlighter()
 		Return _hl
 	End
@@ -35,9 +36,10 @@ Class HighlighterPlugin Extends PluginDependsOnFileType
 	Method New()
 		AddPlugin( Self )
 	End
-		
+	
 	Field _hl:Highlighter
 	Field _keywords:IKeywords
+	Field _parser:ICodeParser
 	
 End
 

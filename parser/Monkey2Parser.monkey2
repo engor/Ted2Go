@@ -42,6 +42,8 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 		New Fiber( Lambda()
 			
+			Fiber.Sleep( 1.5 )
+			
 			Local time:=Millisecs()
 			
 			ParseModules()
@@ -93,35 +95,41 @@ Class Monkey2Parser Extends CodeParserPlugin
 	Method ParseFile:String( params:ParseFileParams )
 		
 		Local filePath:=params.filePath
-		'Local pathOnDisk:=params.pathOnDisk
 		Local moduleName:=params.moduleName
 		Local geninfo:=params.geninfo
 		
-		' start parsing process
+		Local parsingData:=""
+		Local errorMessage:=""
+		
+		' start parsing process - ask mx2cc to generate .geninfo files
 		'
 		If geninfo And _enabled
-			Local parsedPath:String
-			Local cmd:=GetParseCommand( filePath,Varptr parsedPath )
+			
+			'Print "source file: "+filePath
+			
+			Local cmd:=GetFullParseCommand( filePath )
 			
 			If Not cmd Return "#"
 			
 			Local proc:=New ProcessReader( filePath )
 			Local str:=proc.Run( cmd )
 			
-			If Not str Return "#" 'special kind of error
+			If Not str Return "#" ' it's special kind of error
 			
 			Local hasErrors:=(str.Find( "] : Error : " ) > 0)
 			
-			If hasErrors Return str
+			If hasErrors
+				errorMessage=str
+			Endif
 			
-			filePath=parsedPath
 		Endif
 		
-		Local geninfoPath:=GetGeninfoPath( filePath )
+		Local geninfoPath:=PathsProvider.GetGeninfoPath( filePath )
+		
 		If Not geninfo
-			' is file modified?
+			' was file modified?
 			Local time:=GetFileTime( geninfoPath )
-			If time=0 Return Null ' file not found
+			'If time=0 Return Null ' file not found
 		
 			Local last:=_filesTime[filePath]
 		
@@ -133,14 +141,19 @@ Class Monkey2Parser Extends CodeParserPlugin
 				Return Null
 			Endif
 		Endif
-		'Print "info path: "+geninfoPath
-		Local jobj:=JsonObject.Parse( LoadString( geninfoPath ),True )
 		
-		If Not jobj Return "#"
+		parsingData=LoadString( geninfoPath )
+		
+		Local jobj:=JsonObject.Parse( parsingData )
+		
+		If Not jobj
+			'Print "invalid json: "+filePath
+			Return "#"
+		Endif
 		
 		
 		RemovePrevious( filePath )
-
+		
 		Local nspace:= jobj.Contains( "namespace" ) ? jobj["namespace"].ToString() Else ""
 		
 		If jobj.Contains( "members" )
@@ -190,7 +203,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Endif
 		UsingsMap[filePath]=useInfo
 		
-		Return Null
+		Return errorMessage
 	End
 	
 	Method ParseJsonMembers( members:Stack<JsonValue>,parent:CodeItem,filePath:String,resultContainer:Stack<CodeItem>,namespac:String )
@@ -233,7 +246,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 					
 				Case "block"
 					
-					item.Ident=""+item.ScopeStartPos+"..."+item.ScopeEndPos
+					item.Ident="block{"+item.ScopeStartPos+"..."+item.ScopeEndPos+"}"
 				
 				Case "property"
 					
@@ -302,7 +315,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			If kind="local"
 				' add into parent that isn't a nested block
 				' like method/func
-				Local par:=GetNonBlockParent( parent )
+				Local par:=CodeItem.GetNonBlockParent( parent )
 				item.SetParent( par )
 			Elseif parent
 				item.SetParent( parent )
@@ -439,51 +452,23 @@ Class Monkey2Parser Extends CodeParserPlugin
 		
 	End
 	
-	Function GetParseCommand:String( filePathToParse:String,realParsedPath:String Ptr=Null )
+	Function GetSimpleParseCommand:String( filePathToParse:String )
 		
-		Local path:String
-		' is it a module file?
-		Local modsDir:=Prefs.MonkeyRootPath+"modules/"
-		If filePathToParse.StartsWith( modsDir ) And filePathToParse.Find( "/tests/")=-1
-			Local i1:=modsDir.Length
-			Local i2:=filePathToParse.Find( "/",i1+1 )
-			If i2<>-1
-				Local modName:=filePathToParse.Slice( i1,i2 )
-				path=modsDir+modName+"/"+modName+".monkey2"
-			Else
-				path=filePathToParse
-			Endif
-		Else
-			Local mainFile:=PathsProvider.GetActiveMainFilePath()
-			If mainFile
-				If GetFileType( mainFile )<>FileType.File
-					Alert( "File doesn't exists!~n"+mainFile,"Invalid main file" )
-				Endif
-				' is it a standalone file?
-				Local proj:=ProjectView.FindProject( filePathToParse )?.Folder
-				path = mainFile.StartsWith( proj ) ? mainFile Else filePathToParse
-			Else
-				path=filePathToParse
-			Endif
-		Endif
-		Print "path: "+path
-		realParsedPath[0]=path
-		
-		Return path ? "~q"+MainWindow.Mx2ccPath+"~q geninfo ~q"+path+"~q" Else ""
+		Return "~q"+MainWindow.Mx2ccPath+"~q geninfo -parse ~q"+filePathToParse+"~q"
 	End
 	
-	Function GetGeninfoPath:String( filePath:String )
+	Function GetFullParseCommand:String( filePathToParse:String )
 		
-		Return ExtractDir( filePath )+".mx2/"+StripDir( StripExt( filePath ) )+".geninfo"
+		Return "~q"+MainWindow.Mx2ccPath+"~q geninfo -semant ~q"+filePathToParse+"~q"
 	End
 	
-	Function GetTempFilePathForParsing:String( srcPath:String )
+	Function GetSuitableFilePathToParse:String( filePath:String )
 		
-		Local dir:=ExtractDir( srcPath )+".mx2/"
-		CreateDir( dir )
-		Local name:=StripDir( srcPath )
+		Local tmpPath:=PathsProvider.GetTempFilePathForParsing( filePath )
+		Local t1:=GetFileTime( filePath )
+		Local t2:=GetFileTime( tmpPath )
 		
-		Return dir+name
+		Return t1>t2 ? filePath Else tmpPath
 	End
 	
 	
@@ -1234,16 +1219,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Return False
 	End
 	
-	Function GetNonBlockParent:CodeItem( parent:CodeItem )
-	
-		Local par:=parent
-		While par And par.KindStr="block"
-			par=par.Parent
-		Wend
-		
-		Return par
-	End
-	
 	Function GetScopePosition:Vec2i( strPos:String )
 		
 		Local arr:=strPos.Split( ":" )
@@ -1352,17 +1327,6 @@ Class Monkey2Parser Extends CodeParserPlugin
 		' inside of item's parent
 		If item.Parent.Ident = scopeClass.Ident Return True
 		
-'		Local type:=item.Parent.Type.ident
-'		
-		' it's own class
-'		If type = scopeClass.Type.ident
-'			Return True
-'		Else
-'			' inherited
-'			Local has:=scopeClass.HasSuchSuperClass( type )
-'			If has Return item.Access = AccessMode.Protected_
-'		Endif
-		
 		Return False
 		
 	End
@@ -1373,10 +1337,11 @@ Class Monkey2Parser Extends CodeParserPlugin
 		Local endpos:=item.ScopeEndPos
 		
 		If localRule<>LOCAL_RULE_NONE And IsLocalMember( item )
-			'cursor.x-=1 ' hacking
 			If localRule=LOCAL_RULE_SELF_SCOPE
+				cursor.x-=1 ' hacking
 				Return cursor.x=srcpos.x And cursor.y>=srcpos.y
 			Elseif localRule=LOCAL_RULE_PARENT_SCOPE
+				
 				Return (cursor.x=srcpos.x And cursor.y>=srcpos.y) Or 
 						(cursor.x>srcpos.x And cursor.x<endpos.x)
 			Endif

@@ -132,7 +132,7 @@ Class BuildActions Implements IModuleBuilder
 		_releaseConfig.Clicked+=Lambda()
 			_buildConfig="release"
 		End
-		_buildConfig="debug"
+		_buildConfig="release"
 
 		group=New CheckGroup
 
@@ -264,12 +264,14 @@ Class BuildActions Implements IModuleBuilder
 		While Not _errors.Empty And _errors.First.removed
 			_errors.RemoveFirst()
 		Wend
-	
+		
 		Local idle:=Not _console.Running
 		Local canbuild:=idle And FilePathToBuild And _buildTarget
 		
 		build.Enabled=canbuild
 		buildAndRun.Enabled=canbuild
+		semant.Enabled=canbuild
+		debugApp.Enabled=canbuild
 		nextError.Enabled=Not _errors.Empty
 		updateModules.Enabled=idle
 		rebuildHelp.Enabled=idle
@@ -336,7 +338,10 @@ Class BuildActions Implements IModuleBuilder
 	Method GotoError( err:BuildError )
 		
 		Local targetPath:=GetCaseSensitivePath( err.path )
-		_docs.CurrentCodeDocument?.JumpToPosition( targetPath,New Vec2i( err.line,0 ) )
+		Local doc:=_docs.OpenDocument( targetPath,True,True )
+		If doc
+			_docs.CurrentCodeDocument.JumpToPosition( targetPath,New Vec2i( err.line,0 ) )
+		Endif
 	End
 	
 	

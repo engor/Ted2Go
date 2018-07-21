@@ -10,6 +10,7 @@ Class EditActions
 	Field copy:Action
 	Field paste:Action
 	Field selectAll:Action
+	Field selectWord:Action
 	Field wordWrap:Action
 	' Edit -- Text
 	Field textDeleteWordForward:Action
@@ -25,14 +26,14 @@ Class EditActions
 	Field uncomment:Action
 	
 	Method New( docs:DocumentManager )
-	
+		
 		_docs=docs
 		
 		undo=New Action( "Undo" )
 		undo.Triggered=OnUndo
 		undo.HotKey=Key.Z
 		undo.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
-
+		
 		redo=New Action( "Redo" )
 		redo.Triggered=OnRedo
 #If __TARGET__="macos"
@@ -47,21 +48,26 @@ Class EditActions
 		cut.Triggered=OnCut
 		cut.HotKey=Key.X
 		cut.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
-
+		
 		copy=New Action( "Copy" )
 		copy.Triggered=OnCopy
 		copy.HotKey=Key.C
 		copy.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
-
+		
 		paste=New Action( "Paste" )
 		paste.Triggered=OnPaste
 		paste.HotKey=Key.V
 		paste.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
-
+		
 		selectAll=New Action( "Select all" )
 		selectAll.Triggered=OnSelectAll
 		selectAll.HotKey=Key.A
 		selectAll.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
+		
+		selectWord=New Action( "Select word" )
+		selectWord.Triggered=OnSelectWord
+		selectWord.HotKey=Key.W
+		selectWord.HotKeyModifiers=Modifier.Control
 		
 		wordWrap=New Action( "Toggle word wrap" )
 		wordWrap.Triggered=OnWordWrap
@@ -240,6 +246,13 @@ Class EditActions
 		Local tv:=Cast<TextView>( App.KeyView )
 		
 		If tv tv.SelectAll()
+	End
+	
+	Method OnSelectWord()
+		
+		Local tv:=Cast<TextView>( App.KeyView )
+		
+		If tv tv.SelectWord()
 	End
 	
 	Method OnWordWrap()

@@ -11,6 +11,8 @@ Class TreeViewExt Extends TreeView
 	Field NodeCollapsed:Void( node:Node )
 	Field SelectedChanged:Void( selNode:Node )
 	
+	Field ExpandParentsForSelected:=True
+	
 	Method New()
 		
 		Super.New()
@@ -49,7 +51,7 @@ Class TreeViewExt Extends TreeView
 			OnCollapsed( node,True )
 		End
 		
-		_selColor=App.Theme.GetColor( "panel" )
+		OnThemeChanged()
 	End
 	
 	Property Selected:TreeView.Node()
@@ -149,9 +151,15 @@ Class TreeViewExt Extends TreeView
 		If n Then Selected=n
 	End
 	
-	Method Sort()
-	
-		SortNode( RootNode )
+	Method Sort( func:Int( lhs:TreeView.Node,rhs:TreeView.Node )=Null )
+		
+		If func=Null
+			func=Lambda:Int( lhs:TreeView.Node,rhs:TreeView.Node )
+				Return lhs.Text<=>rhs.Text
+			End
+		Endif
+		
+		SortNode( RootNode,func )
 	End
 	
 	
@@ -161,7 +169,7 @@ Class TreeViewExt Extends TreeView
 	
 	Method OnThemeChanged() Override
 		
-		_selColor=App.Theme.GetColor( "panel" )
+		_selColor=App.Theme.GetColor( "treeview-selected-row" )
 	End
 	
 	Method OnRenderContent( canvas:Canvas ) Override
@@ -271,13 +279,15 @@ Class TreeViewExt Extends TreeView
 	Method EnsureVisible( node:TreeView.Node )
 	
 		If Not node Return
-	
-		Local n:=node.Parent
-		While n
-			n.Expanded=True
-			n=n.Parent
-		Wend
-	
+		
+		If ExpandParentsForSelected
+			Local n:=node.Parent
+			While n
+				n.Expanded=True
+				n=n.Parent
+			Wend
+		Endif
+		
 		' scroll Y only
 		Local scroll:=Scroll
 		Super.EnsureVisible( node.Rect )
@@ -285,24 +295,21 @@ Class TreeViewExt Extends TreeView
 		Scroll=scroll
 	End
 	
-	Method SortNode( node:TreeView.Node )
+	Method SortNode( node:TreeView.Node,func:Int( lhs:TreeView.Node,rhs:TreeView.Node ) )
 		
 		If node.Children.Length=0 Return
 		
 		Local children:=New Stack<TreeView.Node>
 		children+=node.Children
 		
-		children.Sort( Lambda:Int( lhs:TreeView.Node,rhs:TreeView.Node )
-			
-			Return lhs.Text<=>rhs.Text
-		End )
+		children.Sort( func )
 		
 		node.RemoveAllChildren()
 		
 		For Local n:=Eachin children
 			node.AddChild( n )
 			
-			SortNode( n )
+			SortNode( n,func )
 		Next
 	End
 	

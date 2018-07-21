@@ -41,6 +41,26 @@ Class CodeItem
 		_ident=ident
 	End
 	
+	Function GetNonBlockParent:CodeItem( parent:CodeItem )
+	
+		Local par:=parent
+		While par And par.KindStr="block"
+			par=par.Parent
+		Wend
+		
+		Return par
+	End
+	
+	Function GetNonFieldParent:CodeItem( parent:CodeItem )
+	
+		Local par:=parent
+		While par And par.IsLikeField
+			par=par.Parent
+		Wend
+		
+		Return par
+	End
+	
 	Method OnRemoved()
 		
 		If nspace Then nspace.items.Remove( Self )
@@ -215,12 +235,20 @@ Class CodeItem
 		Case CodeItemKind.Class_,CodeItemKind.Interface_,CodeItemKind.Struct_,CodeItemKind.Enum_
 			Return True
 		End
-		Return False
+		Return _isExtension
 	End
 	
 	Property IsLikeFunc:Bool()
 		Select _kind
-		Case CodeItemKind.Method_,CodeItemKind.Function_
+		Case CodeItemKind.Method_,CodeItemKind.Function_,CodeItemKind.Property_,CodeItemKind.Operator_
+			Return True
+		End
+		Return False
+	End
+	
+	Property IsLikeField:Bool()
+		Select _kind
+		Case CodeItemKind.Field_,CodeItemKind.Global_,CodeItemKind.Local_,CodeItemKind.Const_
 			Return True
 		End
 		Return False
@@ -234,6 +262,16 @@ Class CodeItem
 	Property IsProperty:Bool()
 	
 		Return _kind=CodeItemKind.Property_
+	End
+	
+	Property IsBlock:Bool()
+	
+		Return _kindStr="block"
+	End
+	
+	Property IsFuncTypedField:Bool()
+		
+		Return (_kindStr="field" Or _kindStr="global") And _type<>Null And _type.IsLikeFunc
 	End
 	
 	Property IsExtension:Bool()
@@ -419,7 +457,8 @@ Class CodeItem
 			_kind=CodeItemKind.Local_
 		Case "operator"
 			_kind=CodeItemKind.Operator_
-		Case "for","select","while"
+		'Case "for","select","while"
+		Case "block"
 			_kind=CodeItemKind.Inner_
 		Case "alias"
 			_kind=CodeItemKind.Alias_

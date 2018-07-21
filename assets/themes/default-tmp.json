@@ -15,6 +15,7 @@
 		"text-disabled": "#888",
 		"text-background": "#888",
 		
+		"textview-color8": "#aa55bb", //code item
 		"textview-cursor":"#fff",
 		"textview-selection":"#88f",
 		"textview-cursor-line":"#2000",

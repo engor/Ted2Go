@@ -760,7 +760,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	
 	Method ShowJsonDialog()
 		
-		Local cmd:=Monkey2Parser.GetParseCommand( _doc.Path )
+		Local cmd:=Monkey2Parser.GetFullParseCommand( _doc.Path )
 		If Not cmd Return
 		
 		New Fiber( Lambda()
@@ -814,7 +814,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					Local x:=RenderStyle.Font.TextWidth( indentStr )
 					Local w:=RenderStyle.Font.TextWidth( s )
 					If event.Location.x >= x And event.Location.x <= x+w
-						Local s:=_doc.GetStringError( line )
+						Local s:=_doc.GetErrorMessageAt( line )
 						If s <> Null
 							_doc.ShowHint_( s,event.Location )
 						Else
@@ -931,6 +931,7 @@ Class CodeDocument Extends Ted2Document
 		_doc.TextChanged+=Lambda()
 		
 			Dirty=True
+			_changesCounter+=1
 			OnTextChanged()
 			_codeView.TextChanged()
 		End
@@ -1006,7 +1007,7 @@ Class CodeDocument Extends Ted2Document
 	Method OnCreateBrowser:View() Override
 		
 		If _browserView Return _browserView
-			
+		
 		' sorting toolbar
 		_browserView=New DockingView
 		
@@ -1046,17 +1047,29 @@ Class CodeDocument Extends Ted2Document
 		
 		_treeView.SortByType=Prefs.SourceSortByType
 		_treeView.ShowInherited=Prefs.SourceShowInherited
+		_treeView.ExpandParentsForSelected=False
 		
 		' goto item from tree view
-		_treeView.NodeClicked+=Lambda( node:TreeView.Node )
+		Local clickFunc:=Lambda( node:TreeView.Node )
 		
 			Local codeNode:=Cast<CodeTreeNode>( node )
 			Local item:=codeNode.CodeItem
 			JumpToPosition( item.FilePath,item.ScopeStartPos )
-			
 		End
 		
+		_treeView.NodeClicked+=clickFunc
+		
+		_treeViewInnerList=New CodeTreeView
+		_treeViewInnerList.FillNestedItems=False
+		
+		_treeViewInnerList.NodeClicked+=clickFunc
+		
 		Return _browserView
+	End
+	
+	Method OnCreateBrowserProperties:View() Override
+		
+		Return _treeViewInnerList
 	End
 	
 	Method AnalyzeIndentation()
@@ -1254,7 +1267,8 @@ Class CodeDocument Extends Ted2Document
 		_errMap[error.line]=s
 	End
 	
-	Method GetStringError:String( line:Int )
+	Method GetErrorMessageAt:String( line:Int )
+		
 		Return _errMap[line]
 	End
 	
@@ -1262,11 +1276,14 @@ Class CodeDocument Extends Ted2Document
 		
 		ResetErrors()
 		
+		'Print "OnDocumentParsed: "+Path
+		
 		If errors And Not errors.Empty
+			'Print "OnDocumentParsed. errors: "+errors.Length
 			For Local err:=Eachin errors
 				AddError( err )
 			Next
-			Return
+			'Return
 		Endif
 		
 		UpdateCodeTree( codeItems )
@@ -1430,6 +1447,81 @@ Class CodeDocument Extends Ted2Document
 		_codeView.OnKeyEvent( event )
 	End
 	
+	Method StoreChangesCounter()
+		
+		_storedChangesCounter=_changesCounter
+	End
+	
+	Method CheckChangesCounter:Bool()
+		
+		Return _changesCounter<>_storedChangesCounter
+	End
+	
+	Method GrabCodeItems( parent:CodeItem,items:Stack<CodeItem> )
+		
+		If parent.IsLikeFunc Or parent.IsOperator Or parent.IsProperty Or parent.IsLikeClass
+			items.Add( parent )
+		Endif
+		
+		If Not (parent.Children Or parent.IsLikeClass) Return
+		
+		For Local child:=Eachin parent.Children
+			GrabCodeItems( child,items )
+		Next 
+	End
+	
+	Method JumpToPreviousScope()
+		
+		Local topItems:=_parser.ItemsMap[Path]
+		If Not topItems Return
+		
+		Local allItems:=New Stack<CodeItem>
+		For Local item:=Eachin topItems
+			GrabCodeItems( item,allItems )
+		Next
+		
+		Local curLine:=_codeView.LineNumAtCursor
+		Local newPos:=New Vec2i( -1 )
+		For Local item:=Eachin allItems
+			Local pos:=item.ScopeStartPos
+			If pos.x<curLine And pos.x>newPos.x
+				newPos=pos
+			Endif
+		Next
+		
+		If newPos.x<>curLine
+			Local pos:=_codeView.Document.StartOfLine( newPos.x )+newPos.y
+			_codeView.SelectText( pos,pos )
+			_codeView.MakeCentered()
+		Endif
+	End
+	
+	Method JumpToNextScope()
+		
+		Local topItems:=_parser.ItemsMap[Path]
+		If Not topItems Return
+		
+		Local allItems:=New Stack<CodeItem>
+		For Local item:=Eachin topItems
+			GrabCodeItems( item,allItems )
+		Next
+		
+		Local curLine:=_codeView.LineNumAtCursor
+		Local newPos:=New Vec2i( _codeView.Document.NumLines )
+		For Local item:=Eachin allItems
+			Local pos:=item.ScopeStartPos
+			If pos.x>curLine And pos.x<newPos.x
+				newPos=pos
+			Endif
+		Next
+		
+		If newPos.x<>curLine
+			Local pos:=_codeView.Document.StartOfLine( newPos.x )+newPos.y
+			_codeView.SelectText( pos,pos )
+			_codeView.MakeCentered()
+		Endif
+	End
+	
 	Property CodeView:CodeDocumentView()
 		Return _codeView
 	End
@@ -1448,6 +1540,7 @@ Class CodeDocument Extends Ted2Document
 	Field _view:DockingView
 	Field _codeView:CodeDocumentView
 	Field _treeView:CodeTreeView
+	Field _treeViewInnerList:CodeTreeView
 	Field _browserView:DockingView
 	Field _fixIndentView:DockingView
 	Field _fixIndentHint:Label
@@ -1465,6 +1558,7 @@ Class CodeDocument Extends Ted2Document
 	
 	Field _toolBar:ToolBarExt
 	Field _content:DockingView
+	Field _changesCounter:Int,_storedChangesCounter:Int
 	
 	Method InitParser()
 		
@@ -1566,6 +1660,7 @@ Class CodeDocument Extends Ted2Document
 		
 		_doc.Text=text
 		Dirty=False
+		_changesCounter=0
 		
 		InitParser()
 		
@@ -1611,9 +1706,13 @@ Class CodeDocument Extends Ted2Document
 		
 		If AutoComplete.IsOpened Then AutoComplete.Hide()
 		
-		If Not _parsingEnabled Return
-		
-		OnUpdateCurrentScope()
+		' show error in status bar
+		If HasErrors
+			Local error:=GetErrorMessageAt( newLine )
+			If error
+				MainWindow.ShowStatusBarText( error )
+			Endif
+		Endif
 	End
 	
 	Property CursorPos:Vec2i()
@@ -1623,11 +1722,36 @@ Class CodeDocument Extends Ted2Document
 	
 	Method OnUpdateCurrentScope()
 		
-		'DebugStop()
+		_treeViewInnerList.RootNode.RemoveAllChildren()
+		
 		Local scope:=_parser.GetNearestScope( Path,CursorPos )
 		'Print ""+CursorPos+", "+scope?.KindStr+", "+scope?.Text
 		If scope
 			_treeView.SelectByScope( scope )
+			
+			Local storedScope:=scope
+			If scope.IsBlock
+				scope=CodeItem.GetNonBlockParent( scope )
+			Endif
+			If scope.IsLikeField
+				scope=CodeItem.GetNonFieldParent( scope )
+			Endif
+			
+			If Not scope Return
+			
+			If scope.NumChildren>0
+				Local st:=New Stack<CodeItem>
+				For Local child:=Eachin scope.Children
+					If Not (child.IsLikeClass Or child.IsLikeFunc Or child.IsOperator)
+						st.Add( child )
+					Endif
+				Next
+				If Not st.Empty
+					_treeViewInnerList.Fill( st,_parser )
+					MainWindow.UpdateWindow( False )
+					_treeViewInnerList.Selected=_treeViewInnerList.FindNode( _treeViewInnerList.RootNode,storedScope )
+				Endif
+			Endif
 		Endif
 	End
 	
@@ -1682,6 +1806,10 @@ Class CodeDocument Extends Ted2Document
 	End
 	
 	Method OnCursorChanged()
+		
+		If _parsingEnabled
+			OnUpdateCurrentScope()
+		Endif
 		
 		' try to show hint for method parameters
 		
@@ -1963,20 +2091,18 @@ Class CodeItemIcons
 			Case "param"
 				key="*"
 			Default
-				Local type:=item.Type
-				If (kind="field" Or kind="global") And type<>Null And type.IsLikeFunc
+				If item.IsFuncTypedField
 					key="field_func"
 				Else
-					If item.Ident.ToLower() = "new" Then kind="constructor"
+					If item.Ident.ToLower()="new" Then kind="constructor"
 					key=kind+"_"+item.AccessStr
 				Endif
 		End
 		
 		Local ic:=_icons[key]
-		If ic = Null Then ic=_iconDefault
+		If ic=Null Then ic=_iconDefault
 		
 		Return ic
-		
 	End
 
 	Function GetKeywordsIcon:Image()

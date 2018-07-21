@@ -1,6 +1,9 @@
 
 Namespace ted2go
 
+#Import "../assets/docsPriority.txt"
+
+
 Private
 
 Function EnumModules:String[]()
@@ -83,7 +86,7 @@ Class HelpTreeView Extends TreeViewExt
 		Return RealPath( "docs/"+page )
 	End
 	
-	Function CreateNodes( obj:JsonObject,parent:Tree.Node,indexer:StringMap<Tree.Node> )
+	Function CreateNodes( obj:JsonObject,parent:Tree.Node )
 		
 		Local text:=obj["text"].ToString()
 		Local page:=""
@@ -94,11 +97,10 @@ Class HelpTreeView Extends TreeViewExt
 		Endif
 		
 		Local node:=New Tree.Node( text,parent,page )
-		indexer[page.ToLower()]=node
 		
 		If obj.Contains( "children" )
 			For Local child:=Eachin obj["children"].ToArray()
-				CreateNodes( Cast<JsonObject>( child ),node,indexer )
+				CreateNodes( Cast<JsonObject>( child ),node )
 			Next
 		Endif
 		
@@ -133,10 +135,8 @@ Class HelpTreeView Extends TreeViewExt
 		Return last
 	End
 	
-	Method Update( applyFilter:Bool=False )
+	Method Update()
 		
-		_index.Clear()
-		_index2.Clear()
 		_tree.Clear()
 		
 		For Local modname:=Eachin EnumModules()
@@ -151,7 +151,7 @@ Class HelpTreeView Extends TreeViewExt
 				Local obj:=JsonObject.Load( index,True )
 				If Not obj Continue
 				
-				CreateNodes( obj,_tree.RootNode,_index )
+				CreateNodes( obj,_tree.RootNode )
 				
 			Catch ex:Throwable
 				
@@ -159,9 +159,16 @@ Class HelpTreeView Extends TreeViewExt
 			End
 		Next
 		
-		FillTree()
+		ApplyFilter( _textField.Text )
 		
-		If applyFilter Then Update( _textField.Text )
+'		For Local i1:=Eachin _tree.RootNode.Children
+'			Print i1.Text
+'			If i1.NumChildren
+'				For Local i2:=Eachin i1.Children
+'					If i2.Text.StartsWith( i1.Text ) And i2.Text<>i1.Text Print i2.Text
+'				Next
+'			Endif
+'		Next
 	End
 	
 	Method RequestFocus()
@@ -183,7 +190,7 @@ Class HelpTreeView Extends TreeViewExt
 			
 			Local text:=_textField.Text
 			
-			Update( text )
+			ApplyFilter( text )
 		End
 		
 		Local find:=New Label( "Find " )
@@ -208,6 +215,8 @@ Class HelpTreeView Extends TreeViewExt
 			PageClicked( page )
 		End
 		
+		InitPriorityInfo()
+		
 		Update()
 	End
 	
@@ -216,12 +225,12 @@ Class HelpTreeView Extends TreeViewExt
 	Field _textField:TextFieldExt
 	Field _matchid:Int
 	Field _matches:=New Stack<Node>
-	Field _index:=New Map<String,Tree.Node>
-	Field _index2:=New Map<String,Node>
 	Field _tree:=New Tree
+	Field _priority:=New StringMap<Int>
+	Field _filterSplittersChars:=New Int[]( Chars.DOT,Chars.SPACE )
 	
 	Class Node Extends TreeView.Node
-	
+		
 		Method New( text:String,parent:TreeView.Node,page:String )
 			
 			Super.New( text,parent )
@@ -239,24 +248,100 @@ Class HelpTreeView Extends TreeViewExt
 		
 	End
 	
-	Method FillTree()
+	Method InitPriorityInfo()
+		
+		Local t:=LoadString( "asset::docsPriority.txt",True )
+		If t Then t=t.Trim()
+		Local arr:=t.Split( "~n" )
+		For Local i:=0 Until arr.Length
+			Local key:=arr[i].Trim()
+			Local priority:=arr.Length+1-i
+			_priority[key]=priority
+		Next
+	End
+	
+	Method GetNamespacePriority:Int( nspace:String )
+		
+		Return _priority[nspace]
+	End
+	
+	Method SortFunc:Int( lhs:TreeView.Node,rhs:TreeView.Node )
+		
+		' special rule for root nodes only
+		'
+		Local p1:=lhs.Parent,p2:=rhs.Parent,cnt:=0
+		While p1
+			p1=p1.Parent
+			p2=p2.Parent
+			cnt+=1
+		Wend
+		If cnt=1
+			Local priority1:=GetNamespacePriority( lhs.Text )
+			Local priority2:=GetNamespacePriority( rhs.Text )
+			Return priority2<=>priority1
+		Endif
+		
+		' default sorting rule
+		'
+		Return lhs.Text<=>rhs.Text
+	End
+	
+	Method FillTree( filterWords:String[] )
 	
 		RootNode.RemoveAllChildren()
 		
-		FillNode( RootNode,_tree.RootNode.Children )
+		FillNode( RootNode,_tree.RootNode.Children,filterWords )
 		
-		Sort()
+		Sort( filterWords.Length>0 ? SortFunc Else Null )
 		
-		If RootNode.Children.Length=0
+		If RootNode.Children.Length=0 And filterWords.Length=0
 			New Node( "No docs found; you can use 'Help -- Rebuild docs'.",RootNode,"" )
 		Endif
 	End
 	
-	Method FillNode( node:TreeView.Node,items:Stack<Tree.Node> )
+	Method CheckFilter:Bool( item:Tree.Node,filterWords:String[],lowercased:Bool=True )
+		
+		Local t:=item.Text
+		Local page:=item.GetUserData<String>()
+		
+		If lowercased
+			t=t.ToLower()
+			page=page.ToLower()
+		Endif
+		
+		Local pos:=-1,allFound:=True,inTextFound:=False
+		' all words in page path
+		For Local word:=Eachin filterWords
+			pos=page.Find( word,pos+1 )
+			If pos=-1
+				allFound=False
+				Exit
+			Endif
+			If Not inTextFound And t.Find( word )<>-1 Then inTextFound=True
+		Next
+		If allFound And inTextFound Return True
+		' and any word in node text
+		
+			
+		If item.NumChildren>0
+			For Local i:=Eachin item.Children
+				Local ok:=CheckFilter( i,filterWords,lowercased )
+				If ok Return True
+			Next
+		Endif
+		
+		Return False
+	End
+	
+	Method FillNode( node:TreeView.Node,items:Stack<Tree.Node>,filterWords:String[] )
 		
 		If Not items Return
 		
 		For Local item:=Eachin items
+			
+			If filterWords.Length>0 And Not CheckFilter( item,filterWords )
+				Continue
+			Endif
 			
 			Local page:=item.GetUserData<String>()
 			
@@ -269,25 +354,26 @@ Class HelpTreeView Extends TreeViewExt
 			Endif
 			
 			Local n:=New Node( item.Text,node,page )
-			_index2[page.ToLower()]=n
 			
 			If item.NumChildren
-				FillNode( n,item.Children )
+				FillNode( n,item.Children,filterWords )
 			Endif
 		Next
 		
 	End
 	
-	Method Update( text:String )
+	Method ApplyFilter( filter:String )
 		
 		RootNode.CollapseAll()
 		
-		text=StripEnding( text,"." )
+		filter=StripEnding( filter,"." )
 		
-		text=text.ToLower()
+		filter=filter.ToLower()
 		
-		Local parts:=text.Split( "." )
-		Local text2:=text.Replace( ".","-" )
+		Local filterWords:=New String[0]
+		If filter
+			filterWords=TextUtils.Split( filter,_filterSplittersChars )
+		Endif
 		
 		If _tree.RootNode.NumChildren=0
 			New Node( "Click here to rebuild docs!",RootNode,"$$rebuild$$" )
@@ -296,34 +382,13 @@ Class HelpTreeView Extends TreeViewExt
 		
 		_matches.Clear()
 		
-		For Local it:=Eachin _index2
-			
-			'Local node:=it.Value
-			Local n:=it.Value
-			
-			'Local n:=InsertNode( node )
-			
-			'If Not text Continue
-			
-			If Not text2 Or Not it.Key.Contains( text2 )
-				n.Selected=False
-				Continue
-			Endif
-			
-			n.Selected=GetSelectionState( n,parts )
-			
-			If n.Selected
-				
-				_matches.Push( n )
-				
-				Local n2:=n.Parent
-				While n2
-					n2.Expanded=True
-					n2=n2.Parent
-				Wend
-			Endif
-			
-		Next
+		FillTree( filterWords )
+		
+		If filter
+			For Local node:=Eachin RootNode.Children
+				CollectMatches( Cast<Node>( node ),_matches )
+			Next
+		Endif
 		
 		RootNode.Expanded=True
 		
@@ -333,30 +398,30 @@ Class HelpTreeView Extends TreeViewExt
 		
 		If _matches.Length
 			
+			For Local i:=Eachin _matches
+				i.Expanded=True
+				Local p:=i.Parent
+				While p
+					p.Expanded=True
+					p=p.Parent
+				Wend
+			Next
+			
 			PageClicked( _matches[0].Page )
 			Selected=_matches[0]
 		Endif
 		
 	End
 	
-	Method GetSelectionState:Bool( node:TreeView.Node,parts:String[] )
+	Method CollectMatches( node:Node,target:Stack<Node> )
 		
-		Local last:=parts.Length-1
-		Local i:=last
-		Repeat
-			Local part:=parts[i]
-			Local txt:=node.Text.ToLower()
-			If txt.Contains( part )
-				i-=1
-				If i<0 Exit 'true
-			Else
-				If i=last Return False
-			Endif
-			node=node.Parent
-			If Not node Return False
-		Forever
-		
-		Return True
+		If node.NumChildren=0
+			target.Add( node )
+		Else
+			For Local n:=Eachin node.Children
+				CollectMatches( Cast<Node>( n ),target )
+			Next
+		Endif
 	End
 	
 	Method NextHelp()

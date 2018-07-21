@@ -3,16 +3,16 @@ Namespace ted2go
 
 
 Class CppHighlighter Extends HighlighterPlugin
-
+	
 	Property Name:String() Override
 		Return "CppHighlighter"
 	End
-
-		
+	
+	
 	Private
 	
 	Global _instance:=New CppHighlighter
-		
+	
 	Method New()
 		Super.New()
 		_types=New String[]( ".cpp",".h",".hpp",".c",".js" )
@@ -21,7 +21,7 @@ Class CppHighlighter Extends HighlighterPlugin
 	End
 	
 	Method HL:Int( text:String,colors:Byte[],sol:Int,eol:Int,state:Int )
-
+		
 		Local i0:=sol
 		Local icolor:=0
 		Local istart:=sol
@@ -57,7 +57,7 @@ Class CppHighlighter Extends HighlighterPlugin
 			
 			Endif
 			
-			If state=10 
+			If state=10
 				' */  closed
 				Local pos:=text.Slice( i0-1,eol ).Find( "*/" )
 				If pos<>-1
@@ -83,8 +83,8 @@ Class CppHighlighter Extends HighlighterPlugin
 				color=Highlighter.COLOR_COMMENT
 				
 			Else If chr=34 Or chr=39
-			
-				While i0<eol And text[i0]<>34 And text[i0]<>39
+				
+				While i0<eol And text[i0]<>chr
 					i0+=1
 				Wend
 				If i0<eol i0+=1

@@ -134,10 +134,14 @@ Class ProjectView Extends DockingView
 		Return _activeProject?.Name
 	End
 	
-	Function CheckMainFilePath( proj:Monkey2Project )
+	Function CheckMainFilePath( proj:Monkey2Project,showAlert:Bool )
 		
 		If Not proj.MainFilePath
-			Alert( "Main file of ~q"+proj.Name+"~q project is not specified.~n~nRight click on file in Project tree~nand choose 'Set as main file'.","Build error" )
+			If showAlert
+				Alert( "Main file of ~q"+proj.Name+"~q project is not specified.~n~nRight click on file in Project tree~nand choose 'Set as main file'.","Build error" )
+			Else
+				MainWindow.ShowStatusBarText( "Main file of ~q"+proj.Name+"~q project is not specified!" )
+			Endif
 		Endif
 	
 	End
@@ -472,17 +476,18 @@ Class ProjectView Extends DockingView
 		End )
 	End
 	
-	' Return True if there is an actual folder deletion
-	Method CleanProject:Bool( dir:String )
-	
+	' Return True if there was an actual folder deletion
+	Method CleanFolder:Bool( folder:String )
+		
 		Local succ:=0,err:=0
-		Local items:=LoadDir( dir )
-		For Local i:=Eachin items
-			i=dir+"/"+i
-			If GetFileType(i)=FileType.Directory
-				If i.Contains( ".buildv" )
-					Local ok:=DeleteDir( i,True )
+		For Local i:=Eachin LoadDir( folder )
+			Local path:=folder+"/"+i
+			If GetFileType( path )=FileType.Directory
+				If i.Contains( ".buildv" ) Or i=PathsProvider.MX2_TMP
+					Local ok:=DeleteDir( path,True )
 					If ok Then succ+=1 Else err+=1
+				Else
+					CleanFolder( path )
 				Endif
 			Endif
 		Next
@@ -542,7 +547,7 @@ Class ProjectView Extends DockingView
 			Local isFolder:=False
 			Local fileType:=GetFileType( path )
 			
-			menu.AddAction( "Open on Desktop" ).Triggered=Lambda()
+			menu.AddAction( "Show in Explorer" ).Triggered=Lambda()
 				
 				Local p:=(fileType=FileType.File) ? ExtractDir( path ) Else path
 				requesters.OpenUrl( p )
@@ -670,12 +675,12 @@ Class ProjectView Extends DockingView
 						CloseProject( path )
 					End
 					
-					menu.AddAction( "Clean (delete .buildv)" ).Triggered=Lambda()
+					menu.AddAction( "Clean (delete .buildv & .mx2)" ).Triggered=Lambda()
 						
-						If Not RequestOkay( "Really delete all '.buildv' folders?" ) Return
+						If Not RequestOkay( "Really delete all '.buildv' and '.mx2' folders?" ) Return
 						
-						Local changes:=CleanProject( path )
-						If changes Then browser.Refresh( node )
+						Local changed:=CleanFolder( path )
+						If changed Then browser.Refresh( node )
 					End
 				Else
 					
@@ -746,7 +751,24 @@ Class ProjectView Extends DockingView
 					Local name:=RequestString( "Enter new name:","Ranaming '"+oldName+"'",oldName )
 					If Not name Or name=oldName Return
 					
-					Local newPath:=ExtractDir( path )+name
+					Local dir:=ExtractDir( path )
+					Local newPath:=dir+name
+					
+					' if just case is different
+					'
+					If name.ToLower()=oldName.ToLower()
+						Local tmpPath:=dir+Int(Rnd( 1000000,9999999 ))+name
+						' rename to temp
+						Local ok:=(libc.rename( path,tmpPath )=0)
+						If ok
+							' rename to desired
+							ok=(libc.rename( tmpPath,newPath )=0)
+							If ok
+								browser.Refresh( node.Parent )
+								Return
+							Endif
+						Endif
+					Endif
 					
 					If FileExists( newPath )
 						Alert( "File already exists! Path: '"+newPath+"'" )
@@ -831,12 +853,24 @@ Class Monkey2Project
 		
 		Local jobj:=New JsonObject
 		jobj[KEY_MAIN_FILE]=New JsonString
-		jobj[KEY_HIDDEN]=New JsonArray
+		jobj[KEY_HIDDEN]=New JsonArray( New JsonValue[]( New JsonString( ".mx2" ) ) )
 		
 		SaveString( jobj.ToJson(),path )
 	End
 	
 	Method New( path:String )
+		
+		Local isFolder:=(GetFileType( path )=FileType.Directory)
+		
+		' try to load project file if it's presented
+		'
+		If isFolder
+			Local dirName:=StripDir( path )
+			Local projPath:=StripSlashes( path )+"/"+dirName+".mx2proj"
+			If FileExists( projPath )
+				path = projPath
+			Endif
+		Endif
 		
 		_path=path
 		
@@ -884,20 +918,21 @@ Class Monkey2Project
 		Return _modified
 	End
 	
-	Property Excluded:String[]()
+	Property Hidden:String[]()
 		
-		If _modified=0 Return New String[0]
-		If _modified=_excludedTime Return _excluded
+		If _modified=0 Or Not _data Return New String[0]
+		If _modified=_hiddenTime Return _hidden
 		
 		Local jarr:=_data.GetArray( KEY_HIDDEN )
 		If Not jarr Or jarr.Empty Return New String[0]
 		
-		_excluded=New String[jarr.Length]
+		_hidden=New String[jarr.Length]
 		For Local i:=0 Until jarr.Length
-			_excluded[i]=jarr[i].ToString()
+			_hidden[i]=jarr[i].ToString()
 		Next
 		
-		Return _excluded
+		_hiddenTime=_modified
+		Return _hidden
 	End
 	
 	Method Save()
@@ -925,7 +960,7 @@ Class Monkey2Project
 	Field _data:JsonObject
 	Field _isFolderBased:Bool
 	Field _modified:Int
-	Field _excluded:String[],_excludedTime:Int
+	Field _hidden:String[],_hiddenTime:Int
 	
 	Method OnChanged()
 		

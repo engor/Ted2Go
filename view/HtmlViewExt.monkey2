@@ -3,7 +3,7 @@ Namespace ted2go
 
 
 Class HtmlViewExt Extends HtmlView
-
+	
 	Field Navigated:Void( url:String )
 	
 	Method New()
@@ -15,18 +15,24 @@ Class HtmlViewExt Extends HtmlView
 			Go( nav.url )
 			Navigated( nav.url )
 			
+			_url=nav.url
+			
 			nav.state+=1
-			If nav.state=1 Return 'navigated first time, so it's new page, don't touch the scroll
+			
+			UpdateCss()
+			
+			'navigated first time, so it's new page, don't touch the scroll
+			If nav.state=1
+				Return 
+			Endif
 			
 			Scroll=nav.scroll
 			
 			'wait a bit for layout
-			If _timer Then _timer.Cancel()
-			_timer=New Timer(20, Lambda()
+			New Fiber( Lambda()
+				Fiber.Sleep( 0.1 )
 				Scroll=nav.scroll
-				_timer.Cancel()
-				_timer=Null
-			End)
+			End )
 			
 		End
 	End
@@ -58,11 +64,32 @@ Class HtmlViewExt Extends HtmlView
 		_navOps.Clear()
 	End
 	
+	Property Url:String()
+		
+		Return _url
+	End
+	
 	
 	Private
 	
 	Field _navOps:=New NavOps<Nav>
-	Field _timer:Timer
+	Field _url:String
+	
+	Method OnValidateStyle() Override
+		
+		Super.OnValidateStyle()
+		
+		UpdateCss()
+	End
+	
+	Method UpdateCss()
+		
+		If ThemesInfo.IsActiveThemeDark()
+			HtmlSource=HtmlSource.Replace( "theme.css","theme-dark.css" )
+		Else
+			HtmlSource=HtmlSource.Replace( "theme-dark.css","theme.css" )
+		Endif
+	End
 	
 	Method StoreScroll()
 		

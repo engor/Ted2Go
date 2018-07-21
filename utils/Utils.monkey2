@@ -172,9 +172,16 @@ Class Utils Final
 		Return Null
 	End
 	
-	Function PrintLog<T>( list:List<T>,prefix:String="" )
+	Function PrintLog<T>( items:List<T>,prefix:String="" )
 	
-		For Local i:=Eachin list
+		For Local i:=Eachin items
+			Print prefix+""+i
+		End
+	End
+	
+	Function PrintLog<T>( items:Stack<T>,prefix:String="" )
+	
+		For Local i:=Eachin items
 			Print prefix+""+i
 		End
 	End
@@ -365,16 +372,16 @@ End
 
 #Rem monkeydocs Return ident and position in line where ident starts
 #End
-Function GetIndentBeforePos_Mx2:IdentInfo( line:String,pos:Int,withDots:Bool )
+Function GetIndentBeforePos_Mx2:IdentInfo( line:String,posInLine:Int,withDots:Bool )
 	
 	' grab whole word under cursor
 	'
-	Local len:=line.Length
-	While pos < len And IsIdent( line[pos] )
-		pos+=1
-	Wend
+'	Local len:=line.Length
+'	While pos <= posInLine And IsIdent( line[pos] )
+'		pos+=1
+'	Wend
 	
-	Local n:=pos-1
+	Local n:=posInLine-1
 	
 	While n >= 0
 	
@@ -416,9 +423,9 @@ Function GetIndentBeforePos_Mx2:IdentInfo( line:String,pos:Int,withDots:Bool )
 	Local s:=""
 	Local starts:=-1
 	Local arr:=False
-	If n < pos
+	If n < posInLine
 		starts=n
-		s=line.Slice( n,pos ).Replace( "?.","." ).Replace( "->","." )
+		s=line.Slice( n,posInLine ).Replace( "?.","." ).Replace( "->","." )
 		Local i:=s.FindLast( "." )
 		arr=(i>0 And s[i-1]=Chars.CLOSED_SQUARE_BRACKET) ' [i].
 		If s.Find( "[" )<>-1
