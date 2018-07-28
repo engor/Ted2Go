@@ -54,7 +54,7 @@ Class ExamplesView Extends DockingView
 	
 	Private
 	
-	Const VALID_FOLDERS:=New String[]( "bananas","examples","tests" )
+	Const VALID_FOLDERS:=New String[]( "bananas","examples","samples","tests" )
 	
 	Field _tree:TreeViewExt
 	Field _dirIcon:Image
@@ -207,7 +207,7 @@ Class ExamplesView Extends DockingView
 			If lowercasedName="src" Or lowercasedName="include" Or lowercasedName="native" Or
 				lowercasedName="bin" Or lowercasedName="docs" Or lowercasedName=PathsProvider.MX2_TMP Or
 				lowercasedName.Contains( ".product" ) Or lowercasedName.Contains( ".buildv" ) Or
-				lowercasedName="module-manager"
+				lowercasedName="module-manager" Or lowercasedName="contrib"
 				Continue
 			Endif
 			Local path:=folder+name
