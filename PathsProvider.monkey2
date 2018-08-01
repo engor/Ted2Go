@@ -56,32 +56,31 @@ Class PathsProvider
 				Local modName:=path.Slice( i1,i2 )
 				' main file of a module
 				'
-				path=modsDir+modName+"/"+modName+".monkey2"
+				Return modsDir+modName+"/"+modName+".monkey2"
 			Endif
 		Else
-			' is it a project file?
+			' priority for locked file
+			'
+			Local lockedPath:=docsManager().LockedDocument?.Path
+			If lockedPath
+				If ExtractDir( path ).Contains( ExtractDir( lockedPath ) )
+					' will parse locked file coz 'path' is under 'locked' folder
+					Return lockedPath
+				Endif
+			Endif
+			' check as a part of project
 			'
 			Local proj:=ProjectView.FindProject( path )
 			If proj
 				Local showNote:=True
 				If proj.MainFilePath
-					path=proj.MainFilePath
-				Else
-					Local lockedProj:Monkey2Project
-					Local lockedPath:=docsManager().LockedDocument?.Path
-					If lockedPath And lockedPath<>path
-						lockedProj=ProjectView.FindProject( lockedPath )
-						If lockedProj And lockedProj=proj
-							' will parse locked file coz it's the same project as current file
-							path=lockedPath
-							showNote=False
-						Endif
-					Endif
+					Return proj.MainFilePath
 				Endif
 				If showNote Then ProjectView.CheckMainFilePath( proj,False )
 			Endif
 		Endif
 		
+		' as is
 		Return path
 	End
 	
