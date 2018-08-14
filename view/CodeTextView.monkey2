@@ -709,8 +709,9 @@ Class CodeTextView Extends TextView
 		Select event.Type
 			
 			Case EventType.MouseWheel 'little faster scroll
-		
-				Scroll-=New Vec2i( 0,RenderStyle.Font.Height*event.Wheel.Y*3 )
+				
+				Local delta:=New Vec2i( RenderStyle.Font.Height,-RenderStyle.Font.Height*3 )
+				Scroll+=delta*event.Wheel
 				Return
 			
 			Case EventType.MouseDown 'prevent selection by dragging with right-button
