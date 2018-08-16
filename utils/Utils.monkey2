@@ -372,14 +372,16 @@ End
 
 #Rem monkeydocs Return ident and position in line where ident starts
 #End
-Function GetIndentBeforePos_Mx2:IdentInfo( line:String,posInLine:Int,withDots:Bool )
+Function GetIndentBeforePos_Mx2:IdentInfo( line:String,posInLine:Int,withDots:Bool,wholeWord:Bool=False )
 	
 	' grab whole word under cursor
 	'
-'	Local len:=line.Length
-'	While pos <= posInLine And IsIdent( line[pos] )
-'		pos+=1
-'	Wend
+	If wholeWord
+		Local len:=line.Length
+		While posInLine < len And IsIdent( line[posInLine] )
+			posInLine+=1
+		Wend
+	Endif
 	
 	Local n:=posInLine-1
 	

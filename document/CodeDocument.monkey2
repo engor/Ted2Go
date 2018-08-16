@@ -1313,7 +1313,7 @@ Class CodeDocument Extends Ted2Document
 		
 		If Not _parsingEnabled Return
 		
-		Local ident:=_codeView.IdentBeforeCursor()
+		Local ident:=_codeView.IdentBeforeCursor( True,True )
 		Local item:=_parser.ItemAtScope( ident,Path,CursorPos )
 		
 		If item

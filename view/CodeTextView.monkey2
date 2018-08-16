@@ -275,9 +275,9 @@ Class CodeTextView Extends TextView
 		Return text.Slice( start,ends )
 	End
 	
-	Method IdentBeforeCursor:String( withDots:Bool=True )
+	Method IdentBeforeCursor:String( withDots:Bool=True,wholeWord:Bool=False )
 		
-		Local info:=GetIndentBeforePos_Mx2( LineTextAtCursor,PosInLineAtCursor,withDots )
+		Local info:=GetIndentBeforePos_Mx2( LineTextAtCursor,PosInLineAtCursor,withDots,wholeWord )
 		Return info.ident
 	End
 	

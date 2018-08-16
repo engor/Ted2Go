@@ -1144,10 +1144,9 @@ Class MainWindowInstance Extends Window
 			Return
 		Endif
 		
-		Local ident:=view.IdentBeforeCursor()
+		Local ident:=view.IdentBeforeCursor( True,True )
 		
 		If Not ident Return
-		
 		Local parser:=ParsersManager.Get( view.FileType )
 		Local item:=parser.ItemAtScope( ident,view.FilePath,GetCursorPos( view ) )
 		
@@ -1161,9 +1160,9 @@ Class MainWindowInstance Extends Window
 			Local pathToIdent:=(item.Namespac+"."+item.Scope).Replace( ".","-" )
 			Local path:=pathTemplate.Replace( "{mod-name}",modName ).Replace( "{path-to-ident}",pathToIdent )
 			
-			Global __prevPath:=""
+			Global _prevPath:=""
 			
-			If path=__prevPath
+			If path=_prevPath
 				
 				If modName ' show docs for modules members
 					
@@ -1197,7 +1196,7 @@ Class MainWindowInstance Extends Window
 			
 			Endif
 			
-			__prevPath=path
+			_prevPath=path
 			
 		Elseif KeywordsManager.Get( view.FileType ).Contains( ident )
 			
