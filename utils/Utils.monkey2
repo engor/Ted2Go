@@ -2,6 +2,20 @@
 Namespace ted2go
 
 
+Function OpenInExplorer( path:String )
+	
+#If __HOSTOS__="macos"
+
+	libc.system( "open ~q"+path+"~q" )
+	
+#Else
+
+	OpenUrl( path )
+
+#Endif
+
+End
+
 Function SwapCase:String( s:String )
 	
 	Local result:="",ss:String,lower:String
@@ -36,6 +50,16 @@ Function GetCaseSensitivePath:String( path:String )
 	Return path
 #Endif
 End
+
+Function GetShowInExplorerTitle:String()
+	
+#If __TARGET__="macos"
+	Return "Show in Finder"
+#Else
+	Return "Show in Explorer"
+#Endif
+End
+
 
 Class Utils Final
 	

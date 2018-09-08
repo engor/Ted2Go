@@ -205,9 +205,9 @@ Class MainWindowInstance Extends Window
 		Local explorerAct:=New Action( " [*] " )
 		explorerAct.Triggered+=Lambda()
 			Local url:=_helpView.Url
-			requesters.OpenUrl( url )
+			OpenInExplorer( url )
 		End
-		Local explorerBtn:=New ToolButtonExt( explorerAct,"Show in Explorer" )
+		Local explorerBtn:=New ToolButtonExt( explorerAct,GetShowInExplorerTitle() )
 		bar.AddView( explorerBtn )
 		
 		bar.AddSeparator()
