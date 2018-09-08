@@ -10,7 +10,8 @@ Class EditActions
 	Field copy:Action
 	Field paste:Action
 	Field selectAll:Action
-	Field selectWord:Action
+	Field expandSelection:Action
+	Field shrinkSelection:Action
 	Field wordWrap:Action
 	' Edit -- Text
 	Field textDeleteWordForward:Action
@@ -64,10 +65,15 @@ Class EditActions
 		selectAll.HotKey=Key.A
 		selectAll.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
 		
-		selectWord=New Action( "Select word" )
-		selectWord.Triggered=OnSelectWord
-		selectWord.HotKey=Key.W
-		selectWord.HotKeyModifiers=Modifier.Control
+		expandSelection=New Action( "Expand selection" )
+		expandSelection.Triggered=OnExpandSelection
+		expandSelection.HotKey=Key.Up
+		expandSelection.HotKeyModifiers=Modifier.Alt
+		
+		shrinkSelection=New Action( "Shrink selection" )
+		shrinkSelection.Triggered=OnShrinkSelection
+		shrinkSelection.HotKey=Key.Down
+		shrinkSelection.HotKeyModifiers=Modifier.Alt
 		
 		wordWrap=New Action( "Toggle word wrap" )
 		wordWrap.Triggered=OnWordWrap
@@ -248,11 +254,14 @@ Class EditActions
 		If tv tv.SelectAll()
 	End
 	
-	Method OnSelectWord()
+	Method OnExpandSelection()
 		
-		Local tv:=Cast<TextView>( App.KeyView )
+		Cast<CodeTextView>( App.KeyView )?.ExpandSelection()
+	End
+	
+	Method OnShrinkSelection()
 		
-		If tv tv.SelectWord()
+		Cast<CodeTextView>( App.KeyView )?.ShrinkSelection()
 	End
 	
 	Method OnWordWrap()

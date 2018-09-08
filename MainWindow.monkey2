@@ -385,7 +385,7 @@ Class MainWindowInstance Extends Window
 		_editMenu.AddAction( _editActions.paste )
 		_editMenu.AddSeparator()
 		_editMenu.AddAction( _editActions.selectAll )
-		_editMenu.AddAction( _editActions.selectWord )
+		_editMenu.AddAction( _editActions.expandSelection )
 		_editMenu.AddSeparator()
 		' Edit -- Text
 		Local subText:=New MenuExt( "Text" )

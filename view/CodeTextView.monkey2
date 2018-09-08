@@ -234,6 +234,136 @@ Class CodeTextView Extends TextView
 		Endif
 	End
 	
+	Method ExpandSelection()
+		
+		' this method tries to intelligent expand
+		' selection under cursor
+		'
+		Local min:=Min( Cursor,Anchor )
+		Local max:=Max( Cursor,Anchor )
+		Local lineStart:=Document.StartOfLine( Document.FindLine( min ) )
+		Local lineEnd:=Document.EndOfLine( Document.FindLine( max ) )
+		
+		Local ch1:=min>lineStart ? Text[min-1] Else -1
+		Local ch2:=max<lineEnd ? Text[max] Else -1
+		
+		Local found:=False
+		
+		If IsIdent( ch1 )
+			min-=1
+			While min>lineStart And IsIdent( Text[min] )
+				min-=1
+			Wend
+			min+=1
+			found=True
+		Endif
+		
+		If IsIdent( ch2 )
+			While max<lineEnd And IsIdent( Text[max] )
+				max+=1
+			Wend
+			found=True
+		Endif
+		
+		If Not found
+			' valid ident parts: .?->[]
+			Local arr:=New Int[]( 
+						Chars.DOT,
+						Chars.QUESTION,
+						Chars.MINUS,
+						Chars.MORE_BRACKET,
+						Chars.OPENED_SQUARE_BRACKET,
+						Chars.CLOSED_SQUARE_BRACKET)
+						
+			If Utils.ArrayContains( arr,ch1 )
+				min-=1
+				While min>lineStart
+					Local ch:=Text[min]
+					If Utils.ArrayContains( arr,ch ) Or
+							IsIdent( ch )
+						min-=1
+					Else
+						Exit
+					Endif
+				Wend
+				min+=1
+				found=True
+			Endif
+			
+			If Not found And Utils.ArrayContains( arr,ch2 )
+				While max<lineEnd
+					Local ch:=Text[max]
+					If Utils.ArrayContains( arr,ch ) Or
+							IsIdent( ch )
+						max+=1
+					Else
+						Exit
+					Endif
+				Wend
+				found=True
+			Endif
+			
+			If Not found And ch1=Chars.COLON
+				min-=2
+				While min>lineStart And IsIdent( Text[min] )
+					min-=1
+				Wend
+				min+=1
+				found=True
+			Endif
+			
+			If Not found And ch2=Chars.COLON
+				max+=1
+				While max<lineEnd And IsIdent( Text[max] )
+					max+=1
+				Wend
+				found=True
+			Endif
+			
+			' scope of (...)
+			If Not found
+				Local pos:=Text.Find( "(",lineStart )
+				If pos>=lineStart And pos<min
+					Local pos2:=Text.Find( ")",max )
+					If pos2>0 And pos2<=lineEnd
+						
+						If min-pos>1 Or pos2-max>1
+							min=pos+1
+							max=pos2
+							found=True
+						Endif
+					Endif
+				Endif
+			Endif
+			
+			' whole line
+			If Not found
+				min=lineStart
+				While min<lineEnd And Text[min]<=Chars.SPACE
+					min+=1
+				Wend
+				max=lineEnd
+				While max>lineStart And Text[max]<=Chars.SPACE
+					max-=1
+				Wend
+				max+=1
+				If min=max 'have no printable chars
+					min=lineStart
+					max=lineEnd
+				Endif
+				found=True
+			Endif
+			
+		Endif
+		
+		SelectText( min,max )
+		
+	End
+	
+	Method ShrinkSelection()
+		' todo
+	End
+	
 	Property SelectedText:String()
 		
 		If Not CanCopy Return ""
@@ -710,7 +840,7 @@ Class CodeTextView Extends TextView
 			
 			Case EventType.MouseWheel 'little faster scroll
 				
-				Local delta:=New Vec2i( RenderStyle.Font.Height,-RenderStyle.Font.Height*3 )
+				Local delta:=New Vec2i( RenderStyle.Font.Height,-RenderStyle.Font.Height*2 )
 				Scroll+=delta*event.Wheel
 				Return
 			
