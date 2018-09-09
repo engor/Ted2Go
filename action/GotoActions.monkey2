@@ -32,7 +32,12 @@ Class GotoActions
 		
 		gotoDeclaration=New Action( "Goto definition" )
 		gotoDeclaration.Triggered=OnGotoDeclaration
+		#If __TARGET__="macos"
+		gotoDeclaration.HotKey=Key.B
+		gotoDeclaration.HotKeyModifiers=Modifier.Control
+		#Else
 		gotoDeclaration.HotKey=Key.F12
+		#Endif
 		
 		prevScope=New Action( "Previous scope" )
 		prevScope.Triggered=OnPrevScope

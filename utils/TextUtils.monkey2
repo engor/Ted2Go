@@ -87,6 +87,7 @@ Struct Chars
 	Const DOUBLE_QUOTE:="~q"[0] '34
 	Const COMMA:=","[0] '44
 	Const SEMICOLON:=";"[0]
+	Const COLON:=":"[0]
 	Const DOT:="."[0] '46
 	Const EQUALS:="="[0] '61
 	Const LESS_BRACKET:="<"[0] '60
@@ -102,5 +103,7 @@ Struct Chars
 	Const TAB:="~t"[0] '9
 	Const SPACE:=" "[0] '32
 	Const NEW_LINE:="~n"[0] '10
-	
+	Const QUESTION:="?"[0]
+	Const PLUS:="+"[0]
+	Const MINUS:="-"[0]
 End

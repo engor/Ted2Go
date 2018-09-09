@@ -13,14 +13,19 @@ Class ScrollViewTabs Extends ScrollView
 		' catch horizontal scrolling
 		Select event.Type
 		Case EventType.MouseWheel
-		
-			Local scroll:=Scroll
-		
-			Local delta:=New Vec2i( 4*ContentView.RenderStyle.Font.Height*event.Wheel.Y,0 )
+			
+			Local wx:=event.Wheel.x
+			Local wy:=event.Wheel.y
+			Local wheelDelta:=0
+			If Abs( wx )>Abs( wy )
+				wheelDelta=-wx
+			Else
+				wheelDelta=wy
+			Endif
+			Local delta:=New Vec2i( 4*ContentView.RenderStyle.Font.Height*wheelDelta,0 )
 		
 			Scroll-=delta
 		
-			'If scroll<>Scroll event.Eat()
 			event.Eat()
 			Return
 		End

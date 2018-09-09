@@ -1053,6 +1053,8 @@ Class CodeDocument Extends Ted2Document
 		Local clickFunc:=Lambda( node:TreeView.Node )
 		
 			Local codeNode:=Cast<CodeTreeNode>( node )
+			If Not codeNode Return
+			
 			Local item:=codeNode.CodeItem
 			JumpToPosition( item.FilePath,item.ScopeStartPos )
 		End
@@ -1311,7 +1313,7 @@ Class CodeDocument Extends Ted2Document
 		
 		If Not _parsingEnabled Return
 		
-		Local ident:=_codeView.IdentBeforeCursor()
+		Local ident:=_codeView.IdentBeforeCursor( True,True )
 		Local item:=_parser.ItemAtScope( ident,Path,CursorPos )
 		
 		If item
@@ -1723,6 +1725,7 @@ Class CodeDocument Extends Ted2Document
 	Method OnUpdateCurrentScope()
 		
 		_treeViewInnerList.RootNode.RemoveAllChildren()
+		_treeViewInnerList.RootNodeVisible=False
 		
 		Local scope:=_parser.GetNearestScope( Path,CursorPos )
 		'Print ""+CursorPos+", "+scope?.KindStr+", "+scope?.Text
@@ -1752,6 +1755,11 @@ Class CodeDocument Extends Ted2Document
 					_treeViewInnerList.Selected=_treeViewInnerList.FindNode( _treeViewInnerList.RootNode,storedScope )
 				Endif
 			Endif
+			
+			_treeViewInnerList.RootNodeVisible=True
+			_treeViewInnerList.RootNode.Text=scope.Text
+			_treeViewInnerList.RootNode.Icon=CodeItemIcons.GetIcon( scope )
+			_treeViewInnerList.RootNode.Expanded=True
 		Endif
 	End
 	

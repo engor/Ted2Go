@@ -37,7 +37,8 @@ Class FileActions
 		
 		close=New Action( "Close tab" )
 		close.HotKey=Key.W
-		close.HotKeyModifiers=Modifier.Alt
+		close.HotKeyModifiers=Modifier.Menu
+		
 		close.Triggered=OnClose
 		
 		closeOthers=New Action( "Close other tabs" )
@@ -76,7 +77,7 @@ Class FileActions
 #Elseif __TARGET__="linux"
 		quit.HotKey=Key.F4
 		quit.HotKeyModifiers=Modifier.Alt|Modifier.Ignore
-#endif		
+#endif
 
 		prefs=New Action( "Preferences..." )
 		prefs.Triggered=OnPrefs
