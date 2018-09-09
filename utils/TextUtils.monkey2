@@ -106,4 +106,5 @@ Struct Chars
 	Const QUESTION:="?"[0]
 	Const PLUS:="+"[0]
 	Const MINUS:="-"[0]
+	Const UNDERLINE:="_"[0]
 End

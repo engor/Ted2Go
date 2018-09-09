@@ -277,10 +277,14 @@ Class CodeTextView Extends TextView
 						
 			If Utils.ArrayContains( arr,ch1 )
 				min-=1
+				Local letters:=False
 				While min>lineStart
 					Local ch:=Text[min]
 					If Utils.ArrayContains( arr,ch ) Or
 							IsIdent( ch )
+						Local let:=IsAlpha( ch ) Or ch=Chars.UNDERLINE
+						If letters And Not let Exit
+						letters=let
 						min-=1
 					Else
 						Exit
@@ -291,10 +295,13 @@ Class CodeTextView Extends TextView
 			Endif
 			
 			If Not found And Utils.ArrayContains( arr,ch2 )
+				Local letters:=False
 				While max<lineEnd
 					Local ch:=Text[max]
 					If Utils.ArrayContains( arr,ch ) Or
 							IsIdent( ch )
+						Local let:=IsAlpha( ch ) Or ch=Chars.UNDERLINE
+						If letters And Not let Exit
 						max+=1
 					Else
 						Exit
