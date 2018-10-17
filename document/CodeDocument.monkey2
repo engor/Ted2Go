@@ -477,7 +477,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						Return
 					Endif
 			
-				#Else
+				#Endif
 			
 				Case Key.Home 'smart Home behaviour
 			
@@ -491,8 +491,25 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						SmartHome( shift )
 					Endif
 					Return
-				#Endif
-			
+				
+				Case Key.KeyEnd ' special case here to force macos behaviour
+					
+					Local pos:=Document.EndOfLine( Document.FindLine( Cursor ) )
+					If ctrl
+						If shift 'selection
+							SelectText( Cursor,Text.Length )
+						Else
+							SelectText( Text.Length,Text.Length )
+						Endif
+					Else
+						If shift
+							SelectText( Anchor,pos )
+						Else
+							SelectText( pos,pos )
+						Endif
+					Endif
+					Return
+					
 				Case Key.Tab
 			
 					If Cursor = Anchor 'has no selection
