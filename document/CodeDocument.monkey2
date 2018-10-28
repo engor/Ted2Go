@@ -182,6 +182,12 @@ Class CodeDocumentView Extends Ted2CodeTextView
 	
 	Method OnKeyEvent( event:KeyEvent ) Override
 		
+		#If __TARGET__="macos"
+		Local isMacos:=True
+		#Else
+		Local isMacos:=False
+		#Endif
+		
 		_doc.HideHint_()
 		
 		Local alt:=(event.Modifiers & Modifier.Alt)<>0
@@ -199,13 +205,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				
 				Case Key.D
 					
-					Local ok:=ctrl
-					#If __TARGET__="macos"
-					ok=ok And shift
-					#Endif
-					
-					If ok ' duplicate line or selection
-						
+					If (isMacos And menu) Or (Not isMacos And ctrl) ' duplicate line or selection
 						Local cur:=Cursor,anc:=Anchor
 						If cur=anc ' duplicate whole line
 							
@@ -213,7 +213,8 @@ Class CodeDocumentView Extends Ted2CodeTextView
 							Local line:=Document.FindLine( cur )
 							Local s:=LineTextAtCursor
 							Local ends:=Document.EndOfLine( line )
-							ReplaceText( ends,ends,"~n"+s )
+							SelectText( ends,ends )
+							ReplaceText( "~n"+s )
 							pos=pos+StartOfLineAtCursor
 							SelectText( pos,pos )
 							
@@ -321,7 +322,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 				
 				Case Key.X
 					
-					If ctrl 'nothing selected - cut whole line
+					If (isMacos And menu) Or (Not isMacos And ctrl) 'nothing selected - cut whole line
 						OnCut( Not CanCopy )
 						Return
 					Endif
@@ -329,7 +330,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 				Case Key.C
 					
-					If ctrl 'nothing selected - copy whole line
+					If (isMacos And menu) Or (Not isMacos And ctrl) 'nothing selected - copy whole line
 						OnCopy( Not CanCopy )
 						Return
 					Endif
@@ -481,39 +482,18 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 				Case Key.Home 'smart Home behaviour
 			
-					If ctrl
-						If shift 'selection
-							SelectText( 0,Anchor )
-						Else
-							SelectText( 0,0 )
-						Endif
-					Else
-						SmartHome( shift )
-					Endif
+					ProcessHomeKey( ctrl,shift )
 					Return
 				
 				Case Key.KeyEnd ' special case here to force macos behaviour
 					
-					Local pos:=Document.EndOfLine( Document.FindLine( Cursor ) )
-					If ctrl
-						If shift 'selection
-							SelectText( Cursor,Text.Length )
-						Else
-							SelectText( Text.Length,Text.Length )
-						Endif
-					Else
-						If shift
-							SelectText( Anchor,pos )
-						Else
-							SelectText( pos,pos )
-						Endif
-					Endif
+					ProcessEndKey( ctrl,shift )
 					Return
 					
 				Case Key.Tab
-			
+					
 					If Cursor = Anchor 'has no selection
-			
+						
 						' live templates by tab!
 						Local ident:=IdentBeforeCursor()
 						If InsertLiveTemplate( ident ) Return ' exit method
@@ -554,26 +534,26 @@ Class CodeDocumentView Extends Ted2CodeTextView
 							For Local i:=0 Until lines.Length
 								
 								If lines[i].StartsWith( tabStr ) ' try to remove tab or spaces
-								
+									
 									lines[i]=lines[i].Slice( tabStr.Length )+"~n"
 									changes+=1
 									If i=0 Then shiftFirst=-tabStr.Length
 									If i=lines.Length-1 Then shiftLast=-tabStr.Length
-								
+									
 								Elseif tabStr<>"~t" And lines[i].StartsWith( "~t" ) ' for spaces-mode also try to remove tabs (mixed indentation)
-								
+									
 									lines[i]=lines[i].Slice( 1 )+"~n"
 									changes+=1
 									If i=0 Then shiftFirst=-1
 									If i=lines.Length-1 Then shiftLast=-1
-								
+									
 								Else
-								
+									
 									lines[i]+="~n"
 								
 								Endif
 							Next
-			
+							
 							go=(changes > 0)
 							
 						Else
@@ -585,7 +565,7 @@ Class CodeDocumentView Extends Ted2CodeTextView
 							Next
 							
 						Endif
-			
+						
 						If go
 							
 							Local minStart:=Document.StartOfLine( min )
@@ -607,22 +587,22 @@ Class CodeDocumentView Extends Ted2CodeTextView
 					CheckFormat( event )
 					
 					Return
-			
-			
+				
+				
 				Case Key.V
-			
-					If CanPaste And ctrl
+					
+					If CanPaste And ((isMacos And menu) Or (Not isMacos And ctrl))
 						SmartPaste()
 						Return
 					Endif
-			
-			
+				
+				
 				#If __TARGET__="macos"
 				
 				Case Key.Z
-			
-					If event.Modifiers & Modifier.Menu
-			
+					
+					If menu
+						
 						If shift
 							Redo()
 						Else
@@ -630,7 +610,21 @@ Class CodeDocumentView Extends Ted2CodeTextView
 						Endif
 						Return
 					Endif
-			
+				
+				Case Key.Left ' home = cmd + left
+					
+					If menu
+						ProcessHomeKey( ctrl,shift )
+						Return
+					Endif
+					
+				Case Key.Right ' end = cmd + right
+					
+					If menu
+						ProcessEndKey( ctrl,shift )
+						Return
+					Endif
+					
 				#Endif
 			
 			End
@@ -927,7 +921,7 @@ Class CodeDocument Extends Ted2Document
 			For Local get:=0 Until _errors.Length
 				Local err:=_errors[get]
 				If err.line>=first
-					If err.line<first+removed 
+					If err.line<first+removed
 						err.removed=True
 						Continue
 					Endif
@@ -1486,7 +1480,7 @@ Class CodeDocument Extends Ted2Document
 		
 		For Local child:=Eachin parent.Children
 			GrabCodeItems( child,items )
-		Next 
+		Next
 	End
 	
 	Method JumpToPreviousScope()
@@ -1849,7 +1843,7 @@ Class CodeDocument Extends Ted2Document
 		Local line:=_codeView.LineTextAtCursor
 		Local pos:=_codeView.PosInLineAtCursor
 		Local lower:=line.Trim().ToLower()
-		Local skip:=lower.StartsWith( "function " ) Or lower.StartsWith( "method " ) Or 
+		Local skip:=lower.StartsWith( "function " ) Or lower.StartsWith( "method " ) Or
 						lower.StartsWith( "operator " ) Or lower.StartsWith( "property " )
 		If Not skip
 			Local i1:=line.Find( "(" )
@@ -2207,7 +2201,7 @@ Class CodeItemIcons
 		_icons["warning"]=Load( "warning.png" )
 		_icons["inherited"]=Load( "class.png" )
 				
-		_iconDefault=Load( "other.png" ) 
+		_iconDefault=Load( "other.png" )
 		
 	End
 	

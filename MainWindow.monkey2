@@ -468,11 +468,7 @@ Class MainWindowInstance Extends Window
 		
 		'Build menu
 		'
-		_forceStop=New Action( "Force Stop" )
-		_forceStop.Triggered=OnForceStop
-		_forceStop.HotKey=Key.F5
-		_forceStop.HotKeyModifiers=Modifier.Shift
-		
+		_forceStop=_buildActions.forceStop
 		'
 		_buildActions.PreBuild+=OnPreBuild
 		_buildActions.PreSemant+=OnPreSemant
@@ -860,9 +856,9 @@ Class MainWindowInstance Extends Window
 		Endif
 		
 		' stay in fullscreen
-		If _fullscreenPrevState=FullscreenState.Window 
-			_fullscreenState=FullscreenState.Window 
-			_fullscreenPrevState=FullscreenState.None 
+		If _fullscreenPrevState=FullscreenState.Window
+			_fullscreenState=FullscreenState.Window
+			_fullscreenPrevState=FullscreenState.None
 			Return
 		Endif
 		
@@ -1629,7 +1625,7 @@ Class MainWindowInstance Extends Window
 		jj["sourcesInnerListHeight"]=New JsonNumber( _docBrowser.PropertiesViewHeight )
 	End
 	
-	Method LoadUndockTabsState( jobj:JsonObject ) 
+	Method LoadUndockTabsState( jobj:JsonObject )
 		
 		Local edges:=DraggableTabs.Edges
 		For Local edge:=Eachin edges
