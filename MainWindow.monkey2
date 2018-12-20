@@ -305,11 +305,11 @@ Class MainWindowInstance Extends Window
 		_tabMenu.AddAction( _buildActions.lockBuildFile )
 		_tabMenu.AddAction( _projectView.setMainFile )
 		_tabMenu.AddSeparator()
-		_tabMenu.AddAction( "Show in Explorer" ).Triggered=Lambda()
+		_tabMenu.AddAction( GetShowInExplorerTitle() ).Triggered=Lambda()
 			
 			Local path:=_docsManager.CurrentDocument?.Path
 			If path
-				requesters.OpenUrl( ExtractDir( path ) )
+				OpenInExplorer( ExtractDir( path ) )
 			Endif
 		End
 		_tabMenu.AddAction( "Copy path" ).Triggered=Lambda()

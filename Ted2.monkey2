@@ -75,6 +75,8 @@
 #Import "syntax/Monkey2Highlighter"
 #Import "syntax/CppHighlighter"
 #Import "syntax/CppKeywords"
+#Import "syntax/JavaHighlighter"
+#Import "syntax/JavaKeywords"
 #Import "syntax/GlslHighlighter"
 #Import "syntax/GlslKeywords"
 #Import "syntax/CodeFormatter"
