@@ -112,8 +112,8 @@
 		"ToolButton":{
 			"extends":"Button",
 			"backgroundColor":"dark",
-			"padding":[ 2,0 ],
-			"margin":[ 2,0 ],
+			"padding":[ 4,4 ],
+			"margin":[ 2,2 ],
 
 			"states":{
 				"hover":{
