@@ -23,6 +23,10 @@
 		"path": "theme-hollow",
 		"dark": true
 	},
+	"Washed": {
+		"path": "theme-washed",
+		"dark": true
+	},
 	"Prime - Red": {
 		"path": "theme-prime-red",
 		"dark": true

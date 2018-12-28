@@ -1,5 +1,4 @@
 //Theme by @Hezkore
-//Inspired by gruvbox
 {
 	"extends":"ted2-default",
 	
@@ -8,7 +7,7 @@
 		"normal":"Roboto-Medium.ttf,16",
 		"fixedWidth":"RobotoMono-Medium.ttf,19",
 		"small":"Roboto-Medium.ttf,14",
-		"editor":"SourceCodePro-Medium.otf,19"
+		"editor":"LiberationMono-Regular.ttf,17"
 	},
 	
 	"colors":{
@@ -16,16 +15,16 @@
 		"border": "#121111",
 
 		"transparent": "#0000",
-		"darkest": "#222020",
-		"darker": "#32302F",
-		"dark": "#3C3836",
-		"bright": "#504945",
-		"brighter": "#665C54",
-		"brightest": "#7C6F64",
+		"darkest": "#101010",
+		"darker": "#202020",
+		"dark": "#343434",
+		"bright": "#484848",
+		"brighter": "#5C5C5C",
+		"brightest": "#707070",
 
-		"separator": "#2A2828",
+		"separator": "darker",
 
-		"text-default": "#CECECE",
+		"text-default": "#DCD7D2",
 		"text-highlight": "#FFFFFF",
 		"text-disabled": "#6F6F6F",
 		"text-background": "#969696",
@@ -33,20 +32,20 @@
 		"textview-cursor":"textview-color1",
 		"textview-selection":"brightest",
 		"textview-cursor-line":"dark",
-		"textview-whitespaces":"bright",
-
+		"textview-whitespaces":"dark",
+		
 		"textview-color0":"#FF00FF", 	//When is this used?
-		"textview-color1": "#FFFBF2",	//identifiers
-		"textview-color2": "#FA3E28",	//keywords
-		"textview-color3": "#C4C722",	//strings
-		"textview-color4": "#B77FE5",	//numbers
-		"textview-color5": "#6F665E",	//comment
-		"textview-color6": "#FDBD28",	//preproc
-		"textview-color7": "#8EC07C",
+		"textview-color1": "#C8C3BE",	//identifiers
+		"textview-color2": "#DB5546",	//keywords
+		"textview-color3": "#8DAA59",	//strings
+		"textview-color4": "#DE935F",	//numbers
+		"textview-color5": "#5A5A5A",	//comment
+		"textview-color6": "#895FA8",	//preproc
+		"textview-color7": "#6C89A8",
 		
 		"windowClearColor":"darkest",
 		"menu-shortcut":"text-background",
-
+		
 		"statusbar": "darkest",
 		"statusbar-active": "darkest"
 	},
@@ -74,7 +73,7 @@
 			"padding":[ -16,0,16,0 ],
 			"extends":"TextView",
 			"textColor":"text-disabled",
-			"backgroundColor":"darkest",
+			"backgroundColor":"darker",
 			"font":"editor"
 		},
 		
@@ -129,10 +128,6 @@
 			"textColor":"text-background",
 			"padding":[ 8,4 ],
 			"margin":[ 2,0,12,0 ]
-		},
-
-		"ProgressBar":{
-			"icons":"hollow_assets/hollow_progressbar_icons.png"
 		},
 
 		"StatusBar":{
@@ -234,7 +229,7 @@
 		},
 		
 		"CheckBox":{
-			"icons":"hollow_assets/hollow_checkbox_icons.png",
+			"icons":"prime_assets/prime_checkbox_icons.png",
 			"iconColor":"textview-color7",
 			"margin":[0,0,0,0]
 		},
@@ -373,7 +368,7 @@
 		
 		"TabButtonLocked":{
 			"extends":"TabButton",
-			"borderColor":"#F26522"
+			"borderColor":"textview-color6"
 		},
 		
 		"TabClose":{

@@ -18,6 +18,8 @@ Class PrefsInstance
 	Field AcUseLiveTemplates:=True
 	'
 	Field MainToolBarVisible:=True
+	Field MainToolBarSide:=True
+	Field MainToolBarSimple:=True
 	Field MainProjectIcons:=True
 	Field MainProjectSingleClickExpanding:=False
 	Field MainPlaceDocsAtBegin:=False
@@ -61,11 +63,13 @@ Class PrefsInstance
 			
 			Local j2:=json["main"].ToObject()
 			MainToolBarVisible=Json_GetBool( j2,"toolBarVisible",MainToolBarVisible )
+			MainToolBarSide=Json_GetBool( j2,"toolBarSide",MainToolBarSide )
+			MainToolBarSimple=Json_GetBool( j2,"toolBarSimple",MainToolBarSimple )
 			MainProjectIcons=Json_GetBool( j2,"projectIcons",MainProjectIcons )
-      		MainProjectSingleClickExpanding=Json_GetBool( j2,"singleClickExpanding",MainProjectSingleClickExpanding )
-      		MainPlaceDocsAtBegin=Json_GetBool( j2,"placeDocsAtBegin",MainPlaceDocsAtBegin )
-      		OpenGlProfile=Json_GetString( j2,"openglProfile",OpenGlProfile )
-      		
+			MainProjectSingleClickExpanding=Json_GetBool( j2,"singleClickExpanding",MainProjectSingleClickExpanding )
+			MainPlaceDocsAtBegin=Json_GetBool( j2,"placeDocsAtBegin",MainPlaceDocsAtBegin )
+			OpenGlProfile=Json_GetString( j2,"openglProfile",OpenGlProfile )
+			
 		Endif
 		
 		If json.Contains( "completion" )
@@ -124,6 +128,8 @@ Class PrefsInstance
 		Local j:=New JsonObject
 		json["main"]=j
 		j["toolBarVisible"]=New JsonBool( MainToolBarVisible )
+		j["toolBarSide"]=New JsonBool( MainToolBarSide )
+		j["toolBarSimple"]=New JsonBool( MainToolBarSimple )
 		j["projectIcons"]=New JsonBool( MainProjectIcons )
 		j["singleClickExpanding"]=New JsonBool( MainProjectSingleClickExpanding )
 		j["placeDocsAtBegin"]=New JsonBool( MainPlaceDocsAtBegin )
@@ -211,7 +217,7 @@ Class PrefsInstance
 		Return Max( EditorFontSize,6 ) '6 is a minimum
 	End
 	
-	Private 
+	Private
 	
 	Field _findFilter:String
 	
