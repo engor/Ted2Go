@@ -89,6 +89,8 @@ Class PrefsDialog Extends DialogExt
 	Field _editorLineSpacing:TextFieldExt
 	
 	Field _mainToolBarVisible:CheckButton
+	Field _mainToolBarSide:CheckButton
+	Field _mainToolBarSimple:CheckButton
 	Field _mainProjectIcons:CheckButton
 	Field _mainProjectSingleClickExpanding:CheckButton
 	Field _mainPlaceDocsAtBegin:CheckButton
@@ -145,6 +147,8 @@ Class PrefsDialog Extends DialogExt
 		Prefs.EditorLineSpacing=Clamp( Float(_editorLineSpacing.Text.Trim()),0.5,2.5 )
 		
 		Prefs.MainToolBarVisible=_mainToolBarVisible.Checked
+		Prefs.MainToolBarSide=_mainToolBarSide.Checked
+		Prefs.MainToolBarSimple=_mainToolBarSimple.Checked
 		Prefs.MainProjectIcons=_mainProjectIcons.Checked
 		Prefs.MainProjectSingleClickExpanding=_mainProjectSingleClickExpanding.Checked
 		Prefs.MainPlaceDocsAtBegin=_mainPlaceDocsAtBegin.Checked
@@ -166,6 +170,12 @@ Class PrefsDialog Extends DialogExt
 		
 		_mainToolBarVisible=New CheckButton( "ToolBar visible" )
 		_mainToolBarVisible.Checked=Prefs.MainToolBarVisible
+		
+		_mainToolBarSide=New CheckButton( "ToolBar on side" )
+		_mainToolBarSide.Checked=Prefs.MainToolBarSide
+		
+		_mainToolBarSimple=New CheckButton( "ToolBar simple" )
+		_mainToolBarSimple.Checked=Prefs.MainToolBarSimple
 		
 		_mainProjectIcons=New CheckButton( "Project file type icons" )
 		_mainProjectIcons.Checked=Prefs.MainProjectIcons
@@ -216,6 +226,8 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( New Label( " " ),"top" )
 		docker.AddView( _mainProjectIcons,"top" )
 		docker.AddView( _mainToolBarVisible,"top" )
+		docker.AddView( _mainToolBarSide,"top" )
+		docker.AddView( _mainToolBarSimple,"top" )
 		docker.AddView( _mainProjectSingleClickExpanding,"top" )
 		docker.AddView( _mainPlaceDocsAtBegin,"top" )
 		#If __TARGET__="windows"

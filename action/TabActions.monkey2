@@ -45,7 +45,7 @@ Class TabActions
 			Local key:=Cast<Key>( 49+keynr )
 			Local i:=view.AddAction( a )
 			i.HotKey=key
-			i.HotKeyModifiers=Modifier.Alt
+			i.HotKeyModifiers=Modifier.Control|Modifier.Shift
 			i.Triggered=Lambda()
 				SwitchView( a )
 			End

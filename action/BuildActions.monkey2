@@ -47,6 +47,7 @@ Class BuildActions Implements IModuleBuilder
 	Field updateModules:Action
 	Field moduleManager:Action
 	Field rebuildHelp:Action
+	Field forceStop:Action
 	
 	Field targetMenu:MenuExt
 	
@@ -65,7 +66,7 @@ Class BuildActions Implements IModuleBuilder
 		buildAndRun=New Action( "Run" )
 #If __TARGET__="macos"
 		buildAndRun.HotKey=Key.R
-		buildAndRun.HotKeyModifiers=Modifier.Menu
+		buildAndRun.HotKeyModifiers=Modifier.Control
 #Else
 		buildAndRun.HotKey=Key.F5
 #Endif
@@ -74,7 +75,7 @@ Class BuildActions Implements IModuleBuilder
 		debugApp=New Action( "Debug" )
 #If __TARGET__="macos"
 		debugApp.HotKey=Key.D
-		debugApp.HotKeyModifiers=Modifier.Menu
+		debugApp.HotKeyModifiers=Modifier.Control
 #Else
 		debugApp.HotKey=Key.F8
 #Endif
@@ -83,7 +84,7 @@ Class BuildActions Implements IModuleBuilder
 		build=New Action( "Build" )
 #If __TARGET__="macos"
 		build.HotKey=Key.B
-		build.HotKeyModifiers=Modifier.Menu
+		build.HotKeyModifiers=Modifier.Control
 #Else
 		build.HotKey=Key.F6
 #Endif
@@ -91,12 +92,22 @@ Class BuildActions Implements IModuleBuilder
 		
 		semant=New Action( "Check" )
 #If __TARGET__="macos"
-		semant.HotKey=Key.R
-		semant.HotKeyModifiers=Modifier.Menu|Modifier.Shift
+		semant.HotKey=Key.C
+		semant.HotKeyModifiers=Modifier.Control
 #Else
 		semant.HotKey=Key.F7
 #Endif
 		semant.Triggered=OnSemant
+		
+		forceStop=New Action( "Force Stop" )
+		forceStop.Triggered=OnForceStop
+#If __TARGET__="macos"
+		forceStop.HotKey=Key.R
+		forceStop.HotKeyModifiers=Modifier.Control|Modifier.Shift
+#Else
+		forceStop.HotKey=Key.F5
+		forceStop.HotKeyModifiers=Modifier.Shift
+#Endif
 		
 		buildSettings=New Action( "Product settings..." )
 		buildSettings.Triggered=OnBuildFileSettings
@@ -625,6 +636,11 @@ Class BuildActions Implements IModuleBuilder
 		If _console.Running Return
 	
 		BuildApp( _buildConfig,_buildTarget,"semant" )
+	End
+	
+	Method OnForceStop()
+	
+		MainWindow.OnForceStop()
 	End
 	
 	Method OnNextError()

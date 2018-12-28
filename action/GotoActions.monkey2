@@ -34,24 +34,29 @@ Class GotoActions
 		gotoDeclaration.Triggered=OnGotoDeclaration
 		#If __TARGET__="macos"
 		gotoDeclaration.HotKey=Key.B
-		gotoDeclaration.HotKeyModifiers=Modifier.Control
+		gotoDeclaration.HotKeyModifiers=Modifier.Menu
 		#Else
 		gotoDeclaration.HotKey=Key.F12
 		#Endif
 		
 		prevScope=New Action( "Previous scope" )
 		prevScope.Triggered=OnPrevScope
-		#If __TARGET__<>"macos"
 		prevScope.HotKey=Key.Up
+		#If __TARGET__="macos"
+		prevScope.HotKeyModifiers=Modifier.Alt|Modifier.Control
+		#Else
 		prevScope.HotKeyModifiers=Modifier.Alt
 		#Endif
 		
 		nextScope=New Action( "Next scope" )
 		nextScope.Triggered=OnNextScope
-		#If __TARGET__<>"macos"
 		nextScope.HotKey=Key.Down
+		#If __TARGET__="macos"
+		nextScope.HotKeyModifiers=Modifier.Alt|Modifier.Control
+		#Else
 		nextScope.HotKeyModifiers=Modifier.Alt
 		#Endif
+		
 		
 	End
 	

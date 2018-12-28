@@ -305,11 +305,11 @@ Class MainWindowInstance Extends Window
 		_tabMenu.AddAction( _buildActions.lockBuildFile )
 		_tabMenu.AddAction( _projectView.setMainFile )
 		_tabMenu.AddSeparator()
-		_tabMenu.AddAction( "Show in Explorer" ).Triggered=Lambda()
+		_tabMenu.AddAction( GetShowInExplorerTitle() ).Triggered=Lambda()
 			
 			Local path:=_docsManager.CurrentDocument?.Path
 			If path
-				requesters.OpenUrl( ExtractDir( path ) )
+				OpenInExplorer( ExtractDir( path ) )
 			Endif
 		End
 		_tabMenu.AddAction( "Copy path" ).Triggered=Lambda()
@@ -468,11 +468,7 @@ Class MainWindowInstance Extends Window
 		
 		'Build menu
 		'
-		_forceStop=New Action( "Force Stop" )
-		_forceStop.Triggered=OnForceStop
-		_forceStop.HotKey=Key.F5
-		_forceStop.HotKeyModifiers=Modifier.Shift
-		
+		_forceStop=_buildActions.forceStop
 		'
 		_buildActions.PreBuild+=OnPreBuild
 		_buildActions.PreSemant+=OnPreSemant
@@ -860,9 +856,9 @@ Class MainWindowInstance Extends Window
 		Endif
 		
 		' stay in fullscreen
-		If _fullscreenPrevState=FullscreenState.Window 
-			_fullscreenState=FullscreenState.Window 
-			_fullscreenPrevState=FullscreenState.None 
+		If _fullscreenPrevState=FullscreenState.Window
+			_fullscreenState=FullscreenState.Window
+			_fullscreenPrevState=FullscreenState.None
 			Return
 		Endif
 		
@@ -1013,30 +1009,48 @@ Class MainWindowInstance Extends Window
 		Local goBackTitle:=GetActionTextWithShortcut( _gotoActions.goBack )
 		Local goForwTitle:=GetActionTextWithShortcut( _gotoActions.goForward )
 		
-		_toolBar=New ToolBarExt
-		_toolBar.Style=GetStyle( "MainToolBar" )
-		_toolBar.MaxSize=New Vec2i( 10000,40 )
+		_toolBar = New ToolBarExt( Prefs.MainToolBarSide ? Axis.Y Else Axis.X )
+		_toolBar.Style = GetStyle( "MainToolBar" )
 		
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/back.png" ),_gotoActions.goBack.Triggered,goBackTitle )
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/forward.png" ),_gotoActions.goForward.Triggered,goForwTitle )
-		_toolBar.AddSeparator()
+		If Not Prefs.MainToolBarSimple Then
+			
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/back.png" ),_gotoActions.goBack.Triggered,goBackTitle )
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/forward.png" ),_gotoActions.goForward.Triggered,goForwTitle )
+			_toolBar.AddSeparator()
+		Endif
+		
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/new_file.png" ),_fileActions.new_.Triggered,newTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_file.png" ),_fileActions.open.Triggered,openTitle )
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_project.png" ),_projectView.openProjectFolder.Triggered,"Open project..." )
+		If Not Prefs.MainToolBarSimple Then _toolBar.AddIconicButton( ThemeImages.Get( "toolbar/open_project.png" ),_projectView.openProjectFolder.Triggered,"Open project..." )
 		Local icons:=New Image[]( ThemeImages.Get( "toolbar/save.png" ),ThemeImages.Get( "toolbar/save_dirty.png" ) )
 		_saveItem=_toolBar.AddIconicButton( icons,_fileActions.save.Triggered,saveTitle )
-		icons=New Image[]( ThemeImages.Get( "toolbar/save_all.png" ),ThemeImages.Get( "toolbar/save_all_dirty.png" ) )
-		_saveAllItem=_toolBar.AddIconicButton( icons,_fileActions.saveAll.Triggered,saveAllTitle )
+		
+		If Not Prefs.MainToolBarSimple Then
+			
+			icons=New Image[]( ThemeImages.Get( "toolbar/save_all.png" ),ThemeImages.Get( "toolbar/save_all_dirty.png" ) )
+			_saveAllItem=_toolBar.AddIconicButton( icons,_fileActions.saveAll.Triggered,saveAllTitle )
+		Endif
+		
 		_toolBar.AddSeparator()
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/cut.png" ),_editActions.cut.Triggered,cutTitle )
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/copy.png" ),_editActions.copy.Triggered,copyTitle )
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/paste.png" ),_editActions.paste.Triggered,pasteTitle )
-		_toolBar.AddSeparator()
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/undo.png" ),_editActions.undo.Triggered,undoTitle )
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/redo.png" ),_editActions.redo.Triggered,redoTitle )
-		_toolBar.AddSeparator()
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/check.png" ),_buildActions.semant.Triggered,checkTitle )
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/build.png" ),_buildActions.build.Triggered,buildTitle )
+		
+		If Not Prefs.MainToolBarSimple Then
+			
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/cut.png" ),_editActions.cut.Triggered,cutTitle )
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/copy.png" ),_editActions.copy.Triggered,copyTitle )
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/paste.png" ),_editActions.paste.Triggered,pasteTitle )
+			_toolBar.AddSeparator()
+		
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/undo.png" ),_editActions.undo.Triggered,undoTitle )
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/redo.png" ),_editActions.redo.Triggered,redoTitle )
+			_toolBar.AddSeparator()
+		Endif
+		
+		If Not Prefs.MainToolBarSimple Then
+			
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/check.png" ),_buildActions.semant.Triggered,checkTitle )
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/build.png" ),_buildActions.build.Triggered,buildTitle )
+		Endif
+		
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/run.png" ),_buildActions.buildAndRun.Triggered,runTitle )
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/debug.png" ),_buildActions.debugApp.Triggered,debugTitle )
 		_toolBar.AddSeparator()
@@ -1045,8 +1059,12 @@ Class MainWindowInstance Extends Window
 			_buildActions.targetMenu.Open()
 		End
 		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/options.png" ),act,"Target settings" )
-		_toolBar.AddSeparator()
-		_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/find.png" ),_findActions.find.Triggered,findTitle )
+		
+		If Not Prefs.MainToolBarSimple Then
+			
+			_toolBar.AddSeparator()
+			_toolBar.AddIconicButton( ThemeImages.Get( "toolbar/find.png" ),_findActions.find.Triggered,findTitle )
+		Endif
 		
 		Return _toolBar
 	End
@@ -1505,16 +1523,19 @@ Class MainWindowInstance Extends Window
 		
 		_tabsWrap.DetachFromParent()
 		
-		If Prefs.MainToolBarVisible
-			_toolBar=GetMainToolBar()
-			_contentView.AddView( _toolBar,"top" )
-		Endif
-		
 		If Not _statusBarContainer
 			_statusBarContainer=New DockingView
 			_statusBarContainer.ContentView=_statusBar
 		Endif
 		_contentView.AddView( _statusBarContainer,"bottom" )
+		
+		If Prefs.MainToolBarVisible Then
+			
+			_toolBar = Null
+			_toolBar = GetMainToolBar()
+			_contentView.AddView( _toolBar, Prefs.MainToolBarSide ? "left" Else "top" )
+		Endif
+		
 		
 		_tabsWrap.AttachToParent( _contentView )
 		
@@ -1629,7 +1650,7 @@ Class MainWindowInstance Extends Window
 		jj["sourcesInnerListHeight"]=New JsonNumber( _docBrowser.PropertiesViewHeight )
 	End
 	
-	Method LoadUndockTabsState( jobj:JsonObject ) 
+	Method LoadUndockTabsState( jobj:JsonObject )
 		
 		Local edges:=DraggableTabs.Edges
 		For Local edge:=Eachin edges
@@ -1786,7 +1807,6 @@ Class MainWindowInstance Extends Window
 			
 		End
 	End
-	
 	
 	Private
 
@@ -2010,7 +2030,7 @@ Class MainWindowInstance Extends Window
 		
 		If _saveItem ' when toolbar is visible
 			_saveItem.SetIcon( _fileActions.save.Enabled ? 1 Else 0 )
-			_saveAllItem.SetIcon( _fileActions.saveAll.Enabled ? 1 Else 0 )
+			If _saveAllItem Then _saveAllItem.SetIcon( _fileActions.saveAll.Enabled ? 1 Else 0 )
 		Endif
 		
 		App.Idle+=OnAppIdle

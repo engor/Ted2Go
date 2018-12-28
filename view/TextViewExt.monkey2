@@ -1292,72 +1292,82 @@ Class TextView Extends ScrollableView
 			UpdateCursor()
 			Return True
 		Case Key.Left
-			If _anchor<>_cursor And Not (modifiers & Modifier.Shift)
-				_cursor=Min( _anchor,_cursor )
-			Endif
-			
-			Local text:=Text
-			Local term:=New Int[1]
-			_cursor=FindWord( _cursor,term )
-			
-			While _cursor And text[_cursor-1]<=32 And text[_cursor-1]<>10
-				_cursor-=1
-			Wend
-			
-			_cursor=FindWord( Max( _cursor-1,0 ),term )
-			_cursor+=1
-			Repeat ' skip invisible lines
-				_cursor-=1
-				Local line:=_doc.FindLine( _cursor )
-				If Not _lines[line].visible
-					line-=1
-					If line<0
-						_cursor=0
-						Exit
-					Else
-						_cursor=_doc.EndOfLine( line )+1
-					Endif
-				Else
-					Exit
-				Endif
-			Forever
-			
-			UpdateCursor()
+			GotoPreviousWord( modifiers )
 			Return True
 		Case Key.Right
-			If _anchor<>_cursor And Not (modifiers & Modifier.Shift)
-				_cursor=Max( _anchor,_cursor )
-			Endif
-			'next word...
-			Local text:=Text
-			Local term:=New Int[1]
-			FindWord( _cursor,term )
-			_cursor=term[0]
-			While _cursor<text.Length And text[_cursor]<=32 And text[_cursor]<>10
-				_cursor+=1
-			Wend
-			_cursor-=1
-			Repeat ' skip invisible lines
-				_cursor+=1
-				Local line:=_doc.FindLine( _cursor )
-				If Not _lines[line].visible
-					line+=1
-					If line>=_lines.Length
-						_cursor=Text.Length
-						Exit
-					Else
-						_cursor=_doc.EndOfLine( line )-1
-					Endif
-				Else
-					Exit
-				Endif
-			Forever
-			
-			UpdateCursor()
+			GotoNextWord( modifiers )
 			Return True
 		End
 		
 		Return False
+	End
+	
+	Method GotoPreviousWord( modifiers:Modifier )
+		
+		If _anchor<>_cursor And Not (modifiers & Modifier.Shift)
+			_cursor=Min( _anchor,_cursor )
+		Endif
+		
+		Local text:=Text
+		Local term:=New Int[1]
+		_cursor=FindWord( _cursor,term )
+		
+		While _cursor And text[_cursor-1]<=32 And text[_cursor-1]<>10
+			_cursor-=1
+		Wend
+		
+		_cursor=FindWord( Max( _cursor-1,0 ),term )
+		_cursor+=1
+		Repeat ' skip invisible lines
+			_cursor-=1
+			Local line:=_doc.FindLine( _cursor )
+			If Not _lines[line].visible
+				line-=1
+				If line<0
+					_cursor=0
+					Exit
+				Else
+					_cursor=_doc.EndOfLine( line )+1
+				Endif
+			Else
+				Exit
+			Endif
+		Forever
+		
+		UpdateCursor()
+	End
+	
+	Method GotoNextWord( modifiers:Modifier )
+		
+		If _anchor<>_cursor And Not (modifiers & Modifier.Shift)
+			_cursor=Max( _anchor,_cursor )
+		Endif
+		'next word...
+		Local text:=Text
+		Local term:=New Int[1]
+		FindWord( _cursor,term )
+		_cursor=term[0]
+		While _cursor<text.Length And text[_cursor]<=32 And text[_cursor]<>10
+			_cursor+=1
+		Wend
+		_cursor-=1
+		Repeat ' skip invisible lines
+			_cursor+=1
+			Local line:=_doc.FindLine( _cursor )
+			If Not _lines[line].visible
+				line+=1
+				If line>=_lines.Length
+					_cursor=Text.Length
+					Exit
+				Else
+					_cursor=_doc.EndOfLine( line )-1
+				Endif
+			Else
+				Exit
+			Endif
+		Forever
+		
+		UpdateCursor()
 	End
 	
 	Method OnKeyChar( text:String ) Virtual
@@ -1443,14 +1453,23 @@ Class TextView Extends ScrollableView
 					End
 					
 				Else
-					
-					Select key
-					Case Key.Home,Key.KeyEnd
-						r=OnControlKeyDown( key,modifiers )
-					Default
-						r=OnKeyDown( key,modifiers )
-					End
-					
+					If (modifiers & Modifier.Alt)<>0
+						If key=Key.Left
+							GotoPreviousWord( modifiers )
+							r=True
+						Elseif key=Key.Right
+							GotoNextWord( modifiers )
+							r=True
+						Endif
+					Endif
+					If Not r
+						Select key
+							Case Key.Home,Key.KeyEnd
+								r=OnControlKeyDown( key,modifiers )
+							Default
+								r=OnKeyDown( key,modifiers )
+						End
+					Endif
 				Endif
 				
 			Else

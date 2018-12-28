@@ -4,10 +4,9 @@ Namespace ted2go
 
 Class ToolBarExt Extends ToolBar
 
-	Method New()
+	Method New( axis:Axis = Null )
 		
-		Super.New()
-		MinSize=New Vec2i( 0,42 )
+		Super.New( axis )
 		Style=GetStyle( "ToolBarExt" )
 	End
 	
@@ -101,7 +100,7 @@ Class ToolButtonExt Extends ToolButton
 			canvas.Color=_selColor
 			canvas.LineWidth=1
 			Utils.DrawRect( canvas,Rect,True )
-		Endif	
+		Endif
 		Super.OnRender( canvas )
 	End
 	

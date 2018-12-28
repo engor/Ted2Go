@@ -75,6 +75,8 @@
 #Import "syntax/Monkey2Highlighter"
 #Import "syntax/CppHighlighter"
 #Import "syntax/CppKeywords"
+#Import "syntax/JavaHighlighter"
+#Import "syntax/JavaKeywords"
 #Import "syntax/GlslHighlighter"
 #Import "syntax/GlslKeywords"
 #Import "syntax/CodeFormatter"
@@ -207,7 +209,7 @@ Function Main()
 	
 	Local rect:Recti
 	
-	If jobj.Contains( "windowRect" ) 
+	If jobj.Contains( "windowRect" )
 		rect=ToRecti( jobj["windowRect"] )
 	Else
 		Local w:=Min( 1480,App.DesktopSize.x-40 )
@@ -227,6 +229,15 @@ Function Main()
 			arg=arg.Replace( "\","/" )
 			MainWindow.OnFileDropped( arg )
 		Next
+		
+		#If __TARGET__="macos"
+		App.Idle+=Lambda() ' quick fix for black screen on mojave at startup
+			
+			Local dx:=MainWindow.Frame.Left Mod 2 = 0 ? -1 Else 1
+			MainWindow.Frame=MainWindow.Frame+New Recti( dx,0,0,0 )
+			MainWindow.RequestRender()
+		End
+		#Endif
 	End
 	
 	SDL_EnableScreenSaver()

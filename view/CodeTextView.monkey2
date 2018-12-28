@@ -267,7 +267,7 @@ Class CodeTextView Extends TextView
 		
 		If Not found
 			' valid ident parts: .?->[]
-			Local arr:=New Int[]( 
+			Local arr:=New Int[](
 						Chars.DOT,
 						Chars.QUESTION,
 						Chars.MINUS,
@@ -368,7 +368,8 @@ Class CodeTextView Extends TextView
 	End
 	
 	Method ShrinkSelection()
-		' todo
+		
+		SelectText( Cursor,Cursor )
 	End
 	
 	Property SelectedText:String()
@@ -1028,6 +1029,19 @@ Class CodeTextView Extends TextView
 		App.ClipboardText=result
 	End
 	
+	Method ProcessHomeKey( ctrl:Bool,shift:Bool )
+		
+		If ctrl
+			If shift 'selection
+				SelectText( 0,Anchor )
+			Else
+				SelectText( 0,0 )
+			Endif
+		Else
+			SmartHome( shift )
+		Endif
+	End
+	
 	Method SmartHome( shift:Bool )
 	
 		Local line:=Document.FindLine( Cursor )
@@ -1051,6 +1065,20 @@ Class CodeTextView Extends TextView
 			SelectText( Anchor,newPos )
 		Else
 			SelectText( newPos,newPos )
+		Endif
+	End
+	
+	Method ProcessEndKey( ctrl:Bool,shift:Bool )
+		
+		Local pos:=Document.EndOfLine( Document.FindLine( Cursor ) )
+		If ctrl
+			If shift 'selection
+				SelectText( Cursor,Text.Length )
+			Else
+				SelectText( Text.Length,Text.Length )
+			Endif
+		Else
+			SmartEnd( shift )
 		Endif
 	End
 	
@@ -1327,7 +1355,7 @@ Function RemoveWhitespacedTrailings:String( doc:TextDocument,linesChanged:Int Pt
 		If i=ends Continue ' have no trailing
 		If i=start Continue ' skip whole-whitespaced line
 		
-		If i>index 
+		If i>index
 			result+=text.Slice( index,i )
 			changes+=1
 		Endif
