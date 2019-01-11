@@ -2396,12 +2396,14 @@ Class ParamsHintView Extends TextView
 	Field _paramIndex:Int
 	Field _color1:Color,_color2:Color
 	Field _sender:CodeTextView
+	Field _offsetX:=0,_offsetAtIndex:=-1
 	
 	Method OnRenderContent( canvas:Canvas ) Override
 		
 		Local stored:=canvas.Color
 		
-		Local x:Float,y:Float,s:=""
+		Local x0:=_offsetX
+		Local x:Float=x0,y:Float,s:=""
 		Local font:=RenderStyle.Font
 		For Local item:=Eachin _items
 			
@@ -2414,8 +2416,18 @@ Class ParamsHintView Extends TextView
 				For Local i:=0 Until params.Length
 					
 					Local param:=params[i]
+					Local selected:=(i=_paramIndex)
 					
-					canvas.Color=(i=_paramIndex) ? _color2 Else _color1
+					If selected And i<>_offsetAtIndex
+						If x*App.Theme.Scale.x-_offsetX>650
+							_offsetX=-500
+						Else
+							_offsetX=0
+						Endif
+						_offsetAtIndex=i
+					Endif
+					
+					canvas.Color=selected ? _color2 Else _color1
 					
 					If param.hasDefaultValue
 						Local ss:=(i>0) ? " [" Else "["
@@ -2441,7 +2453,7 @@ Class ParamsHintView Extends TextView
 			Endif
 			
 			y+=font.Height
-			x=0
+			x=x0
 		Next
 		
 		canvas.Color=stored

@@ -8,7 +8,7 @@ Private
 
 Class TestTheSame
 
-	Function WithDefaults( param:String )
+	Function WithDefaults( parameter1:String,parameter2:String,parameter3:String,parameter4:String,parameter5:String,parameter6:String,parameter7:String )
 	End
 	Function WithDefaults( v1:Bool,param:Int=10 )
 	End
