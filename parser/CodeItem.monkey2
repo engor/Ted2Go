@@ -117,14 +117,14 @@ Class CodeItem
 	Property Text:String()
 		
 		If _text = Null
-			_text=GetText( True )
+			_text=GetText( True,True )
 		Endif
 		Return _text
 	End
 	
 	Property TextForInsert:String()
 		
-		Return GetText( False )
+		Return GetText( False,False )
 	End
 	
 	Property Parent:CodeItem()
@@ -337,15 +337,35 @@ Class CodeItem
 	
 	Property ParamsStr:String()
 		
-		If Not _params Return Null
+		If Not _params Return ""
 		If _paramsStr Return _paramsStr
 		
-		_paramsStr=""
+		Local s:=""
 		For Local p:=Eachin _params
-			If _paramsStr<>"" Then _paramsStr+=","
-			_paramsStr+=p.ToString()
+			If s<>"" Then s+=","
+			s+=p.ToString()
 		Next
+		_paramsStr=s
+		
 		Return _paramsStr
+	End
+	
+	Property ParamsStrWithDefaults:String()
+		
+		If Not _params Return ""
+		If _paramsStrWithDefaults Return _paramsStrWithDefaults
+		
+		Local s:="",empty:=True
+		For Local p:=Eachin _params
+			empty=(s="")
+			If p.hasDefaultValue Then s+=" ["
+			If Not empty Then s+=","
+			s+=p.ToString()
+			If p.hasDefaultValue Then s+="]"
+		Next
+		_paramsStrWithDefaults=s
+		
+		Return _paramsStrWithDefaults
 	End
 	
 	
@@ -365,14 +385,14 @@ Class CodeItem
 	Field _scopeStartPos:Vec2i=New Vec2i,_scopeEndPos:Vec2i=New Vec2i
 	Field _superTypes:Stack<CodeType>,_superTypesStr:Stack<String>
 	Field _params:CodeParam[]
-	Field _paramsStr:String
+	Field _paramsStr:String,_paramsStrWithDefaults:String
 	Field _isExtension:Bool
 	Field _isIfaceMember:Bool
 	Field _modName:String
 	
 	Private
 	
-	Method GetText:String( withSpaces:Bool )
+	Method GetText:String( withSpaces:Bool,withDefaultValues:Bool )
 		
 		Local s:=Ident
 		Select _kind
@@ -383,20 +403,20 @@ Class CodeItem
 				Endif
 				If HasParams
 					s+=withSpaces ? " ( " Else "( "
-					s+=ParamsStr+" )"
+					s+=GetParamsStr( withDefaultValues )+" )"
 				Else
 					s+="()"
 				Endif
-		
+			
 			Case CodeItemKind.Class_,CodeItemKind.Interface_,CodeItemKind.Struct_,CodeItemKind.Enum_,CodeItemKind.Alias_
 				
 				If _isExtension
 					s+=" (ext)"
 				Endif
-		
+			
 			Case CodeItemKind.Inner_,CodeItemKind.EnumMember_
 				' nothing
-		
+			
 			Case CodeItemKind.Property_
 				s+=withSpaces ? " : " Else ":"
 				s+=Type.ToString()
@@ -409,7 +429,7 @@ Class CodeItem
 					Endif
 					If HasParams
 						s+=withSpaces ? " ( " Else "( "
-						s+=ParamsStr+" )"
+						s+=GetParamsStr( withDefaultValues )+" )"
 					Else
 						s+="()"
 					Endif
@@ -423,6 +443,11 @@ Class CodeItem
 		
 		End
 		Return s
+	End
+	
+	Method GetParamsStr:String( withDefaultValues:Bool )
+		
+		Return withDefaultValues ? ParamsStrWithDefaults Else ParamsStr
 	End
 	
 	Method UpdateKind()
@@ -531,6 +556,7 @@ Struct CodeParam
 	Field type:CodeType
 	Field params:CodeParam[] 'for func as param
 	Field srcpos:Vec2i
+	Field hasDefaultValue:=False
 	
 	Method ToString:String()
 		

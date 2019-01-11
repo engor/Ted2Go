@@ -1135,6 +1135,7 @@ Class Monkey2Parser Extends CodeParserPlugin
 			p.type=ParseType( jparam )
 			' try recursive extraction
 			p.params=ParseParams( jparam )
+			p.hasDefaultValue=(jparam["init"]<>Null)
 			result[i]=p
 			i+=1
 		Next

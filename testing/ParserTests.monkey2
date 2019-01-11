@@ -7,7 +7,11 @@ Private
 
 
 Class TestTheSame
-	
+
+	Function WithDefaults( param:String )
+	End
+	Function WithDefaults( v1:Bool,param:Int=10 )
+	End
 	Property TestTheSame:TestTheSame()
 		
 		Local abc:="Hello"

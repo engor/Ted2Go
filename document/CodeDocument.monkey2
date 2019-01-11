@@ -2350,8 +2350,11 @@ Class ParamsHintView Extends TextView
 			Local params:=i.Params
 			If Not params Then s+="<no params>" ; Continue
 			For Local j:=0 Until params.Length
+				Local param:=params[j]
+				If param.hasDefaultValue Then s+=" ["
 				If j>0 Then s+=", "
 				s+=params[j].ToString()
+				If param.hasDefaultValue Then s+="]"
 			Next
 		Next
 		Text=s ' use it for TextView.OnMeasure
@@ -2410,16 +2413,29 @@ Class ParamsHintView Extends TextView
 			Else
 				For Local i:=0 Until params.Length
 					
+					Local param:=params[i]
+					
+					canvas.Color=(i=_paramIndex) ? _color2 Else _color1
+					
+					If param.hasDefaultValue
+						Local ss:=(i>0) ? " [" Else "["
+						canvas.DrawText( ss,x,y )
+						x+=font.TextWidth( ss )
+					Endif
+					
 					If i>0
-						canvas.Color=_color1
 						canvas.DrawText( ", ",x,y )
 						x+=font.TextWidth( ", " )
 					Endif
 					
 					s=params[i].ToString()
-					canvas.Color=(i=_paramIndex) ? _color2 Else _color1
 					canvas.DrawText( s,x,y )
 					x+=font.TextWidth( s )
+					
+					If param.hasDefaultValue
+						canvas.DrawText( "]",x,y )
+						x+=font.TextWidth( "]" )
+					Endif
 				Next
 				
 			Endif
