@@ -75,6 +75,10 @@ Class ModuleManager Extends Dialog
 		End
 		
 		Local upload:=New Button( "Upload module" )
+		upload.Style=upload.Style.Copy()
+		upload.Style.Border=New Recti( -1,-1,1,1 )
+		upload.Style.Margin=New Recti( 0,0,3,0 )
+		upload.Style.BorderColor=upload.RenderStyle.TextColor
 		upload.Clicked+=GotoUploadModulesPage
 		buttons.AddView( upload,"right" )
 		
@@ -87,7 +91,8 @@ Class ModuleManager Extends Dialog
 			If PerformActions() OnActivated()
 		End
 	
-		AddAction( "Close" ).Triggered=Lambda()
+		Local closeAction:=AddAction( "Close" )
+		closeAction.Triggered=Lambda()
 			Close()
 			App.EndModal()
 		End
@@ -99,11 +104,13 @@ Class ModuleManager Extends Dialog
 			App.BeginModal( Self )
 			OnActivated()
 		End
+		
+		SetKeyAction( Key.Escape,closeAction )
 	End
 	
 	Private
 	
-    Field downloadUrl:=MONKEY2_DOMAIN+"/send-file?file="
+	Field downloadUrl:=MONKEY2_DOMAIN+"/send-file?file="
 	
 	Const downloadDir:="modules/module-manager/downloads/"
 	
@@ -197,7 +204,7 @@ Class ModuleManager Extends Dialog
 
 	Method DownloadModules:Bool()
 	
-		If Not CreateDir( downloadDir ) 
+		If Not CreateDir( downloadDir )
 			Alert( "Failed to create download dir '"+downloadDir+"'" )
 			Return False
 		Endif
@@ -264,6 +271,10 @@ Class ModuleManager Extends Dialog
 		For Local config:=0 Until 2
 			
 			Local cmd:=MainWindow.Mx2ccPath+" makemods -config="+(config ? "debug" Else "release")
+			
+			For Local module:=Eachin _procmods
+				cmd+=" "+module.name
+			Next
 			
 			If Not _console.Run( cmd ) Return False
 			

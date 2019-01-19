@@ -76,6 +76,7 @@ Class HelpActions
 			OpenUrl( "https://discord.gg/A2C6AMM" )
 		End
 		
+		
 	End
 	
 	Private
@@ -109,8 +110,10 @@ End
 
 Function GotoUploadModulesPage()
 	
-	Alert( "Now taking you to the module manager page at "+MONKEY2_DOMAIN+".~n~nNote: You must have an account at "+MONKEY2_DOMAIN+" and be logged in to upload modules." )
-	
-	OpenUrl( RealPath( MONKEY2_DOMAIN+"/module-manager/" ) )
+	New Fiber( Lambda()
+		Local result:=Dialog.Run( "Upload module",New Label( "Now taking you to the module manager page at "+MONKEY2_DOMAIN+".~n~nNote: You must have an account at "+MONKEY2_DOMAIN+" and be logged in to upload modules."),New String[]("  OK  ","Cancel"),0,1 )
+		
+		If result=0 Then OpenUrl( RealPath( MONKEY2_DOMAIN+"/module-manager/" ) )
+	End )
 	
 End
