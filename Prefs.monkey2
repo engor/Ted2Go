@@ -21,6 +21,7 @@ Class PrefsInstance
 	Field MainToolBarSide:=True
 	Field MainToolBarSimple:=True
 	Field MainProjectIcons:=True
+	Field MainProjectAutoscrollToFile:=False
 	Field MainProjectSingleClickExpanding:=False
 	Field MainPlaceDocsAtBegin:=False
 	'
@@ -66,6 +67,7 @@ Class PrefsInstance
 			MainToolBarSide=Json_GetBool( j2,"toolBarSide",MainToolBarSide )
 			MainToolBarSimple=Json_GetBool( j2,"toolBarSimple",MainToolBarSimple )
 			MainProjectIcons=Json_GetBool( j2,"projectIcons",MainProjectIcons )
+			MainProjectAutoscrollToFile=Json_GetBool( j2,"projectScrollToFile",MainProjectAutoscrollToFile )
 			MainProjectSingleClickExpanding=Json_GetBool( j2,"singleClickExpanding",MainProjectSingleClickExpanding )
 			MainPlaceDocsAtBegin=Json_GetBool( j2,"placeDocsAtBegin",MainPlaceDocsAtBegin )
 			OpenGlProfile=Json_GetString( j2,"openglProfile",OpenGlProfile )
@@ -131,6 +133,7 @@ Class PrefsInstance
 		j["toolBarSide"]=New JsonBool( MainToolBarSide )
 		j["toolBarSimple"]=New JsonBool( MainToolBarSimple )
 		j["projectIcons"]=New JsonBool( MainProjectIcons )
+		j["projectScrollToFile"]=New JsonBool( MainProjectAutoscrollToFile )
 		j["singleClickExpanding"]=New JsonBool( MainProjectSingleClickExpanding )
 		j["placeDocsAtBegin"]=New JsonBool( MainPlaceDocsAtBegin )
 		j["openglProfile"]=New JsonString( OpenGlProfile )

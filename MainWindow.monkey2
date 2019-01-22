@@ -55,6 +55,10 @@ Class MainWindowInstance Extends Window
 				SwapFullscreenEditor( False,1 )
 			Endif
 			
+			' show current file in project view
+			If _docsManager.CurrentDocument And Prefs.MainProjectAutoscrollToFile
+				_projectView.JumpToFile( _docsManager.CurrentDocument?.Path )
+			Endif
 		End
 		
 		_docsManager.DocumentDoubleClicked+=Lambda( doc:Ted2Document )

@@ -106,6 +106,17 @@ Class ProjectView Extends DockingView
 		_projBrowser.SingleClickExpanding=value
 	End
 	
+	Method JumpToFile( path:String )
+
+		Local node:=_projBrowser.FindSubNode( _projBrowser.RootNode,True,Lambda:Bool( node:TreeView.Node )
+			
+			Local node2:=Cast<ProjectBrowserView.Node>( node )
+			If node2 Then Return (node2.Path=path)
+			Return False
+		End )
+		If node Then _projBrowser.Selected=node
+	End
+	
 	Function FindProject:Monkey2Project( filePath:String )
 	
 		If Not filePath Return Null
@@ -294,7 +305,7 @@ Class ProjectView Extends DockingView
 		If Not yes Return Null
 		
 		Local path:String
-		Repeat 
+		Repeat
 			Local name:=RequestString( "Project filename:","Projects",StripDir( proj.Folder ) ).Trim()
 			If Not name
 				Alert( "Name wasn't entered, so do nothing.","Projects" )

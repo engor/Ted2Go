@@ -92,6 +92,7 @@ Class PrefsDialog Extends DialogExt
 	Field _mainToolBarSide:CheckButton
 	Field _mainToolBarSimple:CheckButton
 	Field _mainProjectIcons:CheckButton
+	Field _mainProjectScrollToFile:CheckButton
 	Field _mainProjectSingleClickExpanding:CheckButton
 	Field _mainPlaceDocsAtBegin:CheckButton
 	Field _mainUseOpenGlEsProfile:CheckButton
@@ -150,6 +151,7 @@ Class PrefsDialog Extends DialogExt
 		Prefs.MainToolBarSide=_mainToolBarSide.Checked
 		Prefs.MainToolBarSimple=_mainToolBarSimple.Checked
 		Prefs.MainProjectIcons=_mainProjectIcons.Checked
+		Prefs.MainProjectAutoscrollToFile=_mainProjectScrollToFile.Checked
 		Prefs.MainProjectSingleClickExpanding=_mainProjectSingleClickExpanding.Checked
 		Prefs.MainPlaceDocsAtBegin=_mainPlaceDocsAtBegin.Checked
 		Prefs.OpenGlProfile=_mainUseOpenGlEsProfile.Checked ? "es" Else ""
@@ -179,6 +181,9 @@ Class PrefsDialog Extends DialogExt
 		
 		_mainProjectIcons=New CheckButton( "Project file type icons" )
 		_mainProjectIcons.Checked=Prefs.MainProjectIcons
+		
+		_mainProjectScrollToFile=New CheckButton( "Autoscroll to current document" )
+		_mainProjectScrollToFile.Checked=Prefs.MainProjectAutoscrollToFile
 		
 		_mainProjectSingleClickExpanding=New CheckButton( "Project tree single-click mode" )
 		_mainProjectSingleClickExpanding.Checked=Prefs.MainProjectSingleClickExpanding
@@ -228,6 +233,7 @@ Class PrefsDialog Extends DialogExt
 		docker.AddView( _mainToolBarVisible,"top" )
 		docker.AddView( _mainToolBarSide,"top" )
 		docker.AddView( _mainToolBarSimple,"top" )
+		docker.AddView( _mainProjectScrollToFile,"top" )
 		docker.AddView( _mainProjectSingleClickExpanding,"top" )
 		docker.AddView( _mainPlaceDocsAtBegin,"top" )
 		#If __TARGET__="windows"
