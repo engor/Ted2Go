@@ -15,48 +15,23 @@ Class GotoActions
 		
 		_docs=docs
 		
-		goBack=New Action( "Jump back" )
+		goBack=ActionById( ActionId.JumpBack )
 		goBack.Triggered=OnGoBack
-		goBack.HotKey=Key.Left
-		goBack.HotKeyModifiers=Modifier.Alt|Modifier.Menu
 		
-		goForward=New Action( "Jump forward" )
+		goForward=ActionById( ActionId.JumpForward )
 		goForward.Triggered=OnGoForward
-		goForward.HotKey=Key.Right
-		goForward.HotKeyModifiers=Modifier.Alt|Modifier.Menu
 		
-		gotoLine=New Action( "Goto line" )
+		gotoLine=ActionById( ActionId.JumpToLine )
 		gotoLine.Triggered=OnGotoLine
-		gotoLine.HotKey=Key.G
-		gotoLine.HotKeyModifiers=Modifier.Menu
 		
-		gotoDeclaration=New Action( "Goto definition" )
+		gotoDeclaration=ActionById( ActionId.JumpToDefinition )
 		gotoDeclaration.Triggered=OnGotoDeclaration
-		#If __TARGET__="macos"
-		gotoDeclaration.HotKey=Key.B
-		gotoDeclaration.HotKeyModifiers=Modifier.Menu
-		#Else
-		gotoDeclaration.HotKey=Key.F12
-		#Endif
 		
-		prevScope=New Action( "Previous scope" )
+		prevScope=ActionById( ActionId.JumpToPrevScope )
 		prevScope.Triggered=OnPrevScope
-		prevScope.HotKey=Key.Up
-		#If __TARGET__="macos"
-		prevScope.HotKeyModifiers=Modifier.Alt|Modifier.Control
-		#Else
-		prevScope.HotKeyModifiers=Modifier.Alt
-		#Endif
 		
-		nextScope=New Action( "Next scope" )
+		nextScope=ActionById( ActionId.JumpToNextScope )
 		nextScope.Triggered=OnNextScope
-		nextScope.HotKey=Key.Down
-		#If __TARGET__="macos"
-		nextScope.HotKeyModifiers=Modifier.Alt|Modifier.Control
-		#Else
-		nextScope.HotKeyModifiers=Modifier.Alt
-		#Endif
-		
 		
 	End
 	

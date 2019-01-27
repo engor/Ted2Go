@@ -47,6 +47,7 @@ Class PrefsInstance
 	Field MonkeyRootPath:String
 	Field IdeHomeDir:String
 	Field OpenGlProfile:="es"
+	Field HotkeysFilePath:String
 	'
 	Field SiblyMode:Bool
 	
@@ -179,8 +180,10 @@ Class PrefsInstance
 	
 	Method LoadLocalState()
 		
-		IdeHomeDir=HomeDir()+"Ted2Go/"
+		IdeHomeDir=HomeDir()+".Ted2Go/"
 		CreateDir( IdeHomeDir )
+		
+		HotkeysFilePath=IdeHomeDir+"hotkeys.json"
 		
 		Local json:=JsonObject.Load( AppDir()+"state.json" )
 		If Not json Return

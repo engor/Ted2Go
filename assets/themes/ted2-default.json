@@ -43,7 +43,9 @@
 		
 		"HelpTextField":{
 			"extends":"TextField",
-			"skinColor":"panel"
+			"skinColor":"panel",
+			"border":[ 1 ],
+			"borderColor":"#2000"
 		},
 		"HelpPageAddress":{
 			"extends":"Label",

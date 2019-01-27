@@ -31,15 +31,11 @@ Class DocumentManager
 			_openDocs=docs
 		End
 		
-		nextDocument=New Action( "Next tab" )
+		nextDocument=ActionById( ActionId.NextTab )
 		nextDocument.Triggered=OnNextDocument
-		nextDocument.HotKey=Key.Tab
-		nextDocument.HotKeyModifiers=Modifier.Control
 		
-		prevDocument=New Action( "Previous tab" )
+		prevDocument=ActionById( ActionId.PrevTab )
 		prevDocument.Triggered=OnPrevDocument
-		prevDocument.HotKey=Key.Tab
-		prevDocument.HotKeyModifiers=Modifier.Control|Modifier.Shift
 		
 		DocumentRemoved+=Lambda( doc:Ted2Document )
 			
@@ -165,7 +161,7 @@ Class DocumentManager
 		path=RealPath( path )
 		
 		Local doc:=FindDocument( path )
-		If doc 
+		If doc
 			If makeCurrent CurrentDocument=doc
 			Return doc
 		Endif

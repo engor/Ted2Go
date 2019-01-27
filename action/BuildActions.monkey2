@@ -63,73 +63,37 @@ Class BuildActions Implements IModuleBuilder
 		_console=console
 		_debugView=debugView
 		
-		buildAndRun=New Action( "Run" )
-#If __TARGET__="macos"
-		buildAndRun.HotKey=Key.R
-		buildAndRun.HotKeyModifiers=Modifier.Control
-#Else
-		buildAndRun.HotKey=Key.F5
-#Endif
+		buildAndRun=ActionById( ActionId.Run )
 		buildAndRun.Triggered=OnBuildAndRun
 		
-		debugApp=New Action( "Debug" )
-#If __TARGET__="macos"
-		debugApp.HotKey=Key.D
-		debugApp.HotKeyModifiers=Modifier.Control
-#Else
-		debugApp.HotKey=Key.F8
-#Endif
+		debugApp=ActionById( ActionId.Debug )
 		debugApp.Triggered=OnDebugApp
 
-		build=New Action( "Build" )
-#If __TARGET__="macos"
-		build.HotKey=Key.B
-		build.HotKeyModifiers=Modifier.Control
-#Else
-		build.HotKey=Key.F6
-#Endif
+		build=ActionById( ActionId.Build )
 		build.Triggered=OnBuild
 		
-		semant=New Action( "Check" )
-#If __TARGET__="macos"
-		semant.HotKey=Key.C
-		semant.HotKeyModifiers=Modifier.Control
-#Else
-		semant.HotKey=Key.F7
-#Endif
+		semant=ActionById( ActionId.Semant )
 		semant.Triggered=OnSemant
 		
-		forceStop=New Action( "Force Stop" )
+		forceStop=ActionById( ActionId.ForceStop )
 		forceStop.Triggered=OnForceStop
-#If __TARGET__="macos"
-		forceStop.HotKey=Key.R
-		forceStop.HotKeyModifiers=Modifier.Control|Modifier.Shift
-#Else
-		forceStop.HotKey=Key.F5
-		forceStop.HotKeyModifiers=Modifier.Shift
-#Endif
 		
-		buildSettings=New Action( "Product settings..." )
+		buildSettings=ActionById( ActionId.ProductSettings )
 		buildSettings.Triggered=OnBuildFileSettings
 		
-		nextError=New Action( "Next build error" )
+		nextError=ActionById( ActionId.NextError )
 		nextError.Triggered=OnNextError
-		nextError.HotKey=Key.F4
 		
-		lockBuildFile=New Action( "Lock build file" )
+		lockBuildFile=ActionById( ActionId.LockBuildFile )
 		lockBuildFile.Triggered=_docs.LockBuildFile
-		lockBuildFile.HotKey=Key.L
-		lockBuildFile.HotKeyModifiers=Modifier.Menu
 		
-		updateModules=New Action( "Update / Rebuild modules..." )
+		updateModules=ActionById( ActionId.UpdateModules )
 		updateModules.Triggered=OnUpdateModules
-		updateModules.HotKey=Key.U
-		updateModules.HotKeyModifiers=Modifier.Menu
 		
-		moduleManager=New Action( "Module manager..." )
+		moduleManager=ActionById( ActionId.ModuleManager )
 		moduleManager.Triggered=OnModuleManager
 		
-		rebuildHelp=New Action( "Rebuild documentation" )
+		rebuildHelp=ActionById( ActionId.RebuildDocs )
 		rebuildHelp.Triggered=OnRebuildHelp
 		
 		local group:=New CheckGroup

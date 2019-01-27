@@ -65,85 +65,44 @@ Class EditActions
 		selectAll.HotKey=Key.A
 		selectAll.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
 		
-		expandSelection=New Action( "Expand selection" )
+		expandSelection=ActionById( ActionId.ExpandSelection )
 		expandSelection.Triggered=OnExpandSelection
-		expandSelection.HotKey=Key.Up
-		expandSelection.HotKeyModifiers=Modifier.Alt
 		
-		shrinkSelection=New Action( "Shrink selection" )
+		shrinkSelection=ActionById( ActionId.ShrinkSelection )
 		shrinkSelection.Triggered=OnShrinkSelection
-		shrinkSelection.HotKey=Key.Down
-		shrinkSelection.HotKeyModifiers=Modifier.Alt
 		
-		wordWrap=New Action( "Toggle word wrap" )
+		wordWrap=ActionById( ActionId.WordWrap )
 		wordWrap.Triggered=OnWordWrap
-		wordWrap.HotKey=Key.Z
-		wordWrap.HotKeyModifiers=Modifier.Alt
 		
-		textDeleteLine=New Action( "Delete line" )
+		textDeleteLine=ActionById( ActionId.DeleteLine )
 		textDeleteLine.Triggered=OnDeleteLine
-		textDeleteLine.HotKey=Key.K
-		textDeleteLine.HotKeyModifiers=Modifier.Control|Modifier.Shift
 		
-		textDeleteWordForward=New Action( "Delete word forward" )
+		textDeleteWordForward=ActionById( ActionId.DeleteWordForward )
 		textDeleteWordForward.Triggered=OnDeleteWordForward
-		textDeleteWordForward.HotKey=Key.KeyDelete
-		textDeleteWordForward.HotKeyModifiers=Modifier.Control
 		
-		textDeleteWordBackward=New Action( "Delete word backward" )
+		textDeleteWordBackward=ActionById( ActionId.DeleteWordBackward )
 		textDeleteWordBackward.Triggered=OnDeleteWordBackward
-		textDeleteWordBackward.HotKey=Key.Backspace
-		textDeleteWordBackward.HotKeyModifiers=Modifier.Control
 		
-		textDeleteToBegin=New Action( "Delete to beginning" )
+		textDeleteToBegin=ActionById( ActionId.DeleteToBegin )
 		textDeleteToBegin.Triggered=OnDeleteToBegin
-		textDeleteToBegin.HotKey=Key.Backspace
-		#If __TARGET__="macos"
-		textDeleteToBegin.HotKeyModifiers=Modifier.Menu
-		#Else
-		textDeleteToBegin.HotKeyModifiers=Modifier.Menu|Modifier.Shift
-		#Endif
 		
-		textDeleteToEnd=New Action( "Delete to end" )
+		textDeleteToEnd=ActionById( ActionId.DeleteToEnd )
 		textDeleteToEnd.Triggered=OnDeleteToEnd
-		#If __TARGET__="macos"
-		textDeleteToEnd.HotKey=Key.K
-		textDeleteToEnd.HotKeyModifiers=Modifier.Control
-		#Else
-		textDeleteToEnd.HotKey=Key.KeyDelete
-		textDeleteToEnd.HotKeyModifiers=Modifier.Control|Modifier.Shift
-		#Endif
 		
-		textLowercase=New Action( "lowercace" )
+		textLowercase=ActionById( ActionId.MakeLowercase )
 		textLowercase.Triggered=OnLowercase
-		textLowercase.HotKey=Key.L
-		textLowercase.HotKeyModifiers=Modifier.Control|Modifier.Shift
 		
-		textUppercase=New Action( "UPPERCASE" )
+		textUppercase=ActionById( ActionId.MakeUppercase )
 		textUppercase.Triggered=OnUppercase
-		textUppercase.HotKey=Key.U
-		textUppercase.HotKeyModifiers=Modifier.Control|Modifier.Shift
 		
-		textSwapCase=New Action( "Swap case" )
+		textSwapCase=ActionById( ActionId.SwapCase )
 		textSwapCase.Triggered=OnSwapCase
 		
-		comment=New Action( "Comment block" )
+		comment=ActionById( ActionId.CommentBlock )
 		comment.Triggered=OnComment
-		#If __TARGET__="macos"
-		comment.HotKey=Key.Backslash
-		#Else
-		comment.HotKey=Key.Apostrophe
-		#Endif
-		comment.HotKeyModifiers=Modifier.Menu
 		
-		uncomment=New Action( "Uncomment block" )
+		uncomment=ActionById( ActionId.UncommentBlock )
 		uncomment.Triggered=OnUncomment
-		#If __TARGET__="macos"
-		uncomment.HotKey=Key.Backslash
-		#Else
-		uncomment.HotKey=Key.Apostrophe
-		#Endif
-		uncomment.HotKeyModifiers=Modifier.Menu|Modifier.Shift
 		
 	End
 	
@@ -281,17 +240,13 @@ Class EditActions
 	Method OnComment()
 	
 		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
-		If Not doc Return
-	
-		doc.Comment()
+		doc?.Comment()
 	End
 	
 	Method OnUncomment()
 	
 		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
-		If Not doc Return
-	
-		doc.Uncomment()
+		doc?.Uncomment()
 	End
 	
 End

@@ -21,36 +21,25 @@ Class FindActions
 		_docs=docs
 		_findConsole=findConsole
 		
-		find=New Action( "Find..." )
+		find=ActionById( ActionId.Find )
 		find.Triggered=OnFind
-		find.HotKey=Key.F
-		find.HotKeyModifiers=Modifier.Menu
 		
-		findNext=New Action( "Find next" )
+		findNext=ActionById( ActionId.FindNext )
 		findNext.Triggered=OnFindNext
-		findNext.HotKey=Key.F3
 		
-		findPrevious=New Action( "Find previous" )
+		findPrevious=ActionById( ActionId.FindPrev )
 		findPrevious.Triggered=OnFindPrevious
-		findPrevious.HotKey=Key.F3
-		findPrevious.HotKeyModifiers=Modifier.Shift
 		
-		replace=New Action( "Replace..." )
+		replace=ActionById( ActionId.Replace )
 		replace.Triggered=OnReplace
-		#If __TARGET__="macos"
-		replace.HotKey=Key.R
-		replace.HotKeyModifiers=Modifier.Menu
-		#Else
-		replace.HotKey=Key.H
-		replace.HotKeyModifiers=Modifier.Menu
-		#Endif
-		replaceNext=New Action( "Replace next" )
+		
+		replaceNext=ActionById( ActionId.ReplaceNext )
 		replaceNext.Triggered=OnReplaceNext
 		
-		replaceAll=New Action( "Replace all" )
+		replaceAll=ActionById( ActionId.ReplaceAll )
 		replaceAll.Triggered=OnReplaceAll
 		
-		findInFiles=New Action( "Find in files..." )
+		findInFiles=ActionById( ActionId.FindInFiles )
 		findInFiles.Triggered=Lambda()
 			
 			Local path:=docs.CurrentDocument?.Path
@@ -58,10 +47,7 @@ Class FindActions
 			
 			Local proj:=ProjectView.FindProject( path )?.Folder
 			OnFindInFiles( "",proj )
-			
 		End
-		findInFiles.HotKey=Key.F
-		findInFiles.HotKeyModifiers=Modifier.Menu|Modifier.Shift
 		
 		findAllInFiles=New Action( "Find all" )
 		findAllInFiles.Triggered=OnFindAllInFiles

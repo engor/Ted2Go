@@ -457,17 +457,11 @@ Class MainWindowInstance Extends Window
 		m.AddAction( foldActions.unfoldAll )
 		_viewMenu.AddSubMenu( m )
 		_viewMenu.AddSeparator()
-		Local showRecent:=New Action( "Recently viewed files...")
+		Local showRecent:=ActionById( ActionId.RecentlyViewedFiles )
 		showRecent.Triggered=Lambda()
 			Local path:=_recentViewedFiles.ShowDialog()
 			If path Then OpenDocument( path )
 		End
-		showRecent.HotKey=Key.E
-		#If __TARGET__="macos"
-		showRecent.HotKeyModifiers=Modifier.Menu
-		#Else
-		showRecent.HotKeyModifiers=Modifier.Control
-		#Endif
 		_viewMenu.AddAction( showRecent )
 		
 		'Build menu

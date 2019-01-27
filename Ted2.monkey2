@@ -84,6 +84,7 @@
 
 #Import "testing/ParserTests"
 
+#Import "utils/Extensions"
 #Import "utils/JsonUtils"
 #Import "utils/Utils"
 #Import "utils/TextUtils"
@@ -128,6 +129,7 @@
 #Import "theme/ThemeImages"
 #Import "theme/ThemesInfo"
 
+#Import "ActionsProvider"
 #Import "PathsProvider"
 #Import "Tree"
 #Import "Tuple"
@@ -152,7 +154,7 @@ Using sdl2..
 
 Const MONKEY2_DOMAIN:="http://monkeycoder.co.nz"
 
-Global AppTitle:="Ted2Go v2.13"
+Global AppTitle:="Ted2Go v2.14a"
 
 
 Function Main()
@@ -202,6 +204,8 @@ Function Main()
 	'start the app!
 	'
 	New AppInstance
+	
+	InitHotkeys()
 	
 	'initial window state
 	'

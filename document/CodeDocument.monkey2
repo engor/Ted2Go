@@ -1450,14 +1450,12 @@ Class CodeDocument Extends Ted2Document
 	
 	Method Comment()
 	
-		Local event:=New KeyEvent( EventType.KeyChar,_codeView,Key.Apostrophe,Key.Apostrophe,Modifier.Control,"'" )
-		_codeView.OnKeyEvent( event )
+		_codeView.CommentBlock()
 	End
 	
 	Method Uncomment()
 	
-		Local event:=New KeyEvent( EventType.KeyChar,_codeView,Key.Apostrophe,Key.Apostrophe,Modifier.Control|Modifier.Shift,"'" )
-		_codeView.OnKeyEvent( event )
+		_codeView.UncommentBlock()
 	End
 	
 	Method StoreChangesCounter()
