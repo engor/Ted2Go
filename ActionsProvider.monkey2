@@ -160,6 +160,7 @@ Class ActionsProvider
 		CreateAction( ActionId.ZoomDefault,"Ctrl+Keypad 0" )
 		
 		CreateAction( ActionId.RecentlyViewedFiles,"Cmd+E" )
+		CreateAction( ActionId.DuplicateBlock,"Cmd+D" )
 		
 		#Else
 		
@@ -232,6 +233,7 @@ Class ActionsProvider
 		CreateAction( ActionId.ZoomDefault,"Ctrl+Keypad 0" )
 		
 		CreateAction( ActionId.RecentlyViewedFiles,"Ctrl+E" )
+		CreateAction( ActionId.DuplicateBlock,"Ctrl+D" )
 		
 		#Endif
 	End
@@ -309,6 +311,7 @@ Class ActionId Final
 	Const ZoomDefault:="zoom_default"
 	
 	Const RecentlyViewedFiles:="recently_viewed_files"
+	Const DuplicateBlock:="duplicate_block"
 	
 	Private
 	
@@ -402,6 +405,7 @@ Class ActionTitle Final
 		map.Add( ActionId.ZoomDefault,"Reset zoom" )
 		
 		map.Add( ActionId.RecentlyViewedFiles,"Recently viewed files..." )
+		map.Add( ActionId.DuplicateBlock,"Duplicate block" )
 		
 		Return map
 	End

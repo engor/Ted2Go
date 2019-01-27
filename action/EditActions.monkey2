@@ -25,6 +25,8 @@ Class EditActions
 	'
 	Field comment:Action
 	Field uncomment:Action
+	Field duplicateBlock:Action
+	
 	
 	Method New( docs:DocumentManager )
 		
@@ -103,6 +105,9 @@ Class EditActions
 		
 		uncomment=ActionById( ActionId.UncommentBlock )
 		uncomment.Triggered=OnUncomment
+		
+		duplicateBlock=ActionById( ActionId.DuplicateBlock )
+		duplicateBlock.Triggered=OnDuplicateBlock
 		
 	End
 	
@@ -247,6 +252,12 @@ Class EditActions
 	
 		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
 		doc?.Uncomment()
+	End
+	
+	Method OnDuplicateBlock()
+	
+		Local doc:=Cast<CodeDocument>( _docs.CurrentDocument )
+		doc?.CodeView.DuplicateBlock()
 	End
 	
 End
