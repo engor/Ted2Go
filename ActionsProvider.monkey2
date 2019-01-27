@@ -82,9 +82,14 @@ Class ActionsProvider
 		For Local jval:=Eachin jarr
 			Local jobj2:=jval.ToObject()
 			Local id:=jobj2["id"].ToString()
-			Local hotkey:=jobj2["hotkey"].ToString()
-			' actualize action
-			_actions[id]=CreateAction( id,hotkey )
+			Local action:=_actions[id]
+			If action
+				' actualize action
+				Local hotkey:=jobj2["hotkey"].ToString()
+				Local pair:=HotKeyFromString( hotkey )
+				action.HotKey=pair.Item1
+				action.HotKeyModifiers=pair.Item2
+			Endif
 		Next
 	End
 	
@@ -417,10 +422,17 @@ End
 
 Function HotKeyFromString:Tuple2<Key,Modifier>( str:String )
 	
+	str=str.Trim()
+	
 	Local endsWithPlus:=str.EndsWith( "+" )
 	If endsWithPlus Then str=str.Slice( 0,-1 )
 	
-	Local items:=New StringStack( str.Split( "+" ) )
+	Local arr:=str.Split( "+" )
+'	For Local i:=0 Until arr.Length
+'		arr[i]=arr[i].Trim()
+'	Next
+	
+	Local items:=New StringStack( arr )
 	Local modifiers:=Modifier.None
 	If items.Contains( "Shift" )
 		modifiers|=Modifier.Shift

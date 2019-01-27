@@ -17,77 +17,43 @@ Class FileActions
 	Field prefs:Action
 	
 	Method New( docs:DocumentManager )
-	
+		
 		_docs=docs
 		
-		new_=New Action( "New file" )
-#if __TARGET__="macos"
-		new_.HotKey=Key.T
-		new_.HotKeyModifiers=Modifier.Menu
-#else
-		new_.HotKey=Key.N
-		new_.HotKeyModifiers=Modifier.Menu
-#endif
+		new_=ActionById( ActionId.NewFile )
 		new_.Triggered=OnNew
 		
-		open=New Action( "Open file" )
-		open.HotKey=Key.O
-		open.HotKeyModifiers=Modifier.Menu
+		open=ActionById( ActionId.OpenFile )
 		open.Triggered=OnOpen
 		
-		close=New Action( "Close tab" )
-		close.HotKey=Key.W
-		close.HotKeyModifiers=Modifier.Menu
-		
+		close=ActionById( ActionId.CloseTab )
 		close.Triggered=OnClose
 		
-		closeOthers=New Action( "Close other tabs" )
+		closeOthers=ActionById( ActionId.CloseOtherTabs )
 		closeOthers.Triggered=OnCloseOthers
 		
-		closeToRight=New Action( "Close tabs to the right" )
+		closeToRight=ActionById( ActionId.CloseTabsToTheRight )
 		closeToRight.Triggered=OnCloseToRight
 		
-		closeAll=New Action( "Close all tabs" )
+		closeAll=ActionById( ActionId.CloseAllTabs )
 		closeAll.Triggered=Lambda()
 			CloseFiles( _docs.OpenDocuments )
 		End
 		
-		save=New Action( "Save" )
-		save.HotKey=Key.S
-		save.HotKeyModifiers=Modifier.Menu
+		save=ActionById( ActionId.Save )
 		save.Triggered=OnSave
-
-		saveAs=New Action( "Save as..." )
+		
+		saveAs=ActionById( ActionId.SaveAs )
 		saveAs.Triggered=OnSaveAs
-
-		saveAll=New Action( "Save all" )
-		saveAll.HotKey=Key.S
-		saveAll.HotKeyModifiers=Modifier.Menu|Modifier.Shift
+		
+		saveAll=ActionById( ActionId.SaveAll )
 		saveAll.Triggered=OnSaveAll
 		
-		quit=New Action( "Quit" )
+		quit=ActionById( ActionId.Quit )
 		quit.Triggered=OnQuit
 		
-#If __TARGET__="windows"
-		quit.HotKey=Key.F4
-		quit.HotKeyModifiers=Modifier.Alt|Modifier.Ignore
-#Elseif __TARGET__="macos"
-		quit.HotKey=Key.Q
-		quit.HotKeyModifiers=Modifier.Menu|Modifier.Ignore
-#Elseif __TARGET__="linux"
-		quit.HotKey=Key.F4
-		quit.HotKeyModifiers=Modifier.Alt|Modifier.Ignore
-#endif
-
-		prefs=New Action( "Preferences..." )
+		prefs=ActionById( ActionId.Preferences )
 		prefs.Triggered=OnPrefs
-#if __TARGET__="macos"
-		prefs.HotKey=Key.Comma
-#Else
-		prefs.HotKey=Key.P
-#Endif
-		prefs.HotKeyModifiers=Modifier.Menu
-		
 	End
 	
 	Method Update()

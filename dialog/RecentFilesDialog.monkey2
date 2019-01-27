@@ -50,6 +50,8 @@ Class RecentFilesDialog Extends DialogExt
 		For Local i:=Eachin files
 			_listItems.Add( New FileListViewItem( GetShortPath( i ),i ) )
 		Next
+		' remove current opened document
+		If Not _listItems.Empty Then _listItems.Erase( 0 )
 		
 		_listView=New AutocompleteListView( 20,100 )
 		_listView.Layout="fill-x"
