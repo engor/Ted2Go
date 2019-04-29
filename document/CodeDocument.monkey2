@@ -438,12 +438,10 @@ Class CodeDocumentView Extends Ted2CodeTextView
 			
 				#Endif
 				
-				#If __TARGET__<>"macos"
 				Case Key.Home 'smart Home behaviour
 				
 					ProcessHomeKey( ctrl,shift )
 					Return
-				#Endif
 				
 				Case Key.KeyEnd ' special case here to force macos behaviour
 					
