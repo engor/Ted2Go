@@ -49,6 +49,8 @@ Class PrefsInstance
 	Field OpenGlProfile:="es"
 	Field HotkeysFilePath:String
 	'
+	Field TemplatesInsertByEnter:=True
+	
 	Field SiblyMode:Bool
 	
 	Property FindFilesFilter:String()
@@ -119,6 +121,13 @@ Class PrefsInstance
 			
 		Endif
 		
+		If json.Contains( "templates" )
+		
+			Local j2:=json["templates"].ToObject()
+			TemplatesInsertByEnter=Json_GetBool( j2,"insertByEnter",TemplatesInsertByEnter )
+			
+		Endif
+		
 		If json.Contains( "siblyMode" )
 		
 			SiblyMode=json["siblyMode"].ToBool()
@@ -173,6 +182,10 @@ Class PrefsInstance
 		json["source"]=j
 		j["sortByType"]=New JsonBool( SourceSortByType )
 		j["showInherited"]=New JsonBool( SourceShowInherited )
+		
+		j=New JsonObject
+		json["templates"]=j
+		j["insertByEnter"]=New JsonBool( TemplatesInsertByEnter )
 		
 		If SiblyMode json["siblyMode"]=JsonBool.TrueValue
 		

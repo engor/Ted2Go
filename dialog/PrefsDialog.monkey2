@@ -105,6 +105,8 @@ Class PrefsDialog Extends DialogExt
 	Field _chatRooms:TextFieldExt
 	Field _chatAutoConnect:CheckButton
 	
+	Field _templatesInsertByEnter:CheckButton
+	
 	Field _codeView:Ted2CodeTextView
 	Field _treeView:TreeViewExt
 	
@@ -155,6 +157,8 @@ Class PrefsDialog Extends DialogExt
 		Prefs.MainProjectSingleClickExpanding=_mainProjectSingleClickExpanding.Checked
 		Prefs.MainPlaceDocsAtBegin=_mainPlaceDocsAtBegin.Checked
 		Prefs.OpenGlProfile=_mainUseOpenGlEsProfile.Checked ? "es" Else ""
+		
+		Prefs.TemplatesInsertByEnter=_templatesInsertByEnter.Checked
 		
 		App.ThemeChanged()
 		
@@ -466,8 +470,12 @@ Class PrefsDialog Extends DialogExt
 		End
 		docker1.ContentView=_codeView
 		
+		_templatesInsertByEnter=New CheckButton( "Insert also by Enter" )
+		_templatesInsertByEnter.Checked=Prefs.TemplatesInsertByEnter
+		
 		Local docker2:=New DockingView
 		docker2.AddView( New Label( "Press 'Tab' in completion list or editor to insert template." ),"top" )
+		docker2.AddView( _templatesInsertByEnter,"top" )
 		docker2.ContentView=docker1
 		
 		PrepareTree( tree )

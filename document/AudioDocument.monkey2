@@ -13,22 +13,20 @@ Class AudioDocumentView Extends View
 		
 		Style.BackgroundColor=App.Theme.GetColor( "content" )
 		
-		If Not _chan _chan=New Channel
-		
 		_toolBar=New ToolBar
 		_toolBar.Layout="float"
 		_toolBar.Gravity=New Vec2f( .5,1 )
 		
 		_toolBar.AddAction( "Play" ).Triggered=Lambda()
-			_chan.Play( _doc.Sound )
+			GetChannel().Play( _doc.Sound )
 		End
 		
 		_toolBar.AddAction( "Loop" ).Triggered=Lambda()
-			_chan.Play( _doc.Sound,True )
+			GetChannel().Play( _doc.Sound,True )
 		End
 		
 		_toolBar.AddAction( "Stop" ).Triggered=Lambda()
-			_chan.Stop()
+			GetChannel().Stop()
 		End
 		
 		Local volbar:=New ScrollBar( Axis.X )
@@ -51,7 +49,7 @@ Class AudioDocumentView Extends View
 		panbar.PageSize=10
 		panbar.Value=_chan.Pan*100
 		panbar.ValueChanged+=Lambda( value:Int )
-			_chan.Pan=value/100.0
+			GetChannel().Pan=value/100.0
 		End
 		Local pan:=New Label( "Pan " )
 		pan.AddView( panbar )
@@ -103,6 +101,13 @@ Class AudioDocumentView Extends View
 	Field _doc:AudioDocument
 	
 	Field _toolBar:ToolBar
+	
+	Function GetChannel:Channel()
+		
+		If Not _chan Then _chan=New Channel
+		
+		Return _chan
+	End
 End
 
 Class AudioDocument Extends Ted2Document

@@ -437,7 +437,7 @@ Class AutocompleteDialog Extends NoTitleDialog
 					event.Eat()
 					
 				Case Key.Enter,Key.KeypadEnter
-					If Not templ
+					If Not templ Or Prefs.TemplatesInsertByEnter
 						If Prefs.AcUseEnter
 							OnItemChoosen( curItem,key )
 							If Not Prefs.AcNewLineByEnter Then event.Eat()
