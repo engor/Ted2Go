@@ -59,7 +59,7 @@
 			"textColor":"#9090ff"
 		},
 		"GutterView":{
-            "font":"editor",
+			"font":"editor",
 			"border":[0,0,0,1],
 			"borderColor":"#202020",
 			"backgroundColor":"#101010",
