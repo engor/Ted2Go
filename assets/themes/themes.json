@@ -42,5 +42,9 @@
 	"Warm": {
 		"path": "theme-warm",
 		"dark": true
+	},
+	"Dark Nights": {
+		"path": "theme-darknights",
+		"dark": true
 	}
 }
