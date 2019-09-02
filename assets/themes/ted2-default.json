@@ -18,7 +18,8 @@
 		"completion-list-selected": "content",
 		"completion-list-marked-bg": "#0fff",
 		"completion-list-marked-text": "textview-color4",
-		"treeview-selected-row": "#1fff"
+		"treeview-selected-row": "#1fff",
+		"textview-color8": "textview-color2" //core types like Int, Bool
 	},
 
 	"fonts":{

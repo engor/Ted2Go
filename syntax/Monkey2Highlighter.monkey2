@@ -135,10 +135,10 @@ Class Monkey2Highlighter Extends HighlighterPlugin
 				
 					color=Highlighter.COLOR_IDENT
 					
-					If _keywords.Contains( id )
+					If _keywords.ContainsCoreType( id )
+						color=Highlighter.COLOR_CORETYPE
+					Elseif _keywords.Contains( id )
 						color=Highlighter.COLOR_KEYWORD
-'					Elseif _parser.GetItem( id )
-'						color=Highlighter.COLOR_CODE_ITEM
 					Endif
 				Endif
 				

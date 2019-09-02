@@ -12,7 +12,8 @@ Class Highlighter
 	Const COLOR_COMMENT:=5
 	Const COLOR_PREPROC:=6
 	Const COLOR_OTHER:=7
-	Const COLOR_CODE_ITEM:=8
+	Const COLOR_CORETYPE:=8
+	
 	
 	'use it like a property, as readonly
 	Field Painter:Int( text:String,colors:Byte[],sol:Int,eol:Int,state:Int )
