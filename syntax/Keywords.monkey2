@@ -7,6 +7,7 @@ Interface IKeywords
 	Method Contains:Bool( word:String )
 	Method Get:String( word:String )
 	Method Values:String[]()
+	Method ContainsCoreType:Bool( word:String )
 	
 End
 
@@ -15,18 +16,28 @@ End
 #end
 Class Keywords Implements IKeywords
 	
-	Method New( words:String[]=Null )
-		If words=Null Then Return
+	Method New( words:String[],coreTypes:String[] )
+		
 		For Local kw:=Eachin words
 			Local kwTrimmed:=kw.Trim()
 			If kwTrimmed.Length = 0 Continue
 			_keywords[kwTrimmed.ToLower()]=kw
 		Next
 		_words=words
+		
+		For Local kw:=Eachin coreTypes
+			Local kwTrimmed:=kw.Trim()
+			If kwTrimmed.Length = 0 Continue
+			_coreTypes[kwTrimmed.ToLower()]=kw
+		Next
 	End
 	
 	Method Contains:Bool( word:String )
 		Return _keywords.Contains( word.ToLower() )
+	End
+
+	Method ContainsCoreType:Bool( word:String )
+		Return _coreTypes.Contains( word.ToLower() )
 	End
 
 	Method Get:String( word:String )
@@ -41,6 +52,7 @@ Class Keywords Implements IKeywords
 	Private
 	
 	Field _keywords:=New StringMap<String>
+	Field _coreTypes:=New StringMap<String>
 	Field _words:String[]
 	
 End
@@ -62,10 +74,13 @@ Class KeywordsPlugin Extends PluginDependsOnFileType
 	End
 	Method GetInternal:String() Virtual 'hardcoded words
 		Return ""
-	End 
+	End
+	Method GetCoreTypes:String() Virtual 'hardcoded words
+		Return ""
+	End
 	Method IsNeedLoadFromFile:Bool() Virtual
 		Return True
-	End 
+	End
 	
 	
 	Protected
@@ -97,7 +112,9 @@ Class KeywordsPlugin Extends PluginDependsOnFileType
 		If IsNeedLoadFromFile() Then value=Json_LoadValue( GetWordsFilePath(),GetMainFileType() )
 		Local s := (value<>Null ? value.ToString() Else GetInternal())
 		Local words:=s.Split( ";" )
-		_keywords=New Keywords( words )
+		Local coreTypes:=GetCoreTypes().Split( ";" )
+		
+		_keywords=New Keywords( words,coreTypes )
 	End
 	
 End
@@ -121,6 +138,6 @@ Class KeywordsManager
 	
 	Private
 	
-	Global _empty:=New Keywords
+	Global _empty:=New Keywords( New String[0],New String[0] )
 	
 End

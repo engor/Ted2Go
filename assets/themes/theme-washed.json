@@ -42,6 +42,7 @@
 		"textview-color5": "#5A5A5A",	//comment
 		"textview-color6": "#895FA8",	//preproc
 		"textview-color7": "#6C89A8",
+		"textview-color8": "textview-color2", //core types like Int, Bool
 		
 		"windowClearColor":"darkest",
 		"menu-shortcut":"text-background",

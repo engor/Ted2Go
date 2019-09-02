@@ -27,7 +27,8 @@
 		"textview-color4": "#0f0",	//numbers
 		"textview-color5": "#fff",	//comment
 		"textview-color6": "#d82",	//preproc
-		"textview-color7": "#222"	//default
+		"textview-color7": "#222",	//default
+		"textview-color8": "textview-color2" //core types like Int, Bool
 	},
 	
 	"fonts":{

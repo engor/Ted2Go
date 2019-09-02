@@ -27,6 +27,7 @@
 		"textview-color4":"#0f8",
 		"textview-color5":"#0ff",
 		"textview-color6":"#fc0",
-		"textview-color7":"#fff"
+		"textview-color7":"#fff",
+		"textview-color8":"textview-color2"
 	}
 }

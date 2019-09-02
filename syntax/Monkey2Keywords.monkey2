@@ -22,11 +22,11 @@ Class Monkey2Keywords Extends KeywordsPlugin
 		Local s:=""
 		s+="Namespace;Using;Import;Extern;"
 		s+="Public;Private;Protected;Internal;Friend;"
-		s+="Void;Bool;Byte;UByte;Short;UShort;Int;UInt;Long;ULong;Float;Double;String;CString;Variant;TypeInfo;DeclInfo;Object;Continue;Exit;"
+		s+="TypeInfo;DeclInfo;Continue;Exit;"
 		s+="New;Self;Super;Eachin;True;False;Null;Where;"
 		s+="Alias;Const;Local;Global;Field;Method;Function;Property;Getter;Setter;Operator;Lambda;"
 		s+="Enum;Class;Interface;Struct;Extends;Implements;Virtual;Override;Abstract;Final;Inline;"
-		s+="Var;Varptr;Ptr;"
+		s+="Var;Varptr;"
 		s+="Not;Mod;And;Or;Shl;Shr;End;"
 		s+="If;Then;Else;Elseif;Endif;"
 		s+="While;Wend;"
@@ -36,6 +36,12 @@ Class Monkey2Keywords Extends KeywordsPlugin
 		s+="Try;Catch;Throw;Throwable;"
 		s+="Return;Print;Static;Cast;Extension;"
 		s+="Typeof;Array"
+		Return s
+	End
+	
+	Method GetCoreTypes:String() Override
+		Local s:=""
+		s+="Void;Bool;Byte;UByte;Short;UShort;Int;UInt;Long;ULong;Float;Double;String;CString;Variant;Object;Ptr"
 		Return s
 	End
 	

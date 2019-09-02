@@ -1193,6 +1193,14 @@ Class CodeTextView Extends TextView
 		_whitespacesColor=App.Theme.GetColor( "textview-whitespaces" )
 		_extraSelColor=App.Theme.GetColor( "textview-extra-selection" )
 		_commentsColor=App.Theme.GetColor( "textview-color"+Highlighter.COLOR_COMMENT )
+		
+		Local colors:=New Color[9]
+		
+		For Local i:=0 Until colors.Length
+			colors[i]=App.Theme.GetColor( "textview-color"+i )
+		Next
+		
+		TextColors=colors
 	End
 	
 	Method OnRenderContent( canvas:Canvas,clip:Recti ) Override
