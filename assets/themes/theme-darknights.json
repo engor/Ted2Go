@@ -30,7 +30,7 @@
 		"textview-color5":"#555555",       // comment
 		"textview-color6":"#208020",       // preproc
 		"textview-color7":"#aaaa00",       // other (normal text)
-		"textview-color8":"textview-color2", // core types like Int, Bool
+		"textview-color8":"#3485A6",       // core types like Int, Bool, Byte Ptr, String
 
 		"codemap-background":"#101010",
 		"codemap-border"    :"#202020",
