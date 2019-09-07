@@ -37,7 +37,7 @@ Class HelpTreeView Extends TreeViewExt
 
 	Field PageClicked:Void( page:String )
 	
-	Method New( htmlView:HtmlView )
+	Method New( htmlView:HtmlViewExt )
 		
 		htmlView.AnchorClicked=Lambda( url:String )
 			
